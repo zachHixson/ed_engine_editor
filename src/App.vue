@@ -1,28 +1,63 @@
 <template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
-  </div>
+    <div id="app">
+        <LogoMenu />
+        <TopPanel />
+        <AssetBrowser />
+        <EditorWindow />
+    </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import LogoMenu from './components/LogoMenu';
+import TopPanel from './components/TopPanel';
+import AssetBrowser from './components/AssetBrowser';
+import EditorWindow from './components/EditorWindow';
 
 export default {
-  name: 'App',
-  components: {
-    HelloWorld
-  }
+    name: 'App',
+    components: {
+        LogoMenu,
+        TopPanel,
+        AssetBrowser,
+        EditorWindow
+    }
 }
 </script>
 
 <style>
+html, body{
+    height: 100%;
+    margin: 0px;
+    padding: 0px;
+}
+
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    display: grid;
+    grid-template-areas:
+        "logoCorner topPanel"
+        "assetBrowser editorWindow";
+    grid-template-columns: 250px auto;
+    grid-template-rows: 100px auto;
+    width: 100%;
+    height: 100%;
+}
+
+LogoMenu{
+    grid-area: logoCorner;
+}
+
+TopPanel{
+    grid-area: topPanel;
+}
+
+AssetBrowser{
+    grid-area: assetBrowser;
+}
+
+EditorWindow{
+    grid-area: editorWindow;
 }
 </style>
