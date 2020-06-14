@@ -5,9 +5,9 @@
             <div>Debug</div>
         </div>
         <div class="panelBox tabContainer">
-            <EditorTab tabText="Level" editorName="level" logoName="placeholder" />
-            <EditorTab tabText="Art" editorName="art" logoName="placeholder" />
-            <EditorTab tabText="Logic" editorName="logic" logoName="placeholder" />
+            <EditorTab :tabText="$t('editor_main.level_tab')" editorName="level" logoName="placeholder" />
+            <EditorTab :tabText="$t('editor_main.art_tab')" editorName="art" logoName="placeholder" />
+            <EditorTab :tabText="$t('editor_main.logic_tab')" editorName="logic" logoName="placeholder" />
         </div>
     </div>
 </template>

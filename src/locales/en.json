@@ -1,0 +1,9 @@
+{
+    "editor_main":{
+        "level_tab" : "Level",
+        "art_tab" : "Art",
+        "logic_tab" : "Logic",
+        "run" : "Run",
+        "debug" : "Debug"
+    }
+}
