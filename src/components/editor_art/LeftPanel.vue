@@ -1,22 +1,31 @@
 <template>
-    <div id="leftPanelWrapper">
-        <div id="pickerWrapper">
-            <div id="picker"></div>
+    <div id="leftPanel">
+        <div id="leftPanelWrapper" ref="leftPanelWrapper">
+            <div id="panelContents">
+                <div id="pickerWrapper">
+                    <div id="picker"></div>
+                </div>
+                <div id="brushSizeContainer">
+                    <Brush name="Large" />
+                    <Brush name="Medium" />
+                    <Brush name="Small" />
+                </div>
+                <div id="toolType">
+                    <Brush />
+                    <Brush />
+                    <Brush />
+                    <Brush />
+                    <Brush />
+                </div>
+            </div>
+            <button class="collapseButton" ref="collapseButton" @click="collapse">
+                &lt;
+            </button>
         </div>
-        <div id="brushSizeContainer">
-            <Brush name="Large" />
-            <Brush name="Medium" />
-            <Brush name="Small" />
-        </div>
-        <div id="toolType">
-            <Brush />
-            <Brush />
-            <Brush />
-            <Brush />
-            <Brush />
-        </div>
-        <div id="collapseButton">
-            &lt;
+        <div id="expandWrapper" ref="expandWrapper">
+            <button class="collapseButton" ref="expandButton" @click="collapse">
+                &gt;
+            </button>
         </div>
     </div>
 </template>
@@ -25,6 +34,7 @@
 import iro from '@jaames/iro';
 import Brush from './Brush';
 
+let collapsed = false;
 let colorPicker;
 
 export default {    
@@ -33,38 +43,58 @@ export default {
         Brush
     },
     methods:{
-        onResize(event){
-            colorPicker.width = Math.min(
-                document.getElementById('leftPanelWrapper').clientWidth,
-                document.getElementById('leftPanelWrapper').clientHeight
-            )
+        collapse(event){
+            let leftPanel = this.$refs.leftPanelWrapper;
+            let expandWrapper = this.$refs.expandWrapper;
+
+            if (collapsed){
+                leftPanel.style.display = "flex";
+                expandWrapper.style.display = "none";
+            }
+            else{
+                leftPanel.style.display = "none";
+                expandWrapper.style.display = "flex";
+            }
+
+            collapsed = !collapsed;
         }
     },
     mounted(){
-        let panelWidth = Math.min(
-            document.getElementById('leftPanelWrapper').clientWidth,
-            document.getElementById('leftPanelWrapper').clientHeight
-        );
         colorPicker = new iro.ColorPicker('#picker', {
-            width: (panelWidth - 20)
+            width: 200
         });
-        window.addEventListener('resize', this.onResize);
+        expandWrapper.style.display = "none";
     }
 }
 </script>
 
 <style scope>
+    #leftPanel{
+        height: 100%;
+    }
+
     #leftPanelWrapper{
-        position: relative;
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-end;
         background: #FFAAAA;
-        width: 200px;
+        width: 200pt;
         height: 100%;
         border-right: 1px solid black;
-        padding-right: 10px;
+    }
+
+    #collapseWrapper{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        align-content:flex-start;
+        flex-grow: 1;
     }
 
     #pickerWrapper{
-        padding: 10px;
+        display: flex;
+        justify-content: center;
+        padding: 10pt;
     }
 
     #brushSizeContainer{
@@ -72,6 +102,7 @@ export default {
         flex-wrap: wrap;
         justify-content: center;
         border-bottom: 1px solid black;
+        width: 100%;
     }
 
     #toolType{
@@ -80,13 +111,28 @@ export default {
         justify-content: center;
     }
 
-    #collapseButton{
-        position: absolute;
+    .collapseButton{
+        align-self: center;
         display: flex;
+        justify-content: center;
         align-items: center;
-        right: 0;
-        top: 50%;
-        height: 20pt;
+        flex-grow: 1;
+        width: 10pt;
+        height: 30pt;
+        background: none;
         border: 1px solid black;
+    }
+
+    #collapseButton > *{
+        pointer-events: none;
+    }
+
+    #expandWrapper{
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        height: 100%;
+        background: #FFAAAA;
+        width: 15pt;
     }
 </style>

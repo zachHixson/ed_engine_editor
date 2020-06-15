@@ -20,4 +20,8 @@ export default {
         border-radius: 8pt;
         border: 2px solid black;
     }
+
+    #brush > *{
+        pointer-events: none;
+    }
 </style>

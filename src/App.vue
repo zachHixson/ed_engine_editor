@@ -39,10 +39,11 @@ html, body{
     grid-template-areas:
         "logoCorner topPanel"
         "assetBrowser editorWindow";
-    grid-template-columns: 250px auto;
-    grid-template-rows: 100px auto;
+    grid-template-columns: 200pt 1fr;
+    grid-template-rows: 80pt minmax(0, 1fr);
     width: 100%;
     height: 100%;
+    max-height: 100vh;
 }
 
 LogoMenu{
