@@ -1,15 +1,22 @@
 <template>
-    <div>
-        Art Editor
+    <div class="artMain">
+        <LeftPanel />
     </div>
 </template>
 
 <script>
+import LeftPanel from './LeftPanel';
+
 export default {
-    name: 'ArtEditor'
+    name: 'ArtEditor',
+    components: {
+        LeftPanel
+    }
 }
 </script>
 
-<style>
-
+<style scope>
+    .artMain{
+        height: 100%;
+    }
 </style>
