@@ -1,7 +1,7 @@
 <template>
     <div class="artMain">
-        <LeftPanel />
-        <ArtCanvas />
+        <LeftPanel @changed="resize"/>
+        <ArtCanvas ref="artCanvas"/>
     </div>
 </template>
 
@@ -14,6 +14,14 @@ export default {
     components: {
         LeftPanel,
         ArtCanvas
+    },
+    mounted(){
+        window.addEventListener('resize', ()=>{this.resize()})
+    },
+    methods:{
+        resize() {
+            this.$refs.artCanvas.resize();
+        }
     }
 }
 </script>

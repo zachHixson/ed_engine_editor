@@ -31,6 +31,7 @@
 </template>
 
 <script>
+import {mapActions, mapGetters} from 'vuex';
 import iro from '@jaames/iro';
 import Brush from './Brush';
 
@@ -43,6 +44,7 @@ export default {
         Brush
     },
     methods:{
+        ...mapActions({selectColor: 'ArtEditor/selectColor'}),
         collapse(event){
             let leftPanel = this.$refs.leftPanelWrapper;
             let expandWrapper = this.$refs.expandWrapper;
@@ -57,6 +59,10 @@ export default {
             }
 
             collapsed = !collapsed;
+            this.$emit('changed');
+        },
+        colorChanged(color){
+            this.selectColor(color.hexString);
         }
     },
     mounted(){
@@ -64,6 +70,8 @@ export default {
             width: 200
         });
         expandWrapper.style.display = "none";
+
+        colorPicker.on("color:change", this.colorChanged);
     }
 }
 </script>

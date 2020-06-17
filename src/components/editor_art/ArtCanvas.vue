@@ -7,8 +7,7 @@
 </template>
 
 <script>
-import {mapGetters} from 'vuex';
-import artCanvas from './artCanvasScript';
+import Art_Canvas from './Art_Canvas.js';
 
 export default {
     name: "ArtCanvas",
@@ -19,11 +18,16 @@ export default {
         }
     },
     mounted(){
+        this.canvasEl = new Art_Canvas(this.$refs.canvas);
         this.resize();
-        this.setup();
+        this.canvasEl.setup();
+        this.update();
     },
-    computed: {
-        ...mapGetters(['selectedTab'])
+    beforeDestroy(){
+        window.cancelAnimationFrame(this.updateFrame);
+    },
+    destroyed(){
+        this.canvasEl = null;
     },
     methods:{
         resize(event = null){
@@ -31,31 +35,21 @@ export default {
             let canvas = this.$refs.canvas;
             let wrapperBounds = {width:0,height:0};
 
-            canvas.width = 10;
-            canvas.height = 10;
+            canvas.width = 1;
+            canvas.height = 1;
 
             wrapperBounds.width = wrapper.clientWidth;
             wrapperBounds.height = wrapper.clientHeight;
 
-            canvas.width = wrapperBounds.width
+            canvas.width = wrapperBounds.width;
             canvas.height = wrapperBounds.height;
-        },
-        setup(){
-            this.canvasEl = new artCanvas(this.$refs.canvas);
-            this.canvasEl.setup();
-            this.update();
+
+            this.canvasEl.resize();
         },
         update(){
-            this.resize();
             this.canvasEl.update();
             this.updateFrame = window.requestAnimationFrame(()=>{this.update()});
         }
-    },
-    beforeDestroy(){
-        window.cancelAnimationFrame(this.updateFrame);
-    },
-    destroyed(){
-        this.canvasEl = null;
     }
 }
 </script>

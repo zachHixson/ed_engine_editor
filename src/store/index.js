@@ -1,6 +1,8 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import MainWindow from './modules/MainWindow';
+import GameData from './modules/GameData';
+import ArtEditor from './modules/ArtEditor';
 
 Vue.use(Vuex);
 
@@ -12,6 +14,8 @@ export default new Vuex.Store({
     actions: {
     },
     modules: {
-        MainWindow
+        MainWindow,
+        GameData,
+        ArtEditor
     }
 });
