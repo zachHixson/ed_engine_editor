@@ -11,7 +11,7 @@ export default {
 }
 </script>
 
-<style scope>
+<style scoped>
     #brush{
         width: 30pt;
         height: 30pt;

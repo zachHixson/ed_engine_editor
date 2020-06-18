@@ -10,7 +10,7 @@ export default {
 }
 </script>
 
-<style scope>
+<style scoped>
 .logoMenu{
     background: #FF9999;
 }

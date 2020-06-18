@@ -76,7 +76,7 @@ export default {
 }
 </script>
 
-<style scope>
+<style scoped>
     #leftPanel{
         height: 100%;
     }
@@ -91,12 +91,13 @@ export default {
         border-right: 1px solid black;
     }
 
-    #collapseWrapper{
+    #panelContents{
         display: flex;
         flex-direction: column;
         align-items: center;
         align-content:flex-start;
         flex-grow: 1;
+        height: 100%;
     }
 
     #pickerWrapper{

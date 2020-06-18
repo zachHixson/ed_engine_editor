@@ -1,5 +1,5 @@
 <template>
-    <div class="artMain">
+    <div id="artMain">
         <LeftPanel @changed="resize"/>
         <ArtCanvas ref="artCanvas"/>
     </div>
@@ -26,12 +26,19 @@ export default {
 }
 </script>
 
-<style scope>
-    .artMain{
+<style scoped>
+    #artMain{
         display: flex;
         flex-direction: row;
+        width: 100%;
         height: 100%;
         margin:none;
         padding:none;
+    }
+
+    #navControls{
+        position: absolute;
+        top: 0;
+        right: 0;
     }
 </style>

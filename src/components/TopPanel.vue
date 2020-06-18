@@ -23,7 +23,7 @@ export default {
 }
 </script>
 
-<style scope>
+<style scoped>
 .topPanel{
     background: #99FF99;
     display: flex;

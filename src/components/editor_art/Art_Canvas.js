@@ -1,7 +1,8 @@
 import store from '@/store/index';
+import Victor from 'victor';
 
 const GRID_DIV = 16;
-const CANVAS_OFFSET = 10;
+const CANVAS_OFFSET = 5;
 const CANVAS_WIDTH = GRID_DIV * 20;
 
 class Art_Canvas{
@@ -12,6 +13,8 @@ class Art_Canvas{
         this.pixelBuff = document.createElement("canvas");
         this.overlayBuff = document.createElement("canvas");
         this.pixelData = store.getters['GameData/getRandomSprite'];
+        this.offset = new Victor(0, 0);
+        this.zoomFac = 1;
     }
 
     setup(){
@@ -24,14 +27,12 @@ class Art_Canvas{
 
         this.drawBGStencil();
         this.drawSpriteData();
-        this.drawGrid();
-        //draw preview buffer
+        this.drawOverlay();
 
         ctx.drawImage(this.checkerBGBuff, 0, 0, this.checkerBGBuff.width, this.checkerBGBuff.height);
         ctx.drawImage(this.checkerStencilBuff, 0, 0, this.checkerStencilBuff.width, this.checkerStencilBuff.height);
         ctx.drawImage(this.pixelBuff, 0, 0, this.pixelBuff.width, this.pixelBuff.height);
         ctx.drawImage(this.overlayBuff, 0, 0, this.overlayBuff.width, this.overlayBuff.height);
-
     }
 
     resize(width = this.canvas.width, height = this.canvas.height){
@@ -45,6 +46,15 @@ class Art_Canvas{
         this.overlayBuff.height = height;
 
         this.drawCheckerBG();
+    }
+
+    navChanged({rawOffset, zoomFac}){
+        this.offset = rawOffset.clone();
+        this.zoomFac = zoomFac;
+        
+        this.drawBGStencil();
+        this.drawSpriteData();
+        this.drawOverlay();
     }
 
     drawCheckerBG(ctx = this.checkerBGBuff.getContext('2d')){
@@ -74,13 +84,35 @@ class Art_Canvas{
     }
 
     drawBGStencil(ctx = this.checkerStencilBuff.getContext('2d')){
+        const HALF_WIDTH = CANVAS_WIDTH / 2;
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, this.checkerStencilBuff.width, this.checkerStencilBuff.height);
-        ctx.clearRect(CANVAS_OFFSET, CANVAS_OFFSET, CANVAS_WIDTH, CANVAS_WIDTH);
+        ctx.save();
+        ctx.translate(
+            (this.canvas.width / 2) + (this.offset.x * this.zoomFac),
+            (this.canvas.height / 2) + (this.offset.y * this.zoomFac)
+        );
+        ctx.clearRect(
+            -HALF_WIDTH * this.zoomFac,
+            -HALF_WIDTH * this.zoomFac,
+            CANVAS_WIDTH * this.zoomFac,
+            CANVAS_WIDTH * this.zoomFac
+        );
+        ctx.restore();
     }
 
     drawSpriteData(ctx = this.pixelBuff.getContext("2d")){
-        let pixelWidth = Math.round(CANVAS_WIDTH / GRID_DIV);
+        const PIXEL_WIDTH = Math.round(CANVAS_WIDTH / GRID_DIV);
+        const HALF_CANVAS = CANVAS_WIDTH / 2;
+
+        ctx.clearRect(0, 0, this.pixelBuff.width, this.pixelBuff.height);
+
+        ctx.save();
+        ctx.translate(
+            (this.canvas.width / 2) + (this.offset.x * this.zoomFac),
+            (this.canvas.height / 2) + (this.offset.y * this.zoomFac)
+        );
+        ctx.scale(this.zoomFac, this.zoomFac);
 
         for (let x = 0; x < GRID_DIV; x++){
             for (let y = 0; y < GRID_DIV; y++){
@@ -89,36 +121,65 @@ class Art_Canvas{
                 if (curPixel.length > 0){
                     ctx.fillStyle = curPixel;
                     ctx.fillRect(
-                        (x * pixelWidth) + CANVAS_OFFSET,
-                        (y * pixelWidth) + CANVAS_OFFSET,
-                        pixelWidth,
-                        pixelWidth
+                        (x * PIXEL_WIDTH) - HALF_CANVAS,
+                        (y * PIXEL_WIDTH) - HALF_CANVAS,
+                        PIXEL_WIDTH,
+                        PIXEL_WIDTH
                     );
                 }
             }
         }
+
+        ctx.restore();
     }
 
-    drawGrid(ctx = this.overlayBuff.getContext("2d")){
-        let pixelSize = Math.round(CANVAS_WIDTH / GRID_DIV);
+    drawOverlay(ctx = this.overlayBuff.getContext("2d")){
+        const PIXEL_SIZE = Math.round(CANVAS_WIDTH / GRID_DIV);
+        const HALF_CANVAS = CANVAS_WIDTH / 2;
 
+        ctx.clearRect(0, 0, this.overlayBuff.width, this.overlayBuff.height);
+
+        ctx.save();
+        ctx.translate(
+            (this.canvas.width / 2) + (this.offset.x * this.zoomFac),
+            (this.canvas.height / 2) + (this.offset.y * this.zoomFac)
+        );
+        ctx.scale(this.zoomFac, this.zoomFac);
+
+        //draw grid
         ctx.strokeStyle = "black";
         ctx.lineWidth = 2;
         ctx.beginPath();
         for (let i = 1; i < GRID_DIV; i++){
-            let xPos = Math.round((i * pixelSize) + CANVAS_OFFSET);
-            let yPos = Math.round((i * pixelSize) + CANVAS_OFFSET);
+            let curLine = i * PIXEL_SIZE;
+            let pos = new Victor(curLine, curLine);
 
-            ctx.moveTo(xPos, CANVAS_OFFSET);
-            ctx.lineTo(xPos, CANVAS_OFFSET + CANVAS_WIDTH);
-            ctx.moveTo(CANVAS_OFFSET, yPos);
-            ctx.lineTo(CANVAS_OFFSET + CANVAS_WIDTH, yPos);
+            pos.subtract(new Victor(HALF_CANVAS, HALF_CANVAS));
+
+            ctx.moveTo(pos.x, -HALF_CANVAS);
+            ctx.lineTo(pos.x, HALF_CANVAS);
+            ctx.moveTo(-HALF_CANVAS, pos.y);
+            ctx.lineTo(HALF_CANVAS, pos.y);
         }
+        
+        ctx.restore();
         ctx.stroke();
     }
 
     get2DIdx(x, y, width){
         return (y * width) + x;
+    }
+
+    getViewTransform(x, y){
+        //
+    }
+
+    getViewBounds(){
+        return [-500, -500, 500, 500];
+    }
+
+    getContentsBounds(){
+        return [0, 0, CANVAS_WIDTH, CANVAS_WIDTH];
     }
 }
 

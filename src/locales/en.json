@@ -5,5 +5,10 @@
         "logic_tab" : "Logic",
         "run" : "Run",
         "debug" : "Debug"
+    },
+    "navigation":{
+        "pan_tool": "Pan Tool",
+        "zoom_tool": "Zoom tool",
+        "center_view": "Center View"
     }
 }

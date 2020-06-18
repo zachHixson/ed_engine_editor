@@ -1,3 +1,5 @@
+import Navigation from './Navigation';
+
 const state = {
     selectedColor : "#FFFFFF"
 }
@@ -16,10 +18,15 @@ const mutations = {
     selectColor: (state, newColor) => state.selectedColor = newColor
 };
 
+const modules = {
+    Navigation
+}
+
 export default {
     namespaced: true,
     state,
     getters,
     actions,
-    mutations
+    mutations,
+    modules
 };

@@ -3,10 +3,16 @@
         <canvas id="canvas" ref="canvas">
             //Error loading HTML5 canvas, check browser compatibility
         </canvas>
+        <NavControlPanel
+            id="navControlPanel"
+            ref="navControlPanel"
+            stateModule="ArtEditor"
+            @navChanged="navChanged"/>
     </div>
 </template>
 
 <script>
+import NavControlPanel from '@/components/common/NavControlPanel';
 import Art_Canvas from './Art_Canvas.js';
 
 export default {
@@ -17,11 +23,25 @@ export default {
             updateFrame : null
         }
     },
+    components: {
+        NavControlPanel
+    },
     mounted(){
-        this.canvasEl = new Art_Canvas(this.$refs.canvas);
+        let canvas = this.$refs.canvas;
+        let navControl = this.$refs.navControlPanel;
+
+        this.canvasEl = new Art_Canvas(canvas);
         this.resize();
         this.canvasEl.setup();
         this.update();
+
+        canvas.addEventListener('mousedown', navControl.mouseDown);
+        canvas.addEventListener('mouseup', navControl.mouseUp);
+        canvas.addEventListener('mousemove', navControl.mouseMove);
+
+        navControl.setViewBounds(this.canvasEl.getViewBounds());
+        navControl.setContentsBounds(this.canvasEl.getContentsBounds());
+        this.navChanged(navControl.getNavState());
     },
     beforeDestroy(){
         window.cancelAnimationFrame(this.updateFrame);
@@ -44,7 +64,11 @@ export default {
             canvas.width = wrapperBounds.width;
             canvas.height = wrapperBounds.height;
 
+            this.$refs.navControlPanel.setContainerDimensions(wrapperBounds);
             this.canvasEl.resize();
+        },
+        navChanged(navState){
+            this.canvasEl.navChanged(navState);
         },
         update(){
             this.canvasEl.update();
@@ -54,13 +78,9 @@ export default {
 }
 </script>
 
-<style scope>
-    *{
-        padding: none;
-        margin: none;
-    }
-    
+<style scoped>
     #artCanvas{
+        position: relative;
         box-sizing: border-box;
         width: 100%;
         height: 100%;
@@ -72,5 +92,12 @@ export default {
 
     #canvas{
         box-sizing: border-box;
+    }
+
+    #navControlPanel{
+        position: absolute;
+        top: 0;
+        right: 0;
+        z-index: 1000;
     }
 </style>

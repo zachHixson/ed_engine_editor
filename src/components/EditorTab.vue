@@ -30,7 +30,7 @@ export default {
 } 
 </script>
 
-<style scope>
+<style scoped>
 .editorTab{
     border: 1px solid black;
     background: #AAFF55;
