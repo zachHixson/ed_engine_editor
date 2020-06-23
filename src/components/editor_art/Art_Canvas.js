@@ -15,6 +15,10 @@ class Art_Canvas{
         this.pixelData = store.getters['GameData/getRandomSprite'];
         this.offset = new Victor(0, 0);
         this.zoomFac = 1;
+        this.mouse = {
+            down: false,
+            cell: new Victor(0, 0)
+        }
     }
 
     setup(){
@@ -29,6 +33,10 @@ class Art_Canvas{
         this.drawSpriteData();
         this.drawOverlay();
 
+        this.composite(ctx);
+    }
+
+    composite(ctx = this.canvas.getContext("2d")){
         ctx.drawImage(this.checkerBGBuff, 0, 0, this.checkerBGBuff.width, this.checkerBGBuff.height);
         ctx.drawImage(this.checkerStencilBuff, 0, 0, this.checkerStencilBuff.width, this.checkerStencilBuff.height);
         ctx.drawImage(this.pixelBuff, 0, 0, this.pixelBuff.width, this.pixelBuff.height);
@@ -48,6 +56,27 @@ class Art_Canvas{
         this.drawCheckerBG();
     }
 
+    updateMouse(event){
+        const CELL_SIZE = (CANVAS_WIDTH / GRID_DIV) * this.zoomFac;
+        let mouseCell = new Victor(event.offsetX, event.offsetY);
+        let windowHalfWidth = new Victor(this.canvas.width / 2, this.canvas.height / 2);
+        let canvasHalfWidth = new Victor(CANVAS_WIDTH / 2, CANVAS_WIDTH / 2);
+        let scaledOffset = this.offset.clone().multiplyScalar(this.zoomFac);
+
+        canvasHalfWidth.multiplyScalar(this.zoomFac);
+
+        mouseCell.subtract(windowHalfWidth);
+        mouseCell.add(canvasHalfWidth);
+        mouseCell.subtract(scaledOffset);
+        mouseCell.divideScalar(CELL_SIZE);
+
+        mouseCell.x = Math.floor(mouseCell.x);
+        mouseCell.y = Math.floor(mouseCell.y);
+
+        this.mouse.cell.copy(mouseCell);
+        console.log(this.mouse.cell.toString())
+    }
+
     navChanged({rawOffset, zoomFac}){
         this.offset = rawOffset.clone();
         this.zoomFac = zoomFac;
@@ -55,6 +84,11 @@ class Art_Canvas{
         this.drawBGStencil();
         this.drawSpriteData();
         this.drawOverlay();
+    }
+
+    mouseMove(event){
+        this.updateMouse(event);
+        //draw brush overlay
     }
 
     drawCheckerBG(ctx = this.checkerBGBuff.getContext('2d')){
@@ -134,10 +168,15 @@ class Art_Canvas{
     }
 
     drawOverlay(ctx = this.overlayBuff.getContext("2d")){
+        ctx.clearRect(0, 0, this.overlayBuff.width, this.overlayBuff.height);
+
+        this.drawGrid(ctx);
+        this.drawBrushOverlay(ctx);
+    }
+
+    drawGrid(ctx = this.overlayBuff.getContext("2d")){
         const PIXEL_SIZE = Math.round(CANVAS_WIDTH / GRID_DIV);
         const HALF_CANVAS = CANVAS_WIDTH / 2;
-
-        ctx.clearRect(0, 0, this.overlayBuff.width, this.overlayBuff.height);
 
         ctx.save();
         ctx.translate(
@@ -150,28 +189,49 @@ class Art_Canvas{
         ctx.strokeStyle = "black";
         ctx.lineWidth = 2;
         ctx.beginPath();
-        for (let i = 1; i < GRID_DIV; i++){
+        for (let i = 1; i < GRID_DIV; i++) {
             let curLine = i * PIXEL_SIZE;
             let pos = new Victor(curLine, curLine);
 
-            pos.subtract(new Victor(HALF_CANVAS, HALF_CANVAS));
+            pos.subtractScalar(HALF_CANVAS);
 
             ctx.moveTo(pos.x, -HALF_CANVAS);
             ctx.lineTo(pos.x, HALF_CANVAS);
             ctx.moveTo(-HALF_CANVAS, pos.y);
             ctx.lineTo(HALF_CANVAS, pos.y);
         }
-        
+
         ctx.restore();
         ctx.stroke();
     }
 
-    get2DIdx(x, y, width){
-        return (y * width) + x;
+    drawBrushOverlay(ctx = this.overlayBuff.getContext("2d")){
+        const PIXEL_SIZE = Math.round(CANVAS_WIDTH / GRID_DIV);
+        const HALF_CANVAS = CANVAS_WIDTH / 2;
+
+        ctx.save();
+        ctx.translate(
+            (this.canvas.width / 2) + (this.offset.x * this.zoomFac),
+            (this.canvas.height / 2) + (this.offset.y * this.zoomFac)
+        );
+        ctx.scale(this.zoomFac, this.zoomFac);
+
+        //draw brush overlay
+        if (this.isMouseInBounds()){
+            ctx.fillStyle = "purple";
+            ctx.fillRect(
+                -HALF_CANVAS + this.mouse.cell.x * PIXEL_SIZE,
+                -HALF_CANVAS + this.mouse.cell.y * PIXEL_SIZE,
+                PIXEL_SIZE,
+                PIXEL_SIZE
+            );
+        }
+
+        ctx.restore();
     }
 
-    getViewTransform(x, y){
-        //
+    get2DIdx(x, y, width){
+        return (y * width) + x;
     }
 
     getViewBounds(){
@@ -180,6 +240,15 @@ class Art_Canvas{
 
     getContentsBounds(){
         return [0, 0, CANVAS_WIDTH, CANVAS_WIDTH];
+    }
+
+    isMouseInBounds(){
+        return (
+            this.mouse.cell.x >= 0 &&
+            this.mouse.cell.x < GRID_DIV &&
+            this.mouse.cell.y >= 0 &&
+            this.mouse.cell.y < GRID_DIV
+        );
     }
 }
 

@@ -38,6 +38,7 @@ export default {
         canvas.addEventListener('mousedown', navControl.mouseDown);
         canvas.addEventListener('mouseup', navControl.mouseUp);
         canvas.addEventListener('mousemove', navControl.mouseMove);
+        canvas.addEventListener('mousemove', this.canvasEl.mouseMove.bind(this.canvasEl));
 
         navControl.setViewBounds(this.canvasEl.getViewBounds());
         navControl.setContentsBounds(this.canvasEl.getContentsBounds());
