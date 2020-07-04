@@ -10,5 +10,16 @@
         "pan_tool": "Pan Tool",
         "zoom_tool": "Zoom tool",
         "center_view": "Center View"
+    },
+    "art_editor":{
+        "small_brush": "Small Brush",
+        "medium_brush": "Medium Brush",
+        "large_brush": "Large Brush",
+        "brush_tool": "Brush",
+        "bucket_tool": "Fill Bucket",
+        "line_tool": "Draw Line",
+        "box_tool": "Draw Box",
+        "circle_tool": "Draw Circle",
+        "eraser_tool": "Eraser"
     }
 }

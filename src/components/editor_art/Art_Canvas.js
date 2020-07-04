@@ -74,7 +74,6 @@ class Art_Canvas{
         mouseCell.y = Math.floor(mouseCell.y);
 
         this.mouse.cell.copy(mouseCell);
-        console.log(this.mouse.cell.toString())
     }
 
     navChanged({rawOffset, zoomFac}){

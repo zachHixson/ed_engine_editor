@@ -6,16 +6,22 @@
                     <div id="picker"></div>
                 </div>
                 <div id="brushSizeContainer">
-                    <Brush name="Large" />
-                    <Brush name="Medium" />
-                    <Brush name="Small" />
+                    <Brush
+                        :key="size.tool"
+                        v-for="size in brushSizes"
+                        :icon="size.icon"
+                        :tool="size.tool"
+                        :name="size.name"
+                        @toolClicked="sizeChanged"/>
                 </div>
                 <div id="toolType">
-                    <Brush />
-                    <Brush />
-                    <Brush />
-                    <Brush />
-                    <Brush />
+                    <Brush
+                        :key="brush.tool"
+                        v-for="brush in brushes"
+                        :icon="brush.icon"
+                        :tool="brush.tool"
+                        :name="brush.name"
+                        @toolClicked="toolChanged"/>
                 </div>
             </div>
             <button class="collapseButton" ref="collapseButton" @click="collapse">
@@ -43,6 +49,59 @@ export default {
     components: {
         Brush
     },
+    data() {
+        return {
+            brushSizes: [
+                {
+                    tool: 'small_brush',
+                    name: this.$t('art_editor.small_brush'),
+                    icon: 'assets/editor_art/small_brush'
+                },
+                {
+                    tool: 'medium_brush',
+                    name: this.$t('art_editor.medium_brush'),
+                    icon: 'assets/editor_art/medium_brush'
+                },
+                {
+                    tool: 'large_brush',
+                    name: this.$t('art_editor.large_brush'),
+                    icon: 'assets/editor_art/large_brush'
+                }
+            ],
+            brushes: [
+                {
+                    tool: 'brush',
+                    name: this.$t('art_editor.brush_tool'),
+                    icon: 'assets/editor_art/brush'
+                },
+                {
+                    tool: 'bucket',
+                    name: this.$t('art_editor.bucket_tool'),
+                    icon: 'assets/editor_art/bucket'
+                },
+                {
+                    tool: 'line',
+                    name: this.$t('art_editor.line_tool'),
+                    icon: 'assets/editor_art/line'
+                },
+                {
+                    tool: 'box',
+                    name: this.$t('art_editor.box_tool'),
+                    icon: 'assets/editor_art/box'
+                },
+                {
+                    tool: 'circle',
+                    name: this.$t('art_editor.circle_tool'),
+                    icon: 'assets/editor_art/circle'
+                },
+                {
+                    tool: 'eraser',
+                    name: this.$t('art_editor.eraser_tool'),
+                    icon: 'assets/editor_art/eraser'
+                }
+            ]
+        }
+    },
     methods:{
         ...mapActions({selectColor: 'ArtEditor/selectColor'}),
         collapse(event){
@@ -63,6 +122,12 @@ export default {
         },
         colorChanged(color){
             this.selectColor(color.hexString);
+        },
+        sizeChanged(newSize){
+            console.log(newSize);
+        },
+        toolChanged(newTool){
+            console.log(newTool);
         }
     },
     mounted(){
