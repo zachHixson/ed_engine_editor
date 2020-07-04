@@ -7,13 +7,13 @@ const state = {
 };
 
 const getters = {
-    getSelectedTool: state => state.selectedTool,
+    getSelectedNavTool: state => state.selectedTool,
     getZoomFac: state => state.zoomFac,
     getOffset: state => state.offset
 };
 
 const actions = {
-    setSelectedTool({ commit }, newTool) {
+    setSelectedNavTool({ commit }, newTool) {
         commit('setTool', newTool);
     },
     setZoomFac({ commit }, newZoomLevel) {

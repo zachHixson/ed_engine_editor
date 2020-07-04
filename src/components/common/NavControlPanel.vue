@@ -149,7 +149,7 @@ export default {
 
             if (!keyDown){
                 this.$store.dispatch(
-                    this.stateModule + '/setSelectedTool',
+                    this.stateModule + '/setSelectedNavTool',
                     null
                 )
                 selectedTool = null;

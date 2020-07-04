@@ -31,7 +31,7 @@ export default {
     computed: {
         isSelected() {
             return this.$store.getters[
-                this.stateModule + '/getSelectedTool'
+                this.stateModule + '/getSelectedNavTool'
             ] == this.control.id;
         }
     },
@@ -41,7 +41,7 @@ export default {
 
             if (!this.control.oneshot){
                 this.$store.dispatch(
-                    this.stateModule + '/setSelectedTool',
+                    this.stateModule + '/setSelectedNavTool',
                     this.control.id
                 );
             }
