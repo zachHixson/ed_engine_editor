@@ -1,5 +1,5 @@
 <template>
-    <div class="brush" @click="click">
+    <div class="brush" :class="{brushSelected : isSelected}" @click="click">
         <img class="icon" ref="iconImg" />
         <div class="altText" ref="altText">
             {{name}}
@@ -10,7 +10,7 @@
 <script>
 export default {
     name: 'Brush',
-    props: ['icon', 'tool', 'name'],
+    props: ['icon', 'tool', 'name', 'curSelection'],
     mounted() {
         let iconPath = this.icon || '';
 
@@ -20,6 +20,11 @@ export default {
         }
         else{
             this.$refs.iconIMg.style.display = 'none';
+        }
+    },
+    computed: {
+        isSelected(){
+            return (this.curSelection == this.tool);
         }
     },
     methods: {
@@ -43,12 +48,16 @@ export default {
         border: 2px solid black;
     }
 
-    .brush:hover{
+    .brush:hover:not(.controlSelected){
         background: #AA0000;
     }
 
     .brush > *{
         pointer-events: none;
+    }
+
+    .brushSelected {
+        background: #880000;
     }
 
     .icon {

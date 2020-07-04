@@ -1,8 +1,14 @@
 import store from '@/store/index';
 import Victor from 'victor';
+import Util_2D from '@/common/Util_2D';
+import Brush from './tools/Brush';
+import Bucket from './tools/Bucket';
+import Line_Brush from './tools/Line_Brush';
+import Box_Brush from './tools/Box_Brush';
+import Ellipse_Brush from './tools/Ellipse_Brush';
+import Eraser from './tools/Eraser';
 
 const GRID_DIV = 16;
-const CANVAS_OFFSET = 5;
 const CANVAS_WIDTH = GRID_DIV * 20;
 
 class Art_Canvas{
@@ -11,14 +17,19 @@ class Art_Canvas{
         this.checkerBGBuff = document.createElement("canvas");
         this.checkerStencilBuff = document.createElement("canvas");
         this.pixelBuff = document.createElement("canvas");
-        this.overlayBuff = document.createElement("canvas");
-        this.pixelData = store.getters['GameData/getRandomSprite'];
+        this.gridBuff = document.createElement("canvas");
+        this.previewBuff = document.createElement("canvas");
+        this.spriteData = store.getters['GameData/getEmptySprite'];
+        this.previewData = new Array(this.spriteData.length).fill('');
         this.offset = new Victor(0, 0);
         this.zoomFac = 1;
         this.mouse = {
             down: false,
             cell: new Victor(0, 0)
         }
+        this.toolColor = null;
+        this.toolSize = null;
+        this.tool = null;
     }
 
     setup(){
@@ -31,16 +42,17 @@ class Art_Canvas{
 
         this.drawBGStencil();
         this.drawSpriteData();
-        this.drawOverlay();
+        this.drawGrid();
 
         this.composite(ctx);
     }
 
     composite(ctx = this.canvas.getContext("2d")){
         ctx.drawImage(this.checkerBGBuff, 0, 0, this.checkerBGBuff.width, this.checkerBGBuff.height);
-        ctx.drawImage(this.checkerStencilBuff, 0, 0, this.checkerStencilBuff.width, this.checkerStencilBuff.height);
         ctx.drawImage(this.pixelBuff, 0, 0, this.pixelBuff.width, this.pixelBuff.height);
-        ctx.drawImage(this.overlayBuff, 0, 0, this.overlayBuff.width, this.overlayBuff.height);
+        ctx.drawImage(this.previewBuff, 0, 0, this.previewBuff.width, this.previewBuff.height);
+        ctx.drawImage(this.gridBuff, 0, 0, this.gridBuff.width, this.gridBuff.height);
+        ctx.drawImage(this.checkerStencilBuff, 0, 0, this.checkerStencilBuff.width, this.checkerStencilBuff.height);
     }
 
     resize(width = this.canvas.width, height = this.canvas.height){
@@ -50,8 +62,10 @@ class Art_Canvas{
         this.checkerStencilBuff.height = height;
         this.pixelBuff.width = width;
         this.pixelBuff.height = height;
-        this.overlayBuff.width = width;
-        this.overlayBuff.height = height;
+        this.gridBuff.width = width;
+        this.gridBuff.height = height;
+        this.previewBuff.width = width;
+        this.previewBuff.height = height;
 
         this.drawCheckerBG();
     }
@@ -82,12 +96,106 @@ class Art_Canvas{
         
         this.drawBGStencil();
         this.drawSpriteData();
-        this.drawOverlay();
+        this.drawGrid();
+        this.drawPreviewBuffer();
+    }
+
+    disableDrawing(){
+        this.tool.canDraw = false;
+    }
+
+    enableDrawing(){
+        this.tool.canDraw = true;
+    }
+
+    setToolColor(newColor){
+        this.toolColor = newColor;
+        this.tool.setToolColor(this.toolColor);
+    }
+
+    setToolSize(newSize){
+        let numSize = 0;
+
+        switch(newSize){
+            case 'small_brush':
+                numSize = 0;
+                break;
+            case 'medium_brush':
+                numSize = 1;
+                break;
+            case 'large_brush':
+                numSize = 2;
+                break;
+            default:
+                numSize = 1;
+        }
+
+        this.toolSize = numSize;
+        this.tool.setToolSize(this.toolSize);
+    }
+
+    setTool(newTool){
+        if (this.tool != null){
+            this.tool.beforeDestroy();
+        }
+
+        switch(newTool){
+            case 'brush':
+                this.tool = new Brush();
+                break;
+            case 'bucket':
+                this.tool = new Bucket();
+                break;
+            case 'line':
+                this.tool = new Line_Brush();
+                break;
+            case 'box':
+                this.tool = new Box_Brush();
+                break;
+            case 'box_fill':
+                this.tool = new Box_Brush(true);
+                break;
+            case 'ellipse':
+                this.tool = new Ellipse_Brush();
+                break;
+            case 'ellipse_fill':
+                this.tool = new Ellipse_Brush(true);
+                break;
+            case 'eraser':
+                this.tool = new Eraser();
+                break;
+            default:
+                this.tool = new Brush();
+                console.warn("Warning: Unkown brush: \"" + newTool + ".\" Defaulting to standard brush");
+                break;
+        }
+
+        this.tool.setPreviewBuff(this.previewData);
+        this.tool.setPixelBuff(this.spriteData);
+        this.tool.setMouseCell(this.mouse.cell);
+        this.tool.setToolColor(this.toolColor);
+        this.tool.setToolSize(this.toolSize);
+        this.drawPreviewBuffer();
+    }
+
+    mouseDown(event){
+        this.tool.mouseDown(event);
+        this.drawPreviewBuffer();
+    }
+
+    mouseUp(event){
+        this.tool.mouseUp(event);
+        this.drawPreviewBuffer();
     }
 
     mouseMove(event){
         this.updateMouse(event);
-        //draw brush overlay
+        this.tool.mouseMove(event);
+        this.drawPreviewBuffer();
+    }
+
+    beforeDestroy(){
+        this.tool.beforeDestroy();
     }
 
     drawCheckerBG(ctx = this.checkerBGBuff.getContext('2d')){
@@ -104,7 +212,7 @@ class Art_Canvas{
 
         for (let x = 0; x < xCount; x++){
             for (let y = 0; y < yCount; y++){
-                let curIdx = this.get2DIdx(x, y, xCount);
+                let curIdx = Util_2D.get2DIdx(x, y, xCount);
                 ctx.fillStyle = (curIdx % 2) ? LIGHT : DARK;
                 ctx.fillRect(
                     x * CHECKER_SIZE,
@@ -134,7 +242,7 @@ class Art_Canvas{
         ctx.restore();
     }
 
-    drawSpriteData(ctx = this.pixelBuff.getContext("2d")){
+    drawPixelData(ctx, pixelData){
         const PIXEL_WIDTH = Math.round(CANVAS_WIDTH / GRID_DIV);
         const HALF_CANVAS = CANVAS_WIDTH / 2;
 
@@ -149,7 +257,14 @@ class Art_Canvas{
 
         for (let x = 0; x < GRID_DIV; x++){
             for (let y = 0; y < GRID_DIV; y++){
-                let curPixel = this.pixelData[this.get2DIdx(x, y, GRID_DIV)];
+                if (pixelData[Util_2D.get2DIdx(x, y, GRID_DIV)] == null){
+                    console.error(pixelData[Util_2D.get2DIdx(x, y, GRID_DIV)]);
+                    console.error(pixelData);
+                    console.error(Util_2D.get2DIdx(x, y, GRID_DIV));
+                    console.error(x + " | " + y);
+                }
+
+                let curPixel = pixelData[Util_2D.get2DIdx(x, y, GRID_DIV)];
 
                 if (curPixel.length > 0){
                     ctx.fillStyle = curPixel;
@@ -166,16 +281,15 @@ class Art_Canvas{
         ctx.restore();
     }
 
-    drawOverlay(ctx = this.overlayBuff.getContext("2d")){
-        ctx.clearRect(0, 0, this.overlayBuff.width, this.overlayBuff.height);
-
-        this.drawGrid(ctx);
-        this.drawBrushOverlay(ctx);
+    drawSpriteData(ctx = this.pixelBuff.getContext("2d")){
+        this.drawPixelData(ctx, this.spriteData);
     }
-
-    drawGrid(ctx = this.overlayBuff.getContext("2d")){
+ 
+    drawGrid(ctx = this.gridBuff.getContext("2d")){
         const PIXEL_SIZE = Math.round(CANVAS_WIDTH / GRID_DIV);
         const HALF_CANVAS = CANVAS_WIDTH / 2;
+
+        ctx.clearRect(0, 0, this.gridBuff.width, this.gridBuff.height);
 
         ctx.save();
         ctx.translate(
@@ -204,33 +318,8 @@ class Art_Canvas{
         ctx.stroke();
     }
 
-    drawBrushOverlay(ctx = this.overlayBuff.getContext("2d")){
-        const PIXEL_SIZE = Math.round(CANVAS_WIDTH / GRID_DIV);
-        const HALF_CANVAS = CANVAS_WIDTH / 2;
-
-        ctx.save();
-        ctx.translate(
-            (this.canvas.width / 2) + (this.offset.x * this.zoomFac),
-            (this.canvas.height / 2) + (this.offset.y * this.zoomFac)
-        );
-        ctx.scale(this.zoomFac, this.zoomFac);
-
-        //draw brush overlay
-        if (this.isMouseInBounds()){
-            ctx.fillStyle = "purple";
-            ctx.fillRect(
-                -HALF_CANVAS + this.mouse.cell.x * PIXEL_SIZE,
-                -HALF_CANVAS + this.mouse.cell.y * PIXEL_SIZE,
-                PIXEL_SIZE,
-                PIXEL_SIZE
-            );
-        }
-
-        ctx.restore();
-    }
-
-    get2DIdx(x, y, width){
-        return (y * width) + x;
+    drawPreviewBuffer(ctx = this.previewBuff.getContext('2d')){
+        this.drawPixelData(ctx, this.previewData);
     }
 
     getViewBounds(){
@@ -239,15 +328,6 @@ class Art_Canvas{
 
     getContentsBounds(){
         return [0, 0, CANVAS_WIDTH, CANVAS_WIDTH];
-    }
-
-    isMouseInBounds(){
-        return (
-            this.mouse.cell.x >= 0 &&
-            this.mouse.cell.x < GRID_DIV &&
-            this.mouse.cell.y >= 0 &&
-            this.mouse.cell.y < GRID_DIV
-        );
     }
 }
 

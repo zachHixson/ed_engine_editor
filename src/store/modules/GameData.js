@@ -31,7 +31,8 @@ const getters = {
         tempData[2] = "#0000FF";
 
         return tempData;
-    }
+    },
+    getEmptySprite: () => {return new Array(16 * 16).fill('')}
 };
 
 const actions = {

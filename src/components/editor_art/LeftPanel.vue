@@ -12,6 +12,7 @@
                         :icon="size.icon"
                         :tool="size.tool"
                         :name="size.name"
+                        :curSelection="selectedSize"
                         @toolClicked="sizeChanged"/>
                 </div>
                 <div id="toolType">
@@ -21,6 +22,7 @@
                         :icon="brush.icon"
                         :tool="brush.tool"
                         :name="brush.name"
+                        :curSelection="selectedTool"
                         @toolClicked="toolChanged"/>
                 </div>
             </div>
@@ -37,7 +39,7 @@
 </template>
 
 <script>
-import {mapActions, mapGetters} from 'vuex';
+import {store, mapActions, mapGetters} from 'vuex';
 import iro from '@jaames/iro';
 import Brush from './Brush';
 
@@ -90,9 +92,19 @@ export default {
                     icon: 'assets/editor_art/box'
                 },
                 {
-                    tool: 'circle',
+                    tool: 'box_fill',
+                    name: this.$t('art_editor.box_tool'),
+                    icon: 'assets/editor_art/box_filled'
+                },
+                {
+                    tool: 'ellipse',
                     name: this.$t('art_editor.circle_tool'),
                     icon: 'assets/editor_art/circle'
+                },
+                {
+                    tool: 'ellipse_fill',
+                    name: this.$t('art_editor.circle_tool'),
+                    icon: 'assets/editor_art/circle_filled'
                 },
                 {
                     tool: 'eraser',
@@ -102,8 +114,28 @@ export default {
             ]
         }
     },
+    mounted(){
+        colorPicker = new iro.ColorPicker('#picker', {
+            width: 200
+        });
+        expandWrapper.style.display = "none";
+
+        colorPicker.on("color:change", this.colorChanged);
+    },
+    computed: {
+        selectedSize(){
+            return this.$store.getters['ArtEditor/getSelectedSize'];
+        },
+        selectedTool(){
+            return this.$store.getters['ArtEditor/getSelectedTool'];
+        }
+    },
     methods:{
-        ...mapActions({selectColor: 'ArtEditor/selectColor'}),
+        ...mapActions({
+            selectColor: 'ArtEditor/selectColor',
+            selectSize: 'ArtEditor/selectSize',
+            selectTool: 'ArtEditor/selectTool'
+        }),
         collapse(event){
             let leftPanel = this.$refs.leftPanelWrapper;
             let expandWrapper = this.$refs.expandWrapper;
@@ -124,19 +156,11 @@ export default {
             this.selectColor(color.hexString);
         },
         sizeChanged(newSize){
-            console.log(newSize);
+            this.selectSize(newSize);
         },
         toolChanged(newTool){
-            console.log(newTool);
+            this.selectTool(newTool);
         }
-    },
-    mounted(){
-        colorPicker = new iro.ColorPicker('#picker', {
-            width: 200
-        });
-        expandWrapper.style.display = "none";
-
-        colorPicker.on("color:change", this.colorChanged);
     }
 }
 </script>

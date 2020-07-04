@@ -75,10 +75,12 @@ export default {
         controlClick(control){
             if (!control.oneshot){
                 selectedTool = control.id;
+                this.$emit('tool-selected');
             }
 
             if (control.id == 'center'){
                 this.centerView();
+                this.deselectTool();
             }
         },
         mouseDown(event){
@@ -148,15 +150,24 @@ export default {
             }
 
             if (!keyDown){
-                this.$store.dispatch(
-                    this.stateModule + '/setSelectedNavTool',
-                    null
-                )
-                selectedTool = null;
+                
+                this.deselectTool();
+            }
+
+            if (selectedTool != null){
+                this.$emit('tool-selected');
             }
         },
         getNavState(){
             return {rawOffset, zoomFac};
+        },
+        deselectTool(){
+            selectedTool = null;
+            this.$store.dispatch(
+                this.stateModule + '/setSelectedNavTool',
+                null
+            )
+            this.$emit('tool-deselected');
         },
         setViewBounds(newBounds){
             if (newBounds.length < 4){

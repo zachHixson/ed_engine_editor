@@ -7,11 +7,14 @@
             id="navControlPanel"
             ref="navControlPanel"
             stateModule="ArtEditor"
-            @navChanged="navChanged"/>
+            @navChanged="navChanged"
+            @tool-selected="enableNav()"
+            @tool-deselected="disableNav()"/>
     </div>
 </template>
 
 <script>
+import {store} from 'vuex';
 import NavControlPanel from '@/components/common/NavControlPanel';
 import Art_Canvas from './Art_Canvas.js';
 
@@ -36,19 +39,48 @@ export default {
         this.update();
 
         canvas.addEventListener('mousedown', navControl.mouseDown);
+        canvas.addEventListener('mousedown', this.canvasEl.mouseDown.bind(this.canvasEl));
         canvas.addEventListener('mouseup', navControl.mouseUp);
+        canvas.addEventListener('mouseup', this.canvasEl.mouseUp.bind(this.canvasEl));
         canvas.addEventListener('mousemove', navControl.mouseMove);
         canvas.addEventListener('mousemove', this.canvasEl.mouseMove.bind(this.canvasEl));
 
         navControl.setViewBounds(this.canvasEl.getViewBounds());
         navControl.setContentsBounds(this.canvasEl.getContentsBounds());
         this.navChanged(navControl.getNavState());
+
+        this.setTool(this.selectedTool);
+        this.setColor(this.selectedColor);
+        this.setSize(this.selectedSize);
     },
     beforeDestroy(){
         window.cancelAnimationFrame(this.updateFrame);
+        this.canvasEl.beforeDestroy();
     },
     destroyed(){
         this.canvasEl = null;
+    },
+    computed:{
+        selectedColor(){
+            return this.$store.getters['ArtEditor/getSelectedColor'];
+        },
+        selectedSize(){
+            return this.$store.getters['ArtEditor/getSelectedSize'];
+        },
+        selectedTool(){
+            return this.$store.getters['ArtEditor/getSelectedTool'];
+        }
+    },
+    watch:{
+        selectedColor(newColor, oldColor){
+            this.setColor(newColor);
+        },
+        selectedSize(newSize, oldSize){
+            this.setSize(newSize);
+        },
+        selectedTool(newTool, oldTool){
+            this.setTool(newTool);
+        }
     },
     methods:{
         resize(event = null){
@@ -70,6 +102,21 @@ export default {
         },
         navChanged(navState){
             this.canvasEl.navChanged(navState);
+        },
+        setColor(newColor){
+            this.canvasEl.setToolColor(newColor);
+        },
+        setSize(newSize){
+            this.canvasEl.setToolSize(newSize);
+        },
+        setTool(newTool){
+            this.canvasEl.setTool(newTool);
+        },
+        enableNav(){
+            this.canvasEl.disableDrawing();
+        },
+        disableNav(){
+            this.canvasEl.enableDrawing();
         },
         update(){
             this.canvasEl.update();
