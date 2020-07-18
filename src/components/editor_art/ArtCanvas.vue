@@ -44,6 +44,7 @@ export default {
         canvas.addEventListener('mouseup', this.canvasEl.mouseUp.bind(this.canvasEl));
         canvas.addEventListener('mousemove', navControl.mouseMove);
         canvas.addEventListener('mousemove', this.canvasEl.mouseMove.bind(this.canvasEl));
+        canvas.addEventListener('wheel', navControl.scroll);
 
         navControl.setViewBounds(this.canvasEl.getViewBounds());
         navControl.setContentsBounds(this.canvasEl.getContentsBounds());

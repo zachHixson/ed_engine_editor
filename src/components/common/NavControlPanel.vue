@@ -17,10 +17,12 @@ import {store} from 'vuex';
 import NavControl from './NavControl';
 
 const ZOOM_SENSITIVITY = 200;
+const ZOOM_WHEEL_AMT = 0.2;
 
 let mouse = {
     position: new Victor(0, 0),
     down: false,
+    mmDown: false,
     downPosition: new Victor(0, 0),
     lastPosition: new Victor(0, 0),
     dragDistance: new Victor(0, 0)
@@ -85,11 +87,13 @@ export default {
         },
         mouseDown(event){
             mouse.down = true;
+            mouse.mmDown = event.which == 2 ? true : false;
             mouse.downPosition.x = event.offsetX;
             mouse.downPosition.y = event.offsetY;
         },
         mouseUp(event){
             mouse.down = false;
+            mouse.mmDown = false;
             this.$store.dispatch(
                 this.stateModule + '/setZoomFac',
                 zoomFac
@@ -112,12 +116,19 @@ export default {
                     case 'zoom':
                         this.zoom();
                         break;
-                    default:
-                        //
+                }
+
+                if (mouse.mmDown){
+                    this.pan();
                 }
 
                 this.$emit('navChanged', {rawOffset, zoomFac});
             }
+        },
+        scroll(event){
+            let zoomDir = event.deltaY < 0 ? 1 : -1;
+            zoomDir *= ZOOM_WHEEL_AMT;
+            this.setZoom(zoomFac + zoomDir);
         },
         registerKeys(event){
             keyMap[event.key] = true;
@@ -150,7 +161,6 @@ export default {
             }
 
             if (!keyDown){
-                
                 this.deselectTool();
             }
 
@@ -193,6 +203,7 @@ export default {
         },
         setZoom(newZoom){
             zoomFac = Math.min(Math.max(newZoom, 0.5), 2);
+            this.$emit('navChanged', {rawOffset, zoomFac});
         },
         pan(){
             let curMouse = new Victor(0,0).copy(mouse.position);
