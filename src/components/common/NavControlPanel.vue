@@ -197,7 +197,7 @@ export default {
                 this.contentsBounds[i] = newBounds[i];
             }
         },
-        setContainerDimensions({width, height}){
+        setContainerDimensions(width, height){
             this.containerDimensions.x = width;
             this.containerDimensions.y = height;
         },

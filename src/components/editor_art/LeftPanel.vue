@@ -88,22 +88,22 @@ export default {
                 },
                 {
                     tool: 'box',
-                    name: this.$t('art_editor.box_tool'),
+                    name: this.$t('art_editor.box_stroke_tool'),
                     icon: 'assets/editor_art/box'
                 },
                 {
                     tool: 'box_fill',
-                    name: this.$t('art_editor.box_tool'),
+                    name: this.$t('art_editor.box_fill_tool'),
                     icon: 'assets/editor_art/box_filled'
                 },
                 {
                     tool: 'ellipse',
-                    name: this.$t('art_editor.circle_tool'),
+                    name: this.$t('art_editor.circle_stroke_tool'),
                     icon: 'assets/editor_art/circle'
                 },
                 {
                     tool: 'ellipse_fill',
-                    name: this.$t('art_editor.circle_tool'),
+                    name: this.$t('art_editor.circle_fill_tool'),
                     icon: 'assets/editor_art/circle_filled'
                 },
                 {
@@ -150,7 +150,7 @@ export default {
             }
 
             collapsed = !collapsed;
-            this.$emit('changed');
+            this.$emit('resized');
         },
         colorChanged(color){
             this.selectColor(color.hexString);

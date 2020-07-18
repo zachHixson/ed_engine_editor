@@ -11,6 +11,7 @@ class Tool{
         this.isMouseDown = false;
         this.brushSize = 0;
         this.canDraw = true;
+        this.commitCallback;
     }
 
     mouseDown(event){
@@ -45,8 +46,8 @@ class Tool{
         this.pixelBuff = pixelBuff;
     }
 
-    setMouseCell(mouseCellVec){
-        this.mouseCell = mouseCellVec;
+    setCommitCallback(callback){
+        this.commitCallback = callback;
     }
 
     setToolColor(color){
@@ -75,6 +76,10 @@ class Tool{
         }
 
         this.clearPreviewBuff();
+
+        if (this.commitCallback != null){
+            this.commitCallback();
+        }
     }
 
     fillRect(x1, y1, x2, y2, color = this.color){

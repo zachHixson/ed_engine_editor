@@ -37,6 +37,8 @@ export default {
         this.canvasEl = new Art_Canvas(canvas);
         this.resize();
         this.canvasEl.setup();
+        this.canvasEl.setCommitCallback(this.onCommit.bind(this));
+        this.setSprite();
         
         canvas.addEventListener('mousedown', this.mouseDown);
         canvas.addEventListener('mouseup', this.mouseUp);
@@ -81,6 +83,12 @@ export default {
         }
     },
     methods:{
+        getSelectedSprite(){
+            return this.$store.getters['AssetBrowser/getSelectedAsset'];
+        },
+        getSelectedFrame(){
+            return this.getSelectedSprite().frames[this.$store.getters['ArtEditor/getSelectedFrame']];
+        },
         mouseDown(event){
             this.navControl.mouseDown(event);
             this.canvasEl.mouseDown(event);
@@ -99,18 +107,11 @@ export default {
         resize(event = null){
             let wrapper = this.$refs.artCanvas;
             let canvas = this.$refs.canvas;
-            let wrapperBounds = {width:0,height:0};
 
-            canvas.width = 1;
-            canvas.height = 1;
+            canvas.width = wrapper.clientWidth;
+            canvas.height = wrapper.clientHeight;
 
-            wrapperBounds.width = wrapper.clientWidth;
-            wrapperBounds.height = wrapper.clientHeight;
-
-            canvas.width = wrapperBounds.width;
-            canvas.height = wrapperBounds.height;
-
-            this.$refs.navControlPanel.setContainerDimensions(wrapperBounds);
+            this.$refs.navControlPanel.setContainerDimensions(wrapper.clientWidth, wrapper.clientHeight);
             this.canvasEl.resize();
         },
         navChanged(navState){
@@ -125,11 +126,17 @@ export default {
         setTool(newTool){
             this.canvasEl.setTool(newTool);
         },
+        setSprite(){
+            this.canvasEl.setSprite(this.getSelectedFrame());
+        },
         enableNav(){
             this.canvasEl.disableDrawing();
         },
         disableNav(){
             this.canvasEl.enableDrawing();
+        },
+        onCommit(){
+            this.$emit('spriteFrameChanged');
         }
     }
 }
@@ -145,9 +152,11 @@ export default {
         padding: none;
         background: blue;
         overflow: hidden;
+        max-width: 100vw;
     }
 
     #canvas{
+        position: absolute;
         box-sizing: border-box;
     }
 

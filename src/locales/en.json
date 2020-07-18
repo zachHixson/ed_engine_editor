@@ -18,8 +18,12 @@
         "brush_tool": "Brush",
         "bucket_tool": "Fill Bucket",
         "line_tool": "Draw Line",
-        "box_tool": "Draw Box",
-        "circle_tool": "Draw Circle",
-        "eraser_tool": "Eraser"
+        "box_stroke_tool": "Draw box outline",
+        "box_fill_tool": "Draw filled box",
+        "circle_stroke_tool": "Draw circle outline",
+        "circle_fill_tool": "Draw filled circle",
+        "eraser_tool": "Eraser",
+        "add_frame": "Add New Frame",
+        "delete_frame": "Delete Frame"
     }
 }

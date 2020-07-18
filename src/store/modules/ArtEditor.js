@@ -3,13 +3,15 @@ import Navigation from './Navigation';
 const state = {
     selectedColor : "#FFFFFF",
     selectedSize: 'small_brush',
-    selectedTool: 'brush'
+    selectedTool: 'brush',
+    selectedFrame: 0
 }
 
 const getters = {
     getSelectedColor: state => state.selectedColor,
     getSelectedSize: state => state.selectedSize,
-    getSelectedTool: state => state.selectedTool
+    getSelectedTool: state => state.selectedTool,
+    getSelectedFrame: state => state.selectedFrame
 };
 
 const actions = {
@@ -21,13 +23,17 @@ const actions = {
     },
     selectTool({commit}, newTool){
         commit('selectTool', newTool);
+    },
+    selectFrame({commit}, newFrame){
+        commit('selectFrame', newFrame);
     }
 };
 
 const mutations = {
     selectColor: (state, newColor) => state.selectedColor = newColor,
     selectSize: (state, newSize) => state.selectedSize = newSize,
-    selectTool: (state, newTool) => state.selectedTool = newTool
+    selectTool: (state, newTool) => state.selectedTool = newTool,
+    selectFrame: (state, newFrame) => state.selectedFrame = newFrame
 };
 
 const modules = {

@@ -1,5 +1,5 @@
 <template>
-    <div class="brush" :class="{brushSelected : isSelected}" @click="click">
+    <div class="brush" :class="{brushSelected : isSelected}" @click="click" :title="name">
         <img class="icon" ref="iconImg" />
         <div class="altText" ref="altText">
             {{name}}

@@ -1,5 +1,7 @@
+import Sprite from './data_classes/Sprite';
+
 const state = {
-    sprites: []
+    sprites: [new Sprite()]
 };
 
 const getters = {
@@ -32,13 +34,11 @@ const getters = {
 
         return tempData;
     },
-    getEmptySprite: () => {return new Array(16 * 16).fill('')}
+    getEmptySprite: () => new Array(16 * 16).fill('')
 };
 
 const actions = {
-    test: ({ commit }) => {
-        console.log("works");
-    }
+    
 };
 
 const mutations = {

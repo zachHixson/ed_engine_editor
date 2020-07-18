@@ -1,4 +1,3 @@
-import store from '@/store/index';
 import Victor from 'victor';
 import Util_2D from '@/common/Util_2D';
 import Brush from './tools/Brush';
@@ -19,8 +18,8 @@ class Art_Canvas{
         this.pixelBuff = document.createElement("canvas");
         this.gridBuff = document.createElement("canvas");
         this.previewBuff = document.createElement("canvas");
-        this.spriteData = store.getters['GameData/getEmptySprite'];
-        this.previewData = new Array(this.spriteData.length).fill('');
+        this.spriteData;
+        this.previewData;
         this.offset = new Victor(0, 0);
         this.zoomFac = 1;
         this.mouse = {
@@ -30,6 +29,7 @@ class Art_Canvas{
         this.toolColor = null;
         this.toolSize = null;
         this.tool = null;
+        this.commitCallback;
     }
 
     setup(){
@@ -179,7 +179,32 @@ class Art_Canvas{
         this.tool.setMouseCell(this.mouse.cell);
         this.tool.setToolColor(this.toolColor);
         this.tool.setToolSize(this.toolSize);
+        this.tool.setCommitCallback(this.commitStroke.bind(this));
         this.drawPreviewBuffer();
+    }
+
+    setSprite(newSprite){
+        this.spriteData = newSprite;
+
+        if (this.previewData == null){
+            this.previewData = new Array(this.spriteData.length).fill('');
+        }
+        else{
+            this.previewData.fill('');
+        }
+
+        if (this.tool != null){
+            this.tool.beforeDestroy();
+            this.tool.setPixelBuff(newSprite);
+        }
+
+        this.drawSpriteData();
+        this.drawPreviewBuffer();
+        this.composite();
+    }
+
+    setCommitCallback(callback){
+        this.commitCallback = callback;
     }
 
     mouseDown(event){
@@ -202,6 +227,12 @@ class Art_Canvas{
         this.drawSpriteData();
         this.drawPreviewBuffer();
         this.composite();
+    }
+
+    commitStroke(){
+        if (this.commitCallback != null){
+            this.commitCallback();
+        }
     }
 
     beforeDestroy(){
@@ -250,11 +281,17 @@ class Art_Canvas{
             CANVAS_WIDTH * this.zoomFac
         );
         ctx.restore();
+
+        //remove after debugging
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, 10, 10);
+        ctx.fillRect(canvas.width - 10, canvas.height - 10, 10, 10);
     }
 
     drawPixelData(ctx, pixelData){
-        const PIXEL_WIDTH = Math.round(CANVAS_WIDTH / GRID_DIV);
+        const SPRITE_DIM = this.getSpriteDimensions();
         const HALF_CANVAS = CANVAS_WIDTH / 2;
+        const PIXEL_WIDTH = Math.round(CANVAS_WIDTH / SPRITE_DIM);
 
         ctx.clearRect(0, 0, this.pixelBuff.width, this.pixelBuff.height);
 
@@ -265,16 +302,16 @@ class Art_Canvas{
         );
         ctx.scale(this.zoomFac, this.zoomFac);
 
-        for (let x = 0; x < GRID_DIV; x++){
-            for (let y = 0; y < GRID_DIV; y++){
+        for (let x = 0; x < SPRITE_DIM; x++){
+            for (let y = 0; y < SPRITE_DIM; y++){
+                let curPixel = pixelData[Util_2D.get2DIdx(x, y, GRID_DIV)];
+
                 if (pixelData[Util_2D.get2DIdx(x, y, GRID_DIV)] == null){
                     console.error(pixelData[Util_2D.get2DIdx(x, y, GRID_DIV)]);
                     console.error(pixelData);
                     console.error(Util_2D.get2DIdx(x, y, GRID_DIV));
                     console.error(x + " | " + y);
                 }
-
-                let curPixel = pixelData[Util_2D.get2DIdx(x, y, GRID_DIV)];
 
                 if (curPixel.length > 0){
                     ctx.fillStyle = curPixel;
@@ -330,6 +367,13 @@ class Art_Canvas{
 
     drawPreviewBuffer(ctx = this.previewBuff.getContext('2d')){
         this.drawPixelData(ctx, this.previewData);
+    }
+
+    getSpriteDimensions(){
+        if (this.spriteData == null){
+            return 0;
+        }
+        return Math.ceil(Math.sqrt(this.spriteData.length));
     }
 
     getViewBounds(){
