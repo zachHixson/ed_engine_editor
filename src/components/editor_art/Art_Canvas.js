@@ -34,15 +34,17 @@ class Art_Canvas{
 
     setup(){
         this.resize();
-        this.update();
+        this.fullRedraw();
     }
 
-    update(){
+    fullRedraw(){
         let ctx = this.canvas.getContext("2d");
 
+        this.drawCheckerBG();
         this.drawBGStencil();
         this.drawSpriteData();
         this.drawGrid();
+        this.drawPreviewBuffer();
 
         this.composite(ctx);
     }
@@ -67,7 +69,7 @@ class Art_Canvas{
         this.previewBuff.width = width;
         this.previewBuff.height = height;
 
-        this.drawCheckerBG();
+        this.fullRedraw();
     }
 
     updateMouse(event){
@@ -98,6 +100,8 @@ class Art_Canvas{
         this.drawSpriteData();
         this.drawGrid();
         this.drawPreviewBuffer();
+        
+        this.composite();
     }
 
     disableDrawing(){
@@ -180,18 +184,24 @@ class Art_Canvas{
 
     mouseDown(event){
         this.tool.mouseDown(event);
+        this.drawSpriteData();
         this.drawPreviewBuffer();
+        this.composite();
     }
 
     mouseUp(event){
         this.tool.mouseUp(event);
+        this.drawSpriteData();
         this.drawPreviewBuffer();
+        this.composite();
     }
 
     mouseMove(event){
         this.updateMouse(event);
         this.tool.mouseMove(event);
+        this.drawSpriteData();
         this.drawPreviewBuffer();
+        this.composite();
     }
 
     beforeDestroy(){
