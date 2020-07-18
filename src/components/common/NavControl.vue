@@ -2,6 +2,7 @@
     <div
         class="navControl"
         ref="navControl"
+        v-bind:title="control.altText"
         @click="onClick"
         :class="{controlSelected : isSelected}">
         <img class="icon" ref="iconImg" />
