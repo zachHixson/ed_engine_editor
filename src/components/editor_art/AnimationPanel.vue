@@ -3,8 +3,8 @@
         <button ref="collapseBtn" class="resizeBtn" @click="toggleSize()">&gt;</button>
         <button ref="expandBtn" class="resizeBtn" @click="toggleSize()">&lt;</button>
         <div ref="contents" class="panelContents">
-            <div style="background: #AA0000; width: 100%; height: 100px">
-                AnimPlayer palceholder
+            <div class="animPlayerWrapper">
+                <AnimationPlayer ref="animPlayer" />
             </div>
             <div class="scrollWrapper">
                 <div class="frames">
@@ -31,11 +31,13 @@
 <script>
 import {store} from 'vuex';
 import AnimFrame from './AnimFrame';
+import AnimationPlayer from './AnimationPlayer';
 
 export default {
     name: 'AnimationPanel',
     components: {
-        AnimFrame
+        AnimFrame,
+        AnimationPlayer
     },
     data(){
         return {
@@ -74,6 +76,8 @@ export default {
             this.$emit('resized');
         },
         updateFramePreviews(forceUpdate = false){
+            this.$refs.animPlayer.frameDataChanged();
+
             for (let i = 0; i < this.$refs.animFrame.length; i++){
                 this.$refs.animFrame[i].index = i;
                 this.$refs.animFrame[i].updateCanvas(forceUpdate);
@@ -103,6 +107,13 @@ export default {
         display: flex;
         flex-direction: column;
         width: 200px;
+    }
+
+    .animPlayerWrapper{
+        display: flex;
+        justify-content: center;
+        border-bottom: 1px solid black;
+        padding: 10px;
     }
 
     .scrollWrapper{

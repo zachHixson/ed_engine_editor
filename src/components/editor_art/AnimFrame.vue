@@ -81,11 +81,10 @@ export default {
             let frame = this.getFrame();
 
             if (frame != null){
-                const SPRITE_DIM = Util_2D.getSpriteDimensions(frame);
-
                 let canvas = this.$refs.canvas;
                 let ctx = canvas.getContext('2d');
-                let scaleFac = (canvas.width / SPRITE_DIM) / Math.round(canvas.width / SPRITE_DIM);
+                let pixelSize = canvas.width / this.sprite.dimensions;
+                let scaleFac = (pixelSize) / Math.round(pixelSize);
 
                 Draw_2D.drawCheckerBG(canvas, 4, '#AAA', '#CCC');
 
