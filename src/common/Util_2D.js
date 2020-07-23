@@ -15,6 +15,10 @@ class Util_2D{
     static clamp(val, min, max){
         return Math.min(Math.max(val, min), max);
     }
+
+    static getSpriteDimensions(spriteArr){
+        return Math.round(Math.sqrt(spriteArr.length));
+    }
 }
 
 export default Util_2D;

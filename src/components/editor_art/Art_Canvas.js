@@ -1,5 +1,6 @@
 import Victor from 'victor';
 import Util_2D from '@/common/Util_2D';
+import Draw_2D from '@/common/Draw_2D';
 import Brush from './tools/Brush';
 import Bucket from './tools/Bucket';
 import Line_Brush from './tools/Line_Brush';
@@ -239,30 +240,8 @@ class Art_Canvas{
         this.tool.beforeDestroy();
     }
 
-    drawCheckerBG(ctx = this.checkerBGBuff.getContext('2d')){
-        const CHECKER_SIZE = 10;
-        const LIGHT = "#AAA";
-        const DARK = "#CCC";
-
-        let xCount = Math.ceil(this.checkerBGBuff.width / CHECKER_SIZE);
-        let yCount = Math.ceil(this.checkerBGBuff.height / CHECKER_SIZE);
-
-        if (xCount % 2 == 0){
-            xCount += 1;
-        }
-
-        for (let x = 0; x < xCount; x++){
-            for (let y = 0; y < yCount; y++){
-                let curIdx = Util_2D.get2DIdx(x, y, xCount);
-                ctx.fillStyle = (curIdx % 2) ? LIGHT : DARK;
-                ctx.fillRect(
-                    x * CHECKER_SIZE,
-                    y * CHECKER_SIZE,
-                    CHECKER_SIZE,
-                    CHECKER_SIZE
-                );
-            }
-        }
+    drawCheckerBG(canvas = this.checkerBGBuff){
+        Draw_2D.drawCheckerBG(canvas, 10, "#AAA", "#CCC");
     }
 
     drawBGStencil(ctx = this.checkerStencilBuff.getContext('2d')){
@@ -288,48 +267,27 @@ class Art_Canvas{
         ctx.fillRect(canvas.width - 10, canvas.height - 10, 10, 10);
     }
 
-    drawPixelData(ctx, pixelData){
-        const SPRITE_DIM = this.getSpriteDimensions();
-        const HALF_CANVAS = CANVAS_WIDTH / 2;
-        const PIXEL_WIDTH = Math.round(CANVAS_WIDTH / SPRITE_DIM);
+    drawPixelData(canvas, pixelData){
+        if (pixelData != null){
+            let ctx = canvas.getContext('2d');
 
-        ctx.clearRect(0, 0, this.pixelBuff.width, this.pixelBuff.height);
+            ctx.clearRect(0, 0, this.pixelBuff.width, this.pixelBuff.height);
 
-        ctx.save();
-        ctx.translate(
-            (this.canvas.width / 2) + (this.offset.x * this.zoomFac),
-            (this.canvas.height / 2) + (this.offset.y * this.zoomFac)
-        );
-        ctx.scale(this.zoomFac, this.zoomFac);
+            ctx.save();
+            ctx.translate(
+                (this.canvas.width / 2) + (this.offset.x * this.zoomFac),
+                (this.canvas.height / 2) + (this.offset.y * this.zoomFac)
+            );
+            ctx.scale(this.zoomFac, this.zoomFac);
 
-        for (let x = 0; x < SPRITE_DIM; x++){
-            for (let y = 0; y < SPRITE_DIM; y++){
-                let curPixel = pixelData[Util_2D.get2DIdx(x, y, GRID_DIV)];
+            Draw_2D.drawPixelData(canvas, CANVAS_WIDTH, pixelData)
 
-                if (pixelData[Util_2D.get2DIdx(x, y, GRID_DIV)] == null){
-                    console.error(pixelData[Util_2D.get2DIdx(x, y, GRID_DIV)]);
-                    console.error(pixelData);
-                    console.error(Util_2D.get2DIdx(x, y, GRID_DIV));
-                    console.error(x + " | " + y);
-                }
-
-                if (curPixel.length > 0){
-                    ctx.fillStyle = curPixel;
-                    ctx.fillRect(
-                        (x * PIXEL_WIDTH) - HALF_CANVAS,
-                        (y * PIXEL_WIDTH) - HALF_CANVAS,
-                        PIXEL_WIDTH,
-                        PIXEL_WIDTH
-                    );
-                }
-            }
+            ctx.restore();
         }
-
-        ctx.restore();
     }
 
-    drawSpriteData(ctx = this.pixelBuff.getContext("2d")){
-        this.drawPixelData(ctx, this.spriteData);
+    drawSpriteData(canvas = this.pixelBuff){
+        this.drawPixelData(canvas, this.spriteData);
     }
  
     drawGrid(ctx = this.gridBuff.getContext("2d")){
@@ -365,8 +323,8 @@ class Art_Canvas{
         ctx.stroke();
     }
 
-    drawPreviewBuffer(ctx = this.previewBuff.getContext('2d')){
-        this.drawPixelData(ctx, this.previewData);
+    drawPreviewBuffer(canvas = this.previewBuff){
+        this.drawPixelData(canvas, this.previewData);
     }
 
     getSpriteDimensions(){

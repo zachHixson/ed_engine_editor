@@ -40,6 +40,7 @@
 <script>
 import {state} from 'vuex';
 import Util_2D from '@/common/Util_2D';
+import Draw_2D from '@/common/Draw_2D';
 
 export default {
     name: 'AnimFrame',
@@ -80,51 +81,19 @@ export default {
             let frame = this.getFrame();
 
             if (frame != null){
-                const FRAME_DIM = Math.round(Math.sqrt(frame.length));
-                const CHECKER_SIZE = 4;
-                const CHECK_LIGHT = '#AAA';
-                const CHECK_DARK = '#CCC';
+                const SPRITE_DIM = Util_2D.getSpriteDimensions(frame);
 
                 let canvas = this.$refs.canvas;
                 let ctx = canvas.getContext('2d');
-                let xCount = Math.ceil(canvas.width / CHECKER_SIZE);
-                let yCount = Math.ceil(canvas.height / CHECKER_SIZE);
-                let pixelSize = canvas.width / FRAME_DIM;
+                let scaleFac = (canvas.width / SPRITE_DIM) / Math.round(canvas.width / SPRITE_DIM);
 
-                //draw checker BG
-                if (xCount % 2 == 0){
-                    xCount += 1;
-                }
+                Draw_2D.drawCheckerBG(canvas, 4, '#AAA', '#CCC');
 
-                for (let x = 0; x < xCount; x++){
-                    for (let y = 0; y < yCount; y++){
-                        let curIdx = Util_2D.get2DIdx(x, y, xCount);
-                        ctx.fillStyle = (curIdx % 2) ? CHECK_LIGHT : CHECK_DARK;
-                        ctx.fillRect(
-                            x * CHECKER_SIZE,
-                            y * CHECKER_SIZE,
-                            CHECKER_SIZE,
-                            CHECKER_SIZE
-                        );
-                    }
-                }
-
-                //draw sprite data
-                for (let x = 0; x < FRAME_DIM; x++){
-                    for (let y = 0; y < FRAME_DIM; y++){
-                        let curPixel = frame[Util_2D.get2DIdx(x, y, FRAME_DIM)];
-
-                        if (curPixel.length > 0){
-                            ctx.fillStyle = curPixel;
-                            ctx.fillRect(
-                                pixelSize * x,
-                                pixelSize * y,
-                                pixelSize + 1,
-                                pixelSize + 1
-                            );
-                        }
-                    }
-                }
+                ctx.save();
+                ctx.scale(scaleFac, scaleFac);
+                ctx.translate(canvas.width / 2, canvas.height / 2);
+                Draw_2D.drawPixelData(canvas, canvas.width, frame);
+                ctx.restore();
             }
         },
         updateCanvas(forceUpdate = false){
