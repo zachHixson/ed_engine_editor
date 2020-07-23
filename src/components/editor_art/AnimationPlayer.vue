@@ -5,10 +5,11 @@
         </canvas>
         <div class="buttons">
             <button @click="playAnimation()">
-                <img class="btnImg" src="@/assets/editor_art/play.svg" />
+                <img class="btnImg" src="@/assets/editor_art/play.svg" v-show="!isPlaying" />
+                <img class="btnImg" src="@/assets/editor_art/pause.svg" v-show="isPlaying" />
             </button>
-            <button @click="pauseAnimation()">
-                <img class="btnImg" src="@/assets/editor_art/pause.svg" />
+            <button @click="stopAnimation()">
+                <img class="btnImg" src="@/assets/editor_art/box_filled.svg" />
             </button>
         </div>
     </div>
@@ -27,6 +28,11 @@ export default {
             checkerBGBuff: document.createElement('canvas'),
             sprite: null,
             animationLoop: null
+        }
+    },
+    computed: {
+        isPlaying(){
+            return this.animationLoop != null;
         }
     },
     mounted(){
@@ -72,10 +78,18 @@ export default {
                     this.advanceFrame();
                 }, intervalTime);
             }
+            else{
+                this.pauseAnimation();
+            }
         },
         pauseAnimation(){
             clearInterval(this.animationLoop);
             this.animationLoop = null;
+        },
+        stopAnimation(){
+            this.pauseAnimation();
+            this.curFrameIdx = 0;
+            this.drawFrame();
         },
         frameDataChanged(){
             let selectedFrame = this.$store.getters['ArtEditor/getSelectedFrame'];
