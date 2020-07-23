@@ -61,7 +61,6 @@ export default {
 
                 ctx.save();
                 ctx.scale(scaleFac, scaleFac);
-                ctx.translate(this.canvas.width / 2, this.canvas.height / 2);
                 Draw_2D.drawPixelData(this.canvas, this.canvas.width, frame);
                 ctx.restore();
             }

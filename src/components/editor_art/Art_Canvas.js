@@ -269,15 +269,18 @@ class Art_Canvas{
 
     drawPixelData(canvas, pixelData){
         if (pixelData != null){
+            const HALF_CANVAS = CANVAS_WIDTH / 2;
+
             let ctx = canvas.getContext('2d');
 
             ctx.clearRect(0, 0, this.pixelBuff.width, this.pixelBuff.height);
 
             ctx.save();
             ctx.translate(
-                (this.canvas.width / 2) + (this.offset.x * this.zoomFac),
+                (this.canvas.width / 2)  + (this.offset.x * this.zoomFac),
                 (this.canvas.height / 2) + (this.offset.y * this.zoomFac)
             );
+            ctx.translate(-HALF_CANVAS * this.zoomFac, -HALF_CANVAS * this.zoomFac);
             ctx.scale(this.zoomFac, this.zoomFac);
 
             Draw_2D.drawPixelData(canvas, CANVAS_WIDTH, pixelData)
