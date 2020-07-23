@@ -47,12 +47,20 @@ export default {
     props: ['sprite', 'index'],
     data(){
         return {
-            hover: false
+            hover: false,
+            canvas: null,
+            checkerBGBuff: document.createElement('canvas')
         }
     },
     mounted(){
-        this.$refs.canvas.width = this.$refs.wrapper.clientWidth;
-        this.$refs.canvas.height = this.$refs.wrapper.clientWidth;
+        this.canvas = this.$refs.canvas;
+
+        this.canvas.width = this.$refs.wrapper.clientWidth;
+        this.canvas.height = this.$refs.wrapper.clientWidth;
+        this.checkerBGBuff.width = this.canvas.width;
+        this.checkerBGBuff.height = this.canvas.height;
+
+        Draw_2D.drawCheckerBG(this.checkerBGBuff, 4, '#AAA', '#CCC');
 
         this.drawCanvas();
     },
@@ -79,19 +87,18 @@ export default {
         },
         drawCanvas(){
             let frame = this.getFrame();
+            let ctx = this.canvas.getContext('2d');
+
+            ctx.drawImage(this.checkerBGBuff, 0, 0, this.canvas.width, this.canvas.height);
 
             if (frame != null){
-                let canvas = this.$refs.canvas;
-                let ctx = canvas.getContext('2d');
-                let pixelSize = canvas.width / this.sprite.dimensions;
+                let pixelSize = this.canvas.width / this.sprite.dimensions;
                 let scaleFac = (pixelSize) / Math.round(pixelSize);
-
-                Draw_2D.drawCheckerBG(canvas, 4, '#AAA', '#CCC');
 
                 ctx.save();
                 ctx.scale(scaleFac, scaleFac);
-                ctx.translate(canvas.width / 2, canvas.height / 2);
-                Draw_2D.drawPixelData(canvas, canvas.width, frame);
+                ctx.translate(this.canvas.width / 2, this.canvas.height / 2);
+                Draw_2D.drawPixelData(this.canvas, this.canvas.width, frame);
                 ctx.restore();
             }
         },

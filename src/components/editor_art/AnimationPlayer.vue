@@ -24,7 +24,7 @@ export default {
         return {
             curFrameIdx: 0,
             canvas: null,
-            checkerBGBuff: document.createElement("canvas"),
+            checkerBGBuff: document.createElement('canvas'),
             sprite: null,
             animationLoop: null
         }
@@ -46,7 +46,6 @@ export default {
         drawFrame(){
             let ctx = this.canvas.getContext('2d');
 
-            ctx.clearRect(0, 0, this.checkerBGBuff.width, this.checkerBGBuff.height);
             ctx.drawImage(this.checkerBGBuff, 0, 0, this.canvas.width, this.canvas.height);
 
             if (this.sprite.frames[this.curFrameIdx] != null){
