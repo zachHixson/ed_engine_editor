@@ -20,7 +20,10 @@ export default {
         AnimationPanel
     },
     mounted(){
-        window.addEventListener('resize', ()=>{this.resize()});
+        window.addEventListener('resize', this.resize);
+    },
+    beforeDestroy(){
+        window.removeEventListener('resize', this.resize);
     },
     methods:{
         resize() {
