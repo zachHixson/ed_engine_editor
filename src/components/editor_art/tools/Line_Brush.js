@@ -6,8 +6,6 @@ class Line_Brush extends Tool{
     constructor(){
         super();
         this.startPos = new Victor(0, 0);
-        this.slope;
-        this.isVertical;
     }
 
     mouseDown(event){
@@ -29,35 +27,42 @@ class Line_Brush extends Tool{
         ){
             let dx = (this.mouseCell.x - this.startPos.x);
             let dy = (this.mouseCell.y - this.startPos.y);
-            this.slope = (dx != 0) ? (dy / dx) : null;
-            this.isVertical = (Math.abs(this.slope) >= 1) || (this.slope == null);
+            let slope = (dx != 0) ? (dy / dx) : null;
+            let isVertical = (Math.abs(slope) >= 1) || (slope == null);
+            let invSlope = (slope != null) ? (1 / slope) : 0;
 
-            if (this.isVertical){
-                this.drawLine(this.startPos.y, this.mouseCell.y, this.startPos.x, this.mouseCell.x);
+            if (isVertical){
+                this.drawLine(
+                    this.startPos.y, this.mouseCell.y,
+                    this.startPos.x, this.mouseCell.x,
+                    slope,
+                    (offset) => {return offset += invSlope},
+                    (offset, p) => {return {x:offset, y:p}}
+                );
             }
             else{
-                this.drawLine(this.startPos.x, this.mouseCell.x, this.startPos.y, this.mouseCell.y);
+                this.drawLine(
+                    this.startPos.x, this.mouseCell.x,
+                    this.startPos.y, this.mouseCell.y,
+                    slope,
+                    (offset) => {return offset += slope},
+                    (offset, p) => {return {x:p, y:offset}}
+                );
             }
         }
     }
 
-    drawLine(a, b, offset1, offset2){
+    drawLine(a, b, offset1, offset2, slope, offsetFunc, pOrderFunc){
         let start = Math.min(a, b);
         let end = Math.max(a, b);
-        let offset = (this.slope >= 0) ? Math.min(offset1, offset2) : Math.max(offset1, offset2);
-        let invSlope = (this.slope != null) ? (1 / this.slope) : 0;
+        let offset = (slope >= 0) ? Math.min(offset1, offset2) : Math.max(offset1, offset2);
 
         for (let p = start; p <= end; p++){
             let intOffset = Math.round(offset);
+            let pOrder = pOrderFunc(intOffset, p);
 
-            if (this.isVertical){
-                this.drawPixel(intOffset, p);
-                offset += invSlope;
-            }
-            else{
-                this.drawPixel(p, intOffset);
-                offset += this.slope;
-            }
+            this.drawPixel(pOrder.x, pOrder.y);
+            offset = offsetFunc(offset);
         }
     }
 

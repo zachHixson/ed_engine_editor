@@ -1,13 +1,13 @@
 <template>
     <div class="artMain">
-        <LeftPanel class="leftPanel" @resized="resize"/>
-        <ArtCanvas class="artCanvas" ref="artCanvas" @spriteFrameChanged="spriteChanged()"/>
+        <LeftPanel class="leftPanel" @resized="resize" @tool-selected="toolSelected"/>
+        <ArtCanvas class="artCanvas" ref="artCanvas" @spriteFrameChanged="spriteChanged()" @nav-selected="navSelected()"/>
         <AnimationPanel class="animPanel" ref="animPanel" @resized="resize" @frameChanged="frameChanged()"/>
     </div>
 </template>
 
 <script>
-import {store} from 'vuex';
+import {store, mapActions} from 'vuex';
 import LeftPanel from './LeftPanel';
 import ArtCanvas from './ArtCanvas';
 import AnimationPanel from './AnimationPanel';
@@ -26,6 +26,10 @@ export default {
         window.removeEventListener('resize', this.resize);
     },
     methods:{
+        ...mapActions({
+            selectTool: 'ArtEditor/selectTool',
+            setNavTool: 'ArtEditor/setSelectedNavTool'
+        }),
         resize() {
             this.$refs.artCanvas.resize();
         },
@@ -34,6 +38,12 @@ export default {
         },
         frameChanged(){
             this.$refs.artCanvas.setSprite();
+        },
+        navSelected(){
+            this.selectTool(null);
+        },
+        toolSelected(){
+            this.setNavTool(null);
         }
     }
 }

@@ -7,6 +7,7 @@
             id="navControlPanel"
             ref="navControlPanel"
             stateModule="ArtEditor"
+            :maxZoom="maxZoom"
             @navChanged="navChanged"
             @tool-selected="enableNav()"
             @tool-deselected="disableNav()"/>
@@ -16,7 +17,7 @@
 <script>
 import {store} from 'vuex';
 import NavControlPanel from '@/components/common/NavControlPanel';
-import Art_Canvas from './Art_Canvas.js';
+import Art_Canvas_Renderer from './Art_Canvas_Renderer.js';
 
 export default {
     name: "ArtCanvas",
@@ -24,7 +25,8 @@ export default {
         return {
             canvasEl: null,
             navControl: null,
-            updateFrame : null
+            updateFrame: null,
+            maxZoom: 2
         }
     },
     components: {
@@ -34,16 +36,14 @@ export default {
         let canvas = this.$refs.canvas;
         
         this.navControl = this.$refs.navControlPanel;
-        this.canvasEl = new Art_Canvas(canvas);
-        this.resize();
-        this.canvasEl.setup();
+        this.canvasEl = new Art_Canvas_Renderer(canvas, this.getSelectedFrame());
         this.canvasEl.setCommitCallback(this.onCommit.bind(this));
-        this.setSprite();
         
         canvas.addEventListener('mousedown', this.mouseDown);
         canvas.addEventListener('mouseup', this.mouseUp);
         canvas.addEventListener('mousemove', this.mouseMove);
         canvas.addEventListener('wheel', this.wheel);
+        canvas.addEventListener('mouseleave', this.navControl.mouseLeave);
 
         this.navControl.setViewBounds(this.canvasEl.getViewBounds());
         this.navControl.setContentsBounds(this.canvasEl.getContentsBounds());
@@ -55,6 +55,8 @@ export default {
     },
     beforeDestroy(){
         window.cancelAnimationFrame(this.updateFrame);
+        this.$store.dispatch('ArtEditor/setZoomFac', this.canvasEl.zoomFac);
+        this.$store.dispatch('ArtEditor/setOffset', this.canvasEl.offset);
         this.canvasEl.beforeDestroy();
     },
     destroyed(){
@@ -91,15 +93,24 @@ export default {
         },
         mouseDown(event){
             this.navControl.mouseDown(event);
-            this.canvasEl.mouseDown(event);
+
+            if (this.navControl.hotkeyTool == null){
+                this.canvasEl.mouseDown(event);
+            }
         },
         mouseUp(event){
+            if (this.navControl.hotkeyTool == null){
+                this.canvasEl.mouseUp(event);
+            }
+
             this.navControl.mouseUp(event);
-            this.canvasEl.mouseUp(event);
         },
         mouseMove(event){
             this.navControl.mouseMove(event);
-            this.canvasEl.mouseMove(event);
+
+            if (this.navControl.hotkeyTool == null){
+                this.canvasEl.mouseMove(event);
+            }
         },
         wheel(event){
             this.navControl.scroll(event);
@@ -113,6 +124,7 @@ export default {
 
             this.$refs.navControlPanel.setContainerDimensions(wrapper.clientWidth, wrapper.clientHeight);
             this.canvasEl.resize();
+            this.maxZoom = this.canvasEl.getZoomBounds().max;
         },
         navChanged(navState){
             this.canvasEl.navChanged(navState);
@@ -130,9 +142,11 @@ export default {
             this.canvasEl.setSprite(this.getSelectedFrame());
         },
         enableNav(){
+            this.$emit('nav-selected');
             this.canvasEl.disableDrawing();
         },
         disableNav(){
+            this.$emit('nav-deselected');
             this.canvasEl.enableDrawing();
         },
         onCommit(){

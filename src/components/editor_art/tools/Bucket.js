@@ -33,10 +33,7 @@ class Bucket extends Tool{
         let spriteColor = this.pixelBuff[xyIdx];
         let previewColor = this.previewBuff[xyIdx];
 
-        if (spriteColor != this.sampledColor || previewColor == this.color){
-            return
-        }
-        else{
+        if (spriteColor == this.sampledColor && previewColor != this.color){
             this.previewBuff[xyIdx] = this.color;
 
             this.fill(x - 1, y);

@@ -2,8 +2,8 @@ import Navigation from './Navigation';
 
 const state = {
     selectedColor : "#FFFFFF",
-    selectedSize: 'small_brush',
-    selectedTool: 'brush',
+    selectedSize: 0,
+    selectedTool: 0,
     selectedFrame: 0
 }
 
