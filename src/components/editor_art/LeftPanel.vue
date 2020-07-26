@@ -116,6 +116,7 @@ export default {
     },
     mounted(){
         colorPicker = new iro.ColorPicker('#picker', {
+            color: this.selectedColor,
             width: 200
         });
         expandWrapper.style.display = "none";
@@ -128,6 +129,9 @@ export default {
         },
         selectedTool(){
             return this.$store.getters['ArtEditor/getSelectedTool'];
+        },
+        selectedColor(){
+            return this.$store.getters['ArtEditor/getSelectedColor']
         }
     },
     methods:{
