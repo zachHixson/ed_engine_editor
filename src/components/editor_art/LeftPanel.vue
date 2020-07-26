@@ -43,9 +43,6 @@ import {store, mapActions, mapGetters} from 'vuex';
 import iro from '@jaames/iro';
 import Brush from './Brush';
 
-let collapsed = false;
-let colorPicker;
-
 export default {    
     name : "LeftPanel",
     components: {
@@ -53,6 +50,8 @@ export default {
     },
     data() {
         return {
+            collapsed: false,
+            colorPicker: null,
             brushSizes: [
                 {
                     tool: 'small_brush',
@@ -110,18 +109,23 @@ export default {
                     tool: 'eraser',
                     name: this.$t('art_editor.eraser_tool'),
                     icon: 'assets/editor_art/eraser'
+                },
+                {
+                    tool: 'eye_dropper',
+                    name: this.$t('art_editor.eye_dropper_tool'),
+                    icon: 'assets/editor_art/eye_dropper'
                 }
             ]
         }
     },
     mounted(){
-        colorPicker = new iro.ColorPicker('#picker', {
+        this.colorPicker = new iro.ColorPicker('#picker', {
             color: this.selectedColor,
             width: 200
         });
         expandWrapper.style.display = "none";
 
-        colorPicker.on("color:change", this.colorChanged);
+        this.colorPicker.on("color:change", this.colorChanged);
     },
     computed: {
         selectedSize(){
@@ -131,7 +135,12 @@ export default {
             return this.$store.getters['ArtEditor/getSelectedTool'];
         },
         selectedColor(){
-            return this.$store.getters['ArtEditor/getSelectedColor']
+            return this.$store.getters['ArtEditor/getSelectedColor'];
+        }
+    },
+    watch: {
+        selectedColor(newCol, oldCol){
+            this.colorPicker.color.hexString = newCol;
         }
     },
     methods:{
@@ -144,7 +153,7 @@ export default {
             let leftPanel = this.$refs.leftPanelWrapper;
             let expandWrapper = this.$refs.expandWrapper;
 
-            if (collapsed){
+            if (this.collapsed){
                 leftPanel.style.display = "flex";
                 expandWrapper.style.display = "none";
             }
@@ -153,7 +162,7 @@ export default {
                 expandWrapper.style.display = "flex";
             }
 
-            collapsed = !collapsed;
+            this.collapsed = !this.collapsed;
             this.$emit('resized');
         },
         colorChanged(color){

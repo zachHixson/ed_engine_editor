@@ -23,6 +23,7 @@
         "circle_stroke_tool": "Draw circle outline",
         "circle_fill_tool": "Draw filled circle",
         "eraser_tool": "Eraser",
+        "eye_dropper_tool": "Eye Dropper",
         "add_frame": "Add New Frame",
         "delete_frame": "Delete Frame"
     }

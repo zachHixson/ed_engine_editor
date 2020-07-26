@@ -7,6 +7,7 @@ import Line_Brush from './tools/Line_Brush';
 import Box_Brush from './tools/Box_Brush';
 import Ellipse_Brush from './tools/Ellipse_Brush';
 import Eraser from './tools/Eraser';
+import Eye_Dropper from './tools/Eye_Dropper';
 
 const GRID_DIV = 16;
 const CANVAS_WIDTH = GRID_DIV * 20;
@@ -168,6 +169,9 @@ class Art_Canvas{
                 break;
             case 'eraser':
                 this.tool = new Eraser();
+                break;
+            case 'eye_dropper':
+                this.tool = new Eye_Dropper();
                 break;
             default:
                 this.tool = new Brush();
