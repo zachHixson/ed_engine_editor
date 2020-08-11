@@ -7,9 +7,13 @@
         "debug" : "Debug"
     },
     "navigation":{
-        "pan_tool": "Pan Tool",
-        "zoom_tool": "Zoom tool",
-        "center_view": "Center View"
+        "pan_tool": "Pan Tool (Space + Drag)",
+        "zoom_tool": "Zoom tool (CTRL + Drag)",
+        "center_view": "Center View (CTRL + F)"
+    },
+    "undo":{
+        "undo": "Undo (CTRL + Z)",
+        "redo": "Redo (CTRL + SHIFT + Z)"
     },
     "art_editor":{
         "small_brush": "Small Brush",

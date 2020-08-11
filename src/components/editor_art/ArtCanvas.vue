@@ -1,10 +1,11 @@
 <template>
     <div id="artCanvas" ref="artCanvas">
-        <canvas id="canvas" ref="canvas">
+        <UndoPanel class="undoPanel" :undoLength="undoLength" :redoLength="redoLength" @undo="undo()" @redo="redo()"/>
+        <canvas id="canvas" class="canvas" ref="canvas">
             //Error loading HTML5 canvas, check browser compatibility
         </canvas>
         <NavControlPanel
-            id="navControlPanel"
+            class="navControlPanel"
             ref="navControlPanel"
             stateModule="ArtEditor"
             :maxZoom="maxZoom"
@@ -16,11 +17,13 @@
 
 <script>
 import {store} from 'vuex';
+import UndoPanel from "@/components/common/UndoPanel";
 import NavControlPanel from '@/components/common/NavControlPanel';
-import Art_Canvas_Renderer from './Art_Canvas_Renderer.js';
+import Art_Canvas_Renderer from './Art_Canvas_Renderer';
 
 export default {
     name: "ArtCanvas",
+    props: ['undoLength', 'redoLength'],
     data() {
         return {
             canvasEl: null,
@@ -30,6 +33,7 @@ export default {
         }
     },
     components: {
+        UndoPanel,
         NavControlPanel
     },
     mounted(){
@@ -151,13 +155,19 @@ export default {
         },
         onCommit(){
             this.$emit('spriteFrameChanged');
+        },
+        undo(){
+            this.$emit('undo');
+        },
+        redo(){
+            this.$emit('redo');
         }
     }
 }
 </script>
 
 <style scoped>
-    #artCanvas{
+    .artCanvas{
         position: relative;
         box-sizing: border-box;
         width: 100%;
@@ -169,12 +179,19 @@ export default {
         max-width: 100vw;
     }
 
-    #canvas{
+    .undoPanel{
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+    }
+
+    .canvas{
         position: absolute;
         box-sizing: border-box;
     }
 
-    #navControlPanel{
+    .navControlPanel{
         position: absolute;
         top: 0;
         right: 0;

@@ -4,11 +4,16 @@ import Util_2D from '@/common/Util_2D';
 class Eraser extends Tool{
     constructor(){
         super();
+        this.canCommit = false;
     }
 
     mouseDown(event){
         super.mouseDown(event);
         this.updateCursorBuff();
+
+        if (!Util_2D.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
+            this.canCommit = false;
+        }
     }
 
     mouseUp(event){
@@ -22,6 +27,8 @@ class Eraser extends Tool{
         this.clearPreviewBuff();
 
         if (Util_2D.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
+            this.canCommit = true;
+
             //erase sprite data
             if (this.isMouseDown){
                 switch(this.brushSize){
@@ -53,7 +60,7 @@ class Eraser extends Tool{
     }
 
     commitResult(){
-        if (this.commitCallback != null){
+        if (this.canCommit && this.commitCallback != null){
             this.commitCallback();
         }
     }

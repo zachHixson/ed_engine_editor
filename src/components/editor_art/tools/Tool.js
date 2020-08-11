@@ -89,15 +89,18 @@ class Tool{
     updateCursorBuff(){}
 
     commitResult(){
+        let canCommit = false;
+
         for (let i = 0; i < this.previewBuff.length; i++){
             if (this.previewBuff[i].length > 0){
-                this.pixelBuff[i] = this.previewBuff[i]
+                this.pixelBuff[i] = this.previewBuff[i];
+                canCommit = true;
             }
         }
 
         this.clearPreviewBuff();
 
-        if (this.commitCallback != null){
+        if (canCommit && this.commitCallback != null){
             this.commitCallback();
         }
     }

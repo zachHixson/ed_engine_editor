@@ -282,12 +282,10 @@ export default {
     .navControlPanel{
         display: flex;
         flex-direction: row;
-        height: 50px;
     }
 
     .controls{
         display: flex;
         flex-direction: row;
-        width: 100%;
     }
 </style>

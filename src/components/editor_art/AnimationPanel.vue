@@ -16,9 +16,9 @@
                         ref="animFrame"
                         class="animFrame"
                         @frameChanged="frameChanged()"
-                        @frameDeleted="updateFramePreviews(true)"
+                        @frameDeleted="deleteFrame()"
                         @frameCopied="updateFramePreviews(true)"
-                        @frameMoved="updateFramePreviews(true)"/>
+                        @frameMoved="frameMoved()"/>
                     <button class="addFrame" :title="$t('art_editor.add_frame')" @click="addFrame()">
                         +
                     </button>
@@ -86,7 +86,19 @@ export default {
         addFrame(){
             let newFrameIdx = this.sprite.addFrame();
             this.$store.dispatch('ArtEditor/selectFrame', newFrameIdx);
-            this.frameChanged();
+            this.$emit('frameAdded');
+        },
+        deleteFrame(){
+            this.updateFramePreviews(true);
+            this.$emit('frameDeleted');
+        },
+        frameMoved(){
+            updateFramePreviews(true);
+            this.emit('frameMoved');
+        },
+        frameCopied(){
+            updateFramePreviews(true);
+            this.emit('frameCopied');
         },
         frameChanged(){
             this.$emit('frameChanged');

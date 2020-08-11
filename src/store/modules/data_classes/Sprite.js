@@ -32,6 +32,28 @@ class Sprite{
         this.frames[idx] = [...this.frames[idx + dir]];
         this.frames[idx + dir] = [...frame];
     }
+
+    getFramesCopy(){
+        let copy = [];
+
+        for (let i = 0; i < this.frames.length; i++){
+            copy.push([...this.frames[i]]);
+        }
+
+        return copy;
+    }
+
+    setFramesFromArray(arr){
+        this.frames = [];
+
+        for (let i = 0; i < arr.length; i++){
+            this.frames.push([...arr[i]]);
+        }
+    }
+
+    clear(){
+        this.frames = [];
+    }
 }
 
 export default Sprite;
