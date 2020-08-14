@@ -127,8 +127,11 @@ export default {
             canvas.height = wrapper.clientHeight;
 
             this.$refs.navControlPanel.setContainerDimensions(wrapper.clientWidth, wrapper.clientHeight);
-            this.canvasEl.resize();
-            this.maxZoom = this.canvasEl.getZoomBounds().max;
+
+            if (this.canvasEl){
+                this.canvasEl.resize();
+                this.maxZoom = this.canvasEl.getZoomBounds().max;
+            }
         },
         navChanged(navState){
             this.canvasEl.navChanged(navState);

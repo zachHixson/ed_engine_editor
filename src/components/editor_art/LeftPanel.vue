@@ -26,12 +26,12 @@
                         @toolClicked="toolChanged"/>
                 </div>
             </div>
-            <button class="collapseButton" ref="collapseButton" @click="collapse">
+            <button class="collapseButton" ref="collapseButton" @click="toggleOpen">
                 &lt;
             </button>
         </div>
         <div id="expandWrapper" ref="expandWrapper">
-            <button class="collapseButton" ref="expandButton" @click="collapse">
+            <button class="collapseButton" ref="expandButton" @click="toggleOpen">
                 &gt;
             </button>
         </div>
@@ -51,7 +51,7 @@ export default {
     },
     data() {
         return {
-            collapsed: false,
+            isOpen: true,
             colorPicker: null,
             brushSizes: [
                 {
@@ -120,13 +120,18 @@ export default {
         }
     },
     mounted(){
+        this.isOpen = this.$store.getters['ArtEditor/isToolPanelOpen'];
         this.colorPicker = new iro.ColorPicker('#picker', {
             color: this.selectedColor,
             width: 200
         });
         expandWrapper.style.display = "none";
 
+        this.resize();
         this.colorPicker.on("color:change", this.colorChanged);
+    },
+    beforeDestroy(){
+        this.$store.dispatch('ArtEditor/setToolPanelState', this.isOpen);
     },
     computed: {
         selectedSize(){
@@ -150,11 +155,15 @@ export default {
             selectSize: 'ArtEditor/selectSize',
             selectTool: 'ArtEditor/selectTool'
         }),
-        collapse(event){
+        toggleOpen(){
+            this.isOpen = !this.isOpen;
+            this.resize();
+        },
+        resize(){
             let leftPanel = this.$refs.leftPanelWrapper;
             let expandWrapper = this.$refs.expandWrapper;
 
-            if (this.collapsed){
+            if (this.isOpen){
                 leftPanel.style.display = "flex";
                 expandWrapper.style.display = "none";
             }
@@ -163,7 +172,6 @@ export default {
                 expandWrapper.style.display = "flex";
             }
 
-            this.collapsed = !this.collapsed;
             this.$emit('resized');
         },
         colorChanged(color){

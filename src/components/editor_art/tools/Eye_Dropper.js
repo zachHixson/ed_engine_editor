@@ -11,10 +11,11 @@ class Eye_Dropper extends Tool{
         super.mouseDown(event);
 
         if (Util_2D.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
-            store.dispatch(
-                'ArtEditor/selectColor',
-                this.pixelBuff[Util_2D.get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)]
-            );
+            let sampledColor = this.pixelBuff[Util_2D.get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)];
+
+            if (sampledColor.length > 0){
+                store.dispatch('ArtEditor/selectColor', sampledColor);
+            }
         }
     }
 

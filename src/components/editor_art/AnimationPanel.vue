@@ -41,11 +41,16 @@ export default {
     },
     data(){
         return {
-            collapsed: false
+            isOpen: false
         }
     },
     mounted(){
         this.resize();
+        this.isOpen = this.$store.getters['ArtEditor/isAnimPanelOpen'];
+        this.resize();
+    },
+    beforeDestroy(){
+        this.$store.dispatch('ArtEditor/setAnimPanelState', this.isOpen);
     },
     computed: {
         sprite(){
@@ -54,7 +59,7 @@ export default {
     },
     methods: {
         toggleSize(){
-            this.collapsed = !this.collapsed;
+            this.isOpen = !this.isOpen;
             this.resize();
         },
         resize(){
@@ -62,15 +67,15 @@ export default {
             let expandBtn = this.$refs.expandBtn;
             let contents = this.$refs.contents;
 
-            if (this.collapsed){
-                collapseBtn.style.display = 'none';
-                expandBtn.style.display = 'block';
-                contents.style.display = 'none';
-            }
-            else{
+            if (this.isOpen){
                 collapseBtn.style.display = 'block';
                 expandBtn.style.display = 'none';
                 contents.style.display = 'flex';
+            }
+            else{
+                collapseBtn.style.display = 'none';
+                expandBtn.style.display = 'block';
+                contents.style.display = 'none';
             }
 
             this.$emit('resized');
@@ -93,8 +98,8 @@ export default {
             this.$emit('frameDeleted');
         },
         frameMoved(){
-            updateFramePreviews(true);
-            this.emit('frameMoved');
+            this.updateFramePreviews(true);
+            this.$emit('frameMoved');
         },
         frameCopied(){
             updateFramePreviews(true);
