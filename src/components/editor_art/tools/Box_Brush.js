@@ -28,6 +28,23 @@ class Box_Brush extends Tool{
         ){
             this.drawBox(this.startPos, this.mouseCell, this.brushSize);
         }
+
+        if (
+            !this.isMouseDown &&
+            Util_2D.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
+        ){
+            switch(this.brushSize){
+                case 0:
+                    this.previewBuff[Util_2D.get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = this.color;
+                    break;
+                case 1:
+                    this.fillRect(this.mouseCell.x, this.mouseCell.y, this.mouseCell.x + 1, this.mouseCell.y + 1);
+                    break;
+                case 2:
+                    this.fillRect(this.mouseCell.x, this.mouseCell.y, this.mouseCell.x + 2, this.mouseCell.y + 2);
+                    break;
+            }
+        }
     }
 
     drawBox(vec1, vec2, thickness){

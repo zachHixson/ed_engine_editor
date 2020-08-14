@@ -28,6 +28,13 @@ class Ellipse_Brush extends Tool{
         ){
             this.drawEllipse(this.startPos, this.mouseCell, this.brushSize);
         }
+
+        if (
+            !this.isMouseDown &&
+            Util_2D.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
+        ){
+            this.previewBuff[Util_2D.get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = this.color;
+        }
     }
 
     drawEllipse(vec1, vec2, thickness){

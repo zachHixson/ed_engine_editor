@@ -50,6 +50,23 @@ class Line_Brush extends Tool{
                 );
             }
         }
+
+        if (
+            !this.isMouseDown &&
+            Util_2D.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
+        ){
+            switch(this.brushSize){
+                case 0:
+                    this.previewBuff[Util_2D.get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = this.color;
+                    break;
+                case 1:
+                    this.fillRect(this.mouseCell.x, this.mouseCell.y, this.mouseCell.x + 1, this.mouseCell.y + 1);
+                    break;
+                case 2:
+                    this.fillRect(this.mouseCell.x - 1, this.mouseCell.y - 1, this.mouseCell.x + 1, this.mouseCell.y + 1);
+                    break;
+            }
+        }
     }
 
     drawLine(a, b, offset1, offset2, slope, offsetFunc, pOrderFunc){

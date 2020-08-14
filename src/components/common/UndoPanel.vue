@@ -32,9 +32,6 @@ export default {
         document.addEventListener('keyup', this.unregisterKeys);
     },
     methods: {
-        detectKeyCombo(event){
-            console.log("keydown")
-        },
         registerKeys(event){
             this.keyMap[event.key] = true;
             this.detectKeyCombo();
