@@ -1,11 +1,15 @@
-class Sprite{
+import Asset from './Asset';
+
+class Sprite extends Asset{
     constructor(dimensions = 16){
-        this.id;
+        super();
         this.dimensions = dimensions;
         this.frames = [];
 
         this.addFrame();
     }
+
+    static get type(){return 'SPRITE'}
 
     addFrame(){
         let pixNum = Math.pow(this.dimensions, 2);
