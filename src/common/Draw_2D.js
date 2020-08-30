@@ -27,7 +27,7 @@ class Draw_2D{
 
     static drawPixelData(canvas, canvasWidth, spriteArray){
         const SPRITE_DIM = Util_2D.getSpriteDimensions(spriteArray);
-        const PIXEL_WIDTH = Math.round(canvasWidth / SPRITE_DIM);
+        const PIXEL_WIDTH = Math.floor(canvasWidth / SPRITE_DIM);
 
         let ctx = canvas.getContext('2d');
 
@@ -47,8 +47,8 @@ class Draw_2D{
                     ctx.fillRect(
                         (x * PIXEL_WIDTH),
                         (y * PIXEL_WIDTH),
-                        PIXEL_WIDTH,
-                        PIXEL_WIDTH
+                        Math.ceil(PIXEL_WIDTH),
+                        Math.ceil(PIXEL_WIDTH)
                     );
                 }
             }

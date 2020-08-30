@@ -6,7 +6,12 @@
 
 <script>
 export default {
-    name: 'LogicEditor'
+    name: 'LogicEditor',
+    methods: {
+        updateAssetSelection(){
+            //
+        }
+    }
 }
 </script>
 

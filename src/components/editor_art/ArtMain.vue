@@ -69,6 +69,7 @@ export default {
         spriteChanged(){
             this.$refs.animPanel.updateFramePreviews();
             this.commitFullState();
+            this.$emit('asset-changed', this.getSprite().ID);
         },
         frameChanged(){
             let undoPackage = this.packageUndoData();
@@ -127,6 +128,9 @@ export default {
                 selectedFrame: this.getSelectedFrame(),
                 spriteData: [...this.getSprite().getFramesCopy()]
             }
+        },
+        updateAssetSelection(){
+            this.frameChanged();
         }
     }
 }

@@ -1,6 +1,6 @@
 <template>
     <div>
-        <component :is="currentEditor" />
+        <component ref="editor" :is="currentEditor" @asset-changed="$emit('asset-changed', $event)" />
     </div>
 </template>
 
@@ -28,6 +28,11 @@ export default {
                 default:
                     return LevelEditor;
             }
+        }
+    },
+    methods: {
+        updateAssetSelection(){
+            this.$refs.editor.updateAssetSelection();
         }
     }
 }

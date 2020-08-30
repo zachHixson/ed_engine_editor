@@ -6,7 +6,12 @@
 
 <script>
 export default {
-    name: 'LevelEditor'
+    name: 'LevelEditor',
+    methods: {
+        updateAssetSelection(){
+            //
+        }
+    }
 }
 </script>
 

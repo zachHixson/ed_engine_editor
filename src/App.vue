@@ -2,15 +2,15 @@
     <div id="app">
         <LogoMenu />
         <TopPanel />
-        <AssetBrowser />
-        <EditorWindow />
+        <AssetBrowser ref="assetBrowser" @asset-selected="updateEditorAsset" />
+        <EditorWindow ref="editorWindow" @asset-changed="updateAssetPreviews" />
     </div>
 </template>
 
 <script>
 import LogoMenu from './components/LogoMenu';
 import TopPanel from './components/TopPanel';
-import AssetBrowser from './components/AssetBrowser';
+import AssetBrowser from './components/asset_browser/AssetBrowser';
 import EditorWindow from './components/EditorWindow';
 
 export default {
@@ -20,6 +20,14 @@ export default {
         TopPanel,
         AssetBrowser,
         EditorWindow
+    },
+    methods: {
+        updateAssetPreviews(id){
+            this.$refs.assetBrowser.updateAsset(id);
+        },
+        updateEditorAsset(){
+            this.$refs.editorWindow.updateAssetSelection();
+        }
     }
 }
 </script>
