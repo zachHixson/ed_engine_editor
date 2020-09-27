@@ -7,18 +7,18 @@
                 <AnimationPlayer ref="animPlayer" />
             </div>
             <div class="scrollWrapper">
-                <div class="frames">
+                <div v-if="isOpen" class="frames">
                     <AnimFrame 
-                        v-for="(frame, idx) in sprite.frames"
-                        :key="idx"
+                        v-for="(id, idx) in frameIDs"
+                        :key="id"
                         :index="idx"
                         :sprite="sprite"
                         ref="animFrame"
                         class="animFrame"
-                        @frameChanged="frameChanged()"
-                        @frameDeleted="deleteFrame()"
-                        @frameCopied="updateFramePreviews(true)"
-                        @frameMoved="frameMoved()"/>
+                        @frameChanged="frameChanged"
+                        @frameDeleted="deleteFrame"
+                        @frameCopied="frameCopied"
+                        @frameMoved="frameMoved"/>
                     <button class="addFrame" :title="$t('art_editor.add_frame')" @click="addFrame()">
                         +
                     </button>
@@ -39,13 +39,13 @@ export default {
         AnimFrame,
         AnimationPlayer
     },
+    props: ['frameIDs'],
     data(){
         return {
             isOpen: false
         }
     },
     mounted(){
-        this.resize();
         this.isOpen = this.$store.getters['ArtEditor/isAnimPanelOpen'];
         this.resize();
     },
@@ -80,12 +80,16 @@ export default {
 
             this.$emit('resized');
         },
-        updateFramePreviews(forceUpdate = false){
+        updateFramePreviews(range = [0, this.$refs.animFrame.length]){
             this.$refs.animPlayer.frameDataChanged();
 
-            for (let i = 0; i < this.$refs.animFrame.length; i++){
+            if (range.length == 1){
+                range = [range[0], range[0] + 1];
+            }
+
+            for (let i = range[0]; i < range[1]; i++){
                 this.$refs.animFrame[i].index = i;
-                this.$refs.animFrame[i].updateCanvas(forceUpdate);
+                this.$refs.animFrame[i].updateCanvas();
             }
         },
         addFrame(){
@@ -93,20 +97,27 @@ export default {
             this.$store.dispatch('ArtEditor/selectFrame', newFrameIdx);
             this.$emit('frameAdded');
         },
-        deleteFrame(){
-            this.updateFramePreviews(true);
+        deleteFrame(idx){
             this.$emit('frameDeleted');
         },
-        frameMoved(){
-            this.updateFramePreviews(true);
+        frameMoved({idx, dir}){
+            if (dir < 0){
+                this.updateFramePreviews([idx - 1, idx + 1]);
+            }
+            else{
+                this.updateFramePreviews([idx, idx + 2]);
+            }
+            
             this.$emit('frameMoved');
         },
-        frameCopied(){
-            updateFramePreviews(true);
-            this.emit('frameCopied');
+        frameCopied(idx){
+            this.$emit('frameCopied');
         },
-        frameChanged(){
+        frameChanged(idx){
             this.$emit('frameChanged');
+        },
+        newSpriteSelection(){
+            this.$refs.animPlayer.newSpriteSelection();
         }
     }
 }
@@ -123,7 +134,7 @@ export default {
     .panelContents{
         display: flex;
         flex-direction: column;
-        width: 200px;
+        width: 100%;
     }
 
     .animPlayerWrapper{

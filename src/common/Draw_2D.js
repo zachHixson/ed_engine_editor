@@ -25,33 +25,34 @@ class Draw_2D{
         }
     }
 
-    static drawPixelData(canvas, canvasWidth, spriteArray){
+    static drawPixelData(canvas, spriteArray){
         const SPRITE_DIM = Util_2D.getSpriteDimensions(spriteArray);
-        const PIXEL_WIDTH = Math.floor(canvasWidth / SPRITE_DIM);
 
         let ctx = canvas.getContext('2d');
+        let imgData = ctx.createImageData(SPRITE_DIM, SPRITE_DIM);
+        
+        for (let i = 0; i < spriteArray.length; i++){
+            let curIdx = i * 4;
+            let rgb = this.HexToRGB(spriteArray[i]);
 
-        for (let x = 0; x < SPRITE_DIM; x++){
-            for (let y = 0; y < SPRITE_DIM; y++){
-                let curPixel = spriteArray[Util_2D.get2DIdx(x, y, SPRITE_DIM)];
+            imgData.data[curIdx + 0] = rgb.r;
+            imgData.data[curIdx + 1] = rgb.g;
+            imgData.data[curIdx + 2] = rgb.b;
+            imgData.data[curIdx + 3] = (spriteArray[i].length > 0) ? 255 : 0;
+        }
 
-                if (spriteArray[Util_2D.get2DIdx(x, y, SPRITE_DIM)] == null){
-                    console.error(spriteArray[Util_2D.get2DIdx(x, y, SPRITE_DIM)]);
-                    console.error(spriteArray);
-                    console.error(Util_2D.get2DIdx(x, y, SPRITE_DIM));
-                    console.error(x + " | " + y);
-                }
+        ctx.putImageData(imgData, 0, 0);
+    }
 
-                if (curPixel.length > 0){
-                    ctx.fillStyle = curPixel;
-                    ctx.fillRect(
-                        (x * PIXEL_WIDTH),
-                        (y * PIXEL_WIDTH),
-                        Math.ceil(PIXEL_WIDTH),
-                        Math.ceil(PIXEL_WIDTH)
-                    );
-                }
-            }
+    static HexToRGB(hexStr){
+        if (hexStr.charAt(0) == '#'){
+            hexStr = hexStr.substring(1);
+        }
+
+        return {
+            r: parseInt(hexStr.substring(0, 2), 16),
+            g: parseInt(hexStr.substring(2, 4), 16),
+            b: parseInt(hexStr.substring(4, 6), 16),
         }
     }
 }

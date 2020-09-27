@@ -34,6 +34,11 @@ class Art_Canvas_Renderer{
         this.tool = null;
         this.commitCallback;
 
+        this.pixelBuff.width = GRID_DIV;
+        this.pixelBuff.height = GRID_DIV;
+        this.previewBuff.width = GRID_DIV;
+        this.previewBuff.height = GRID_DIV;
+
         this.resize();
     }
 
@@ -50,9 +55,32 @@ class Art_Canvas_Renderer{
     }
 
     composite(ctx = this.canvas.getContext("2d")){
+        const HALF_CANVAS = CANVAS_WIDTH / 2;
+
+        let scaleFac = (CANVAS_WIDTH / GRID_DIV) * this.zoomFac;
+
         ctx.drawImage(this.checkerBGBuff, 0, 0, this.checkerBGBuff.width, this.checkerBGBuff.height);
+
+        //draw pixel and preview buffers
+        ctx.imageSmoothingEnabled = false;
+        ctx.webkitImageSmoothingEnabled = false;
+
+        ctx.save();
+        ctx.translate(
+            (this.canvas.width / 2) + (this.offset.x * this.zoomFac),
+            (this.canvas.height / 2) + (this.offset.y * this.zoomFac)
+        );
+        ctx.translate(
+            -HALF_CANVAS * this.zoomFac, -HALF_CANVAS * this.zoomFac
+        )
+        ctx.scale(scaleFac, scaleFac);
+
         ctx.drawImage(this.pixelBuff, 0, 0, this.pixelBuff.width, this.pixelBuff.height);
         ctx.drawImage(this.previewBuff, 0, 0, this.previewBuff.width, this.previewBuff.height);
+
+        ctx.restore();
+
+
         ctx.drawImage(this.gridBuff, 0, 0, this.gridBuff.width, this.gridBuff.height);
         ctx.drawImage(this.checkerStencilBuff, 0, 0, this.checkerStencilBuff.width, this.checkerStencilBuff.height);
     }
@@ -62,12 +90,8 @@ class Art_Canvas_Renderer{
         this.checkerBGBuff.height = height;
         this.checkerStencilBuff.width = width;
         this.checkerStencilBuff.height = height;
-        this.pixelBuff.width = width;
-        this.pixelBuff.height = height;
         this.gridBuff.width = width;
         this.gridBuff.height = height;
-        this.previewBuff.width = width;
-        this.previewBuff.height = height;
 
         this.fullRedraw();
     }
@@ -122,7 +146,10 @@ class Art_Canvas_Renderer{
 
     setToolColor(newColor){
         this.toolColor = newColor;
-        this.tool.setToolColor(this.toolColor);
+
+        if (this.tool){
+            this.tool.setToolColor(this.toolColor);
+        }
     }
 
     setToolSize(newSize){
@@ -139,7 +166,11 @@ class Art_Canvas_Renderer{
         }
 
         if (newTool == null){
+            let ctx = this.previewBuff.getContext('2d');
+            
             this.tool = null;
+            ctx.clearRect(0, 0, this.previewBuff.width, this.previewBuff.height);
+            this.composite();
         }
         else{
             switch(newTool){
@@ -246,7 +277,9 @@ class Art_Canvas_Renderer{
     }
 
     beforeDestroy(){
-        this.tool.beforeDestroy();
+        if (this.tool){
+            this.tool.beforeDestroy();
+        }
     }
 
     drawCheckerBG(canvas = this.checkerBGBuff){
@@ -278,23 +311,10 @@ class Art_Canvas_Renderer{
 
     drawPixelData(canvas, pixelData){
         if (pixelData != null){
-            const HALF_CANVAS = CANVAS_WIDTH / 2;
-
             let ctx = canvas.getContext('2d');
 
-            ctx.clearRect(0, 0, this.pixelBuff.width, this.pixelBuff.height);
-
-            ctx.save();
-            ctx.translate(
-                (this.canvas.width / 2)  + (this.offset.x * this.zoomFac),
-                (this.canvas.height / 2) + (this.offset.y * this.zoomFac)
-            );
-            ctx.translate(-HALF_CANVAS * this.zoomFac, -HALF_CANVAS * this.zoomFac);
-            ctx.scale(this.zoomFac, this.zoomFac);
-
-            Draw_2D.drawPixelData(canvas, CANVAS_WIDTH, pixelData)
-
-            ctx.restore();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            Draw_2D.drawPixelData(canvas, pixelData);
         }
     }
 
@@ -336,7 +356,9 @@ class Art_Canvas_Renderer{
     }
 
     drawPreviewBuffer(canvas = this.previewBuff){
-        this.drawPixelData(canvas, this.previewData);
+        if (this.tool){
+            this.drawPixelData(canvas, this.previewData);
+        }
     }
 
     getSpriteDimensions(){

@@ -93,7 +93,15 @@ export default {
             return this.$store.getters['AssetBrowser/getSelectedAsset'];
         },
         getSelectedFrame(){
-            return this.getSelectedSprite().frames[this.$store.getters['ArtEditor/getSelectedFrame']];
+            let selectedFrame = this.$store.getters['ArtEditor/getSelectedFrame'];
+            let sprite = this.getSelectedSprite();
+            
+            if (sprite.frames.length < selectedFrame + 1){
+                selectedFrame = 0;
+                this.$store.dispatch('ArtEditor/selectFrame', selectedFrame);
+            }
+
+            return sprite.frames[selectedFrame];
         },
         mouseDown(event){
             this.navControl.mouseDown(event);
@@ -123,8 +131,8 @@ export default {
             let wrapper = this.$refs.artCanvas;
             let canvas = this.$refs.canvas;
 
-            canvas.width = wrapper.clientWidth;
-            canvas.height = wrapper.clientHeight;
+            canvas.width = Math.max(wrapper.clientWidth, 1);
+            canvas.height = Math.max(wrapper.clientHeight, 1);
 
             this.$refs.navControlPanel.setContainerDimensions(wrapper.clientWidth, wrapper.clientHeight);
 

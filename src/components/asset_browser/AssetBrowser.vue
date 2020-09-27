@@ -117,11 +117,28 @@ export default {
             });
         },
         deleteAsset(asset){
+            //select item adjacent to currently deleted item in the list
+            if (asset.ID == this.getSelected().ID){
+                let newSelection = null;
+
+                for (let i = 0; i < this.selectedList.length; i++){
+                    if (this.selectedList[i].ID == asset.ID){
+                        newSelection = (i > 0) ? this.selectedList[i - 1] : this.selectedList[i + 1]
+                    }
+                }
+
+                this.selectAsset(newSelection);
+            }
+
+            //Actually delete the asset from Vuex
             this.$store.dispatch('GameData/deleteAsset', {category: asset.category_ID, id: asset.ID});
         },
         selectAsset(asset){
             this.$store.dispatch('AssetBrowser/selectAsset', asset);
             this.$emit('asset-selected');
+        },
+        getSelected(){
+            return this.$store.getters['AssetBrowser/getSelectedAsset'];
         },
         updateAsset(id = null){
             for (let i = 0; i < this.$refs.assets.length; i++){

@@ -10,12 +10,12 @@ class ID_Generator_Class{
     }
 
     newID(){
-        let id = this.idFromNum(this.curStep);
+        let id = this.curStep;
         this.curStep++;
         return id;
     }
 
-    idFromNum(num){
+    numToChar(num){
         let charLength = this.getIDLength(num);
         let id = '';
         let remainder = num;
@@ -31,7 +31,7 @@ class ID_Generator_Class{
         return id;
     }
 
-    numFromID(id){
+    charToNum(id){
         let num = 0;
 
         for (let i = 0; i < id.length; i++){

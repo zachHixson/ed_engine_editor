@@ -28,7 +28,8 @@ export default {
             isRenaming: false,
             dblClickCheck: false,
             hasThumb: false,
-            thumbLoading: false
+            thumbLoading: false,
+            pixelBuff: document.createElement('canvas')
         }
     },
     computed: {
@@ -49,6 +50,9 @@ export default {
                 this.isRenaming = false;
             }
         });
+
+        this.pixelBuff.width = 16;
+        this.pixelBuff.height = 16;
 
         this.drawThumbnail();
     },
@@ -99,15 +103,17 @@ export default {
             if (this.checkThumb()){
                 let canvas = this.$refs.thumbNail;
                 let ctx = canvas.getContext('2d');
-                let pixelSize = canvas.width / Util_2D.getSpriteDimensions(this.asset.thumbnailData);
-                let scaleFac = pixelSize / Math.round(pixelSize);
+                let pixelDim = Util_2D.getSpriteDimensions(this.asset.thumbnailData);
+                let scaleFac = canvas.width / pixelDim;
+
+                Draw_2D.drawPixelData(this.pixelBuff, this.asset.thumbnailData);
 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
                 this.thumbLoading = true;
                 ctx.save()
                 ctx.scale(scaleFac, scaleFac);
-                Draw_2D.drawPixelData(canvas, canvas.width, this.asset.thumbnailData);
+                ctx.drawImage(this.pixelBuff, 0, 0, this.pixelBuff.width, this.pixelBuff.height);
                 ctx.restore();
                 this.thumbLoading = false;
                 this.checkThumb();

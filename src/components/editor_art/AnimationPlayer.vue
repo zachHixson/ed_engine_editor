@@ -26,6 +26,7 @@ export default {
             curFrameIdx: 0,
             canvas: null,
             checkerBGBuff: document.createElement('canvas'),
+            pixelBuff: document.createElement('canvas'),
             sprite: null,
             animationLoop: null
         }
@@ -39,6 +40,8 @@ export default {
         this.canvas = this.$refs.canvas;
         this.checkerBGBuff.width = this.canvas.width;
         this.checkerBGBuff.height = this.canvas.height;
+        this.pixelBuff.width = this.getSprite().dimensions;
+        this.pixelBuff.height = this.getSprite().dimensions;
         this.sprite = this.getSprite();
 
         Draw_2D.drawCheckerBG(this.checkerBGBuff, 4, '#AAA', '#CCC');
@@ -56,12 +59,16 @@ export default {
 
             if (this.sprite.frames[this.curFrameIdx] != null){
                 let frame = this.sprite.frames[this.curFrameIdx];
-                let pixelSize = this.canvas.width / this.sprite.dimensions;
-                let scaleFac = (pixelSize) / Math.round(pixelSize);
+                let scaleFac = this.canvas.width / Util_2D.getSpriteDimensions(frame);
+
+                Draw_2D.drawPixelData(this.pixelBuff, frame);
+
+                ctx.imageSmoothingEnabled = false;
+                ctx.webkitImageSmoothingEnabled = false;
 
                 ctx.save();
                 ctx.scale(scaleFac, scaleFac);
-                Draw_2D.drawPixelData(this.canvas, this.canvas.width, frame);
+                ctx.drawImage(this.pixelBuff, 0, 0, this.pixelBuff.width, this.pixelBuff.height);
                 ctx.restore();
             }
         },
@@ -92,9 +99,14 @@ export default {
         },
         frameDataChanged(){
             let selectedFrame = this.$store.getters['ArtEditor/getSelectedFrame'];
+
             if (this.curFrameIdx == selectedFrame){
                 this.drawFrame();
             }
+        },
+        newSpriteSelection(){
+            this.sprite = this.getSprite();
+            this.drawFrame();
         }
     }
 }

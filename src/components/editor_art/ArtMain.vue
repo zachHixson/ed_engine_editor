@@ -16,6 +16,7 @@
         <AnimationPanel
             class="animPanel"
             ref="animPanel"
+            :frameIDs="frameIDs"
             @resized="resize"
             @frameChanged="frameChanged()"
             @frameAdded="frameAdded()"
@@ -43,7 +44,8 @@ export default {
     },
     data(){
         return {
-            undoStore: new Undo_Store(MAX_UNDO_STEPS)
+            undoStore: new Undo_Store(MAX_UNDO_STEPS),
+            frameIDs: this.$store.getters['AssetBrowser/getSelectedAsset'].frameIDs
         }
     },
     mounted(){
@@ -69,6 +71,8 @@ export default {
         spriteChanged(){
             this.$refs.animPanel.updateFramePreviews();
             this.commitFullState();
+            this.getSprite().updateFrame(this.getSelectedFrame());
+            this.updateFrameIDs();
             this.$emit('asset-changed', this.getSprite().ID);
         },
         frameChanged(){
@@ -76,10 +80,12 @@ export default {
             undoPackage.spriteData = null;
             this.$refs.artCanvas.setSprite();
             this.undoStore.commit(undoPackage);
+            this.updateFrameIDs();
         },
         frameAdded(){
             this.commitFullState();
             this.$refs.artCanvas.setSprite();
+            this.updateFrameIDs();
         },
         navSelected(){
             this.selectTool(null);
@@ -95,11 +101,11 @@ export default {
             let prevStep = this.undoStore.stepBack();
 
             if (prevStep){
-                if (prevStep.selectedFrame != null){
+                if (prevStep.selectedFrame){
                     this.selectFrame(prevStep.selectedFrame);
                 }
 
-                if (prevStep.spriteData != null){
+                if (prevStep.spriteData){
                     sprite.setFramesFromArray(prevStep.spriteData);
                 }
             }
@@ -110,18 +116,25 @@ export default {
 
             this.$refs.animPanel.updateFramePreviews(true);
             this.$refs.artCanvas.setSprite();
+            this.updateFrameIDs();
         },
         redo(){
             let sprite = this.getSprite();
             let nextStep = this.undoStore.stepForward();
 
             if (nextStep){
-                this.selectFrame(nextStep.selectedFrame);
-                sprite.setFramesFromArray(nextStep.spriteData);
+                if (nextStep.selectedFrame){
+                    this.selectFrame(nextStep.selectedFrame);
+                }
+
+                if (nextStep.spriteData){
+                    sprite.setFramesFromArray(nextStep.spriteData);
+                }
             }
 
             this.$refs.animPanel.updateFramePreviews(true);
             this.$refs.artCanvas.setSprite();
+            this.updateFrameIDs();
         },
         packageUndoData(){
             return {
@@ -130,7 +143,13 @@ export default {
             }
         },
         updateAssetSelection(){
-            this.frameChanged();
+            this.$refs.artCanvas.setSprite();
+            this.$refs.animPanel.newSpriteSelection();
+            this.updateFrameIDs()
+            this.undoStore.clear();
+        },
+        updateFrameIDs(){
+            this.frameIDs = this.getSprite().frameIDs;
         }
     }
 }

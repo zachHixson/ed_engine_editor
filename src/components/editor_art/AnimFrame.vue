@@ -49,7 +49,8 @@ export default {
         return {
             hover: false,
             canvas: null,
-            checkerBGBuff: document.createElement('canvas')
+            checkerBGBuff: document.createElement('canvas'),
+            pixelBuff: document.createElement('canvas')
         }
     },
     mounted(){
@@ -59,6 +60,8 @@ export default {
         this.canvas.height = this.$refs.wrapper.clientWidth;
         this.checkerBGBuff.width = this.canvas.width;
         this.checkerBGBuff.height = this.canvas.height;
+        this.pixelBuff.width = this.getSprite().dimensions;
+        this.pixelBuff.height = this.getSprite().dimensions;
 
         Draw_2D.drawCheckerBG(this.checkerBGBuff, 4, '#AAA', '#CCC');
 
@@ -82,29 +85,34 @@ export default {
         }
     },
     methods: {
+        getSprite(){
+            return this.$store.getters['AssetBrowser/getSelectedAsset'];
+        },
         getFrame(){
             return this.sprite.frames[this.index];
         },
         drawCanvas(){
             let frame = this.getFrame();
             let ctx = this.canvas.getContext('2d');
-
+            
             ctx.drawImage(this.checkerBGBuff, 0, 0, this.canvas.width, this.canvas.height);
 
             if (frame != null){
-                let pixelSize = this.canvas.width / this.sprite.dimensions;
-                let scaleFac = (pixelSize) / Math.round(pixelSize);
+                let scaleFac = this.canvas.width / Util_2D.getSpriteDimensions(frame);
+
+                Draw_2D.drawPixelData(this.pixelBuff, frame);
+
+                ctx.imageSmoothingEnabled = false;
+                ctx.webkitImageSmoothingEnabled = false;
 
                 ctx.save();
                 ctx.scale(scaleFac, scaleFac);
-                Draw_2D.drawPixelData(this.canvas, this.canvas.width, frame);
+                ctx.drawImage(this.pixelBuff, 0, 0, this.pixelBuff.width, this.pixelBuff.height);
                 ctx.restore();
             }
         },
-        updateCanvas(forceUpdate = false){
-            if (this.isSelected || forceUpdate){
-                this.drawCanvas();
-            }
+        updateCanvas(){
+            this.drawCanvas();
         },
         selectFrame(idx = this.index){
             this.$store.dispatch('ArtEditor/selectFrame', idx);
@@ -122,7 +130,7 @@ export default {
 
             this.sprite.deleteFrame(this.index);
             this.selectFrame(selectedFrame);
-            this.$emit('frameDeleted');
+            this.$emit('frameDeleted', this.index);
         },
         copyFrame(event){
             let selectedFrame = this.selectedFrameIdx;
@@ -133,10 +141,10 @@ export default {
             if (this.index < selectedFrame){
                 selectedFrame += 1;
             }
-
+            
             this.sprite.copyFrame(this.index);
             this.selectFrame(selectedFrame);
-            this.$emit('frameCopied');
+            this.$emit('frameCopied', this.index);
         },
         moveFrame(event, dir){
             let selectFrame = this.selectedFrameIdx;
@@ -147,10 +155,10 @@ export default {
             if (this.isSelected){
                 selectFrame += dir;
             }
-
+            
             this.sprite.moveFrame(this.index, dir);
-            this.selectFrame(selectFrame);
-            this.$emit('frameMoved');
+            this.$store.dispatch('ArtEditor/selectFrame', selectFrame);
+            this.$emit('frameMoved', {idx: this.index, dir});
         }
     }
 }
