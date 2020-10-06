@@ -80,16 +80,18 @@ export default {
 
             this.$emit('resized');
         },
-        updateFramePreviews(range = [0, this.$refs.animFrame.length]){
-            this.$refs.animPlayer.frameDataChanged();
+        updateFramePreviews(range = [0, 1]){
+            if (this.isOpen){
+                this.$refs.animPlayer.frameDataChanged();
 
-            if (range.length == 1){
-                range = [range[0], range[0] + 1];
-            }
+                if (range.length == 1){
+                    range = [range[0], range[0] + 1];
+                }
 
-            for (let i = range[0]; i < range[1]; i++){
-                this.$refs.animFrame[i].index = i;
-                this.$refs.animFrame[i].updateCanvas();
+                for (let i = range[0]; i < range[1]; i++){
+                    this.$refs.animFrame[i].index = i;
+                    this.$refs.animFrame[i].updateCanvas();
+                }
             }
         },
         addFrame(){
