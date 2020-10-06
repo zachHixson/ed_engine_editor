@@ -3,12 +3,15 @@
         <div class="leftFloat">
             <canvas v-show="hasThumb" class="thumbnail" ref="thumbNail" width="20" height="20">Test</canvas>
             <img v-if="!hasThumb" class="thumbnail assetIcon" :src="require(`@/${defaultIcon}.svg`)" />
-            <div v-if="isRenaming">
+            <div v-show="isRenaming">
                 <input ref="renameText" v-model="asset.name" type="text" />
             </div>
-            <div v-else>{{asset.name}}</div>
+            <div v-show="!isRenaming">{{asset.name}}</div>
         </div>
         <div class="rightFloat">
+            <button class="rightButton" @click="(event)=>{event.stopPropagation(); rename();}">
+                <img class="rightIcon" style="width:30px; height:30px;" src="@/assets/rename.svg" />
+            </button>
             <button class="rightButton" @click="deleteAsset">
                 <img class="rightIcon" src="@/assets/trash.svg" />
             </button>
@@ -66,11 +69,7 @@ export default {
             event.preventDefault();
 
             if (this.dblClickCheck){
-                this.isRenaming = true;
-                setTimeout(()=>{
-                    this.$refs.renameText.focus();
-                    this.$refs.renameText.select();
-                }, 10);
+                this.rename();
             }
             else{
                 this.$emit('selectAsset', this.asset);
@@ -78,8 +77,15 @@ export default {
                 setTimeout(()=>{this.dblClickCheck = false}, 200);
             }
         },
+        rename(){
+            this.isRenaming = true;
+            this.$nextTick(()=>{
+                this.$refs.renameText.focus();
+                this.$refs.renameText.select();
+            }, 10);
+        },
         clickOutside(event){
-            let rootEl = this.$refs.asset;
+            let rootEl = this.$refs.renameText;
 
             if (rootEl){
                 let bounds = rootEl.getBoundingClientRect();
@@ -164,5 +170,6 @@ export default {
 .rightIcon{
     width: 20px;
     height: 20px;
+    margin: 3px;
 }
 </style>
