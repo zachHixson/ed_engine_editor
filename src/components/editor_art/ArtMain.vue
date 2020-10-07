@@ -32,6 +32,7 @@ import LeftPanel from './LeftPanel';
 import ArtCanvas from './ArtCanvas';
 import AnimationPanel from './AnimationPanel';
 import Undo_Store from './Undo_Store';
+import {CATEGORY_ID} from '@/common/Enums';
 
 const MAX_UNDO_STEPS = 32;
 
@@ -45,7 +46,8 @@ export default {
     data(){
         return {
             undoStore: new Undo_Store(MAX_UNDO_STEPS),
-            frameIDs: this.$store.getters['AssetBrowser/getSelectedAsset'].frameIDs
+            currentSprite: this.getSprite(),
+            frameIDs: this.getSprite().frameIDs,
         }
     },
     mounted(){
@@ -143,10 +145,15 @@ export default {
             }
         },
         updateAssetSelection(){
-            this.$refs.artCanvas.setSprite();
-            this.$refs.animPanel.newSpriteSelection();
-            this.updateFrameIDs()
+            let newAsset = this.getSprite();
             this.undoStore.clear();
+
+            if (newAsset.category_ID == CATEGORY_ID.SPRITE){
+                this.currentSprite = this.getSprite();
+                this.$refs.artCanvas.setSprite();
+                this.$refs.animPanel.newSpriteSelection();
+                this.updateFrameIDs()
+            }
         },
         updateFrameIDs(){
             this.frameIDs = this.getSprite().frameIDs;

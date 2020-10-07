@@ -1,5 +1,5 @@
 const state = {
-    selectedEditor: 'level'
+    selectedEditor: 0
 }
 
 const getters = {

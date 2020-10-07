@@ -2,6 +2,7 @@
     "editor_main":{
         "level_tab" : "Level",
         "art_tab" : "Art",
+        "object_tab" : "Object",
         "logic_tab" : "Logic",
         "run" : "Run",
         "debug" : "Debug"

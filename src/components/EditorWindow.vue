@@ -6,8 +6,10 @@
 
 <script>
 import {mapGetters} from 'vuex';
+import {EDITOR_ID} from '@/common/Enums';
 import LevelEditor from './editor_level/LevelMain';
 import ArtEditor from './editor_art/ArtMain';
+import ObjectEditor from './editor_object/ObjectMain';
 import LogicEditor from './editor_logic/LogicMain';
 
 export default {
@@ -19,11 +21,13 @@ export default {
         ...mapGetters(['selectedTab']),
         currentEditor(){
             switch(this.selectedTab){
-                case 'level':
+                case EDITOR_ID.LEVEL:
                     return LevelEditor;
-                case 'art':
+                case EDITOR_ID.ART:
                     return ArtEditor;
-                case 'logic':
+                case EDITOR_ID.OBJECT:
+                    return ObjectEditor;
+                case EDITOR_ID.LOGIC:
                     return LogicEditor;
                 default:
                     return LevelEditor;

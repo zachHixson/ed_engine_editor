@@ -1,7 +1,7 @@
 <template>
     <div id="app">
         <LogoMenu />
-        <TopPanel />
+        <TopPanel ref="topPanel"/>
         <AssetBrowser ref="assetBrowser" @asset-selected="updateEditorAsset" />
         <EditorWindow ref="editorWindow" @asset-changed="updateAssetPreviews" />
     </div>
@@ -27,6 +27,7 @@ export default {
         },
         updateEditorAsset(){
             this.$refs.editorWindow.updateAssetSelection();
+            this.$refs.topPanel.updateEditorTabs();
         }
     }
 }

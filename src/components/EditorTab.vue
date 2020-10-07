@@ -1,7 +1,7 @@
 <template>
     <div class="editorTab" @click="tabClick" :class="{tabSelected : isSelected}">
         <div class="tabEl logoBox">
-            <img class="tabImg" :src="require(`../assets/${logoName}.svg`)" />
+            <img class="tabImg" :src="require(`@/${logoPath}.svg`)" />
         </div>
         <div class="tabEl name">
             {{tabText}}
@@ -14,17 +14,17 @@ import {mapActions, mapGetters} from 'vuex';
 
 export default {
     name: 'EditorTab',
-    props: ['tabText', 'logoName', 'editorName'],
+    props: ['tabText', 'logoPath', 'editorID'],
     methods: {
         ...mapActions(['switchTab']),
         tabClick(e) {
-            this.switchTab(this.editorName);
+            this.switchTab(this.editorID);
         }
     },
     computed: {
         ...mapGetters(['selectedTab']),
         isSelected(){
-            return (this.selectedTab == this.editorName);
+            return (this.selectedTab == this.editorID);
         }
     }
 } 
@@ -38,6 +38,11 @@ export default {
     display: flex;
     flex-direction: row;
     align-items: center;
+    max-width: 50%;
+}
+
+.editorTab:not(:last-child){
+    border-right: none;
 }
 
 .editorTab:hover:not(.tabSelected){

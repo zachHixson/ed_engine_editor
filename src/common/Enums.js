@@ -14,9 +14,26 @@ const CATEGORY_TYPE = {
     TILE: 'TILE',
     ROOM: 'ROOM'
 }
-Object.freeze(CATEGORY_TYPE)
+Object.freeze(CATEGORY_TYPE);
+
+const EDITOR_ID = {
+    LEVEL: 0,
+    ART: 1,
+    OBJECT: 2,
+    LOGIC: 3
+}
+Object.freeze(EDITOR_ID);
+
+const EDITOR_TYPE = {
+    LEVEL: 'LEVEL',
+    ART: 'ART',
+    OBJECT: 'OBJECT',
+    LOGIC: 'LOGIC'
+}
 
 export {
     CATEGORY_ID,
-    CATEGORY_TYPE
+    CATEGORY_TYPE,
+    EDITOR_ID,
+    EDITOR_TYPE
 };
