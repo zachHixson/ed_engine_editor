@@ -57,64 +57,64 @@ export default {
                 {
                     tool: TOOL_SIZE.SMALL,
                     name: this.$t('art_editor.small_brush'),
-                    icon: 'assets/editor_art/small_brush'
+                    icon: 'assets/small_brush'
                 },
                 {
                     tool: TOOL_SIZE.MEDIUM,
                     name: this.$t('art_editor.medium_brush'),
-                    icon: 'assets/editor_art/medium_brush'
+                    icon: 'assets/medium_brush'
                 },
                 {
                     tool: TOOL_SIZE.LARGE,
                     name: this.$t('art_editor.large_brush'),
-                    icon: 'assets/editor_art/large_brush'
+                    icon: 'assets/large_brush'
                 }
             ],
             brushes: [
                 {
                     tool: TOOL_TYPE.BRUSH,
                     name: this.$t('art_editor.brush_tool'),
-                    icon: 'assets/editor_art/brush'
+                    icon: 'assets/brush'
                 },
                 {
                     tool: TOOL_TYPE.BUCKET,
                     name: this.$t('art_editor.bucket_tool'),
-                    icon: 'assets/editor_art/bucket'
+                    icon: 'assets/bucket'
                 },
                 {
                     tool: TOOL_TYPE.LINE,
                     name: this.$t('art_editor.line_tool'),
-                    icon: 'assets/editor_art/line'
+                    icon: 'assets/line'
                 },
                 {
                     tool: TOOL_TYPE.BOX,
                     name: this.$t('art_editor.box_stroke_tool'),
-                    icon: 'assets/editor_art/box'
+                    icon: 'assets/box'
                 },
                 {
                     tool: TOOL_TYPE.BOX_FILL,
                     name: this.$t('art_editor.box_fill_tool'),
-                    icon: 'assets/editor_art/box_filled'
+                    icon: 'assets/box_filled'
                 },
                 {
                     tool: TOOL_TYPE.ELLIPSE,
                     name: this.$t('art_editor.circle_stroke_tool'),
-                    icon: 'assets/editor_art/circle'
+                    icon: 'assets/circle'
                 },
                 {
                     tool: TOOL_TYPE.ELLIPSE_FILL,
                     name: this.$t('art_editor.circle_fill_tool'),
-                    icon: 'assets/editor_art/circle_filled'
+                    icon: 'assets/circle_filled'
                 },
                 {
                     tool: TOOL_TYPE.ERASER,
                     name: this.$t('art_editor.eraser_tool'),
-                    icon: 'assets/editor_art/eraser'
+                    icon: 'assets/eraser'
                 },
                 {
                     tool: TOOL_TYPE.EYE_DROPPER,
                     name: this.$t('art_editor.eye_dropper_tool'),
-                    icon: 'assets/editor_art/eye_dropper'
+                    icon: 'assets/eye_dropper'
                 }
             ]
         }

@@ -5,11 +5,11 @@
         </canvas>
         <div class="buttons">
             <button @click="playAnimation()">
-                <img class="btnImg" src="@/assets/editor_art/play.svg" v-show="!isPlaying" />
-                <img class="btnImg" src="@/assets/editor_art/pause.svg" v-show="isPlaying" />
+                <img class="btnImg" src="@/assets/play.svg" v-show="!isPlaying" />
+                <img class="btnImg" src="@/assets/pause.svg" v-show="isPlaying" />
             </button>
             <button @click="stopAnimation()">
-                <img class="btnImg" src="@/assets/editor_art/box_filled.svg" />
+                <img class="btnImg" src="@/assets/box_filled.svg" />
             </button>
         </div>
     </div>
@@ -21,13 +21,13 @@ import Draw_2D from '@/common/Draw_2D';
 
 export default {
     name: 'AnimationPlayer',
+    props: ['sprite'],
     data(){
         return {
             curFrameIdx: 0,
             canvas: null,
             checkerBGBuff: document.createElement('canvas'),
             pixelBuff: document.createElement('canvas'),
-            sprite: null,
             animationLoop: null
         }
     },

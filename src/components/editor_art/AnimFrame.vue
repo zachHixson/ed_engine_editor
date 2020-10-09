@@ -20,19 +20,19 @@
             class="button copyFrame"
             v-show="hover"
             @click="copyFrame">
-            <img class="btnIcon" src="@/assets/editor_art/copy.svg" />
+            <img class="btnIcon" src="@/assets/copy.svg" />
         </button>
         <button
             class="button moveUp"
             v-show="hover && !isFirst"
             @click="moveFrame($event, -1)">
-            <img class="btnIcon" src="@/assets/editor_art/arrow_01_up.svg" />
+            <img class="btnIcon" src="@/assets/arrow_01_up.svg" />
         </button>
         <button
             class="button moveDown"
             v-show="hover && !isLast"
             @click="moveFrame($event, 1)">
-            <img class="btnIcon" src="@/assets/editor_art/arrow_01_down.svg" />
+            <img class="btnIcon" src="@/assets/arrow_01_down.svg" />
         </button>
     </div>
 </template>
