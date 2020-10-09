@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="editorWindow">
         <component ref="editor" :is="currentEditor" @asset-changed="$emit('asset-changed', $event)" />
     </div>
 </template>
@@ -43,5 +43,8 @@ export default {
 </script>
 
 <style scoped>
-
+.editorWindow{
+    display: flex;
+    box-sizing: border-box;
+}
 </style>
