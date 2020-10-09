@@ -1,10 +1,10 @@
 <template>
     <div class="animPanel">
-        <button ref="collapseBtn" class="resizeBtn" @click="toggleSize()">&gt;</button>
-        <button ref="expandBtn" class="resizeBtn" @click="toggleSize()">&lt;</button>
-        <div ref="contents" class="panelContents">
+        <button v-show="isOpen" ref="collapseBtn" class="resizeBtn" @click="toggleSize()">&gt;</button>
+        <button v-show="!isOpen" ref="expandBtn" class="resizeBtn" @click="toggleSize()">&lt;</button>
+        <div v-show="isOpen" ref="contents" class="panelContents">
             <div class="animPlayerWrapper">
-                <AnimationPlayer ref="animPlayer" />
+                <AnimationPlayer ref="animPlayer" :sprite="sprite" :selectedFrame="currentFrame"/>
             </div>
             <div class="scrollWrapper">
                 <div v-if="isOpen" class="frames">
@@ -31,7 +31,7 @@
 <script>
 import {store} from 'vuex';
 import AnimFrame from './AnimFrame';
-import AnimationPlayer from './AnimationPlayer';
+import AnimationPlayer from '@/components/common/AnimationPlayer';
 
 export default {
     name: 'AnimationPanel',
@@ -42,43 +42,21 @@ export default {
     props: ['frameIDs'],
     data(){
         return {
-            isOpen: false
+            isOpen: false,
+            currentFrame: this.getSelectedFrame(),
+            sprite: this.$store.getters['AssetBrowser/getSelectedAsset']
         }
     },
-    mounted(){
+    beforeMount(){
         this.isOpen = this.$store.getters['ArtEditor/isAnimPanelOpen'];
-        this.resize();
     },
     beforeDestroy(){
         this.$store.dispatch('ArtEditor/setAnimPanelState', this.isOpen);
     },
-    computed: {
-        sprite(){
-            return this.$store.getters['AssetBrowser/getSelectedAsset'];
-        }
-    },
     methods: {
         toggleSize(){
             this.isOpen = !this.isOpen;
-            this.resize();
-        },
-        resize(){
-            let collapseBtn = this.$refs.collapseBtn;
-            let expandBtn = this.$refs.expandBtn;
-            let contents = this.$refs.contents;
-
-            if (this.isOpen){
-                collapseBtn.style.display = 'block';
-                expandBtn.style.display = 'none';
-                contents.style.display = 'flex';
-            }
-            else{
-                collapseBtn.style.display = 'none';
-                expandBtn.style.display = 'block';
-                contents.style.display = 'none';
-            }
-
-            this.$emit('resized');
+            this.$nextTick(()=>{this.$emit('resized');});
         },
         updateFramePreviews(range = [0, 1]){
             if (this.isOpen){
@@ -89,10 +67,12 @@ export default {
                 }
 
                 for (let i = range[0]; i < range[1]; i++){
-                    this.$refs.animFrame[i].index = i;
                     this.$refs.animFrame[i].updateCanvas();
                 }
             }
+        },
+        getSelectedFrame(){
+            return this.$store.getters['ArtEditor/getSelectedFrame'];
         },
         addFrame(){
             let newFrameIdx = this.sprite.addFrame();
@@ -116,6 +96,7 @@ export default {
             this.$emit('frameCopied');
         },
         frameChanged(idx){
+            this.currentFrame = this.getSelectedFrame();
             this.$emit('frameChanged');
         },
         newSpriteSelection(){

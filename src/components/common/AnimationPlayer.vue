@@ -21,7 +21,7 @@ import Draw_2D from '@/common/Draw_2D';
 
 export default {
     name: 'AnimationPlayer',
-    props: ['sprite'],
+    props: ['sprite', 'selectedFrame'],
     data(){
         return {
             curFrameIdx: 0,
@@ -42,7 +42,6 @@ export default {
         this.checkerBGBuff.height = this.canvas.height;
         this.pixelBuff.width = this.getSprite().dimensions;
         this.pixelBuff.height = this.getSprite().dimensions;
-        this.sprite = this.getSprite();
 
         Draw_2D.drawCheckerBG(this.checkerBGBuff, 4, '#AAA', '#CCC');
 
@@ -80,8 +79,8 @@ export default {
                 let intervalTime = 1000/12;
 
                 this.animationLoop = setInterval(()=>{
-                    this.drawFrame();
                     this.advanceFrame();
+                    this.drawFrame();
                 }, intervalTime);
             }
             else{
@@ -98,14 +97,11 @@ export default {
             this.drawFrame();
         },
         frameDataChanged(){
-            let selectedFrame = this.$store.getters['ArtEditor/getSelectedFrame'];
-
-            if (this.curFrameIdx == selectedFrame){
+            if (this.curFrameIdx == this.selectedFrame){
                 this.drawFrame();
             }
         },
         newSpriteSelection(){
-            this.sprite = this.getSprite();
             this.drawFrame();
         }
     }
