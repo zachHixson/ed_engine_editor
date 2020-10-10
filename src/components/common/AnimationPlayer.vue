@@ -21,7 +21,7 @@ import Draw_2D from '@/common/Draw_2D';
 
 export default {
     name: 'AnimationPlayer',
-    props: ['sprite', 'selectedFrame'],
+    props: ['sprite', 'selectedFrame', 'fps', 'startFrame'],
     data(){
         return {
             curFrameIdx: 0,
@@ -40,23 +40,22 @@ export default {
         this.canvas = this.$refs.canvas;
         this.checkerBGBuff.width = this.canvas.width;
         this.checkerBGBuff.height = this.canvas.height;
-        this.pixelBuff.width = this.getSprite().dimensions;
-        this.pixelBuff.height = this.getSprite().dimensions;
 
         Draw_2D.drawCheckerBG(this.checkerBGBuff, 4, '#AAA', '#CCC');
+        if (this.sprite){
+            this.pixelBuff.width = this.sprite.dimensions;
+            this.pixelBuff.height = this.sprite.dimensions;
+        }
 
-        this.drawFrame();
+        this.newSpriteSelection();
     },
     methods: {
-        getSprite(){
-            return this.$store.getters['AssetBrowser/getSelectedAsset'];
-        },
         drawFrame(){
             let ctx = this.canvas.getContext('2d');
-
+            
             ctx.drawImage(this.checkerBGBuff, 0, 0, this.canvas.width, this.canvas.height);
 
-            if (this.sprite.frames[this.curFrameIdx] != null){
+            if (this.sprite && this.sprite.frames[this.curFrameIdx] != null){
                 let frame = this.sprite.frames[this.curFrameIdx];
                 let scaleFac = this.canvas.width / Util_2D.getSpriteDimensions(frame);
 
@@ -75,8 +74,8 @@ export default {
             this.curFrameIdx = (this.curFrameIdx + 1) % this.sprite.frames.length;
         },
         playAnimation(){
-            if (this.animationLoop == null){
-                let intervalTime = 1000/12;
+            if (this.animationLoop == null && this.fps > 0){
+                let intervalTime = 1000/this.fps;
 
                 this.animationLoop = setInterval(()=>{
                     this.advanceFrame();
@@ -93,7 +92,7 @@ export default {
         },
         stopAnimation(){
             this.pauseAnimation();
-            this.curFrameIdx = 0;
+            this.curFrameIdx = this.startFrame;
             this.drawFrame();
         },
         frameDataChanged(){
@@ -101,8 +100,21 @@ export default {
                 this.drawFrame();
             }
         },
+        fpsChanged(){
+            this.pauseAnimation();
+            this.playAnimation();
+        },
         newSpriteSelection(){
-            this.drawFrame();
+            if (this.sprite){
+                this.pixelBuff.width = this.sprite.dimensions;
+                this.pixelBuff.height = this.sprite.dimensions;
+            }
+
+            this.curFrameIdx = this.startFrame;
+
+            this.$nextTick(()=>{
+                this.drawFrame();
+            });
         }
     }
 }

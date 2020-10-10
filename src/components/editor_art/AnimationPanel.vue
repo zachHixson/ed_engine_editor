@@ -4,7 +4,7 @@
         <button v-show="!isOpen" ref="expandBtn" class="resizeBtn" @click="toggleSize()">&lt;</button>
         <div v-show="isOpen" ref="contents" class="panelContents">
             <div class="animPlayerWrapper">
-                <AnimationPlayer ref="animPlayer" :sprite="sprite" :selectedFrame="currentFrame"/>
+                <AnimationPlayer ref="animPlayer" :sprite="sprite" :selectedFrame="currentFrame" fps="12" startFrame="0"/>
             </div>
             <div class="scrollWrapper">
                 <div v-if="isOpen" class="frames">

@@ -15,18 +15,18 @@
                 </div>
                 <div class="control">
                     <label for="frameStart">Start Frame: </label>
-                    <input type="number" id="frameStart"  value="0" v-model="object.startFrame"/>
+                    <input type="number" id="frameStart"  v-model="object.startFrame" @change="vailidateStartFrame()"/>
                 </div>
                 <div class="control">
                     <label for="fps">Playback Speed (fps): </label>
-                    <input type="number" id="fps" value="6" v-model="object.fps"/>
+                    <input type="number" id="fps" value="6" v-model="object.fps" @change="validateFPS"/>
                 </div>
                 <div class="control">
                     <label for="loop">Loop: </label>
                     <input type="checkbox" id="loop" checked="true" v-model="object.animLoop"/>
                 </div>
             </div>
-            <div class="animPlaceholder"></div>
+            <AnimationPlayer ref="animPlayer" :sprite="object.sprite" :fps="object.fps" :startFrame="object.startFrame"/>
         </CategoryWrapper>
         <CategoryWrapper title="Physics" iconPath="assets/placeholder">
             <div class="options">
@@ -67,12 +67,14 @@
 </template>
 
 <script>
+import AnimationPlayer from '@/components/common/AnimationPlayer';
 import CategoryWrapper from './CategoryWrapper';
 
 export default {
     name: 'ObjectEditor',
     components: {
-        CategoryWrapper
+        CategoryWrapper,
+        AnimationPlayer
     },
     data() {
         return {
@@ -112,6 +114,20 @@ export default {
             else{
                 this.object.sprite = null;
             }
+
+            this.vailidateStartFrame();
+            this.$nextTick(()=>{
+                this.$refs.animPlayer.newSpriteSelection();
+            });
+        },
+        vailidateStartFrame(){
+            this.object.startFrame = Math.min(this.object.startFrame, this.object.sprite.frames.length - 1);
+            this.object.startFrame = Math.max(this.object.startFrame, 0);
+            this.$refs.animPlayer.drawFrame();
+        },
+        validateFPS(){
+            this.object.fps = Math.floor(this.object.fps);
+            this.$refs.animPlayer.fpsChanged();
         },
         updateAssetSelection() {
             this.object = this.getSelectedObject();
@@ -122,6 +138,8 @@ export default {
             else{
                 this.$refs.spriteSelector.value = -1;
             }
+
+            this.$refs.animPlayer.newSpriteSelection();
         }
     }
 }
