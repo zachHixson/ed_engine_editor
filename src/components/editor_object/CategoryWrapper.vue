@@ -40,5 +40,6 @@ export default {
 }
 
 .contents{
+    display: flex;
 }
 </style>
