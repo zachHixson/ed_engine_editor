@@ -42,5 +42,23 @@
         "eye_dropper_tool": "Eye Dropper",
         "add_frame": "Add New Frame",
         "delete_frame": "Delete Frame"
+    },
+    "object_editor":{
+        "heading_sprite": "Drawing & Animation",
+        "heading_physics": "Physics",
+        "heading_logic": "Logic",
+        "sprite_selector": "Drawing: ",
+        "start_frame": "Start Frame: ",
+        "fps": "Playback Speed (fps): ",
+        "loop": "Loop: ",
+        "is_solid": "Is Solid: ",
+        "apply_gravity": "Affected by Gravity: ",
+        "room_gravity": "Use Room Gravity: ",
+        "custom_grav_dir": "Custom Gravity Direction ",
+        "logic_type": "Logic Type: ",
+        "logic_preset": "Logic Preset: ",
+        "preset": "Preset",
+        "custom": "Custom",
+        "none": "--none--"
     }
 }

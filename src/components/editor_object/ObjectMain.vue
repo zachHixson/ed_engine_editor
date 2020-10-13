@@ -1,9 +1,9 @@
 <template>
     <div class="objMain">
-        <CategoryWrapper title="Drawing &amp; Animation" iconPath="assets/placeholder">
+        <CategoryWrapper :title="$t('object_editor.heading_sprite')" iconPath="assets/placeholder">
             <div class="options">
                 <div class="control">
-                    <label for="drawing_select">Drawing: </label>
+                    <label for="drawing_select">{{$t('object_editor.sprite_selector')}}</label>
                     <select ref="spriteSelector" id="drawing_select" @change="setObjectSprite">
                         <option
                             v-for="sprite in spriteChoices"
@@ -14,51 +14,51 @@
                     </select>
                 </div>
                 <div class="control">
-                    <label for="frameStart">Start Frame: </label>
+                    <label for="frameStart">{{$t('object_editor.start_frame')}}</label>
                     <input type="number" id="frameStart"  v-model="object.startFrame" @change="vailidateStartFrame()"/>
                 </div>
                 <div class="control">
-                    <label for="fps">Playback Speed (fps): </label>
+                    <label for="fps">{{$t('object_editor.fps')}}</label>
                     <input type="number" id="fps" value="6" v-model="object.fps" @change="validateFPS"/>
                 </div>
                 <div class="control">
-                    <label for="loop">Loop: </label>
+                    <label for="loop">{{$t('object_editor.loop')}}</label>
                     <input type="checkbox" id="loop" checked="true" v-model="object.animLoop"/>
                 </div>
             </div>
             <AnimationPlayer ref="animPlayer" :sprite="object.sprite" :fps="object.fps" :startFrame="object.startFrame"/>
         </CategoryWrapper>
-        <CategoryWrapper title="Physics" iconPath="assets/placeholder">
+        <CategoryWrapper :title="$t('object_editor.heading_physics')" iconPath="assets/placeholder">
             <div class="options">
                 <div class="control">
-                    <label for="isSolid">Is Solid: </label>
+                    <label for="isSolid">{{$t('object_editor.is_solid')}}</label>
                     <input type="checkbox" id="isSolid" checked="true" v-model="object.isSolid"/>
                 </div>
                 <div class="control">
-                    <label for="useGravity">Affected by Gravity: </label>
+                    <label for="useGravity">{{$t('object_editor.apply_gravity')}}</label>
                     <input type="checkbox" id="useGravity" checked="true" v-model="object.applyGravity"/>
                 </div>
                 <div class="control">
-                    <label for="roomGravity">Use room gravity: </label>
+                    <label for="roomGravity">{{$t('object_editor.room_gravity')}}</label>
                     <input type="checkbox" id="roomGravity" checked="true" v-model="object.useRoomGravity"/>
                 </div>
                 <div class="control">
-                    <div>Custom Gravity Direction</div>
+                    <div>{{$t('object_editor.custom_grav_dir')}}</div>
                     <div class="gravPlaceholder"></div>
                 </div>
             </div>
         </CategoryWrapper>
-        <CategoryWrapper title="Logic" iconPath="assets/placeholder">
+        <CategoryWrapper :title="$t('object_editor.heading_logic')" iconPath="assets/placeholder">
             <div class="options">
                 <div class="control">
-                    <label for="drawing_select">Logic Type: </label>
+                    <label for="drawing_select">{{$t('object_editor.logic_type')}}</label>
                     <select id="drawing_select">
-                        <option value="preset">Preset</option>
-                        <option value="custom">Custom</option>
+                        <option value="preset">{{$t('object_editor.preset')}}</option>
+                        <option value="custom">{{$t('object_editor.custom')}}</option>
                     </select>
                 </div>
                 <div class="control">
-                    <label for="drawing_select">Logic Preset: </label>
+                    <label for="drawing_select">{{$t('object_editor.logic_preset')}}</label>
                     <select id="drawing_select"></select>
                 </div>
             </div>
@@ -84,7 +84,7 @@ export default {
     computed: {
         spriteChoices() {
             let sprites = this.$store.getters['GameData/getAllSprites'];
-            let spriteChoices = [{id:-1, name:'--none--'}];
+            let spriteChoices = [{id:-1, name:this.$t('object_editor.none')}];
 
             for (let i = 0; i < sprites.length; i++){
                 spriteChoices.push({
