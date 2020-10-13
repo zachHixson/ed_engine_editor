@@ -22,7 +22,7 @@ class Eraser extends Tool{
     }
 
     updateCursorBuff(){
-        const CURSOR_COLOR = 'rgba(255, 255, 255, 0.8)';
+        const CURSOR_COLOR = '#FFFFFFAA';
 
         this.clearPreviewBuff();
 

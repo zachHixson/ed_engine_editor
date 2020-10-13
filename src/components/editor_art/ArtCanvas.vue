@@ -49,6 +49,7 @@ export default {
         canvas.addEventListener('wheel', this.wheel);
         canvas.addEventListener('mouseleave', this.navControl.mouseLeave);
 
+        this.maxZoom = this.canvasEl.getZoomBounds().max
         this.navControl.setViewBounds(this.canvasEl.getViewBounds());
         this.navControl.setContentsBounds(this.canvasEl.getContentsBounds());
         this.navChanged(this.navControl.getNavState());
@@ -165,7 +166,7 @@ export default {
             this.canvasEl.enableDrawing();
         },
         onCommit(){
-            this.$emit('spriteFrameChanged');
+            this.$emit('spriteDataChanged');
         },
         undo(){
             this.$emit('undo');

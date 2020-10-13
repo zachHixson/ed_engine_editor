@@ -18,7 +18,6 @@ export default {
     justify-content: space-between;
     align-items: flex-start;
     flex-wrap: wrap;
-    width: 100%;
     background: rgb(201, 201, 201);
     padding: 10px;
     margin-bottom: 10px;

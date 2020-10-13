@@ -96,9 +96,7 @@ export default {
             this.drawFrame();
         },
         frameDataChanged(){
-            if (this.curFrameIdx == this.selectedFrame){
-                this.drawFrame();
-            }
+            this.drawFrame();
         },
         fpsChanged(){
             this.pauseAnimation();

@@ -4,7 +4,7 @@
         <button v-show="!isOpen" ref="expandBtn" class="resizeBtn" @click="toggleSize()">&lt;</button>
         <div v-show="isOpen" ref="contents" class="panelContents">
             <div class="animPlayerWrapper">
-                <AnimationPlayer ref="animPlayer" :sprite="sprite" :selectedFrame="currentFrame" fps="12" startFrame="0"/>
+                <AnimationPlayer ref="animPlayer" :sprite="sprite" fps="12" startFrame="0"/>
             </div>
             <div class="scrollWrapper">
                 <div v-if="isOpen" class="frames">
@@ -15,7 +15,7 @@
                         :sprite="sprite"
                         ref="animFrame"
                         class="animFrame"
-                        @frameChanged="frameChanged"
+                        @selectedFrameChanged="selectedFrameChanged"
                         @frameDeleted="deleteFrame"
                         @frameCopied="frameCopied"
                         @frameMoved="frameMoved"/>
@@ -43,7 +43,6 @@ export default {
     data(){
         return {
             isOpen: false,
-            currentFrame: this.getSelectedFrame(),
             sprite: this.$store.getters['AssetBrowser/getSelectedAsset']
         }
     },
@@ -56,9 +55,18 @@ export default {
     methods: {
         toggleSize(){
             this.isOpen = !this.isOpen;
-            this.$nextTick(()=>{this.$emit('resized');});
+            this.$nextTick(()=>{
+                if (this.isOpen){
+                    this.$refs.animPlayer.frameDataChanged();
+                }
+                this.$emit('resized');
+            });
         },
-        updateFramePreviews(range = [0, 1]){
+        updateFramePreviews(range = [0, -1]){
+            if (range[1] == -1){
+                range[1] = this.sprite.frames.length - 1;
+            }
+
             if (this.isOpen){
                 this.$refs.animPlayer.frameDataChanged();
 
@@ -66,7 +74,7 @@ export default {
                     range = [range[0], range[0] + 1];
                 }
 
-                for (let i = range[0]; i < range[1]; i++){
+                for (let i = range[0]; i <= range[1]; i++){
                     this.$refs.animFrame[i].updateCanvas();
                 }
             }
@@ -95,9 +103,8 @@ export default {
         frameCopied(idx){
             this.$emit('frameCopied');
         },
-        frameChanged(idx){
-            this.currentFrame = this.getSelectedFrame();
-            this.$emit('frameChanged');
+        selectedFrameChanged(idx){
+            this.$emit('selectedFrameChanged');
         },
         newSpriteSelection(){
             this.$refs.animPlayer.newSpriteSelection();

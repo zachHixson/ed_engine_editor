@@ -149,15 +149,13 @@ export default {
 .objMain{
     display: flex;
     flex-direction: column;
+    align-items: stretch;
     box-sizing: border-box;
     background: white;
     padding: 20px;
     width: 100%;
-    overflow-x: auto;
-}
-
-.categoryContents{
-    display: flex;
+    overflow-x: none;
+    overflow-y: auto;
 }
 
 .options{

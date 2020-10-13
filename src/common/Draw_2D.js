@@ -33,26 +33,39 @@ class Draw_2D{
         
         for (let i = 0; i < spriteArray.length; i++){
             let curIdx = i * 4;
-            let rgb = this.HexToRGB(spriteArray[i]);
+            let rgb = this.HexToRGBA(spriteArray[i]);
+
+            switch (spriteArray[i].length){
+                case 0:
+                    rgb.a = 0;
+                    break;
+                case 6:
+                case 7:
+                    rgb.a = 255;
+                    break;
+            }
 
             imgData.data[curIdx + 0] = rgb.r;
             imgData.data[curIdx + 1] = rgb.g;
             imgData.data[curIdx + 2] = rgb.b;
-            imgData.data[curIdx + 3] = (spriteArray[i].length > 0) ? 255 : 0;
+            imgData.data[curIdx + 3] = rgb.a;
         }
 
         ctx.putImageData(imgData, 0, 0);
     }
 
-    static HexToRGB(hexStr){
+    static HexToRGBA(hexStr){
+        let offset = 0;
+
         if (hexStr.charAt(0) == '#'){
-            hexStr = hexStr.substring(1);
+            offset = 1;
         }
 
         return {
-            r: parseInt(hexStr.substring(0, 2), 16),
-            g: parseInt(hexStr.substring(2, 4), 16),
-            b: parseInt(hexStr.substring(4, 6), 16),
+            r: parseInt(hexStr.substring(0 + offset, 2 + offset), 16),
+            g: parseInt(hexStr.substring(2 + offset, 4 + offset), 16),
+            b: parseInt(hexStr.substring(4 + offset, 6 + offset), 16),
+            a: parseInt(hexStr.substring(6 + offset, 8 + offset), 16)
         }
     }
 }

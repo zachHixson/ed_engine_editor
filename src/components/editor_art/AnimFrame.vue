@@ -116,7 +116,7 @@ export default {
         },
         selectFrame(idx = this.index){
             this.$store.dispatch('ArtEditor/selectFrame', idx);
-            this.$emit('frameChanged');
+            this.$emit('selectedFrameChanged');
         },
         deleteFrame(event){
             let selectedFrame = this.selectedFrameIdx;
@@ -129,7 +129,7 @@ export default {
             }
 
             this.sprite.deleteFrame(this.index);
-            this.selectFrame(selectedFrame);
+            this.$store.dispatch('ArtEditor/selectFrame', selectedFrame);
             this.$emit('frameDeleted', this.index);
         },
         copyFrame(event){
@@ -143,7 +143,7 @@ export default {
             }
             
             this.sprite.copyFrame(this.index);
-            this.selectFrame(selectedFrame);
+            this.$store.dispatch('ArtEditor/selectFrame', selectedFrame);
             this.$emit('frameCopied', this.index);
         },
         moveFrame(event, dir){

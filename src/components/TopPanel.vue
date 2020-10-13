@@ -91,6 +91,9 @@ export default {
                     this.$store.dispatch('switchTab', newTab);
                 }
             }
+            else{
+                this.$store.dispatch('switchTab', EDITOR_ID.LEVEL);
+            }
         }
     }
 }

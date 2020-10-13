@@ -117,8 +117,10 @@ export default {
             });
         },
         deleteAsset(asset){
+            let selectedAsset = this.getSelected();
+
             //select item adjacent to currently deleted item in the list
-            if (asset.ID == this.getSelected().ID){
+            if (selectedAsset && asset.ID == selectedAsset.ID){
                 let newSelection = null;
 
                 for (let i = 0; i < this.selectedList.length; i++){

@@ -1,9 +1,9 @@
 <template>
     <div id="app">
-        <LogoMenu />
-        <TopPanel ref="topPanel"/>
-        <AssetBrowser ref="assetBrowser" @asset-selected="updateEditorAsset" />
-        <EditorWindow ref="editorWindow" @asset-changed="updateAssetPreviews" />
+        <LogoMenu class="logoMenu" />
+        <TopPanel class="topPanel" ref="topPanel"/>
+        <AssetBrowser class="assetBrowser" ref="assetBrowser" @asset-selected="updateEditorAsset" />
+        <EditorWindow class="editorWindow" ref="editorWindow" @asset-changed="updateAssetPreviews" />
     </div>
 </template>
 
@@ -55,19 +55,19 @@ html, body{
     max-height: 100vh;
 }
 
-LogoMenu{
+.logoMenu{
     grid-area: logoCorner;
 }
 
-TopPanel{
+.topPanel{
     grid-area: topPanel;
 }
 
-AssetBrowser{
+.assetBrowser{
     grid-area: assetBrowser;
 }
 
-EditorWindow{
+.editorWindow{
     grid-area: editorWindow;
 }
 </style>
