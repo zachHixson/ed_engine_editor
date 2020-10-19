@@ -1,6 +1,6 @@
 <template>
     <div class="objMain">
-        <CategoryWrapper :title="$t('object_editor.heading_sprite')" iconPath="assets/placeholder">
+        <CategoryWrapper :title="$t('object_editor.heading_sprite')" iconPath="assets/sprite_icon">
             <div class="options">
                 <div class="control">
                     <label for="drawing_select">{{$t('object_editor.sprite_selector')}}</label>
@@ -28,7 +28,7 @@
             </div>
             <AnimationPlayer ref="animPlayer" :sprite="object.sprite" :fps="object.fps" :startFrame="object.startFrame"/>
         </CategoryWrapper>
-        <CategoryWrapper :title="$t('object_editor.heading_physics')" iconPath="assets/placeholder">
+        <CategoryWrapper :title="$t('object_editor.heading_physics')" iconPath="assets/physics">
             <div class="options">
                 <div class="control">
                     <label for="isSolid">{{$t('object_editor.is_solid')}}</label>
@@ -48,7 +48,7 @@
                 </div>
             </div>
         </CategoryWrapper>
-        <CategoryWrapper :title="$t('object_editor.heading_logic')" iconPath="assets/placeholder">
+        <CategoryWrapper :title="$t('object_editor.heading_logic')" iconPath="assets/logic">
             <div class="options">
                 <div class="control">
                     <label for="drawing_select">{{$t('object_editor.logic_type')}}</label>
