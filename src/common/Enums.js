@@ -1,9 +1,11 @@
+let curEnum = 0;
+
 const CATEGORY_ID = {
     UNDEFINED: -1,
-    SPRITE: 0,
-    OBJECT: 1,
-    TILE: 2,
-    ROOM: 3
+    SPRITE: curEnum++,
+    OBJECT: curEnum++,
+    TILE: curEnum++,
+    ROOM: curEnum++
 }
 Object.freeze(CATEGORY_ID);
 
@@ -17,10 +19,10 @@ const CATEGORY_TYPE = {
 Object.freeze(CATEGORY_TYPE);
 
 const EDITOR_ID = {
-    LEVEL: 0,
-    ART: 1,
-    OBJECT: 2,
-    LOGIC: 3
+    LEVEL: curEnum++,
+    ART: curEnum++,
+    OBJECT: curEnum++,
+    LOGIC: curEnum++
 }
 Object.freeze(EDITOR_ID);
 
