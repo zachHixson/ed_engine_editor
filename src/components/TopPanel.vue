@@ -27,8 +27,8 @@ export default {
     data() {
         return {
             editorTabs: {
-                'level' : {
-                    id: EDITOR_ID.LEVEL,
+                'room' : {
+                    id: EDITOR_ID.ROOM,
                     logoPath: 'assets/room_icon',
                     text: this.$t('editor_main.room_tab')
                 },
@@ -52,16 +52,16 @@ export default {
         }
     },
     mounted() {
-        this.contextTabs = [this.editorTabs['level']];
+        this.contextTabs = [this.editorTabs['room']];
         this.updateEditorTabs();
-        this.$store.dispatch('switchTab', EDITOR_ID.LEVEL)
+        this.$store.dispatch('switchTab', EDITOR_ID.ROOM)
     },
     methods: {
         updateEditorTabs(){
             let currentAsset = this.$store.getters['AssetBrowser/getSelectedAsset'];
             let selectedTab = this.$store.getters['selectedTab'];
 
-            this.contextTabs = [this.editorTabs['level']];
+            this.contextTabs = [this.editorTabs['room']];
 
             if (currentAsset){
                 let assetType = currentAsset.category_ID;
@@ -77,7 +77,7 @@ export default {
 
                 //if user is in tab that no longer exists, transition them to appropriate tab
                 if (this.contextTabs.find(t => t.id == selectedTab) == undefined){
-                    let newTab = EDITOR_ID.LEVEL;
+                    let newTab = EDITOR_ID.ROOM;
 
                     switch(assetType){
                         case CATEGORY_ID.SPRITE:
@@ -92,7 +92,7 @@ export default {
                 }
             }
             else{
-                this.$store.dispatch('switchTab', EDITOR_ID.LEVEL);
+                this.$store.dispatch('switchTab', EDITOR_ID.ROOM);
             }
         }
     }

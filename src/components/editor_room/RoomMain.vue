@@ -1,12 +1,12 @@
 <template>
     <div>
-        Level Editor
+        Room Editor
     </div>
 </template>
 
 <script>
 export default {
-    name: 'LevelEditor',
+    name: 'RoomEditor',
     methods: {
         updateAssetSelection(){
             //

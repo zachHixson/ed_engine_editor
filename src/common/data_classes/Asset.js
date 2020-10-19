@@ -10,6 +10,13 @@ class Asset{
     get type(){return CATEGORY_TYPE.UNDEFINED}
     get category_ID(){return CATEGORY_ID.UNDEFINED}
     get thumbnailData(){return null}
+    
+    toSaveData(){return this}
+
+    fromSaveData(data){
+        Object.assign(this, data);
+        return this;
+    }
 }
 
 export default Asset;

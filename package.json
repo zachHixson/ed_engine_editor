@@ -11,6 +11,7 @@
   "dependencies": {
     "@jaames/iro": "^5.1.8",
     "core-js": "^3.6.5",
+    "file-saver": "^2.0.2",
     "victor": "^1.1.0",
     "vue": "^2.6.11",
     "vue-i18n": "^8.17.3",

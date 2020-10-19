@@ -1,11 +1,19 @@
 {
     "editor_main":{
-        "room_tab" : "Level",
+        "room_tab" : "Room",
         "art_tab" : "Art",
         "object_tab" : "Object",
         "logic_tab" : "Logic",
         "run" : "Run",
         "debug" : "Debug"
+    },
+    "file_menu":{
+        "new": "New",
+        "open": "Open",
+        "save": "Save",
+        "export": "Export Game",
+        "prefs": "Preferences",
+        "about": "About"
     },
     "navigation":{
         "pan_tool": "Pan (Space + Drag)",
@@ -20,10 +28,10 @@
         "title": "Asset Browser",
         "sprites": "Drawings",
         "objects": "Objects",
-        "rooms": "Levels",
+        "rooms": "Rooms",
         "sprite_prefix": "Drawing_",
         "object_prefix": "Object_",
-        "room_prefix": "Level_"
+        "room_prefix": "Room_"
     },
     "art_editor":{
         "small_brush": "Small Brush",

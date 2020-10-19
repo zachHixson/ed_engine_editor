@@ -19,7 +19,7 @@ const CATEGORY_TYPE = {
 Object.freeze(CATEGORY_TYPE);
 
 const EDITOR_ID = {
-    LEVEL: curEnum++,
+    ROOM: curEnum++,
     ART: curEnum++,
     OBJECT: curEnum++,
     LOGIC: curEnum++
@@ -27,7 +27,7 @@ const EDITOR_ID = {
 Object.freeze(EDITOR_ID);
 
 const EDITOR_TYPE = {
-    LEVEL: 'LEVEL',
+    ROOM: 'ROOM',
     ART: 'ART',
     OBJECT: 'OBJECT',
     LOGIC: 'LOGIC'

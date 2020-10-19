@@ -1,3 +1,4 @@
+import {version as EDITOR_VERSION} from '@/../package.json';
 import i18n from '@/i18n';
 import {CATEGORY_ID} from '@/common/Enums';
 import Sprite from '@/common/data_classes/Sprite';
@@ -5,17 +6,13 @@ import Game_Object from '@/common/data_classes/Game_Object';
 import Room from '@/common/data_classes/Room';
 
 const state = {
+    projectName: 'untitled',
     sprites: [],
     objects: [],
     rooms: []
 };
 
 const getters = {
-    serialize: () => {
-        return {
-            sprites
-        }
-    },
     getRandomSprite: () => {
         let tempData = [];
 
@@ -43,7 +40,18 @@ const getters = {
     getEmptySprite: () => new Array(16 * 16).fill(''),
     getAllSprites: state => state.sprites,
     getAllObjects: state => state.objects,
-    getAllRooms: state => state.rooms
+    getAllRooms: state => state.rooms,
+    getSaveData: (state) => {
+        let saveObj = {
+            projectName: state.projectName,
+            editor_version: EDITOR_VERSION,
+            sprites: state.sprites.map(s => s.toSaveData()),
+            objects: state.objects.map(o => o.toSaveData()),
+            rooms: state.rooms.map(r => r.toSaveData())
+        }
+
+        return JSON.stringify(saveObj);
+    }
 };
 
 const actions = {
@@ -51,7 +59,10 @@ const actions = {
         commit('addAsset', category);
     },
     deleteAsset({commit}, {category, id}){
-        commit('deleteAsset', {category, id})
+        commit('deleteAsset', {category, id});
+    },
+    loadSaveData({commit}, projString){
+        commit('loadSaveData', projString);
     }
 };
 
@@ -65,13 +76,13 @@ const mutations = {
                 state.sprites.push(newSprite);
                 break;
             case CATEGORY_ID.OBJECT:
-                let objName = 'Object_' + getSuffixNum(state.objects);
+                let objName = i18n.tc(`asset_browser.object_prefix`) + getSuffixNum(state.objects);
                 let newObject = new Game_Object();
                 newObject.name = objName;
                 state.objects.push(newObject);
                 break;
             case CATEGORY_ID.ROOM:
-                let roomName = 'Room_' + getSuffixNum(state.rooms);
+                let roomName = i18n.tc(`asset_browser.room_prefix`) + getSuffixNum(state.rooms);
                 let newRoom = new Room();
                 newRoom.name = roomName;
                 state.rooms.push(newRoom);
@@ -100,6 +111,15 @@ const mutations = {
                 hasFound = true;
             }
         }
+    },
+    loadSaveData: (state, projString) => {
+        let loadObj = JSON.parse(projString);
+        
+        state.projectName = loadObj.projectName;
+        state.editor_version = loadObj.editor_version;
+        state.sprites = loadObj.sprites.map(s => new Sprite().fromSaveData(s));
+        state.objects = loadObj.objects.map(o => new Game_Object().fromSaveData(o));
+        state.rooms = loadObj.rooms.map(r => new Room().fromSaveData(r));
     }
 };
 

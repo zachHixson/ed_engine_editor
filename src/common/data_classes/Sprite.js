@@ -23,6 +23,23 @@ class Sprite extends Asset{
 
         return null;
     }
+    
+    toSaveData(){
+        let stripped = Object.assign({}, this);
+        stripped.frames = this.getFramesCopy();
+        this.compressFrames(stripped.frames);
+        delete stripped.frameIDs;
+
+        return stripped;
+    }
+
+    fromSaveData(data){
+        Object.assign(this, data);
+        this.decompressFrames(this.frames);
+        this.hashAllFrames();
+
+        return this;
+    }
 
     updateFrame(idx){
         this.frameIDs[idx] = this.hashFrame(idx);
@@ -113,6 +130,36 @@ class Sprite extends Asset{
         }
 
         return frameHash;
+    }
+
+    compressFrames(frames){
+        //strip '#' from frames
+        for (let f = 0; f < frames.length; f++){
+            for (let p = 0; p < frames[f].length; p++){
+                let curFrame = frames[f][p];
+
+                if (curFrame.length > 0){
+                    curFrame = curFrame.substring(1, curFrame.length);
+                }
+
+                frames[f][p] = curFrame;
+            }
+        }
+    }
+
+    decompressFrames(frames){
+        //Add '#' back to frames
+        for (let f = 0; f < frames.length; f++){
+            for (let p = 0; p < frames[f].length; p++){
+                let curFrame = frames[f][p];
+
+                if (curFrame.length == 6){
+                    curFrame = '#' + curFrame;
+                }
+
+                frames[f][p] = curFrame;
+            }
+        }
     }
 }
 
