@@ -20,11 +20,9 @@
         "title": "Asset Browser",
         "sprites": "Drawings",
         "objects": "Objects",
-        "tiles": "Tiles",
         "rooms": "Levels",
         "sprite_prefix": "Drawing_",
         "object_prefix": "Object_",
-        "tile_prefix": "Tile_",
         "room_prefix": "Level_"
     },
     "art_editor":{

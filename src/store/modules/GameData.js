@@ -2,13 +2,11 @@ import i18n from '@/i18n';
 import {CATEGORY_ID} from '@/common/Enums';
 import Sprite from '@/common/data_classes/Sprite';
 import Game_Object from '@/common/data_classes/Game_Object';
-import Tile from '@/common/data_classes/Tile';
 import Room from '@/common/data_classes/Room';
 
 const state = {
     sprites: [],
     objects: [],
-    tiles: [],
     rooms: []
 };
 
@@ -45,7 +43,6 @@ const getters = {
     getEmptySprite: () => new Array(16 * 16).fill(''),
     getAllSprites: state => state.sprites,
     getAllObjects: state => state.objects,
-    getAllTiles: state => state.tiles,
     getAllRooms: state => state.rooms
 };
 
@@ -73,12 +70,6 @@ const mutations = {
                 newObject.name = objName;
                 state.objects.push(newObject);
                 break;
-            case CATEGORY_ID.TILE:
-                let tileName = 'Tile_' + getSuffixNum(state.tiles);
-                let newTile = new Tile();
-                newTile.name = tileName;
-                state.tiles.push(newTile);
-                break;
             case CATEGORY_ID.ROOM:
                 let roomName = 'Room_' + getSuffixNum(state.rooms);
                 let newRoom = new Room();
@@ -97,9 +88,6 @@ const mutations = {
                 break;
             case CATEGORY_ID.OBJECT:
                 curList = state.objects;
-                break;
-            case CATEGORY_ID.TILE:
-                curList = state.tiles;
                 break;
             case CATEGORY_ID.ROOM:
                 curList = state.rooms;

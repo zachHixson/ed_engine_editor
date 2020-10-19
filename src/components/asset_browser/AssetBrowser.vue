@@ -62,11 +62,6 @@ export default {
                     icon: 'assets/object_icon'
                 },
                 {
-                    cat_ID: CATEGORY_ID.TILE,
-                    text: this.$t("asset_browser.tiles"),
-                    icon: 'assets/tile_icon'
-                },
-                {
                     cat_ID: CATEGORY_ID.ROOM,
                     text: this.$t("asset_browser.rooms"),
                     icon: 'assets/room_icon'
@@ -85,8 +80,6 @@ export default {
                     return this.$store.getters['GameData/getAllSprites'];
                 case CATEGORY_ID.OBJECT:
                     return this.$store.getters['GameData/getAllObjects'];
-                case CATEGORY_ID.TILE:
-                    return this.$store.getters['GameData/getAllTiles'];
                 case CATEGORY_ID.ROOM:
                     return this.$store.getters['GameData/getAllRooms'];
             }
