@@ -29,22 +29,22 @@ export default {
             editorTabs: {
                 'level' : {
                     id: EDITOR_ID.LEVEL,
-                    logoPath: 'assets/placeholder',
-                    text: this.$t('editor_main.level_tab')
+                    logoPath: 'assets/room_icon',
+                    text: this.$t('editor_main.room_tab')
                 },
                 'art' : {
                     id: EDITOR_ID.ART,
-                    logoPath: 'assets/placeholder',
+                    logoPath: 'assets/sprite_icon',
                     text: this.$t('editor_main.art_tab')
                 },
                 'object' : {
                     id: EDITOR_ID.OBJECT,
-                    logoPath: 'assets/placeholder',
+                    logoPath: 'assets/object_icon',
                     text: this.$t('editor_main.object_tab')
                 },
                 'logic' : {
                     id: EDITOR_ID.LOGIC,
-                    logoPath: 'assets/placeholder',
+                    logoPath: 'assets/logic',
                     text: this.$t('editor_main.logic_tab')
                 },
             },

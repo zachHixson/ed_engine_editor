@@ -1,6 +1,6 @@
 {
     "editor_main":{
-        "level_tab" : "Level",
+        "room_tab" : "Level",
         "art_tab" : "Art",
         "object_tab" : "Object",
         "logic_tab" : "Logic",
@@ -21,11 +21,11 @@
         "sprites": "Drawings",
         "objects": "Objects",
         "tiles": "Tiles",
-        "rooms": "Rooms",
+        "rooms": "Levels",
         "sprite_prefix": "Drawing_",
         "object_prefix": "Object_",
         "tile_prefix": "Tile_",
-        "room_prefix": "Room_"
+        "room_prefix": "Level_"
     },
     "art_editor":{
         "small_brush": "Small Brush",
