@@ -1,6 +1,9 @@
 <template>
     <div id="app">
-        <LogoMenu class="logoMenu" />
+        <LogoMenu class="logoMenu"
+            @new-project="newProject"
+            @open-project="openProject"
+            @save-project="saveProject" />
         <TopPanel class="topPanel" ref="topPanel"/>
         <AssetBrowser class="assetBrowser" ref="assetBrowser" @asset-selected="updateEditorAsset" />
         <EditorWindow class="editorWindow" ref="editorWindow" @asset-changed="updateAssetPreviews" />
@@ -8,6 +11,9 @@
 </template>
 
 <script>
+import {saveAs} from 'file-saver';
+import {EDITOR_ID} from '@/common/Enums';
+import ID_Generator from '@/common/ID_Generator';
 import LogoMenu from './components/LogoMenu';
 import TopPanel from './components/TopPanel';
 import AssetBrowser from './components/asset_browser/AssetBrowser';
@@ -28,6 +34,20 @@ export default {
         updateEditorAsset(){
             this.$refs.editorWindow.updateAssetSelection();
             this.$refs.topPanel.updateEditorTabs();
+        },
+        newProject(){
+            this.$store.dispatch('GameData/newProject');
+            this.$store.dispatch('AssetBrowser/deselectAssets');
+            this.$store.dispatch('switchTab', EDITOR_ID.ROOM);
+            this.updateEditorAsset();
+            ID_Generator.reset();
+        },
+        openProject(data){
+            this.$store.dispatch('GameData/loadSaveData', data);
+        },
+        saveProject(){
+            let blob = new Blob([this.$store.getters['GameData/getSaveData']]);
+            saveAs(blob, "MyFile.edproj");
         }
     }
 }

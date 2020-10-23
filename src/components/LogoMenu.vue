@@ -23,8 +23,6 @@
 </template>
 
 <script>
-import {saveAs} from 'file-saver';
-
 let enumID = 0;
 
 export default {
@@ -37,7 +35,7 @@ export default {
                 {
                     id: enumID++,
                     text: this.$t('file_menu.new'),
-                    method: () => {console.log("New")}
+                    method: this.new
                 },
                 {
                     id: enumID++,
@@ -119,12 +117,14 @@ export default {
                 this.$nextTick(()=>{
                     this.$refs.projNameEdit.focus();
                     this.$refs.projNameEdit.select();
-                }, 10);
+                });
             }
         },
+        new(){
+            this.$emit('new-project');
+        },
         save(){
-            let blob = new Blob([this.$store.getters['GameData/getSaveData']]);
-            saveAs(blob, "MyFile.edproj");
+            this.$emit('save-project');
         },
         open(event){
             this.$refs.fileOpen.click();
@@ -135,7 +135,7 @@ export default {
             if ('files' in input && input.files.length > 0){
                 let reader = new FileReader();
                 reader.onload = () => {
-                    this.$store.dispatch('GameData/loadSaveData', reader.result);
+                    this.$emit('open-project', reader.result);
                 }
                 reader.readAsText(input.files[0]);
             }

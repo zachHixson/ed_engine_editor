@@ -54,6 +54,10 @@ class ID_Generator_Class{
             ) + 1;
         }
     }
+
+    reset(){
+        this.curStep = 0;
+    }
 }
 
 let ID_Generator = new ID_Generator_Class();

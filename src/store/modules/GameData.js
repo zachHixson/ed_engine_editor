@@ -4,6 +4,7 @@ import {CATEGORY_ID} from '@/common/Enums';
 import Sprite from '@/common/data_classes/Sprite';
 import Game_Object from '@/common/data_classes/Game_Object';
 import Room from '@/common/data_classes/Room';
+import {ID_Generator} from '@/common/ID_Generator';
 
 const state = {
     projectName: 'untitled',
@@ -65,6 +66,9 @@ const actions = {
     deleteAsset({commit}, {category, id}){
         commit('deleteAsset', {category, id});
     },
+    newProject({commit}){
+        commit('newProject');
+    },
     loadSaveData({commit}, projString){
         commit('loadSaveData', projString);
     }
@@ -118,6 +122,12 @@ const mutations = {
                 hasFound = true;
             }
         }
+    },
+    newProject: (state) => {
+        state.projectName = 'untitled';
+        state.sprites = [];
+        state.objects = [];
+        state.rooms = [];
     },
     loadSaveData: (state, projString) => {
         let loadObj = JSON.parse(projString);
