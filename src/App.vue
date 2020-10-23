@@ -37,17 +37,21 @@ export default {
         },
         newProject(){
             this.$store.dispatch('GameData/newProject');
-            this.$store.dispatch('AssetBrowser/deselectAssets');
-            this.$store.dispatch('switchTab', EDITOR_ID.ROOM);
-            this.updateEditorAsset();
+            this.resetUI();
             ID_Generator.reset();
         },
         openProject(data){
             this.$store.dispatch('GameData/loadSaveData', data);
+            this.resetUI();
         },
         saveProject(){
             let blob = new Blob([this.$store.getters['GameData/getSaveData']]);
             saveAs(blob, "MyFile.edproj");
+        },
+        resetUI(){
+            this.$store.dispatch('AssetBrowser/deselectAssets');
+            this.$store.dispatch('switchTab', EDITOR_ID.ROOM);
+            this.updateEditorAsset();
         }
     }
 }
