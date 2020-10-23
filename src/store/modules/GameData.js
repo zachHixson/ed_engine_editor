@@ -13,6 +13,7 @@ const state = {
 };
 
 const getters = {
+    getProjectName: state => state.projectName,
     getRandomSprite: () => {
         let tempData = [];
 
@@ -55,6 +56,9 @@ const getters = {
 };
 
 const actions = {
+    setProjectName({commit}, newName){
+        commit('setProjectName', newName);
+    },
     addAsset({commit}, category){
         commit('addAsset', category);
     },
@@ -67,6 +71,9 @@ const actions = {
 };
 
 const mutations = {
+    setProjectName: (state, newName) => {
+        state.projectName = newName;
+    },
     addAsset: (state, category) => {
         switch (category){
             case CATEGORY_ID.SPRITE:

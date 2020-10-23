@@ -1,5 +1,6 @@
 {
     "editor_main":{
+        "project_name": "Project Name:",
         "room_tab" : "Room",
         "art_tab" : "Art",
         "object_tab" : "Object",
