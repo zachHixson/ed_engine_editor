@@ -36,16 +36,16 @@ export default {
             this.$refs.topPanel.updateEditorTabs();
         },
         newProject(){
-            this.$store.dispatch('GameData/newProject');
+            this.$store.dispatch('newProject');
             this.resetUI();
             ID_Generator.reset();
         },
         openProject(data){
-            this.$store.dispatch('GameData/loadSaveData', data);
+            this.$store.dispatch('loadSaveData', data);
             this.resetUI();
         },
         saveProject(){
-            let blob = new Blob([this.$store.getters['GameData/getSaveData']]);
+            let blob = new Blob([this.$store.getters['getSaveData']]);
             saveAs(blob, "MyFile.edproj");
         },
         resetUI(){

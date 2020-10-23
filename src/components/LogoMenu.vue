@@ -68,10 +68,10 @@ export default {
     computed: {
         projName: {
             get: function(){
-                return this.$store.getters['GameData/getProjectName'];
+                return this.$store.getters['getProjectName'];
             },
             set: function(newName){
-                this.$store.dispatch('GameData/setProjectName', newName);
+                this.$store.dispatch('setProjectName', newName);
             }
         }
     },

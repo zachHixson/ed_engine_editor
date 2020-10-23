@@ -1,20 +1,16 @@
-import {version as EDITOR_VERSION} from '@/../package.json';
 import i18n from '@/i18n';
 import {CATEGORY_ID} from '@/common/Enums';
 import Sprite from '@/common/data_classes/Sprite';
 import Game_Object from '@/common/data_classes/Game_Object';
 import Room from '@/common/data_classes/Room';
-import {ID_Generator} from '@/common/ID_Generator';
 
 const state = {
-    projectName: 'untitled',
     sprites: [],
     objects: [],
     rooms: []
 };
 
 const getters = {
-    getProjectName: state => state.projectName,
     getRandomSprite: () => {
         let tempData = [];
 
@@ -42,24 +38,10 @@ const getters = {
     getEmptySprite: () => new Array(16 * 16).fill(''),
     getAllSprites: state => state.sprites,
     getAllObjects: state => state.objects,
-    getAllRooms: state => state.rooms,
-    getSaveData: (state) => {
-        let saveObj = {
-            projectName: state.projectName,
-            editor_version: EDITOR_VERSION,
-            sprites: state.sprites.map(s => s.toSaveData()),
-            objects: state.objects.map(o => o.toSaveData()),
-            rooms: state.rooms.map(r => r.toSaveData())
-        }
-
-        return JSON.stringify(saveObj);
-    }
+    getAllRooms: state => state.rooms
 };
 
 const actions = {
-    setProjectName({commit}, newName){
-        commit('setProjectName', newName);
-    },
     addAsset({commit}, category){
         commit('addAsset', category);
     },
@@ -75,9 +57,6 @@ const actions = {
 };
 
 const mutations = {
-    setProjectName: (state, newName) => {
-        state.projectName = newName;
-    },
     addAsset: (state, category) => {
         switch (category){
             case CATEGORY_ID.SPRITE:
@@ -122,21 +101,6 @@ const mutations = {
                 hasFound = true;
             }
         }
-    },
-    newProject: (state) => {
-        state.projectName = 'untitled';
-        state.sprites = [];
-        state.objects = [];
-        state.rooms = [];
-    },
-    loadSaveData: (state, projString) => {
-        let loadObj = JSON.parse(projString);
-        
-        state.projectName = loadObj.projectName;
-        state.editor_version = loadObj.editor_version;
-        state.sprites = loadObj.sprites.map(s => new Sprite().fromSaveData(s));
-        state.objects = loadObj.objects.map(o => new Game_Object().fromSaveData(o));
-        state.rooms = loadObj.rooms.map(r => new Room().fromSaveData(r));
     }
 };
 
