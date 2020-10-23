@@ -1,11 +1,11 @@
 <template>
-    <div id="leftPanel">
-        <div id="leftPanelWrapper" ref="leftPanelWrapper">
-            <div id="panelContents">
-                <div id="pickerWrapper">
-                    <div id="picker"></div>
+    <div class="leftPanel">
+        <div class="leftPanelWrapper" ref="leftPanelWrapper">
+            <div v-show="isOpen" class="panelContents">
+                <div class="pickerWrapper">
+                    <div id="picker" class="picker"></div>
                 </div>
-                <div id="brushSizeContainer">
+                <div class="brushSizeContainer">
                     <Brush
                         :key="size.tool"
                         v-for="size in brushSizes"
@@ -15,7 +15,7 @@
                         :curSelection="selectedSize"
                         @toolClicked="sizeChanged"/>
                 </div>
-                <div id="toolType">
+                <div class="toolType">
                     <Brush
                         :key="brush.tool"
                         v-for="brush in brushes"
@@ -26,12 +26,10 @@
                         @toolClicked="toolChanged"/>
                 </div>
             </div>
-            <button class="collapseButton" ref="collapseButton" @click="toggleOpen">
+            <button v-show="isOpen" class="collapseButton" ref="collapseButton" @click="toggleOpen">
                 &lt;
             </button>
-        </div>
-        <div id="expandWrapper" ref="expandWrapper">
-            <button class="collapseButton" ref="expandButton" @click="toggleOpen">
+            <button v-show="!isOpen" class="collapseButton" ref="expandButton" @click="toggleOpen">
                 &gt;
             </button>
         </div>
@@ -125,10 +123,8 @@ export default {
             color: this.selectedColor,
             width: 200
         });
-        expandWrapper.style.display = "none";
-
-        this.resize();
         this.colorPicker.on("color:change", this.colorChanged);
+        this.$emit('resized');
     },
     beforeDestroy(){
         this.$store.dispatch('ArtEditor/setToolPanelState', this.isOpen);
@@ -157,22 +153,9 @@ export default {
         }),
         toggleOpen(){
             this.isOpen = !this.isOpen;
-            this.resize();
-        },
-        resize(){
-            let leftPanel = this.$refs.leftPanelWrapper;
-            let expandWrapper = this.$refs.expandWrapper;
-
-            if (this.isOpen){
-                leftPanel.style.display = "flex";
-                expandWrapper.style.display = "none";
-            }
-            else{
-                leftPanel.style.display = "none";
-                expandWrapper.style.display = "flex";
-            }
-
-            this.$emit('resized');
+            this.$nextTick(()=>{
+                this.$emit('resized');
+            });
         },
         colorChanged(color){
             this.selectColor(color.hexString);
@@ -189,36 +172,36 @@ export default {
 </script>
 
 <style scoped>
-    #leftPanel{
+    .leftPanel{
         height: 100%;
     }
 
-    #leftPanelWrapper{
+    .leftPanelWrapper{
         display: flex;
         flex-direction: row;
         justify-content: flex-end;
         background: #FFAAAA;
-        width: 200pt;
         height: 100%;
         border-right: 1px solid black;
     }
 
-    #panelContents{
+    .panelContents{
         display: flex;
         flex-direction: column;
         align-items: center;
         align-content:flex-start;
         flex-grow: 1;
+        width: 200pt;
         height: 100%;
     }
 
-    #pickerWrapper{
+    .pickerWrapper{
         display: flex;
         justify-content: center;
         padding: 10pt;
     }
 
-    #brushSizeContainer{
+    .brushSizeContainer{
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
@@ -226,7 +209,7 @@ export default {
         width: 100%;
     }
 
-    #toolType{
+    .toolType{
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
@@ -244,16 +227,7 @@ export default {
         border: 1px solid black;
     }
 
-    #collapseButton > *{
+    .collapseButton > *{
         pointer-events: none;
-    }
-
-    #expandWrapper{
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        height: 100%;
-        background: #FFAAAA;
-        width: 15pt;
     }
 </style>

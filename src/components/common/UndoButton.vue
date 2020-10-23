@@ -1,7 +1,13 @@
 <template>
     <div class="viewportControl" :title="altText" @click="onClick">
-        <img class="icon" :class="{iconDisabled : !isActive}" ref="iconImg" />
-        <div class="altText" ref="altText">
+        <img
+            v-show="iconLoaded"
+            class="icon"
+            :class="{iconDisabled : !isActive}"
+            ref="iconImg"
+            :src="require(`@/${icon}.svg`)"
+            @error="iconLoaded = false" />
+        <div v-show="!iconLoaded" class="altText" ref="altText">
             {{altText}}
         </div>
     </div>
@@ -11,13 +17,9 @@
 export default {
     name: 'UndoButton',
     props: ['icon', 'altText', 'isActive'],
-    mounted() {
-        if (this.icon != null){
-            this.$refs.iconImg.src = require(`@/${this.icon}.svg`);
-            this.$refs.altText.style.display = 'none';
-        }
-        else{
-            this.$refs.iconImg.style.display = 'none';
+    data() {
+        return {
+            iconLoaded: true
         }
     },
     methods: {

@@ -199,10 +199,18 @@ export default {
 }
 
 .displayEditBox{
+    position: relative;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+}
+
+.projNameDisplay{
+    max-width: 8em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .projNameEdit{
@@ -210,6 +218,8 @@ export default {
 }
 
 .renameBtn{
+    position: absolute;
+    right: 5px;
     display: flex;
     justify-content: center;
     align-items: center;

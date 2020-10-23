@@ -1,7 +1,7 @@
 <template>
     <div class="brush" :class="{brushSelected : isSelected}" @click="click" :title="name">
-        <img class="icon" ref="iconImg" />
-        <div class="altText" ref="altText">
+        <img v-show="iconLoaded" class="icon" ref="iconImg" :src="require(`@/${icon}.svg`)" @error="iconLoaded = false" />
+        <div v-show="!iconLoaded" class="altText" ref="altText">
             {{name}}
         </div>
     </div>
@@ -11,15 +11,9 @@
 export default {
     name: 'Brush',
     props: ['icon', 'tool', 'name', 'curSelection'],
-    mounted() {
-        let iconPath = this.icon || '';
-
-        if (iconPath.length > 0){
-            this.$refs.iconImg.src = require(`@/${iconPath}.svg`);
-            this.$refs.altText.style.display = 'none';
-        }
-        else{
-            this.$refs.iconIMg.style.display = 'none';
+    data() {
+        return {
+            iconLoaded: true
         }
     },
     computed: {
