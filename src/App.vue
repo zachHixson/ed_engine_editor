@@ -38,7 +38,6 @@ export default {
         newProject(){
             this.$store.dispatch('newProject');
             this.resetUI();
-            ID_Generator.reset();
         },
         openProject(data){
             this.$store.dispatch('loadSaveData', data);

@@ -58,6 +58,14 @@ class ID_Generator_Class{
     reset(){
         this.curStep = 0;
     }
+
+    getCurrentID(){
+        return this.curStep;
+    }
+
+    setID(id){
+        this.curStep = id;
+    }
 }
 
 let ID_Generator = new ID_Generator_Class();

@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import {version as EDITOR_VERSION} from '@/../package.json';
+import ID_Generator from '@/common/ID_Generator';
 import MainWindow from './modules/MainWindow';
 import GameData from './modules/GameData';
 import ArtEditor from './modules/ArtEditor';
@@ -22,6 +23,7 @@ export default new Vuex.Store({
             let saveObj = {
                 projectName: state.projectName,
                 editor_version: EDITOR_VERSION,
+                newestID: ID_Generator.getCurrentID(),
                 sprites: gameData.sprites.map(s => s.toSaveData()),
                 objects: gameData.objects.map(o => o.toSaveData()),
                 rooms: gameData.rooms.map(r => r.toSaveData())
@@ -51,13 +53,15 @@ export default new Vuex.Store({
             gameData.sprites = [];
             gameData.objects = [];
             gameData.rooms = [];
+            ID_Generator.reset();
         },
         loadSaveData: (state, projString) => {
             let gameData = GameData.state;
             let loadObj = JSON.parse(projString);
             
-            gameData.projectName = loadObj.projectName;
+            state.projectName = loadObj.projectName;
             gameData.editor_version = loadObj.editor_version;
+            ID_Generator.setID(loadObj.newestID);
             gameData.sprites = loadObj.sprites.map(s => new Sprite().fromSaveData(s));
             gameData.objects = loadObj.objects.map(o => new Game_Object().fromSaveData(o));
             gameData.rooms = loadObj.rooms.map(r => new Room().fromSaveData(r));
