@@ -92,10 +92,16 @@ export default {
         },
         frameMoved({idx, dir}){
             if (dir < 0){
-                this.updateFramePreviews([idx - 1, idx + 1]);
+                this.updateFramePreviews([
+                    Math.max(idx - 1, 0),
+                    Math.min(idx + 1, this.sprite.frames.length - 1)
+                ]);
             }
             else{
-                this.updateFramePreviews([idx, idx + 2]);
+                this.updateFramePreviews([
+                    idx,
+                    Math.min(idx + 2, this.sprite.frames.length - 1)
+                ]);
             }
             
             this.$emit('frameMoved');

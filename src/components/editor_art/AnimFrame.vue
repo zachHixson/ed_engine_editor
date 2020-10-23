@@ -158,6 +158,7 @@ export default {
             
             this.sprite.moveFrame(this.index, dir);
             this.$store.dispatch('ArtEditor/selectFrame', selectFrame);
+            this.$emit('selectedFrameChanged');
             this.$emit('frameMoved', {idx: this.index, dir});
         }
     }
