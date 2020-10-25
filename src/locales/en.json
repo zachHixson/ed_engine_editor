@@ -67,5 +67,13 @@
         "preset": "Preset",
         "custom": "Custom",
         "none": "--none--"
+    },
+    "room_editor":{
+        "select_move": "Select and Move",
+        "add_brush": "Add Brush",
+        "eraser": "Eraser",
+        "camera": "Camera Tool",
+        "room_props": "Room Properties",
+        "toggle_grid": "Toggle Grid"
     }
 }

@@ -1,24 +1,5 @@
+import {ART_TOOL_SIZE} from '@/common/Enums';
 import Util_2D from '@/common/Util_2D';
-
-const TOOL_SIZE = {
-    SMALL: 0,
-    MEDIUM: 1,
-    LARGE: 2
-}
-Object.freeze(TOOL_SIZE);
-
-const TOOL_TYPE = {
-    BRUSH: 0,
-    BUCKET: 1,
-    LINE: 2,
-    BOX: 3,
-    BOX_FILL: 4,
-    ELLIPSE: 5,
-    ELLIPSE_FILL: 6,
-    ERASER: 7,
-    EYE_DROPPER: 8
-}
-Object.freeze(TOOL_TYPE);
 
 class Tool{
     constructor(){
@@ -32,6 +13,19 @@ class Tool{
         this.brushSize = 0;
         this.canDraw = true;
         this.commitCallback;
+    }
+
+    get brushPxSize(){
+        switch(this.brushSize){
+            case ART_TOOL_SIZE.SMALL:
+                return 0
+            case ART_TOOL_SIZE.MEDIUM:
+                return 1
+            case ART_TOOL_SIZE.LARGE:
+                return 2
+            default:
+                return 0
+        }
     }
 
     mouseDown(event){
@@ -119,5 +113,4 @@ class Tool{
     }
 }
 
-export {TOOL_SIZE, TOOL_TYPE};
 export default Tool;

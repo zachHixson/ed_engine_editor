@@ -1,5 +1,5 @@
 <template>
-    <div class="brush" :class="{brushSelected : isSelected}" @click="click" :title="name">
+    <div class="tool" :class="{toolSelected : isSelected}" @click="click" :title="name">
         <img v-show="iconLoaded" class="icon" ref="iconImg" :src="require(`@/${icon}.svg`)" @error="iconLoaded = false" />
         <div v-show="!iconLoaded" class="altText" ref="altText">
             {{name}}
@@ -9,8 +9,8 @@
 
 <script>
 export default {
-    name: 'Brush',
-    props: ['icon', 'tool', 'name', 'curSelection'],
+    name: 'Tool',
+    props: ['icon', 'tool', 'name', 'curSelection', 'toggled'],
     data() {
         return {
             iconLoaded: true
@@ -18,7 +18,7 @@ export default {
     },
     computed: {
         isSelected(){
-            return (this.curSelection == this.tool);
+            return (this.curSelection == this.tool) || (this.toggled);
         }
     },
     methods: {
@@ -30,7 +30,7 @@ export default {
 </script>
 
 <style scoped>
-    .brush{
+    .tool{
         display: flex;
         justify-content: center;
         align-items: center;
@@ -42,15 +42,19 @@ export default {
         border: 2px solid black;
     }
 
-    .brush:hover:not(.controlSelected){
+    .tool:hover:not(.controlSelected){
         background: #AA0000;
     }
 
-    .brush > *{
+    .tool:active:hover{
+        background: #AA5500;
+    }
+
+    .tool > *{
         pointer-events: none;
     }
 
-    .brushSelected {
+    .toolSelected {
         background: #880000;
     }
 

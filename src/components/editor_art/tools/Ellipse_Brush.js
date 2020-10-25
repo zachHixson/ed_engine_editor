@@ -1,4 +1,5 @@
 import Tool from './Tool';
+import {ART_TOOL_SIZE} from '@/common/Enums';
 import Victor from 'victor';
 import Util_2D from '@/common/Util_2D';
 
@@ -26,7 +27,7 @@ class Ellipse_Brush extends Tool{
             this.isMouseDown &&
             Util_2D.isInBounds(this.startPos.x, this.startPos.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
         ){
-            this.drawEllipse(this.startPos, this.mouseCell, this.brushSize);
+            this.drawEllipse(this.startPos, this.mouseCell, this.brushPxSize);
         }
 
         if (

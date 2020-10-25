@@ -1,4 +1,5 @@
 import Tool from './Tool';
+import {ART_TOOL_SIZE} from '@/common/Enums';
 import Victor from 'victor';
 import Util_2D from '@/common/Util_2D';
 
@@ -56,13 +57,13 @@ class Line_Brush extends Tool{
             Util_2D.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
         ){
             switch(this.brushSize){
-                case 0:
+                case ART_TOOL_SIZE.SMALL:
                     this.previewBuff[Util_2D.get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = this.color;
                     break;
-                case 1:
+                case ART_TOOL_SIZE.MEDIUM:
                     this.fillRect(this.mouseCell.x, this.mouseCell.y, this.mouseCell.x + 1, this.mouseCell.y + 1);
                     break;
-                case 2:
+                case ART_TOOL_SIZE.LARGE:
                     this.fillRect(this.mouseCell.x - 1, this.mouseCell.y - 1, this.mouseCell.x + 1, this.mouseCell.y + 1);
                     break;
             }
@@ -86,14 +87,14 @@ class Line_Brush extends Tool{
     drawPixel(x, y){
         if (Util_2D.isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
             switch(this.brushSize){
-                case 0:
+                case ART_TOOL_SIZE.SMALL:
                     let xyIdx = Util_2D.get2DIdx(x, y, this.cellWidth);
                     this.previewBuff[xyIdx] = this.color;
                     break;
-                case 1:
+                case ART_TOOL_SIZE.MEDIUM:
                     this.fillRect(x, y, x + 1, y + 1);
                     break;
-                case 2:
+                case ART_TOOL_SIZE.LARGE:
                     this.fillRect(x - 1, y - 1, x + 1, y + 1);
                     break;
             }

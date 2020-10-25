@@ -6,6 +6,7 @@ import MainWindow from './modules/MainWindow';
 import GameData from './modules/GameData';
 import ArtEditor from './modules/ArtEditor';
 import AssetBrowser from './modules/AssetBrowser';
+import RoomEditor from './modules/RoomEditor';
 import Sprite from '@/common/data_classes/Sprite';
 import Game_Object from '@/common/data_classes/Game_Object';
 import Room from '@/common/data_classes/Room';
@@ -71,6 +72,7 @@ export default new Vuex.Store({
         MainWindow,
         GameData,
         ArtEditor,
-        AssetBrowser
+        AssetBrowser,
+        RoomEditor
     }
 });

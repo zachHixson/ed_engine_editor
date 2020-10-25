@@ -6,7 +6,7 @@
                     <div id="picker" class="picker"></div>
                 </div>
                 <div class="brushSizeContainer">
-                    <Brush
+                    <Tool
                         :key="size.tool"
                         v-for="size in brushSizes"
                         :icon="size.icon"
@@ -16,7 +16,7 @@
                         @toolClicked="sizeChanged"/>
                 </div>
                 <div class="toolType">
-                    <Brush
+                    <Tool
                         :key="brush.tool"
                         v-for="brush in brushes"
                         :icon="brush.icon"
@@ -39,13 +39,13 @@
 <script>
 import {store, mapActions, mapGetters} from 'vuex';
 import iro from '@jaames/iro';
-import {TOOL_SIZE, TOOL_TYPE} from './tools/Tool';
-import Brush from './Brush';
+import {ART_TOOL_SIZE, ART_TOOL_TYPE} from '@/common/Enums';
+import Tool from '@/components/common/Tool';
 
 export default {    
     name : "LeftPanel",
     components: {
-        Brush
+        Tool
     },
     data() {
         return {
@@ -53,64 +53,64 @@ export default {
             colorPicker: null,
             brushSizes: [
                 {
-                    tool: TOOL_SIZE.SMALL,
+                    tool: ART_TOOL_SIZE.SMALL,
                     name: this.$t('art_editor.small_brush'),
                     icon: 'assets/small_brush'
                 },
                 {
-                    tool: TOOL_SIZE.MEDIUM,
+                    tool: ART_TOOL_SIZE.MEDIUM,
                     name: this.$t('art_editor.medium_brush'),
                     icon: 'assets/medium_brush'
                 },
                 {
-                    tool: TOOL_SIZE.LARGE,
+                    tool: ART_TOOL_SIZE.LARGE,
                     name: this.$t('art_editor.large_brush'),
                     icon: 'assets/large_brush'
                 }
             ],
             brushes: [
                 {
-                    tool: TOOL_TYPE.BRUSH,
+                    tool: ART_TOOL_TYPE.BRUSH,
                     name: this.$t('art_editor.brush_tool'),
                     icon: 'assets/brush'
                 },
                 {
-                    tool: TOOL_TYPE.BUCKET,
+                    tool: ART_TOOL_TYPE.BUCKET,
                     name: this.$t('art_editor.bucket_tool'),
                     icon: 'assets/bucket'
                 },
                 {
-                    tool: TOOL_TYPE.LINE,
+                    tool: ART_TOOL_TYPE.LINE,
                     name: this.$t('art_editor.line_tool'),
                     icon: 'assets/line'
                 },
                 {
-                    tool: TOOL_TYPE.BOX,
+                    tool: ART_TOOL_TYPE.BOX,
                     name: this.$t('art_editor.box_stroke_tool'),
                     icon: 'assets/box'
                 },
                 {
-                    tool: TOOL_TYPE.BOX_FILL,
+                    tool: ART_TOOL_TYPE.BOX_FILL,
                     name: this.$t('art_editor.box_fill_tool'),
                     icon: 'assets/box_filled'
                 },
                 {
-                    tool: TOOL_TYPE.ELLIPSE,
+                    tool: ART_TOOL_TYPE.ELLIPSE,
                     name: this.$t('art_editor.circle_stroke_tool'),
                     icon: 'assets/circle'
                 },
                 {
-                    tool: TOOL_TYPE.ELLIPSE_FILL,
+                    tool: ART_TOOL_TYPE.ELLIPSE_FILL,
                     name: this.$t('art_editor.circle_fill_tool'),
                     icon: 'assets/circle_filled'
                 },
                 {
-                    tool: TOOL_TYPE.ERASER,
+                    tool: ART_TOOL_TYPE.ERASER,
                     name: this.$t('art_editor.eraser_tool'),
                     icon: 'assets/eraser'
                 },
                 {
-                    tool: TOOL_TYPE.EYE_DROPPER,
+                    tool: ART_TOOL_TYPE.EYE_DROPPER,
                     name: this.$t('art_editor.eye_dropper_tool'),
                     icon: 'assets/eye_dropper'
                 }

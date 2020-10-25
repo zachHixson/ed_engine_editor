@@ -1,9 +1,10 @@
 import Navigation from './Navigation';
+import {ART_TOOL_SIZE, ART_TOOL_TYPE} from '@/common/Enums';
 
 const state = {
     selectedColor : "#FFFFFF",
-    selectedSize: 0,
-    selectedTool: 0,
+    selectedSize: ART_TOOL_SIZE.SMALL,
+    selectedTool: ART_TOOL_TYPE.BRUSH,
     selectedFrame: 0,
     toolPanelOpen: true,
     animPanelOpen: false

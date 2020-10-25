@@ -1,4 +1,5 @@
 import Tool from './Tool';
+import {ART_TOOL_SIZE} from '@/common/Enums';
 import Util_2D from '@/common/Util_2D';
 
 class Eraser extends Tool{
@@ -32,13 +33,13 @@ class Eraser extends Tool{
             //erase sprite data
             if (this.isMouseDown){
                 switch(this.brushSize){
-                    case 0:
+                    case ART_TOOL_SIZE.SMALL:
                         this.pixelBuff[Util_2D.get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = '';
                         break;
-                    case 1:
+                    case ART_TOOL_SIZE.MEDIUM:
                         this.clearRect(this.mouseCell.x - 1, this.mouseCell.y - 1, this.mouseCell.x, this.mouseCell.y);
                         break;
-                    case 2:
+                    case ART_TOOL_SIZE.LARGE:
                         this.clearRect(this.mouseCell.x - 1, this.mouseCell.y - 1, this.mouseCell.x + 1, this.mouseCell.y + 1);
                         break;
                 }
@@ -46,13 +47,13 @@ class Eraser extends Tool{
 
             //draw preview cursor
             switch(this.brushSize){
-                case 0:
+                case ART_TOOL_SIZE.SMALL:
                     this.previewBuff[Util_2D.get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = CURSOR_COLOR;
                     break;
-                case 1:
+                case ART_TOOL_SIZE.MEDIUM:
                     this.fillRect(this.mouseCell.x - 1, this.mouseCell.y - 1, this.mouseCell.x, this.mouseCell.y, CURSOR_COLOR);
                     break;
-                case 2:
+                case ART_TOOL_SIZE.LARGE:
                     this.fillRect(this.mouseCell.x - 1, this.mouseCell.y - 1, this.mouseCell.x + 1, this.mouseCell.y + 1, CURSOR_COLOR);
                     break;
             }

@@ -1,7 +1,7 @@
 import Victor from 'victor';
 import Util_2D from '@/common/Util_2D';
 import Draw_2D from '@/common/Draw_2D';
-import {TOOL_TYPE} from './tools/Tool';
+import {ART_TOOL_TYPE} from '@/common/Enums';
 import Brush from './tools/Brush';
 import Bucket from './tools/Bucket';
 import Line_Brush from './tools/Line_Brush';
@@ -174,31 +174,31 @@ class Art_Canvas_Renderer{
         }
         else{
             switch(newTool){
-                case TOOL_TYPE.BRUSH:
+                case ART_TOOL_TYPE.BRUSH:
                     this.tool = new Brush();
                     break;
-                case TOOL_TYPE.BUCKET:
+                case ART_TOOL_TYPE.BUCKET:
                     this.tool = new Bucket();
                     break;
-                case TOOL_TYPE.LINE:
+                case ART_TOOL_TYPE.LINE:
                     this.tool = new Line_Brush();
                     break;
-                case TOOL_TYPE.BOX:
+                case ART_TOOL_TYPE.BOX:
                     this.tool = new Box_Brush();
                     break;
-                case TOOL_TYPE.BOX_FILL:
+                case ART_TOOL_TYPE.BOX_FILL:
                     this.tool = new Box_Brush(true);
                     break;
-                case TOOL_TYPE.ELLIPSE:
+                case ART_TOOL_TYPE.ELLIPSE:
                     this.tool = new Ellipse_Brush();
                     break;
-                case TOOL_TYPE.ELLIPSE_FILL:
+                case ART_TOOL_TYPE.ELLIPSE_FILL:
                     this.tool = new Ellipse_Brush(true);
                     break;
-                case TOOL_TYPE.ERASER:
+                case ART_TOOL_TYPE.ERASER:
                     this.tool = new Eraser();
                     break;
-                case TOOL_TYPE.EYE_DROPPER:
+                case ART_TOOL_TYPE.EYE_DROPPER:
                     this.tool = new Eye_Dropper();
                     break;
                 default:

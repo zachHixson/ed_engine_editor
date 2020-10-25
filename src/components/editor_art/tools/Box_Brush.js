@@ -1,4 +1,5 @@
 import Tool from './Tool';
+import {ART_TOOL_SIZE} from '@/common/Enums';
 import Victor from 'victor';
 import Util_2D from '@/common/Util_2D';
 
@@ -26,7 +27,7 @@ class Box_Brush extends Tool{
             this.isMouseDown &&
             Util_2D.isInBounds(this.startPos.x, this.startPos.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
         ){
-            this.drawBox(this.startPos, this.mouseCell, this.brushSize);
+            this.drawBox(this.startPos, this.mouseCell, this.brushPxSize);
         }
 
         if (
@@ -34,13 +35,13 @@ class Box_Brush extends Tool{
             Util_2D.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
         ){
             switch(this.brushSize){
-                case 0:
+                case ART_TOOL_SIZE.SMALL:
                     this.previewBuff[Util_2D.get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = this.color;
                     break;
-                case 1:
+                case ART_TOOL_SIZE.MEDIUM:
                     this.fillRect(this.mouseCell.x, this.mouseCell.y, this.mouseCell.x + 1, this.mouseCell.y + 1);
                     break;
-                case 2:
+                case ART_TOOL_SIZE.LARGE:
                     this.fillRect(this.mouseCell.x, this.mouseCell.y, this.mouseCell.x + 2, this.mouseCell.y + 2);
                     break;
             }
