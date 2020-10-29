@@ -28,11 +28,11 @@
 
 <script>
 import {store, mapActions, mapGetters} from 'vuex';
+import Undo_Store from '@/common/Undo_Store';
+import {CATEGORY_ID} from '@/common/Enums';
 import LeftPanel from './LeftPanel';
 import ArtCanvas from './ArtCanvas';
 import AnimationPanel from './AnimationPanel';
-import Undo_Store from './Undo_Store';
-import {CATEGORY_ID} from '@/common/Enums';
 
 const MAX_UNDO_STEPS = 32;
 
