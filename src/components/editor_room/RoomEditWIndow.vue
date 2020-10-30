@@ -7,11 +7,18 @@
             stateModule="RoomEditor"
             maxZoom="2"
             @navChanged="canvasRenderer.navChange($event)"/>
-        <canvas ref="canvas" class="canvas">//Canvas Error</canvas>
+        <canvas
+            ref="canvas"
+            class="canvas"
+            @mousedown="emitMouseEvent($event, mEvents.DOWN)"
+            @mouseup="emitMouseEvent($event, mEvents.UP)"
+            @mousemove="emitMouseEvent($event, mEvents.MOVE)">//Canvas Error</canvas>
     </div>
 </template>
 
 <script>
+import Victor from 'victor';
+import {MOUSE_EVENT} from '@/common/Enums';
 import NavControlPanel from '@/components/common/NavControlPanel';
 import UndoPanel from '@/components/common/UndoPanel';
 import Room_Edit_Renderer from './Room_Edit_Renderer';
@@ -25,7 +32,8 @@ export default {
     data() {
         return {
             canvasEl: null,
-            canvasRenderer: null
+            canvasRenderer: null,
+            mEvents: MOUSE_EVENT
         }
     },
     mounted() {
@@ -49,7 +57,18 @@ export default {
         this.canvasEl.addEventListener('mouseleave', this.$refs.navControlPanel.mouseLeave);
     },
     beforeDestroy() {
+        //unbind canvas events
         window.removeEventListener('resize', this.resize);
+        this.canvasEl.removeEventListener('mousedown', this.canvasRenderer.mouseDown.bind(this.canvasRenderer));
+        this.canvasEl.removeEventListener('mouseup', this.canvasRenderer.mouseUp.bind(this.canvasRenderer));
+        this.canvasEl.removeEventListener('mousemove', this.canvasRenderer.mouseMove.bind(this.canvasRenderer));
+
+        //unbind Nav Panel Events
+        this.canvasEl.removeEventListener('mousedown', this.$refs.navControlPanel.mouseDown);
+        this.canvasEl.removeEventListener('mouseup', this.$refs.navControlPanel.mouseUp);
+        this.canvasEl.removeEventListener('mousemove', this.$refs.navControlPanel.mouseMove);
+        this.canvasEl.removeEventListener('wheel', this.$refs.navControlPanel.scroll);
+        this.canvasEl.removeEventListener('mouseleave', this.$refs.navControlPanel.mouseLeave);
     },
     methods: {
         resize() {
@@ -63,6 +82,12 @@ export default {
             if (this.canvasRenderer){
                 this.canvasRenderer.resize();
             }
+        },
+        emitMouseEvent(event, type){ 
+            let canvasPos = new Victor(event.offsetX, event.offsetY);
+            let worldPos = canvasPos.clone();
+            this.canvasRenderer.viewTransformPoint(worldPos);
+            this.$emit('mouse-event', {type, canvasPos, worldPos});
         }
     }
 }

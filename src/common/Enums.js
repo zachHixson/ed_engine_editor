@@ -63,3 +63,21 @@ export const ROOM_TOOL_TYPE = {
     TOGGLE_GRID: curEnum++,
 }
 Object.freeze(ROOM_TOOL_TYPE);
+
+export const ROOM_ACTION = {
+    MOVE: curEnum++,
+    ADD: curEnum++,
+    DELETE: curEnum++,
+    CAMERA_CHANGE: curEnum++,
+    ROOM_PROP_CHANGE: curEnum++
+}
+Object.freeze(ROOM_ACTION);
+
+export const MOUSE_EVENT = {
+    CLICK: curEnum++,
+    DOWN: curEnum++,
+    UP: curEnum++,
+    MOVE: curEnum++,
+    LEAVE: curEnum++
+}
+Object.freeze(MOUSE_EVENT);
