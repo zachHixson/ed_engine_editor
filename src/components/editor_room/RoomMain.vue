@@ -18,9 +18,11 @@
                 @toolClicked="$store.dispatch('RoomEditor/setGridState', !viewGrid)"/>
         </div>
         <RoomEditWindow
+            v-if="isRoomSelected"
             ref="editWindow"
             class="editWindow"
             @mouse-event="mouseEvent" />
+        <div v-else class="noRoomSelected">{{$t('room_editor.no_room_selected')}}</div>
         <div class="propertyPanel">
             <button v-show="propertiesOpen" class="resizeBtn" @click="propertiesOpen = false; resize()">
                 &gt;
@@ -37,7 +39,7 @@
 
 <script>
 import Victor from 'victor';
-import {ROOM_TOOL_TYPE, ROOM_ACTION, MOUSE_EVENT} from '@/common/Enums';
+import {ROOM_TOOL_TYPE, ROOM_ACTION, MOUSE_EVENT, CATEGORY_ID} from '@/common/Enums';
 import Undo_Store from '@/common/Undo_Store';
 import RoomEditWindow from './RoomEditWIndow';
 import Tool from '@/components/common/Tool';
@@ -51,6 +53,7 @@ export default {
     data() {
         return {
             propertiesOpen: false,
+            selectedRoom: null,
             tools: [
                 {
                     tool: ROOM_TOOL_TYPE.SELECT_MOVE,
@@ -97,6 +100,9 @@ export default {
         },
         viewGrid() {
             return this.$store.getters['RoomEditor/getGridState'];
+        },
+        isRoomSelected() {
+            return this.selectedRoom;
         }
     },
     mounted() {
@@ -125,11 +131,13 @@ export default {
     },
     methods: {
         updateAssetSelection() {
-            //
+            this.selectedRoom = this.$store.getters['AssetBrowser/getSelectedRoom'];
         },
         resize() {
             this.$nextTick(()=>{
-                this.$refs.editWindow.resize();
+                if (this.$refs.editWindow){
+                    this.$refs.editWindow.resize();
+                }
             });
         },
         mouseEvent(mEvent){
@@ -238,5 +246,11 @@ export default {
 .toolSpacer{
     width: 100%;
     height: 10px;
+}
+
+.noRoomSelected{
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 </style>

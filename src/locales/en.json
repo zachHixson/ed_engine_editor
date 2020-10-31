@@ -74,6 +74,7 @@
         "eraser": "Eraser",
         "camera": "Camera Tool",
         "room_props": "Room Properties",
-        "toggle_grid": "Toggle Grid"
+        "toggle_grid": "Toggle Grid",
+        "no_room_selected": "Select a room to edit it"
     }
 }

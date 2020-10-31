@@ -38,12 +38,13 @@ export default {
     computed: {
         isSelected(){
             let selectedAsset = this.$store.getters['AssetBrowser/getSelectedAsset'];
-            
-            if (selectedAsset){
-                return this.$store.getters['AssetBrowser/getSelectedAsset'].ID == this.asset.ID;
-            }
+            let selectedRoom = this.$store.getters['AssetBrowser/getSelectedRoom'];
+            let isSelected = false;
 
-            return false;
+            isSelected |= (selectedAsset) ? selectedAsset.ID == this.asset.ID : false
+            isSelected |= (selectedRoom) ? selectedRoom.ID == this.asset.ID : false
+
+            return isSelected;
         }
     },
     mounted(){

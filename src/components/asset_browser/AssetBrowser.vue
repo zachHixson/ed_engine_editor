@@ -129,7 +129,12 @@ export default {
             this.$store.dispatch('GameData/deleteAsset', {category: asset.category_ID, id: asset.ID});
         },
         selectAsset(asset){
-            this.$store.dispatch('AssetBrowser/selectAsset', asset);
+            if (asset.category_ID == CATEGORY_ID.ROOM){
+                this.$store.dispatch('AssetBrowser/selectRoom', asset);
+            }
+            else{
+                this.$store.dispatch('AssetBrowser/selectAsset', asset);
+            }
             this.$emit('asset-selected');
         },
         getSelected(){
