@@ -8,6 +8,7 @@ class Game_Object extends Asset{
         this.startFrame = 0;
         this.fps = 6;
         this.animLoop = true;
+        this.zDepth = 0;
         this.isSolid = false;
         this.applyGravity = false;
         this.useRoomGravity = true;

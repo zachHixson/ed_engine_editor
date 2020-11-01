@@ -50,7 +50,7 @@ class Linked_List{
             this.end = newNode;
         }
         else{
-            let newNode = new Node(val);
+            let newNode = new Node(val, null, this.end);
             this.end.next = newNode;
             this.end = newNode;
         }
@@ -59,29 +59,16 @@ class Linked_List{
     }
 
     pop(){
-        if (this.start && this.start.next){
-            let returnVal = null;
-            let penultNode = this.start;
-
-            while (penultNode.next && penultNode.next.next){
-                penultNode = penultNode.next;
-            }
-
-            returnVal = penultNode.next.val;
-            penultNode.next = null;
-            this.end = penultNode;
-            this.length--;
-            return returnVal;
-        }
-        else if (this.start){
-            let returnVal = this.start.val;
-            this.start = null;
-            this.end = null;
-            this.length--;
+        if (this.end && this.end.prev){
+            let returnVal = this.end.val;
+            this.end = this.end.prev;
+            this.end.next = null;
             return returnVal;
         }
         else{
-            return null;
+            let returnVal = this.end.val;
+            this.end = null;
+            return returnVal;
         }
     }
 
@@ -90,6 +77,7 @@ class Linked_List{
             let returnVal = this.start.val;
             let secondNode = this.start.next;
             this.start = secondNode;
+            secondNode.prev = null;
             this.length--;
             return returnVal;
         }
@@ -113,7 +101,7 @@ class Linked_List{
 
         if (lNode){
             let rNode = lNode.next;
-            let newNode = new Node(val, rNode);
+            let newNode = new Node(val, rNode, lNode);
 
             lNode.next = newNode;
             this.length++;
@@ -141,11 +129,65 @@ class Linked_List{
         }
     }
 
+    sort(smallestFunc = (a, b) => a < b){
+        let head = null;
+        let tail = null;
+
+        while (this.start){
+            let smallest = this._findSmallestNode(smallestFunc);
+
+            this._removeNode(smallest);
+
+            if (tail){
+                tail.next = smallest;
+            }
+
+            if (!head){
+                head = smallest;
+            }
+
+            if (smallest == this.start){
+                this.start = (this.start.next) ? this.start.next : null;
+            }
+
+            smallest.prev = tail;
+            smallest.next = null;
+            tail = smallest;
+        }
+
+        this.start = head;
+    }
+
+    _removeNode(node){
+        if (node.prev){
+            node.prev.next = node.next;
+        }
+
+        if (node.next){
+            node.next.prev = node.prev;
+        }
+    }
+
+    _findSmallestNode(smallestFunc = (a, b) => a < b){
+        let smallest = this.start;
+        let seeker = this.start?.next;
+
+        while (seeker){
+            if (smallestFunc(seeker.val, smallest.val)){
+                smallest = seeker;
+            }
+
+            seeker = seeker.next;
+        }
+
+        return smallest;
+    }
+
     toArray(){
         let newArray = [];
         let curNode = this.start;
 
-        while (curNode != null){
+        while (curNode){
             newArray.push(curNode.val);
             curNode = curNode.next;
         }
@@ -155,9 +197,10 @@ class Linked_List{
 }
 
 class Node{
-    constructor(val, next = null){
+    constructor(val, next = null, prev = null){
         this.val = val;
         this.next = next;
+        this.prev = prev;
     }
 }
 
