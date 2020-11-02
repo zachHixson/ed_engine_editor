@@ -9,6 +9,7 @@ export default class Room_Edit_Renderer{
         this.gridBuff = document.createElement('canvas');
         this.mouse = {
             down: false,
+            pos: new Victor(0, 0),
             cell: new Victor(0, 0)
         }
         this.navData = {
@@ -20,11 +21,16 @@ export default class Room_Edit_Renderer{
         this.roundedCanvas = new Victor(0, 0);
         this.scaledCellWidth = this.cell_px_width * this.navData.zoomFac;
         this.halfCanvas = new Victor(0, 0);
-        this.vpCenterWorld = new Victor(0, 0);
-        this.vpCenterWorldScaled = new Victor(0, 0);
         this.recalcRoundedCanvas();
         this.recalcHalfCanvas();
-        this.recalcVpCenterWorld();
+    }
+
+    getMouseWorldPos(){
+        return this.mouse.pos;
+    }
+
+    getMouseWorldCell(){
+        return this.mouse.cell;
     }
 
     recalcHalfCanvas(){
@@ -37,11 +43,6 @@ export default class Room_Edit_Renderer{
         this.roundedCanvas.y = Math.ceil(this.canvas.height / this.scaledCellWidth) * this.scaledCellWidth;
     }
 
-    recalcVpCenterWorld(){
-        this.vpCenterWorld.copy(this.navData.rawOffset.clone().add(this.halfCanvas));
-        this.vpCenterWorldScaled.copy(this.vpCenterWorld.clone().multiplyScalar(this.navData.zoomFac).add(this.halfCanvas));
-    }
-
     mouseDown(event){
         this.mouse.down = true;
     }
@@ -51,7 +52,19 @@ export default class Room_Edit_Renderer{
     }
 
     mouseMove(event){
-        //
+        let screenCoords = new Victor(event.offsetX, event.offsetY);
+        let worldCoords = this.screenToWorldPos(screenCoords.clone());
+        let cell = worldCoords.clone();
+        
+        cell.divideScalar(this.cell_px_width);
+        cell.subtractScalar(0.5);
+        cell.unfloat();
+
+        this.mouse.pos.copy(worldCoords);
+        this.mouse.cell.copy(cell);
+
+        this.drawCursor();
+        this.composite();
     }
 
     navChange(navEventData){
@@ -59,7 +72,6 @@ export default class Room_Edit_Renderer{
         this.navData.zoomFac = navEventData.zoomFac;
         this.scaledCellWidth = this.cell_px_width * this.navData.zoomFac;
         this.recalcRoundedCanvas();
-        this.recalcVpCenterWorld()
         this.fullRedraw();
     }
 
@@ -78,13 +90,15 @@ export default class Room_Edit_Renderer{
     composite(){
         let ctx = this.canvas.getContext('2d');
 
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.drawBackground();
         ctx.drawImage(this.objBuff, 0, 0, this.objBuff.width, this.objBuff.height);
         ctx.drawImage(this.cursorBuff, 0, 0, this.cursorBuff.width, this.cursorBuff.height);
         ctx.drawImage(this.gridBuff, 0, 0, this.gridBuff.width, this.gridBuff.height);
     }
 
     fullRedraw(){
-        this.drawBackground();
         this.drawObjects();
         this.drawCursor();
         this.drawGrid();
@@ -102,27 +116,35 @@ export default class Room_Edit_Renderer{
     }
 
     drawCursor(){
-        //
+        let ctx = this.cursorBuff.getContext("2d");
+        let screenCell = this.worldToScreenPos(this.mouse.cell.clone().multiplyScalar(this.cell_px_width));
+
+        ctx.clearRect(0, 0, this.cursorBuff.width, this.cursorBuff.height);
+
+        ctx.fillStyle = "#AAAAAA88";
+        ctx.fillRect(screenCell.x, screenCell.y, this.scaledCellWidth, this.scaledCellWidth);
     }
 
     drawGrid(){
         let ctx = this.gridBuff.getContext('2d');
         let maxDim = Math.max(this.gridBuff.width, this.gridBuff.height);
         let lineCount = Math.ceil(maxDim / this.scaledCellWidth);
+        let origin = new Victor(0, 0);
 
         lineCount += (lineCount % 2 == 0) ? 1 : 0;
+        this.worldToScreenPos(origin);
 
         ctx.clearRect(0, 0, this.gridBuff.width, this.gridBuff.height);
 
         //draw lines
-        ctx.strokeStyle = "#777";
+        ctx.strokeStyle = "#BBB";
         ctx.lineWidth = 2;
         ctx.beginPath();
-        for (let i = 0; i < lineCount; i++){
+        for (let i = 1; i < lineCount; i++){
             let offset = i * this.cell_px_width;
             let pos = new Victor(offset, offset);
 
-            this.viewTransformPoint(pos);
+            this.worldToScreenPos(pos);
 
             //wrap lines around canvas
             pos.x = mod(pos.x, this.roundedCanvas.x);
@@ -137,17 +159,40 @@ export default class Room_Edit_Renderer{
         }
         ctx.stroke();
 
+        //draw origin axis
+        ctx.strokeStyle = "#FF0000";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, origin.y);
+        ctx.lineTo(this.canvas.width, origin.y);
+        ctx.stroke();
+        ctx.strokeStyle = "#00FF00";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(origin.x, 0);
+        ctx.lineTo(origin.x, this.canvas.height);
+        ctx.stroke();
+
         //draw test points
         ctx.fillStyle = 'black';
         ctx.fillRect(0, 0, 10, 10);
         ctx.fillRect(this.gridBuff.width - 10, this.gridBuff.height - 10, this.gridBuff.width, this.gridBuff.height);
     }
 
-    viewTransformPoint(pt){
+    screenToWorldPos(pt){
+        pt.subtract(this.halfCanvas);
+        pt.divideScalar(this.navData.zoomFac);
+        pt.subtract(this.navData.rawOffset);
+
+        return pt;
+    }
+
+    worldToScreenPos(pt){
         pt.add(this.navData.rawOffset);
-        pt.subtract(this.vpCenterWorld);
         pt.multiplyScalar(this.navData.zoomFac);
-        pt.add(this.vpCenterWorldScaled);
+        pt.add(this.halfCanvas);
+
+        return pt;
     }
 }
 

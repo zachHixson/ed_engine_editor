@@ -85,9 +85,9 @@ export default {
         },
         emitMouseEvent(event, type){ 
             let canvasPos = new Victor(event.offsetX, event.offsetY);
-            let worldPos = canvasPos.clone();
-            this.canvasRenderer.viewTransformPoint(worldPos);
-            this.$emit('mouse-event', {type, canvasPos, worldPos});
+            let worldPos = this.canvasRenderer.getMouseWorldPos();
+            let cellPos = this.canvasRenderer.getMouseCellPos();
+            this.$emit('mouse-event', {type, canvasPos, worldPos, cellPos});
         }
     }
 }
