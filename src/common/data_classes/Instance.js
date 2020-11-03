@@ -7,6 +7,8 @@ class Instance{
     }
 
     get zDepth(){return (this.objRef) ? this.objRef.zDepth : this.zDepthOverride}
+    get editorFrame(){return this.objRef.editorFrame};
+    get editorFrameID(){return this.objRef.editorFrameID};
 }
 
 export default Instance;

@@ -1,4 +1,5 @@
 import Victor from 'victor';
+import Draw_2D from '@/common/Draw_2D';
 
 export default class Room_Edit_Renderer{
     constructor(element){
@@ -7,6 +8,8 @@ export default class Room_Edit_Renderer{
         this.objBuff = document.createElement('canvas');
         this.cursorBuff = document.createElement('canvas');
         this.gridBuff = document.createElement('canvas');
+        this.zDrawList = null;
+        this.spriteCache = new Map();
         this.mouse = {
             down: false,
             pos: new Victor(0, 0),
@@ -29,8 +32,18 @@ export default class Room_Edit_Renderer{
         return this.mouse.pos;
     }
 
-    getMouseWorldCell(){
+    getMouseCell(){
         return this.mouse.cell;
+    }
+
+    getMouseWorldCell(){
+        return this.mouse.cell.clone().multiplyScalar(this.cell_px_width);
+    }
+
+    setZDrawList(list){
+        this.zDrawList = list;
+        this.drawObjects();
+        this.composite();
     }
 
     recalcHalfCanvas(){
@@ -75,6 +88,11 @@ export default class Room_Edit_Renderer{
         this.fullRedraw();
     }
 
+    instancesAdded(){
+        this.drawObjects();
+        this.composite();
+    }
+
     resize(){
         this.objBuff.width = this.canvas.width;
         this.objBuff.height = this.canvas.height;
@@ -112,7 +130,47 @@ export default class Room_Edit_Renderer{
     }
 
     drawObjects(){
-        //
+        let ctx = this.objBuff.getContext('2d');
+        let scaleFac = this.scaledCellWidth / 16;
+
+        ctx.clearRect(0, 0, this.objBuff.width, this.objBuff.height);
+        ctx.imageSmoothingEnabled = false;
+        ctx.webkitImageSmoothingEnabled = false;
+
+        if (this.zDrawList){
+            this.zDrawList.forEach((inst) => {
+                let pos = Victor.fromObject(inst.pos);
+
+                this.worldToScreenPos(pos);
+
+                //only draw sprite if it's within the view bounds
+                if (
+                    pos.x > -this.scaledCellWidth &&
+                    pos.x < this.objBuff.width + this.scaledCellWidth &&
+                    pos.y > -this.scaledCellWidth &&
+                    pos.y < this.objBuff.height + this.scaledCellWidth
+                ){
+                    let spriteBuff;
+
+                    //cache sprites once they are already drawn once
+                    if (this.spriteCache.has(inst.editorFrameID)){
+                        spriteBuff = this.spriteCache.get(inst.editorFrameID);
+                    }
+                    else{
+                        spriteBuff = this.newSpriteBuff();
+                        Draw_2D.drawPixelData(spriteBuff, inst.editorFrame);
+                        this.spriteCache.set(inst.editorFrameID, spriteBuff);
+                    }
+
+                    //draw sprite
+                    ctx.save();
+                    ctx.translate(pos.x, pos.y);
+                    ctx.scale(scaleFac, scaleFac);
+                    ctx.drawImage(spriteBuff, 0, 0, 16, 16);
+                    ctx.restore();
+                }
+            });
+        }
     }
 
     drawCursor(){
@@ -193,6 +251,14 @@ export default class Room_Edit_Renderer{
         pt.add(this.halfCanvas);
 
         return pt;
+    }
+
+    newSpriteBuff(){
+        let newBuff = document.createElement('canvas');
+        newBuff.width = 16;
+        newBuff.height = 16;
+
+        return newBuff;
     }
 }
 

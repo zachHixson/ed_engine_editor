@@ -15,7 +15,7 @@
                 </div>
                 <div class="control">
                     <label for="frameStart">{{$t('object_editor.start_frame')}}</label>
-                    <input type="number" id="frameStart"  v-model="object.startFrame" @change="vailidateStartFrame()"/>
+                    <input type="number" ref="frameStart" id="frameStart"  v-model="startFrame"/>
                 </div>
                 <div class="control">
                     <label for="fps">{{$t('object_editor.fps')}}</label>
@@ -94,6 +94,16 @@ export default {
             }
 
             return spriteChoices;
+        },
+        startFrame: {
+            get(){
+                return this.object.startFrame;
+            },
+            set(newFrame){
+                this.$refs.frameStart.value = this.object.startFrame;
+                this.object.startFrame = newFrame;
+                this.$refs.animPlayer.drawFrame();
+            }
         }
     },
     mounted() {
@@ -119,11 +129,6 @@ export default {
             this.$nextTick(()=>{
                 this.$refs.animPlayer.newSpriteSelection();
             });
-        },
-        vailidateStartFrame(){
-            this.object.startFrame = Math.min(this.object.startFrame, this.object.sprite.frames.length - 1);
-            this.object.startFrame = Math.max(this.object.startFrame, 0);
-            this.$refs.animPlayer.drawFrame();
         },
         validateFPS(){
             this.object.fps = Math.floor(this.object.fps);

@@ -5,7 +5,7 @@ class Game_Object extends Asset{
     constructor(){
         super();
         this.sprite = null;
-        this.startFrame = 0;
+        this._startFrame = 0;
         this.fps = 6;
         this.animLoop = true;
         this.zDepth = 0;
@@ -19,6 +19,13 @@ class Game_Object extends Asset{
 
     get type(){return CATEGORY_TYPE.OBJECT}
     get category_ID(){return CATEGORY_ID.OBJECT}
+    get startFrame(){return this._startFrame}
+    get editorFrame(){return this.sprite.frames[this._startFrame]}
+    get editorFrameID(){return this.sprite.frameIDs[this._startFrame]}
+
+    set startFrame(frame){
+        this._startFrame = Math.max(Math.min(frame, this.sprite.frames.length - 1), 0);
+    }
 }
 
 export default Game_Object;

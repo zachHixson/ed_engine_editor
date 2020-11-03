@@ -25,6 +25,7 @@ import Room_Edit_Renderer from './Room_Edit_Renderer';
 
 export default {
     name: 'RoomEditWindow',
+    props: ['selectedRoom'],
     components: {
         NavControlPanel,
         UndoPanel
@@ -55,6 +56,10 @@ export default {
         this.canvasEl.addEventListener('mousemove', this.$refs.navControlPanel.mouseMove);
         this.canvasEl.addEventListener('wheel', this.$refs.navControlPanel.scroll);
         this.canvasEl.addEventListener('mouseleave', this.$refs.navControlPanel.mouseLeave);
+
+        if (this.selectedRoom){
+            this.roomChange();
+        }
     },
     beforeDestroy() {
         //unbind canvas events
@@ -71,6 +76,9 @@ export default {
         this.canvasEl.removeEventListener('mouseleave', this.$refs.navControlPanel.mouseLeave);
     },
     methods: {
+        roomChange(){
+            this.canvasRenderer.setZDrawList(this.selectedRoom.zSortedList);
+        },
         resize() {
             let wrapper = this.$refs.editWindow;
             
@@ -86,8 +94,12 @@ export default {
         emitMouseEvent(event, type){ 
             let canvasPos = new Victor(event.offsetX, event.offsetY);
             let worldPos = this.canvasRenderer.getMouseWorldPos();
-            let cellPos = this.canvasRenderer.getMouseCellPos();
-            this.$emit('mouse-event', {type, canvasPos, worldPos, cellPos});
+            let cell = this.canvasRenderer.getMouseCell();
+            let worldCell = this.canvasRenderer.getMouseWorldCell();
+            this.$emit('mouse-event', {type, canvasPos, worldPos, cell, worldCell});
+        },
+        instancesAdded(){
+            this.canvasRenderer.instancesAdded();
         }
     }
 }

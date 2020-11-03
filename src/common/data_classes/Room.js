@@ -5,15 +5,19 @@ import Instance_Collection from './Instance_Collection';
 class Room extends Asset{
     constructor(){
         super();
-        this.collection = new Instance_Collection(8192, 16);
+        this.collection = new Instance_Collection(4000, 200);
     }
 
     get type(){return CATEGORY_TYPE.ROOM}
     get category_ID(){return CATEGORY_ID.ROOM}
     get zSortedList(){return this.collection.zSort}
 
-    add(objRef, pos){
+    addInstance(objRef, pos){
         this.collection.addInstance(objRef, pos);
+    }
+
+    getObjectsInRadius({x, y}, radius){
+        return this.collection.getObjectsInRadius({x, y}, radius);
     }
 }
 

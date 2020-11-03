@@ -194,6 +194,24 @@ class Linked_List{
 
         return newArray;
     }
+
+    forEach(func){
+        let curNode = this.start;
+
+        while (curNode){
+            func(curNode.val);
+            curNode = curNode.next;
+        }
+    }
+
+    map(func){
+        let curNode = this.start;
+
+        while (curNode){
+            curNode.val = func(curNode.val);
+            curNode = curNode.next;
+        }
+    }
 }
 
 class Node{

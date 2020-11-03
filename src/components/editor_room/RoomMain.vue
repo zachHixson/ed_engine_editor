@@ -21,6 +21,7 @@
             v-if="isRoomSelected"
             ref="editWindow"
             class="editWindow"
+            :selectedRoom="selectedRoom"
             @mouse-event="mouseEvent" />
         <div v-else class="noRoomSelected">{{$t('room_editor.no_room_selected')}}</div>
         <div class="propertyPanel">
@@ -90,7 +91,10 @@ export default {
                 vpLastDown: new Victor(0, 0),
                 wpLastDown: new Victor(0, 0),
                 vPos: new Victor(0, 0),
-                wPos: new Victor(0, 0)
+                wPos: new Victor(0, 0),
+                cell: new Victor(0, 0),
+                wCell: new Victor(0, 0),
+                cellCache: []
             }
         }
     },
@@ -106,6 +110,7 @@ export default {
         }
     },
     mounted() {
+        this.selectedRoom = this.$store.getters['AssetBrowser/getSelectedRoom'];
         this.propertiesOpen = this.$store.getters['RoomEditor/getPropPanelState'];
         this.resize();
 
@@ -131,7 +136,15 @@ export default {
     },
     methods: {
         updateAssetSelection() {
-            this.selectedRoom = this.$store.getters['AssetBrowser/getSelectedRoom'];
+            let selectedRoom = this.$store.getters['AssetBrowser/getSelectedRoom'];
+            
+            if (selectedRoom && selectedRoom != this.selectedRoom){
+                this.selectedRoom = selectedRoom;
+
+                this.$nextTick(()=>{
+                    this.$refs.editWindow.roomChange();
+                });
+            }
         },
         resize() {
             this.$nextTick(()=>{
@@ -143,13 +156,18 @@ export default {
         mouseEvent(mEvent){
             let toolScript = this.toolMap.get(this.curToolSelection);
 
-            this.mouse.down = (mEvent.type == MOUSE_EVENT.DOWN);
             this.mouse.vPos.copy(mEvent.canvasPos);
             this.mouse.wPos.copy(mEvent.worldPos);
+            this.mouse.cell.copy(mEvent.cell);
+            this.mouse.wCell.copy(mEvent.worldCell);
 
-            if (this.mouse.down){
+            if (mEvent.type == MOUSE_EVENT.DOWN){
+                this.mouse.down = true;
                 this.mouse.vpLastDown = mEvent.canvasPos;
                 this.mouse.wpLastDown = mEvent.worldPos;
+            }
+            else if (mEvent.type == MOUSE_EVENT.UP){
+                this.mouse.down = false;
             }
 
             if (toolScript){
@@ -160,7 +178,32 @@ export default {
             //
         },
         toolAddBrush(mEvent){
-            //
+            let selectedAsset = this.$store.getters['AssetBrowser/getSelectedAsset'];
+
+            switch(mEvent.type){
+                case MOUSE_EVENT.MOVE:
+                case MOUSE_EVENT.DOWN:
+                    let hasVisited = false;
+
+                    //check if cell has already been visited
+                    for (let i = 0; i < this.mouse.cellCache.length; i++){
+                        let cmpX = this.mouse.cellCache[i].x == mEvent.worldCell.x;
+                        let cmpY = this.mouse.cellCache[i].y == mEvent.worldCell.y;
+                        hasVisited |= (cmpX && cmpY);
+                    }
+
+                    if (!hasVisited && this.mouse.down){
+                        this.mouse.cellCache.push(mEvent.worldCell.toObject());
+                    }
+
+                    break;
+                case MOUSE_EVENT.UP:
+                    if (selectedAsset?.category_ID == CATEGORY_ID.OBJECT){
+                        this.actionAdd({objId: selectedAsset.ID, posList: this.mouse.cellCache});
+                    }
+                    this.mouse.cellCache = [];
+                    break;
+            }
         },
         toolEraser(mEvent){
             //
@@ -168,19 +211,26 @@ export default {
         toolCamera(mEvent){
             //
         },
-        actionMove({instId, newPos}){
+        actionMove({instId, newPos}, makeCommit = true){
             //
         },
-        actionAdd({objId, pos}){
+        actionAdd({objId, posList}, makeCommit = true){
+            let object = this.$store.getters['GameData/getAllObjects'].filter((o) => o.ID == objId)[0];
+            let room = this.$store.getters['AssetBrowser/getSelectedRoom'];
+
+            for (let i = 0; i < posList.length; i++){
+                room.addInstance(object, posList[i]);
+            }
+
+            this.$refs.editWindow.instancesAdded();
+        },
+        actionDelete({objId}, makeCommit = true){
             //
         },
-        actionDelete({objId}){
+        actionCameraChange({newState}, makeCommit = true){
             //
         },
-        actionCameraChange({newState}){
-            //
-        },
-        actionRoomPropChange({newState}){
+        actionRoomPropChange({newState}, makeCommit = true){
             //
         },
         revertMove({objId, oldPos}){
