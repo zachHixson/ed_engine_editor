@@ -3,10 +3,10 @@ import Instance from './Instance';
 
 class Instance_Collection{
     constructor(area, cellSize){
+        this.curInstId = 0;
         this.area = area;
         this.cellSize = cellSize;
         this.cellCount = this.area / this.cellSize;
-        this.instances = new Linked_List();
         this.zSort = new Linked_List();
         this.spacialGrid = new Array(Math.ceil(this.cellCount * this.cellCount));
         
@@ -16,11 +16,33 @@ class Instance_Collection{
     }
 
     addInstance(objRef, pos){
-        let newInstance = new Instance(0, objRef, pos);
+        let instNodeRef;
+        let newInstance = new Instance(this.curInstId++, objRef, pos);
         let spacialIdx = this.getSpacialCellIdx(pos);
-        this.instances.push(newInstance);
         this.zSort.push(newInstance);
-        this.spacialGrid[spacialIdx].push(newInstance);
+        instNodeRef = this.zSort.getLastNodeRef();
+        this.spacialGrid[spacialIdx].push(instNodeRef);
+        this.resortZ();
+    }
+
+    removeInstance(instId, pos = null){
+        if (pos){
+            let spacialIdx = this.getSpacialCellIdx(pos);
+            let cellList = this.spacialGrid[spacialIdx];
+            let instRef = cellList.findRef(instId, (i) => i.val.id);
+            
+            cellList.removeByNodeRef(instRef);
+            this.zSort.removeByNodeRef(instRef.val);
+        }
+        else{
+            let instRef = this.zSort.findRef(instId, (i) => i.id);
+            let spacialIdx = this.getSpacialCellIdx(instRef.val.pos);
+            let cellList = this.spacialGrid[spacialIdx];
+            let cellRef = cellList.findRef(instId, (i) => i.val.id);
+
+            this.zSort.removeByNodeRef(instRef);
+            cellList.removeByNodeRef(cellRef);
+        }
     }
 
     resortZ(){
@@ -36,8 +58,12 @@ class Instance_Collection{
         return (cellY * this.cellCount) + cellX;
     }
 
-    getObjectsInRadius({x, y}, radius){
-        let outputObjs = [];
+    getInstanceById(instId){
+        return this.zSort.find(instId, (i) => i.id);
+    }
+
+    getInstancesInRadius({x, y}, radius){
+        let outputInsts = [];
         let cellRadius = Math.floor(radius / this.cellSize) * this.cellSize;
         
         for (let xCell = x - cellRadius; xCell <= x + cellRadius; xCell += this.cellSize){
@@ -45,12 +71,32 @@ class Instance_Collection{
                 let idx = this.getSpacialCellIdx({x:xCell, y:yCell});
 
                 if (idx > 0 && idx < this.spacialGrid.length - 1){
-                    outputObjs.push(...this.spacialGrid[idx].toArray());
+                    let cellList = this.spacialGrid[idx].toArray();
+                    
+                    for (let i = 0; i < cellList.length; i++){
+                        outputInsts.push(cellList[i].val);
+                    }
                 }
             }
         }
 
-        return outputObjs;
+        return outputInsts;
+    }
+
+    setInstancePosition(instRef, newPos){
+        let startSpacialIdx = this.getSpacialCellIdx(instRef.pos);
+        let newSpacialIdx = this.getSpacialCellIdx(newPos);
+
+        if (startSpacialIdx != newSpacialIdx){
+            let startSpacialCell = this.spacialGrid[startSpacialIdx];
+            let newSpacialCell = this.spacialGrid[newSpacialIdx];
+            let spacialRef = startSpacialCell.findRef(instRef.id, (i) => i.val.id);
+
+            startSpacialCell.removeByNodeRef(spacialRef);
+            newSpacialCell.push(spacialRef.val);
+        }
+
+        instRef.pos.copy(newPos);
     }
 }
 

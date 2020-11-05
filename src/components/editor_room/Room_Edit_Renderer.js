@@ -10,15 +10,18 @@ export default class Room_Edit_Renderer{
         this.gridBuff = document.createElement('canvas');
         this.zDrawList = null;
         this.spriteCache = new Map();
+        this.selectedInstance = null;
         this.mouse = {
             down: false,
             pos: new Victor(0, 0),
             cell: new Victor(0, 0)
-        }
+        };
         this.navData = {
             rawOffset: new Victor(0, 0),
             zoomFac: 1
         };
+        this.camera = null;
+        this.cameraIcon = null;
 
         //cached data
         this.roundedCanvas = new Victor(0, 0);
@@ -43,6 +46,17 @@ export default class Room_Edit_Renderer{
     setZDrawList(list){
         this.zDrawList = list;
         this.drawObjects();
+        this.composite();
+    }
+
+    setCamera(camObj, svgIcon){
+        this.camera = camObj;
+        this.cameraIcon = svgIcon;
+    }
+
+    setSelectedInstance(instRef){
+        this.selectedInstance = instRef;
+        this.drawCursor();
         this.composite();
     }
 
@@ -88,8 +102,9 @@ export default class Room_Edit_Renderer{
         this.fullRedraw();
     }
 
-    instancesAdded(){
+    instancesChanged(){
         this.drawObjects();
+        this.drawCursor();
         this.composite();
     }
 
@@ -112,8 +127,8 @@ export default class Room_Edit_Renderer{
 
         this.drawBackground();
         ctx.drawImage(this.objBuff, 0, 0, this.objBuff.width, this.objBuff.height);
-        ctx.drawImage(this.cursorBuff, 0, 0, this.cursorBuff.width, this.cursorBuff.height);
         ctx.drawImage(this.gridBuff, 0, 0, this.gridBuff.width, this.gridBuff.height);
+        ctx.drawImage(this.cursorBuff, 0, 0, this.cursorBuff.width, this.cursorBuff.height);
     }
 
     fullRedraw(){
@@ -174,6 +189,7 @@ export default class Room_Edit_Renderer{
     }
 
     drawCursor(){
+        //draw mouse cursor
         let ctx = this.cursorBuff.getContext("2d");
         let screenCell = this.worldToScreenPos(this.mouse.cell.clone().multiplyScalar(this.cell_px_width));
 
@@ -181,6 +197,25 @@ export default class Room_Edit_Renderer{
 
         ctx.fillStyle = "#AAAAAA88";
         ctx.fillRect(screenCell.x, screenCell.y, this.scaledCellWidth, this.scaledCellWidth);
+
+        //draw selection cursor
+        if (this.selectedInstance){
+            let screenPos = this.selectedInstance.pos.clone();
+            screenPos = this.worldToScreenPos(screenPos);
+            ctx.strokeStyle = "blue";
+            ctx.strokeRect(screenPos.x, screenPos.y, this.scaledCellWidth, this.scaledCellWidth);
+        }
+
+        //draw camera cursor
+        if (this.camera){
+            let scaleFac = this.scaledCellWidth / this.cameraIcon.width;
+            let screenPos = this.camera.pos.clone();
+            screenPos = this.worldToScreenPos(screenPos);
+            ctx.translate(screenPos.x, screenPos.y);
+            ctx.scale(scaleFac, scaleFac);
+            ctx.drawImage(this.cameraIcon, 0, 0);
+            ctx.resetTransform();
+        }
     }
 
     drawGrid(){

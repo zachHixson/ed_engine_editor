@@ -10,9 +10,11 @@
         <canvas
             ref="canvas"
             class="canvas"
+            @click="emitMouseEvent($event, mEvents.CLICK)"
             @mousedown="emitMouseEvent($event, mEvents.DOWN)"
             @mouseup="emitMouseEvent($event, mEvents.UP)"
             @mousemove="emitMouseEvent($event, mEvents.MOVE)">//Canvas Error</canvas>
+        <img ref="camera_icon" style="display: none" src="@/assets/camera_location.svg"/>
     </div>
 </template>
 
@@ -78,6 +80,7 @@ export default {
     methods: {
         roomChange(){
             this.canvasRenderer.setZDrawList(this.selectedRoom.zSortedList);
+            this.canvasRenderer.setCamera(this.selectedRoom.camera, this.$refs.camera_icon);
         },
         resize() {
             let wrapper = this.$refs.editWindow;
@@ -98,8 +101,15 @@ export default {
             let worldCell = this.canvasRenderer.getMouseWorldCell();
             this.$emit('mouse-event', {type, canvasPos, worldPos, cell, worldCell});
         },
-        instancesAdded(){
-            this.canvasRenderer.instancesAdded();
+        instancesChanged(){
+            this.canvasRenderer.instancesChanged();
+        },
+        newInstanceSelected(newSelection){
+            this.canvasRenderer.setSelectedInstance(newSelection);
+        },
+        cameraChanged(){
+            this.canvasRenderer.drawCursor();
+            this.canvasRenderer.composite();
         }
     }
 }

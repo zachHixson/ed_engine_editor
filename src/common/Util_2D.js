@@ -19,6 +19,13 @@ class Util_2D{
     static getSpriteDimensions(spriteArr){
         return Math.round(Math.sqrt(spriteArr.length));
     }
+
+    static compareVector(vec1, vec2){
+        return (
+            vec1.x == vec2.x &&
+            vec1.y == vec2.y
+        );
+    }
 }
 
 export default Util_2D;

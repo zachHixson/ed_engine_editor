@@ -1,8 +1,10 @@
+import Victor from 'victor';
+
 class Instance{
     constructor(id, objRef, {x, y}){
         this.id = id;
         this.objRef = objRef;
-        this.pos = {x, y};
+        this.pos = new Victor(x, y);
         this.zDepthOverride = null;
     }
 

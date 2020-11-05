@@ -42,6 +42,7 @@
 import Victor from 'victor';
 import {ROOM_TOOL_TYPE, ROOM_ACTION, MOUSE_EVENT, CATEGORY_ID} from '@/common/Enums';
 import Undo_Store from '@/common/Undo_Store';
+import Util_2D from '@/common/Util_2D';
 import RoomEditWindow from './RoomEditWIndow';
 import Tool from '@/components/common/Tool';
 
@@ -55,6 +56,7 @@ export default {
         return {
             propertiesOpen: false,
             selectedRoom: null,
+            selectedInstance: null,
             tools: [
                 {
                     tool: ROOM_TOOL_TYPE.SELECT_MOVE,
@@ -90,10 +92,13 @@ export default {
                 down: false,
                 vpLastDown: new Victor(0, 0),
                 wpLastDown: new Victor(0, 0),
+                wcLastDown: new Victor(0, 0),
                 vPos: new Victor(0, 0),
                 wPos: new Victor(0, 0),
                 cell: new Victor(0, 0),
                 wCell: new Victor(0, 0),
+                downOnSelection: false,
+                newSelection: false,
                 cellCache: []
             }
         }
@@ -153,6 +158,38 @@ export default {
                 }
             });
         },
+        selectInstanceByPos(pos){
+            let nearbyInst = this.selectedRoom.getInstancesInRadius(pos, 0);
+
+            if (nearbyInst.length > 0){
+                let selectedInListIdx = -1;
+                let instInCell = [];
+
+                //get instances in same sell
+                for (let i = 0; i < nearbyInst.length; i++){
+                    if (Util_2D.compareVector(pos, nearbyInst[i].pos)){
+                        instInCell.push(nearbyInst[i]);
+                    }
+                }
+
+                //search instances in cell for selected instance
+                for (let i = 0; i < instInCell.length && selectedInListIdx < 0; i++){
+                    if (this.selectedInstance?.id == instInCell[i].id){
+                        selectedInListIdx = i;
+                    }
+                }
+
+                //if selected instance is in current cell, then select next item in cell
+                if (selectedInListIdx >= 0){
+                    this.selectedInstance = instInCell[++selectedInListIdx % instInCell.length];
+                }
+                else{
+                    this.selectedInstance = instInCell[0];
+                }
+                
+                this.$refs.editWindow.newInstanceSelected(this.selectedInstance);
+            }
+        },
         mouseEvent(mEvent){
             let toolScript = this.toolMap.get(this.curToolSelection);
 
@@ -163,8 +200,9 @@ export default {
 
             if (mEvent.type == MOUSE_EVENT.DOWN){
                 this.mouse.down = true;
-                this.mouse.vpLastDown = mEvent.canvasPos;
-                this.mouse.wpLastDown = mEvent.worldPos;
+                this.mouse.vpLastDown.copy(mEvent.canvasPos);
+                this.mouse.wpLastDown.copy(mEvent.worldPos);
+                this.mouse.wcLastDown.copy(mEvent.worldCell);
             }
             else if (mEvent.type == MOUSE_EVENT.UP){
                 this.mouse.down = false;
@@ -175,7 +213,30 @@ export default {
             }
         },
         toolSelectMove(mEvent){
-            //
+            switch(mEvent.type){
+                case MOUSE_EVENT.DOWN:
+                    if (this.selectedInstance == null){
+                        this.selectInstanceByPos(mEvent.worldCell);
+                        this.mouse.newSelection = true;
+                    }
+                    else if (Util_2D.compareVector(this.selectedInstance.pos, mEvent.worldCell)){
+                        this.mouse.downOnSelection = true;
+                    }
+                    break;
+                case MOUSE_EVENT.MOVE:
+                    if (this.mouse.down && this.mouse.downOnSelection){
+                        this.actionMove({instRef: this.selectedInstance, newPos: mEvent.worldCell});
+                    }
+                    break;
+                case MOUSE_EVENT.UP:
+                    if (Util_2D.compareVector(mEvent.worldPos, this.mouse.wpLastDown) && !this.mouse.newSelection){
+                        this.selectInstanceByPos(mEvent.worldCell);
+                    }
+
+                    this.mouse.downOnSelection = false;
+                    this.mouse.newSelection = false;
+                    break;
+            }
         },
         toolAddBrush(mEvent){
             let selectedAsset = this.$store.getters['AssetBrowser/getSelectedAsset'];
@@ -187,9 +248,7 @@ export default {
 
                     //check if cell has already been visited
                     for (let i = 0; i < this.mouse.cellCache.length; i++){
-                        let cmpX = this.mouse.cellCache[i].x == mEvent.worldCell.x;
-                        let cmpY = this.mouse.cellCache[i].y == mEvent.worldCell.y;
-                        hasVisited |= (cmpX && cmpY);
+                        hasVisited |= Util_2D.compareVector(this.mouse.cellCache[i], mEvent.worldCell);
                     }
 
                     if (!hasVisited && this.mouse.down){
@@ -206,13 +265,46 @@ export default {
             }
         },
         toolEraser(mEvent){
-            //
+            switch(mEvent.type){
+                case MOUSE_EVENT.MOVE:
+                case MOUSE_EVENT.DOWN:
+                    let removedFromCell = false;
+
+                    if (this.mouse.cellCache.length > 0){
+                        removedFromCell |= Util_2D.compareVector(this.mouse.cellCache[0], mEvent.worldCell);
+                    }
+
+                    if (!removedFromCell && this.mouse.down){
+                        let instances = this.selectedRoom.getInstancesInRadius(mEvent.worldCell, 60);
+                        instances = instances.filter((i) => Util_2D.compareVector(i.pos, mEvent.worldCell));
+                        instances.sort((a, b) => a.zDepth > b.zDepth);
+
+                        if (instances.length > 0){
+                            this.actionDelete({instId: instances[0].id, pos: instances[0].pos});
+                        }
+
+                        this.mouse.cellCache[0] = mEvent.worldCell;
+                    }
+            }
         },
         toolCamera(mEvent){
-            //
+            switch(mEvent.type){
+                case MOUSE_EVENT.MOVE:
+                case MOUSE_EVENT.DOWN:
+                    if (this.mouse.down){
+                        this.selectedRoom.camera.pos.copy(mEvent.worldCell);
+                    }
+                    this.$refs.editWindow.cameraChanged();
+                    break;
+            }
         },
-        actionMove({instId, newPos}, makeCommit = true){
-            //
+        actionMove({instId, instRef, newPos}, makeCommit = true){
+            if (!instRef){
+                instRef = this.selectedRoom.getInstanceById(instId);
+            }
+
+            this.selectedRoom.setInstancePosition(instRef, newPos);
+            this.$refs.editWindow.instancesChanged();
         },
         actionAdd({objId, posList}, makeCommit = true){
             let object = this.$store.getters['GameData/getAllObjects'].filter((o) => o.ID == objId)[0];
@@ -222,13 +314,15 @@ export default {
                 room.addInstance(object, posList[i]);
             }
 
-            this.$refs.editWindow.instancesAdded();
+            this.$refs.editWindow.instancesChanged();
         },
-        actionDelete({objId}, makeCommit = true){
-            //
+        actionDelete({instId, pos}, makeCommit = true){
+            this.selectedRoom.removeInstance(instId, pos);
+            this.$refs.editWindow.instancesChanged();
         },
         actionCameraChange({newState}, makeCommit = true){
-            //
+            Object.assign(this.selectedRoom.camera, newState);
+            this.$refs.editWindow.cameraChanged();
         },
         actionRoomPropChange({newState}, makeCommit = true){
             //

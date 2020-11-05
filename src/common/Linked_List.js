@@ -43,14 +43,40 @@ class Linked_List{
         return null;
     }
 
+    getLastNodeRef(){
+        if (this.end){
+            return this.end;
+        }
+
+        return null;
+    }
+
+    find(val, accessFunc = (a) => a){
+        return this.findRef(val, accessFunc).val;
+    }
+
+    findRef(val, accessFunc = (a) => a){
+        let current = this.start;
+
+        while (current){
+            if (accessFunc(current.val) == val){
+                return current;
+            }
+
+            current = current.next;
+        }
+    }
+
     push(val){
+        let newNode;
+
         if (this.start == null){
-            let newNode = new Node(val);
+            newNode = new Node(val);
             this.start = newNode;
             this.end = newNode;
         }
         else{
-            let newNode = new Node(val, null, this.end);
+            newNode = new Node(val, null, this.end);
             this.end.next = newNode;
             this.end = newNode;
         }
@@ -156,9 +182,30 @@ class Linked_List{
         }
 
         this.start = head;
+        this.end = tail;
+    }
+
+    removeByNodeRef(nodeRef){
+        this._removeNode(nodeRef);
     }
 
     _removeNode(node){
+        if (node == this.start){
+            this.start = this.start.next;
+
+            if (this.start){
+                this.start.prev = null;
+            }
+        }
+
+        if (node == this.end){
+            this.end = this.end.prev;
+
+            if (this.end){
+                this.end.next = null;
+            }
+        }
+
         if (node.prev){
             node.prev.next = node.next;
         }
