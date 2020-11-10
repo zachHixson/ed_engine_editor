@@ -11,8 +11,6 @@ class Game_Object extends Asset{
         this.zDepth = 0;
         this.isSolid = false;
         this.applyGravity = false;
-        this.useRoomGravity = true;
-        this.customGravity = [0,0];
         this.customLogic = false;
         this.logicPreset = null;
     }

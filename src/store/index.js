@@ -25,6 +25,7 @@ export default new Vuex.Store({
                 projectName: state.projectName,
                 editor_version: EDITOR_VERSION,
                 newestID: ID_Generator.getCurrentID(),
+                startRoom: gameData.startRoomId,
                 sprites: gameData.sprites.map(s => s.toSaveData()),
                 objects: gameData.objects.map(o => o.toSaveData()),
                 rooms: gameData.rooms.map(r => r.toSaveData())
@@ -63,6 +64,7 @@ export default new Vuex.Store({
             state.projectName = loadObj.projectName;
             gameData.editor_version = loadObj.editor_version;
             ID_Generator.setID(loadObj.newestID);
+            gameData.startRoomId = loadObj.startRoomId,
             gameData.sprites = loadObj.sprites.map(s => new Sprite().fromSaveData(s));
             gameData.objects = loadObj.objects.map(o => new Game_Object().fromSaveData(o));
             gameData.rooms = loadObj.rooms.map(r => new Room().fromSaveData(r));

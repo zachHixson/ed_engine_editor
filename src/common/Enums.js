@@ -68,8 +68,11 @@ export const ROOM_ACTION = {
     MOVE: curEnum++,
     ADD: curEnum++,
     DELETE: curEnum++,
+    INSTANCE_CHANGE: curEnum++,
+    INSTANCE_VAR_CHANGE: curEnum++,
     CAMERA_CHANGE: curEnum++,
-    ROOM_PROP_CHANGE: curEnum++
+    ROOM_PROP_CHANGE: curEnum++,
+    ROOM_VAR_CHANGE: curEnum++
 }
 Object.freeze(ROOM_ACTION);
 

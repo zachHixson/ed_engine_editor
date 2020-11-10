@@ -4,6 +4,7 @@ import Draw_2D from '@/common/Draw_2D';
 export default class Room_Edit_Renderer{
     constructor(element){
         this.cell_px_width = 50;
+        this.roomRef = null;
         this.canvas = element;
         this.objBuff = document.createElement('canvas');
         this.cursorBuff = document.createElement('canvas');
@@ -20,8 +21,8 @@ export default class Room_Edit_Renderer{
             rawOffset: new Victor(0, 0),
             zoomFac: 1
         };
-        this.camera = null;
         this.cameraIcon = null;
+        this.noSpriteSVG = null;
 
         //cached data
         this.roundedCanvas = new Victor(0, 0);
@@ -43,21 +44,31 @@ export default class Room_Edit_Renderer{
         return this.mouse.cell.clone().multiplyScalar(this.cell_px_width);
     }
 
+    setRoomRef(roomObj){
+        this.roomRef = roomObj;
+        this.zDrawList = this.roomRef.zSortedList;
+    }
+
     setZDrawList(list){
         this.zDrawList = list;
         this.drawObjects();
         this.composite();
     }
 
-    setCamera(camObj, svgIcon){
-        this.camera = camObj;
+    setCameraSVG(svgIcon){
         this.cameraIcon = svgIcon;
+        this.drawCursor();
+        this.composite();
     }
 
     setSelectedInstance(instRef){
         this.selectedInstance = instRef;
         this.drawCursor();
         this.composite();
+    }
+
+    setNoSpriteSVG(svg){
+        this.noSpriteSVG = svg;
     }
 
     recalcHalfCanvas(){
@@ -108,6 +119,10 @@ export default class Room_Edit_Renderer{
         this.composite();
     }
 
+    bgColorChanged(){
+        this.composite();
+    }
+
     resize(){
         this.objBuff.width = this.canvas.width;
         this.objBuff.height = this.canvas.height;
@@ -140,13 +155,18 @@ export default class Room_Edit_Renderer{
 
     drawBackground(){
         let ctx = this.canvas.getContext('2d');
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = this.roomRef?.bgColor ?? 'white';
         ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
     drawObjects(){
+        const NO_SPRITE_PADDING = 0.75;
+
         let ctx = this.objBuff.getContext('2d');
         let scaleFac = this.scaledCellWidth / 16;
+        let paddingOffset = this.scaledCellWidth - (this.scaledCellWidth * NO_SPRITE_PADDING);
+
+        paddingOffset /= 2;
 
         ctx.clearRect(0, 0, this.objBuff.width, this.objBuff.height);
         ctx.imageSmoothingEnabled = false;
@@ -155,6 +175,7 @@ export default class Room_Edit_Renderer{
         if (this.zDrawList){
             this.zDrawList.forEach((inst) => {
                 let pos = Victor.fromObject(inst.pos);
+                let offset = 0;
 
                 this.worldToScreenPos(pos);
 
@@ -167,21 +188,35 @@ export default class Room_Edit_Renderer{
                 ){
                     let spriteBuff;
 
-                    //cache sprites once they are already drawn once
-                    if (this.spriteCache.has(inst.editorFrameID)){
-                        spriteBuff = this.spriteCache.get(inst.editorFrameID);
+                    if (inst.objRef.sprite){
+                        //cache sprites once they are already drawn once
+                        if (this.spriteCache.has(inst.editorFrameID)){
+                            spriteBuff = this.spriteCache.get(inst.editorFrameID);
+                        }
+                        else{
+                            spriteBuff = this.newSpriteBuff();
+                            Draw_2D.drawPixelData(spriteBuff, inst.editorFrame);
+                            this.spriteCache.set(inst.editorFrameID, spriteBuff);
+                        }
+
+                        scaleFac = this.scaledCellWidth / spriteBuff.width;
+                    }
+                    else if (this.noSpriteSVG){
+                        spriteBuff = this.noSpriteSVG;
+                        scaleFac = this.scaledCellWidth / spriteBuff.width;
+                        scaleFac *= NO_SPRITE_PADDING;
+                        offset = paddingOffset;
                     }
                     else{
-                        spriteBuff = this.newSpriteBuff();
-                        Draw_2D.drawPixelData(spriteBuff, inst.editorFrame);
-                        this.spriteCache.set(inst.editorFrameID, spriteBuff);
+                        //This prevents a rare edge case where spriteBuff goes undefined
+                        spriteBuff = document.createElement('canvas');
                     }
 
                     //draw sprite
                     ctx.save();
-                    ctx.translate(pos.x, pos.y);
+                    ctx.translate(pos.x + offset, pos.y + offset);
                     ctx.scale(scaleFac, scaleFac);
-                    ctx.drawImage(spriteBuff, 0, 0, 16, 16);
+                    ctx.drawImage(spriteBuff, 0, 0);
                     ctx.restore();
                 }
             });
@@ -207,9 +242,9 @@ export default class Room_Edit_Renderer{
         }
 
         //draw camera cursor
-        if (this.camera){
+        if (this.roomRef?.camera){
             let scaleFac = this.scaledCellWidth / this.cameraIcon.width;
-            let screenPos = this.camera.pos.clone();
+            let screenPos = this.roomRef.camera.pos.clone();
             screenPos = this.worldToScreenPos(screenPos);
             ctx.translate(screenPos.x, screenPos.y);
             ctx.scale(scaleFac, scaleFac);

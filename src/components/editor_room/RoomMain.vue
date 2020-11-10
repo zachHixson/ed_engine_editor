@@ -1,6 +1,6 @@
 <template>
     <div class="roomMain">
-        <div class="toolPanel">
+        <div v-if="selectedRoom" class="toolPanel">
             <Tool
                 :key="tool.tool"
                 v-for="tool in tools"
@@ -8,7 +8,7 @@
                 :name="tool.text"
                 :tool="tool.tool"
                 :curSelection="curToolSelection"
-                @toolClicked="$store.dispatch('RoomEditor/setSelectedTool', $event)"/>
+                @toolClicked="toolClicked"/>
             <div class="toolSpacer"></div>
             <Tool
                 :tool="0"
@@ -24,7 +24,7 @@
             :selectedRoom="selectedRoom"
             @mouse-event="mouseEvent" />
         <div v-else class="noRoomSelected">{{$t('room_editor.no_room_selected')}}</div>
-        <div class="propertyPanel">
+        <div v-if="selectedRoom" class="propertyPanel">
             <button v-show="propertiesOpen" class="resizeBtn" @click="propertiesOpen = false; resize()">
                 &gt;
             </button>
@@ -32,7 +32,17 @@
                 &lt;
             </button>
             <div v-show="propertiesOpen" class="propertiesContents">
-                Properties
+                <Properties
+                    :selectedTool="curToolSelection"
+                    :selectedInstance="selectedInstance"
+                    :camera="(selectedRoom) ? selectedRoom.camera : null"
+                    :room="selectedRoom"
+                    @inst-prop-set="actionInstanceChange({newState: $event})"
+                    @inst-var-changed="actionInstanceVarChange($event)"
+                    @cam-prop-set="actionCameraChange({newState: $event})"
+                    @room-prop-set="actionRoomPropChange({newState: $event})"
+                    @room-var-changed="actionRoomVarChange($event)"
+                    @bg-color-changed="bgColorChanged"/>
             </div>
         </div>
     </div>
@@ -44,12 +54,14 @@ import {ROOM_TOOL_TYPE, ROOM_ACTION, MOUSE_EVENT, CATEGORY_ID} from '@/common/En
 import Undo_Store from '@/common/Undo_Store';
 import Util_2D from '@/common/Util_2D';
 import RoomEditWindow from './RoomEditWIndow';
+import Properties from './Properties';
 import Tool from '@/components/common/Tool';
 
 export default {
     name: 'RoomEditor',
     components: {
         RoomEditWindow,
+        Properties,
         Tool
     },
     data() {
@@ -86,7 +98,7 @@ export default {
             ],
             undoStore: new Undo_Store(),
             toolMap: new Map(),
-            applyMap: new Map(),
+            actionMap: new Map(),
             revertMap: new Map(),
             mouse: {
                 down: false,
@@ -124,17 +136,23 @@ export default {
         this.toolMap.set(ROOM_TOOL_TYPE.ERASER, this.toolEraser);
         this.toolMap.set(ROOM_TOOL_TYPE.CAMERA, this.toolCamera);
 
-        this.applyMap.set(ROOM_ACTION.MOVE, this.actionMove);
-        this.applyMap.set(ROOM_ACTION.ADD, this.actionAdd);
-        this.applyMap.set(ROOM_ACTION.DELETE, this.actionDelete);
-        this.applyMap.set(ROOM_ACTION.CAMERA_CHANGE, this.actionCameraChange);
-        this.applyMap.set(ROOM_ACTION.ROOM_PROP_CHANGE, this.actionRoomPropChange);
+        this.actionMap.set(ROOM_ACTION.MOVE, this.actionMove);
+        this.actionMap.set(ROOM_ACTION.ADD, this.actionAdd);
+        this.actionMap.set(ROOM_ACTION.DELETE, this.actionDelete);
+        this.actionMap.set(ROOM_ACTION.INSTANCE_CHANGE, this.actionInstanceChange);
+        this.actionMap.set(ROOM_ACTION.INSTANCE_VAR_CHANGE, this.actionInstanceVarChange);
+        this.actionMap.set(ROOM_ACTION.CAMERA_CHANGE, this.actionCameraChange);
+        this.actionMap.set(ROOM_ACTION.ROOM_PROP_CHANGE, this.actionRoomPropChange);
+        this.actionMap.set(ROOM_ACTION.ROOM_VAR_CHANGE, this.actionRoomVarChange);
 
         this.revertMap.set(ROOM_ACTION.MOVE, this.revertMove);
         this.revertMap.set(ROOM_ACTION.ADD, this.revertAdd);
         this.revertMap.set(ROOM_ACTION.DELETE, this.revertDelete);
+        this.revertMap.set(ROOM_ACTION.INSTANCE_CHANGE, this.revertInstanceChange);
+        this.actionMap.set(ROOM_ACTION.INSTANCE_VAR_CHANGE, this.revertInstanceChange);
         this.revertMap.set(ROOM_ACTION.CAMERA_CHANGE, this.revertCameraChange);
         this.revertMap.set(ROOM_ACTION.ROOM_PROP_CHANGE, this.revertRoomPropChange);
+        this.actionMap.set(ROOM_ACTION.ROOM_VAR_CHANGE, this.reverRoomVarChange);
     },
     beforeDestroy() {
         this.$store.dispatch('RoomEditor/setPropPanelState', this.propertiesOpen);
@@ -157,6 +175,13 @@ export default {
                     this.$refs.editWindow.resize();
                 }
             });
+        },
+        bgColorChanged(){
+            this.$refs.editWindow.bgColorChanged();
+        },
+        toolClicked(tool){
+            this.selectedTool = tool;
+            this.$store.dispatch('RoomEditor/setSelectedTool', tool);
         },
         selectInstanceByPos(pos){
             let nearbyInst = this.selectedRoom.getInstancesInRadius(pos, 0);
@@ -285,6 +310,7 @@ export default {
 
                         this.mouse.cellCache[0] = mEvent.worldCell;
                     }
+                    break;
             }
         },
         toolCamera(mEvent){
@@ -292,9 +318,8 @@ export default {
                 case MOUSE_EVENT.MOVE:
                 case MOUSE_EVENT.DOWN:
                     if (this.mouse.down){
-                        this.selectedRoom.camera.pos.copy(mEvent.worldCell);
+                        this.actionCameraChange({newState: {pos: mEvent.worldCell}});
                     }
-                    this.$refs.editWindow.cameraChanged();
                     break;
             }
         },
@@ -320,12 +345,24 @@ export default {
             this.selectedRoom.removeInstance(instId, pos);
             this.$refs.editWindow.instancesChanged();
         },
+        actionInstanceChange({newState}, makeCommit = true){
+            Object.assign(this.selectedInstance, newState);
+            this.$refs.editWindow.instancesChanged();
+        },
+        actionInstanceVarChange(changeObj, makeCommit = true){
+            let varList = this.selectedInstance.customVars;
+            this.changeCustomVar(varList, changeObj);
+        },
         actionCameraChange({newState}, makeCommit = true){
             Object.assign(this.selectedRoom.camera, newState);
             this.$refs.editWindow.cameraChanged();
         },
         actionRoomPropChange({newState}, makeCommit = true){
-            //
+            Object.assign(this.selectedRoom, newState);
+        },
+        actionRoomVarChange(changeObj, makeCommit = true){
+            let varList = this.selectedRoom.customVars;
+            this.changeCustomVar(varList, changeObj);
         },
         revertMove({objId, oldPos}){
             //
@@ -336,11 +373,44 @@ export default {
         revertDelete({instObj}){
             //
         },
+        revertInstanceChange({oldState}){
+            //
+        },
+        revertInstanceVarChange(changeObj){
+            //
+        },
         revertCameraChange({oldState}){
             //
         },
         revertRoomPropChange({oldState}){
             //
+        },
+        revertRoomVarChange(changeObj){
+            //
+        },
+        changeCustomVar(varList, {varName, newVal, newName, remove}){
+            let varIdx = -1;
+
+            for (let i = 0; i < varList.length; i++){
+                varIdx = (varList[i].name == varName) ? i : varIdx;
+            }
+
+            if (varIdx >= 0){
+                if (newVal){
+                    varList[varIdx].val = newVal;
+                }
+
+                if (newName){
+                    varList[varIdx].name = newName;
+                }
+
+                if (remove){
+                    varList.splice(varIdx, 1);
+                }
+            }
+            else{
+                varList.push({name: varName, val: newVal});
+            }
         }
     }
 }
@@ -373,7 +443,7 @@ export default {
 }
 
 .propertiesContents{
-    padding-right: 20px;
+    width: 250px;
 }
 
 .resizeBtn{
@@ -393,6 +463,7 @@ export default {
 }
 
 .noRoomSelected{
+    flex-grow: 1;
     display: flex;
     justify-content: center;
     align-items: center;

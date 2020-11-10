@@ -5,12 +5,14 @@ import Game_Object from '@/common/data_classes/Game_Object';
 import Room from '@/common/data_classes/Room';
 
 const state = {
+    startRoomId: null,
     sprites: [],
     objects: [],
     rooms: []
 };
 
 const getters = {
+    getStartRoom: state => state.startRoomId,
     getRandomSprite: () => {
         let tempData = [];
 
@@ -42,21 +44,21 @@ const getters = {
 };
 
 const actions = {
+    setStartRoomId({commit}, newStartRoomId){
+        commit('setStartRoomId', newStartRoomId);
+    },
     addAsset({commit}, category){
         commit('addAsset', category);
     },
     deleteAsset({commit}, {category, id}){
         commit('deleteAsset', {category, id});
-    },
-    newProject({commit}){
-        commit('newProject');
-    },
-    loadSaveData({commit}, projString){
-        commit('loadSaveData', projString);
     }
 };
 
 const mutations = {
+    setStartRoomId: (state, newStartRoomId) => {
+        state.startRoomId = newStartRoomId;
+    },
     addAsset: (state, category) => {
         switch (category){
             case CATEGORY_ID.SPRITE:

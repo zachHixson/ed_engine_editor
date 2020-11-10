@@ -38,14 +38,6 @@
                     <label for="useGravity">{{$t('object_editor.apply_gravity')}}</label>
                     <input type="checkbox" id="useGravity" checked="true" v-model="object.applyGravity"/>
                 </div>
-                <div class="control">
-                    <label for="roomGravity">{{$t('object_editor.room_gravity')}}</label>
-                    <input type="checkbox" id="roomGravity" checked="true" v-model="object.useRoomGravity"/>
-                </div>
-                <div class="control">
-                    <div>{{$t('object_editor.custom_grav_dir')}}</div>
-                    <div class="gravPlaceholder"></div>
-                </div>
             </div>
         </CategoryWrapper>
         <CategoryWrapper :title="$t('object_editor.heading_logic')" iconPath="assets/logic">
@@ -84,7 +76,7 @@ export default {
     computed: {
         spriteChoices() {
             let sprites = this.$store.getters['GameData/getAllSprites'];
-            let spriteChoices = [{id:-1, name:this.$t('object_editor.none')}];
+            let spriteChoices = [{id:-1, name:this.$t('generic.no_option')}];
 
             for (let i = 0; i < sprites.length; i++){
                 spriteChoices.push({

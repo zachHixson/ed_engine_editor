@@ -1,15 +1,18 @@
-import Victor from 'victor';
 import Asset from './Asset';
+import Camera from './Camera';
 import {CATEGORY_ID, CATEGORY_TYPE} from '../Enums';
 import Instance_Collection from './Instance_Collection';
 
 class Room extends Asset{
     constructor(){
         super();
-        this.camera = {
-            pos: new Victor(0, 0)
-        };
+        this.camera = new Camera();
         this.collection = new Instance_Collection(4000, 200);
+        this.bgColor = "#FFFFFF";
+        this.persist = false;
+        this.useGravity = false;
+        this.gravity = 9.81;
+        this.customVars = [];
     }
 
     get type(){return CATEGORY_TYPE.ROOM}
@@ -26,6 +29,10 @@ class Room extends Asset{
 
     getInstancesInRadius({x, y}, radius){
         return this.collection.getInstancesInRadius({x, y}, radius);
+    }
+
+    getAllInstances(){
+        return this.collection.zSort.toArray();
     }
 
     removeInstance(instId, pos = null){

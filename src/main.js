@@ -10,3 +10,19 @@ new Vue({
     i18n,
     render: h => h(App)
 }).$mount('#app')
+
+Vue.directive('click-outside', {
+    bind: function (el, binding, vnode) {
+        el.checkOutside = (event) => {
+            if (!(el == event.target || el.contains(event.target))) {
+                vnode.context[binding.expression](event);
+            }
+
+        };
+
+        document.body.addEventListener('click', el.checkOutside);
+    },
+    unbind: function (el) {
+        document.body.removeEventListener('click', el.checkOutside)
+    }
+});
