@@ -4,6 +4,7 @@ import Draw_2D from '@/common/Draw_2D';
 export default class Room_Edit_Renderer{
     constructor(element){
         this.cell_px_width = 50;
+        this.showGrid = true;
         this.roomRef = null;
         this.canvas = element;
         this.objBuff = document.createElement('canvas');
@@ -69,6 +70,12 @@ export default class Room_Edit_Renderer{
 
     setNoSpriteSVG(svg){
         this.noSpriteSVG = svg;
+    }
+
+    setGridVisibility(newVisibility){
+        this.showGrid = newVisibility;
+        this.drawGrid();
+        this.composite();
     }
 
     recalcHalfCanvas(){
@@ -264,42 +271,44 @@ export default class Room_Edit_Renderer{
 
         ctx.clearRect(0, 0, this.gridBuff.width, this.gridBuff.height);
 
-        //draw lines
-        ctx.strokeStyle = "#BBB";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        for (let i = 1; i < lineCount; i++){
-            let offset = i * this.cell_px_width;
-            let pos = new Victor(offset, offset);
-
-            this.worldToScreenPos(pos);
-
-            //wrap lines around canvas
-            pos.x = mod(pos.x, this.roundedCanvas.x);
-            pos.y = mod(pos.y, this.roundedCanvas.y);
-
+        if (this.showGrid){
             //draw lines
-            pos.unfloat();
-            ctx.moveTo(pos.x, 0);
-            ctx.lineTo(pos.x, this.gridBuff.height);
-            ctx.moveTo(0, pos.y);
-            ctx.lineTo(this.gridBuff.width, pos.y);
-        }
-        ctx.stroke();
+            ctx.strokeStyle = "#BBB";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let i = 1; i < lineCount; i++){
+                let offset = i * this.cell_px_width;
+                let pos = new Victor(offset, offset);
 
-        //draw origin axis
-        ctx.strokeStyle = "#FF0000";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, origin.y);
-        ctx.lineTo(this.canvas.width, origin.y);
-        ctx.stroke();
-        ctx.strokeStyle = "#00FF00";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(origin.x, 0);
-        ctx.lineTo(origin.x, this.canvas.height);
-        ctx.stroke();
+                this.worldToScreenPos(pos);
+
+                //wrap lines around canvas
+                pos.x = mod(pos.x, this.roundedCanvas.x);
+                pos.y = mod(pos.y, this.roundedCanvas.y);
+
+                //draw lines
+                pos.unfloat();
+                ctx.moveTo(pos.x, 0);
+                ctx.lineTo(pos.x, this.gridBuff.height);
+                ctx.moveTo(0, pos.y);
+                ctx.lineTo(this.gridBuff.width, pos.y);
+            }
+            ctx.stroke();
+
+            //draw origin axis
+            ctx.strokeStyle = "#FF0000";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, origin.y);
+            ctx.lineTo(this.canvas.width, origin.y);
+            ctx.stroke();
+            ctx.strokeStyle = "#00FF00";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(origin.x, 0);
+            ctx.lineTo(origin.x, this.canvas.height);
+            ctx.stroke();
+        }
 
         //draw test points
         ctx.fillStyle = 'black';

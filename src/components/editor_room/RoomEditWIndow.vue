@@ -40,6 +40,16 @@ export default {
             mEvents: MOUSE_EVENT
         }
     },
+    computed: {
+        gridEnabled(){
+            return this.$store.getters["RoomEditor/getGridState"];
+        }
+    },
+    watch: {
+        gridEnabled(newVal, oldVal){
+            this.canvasRenderer.setGridVisibility(newVal);
+        }
+    },
     mounted() {
         //Setup Canvas and renderer
         this.canvasEl = this.$refs.canvas;
