@@ -102,13 +102,7 @@ export default {
             revertMap: new Map(),
             mouse: {
                 down: false,
-                vpLastDown: new Victor(0, 0),
                 wpLastDown: new Victor(0, 0),
-                wcLastDown: new Victor(0, 0),
-                vPos: new Victor(0, 0),
-                wPos: new Victor(0, 0),
-                cell: new Victor(0, 0),
-                wCell: new Victor(0, 0),
                 downOnSelection: false,
                 newSelection: false,
                 cellCache: []
@@ -218,16 +212,9 @@ export default {
         mouseEvent(mEvent){
             let toolScript = this.toolMap.get(this.curToolSelection);
 
-            this.mouse.vPos.copy(mEvent.canvasPos);
-            this.mouse.wPos.copy(mEvent.worldPos);
-            this.mouse.cell.copy(mEvent.cell);
-            this.mouse.wCell.copy(mEvent.worldCell);
-
             if (mEvent.type == MOUSE_EVENT.DOWN){
                 this.mouse.down = true;
-                this.mouse.vpLastDown.copy(mEvent.canvasPos);
                 this.mouse.wpLastDown.copy(mEvent.worldPos);
-                this.mouse.wcLastDown.copy(mEvent.worldCell);
             }
             else if (mEvent.type == MOUSE_EVENT.UP){
                 this.mouse.down = false;
