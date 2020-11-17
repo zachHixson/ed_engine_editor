@@ -42,7 +42,7 @@ export default class Room_Edit_Renderer{
     }
 
     getMouseWorldCell(){
-        return this.mouse.cell.clone().multiplyScalar(this.cell_px_width);
+        return this.mouse.cell.clone().multiplyScalar(16);
     }
 
     setRoomRef(roomObj){
@@ -101,7 +101,7 @@ export default class Room_Edit_Renderer{
         let worldCoords = this.screenToWorldPos(screenCoords.clone());
         let cell = worldCoords.clone();
         
-        cell.divideScalar(this.cell_px_width);
+        cell.divideScalar(16);
         cell.subtractScalar(0.5);
         cell.unfloat();
 
@@ -233,7 +233,7 @@ export default class Room_Edit_Renderer{
     drawCursor(){
         //draw mouse cursor
         let ctx = this.cursorBuff.getContext("2d");
-        let screenCell = this.worldToScreenPos(this.mouse.cell.clone().multiplyScalar(this.cell_px_width));
+        let screenCell = this.worldToScreenPos(this.getMouseWorldCell());
 
         ctx.clearRect(0, 0, this.cursorBuff.width, this.cursorBuff.height);
 
@@ -277,7 +277,7 @@ export default class Room_Edit_Renderer{
             ctx.lineWidth = 2;
             ctx.beginPath();
             for (let i = 1; i < lineCount; i++){
-                let offset = i * this.cell_px_width;
+                let offset = i * 16;
                 let pos = new Victor(offset, offset);
 
                 this.worldToScreenPos(pos);
@@ -320,11 +320,13 @@ export default class Room_Edit_Renderer{
         pt.subtract(this.halfCanvas);
         pt.divideScalar(this.navData.zoomFac);
         pt.subtract(this.navData.rawOffset);
+        pt.divideScalar(this.cell_px_width / 16);
 
         return pt;
     }
 
     worldToScreenPos(pt){
+        pt.multiplyScalar(this.cell_px_width / 16);
         pt.add(this.navData.rawOffset);
         pt.multiplyScalar(this.navData.zoomFac);
         pt.add(this.halfCanvas);

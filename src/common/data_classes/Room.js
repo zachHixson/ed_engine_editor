@@ -7,7 +7,7 @@ class Room extends Asset{
     constructor(){
         super();
         this.camera = new Camera();
-        this.collection = new Instance_Collection(4000, 200);
+        this.collection = new Instance_Collection(2000, 80);
         this.bgColor = "#FFFFFF";
         this.persist = false;
         this.useGravity = false;
