@@ -1,6 +1,11 @@
 <template>
     <div ref="editWindow" class="editWindow">
-        <UndoPanel class="undoPanel" />
+        <UndoPanel
+            class="undoPanel"
+            :undoLength="undoLength"
+            :redoLength="redoLength"
+            @undo="$emit('undo')"
+            @redo="$emit('redo')"/>
         <NavControlPanel
             ref="navControlPanel"
             class="navControlPanel"
@@ -28,7 +33,7 @@ import Room_Edit_Renderer from './Room_Edit_Renderer';
 
 export default {
     name: 'RoomEditWindow',
-    props: ['selectedRoom'],
+    props: ['selectedRoom', 'undoLength', 'redoLength'],
     components: {
         NavControlPanel,
         UndoPanel

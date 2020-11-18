@@ -105,12 +105,12 @@
             </div>
             <div class="control">
                 <label for="roomPersist">{{$t('room_editor.persist')}}:</label>
-                <input id="roomPersist" type="checkbox" :value="room.persist" :title="$t('room_editor.tt_room_persist')"
+                <input id="roomPersist" type="checkbox" :checked="room.persist" :title="$t('room_editor.tt_room_persist')"
                     @change="setRoomProp({persist: $event.target.checked})"/>
             </div>
             <div class="control">
                 <label for="roomUseGrav">{{$t('room_editor.enable_gravity')}}:</label>
-                <input id="roomUseGrav" type="checkbox" :value="room.useGravity" :title="$t('room_editor.tt_room_use_gravity')"
+                <input id="roomUseGrav" type="checkbox" :checked="room.useGravity" :title="$t('room_editor.tt_room_use_gravity')"
                     @change="setRoomProp({useGravity: $event.target.checked})"/>
             </div>
             <div v-show="room.useGravity" class="control">
@@ -177,7 +177,7 @@ export default {
             color: this.room.bgColor,
             width: 150
         });
-        this.colorPicker.on("color:change", this.setRoomBgColor);
+        this.colorPicker.on("input:end", this.setRoomBgColor);
         this.$refs.bgColorBtn.style.background = this.room.bgColor;
     },
     methods: {
@@ -191,10 +191,11 @@ export default {
             this.$emit('room-prop-set', propObj);
         },
         setRoomBgColor(color){
+            this.updateBGColorPicker(color.hexString);
             this.setRoomProp({bgColor: color.hexString});
-            this.$refs.bgColorBtn.style.background = color.hexString;
-            this.setRoomProp({bgColor: color.hexString});
-            this.$emit('bg-color-changed')
+        },
+        updateBGColorPicker(hexColor){
+            this.$refs.bgColorBtn.style.background = hexColor;
         },
         setInstanceName(newName){
             let instanceList = this.room.getAllInstances();

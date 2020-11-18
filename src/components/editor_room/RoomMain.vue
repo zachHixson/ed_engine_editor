@@ -22,7 +22,11 @@
             ref="editWindow"
             class="editWindow"
             :selectedRoom="selectedRoom"
-            @mouse-event="mouseEvent" />
+            :undoLength="undoStore.undoLength"
+            :redoLength="undoStore.redoLength"
+            @mouse-event="mouseEvent"
+            @undo="applyChronoStep(undoStore.stepBack(), revertMap)"
+            @redo="applyChronoStep(undoStore.stepForward(), actionMap)"/>
         <div v-else class="noRoomSelected">{{$t('room_editor.no_room_selected')}}</div>
         <div v-if="selectedRoom" class="propertyPanel">
             <button v-show="propertiesOpen" class="resizeBtn" @click="propertiesOpen = false; resize()">
@@ -33,16 +37,16 @@
             </button>
             <div v-show="propertiesOpen" class="propertiesContents">
                 <Properties
+                    ref="props"
                     :selectedTool="curToolSelection"
                     :selectedInstance="selectedInstance"
                     :camera="(selectedRoom) ? selectedRoom.camera : null"
                     :room="selectedRoom"
                     @inst-prop-set="actionInstanceChange({newState: $event})"
-                    @inst-var-changed="actionInstanceVarChange($event)"
+                    @inst-var-changed="actionInstanceVarChange({changeObj: $event})"
                     @cam-prop-set="actionCameraChange({newState: $event})"
                     @room-prop-set="actionRoomPropChange({newState: $event})"
-                    @room-var-changed="actionRoomVarChange($event)"
-                    @bg-color-changed="bgColorChanged"/>
+                    @room-var-changed="actionRoomVarChange({changeObj: $event})"/>
             </div>
         </div>
     </div>
@@ -66,8 +70,8 @@ export default {
     },
     data() {
         return {
-            propertiesOpen: false,
-            selectedRoom: null,
+            propertiesOpen: this.$store.getters['RoomEditor/getPropPanelState'],
+            selectedRoom: this.$store.getters['AssetBrowser/getSelectedRoom'],
             selectedInstance: null,
             tools: [
                 {
@@ -96,7 +100,7 @@ export default {
                     icon: 'assets/gear'
                 }
             ],
-            undoStore: new Undo_Store(),
+            undoStore: new Undo_Store(32, false),
             toolMap: new Map(),
             actionMap: new Map(),
             revertMap: new Map(),
@@ -106,7 +110,8 @@ export default {
                 downOnSelection: false,
                 newSelection: false,
                 cellCache: []
-            }
+            },
+            squashCounter: 0
         }
     },
     computed: {
@@ -121,8 +126,6 @@ export default {
         }
     },
     mounted() {
-        this.selectedRoom = this.$store.getters['AssetBrowser/getSelectedRoom'];
-        this.propertiesOpen = this.$store.getters['RoomEditor/getPropPanelState'];
         this.resize();
 
         this.toolMap.set(ROOM_TOOL_TYPE.SELECT_MOVE, this.toolSelectMove);
@@ -143,10 +146,10 @@ export default {
         this.revertMap.set(ROOM_ACTION.ADD, this.revertAdd);
         this.revertMap.set(ROOM_ACTION.DELETE, this.revertDelete);
         this.revertMap.set(ROOM_ACTION.INSTANCE_CHANGE, this.revertInstanceChange);
-        this.actionMap.set(ROOM_ACTION.INSTANCE_VAR_CHANGE, this.revertInstanceChange);
+        this.revertMap.set(ROOM_ACTION.INSTANCE_VAR_CHANGE, this.revertInstanceVarChange);
         this.revertMap.set(ROOM_ACTION.CAMERA_CHANGE, this.revertCameraChange);
         this.revertMap.set(ROOM_ACTION.ROOM_PROP_CHANGE, this.revertRoomPropChange);
-        this.actionMap.set(ROOM_ACTION.ROOM_VAR_CHANGE, this.reverRoomVarChange);
+        this.revertMap.set(ROOM_ACTION.ROOM_VAR_CHANGE, this.revertRoomVarChange);
     },
     beforeDestroy() {
         this.$store.dispatch('RoomEditor/setPropPanelState', this.propertiesOpen);
@@ -233,11 +236,18 @@ export default {
                     }
                     else if (Util_2D.compareVector(this.selectedInstance.pos, mEvent.worldCell)){
                         this.mouse.downOnSelection = true;
+                        this.mouse.cellCache.push(mEvent.worldCell.clone());
                     }
                     break;
                 case MOUSE_EVENT.MOVE:
-                    if (this.mouse.down && this.mouse.downOnSelection){
+                    if (
+                        this.mouse.down &&
+                        this.mouse.downOnSelection &&
+                        !Util_2D.compareVector(this.mouse.cellCache[0], mEvent.worldCell)
+                    ){
                         this.actionMove({instRef: this.selectedInstance, newPos: mEvent.worldCell});
+                        this.squashCounter++;
+                        this.mouse.cellCache[0].copy(mEvent.worldCell);
                     }
                     break;
                 case MOUSE_EVENT.UP:
@@ -245,8 +255,13 @@ export default {
                         this.selectInstanceByPos(mEvent.worldCell);
                     }
 
+                    if (this.squashCounter > 0){
+                        this.squashActions();
+                    }
+
                     this.mouse.downOnSelection = false;
                     this.mouse.newSelection = false;
+                    this.mouse.cellCache = [];
                     break;
             }
         },
@@ -264,14 +279,17 @@ export default {
                     }
 
                     if (!hasVisited && this.mouse.down){
-                        this.mouse.cellCache.push(mEvent.worldCell.toObject());
+                        if (this.mouse.down && selectedAsset?.category_ID == CATEGORY_ID.OBJECT){
+                            this.actionAdd({objId: selectedAsset.ID, pos: mEvent.worldCell});
+                            this.squashCounter++;
+                        }
+                        
+                        this.mouse.cellCache.push(mEvent.worldCell.clone());
                     }
 
                     break;
                 case MOUSE_EVENT.UP:
-                    if (selectedAsset?.category_ID == CATEGORY_ID.OBJECT){
-                        this.actionAdd({objId: selectedAsset.ID, posList: this.mouse.cellCache});
-                    }
+                    this.squashActions();
                     this.mouse.cellCache = [];
                     break;
             }
@@ -293,11 +311,14 @@ export default {
 
                         if (instances.length > 0){
                             this.actionDelete({instId: instances[0].id, pos: instances[0].pos});
+                            this.squashCounter++;
                         }
 
                         this.mouse.cellCache[0] = mEvent.worldCell;
                     }
                     break;
+                case MOUSE_EVENT.UP:
+                    this.squashActions();
             }
         },
         toolCamera(mEvent){
@@ -311,75 +332,145 @@ export default {
             }
         },
         actionMove({instId, instRef, newPos}, makeCommit = true){
+            let oldPos;
+
             if (!instRef){
                 instRef = this.selectedRoom.getInstanceById(instId);
             }
 
+            oldPos = instRef.pos.clone();
             this.selectedRoom.setInstancePosition(instRef, newPos);
             this.$refs.editWindow.instancesChanged();
-        },
-        actionAdd({objId, posList}, makeCommit = true){
-            let object = this.$store.getters['GameData/getAllObjects'].filter((o) => o.ID == objId)[0];
-            let room = this.$store.getters['AssetBrowser/getSelectedRoom'];
 
-            for (let i = 0; i < posList.length; i++){
-                room.addInstance(object, posList[i]);
+            if (makeCommit){
+                let data = {instId: instRef.id, instRef, newPos: newPos.clone(), oldPos}
+                this.undoStore.commit({action: ROOM_ACTION.MOVE, data});
+            }
+        },
+        actionAdd({objId, instRef, pos}, makeCommit = true){
+            let object = this.$store.getters['GameData/getAllObjects'].filter((o) => o.ID == objId)[0];
+            let newInstance = this.selectedRoom.addInstance(object, pos);
+
+            if (instRef){
+                Object.assign(newInstance, instRef);
             }
 
             this.$refs.editWindow.instancesChanged();
+
+            if (makeCommit){
+                let data = {objId, pos: pos.clone(), instRef: newInstance};
+                this.undoStore.commit({action: ROOM_ACTION.ADD, data});
+            }
         },
         actionDelete({instId, pos}, makeCommit = true){
-            this.selectedRoom.removeInstance(instId, pos);
+            let instRef = this.selectedRoom.removeInstance(instId, pos);
             this.$refs.editWindow.instancesChanged();
+
+            if (makeCommit){
+                let data = {instId, instRef, pos}
+                this.undoStore.commit({action: ROOM_ACTION.DELETE, data})
+            }
         },
         actionInstanceChange({newState}, makeCommit = true){
+            let oldState = Object.assign({}, this.selectedInstance);
+
             Object.assign(this.selectedInstance, newState);
             this.$refs.editWindow.instancesChanged();
+
+            if (makeCommit){
+                let data = {newState, oldState, instRef: this.selectedInstance};
+                this.undoStore.commit({action: ROOM_ACTION.INSTANCE_CHANGE, data});
+            }
         },
-        actionInstanceVarChange(changeObj, makeCommit = true){
+        actionInstanceVarChange({changeObj}, makeCommit = true){
             let varList = this.selectedInstance.customVars;
+            
             this.changeCustomVar(varList, changeObj);
+
+            if (makeCommit){
+                let data = {changeObj, instRef: this.selectedInstance};
+                this.undoStore.commit({action: ROOM_ACTION.INSTANCE_VAR_CHANGE, data});
+            }
         },
         actionCameraChange({newState}, makeCommit = true){
+            let oldState = Object.assign({}, this.selectedRoom.camera);
+
             Object.assign(this.selectedRoom.camera, newState);
             this.$refs.editWindow.cameraChanged();
+
+            if (makeCommit){
+                let data = {newState, oldState};
+                this.undoStore.commit({action: ROOM_ACTION.CAMERA_CHANGE, data});
+            }
         },
         actionRoomPropChange({newState}, makeCommit = true){
+            let oldState = Object.assign({}, this.selectedRoom);
+
             Object.assign(this.selectedRoom, newState);
+
+            if (oldState.bgColor != this.selectedRoom.bgColor){
+                this.$refs.props.updateBGColorPicker(this.selectedRoom.bgColor);
+                this.bgColorChanged();
+            }
+
+            if (makeCommit){
+                let data = {newState, oldState};
+                this.undoStore.commit({action: ROOM_ACTION.ROOM_PROP_CHANGE, data});
+            }
         },
-        actionRoomVarChange(changeObj, makeCommit = true){
+        actionRoomVarChange({changeObj}, makeCommit = true){
             let varList = this.selectedRoom.customVars;
-            this.changeCustomVar(varList, changeObj);
+            let varIdx = this.changeCustomVar(varList, changeObj);
+
+            if (makeCommit){
+                let data = {changeObj};
+                this.undoStore.commit({action: ROOM_ACTION.ROOM_VAR_CHANGE, data});
+            }
         },
-        revertMove({objId, oldPos}){
-            //
+        revertMove({instRef, oldPos}){
+            this.selectedRoom.setInstancePosition(instRef, oldPos);
+            this.$refs.editWindow.instancesChanged();
         },
-        revertAdd({instId}){
-            //
+        revertAdd({instRef}){
+            this.selectedRoom.removeInstance(instRef.id, instRef.pos);
+            this.$refs.editWindow.instancesChanged();
         },
-        revertDelete({instObj}){
-            //
+        revertDelete({instRef}){
+            let instance = this.selectedRoom.addInstance(instRef.objRef, instRef.pos);
+            Object.assign(instance, instRef);
+            this.$refs.editWindow.instancesChanged();
         },
-        revertInstanceChange({oldState}){
-            //
+        revertInstanceChange({oldState, instRef}){
+            Object.assign(instRef, oldState);
+            this.$refs.editWindow.instancesChanged();
         },
-        revertInstanceVarChange(changeObj){
-            //
+        revertInstanceVarChange({changeObj, instRef}){
+            let varList = instRef.customVars;
+            this.unchangeCustomVar(varList, changeObj);
         },
         revertCameraChange({oldState}){
-            //
+            Object.assign(this.selectedRoom.camera, oldState);
+            this.$refs.editWindow.cameraChanged();
         },
         revertRoomPropChange({oldState}){
-            //
+            let oldBG = this.selectedRoom.bgColor;
+
+            Object.assign(this.selectedRoom, oldState);
+
+            if (oldBG != this.selectedRoom.bgColor){
+                this.$refs.props.updateBGColorPicker(this.selectedRoom.bgColor);
+                this.bgColorChanged();
+            }
         },
-        revertRoomVarChange(changeObj){
-            //
+        revertRoomVarChange({changeObj}){
+            let varList = this.selectedRoom.customVars;
+            this.unchangeCustomVar(varList, changeObj);
         },
-        changeCustomVar(varList, {varName, newVal, newName, remove}){
+        changeCustomVar(varList, {varName, newName, newVal, add, remove, oldIdx}){
             let varIdx = -1;
 
-            for (let i = 0; i < varList.length; i++){
-                varIdx = (varList[i].name == varName) ? i : varIdx;
+            for (let i = 0; i < varList.length && varIdx < 0; i++){
+                varIdx = (varList[i].name == varName) ? i : -1;
             }
 
             if (varIdx >= 0){
@@ -396,8 +487,45 @@ export default {
                 }
             }
             else{
-                varList.push({name: varName, val: newVal});
+                let newVar = {name: varName, val: newVal};
+
+                if (oldIdx){
+                    varList.splice(oldIdx, 0, newVar)
+                }
+                else{
+                    varList.push(newVar);
+                }
             }
+        },
+        unchangeCustomVar(varList, {varName, newName, oldVal, newVal, add, remove, oldIdx}){
+            if (varName && newName){
+                this.changeCustomVar(varList, {varName: newName, newName: varName});
+            }
+            else if (newVal && oldVal){
+                this.changeCustomVar(varList, {varName, newVal: oldVal});
+            }
+            else if (add){
+                this.changeCustomVar(varList, {varName, remove: true});
+            }
+            else if (remove){
+                this.changeCustomVar(varList, {varName, newVal, oldIdx});
+            }
+        },
+        applyChronoStep(step, map){
+            if (step.squashList){
+                for (let i = 0; i < step.squashList.length; i++){
+                    this.applyChronoStep(step.squashList[i], map);
+                }
+            }
+            else{
+                let action = map.get(step.action);
+                
+                action(step.data, false);
+            }
+        },
+        squashActions(){
+            this.undoStore.squashCommits(this.squashCounter);
+            this.squashCounter = 0;
         }
     }
 }

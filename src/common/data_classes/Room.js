@@ -20,7 +20,7 @@ class Room extends Asset{
     get zSortedList(){return this.collection.zSort}
 
     addInstance(objRef, pos){
-        this.collection.addInstance(objRef, pos);
+        return this.collection.addInstance(objRef, pos);
     }
 
     getInstanceById(instId){
@@ -36,7 +36,7 @@ class Room extends Asset{
     }
 
     removeInstance(instId, pos = null){
-        this.collection.removeInstance(instId, pos);
+        return this.collection.removeInstance(instId, pos);
     }
 
     setInstancePosition(instRef, newPos){

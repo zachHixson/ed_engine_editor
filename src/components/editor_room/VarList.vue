@@ -6,7 +6,7 @@
         </div>
         <div class="list">
             <div
-                v-for="item in editList"
+                v-for="(item, idx) in editList"
                 :key="item.name"
                 class="item">
                 <input class="inpName" type="text" :value="item.name"
@@ -14,12 +14,14 @@
                 <input class="inpVal" type="text" :value="item.val"
                     @change="$emit('var-changed', {
                         varName: item.name,
+                        oldVal: item.val,
                         newVal: $event.target.value
                     })"/>
-                <button @click="$emit('var-changed', {varName: item.name, remove: true})">X</button>
+                <button @click="$emit('var-changed', {varName: item.name, newVal: item.val, remove: true, oldIdx: idx})">X</button>
             </div>
         </div>
         <button class="addBtn" :title="tooltip_text" @click="$emit('var-changed', {
+                add: true,
                 varName: $t('room_editor.new_var_prefix') + editList.length,
                 newVal: 0
             })">

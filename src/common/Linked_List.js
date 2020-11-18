@@ -36,7 +36,7 @@ class Linked_List{
     }
 
     getLast(){
-        if (this.start){
+        if (this.end){
             return this.end.val;
         }
 
@@ -89,13 +89,18 @@ class Linked_List{
             let returnVal = this.end.val;
             this.end = this.end.prev;
             this.end.next = null;
+            length--;
             return returnVal;
         }
-        else{
+        else if (this.end){
             let returnVal = this.end.val;
             this.end = null;
+            this.start = null;
+            this.length = 0;
             return returnVal;
         }
+        
+        return null;
     }
 
     popFirst(){
@@ -143,6 +148,8 @@ class Linked_List{
             this._clear(this.start);
         }
 
+        this.start = null;
+        this.end = null;
         this.length = 0;
     }
 
@@ -213,6 +220,8 @@ class Linked_List{
         if (node.next){
             node.next.prev = node.prev;
         }
+
+        this.length--;
     }
 
     _findSmallestNode(smallestFunc = (a, b) => a < b){

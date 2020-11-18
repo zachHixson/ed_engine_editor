@@ -23,26 +23,35 @@ class Instance_Collection{
         instNodeRef = this.zSort.getLastNodeRef();
         this.spacialGrid[spacialIdx].push(instNodeRef);
         this.resortZ();
+
+        return newInstance;
     }
 
     removeInstance(instId, pos = null){
+        let instRef = null;
+        let spacialIdx;
+        let cellList;
+        let cellRef;
+
         if (pos){
-            let spacialIdx = this.getSpacialCellIdx(pos);
-            let cellList = this.spacialGrid[spacialIdx];
-            let instRef = cellList.findRef(instId, (i) => i.val.id);
+            spacialIdx = this.getSpacialCellIdx(pos);
+            cellList = this.spacialGrid[spacialIdx];
+            instRef = cellList.findRef(instId, (i) => i.val.id);
             
             cellList.removeByNodeRef(instRef);
             this.zSort.removeByNodeRef(instRef.val);
         }
         else{
-            let instRef = this.zSort.findRef(instId, (i) => i.id);
-            let spacialIdx = this.getSpacialCellIdx(instRef.val.pos);
-            let cellList = this.spacialGrid[spacialIdx];
-            let cellRef = cellList.findRef(instId, (i) => i.val.id);
+            instRef = this.zSort.findRef(instId, (i) => i.id);
+            spacialIdx = this.getSpacialCellIdx(instRef.val.pos);
+            cellList = this.spacialGrid[spacialIdx];
+            cellRef = cellList.findRef(instId, (i) => i.val.id);
 
             this.zSort.removeByNodeRef(instRef);
             cellList.removeByNodeRef(cellRef);
         }
+
+        return instRef.val.val;
     }
 
     resortZ(){
