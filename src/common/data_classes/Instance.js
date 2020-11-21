@@ -25,6 +25,17 @@ class Instance{
     get zDepth(){return (this.zDepthOverride) ? this.zDepthOverride : this.objRef.zDepth}
     get editorFrame(){return this.objRef.editorFrame};
     get editorFrameID(){return this.objRef.editorFrameID};
+
+    toSaveData(){
+        let sanitized = Object.assign({}, this);
+
+        sanitized.objId = this.objRef.ID;
+        sanitized.pos = this.pos.toObject();
+
+        delete sanitized.objRef;
+
+        return sanitized;
+    }
 }
 
 export default Instance;

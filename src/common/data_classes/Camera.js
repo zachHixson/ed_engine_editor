@@ -41,6 +41,13 @@ class Camera {
     get size(){return this._size};
 
     set size(newSize){this._size = Math.max(newSize, 1)}
+
+    fromSaveData(camera){
+        Object.assign(this, camera);
+        this.pos = new Victor().copy(camera.pos);
+
+        return this;
+    }
 }
 
 export default Camera;

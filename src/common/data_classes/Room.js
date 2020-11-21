@@ -1,3 +1,4 @@
+import Victor from 'victor';
 import Asset from './Asset';
 import Camera from './Camera';
 import {CATEGORY_ID, CATEGORY_TYPE} from '../Enums';
@@ -18,6 +19,44 @@ class Room extends Asset{
     get type(){return CATEGORY_TYPE.ROOM}
     get category_ID(){return CATEGORY_ID.ROOM}
     get zSortedList(){return this.collection.zSort}
+
+    toSaveData(){
+        let sanitized = Object.assign({}, this);
+        
+        sanitized.cameraProps = Object.assign({}, this.camera);
+        sanitized.instances = this.collection.toSaveData();
+
+        delete sanitized.camera;
+        delete sanitized.collection;
+
+        return sanitized;
+    }
+
+    fromSaveData(room, objects, sprites){
+        Object.assign(this, room);
+        
+        this.camera.fromSaveData(room.cameraProps);
+
+        for (let i = 0; i < room.instances.length; i++){
+            let curInstance = room.instances[i];
+            let objRef = null;
+            let newInstance;
+
+            //locate object reference by ID
+            for (let o = 0; o < objects.length && !objRef; o++){
+                if (objects[o].ID == curInstance.objId){
+                    objRef = objects[o];
+                }
+            }
+
+            newInstance = this.collection.addInstance(objRef, new Victor().copy(curInstance.pos));
+            delete curInstance.pos;
+            delete curInstance.objId;
+            Object.assign(newInstance, curInstance);
+        }
+
+        return this;
+    }
 
     addInstance(objRef, pos){
         return this.collection.addInstance(objRef, pos);

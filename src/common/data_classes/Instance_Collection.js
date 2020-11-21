@@ -15,6 +15,17 @@ class Instance_Collection{
         }
     }
 
+    toSaveData(){
+        let rawInstances = this.zSort.toArray();
+        let sanitizedInstances = [];
+
+        for (let i = 0; i < rawInstances.length; i++){
+            sanitizedInstances.push(rawInstances[i].toSaveData());
+        }
+
+        return sanitizedInstances;
+    }
+
     addInstance(objRef, pos){
         let instNodeRef;
         let newInstance = new Instance(this.curInstId++, objRef, pos);

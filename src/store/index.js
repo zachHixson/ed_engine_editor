@@ -67,7 +67,7 @@ export default new Vuex.Store({
             gameData.startRoomId = loadObj.startRoomId,
             gameData.sprites = loadObj.sprites.map(s => new Sprite().fromSaveData(s));
             gameData.objects = loadObj.objects.map(o => new Game_Object().fromSaveData(o));
-            gameData.rooms = loadObj.rooms.map(r => new Room().fromSaveData(r));
+            gameData.rooms = loadObj.rooms.map(r => new Room().fromSaveData(r, gameData.objects, gameData.sprites));
         }
     },
     modules: {
