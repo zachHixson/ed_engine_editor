@@ -122,6 +122,7 @@ export default {
             return this.$store.getters['RoomEditor/getGridState'];
         },
         isRoomSelected() {
+            this.$nextTick(()=>{this.updateAssetSelection()});
             return this.selectedRoom;
         }
     },

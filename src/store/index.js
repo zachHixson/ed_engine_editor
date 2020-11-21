@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import {version as EDITOR_VERSION} from '@/../package.json';
 import ID_Generator from '@/common/ID_Generator';
+import {CATEGORY_ID} from '@/common/Enums';
 import MainWindow from './modules/MainWindow';
 import GameData from './modules/GameData';
 import ArtEditor from './modules/ArtEditor';
@@ -25,6 +26,7 @@ export default new Vuex.Store({
                 projectName: state.projectName,
                 editor_version: EDITOR_VERSION,
                 newestID: ID_Generator.getCurrentID(),
+                selectedRoomId: AssetBrowser.state.selectedRoom.ID,
                 startRoom: gameData.startRoomId,
                 sprites: gameData.sprites.map(s => s.toSaveData()),
                 objects: gameData.objects.map(o => o.toSaveData()),
@@ -38,11 +40,23 @@ export default new Vuex.Store({
         setProjectName({commit}, newName){
             commit('setProjectName', newName);
         },
-        newProject({commit}){
+        newProject({commit, dispatch, getters}){
+            let newRoom = null;
+
             commit('newProject');
+            dispatch('GameData/addAsset', CATEGORY_ID.ROOM);
+            newRoom = getters['GameData/getAllRooms'][0];
+            dispatch('AssetBrowser/selectRoom', newRoom);
         },
-        loadSaveData({commit}, projString){
-            commit('loadSaveData', projString);
+        loadSaveData({commit, dispatch}, projString){
+            let loadObj = JSON.parse(projString);
+
+            commit('loadSaveData', loadObj);
+
+            if (loadObj.selectedRoomId){
+                let room = GameData.state.rooms.filter(r => r.ID == loadObj.selectedRoomId)[0];
+                dispatch('AssetBrowser/selectRoom', room);
+            }
         }
     },
     mutations: {
@@ -57,9 +71,8 @@ export default new Vuex.Store({
             gameData.rooms = [];
             ID_Generator.reset();
         },
-        loadSaveData: (state, projString) => {
+        loadSaveData: (state, loadObj) => {
             let gameData = GameData.state;
-            let loadObj = JSON.parse(projString);
             
             state.projectName = loadObj.projectName;
             gameData.editor_version = loadObj.editor_version;

@@ -27,6 +27,9 @@ export default {
         AssetBrowser,
         EditorWindow
     },
+    mounted(){
+        this.$store.dispatch('newProject');
+    },
     methods: {
         updateAssetPreviews(id){
             this.$refs.assetBrowser.updateAsset(id);
