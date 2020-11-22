@@ -25,7 +25,7 @@ Object.freeze(FOLLOW_TYPES);
 
 class Camera {
     constructor() {
-        this.pos = new Victor(0, 0);
+        this.pos = new Victor(0, -16);
         this._size = 1;
         this.moveType = this.MOVE_TYPES.LOCKED;
         this.scrollDir = this.SCROLL_DIRS.RIGHT;

@@ -40,7 +40,10 @@ const getters = {
     getEmptySprite: () => new Array(16 * 16).fill(''),
     getAllSprites: state => state.sprites,
     getAllObjects: state => state.objects,
-    getAllRooms: state => state.rooms
+    getAllRooms: state => state.rooms,
+    getSpriteSaveData: state => state.sprites.map(s => s.toSaveData()),
+    getObjectSaveData: state => state.objects.map(o => o.toSaveData()),
+    getRoomSaveData: state => state.rooms.map(r => r.toSaveData())
 };
 
 const actions = {
@@ -52,6 +55,9 @@ const actions = {
     },
     deleteAsset({commit}, {category, id}){
         commit('deleteAsset', {category, id});
+    },
+    loadSaveData({commit}, loadObj){
+        commit('loadSaveData', loadObj);
     }
 };
 
@@ -103,6 +109,12 @@ const mutations = {
                 hasFound = true;
             }
         }
+    },
+    loadSaveData(state, loadObj){
+        state.startRoomId = loadObj.startRoomId;
+        state.sprites = loadObj.sprites.map(s => new Sprite().fromSaveData(s));
+        state.objects = loadObj.objects.map(o => new Game_Object().fromSaveData(o));
+        state.rooms = loadObj.rooms.map(r => new Room().fromSaveData(r, state.objects, state.sprites));
     }
 };
 
