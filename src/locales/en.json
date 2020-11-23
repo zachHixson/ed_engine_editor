@@ -69,6 +69,8 @@
         "logic_preset": "Logic Preset: ",
         "preset": "Preset",
         "custom": "Custom",
+        "groups": "Groups",
+        "group_prefix": "Group_",
         "none": "--none--"
     },
     "room_editor":{

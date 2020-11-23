@@ -53,6 +53,9 @@
                     <label for="drawing_select">{{$t('object_editor.logic_preset')}}</label>
                     <select id="drawing_select"></select>
                 </div>
+                <GroupList
+                    :editList="object.groups"
+                    @group-changed="groupChanged"/>
             </div>
         </CategoryWrapper>
     </div>
@@ -60,13 +63,15 @@
 
 <script>
 import AnimationPlayer from '@/components/common/AnimationPlayer';
+import GroupList from '@/components/common/GroupList';
 import CategoryWrapper from './CategoryWrapper';
 
 export default {
     name: 'ObjectEditor',
     components: {
-        CategoryWrapper,
-        AnimationPlayer
+        AnimationPlayer,
+        GroupList,
+        CategoryWrapper
     },
     data() {
         return {
@@ -137,6 +142,21 @@ export default {
             }
 
             this.$refs.animPlayer.newSpriteSelection();
+        },
+        groupChanged({add, groupName, newName, remove}){
+            if (add){
+                this.object.groups.push(groupName);
+            }
+
+            if (newName){
+                let groupIdx = this.object.groups.indexOf(groupName);
+                this.object.groups[groupIdx] = newName;
+            }
+
+            if (remove){
+                let groupIdx = this.object.groups.indexOf(groupName);
+                this.object.groups.splice(groupIdx, 1);
+            }
         }
     }
 }

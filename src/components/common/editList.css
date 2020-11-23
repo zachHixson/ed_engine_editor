@@ -1,0 +1,59 @@
+.editListTitle{
+    text-align: center;
+    padding: 5px;
+    font-weight: bold;
+}
+
+.editList{
+    display: flex;
+    flex-direction: column;
+    background: #008888;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.heading{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.heading > div{
+    flex-grow: 1;
+    text-align: center;
+}
+
+.list{
+    display: flex;
+    flex-direction: column;
+    min-height: 15px;
+    max-height: 10em;
+    overflow-y: auto;
+}
+
+input{
+    min-width: 0;
+    border: 0;
+    padding: 5px;
+    border-bottom: 1px solid #DDD;
+}
+
+.addBtn{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    background: #EEEEEE;
+    border: none;
+}
+
+.addBtn:hover{
+    background: #DDDDDD;
+}
+
+.deleteBtn{
+    border: none;
+}
+
+.deleteBtn:hover{
+    background: #888888;
+}

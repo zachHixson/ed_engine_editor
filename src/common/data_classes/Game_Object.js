@@ -13,6 +13,7 @@ class Game_Object extends Asset{
         this.applyGravity = false;
         this.customLogic = false;
         this.logicPreset = null;
+        this.groups = [];
     }
 
     get type(){return CATEGORY_TYPE.OBJECT}

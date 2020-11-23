@@ -43,6 +43,7 @@
                     :camera="(selectedRoom) ? selectedRoom.camera : null"
                     :room="selectedRoom"
                     @inst-prop-set="actionInstanceChange({newState: $event})"
+                    @inst-group-changed="actionInstanceGroupChange($event)"
                     @inst-var-changed="actionInstanceVarChange({changeObj: $event})"
                     @cam-prop-set="actionCameraChange({newState: $event})"
                     @room-prop-set="actionRoomPropChange({newState: $event})"
@@ -53,6 +54,7 @@
 </template>
 
 <script>
+import Vue from 'vue';
 import Victor from 'victor';
 import {ROOM_TOOL_TYPE, ROOM_ACTION, MOUSE_EVENT, CATEGORY_ID} from '@/common/Enums';
 import Undo_Store from '@/common/Undo_Store';
@@ -138,6 +140,7 @@ export default {
         this.actionMap.set(ROOM_ACTION.ADD, this.actionAdd);
         this.actionMap.set(ROOM_ACTION.DELETE, this.actionDelete);
         this.actionMap.set(ROOM_ACTION.INSTANCE_CHANGE, this.actionInstanceChange);
+        this.actionMap.set(ROOM_ACTION.INSTANCE_GROUP_CHANGE, this.actionInstanceGroupChange);
         this.actionMap.set(ROOM_ACTION.INSTANCE_VAR_CHANGE, this.actionInstanceVarChange);
         this.actionMap.set(ROOM_ACTION.CAMERA_CHANGE, this.actionCameraChange);
         this.actionMap.set(ROOM_ACTION.ROOM_PROP_CHANGE, this.actionRoomPropChange);
@@ -147,6 +150,7 @@ export default {
         this.revertMap.set(ROOM_ACTION.ADD, this.revertAdd);
         this.revertMap.set(ROOM_ACTION.DELETE, this.revertDelete);
         this.revertMap.set(ROOM_ACTION.INSTANCE_CHANGE, this.revertInstanceChange);
+        this.revertMap.set(ROOM_ACTION.INSTANCE_GROUP_CHANGE, this.revertInstanceGroupChange);
         this.revertMap.set(ROOM_ACTION.INSTANCE_VAR_CHANGE, this.revertInstanceVarChange);
         this.revertMap.set(ROOM_ACTION.CAMERA_CHANGE, this.revertCameraChange);
         this.revertMap.set(ROOM_ACTION.ROOM_PROP_CHANGE, this.revertRoomPropChange);
@@ -383,6 +387,33 @@ export default {
                 this.undoStore.commit({action: ROOM_ACTION.INSTANCE_CHANGE, data});
             }
         },
+        actionInstanceGroupChange({add, groupName, newName, remove, oldIdx, instRef}, makeCommit = true){
+            let groups;
+
+            if (instRef){
+                groups = instRef.groups;
+            }
+            else{
+                groups = this.selectedInstance.groups;
+            }
+
+            if (add){
+                groups.push(groupName);
+            }
+            else if (newName){
+                let idx = groups.indexOf(groupName);
+                Vue.set(groups, idx, newName);
+            }
+            else if (remove){
+                let idx = groups.indexOf(groupName);
+                groups.splice(idx, 1);
+            }
+
+            if (makeCommit){
+                let data = {add, groupName, newName, remove, oldIdx, instRef: this.selectedInstance};
+                this.undoStore.commit({action: ROOM_ACTION.INSTANCE_GROUP_CHANGE, data});
+            }
+        },
         actionInstanceVarChange({changeObj}, makeCommit = true){
             let varList = this.selectedInstance.customVars;
             
@@ -444,6 +475,21 @@ export default {
         revertInstanceChange({oldState, instRef}){
             Object.assign(instRef, oldState);
             this.$refs.editWindow.instancesChanged();
+        },
+        revertInstanceGroupChange({add, groupName, newName, remove, oldIdx, instRef}){
+            let groups = instRef.groups;
+
+            if (add){
+                let idx = instRef.groups.indexOf(groupName);
+                groups.splice(idx, 1);
+            }
+            else if (newName){
+                let idx = instRef.groups.indexOf(newName);
+                Vue.set(groups, idx, groupName);
+            }
+            else if (remove){
+                groups.splice(oldIdx, 0, groupName);
+            }
         },
         revertInstanceVarChange({changeObj, instRef}){
             let varList = instRef.customVars;

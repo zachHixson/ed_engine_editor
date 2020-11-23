@@ -3,6 +3,7 @@ import {CATEGORY_ID} from '@/common/Enums';
 import Sprite from '@/common/data_classes/Sprite';
 import Game_Object from '@/common/data_classes/Game_Object';
 import Room from '@/common/data_classes/Room';
+import Util from '@/common/Util';
 
 const state = {
     startRoomId: null,
@@ -121,21 +122,9 @@ const mutations = {
 function getSuffixNum(list){
     const PADDING = 2;
     let requiredDigits;
-    let largest = -1;
+    let nameList = list.map(l => l.name);
+    let largest = Util.getHighestEndingNumber(nameList);
     let output = "";
-
-    //search num
-    for (let i = 0; i < list.length; i++){
-        let suffixNumSearch = /(\d+)$/.exec(list[i].name);
-        
-        if (suffixNumSearch != null){
-            let suffixNum = parseInt(suffixNumSearch[1]);
-
-            if (suffixNum > largest){
-                largest = suffixNum;
-            }
-        }
-    }
 
     largest++;
 

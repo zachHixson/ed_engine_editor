@@ -17,6 +17,7 @@ class Instance{
         this.instanceName = this.objRef.name + '_' + this.id;
         this.zDepthOverride = null;
         this.collisionOverride = this.COLLISION_OVERRIDES.KEEP;
+        this.groups = [];
         this.customVars = [];
     }
 

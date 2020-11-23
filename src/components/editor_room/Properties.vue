@@ -29,13 +29,14 @@
                 <input id="instCustDepth" type="number" :value="selectedInstance.zDepthOverride" :title="$t('room_editor.tt_cust_depth')"
                     @change="setInstProp({zDepthOverride: nanToNull(parseInt($event.target.value))})"/>
             </div>
-            <div class="editList">
-                <label>{{$t('room_editor.custom_variables')}}:</label>
-                <VarList
-                    :editList="selectedInstance.customVars"
-                    :tooltip_text="$t('room_editor.tt_cust_inst_vars')"
-                    @var-changed="$emit('inst-var-changed', $event)" />
-            </div>
+            <GroupList
+                :editList="selectedInstance.groups"
+                :readOnlyList="selectedInstance.objRef.groups"
+                @group-changed="$emit('inst-group-changed', $event)"/>
+            <VarList
+                :editList="selectedInstance.customVars"
+                :tooltip_text="$t('room_editor.tt_cust_inst_vars')"
+                @var-changed="$emit('inst-var-changed', $event)" />
         </div>
         <div v-show="showCameraProps" class="propContents">
             <div class="heading">{{$t('room_editor.camera_properties_heading')}}</div>
@@ -123,13 +124,10 @@
                 <input id="roomSetStart" type="button" value="Set" :title="$t('room_editor.tt_room_starting_room')"
                     @click="$store.dispatch('GameData/setStartRoomId', room.ID)" />
             </div>
-            <div class="list">
-                <label>{{$t('room_editor.custom_variables')}}:</label>
-                <VarList
-                    :editList="room.customVars"
-                    :tooltip_text="$t('room_editor.tt_cust_room_vars')"
-                    @var-changed="$emit('room-var-changed', $event)"/>
-            </div>
+            <VarList
+                :editList="room.customVars"
+                :tooltip_text="$t('room_editor.tt_cust_room_vars')"
+                @var-changed="$emit('room-var-changed', $event)"/>
         </div>
         <div v-show="showPlaceHolder" class="noProps">{{$t('room_editor.no_props')}}</div>
     </div>
@@ -138,12 +136,14 @@
 <script>
 import iro from '@jaames/iro';
 import {ROOM_TOOL_TYPE} from '@/common/Enums';
+import GroupList from '@/components/common/GroupList';
 import VarList from './VarList';
 
 export default {
     name: 'Properties',
     props: ['camera', 'room', 'selectedTool', 'selectedInstance'],
     components: {
+        GroupList,
         VarList
     },
     data(){
@@ -243,6 +243,10 @@ export default {
     flex-direction: column;
 }
 
+.propContents > *{
+    margin-bottom: 5px;
+}
+
 .heading{
     font-size: 1.3em;
     margin-bottom: 10px;
@@ -253,7 +257,6 @@ export default {
     flex-direction: row;
     justify-content: end;
     width: 100%;
-    margin-bottom: 5px;
 }
 
 .control > label{
