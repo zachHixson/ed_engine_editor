@@ -71,7 +71,16 @@
         "custom": "Custom",
         "groups": "Groups",
         "group_prefix": "Group_",
-        "none": "--none--"
+        "none": "--none--",
+        "tt_sprite": "Which drawing this object should display when placed in the level.\nIf no drawing is selected, the object will use a placeholder in the editor, and be invisible in game.",
+        "tt_start_frame": "The frame which the animation will start on",
+        "tt_fps": "How many animation frames should play each second.\nHigher number means the animation will be faster",
+        "tt_loop": "Toggles whether or not the animation should loop when it's played.\nIf off, animation will freeze on the last frame",
+        "tt_solid": "Toggles whether or not other objects will react to colliding with this object",
+        "tt_gravity": "Toggles whether or not this object is affected by the room's gravity",
+        "tt_logic_type": "Choose to use a logic preset, or a custom logic script",
+        "tt_logic_preset": "Select what type of logic preset this object should use",
+        "tt_groups": "Add custom groups this object should belong to.\nCan be used when scripting to get different objects which have the same group"
     },
     "room_editor":{
         "select_move": "Select and Move",

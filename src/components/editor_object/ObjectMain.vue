@@ -4,7 +4,7 @@
             <div class="options">
                 <div class="control">
                     <label for="drawing_select">{{$t('object_editor.sprite_selector')}}</label>
-                    <select ref="spriteSelector" id="drawing_select" @change="setObjectSprite">
+                    <select ref="spriteSelector" id="drawing_select" @change="setObjectSprite" :title="$t('object_editor.tt_sprite')">
                         <option
                             v-for="sprite in spriteChoices"
                             :key="sprite.id"
@@ -13,17 +13,17 @@
                         </option>
                     </select>
                 </div>
-                <div class="control">
+                <div v-if="object.sprite" class="control">
                     <label for="frameStart">{{$t('object_editor.start_frame')}}</label>
-                    <input type="number" ref="frameStart" id="frameStart"  v-model="startFrame"/>
+                    <input type="number" ref="frameStart" id="frameStart"  v-model="startFrame" :title="$t('object_editor.tt_start_frame')"/>
                 </div>
-                <div class="control">
+                <div v-if="object.sprite" class="control">
                     <label for="fps">{{$t('object_editor.fps')}}</label>
-                    <input type="number" id="fps" value="6" v-model="object.fps" @change="validateFPS"/>
+                    <input type="number" id="fps" value="6" v-model="object.fps" @change="validateFPS" :title="$t('object_editor.tt_fps')"/>
                 </div>
-                <div class="control">
+                <div v-if="object.sprite" class="control">
                     <label for="loop">{{$t('object_editor.loop')}}</label>
-                    <input type="checkbox" id="loop" checked="true" v-model="object.animLoop"/>
+                    <input type="checkbox" id="loop" checked="true" v-model="object.animLoop" :title="$t('object_editor.tt_loop')"/>
                 </div>
             </div>
             <AnimationPlayer ref="animPlayer" :sprite="object.sprite" :fps="object.fps" :startFrame="object.startFrame"/>
@@ -32,29 +32,30 @@
             <div class="options">
                 <div class="control">
                     <label for="isSolid">{{$t('object_editor.is_solid')}}</label>
-                    <input type="checkbox" id="isSolid" checked="true" v-model="object.isSolid"/>
+                    <input type="checkbox" id="isSolid" checked="true" v-model="object.isSolid" :title="$t('object_editor.tt_solid')"/>
                 </div>
                 <div class="control">
                     <label for="useGravity">{{$t('object_editor.apply_gravity')}}</label>
-                    <input type="checkbox" id="useGravity" checked="true" v-model="object.applyGravity"/>
+                    <input type="checkbox" id="useGravity" checked="true" v-model="object.applyGravity" :title="$t('object_editor.tt_gravity')"/>
                 </div>
             </div>
         </CategoryWrapper>
         <CategoryWrapper :title="$t('object_editor.heading_logic')" iconPath="assets/logic">
             <div class="options">
                 <div class="control">
-                    <label for="drawing_select">{{$t('object_editor.logic_type')}}</label>
-                    <select id="drawing_select">
-                        <option value="preset">{{$t('object_editor.preset')}}</option>
-                        <option value="custom">{{$t('object_editor.custom')}}</option>
+                    <label for="logic_type_select">{{$t('object_editor.logic_type')}}</label>
+                    <select id="logic_type_select" v-model="object.customLogic" :title="$t('object_editor.tt_logic_type')">
+                        <option :value="false">{{$t('object_editor.preset')}}</option>
+                        <option :value="true">{{$t('object_editor.custom')}}</option>
                     </select>
                 </div>
-                <div class="control">
-                    <label for="drawing_select">{{$t('object_editor.logic_preset')}}</label>
-                    <select id="drawing_select"></select>
+                <div v-if="!object.customLogic" class="control">
+                    <label for="logic_preset_select">{{$t('object_editor.logic_preset')}}</label>
+                    <select id="logic_preset_select" :title="$t('object_editor.tt_logic_preset')"></select>
                 </div>
                 <GroupList
                     :editList="object.groups"
+                    :tooltip_text="$t('object_editor.tt_groups')"
                     @group-changed="groupChanged"/>
             </div>
         </CategoryWrapper>
@@ -122,7 +123,6 @@ export default {
                 this.object.sprite = null;
             }
 
-            this.vailidateStartFrame();
             this.$nextTick(()=>{
                 this.$refs.animPlayer.newSpriteSelection();
             });

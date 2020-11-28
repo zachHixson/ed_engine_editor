@@ -22,7 +22,7 @@
                 </div>
             </div>
         </div>
-        <button class="addBtn" @click="addGroup">
+        <button class="addBtn" :title="tooltip_text" @click="addGroup">
             +
         </button>
     </div>
@@ -33,7 +33,7 @@ import Util from '@/common/Util';
 
 export default {
     name: 'GroupList',
-    props: ['editList', 'readOnlyList'],
+    props: ['editList', 'readOnlyList', 'tooltip_text'],
     methods: {
         validateName(name, oldname){
             let roCollisions = this.readOnlyList?.includes(name);
