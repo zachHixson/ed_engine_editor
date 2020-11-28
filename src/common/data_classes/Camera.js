@@ -1,25 +1,23 @@
 import Victor from 'victor';
 
-let enumVal = 0;
-
 const MOVE_TYPES = {
-    LOCKED: enumVal++,
-    FOLLOW: enumVal++,
-    SCROLL: enumVal++
+    LOCKED: 0,
+    FOLLOW: 1,
+    SCROLL: 2
 }
 Object.freeze(MOVE_TYPES);
 
 const SCROLL_DIRS = {
-    UP: enumVal++,
-    DOWN: enumVal++,
-    RIGHT: enumVal++,
-    LEFT: enumVal++
+    UP: 0,
+    DOWN: 1,
+    RIGHT: 2,
+    LEFT: 3
 }
 Object.freeze(SCROLL_DIRS);
 
 const FOLLOW_TYPES = {
-    SMOOTH: enumVal++,
-    TILED: enumVal++
+    SMOOTH: 0,
+    TILED: 1
 }
 Object.freeze(FOLLOW_TYPES);
 

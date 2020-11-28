@@ -1,11 +1,9 @@
 import Victor from 'victor';
 
-let enumVal = 0;
-
 const COLLISION_OVERRIDE = {
-    KEEP: enumVal++,
-    FORCE: enumVal++,
-    IGNORE: enumVal++
+    KEEP: 0,
+    FORCE: 1,
+    IGNORE: 2
 }
 Object.freeze(COLLISION_OVERRIDE);
 
