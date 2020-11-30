@@ -2,13 +2,13 @@ import Victor from 'victor';
 import Asset from './Asset';
 import Camera from './Camera';
 import {CATEGORY_ID, CATEGORY_TYPE} from '../Enums';
-import Instance_Collection from './Instance_Collection';
+import Spacial_Collection from './Spacial_Collection';
 
 class Room extends Asset{
     constructor(){
         super();
         this.camera = new Camera();
-        this.collection = new Instance_Collection(2000, 80);
+        this.collection = new Spacial_Collection(2000, 80);
         this.bgColor = "#FFFFFF";
         this.persist = false;
         this.useGravity = false;

@@ -1,7 +1,7 @@
 import Linked_List from '../Linked_List';
 import Instance from './Instance';
 
-class Instance_Collection{
+class Spacial_Collection{
     constructor(area, cellSize){
         this.curInstId = 0;
         this.area = area;
@@ -120,4 +120,4 @@ class Instance_Collection{
     }
 }
 
-export default Instance_Collection;
+export default Spacial_Collection;
