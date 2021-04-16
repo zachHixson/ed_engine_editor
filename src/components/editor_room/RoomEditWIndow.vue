@@ -21,6 +21,8 @@
             @mousemove="emitMouseEvent($event, mEvents.MOVE)">//Canvas Error</canvas>
         <img ref="camera_icon" style="display: none" src="@/assets/camera_location.svg"/>
         <img ref="noSprite_icon" style="display: none" src="@/assets/object_icon.svg" />
+        <img ref="exit_icon" style="display: none" src="@/assets/exit.svg" />
+        <img ref="end_icon" style="display: none" src="@/assets/end.svg" />
     </div>
 </template>
 
@@ -96,8 +98,12 @@ export default {
     methods: {
         roomChange(){
             this.canvasRenderer.setRoomRef(this.selectedRoom);
-            this.canvasRenderer.setCameraSVG(this.$refs.camera_icon);
-            this.canvasRenderer.setNoSpriteSVG(this.$refs.noSprite_icon);
+            this.canvasRenderer.setSVG({
+                camera: this.$refs.camera_icon,
+                noSprite: this.$refs.noSprite_icon,
+                exit: this.$refs.exit_icon,
+                end: this.$refs.end_icon
+            })
         },
         resize() {
             let wrapper = this.$refs.editWindow;
@@ -121,8 +127,8 @@ export default {
         instancesChanged(){
             this.canvasRenderer.instancesChanged();
         },
-        newInstanceSelected(newSelection){
-            this.canvasRenderer.setSelectedInstance(newSelection);
+        setSelection(newSelection){
+            this.canvasRenderer.setSelection(newSelection);
         },
         cameraChanged(){
             this.canvasRenderer.drawCursor();

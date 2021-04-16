@@ -39,13 +39,15 @@
                 <Properties
                     ref="props"
                     :selectedTool="curToolSelection"
-                    :selectedInstance="selectedInstance"
+                    :selectedEntity="editorSelection"
                     :camera="(selectedRoom) ? selectedRoom.camera : null"
                     :room="selectedRoom"
                     @inst-prop-set="actionInstanceChange({newState: $event})"
                     @inst-group-changed="actionInstanceGroupChange($event)"
                     @inst-var-changed="actionInstanceVarChange({changeObj: $event})"
                     @cam-prop-set="actionCameraChange({newState: $event})"
+                    @exit-prop-set="actionExitChange({newState: $event})"
+                    @exit-delete="actionExitDelete({exitId: $event.id, pos: $event.pos})"
                     @room-prop-set="actionRoomPropChange({newState: $event})"
                     @room-var-changed="actionRoomVarChange({changeObj: $event})"/>
             </div>
@@ -74,7 +76,7 @@ export default {
         return {
             propertiesOpen: this.$store.getters['RoomEditor/getPropPanelState'],
             selectedRoom: this.$store.getters['AssetBrowser/getSelectedRoom'],
-            selectedInstance: null,
+            editorSelection: null,
             tools: [
                 {
                     tool: ROOM_TOOL_TYPE.SELECT_MOVE,
@@ -95,6 +97,11 @@ export default {
                     tool: ROOM_TOOL_TYPE.CAMERA,
                     text: this.$t('room_editor.camera'),
                     icon: 'assets/camera'
+                },
+                {
+                    tool: ROOM_TOOL_TYPE.EXIT,
+                    text: this.$t('room_editor.exit'),
+                    icon: 'assets/exit'
                 },
                 {
                     tool: ROOM_TOOL_TYPE.ROOM_PROPERTIES,
@@ -134,6 +141,7 @@ export default {
         this.toolMap.set(ROOM_TOOL_TYPE.SELECT_MOVE, this.toolSelectMove);
         this.toolMap.set(ROOM_TOOL_TYPE.ADD_BRUSH, this.toolAddBrush);
         this.toolMap.set(ROOM_TOOL_TYPE.ERASER, this.toolEraser);
+        this.toolMap.set(ROOM_TOOL_TYPE.EXIT, this.toolExit);
         this.toolMap.set(ROOM_TOOL_TYPE.CAMERA, this.toolCamera);
 
         this.actionMap.set(ROOM_ACTION.MOVE, this.actionMove);
@@ -142,6 +150,9 @@ export default {
         this.actionMap.set(ROOM_ACTION.INSTANCE_CHANGE, this.actionInstanceChange);
         this.actionMap.set(ROOM_ACTION.INSTANCE_GROUP_CHANGE, this.actionInstanceGroupChange);
         this.actionMap.set(ROOM_ACTION.INSTANCE_VAR_CHANGE, this.actionInstanceVarChange);
+        this.actionMap.set(ROOM_ACTION.EXIT_ADD, this.actionExitAdd);
+        this.actionMap.set(ROOM_ACTION.EXIT_CHANGE, this.actionExitChange);
+        this.actionMap.set(ROOM_ACTION.EXIT_DELETE, this.actionExitDelete);
         this.actionMap.set(ROOM_ACTION.CAMERA_CHANGE, this.actionCameraChange);
         this.actionMap.set(ROOM_ACTION.ROOM_PROP_CHANGE, this.actionRoomPropChange);
         this.actionMap.set(ROOM_ACTION.ROOM_VAR_CHANGE, this.actionRoomVarChange);
@@ -152,6 +163,9 @@ export default {
         this.revertMap.set(ROOM_ACTION.INSTANCE_CHANGE, this.revertInstanceChange);
         this.revertMap.set(ROOM_ACTION.INSTANCE_GROUP_CHANGE, this.revertInstanceGroupChange);
         this.revertMap.set(ROOM_ACTION.INSTANCE_VAR_CHANGE, this.revertInstanceVarChange);
+        this.revertMap.set(ROOM_ACTION.EXIT_ADD, this.revertExitAdd);
+        this.revertMap.set(ROOM_ACTION.EXIT_CHANGE, this.revertExitChange);
+        this.revertMap.set(ROOM_ACTION.EXIT_DELETE, this.revertExitDelete);
         this.revertMap.set(ROOM_ACTION.CAMERA_CHANGE, this.revertCameraChange);
         this.revertMap.set(ROOM_ACTION.ROOM_PROP_CHANGE, this.revertRoomPropChange);
         this.revertMap.set(ROOM_ACTION.ROOM_VAR_CHANGE, this.revertRoomVarChange);
@@ -201,20 +215,20 @@ export default {
 
                 //search instances in cell for selected instance
                 for (let i = 0; i < instInCell.length && selectedInListIdx < 0; i++){
-                    if (this.selectedInstance?.id == instInCell[i].id){
+                    if (this.editorSelection?.id == instInCell[i].id){
                         selectedInListIdx = i;
                     }
                 }
 
                 //if selected instance is in current cell, then select next item in cell
                 if (selectedInListIdx >= 0){
-                    this.selectedInstance = instInCell[++selectedInListIdx % instInCell.length];
+                    this.editorSelection = instInCell[++selectedInListIdx % instInCell.length];
                 }
                 else{
-                    this.selectedInstance = instInCell[0];
+                    this.editorSelection = instInCell[0];
                 }
                 
-                this.$refs.editWindow.newInstanceSelected(this.selectedInstance);
+                this.$refs.editWindow.setSelection(this.editorSelection);
             }
         },
         mouseEvent(mEvent){
@@ -235,11 +249,11 @@ export default {
         toolSelectMove(mEvent){
             switch(mEvent.type){
                 case MOUSE_EVENT.DOWN:
-                    if (this.selectedInstance == null){
+                    if (this.editorSelection == null){
                         this.selectInstanceByPos(mEvent.worldCell);
                         this.mouse.newSelection = true;
                     }
-                    else if (Util_2D.compareVector(this.selectedInstance.pos, mEvent.worldCell)){
+                    else if (Util_2D.compareVector(this.editorSelection.pos, mEvent.worldCell)){
                         this.mouse.downOnSelection = true;
                         this.mouse.cellCache.push(mEvent.worldCell.clone());
                     }
@@ -250,7 +264,7 @@ export default {
                         this.mouse.downOnSelection &&
                         !Util_2D.compareVector(this.mouse.cellCache[0], mEvent.worldCell)
                     ){
-                        this.actionMove({instRef: this.selectedInstance, newPos: mEvent.worldCell});
+                        this.actionMove({instRef: this.editorSelection, newPos: mEvent.worldCell});
                         this.squashCounter++;
                         this.mouse.cellCache[0].copy(mEvent.worldCell);
                     }
@@ -336,6 +350,21 @@ export default {
                     break;
             }
         },
+        toolExit(mEvent){
+            if (mEvent.type == MOUSE_EVENT.DOWN){
+                let exitsAtCursor = this.selectedRoom.getExitsAtPosition(mEvent.worldCell);
+                exitsAtCursor = exitsAtCursor.filter(e => Util_2D.compareVector(e.pos, mEvent.worldCell));
+
+                if (exitsAtCursor.length > 0){
+                    this.editorSelection = exitsAtCursor[0];
+                    this.$refs.editWindow.setSelection(this.editorSelection);
+                }
+                else{
+                    this.editorSelection = this.actionExitAdd({pos: mEvent.worldCell});
+                    this.$refs.editWindow.setSelection(this.editorSelection);
+                }
+            }
+        },
         actionMove({instId, instRef, newPos}, makeCommit = true){
             let oldPos;
 
@@ -377,13 +406,13 @@ export default {
             }
         },
         actionInstanceChange({newState}, makeCommit = true){
-            let oldState = Object.assign({}, this.selectedInstance);
+            let oldState = Object.assign({}, this.editorSelection);
 
-            Object.assign(this.selectedInstance, newState);
+            Object.assign(this.editorSelection, newState);
             this.$refs.editWindow.instancesChanged();
 
             if (makeCommit){
-                let data = {newState, oldState, instRef: this.selectedInstance};
+                let data = {newState, oldState, instRef: this.editorSelection};
                 this.undoStore.commit({action: ROOM_ACTION.INSTANCE_CHANGE, data});
             }
         },
@@ -394,7 +423,7 @@ export default {
                 groups = instRef.groups;
             }
             else{
-                groups = this.selectedInstance.groups;
+                groups = this.editorSelection.groups;
             }
 
             if (add){
@@ -410,17 +439,17 @@ export default {
             }
 
             if (makeCommit){
-                let data = {add, groupName, newName, remove, oldIdx, instRef: this.selectedInstance};
+                let data = {add, groupName, newName, remove, oldIdx, instRef: this.editorSelection};
                 this.undoStore.commit({action: ROOM_ACTION.INSTANCE_GROUP_CHANGE, data});
             }
         },
         actionInstanceVarChange({changeObj}, makeCommit = true){
-            let varList = this.selectedInstance.customVars;
+            let varList = this.editorSelection.customVars;
             
             this.changeCustomVar(varList, changeObj);
 
             if (makeCommit){
-                let data = {changeObj, instRef: this.selectedInstance};
+                let data = {changeObj, instRef: this.editorSelection};
                 this.undoStore.commit({action: ROOM_ACTION.INSTANCE_VAR_CHANGE, data});
             }
         },
@@ -433,6 +462,47 @@ export default {
             if (makeCommit){
                 let data = {newState, oldState};
                 this.undoStore.commit({action: ROOM_ACTION.CAMERA_CHANGE, data});
+            }
+        },
+        actionExitAdd({exitRef, pos}, makeCommit = true){
+            let newExit = this.selectedRoom.addExit(pos);
+            let newExitName = this.$t('room_editor.new_exit_prefix') + newExit.id;
+
+            if (exitRef){
+                Object.assign(newExit, exitRef);
+                newExitName = exitRef.name;
+            }
+
+            newExit.name = newExitName;
+            this.$refs.editWindow.instancesChanged();
+
+            if (makeCommit){
+                let data = {exitRef: newExit, pos: pos.clone()};
+                this.undoStore.commit({action: ROOM_ACTION.EXIT_ADD, data});
+            }
+
+            return newExit;
+        },
+        actionExitChange({newState}, makeCommit = true){
+            let oldState = Object.assign({}, this.editorSelection);
+
+            Object.assign(this.editorSelection, newState);
+            this.$refs.editWindow.instancesChanged();
+
+            if (makeCommit){
+                let data = {newState, oldState, exitRef: this.editorSelection};
+                this.undoStore.commit({action: ROOM_ACTION.EXIT_CHANGE, data});
+            }
+        },
+        actionExitDelete({exitId, pos}, makeCommit = true){
+            let exitRef = this.selectedRoom.removeExit(exitId, pos);
+            this.editorSelection = null;
+            this.$refs.editWindow.setSelection(this.editorSelection);
+            this.$refs.editWindow.instancesChanged();
+
+            if (makeCommit){
+                let data = {exitId, exitRef, pos};
+                this.undoStore.commit({action: ROOM_ACTION.EXIT_DELETE, data});
             }
         },
         actionRoomPropChange({newState}, makeCommit = true){
@@ -498,6 +568,19 @@ export default {
         revertCameraChange({oldState}){
             Object.assign(this.selectedRoom.camera, oldState);
             this.$refs.editWindow.cameraChanged();
+        },
+        revertExitAdd({exitRef}){
+            this.selectedRoom.removeExit(exitRef.id, exitRef.pos);
+            this.$refs.editWindow.instancesChanged();
+        },
+        revertExitDelete({exitRef}){
+            let exit = this.selectedRoom.addExit(exitRef.pos);
+            Object.assign(exit, exitRef);
+            this.$refs.editWindow.instancesChanged();
+        },
+        revertExitChange({oldState, exitRef}){
+            Object.assign(exitRef, oldState);
+            this.$refs.editWindow.instancesChanged();
         },
         revertRoomPropChange({oldState}){
             let oldBG = this.selectedRoom.bgColor;

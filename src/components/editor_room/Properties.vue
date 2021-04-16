@@ -4,41 +4,41 @@
             <div class="heading">{{$t('room_editor.object_properties_heading')}}</div>
             <div class="control">
                 <label>{{$t('room_editor.object_type')}}:</label>
-                <div class="info">{{selectedInstance.objRef.name}}</div>
+                <div class="info">{{selectedEntity.objRef.name}}</div>
             </div>
             <div class="control">
                 <label>{{$t('room_editor.instance_id')}}:</label>
-                <div class="info">{{selectedInstance.id}}</div>
+                <div class="info">{{selectedEntity.id}}</div>
             </div>
             <div class="control">
                 <label for="instName">{{$t('room_editor.instance_name')}}:</label>
-                <input id="instName" type="text" :value="selectedInstance.instanceName" :title="$t('room_editor.tt_inst_name')"
+                <input id="instName" type="text" :value="selectedEntity.name" :title="$t('room_editor.tt_inst_name')"
                     @change="setInstanceName($event.target.value)"/>
             </div>
             <div class="control">
                 <label for="instCollisionOvrr">{{$t('room_editor.collision')}}:</label>
-                <select id="instCollisionOvrr" :value="selectedInstance.collisionOverride" :title="$t('room_editor.tt_coll_ovr')"
+                <select id="instCollisionOvrr" :value="selectedEntity.collisionOverride" :title="$t('room_editor.tt_coll_ovr')"
                     @change="setInstProp({collisionOverride: parseInt($event.target.value)})">
-                    <option :value="selectedInstance.COLLISION_OVERRIDES.KEEP">{{$t('room_editor.keep')}}</option>
-                    <option :value="selectedInstance.COLLISION_OVERRIDES.FORCE">{{$t('room_editor.on')}}</option>
-                    <option :value="selectedInstance.COLLISION_OVERRIDES.IGNORE">{{$t('room_editor.off')}}</option>
+                    <option :value="selectedEntity.COLLISION_OVERRIDES.KEEP">{{$t('room_editor.keep')}}</option>
+                    <option :value="selectedEntity.COLLISION_OVERRIDES.FORCE">{{$t('room_editor.on')}}</option>
+                    <option :value="selectedEntity.COLLISION_OVERRIDES.IGNORE">{{$t('room_editor.off')}}</option>
                 </select>
             </div>
             <div class="control">
                 <label for="instCustDepth">{{$t('room_editor.custom_depth')}}:</label>
-                <input id="instCustDepth" type="number" :value="selectedInstance.zDepthOverride" :title="$t('room_editor.tt_cust_depth')"
+                <input id="instCustDepth" type="number" :value="selectedEntity.zDepthOverride" :title="$t('room_editor.tt_cust_depth')"
                     @change="setInstProp({zDepthOverride: nanToNull(parseInt($event.target.value))})"/>
             </div>
             <GroupList
-                :editList="selectedInstance.groups"
-                :readOnlyList="selectedInstance.objRef.groups"
+                :editList="selectedEntity.groups"
+                :readOnlyList="selectedEntity.objRef.groups"
                 @group-changed="$emit('inst-group-changed', $event)"/>
             <VarList
-                :editList="selectedInstance.customVars"
+                :editList="selectedEntity.customVars"
                 :tooltip_text="$t('room_editor.tt_cust_inst_vars')"
                 @var-changed="$emit('inst-var-changed', $event)" />
         </div>
-        <div v-show="showCameraProps" class="propContents">
+        <div v-if="showCameraProps" class="propContents">
             <div class="heading">{{$t('room_editor.camera_properties_heading')}}</div>
             <div class="control">
                 <label for="cameraSize">{{$t('room_editor.camera_size')}}:</label>
@@ -72,7 +72,7 @@
             <div v-show="camera.moveType == camera.MOVE_TYPES.FOLLOW" class="control">
                 <label for="camFollowObj">{{$t('room_editor.follow_obj')}}: </label>
                 <select id="camFollowObj" :value="camera.followObjId" :title="$t('room_editor.tt_camera_follow_obj')"
-                    @change="setCamProp({followObjId: parseInt($event.target.value)})">
+                    @change="setCamProp({followObjId: nanToNull(parseInt($event.target.value))})">
                     <option :value="null">{{$t('generic.no_option')}}</option>
                     <option
                         v-for="object in objects"
@@ -87,6 +87,58 @@
                     <option :value="camera.FOLLOW_TYPES.SMOOTH">{{$t('room_editor.smooth')}}</option>
                     <option :value="camera.FOLLOW_TYPES.TILED">{{$t('room_editor.tiled')}}</option>
                 </select>
+            </div>
+        </div>
+        <div v-if="showExitProps" class="propContents">
+            <div class="heading">{{$t('room_editor.exit_properties_heading')}}</div>
+            <div class="control">
+                <label for="exitName">{{$t('room_editor.exit_name')}}:</label>
+                <input id="exitName" type="text" :value="selectedEntity.name" :title="$t('room_editor.tt_exit_name')"
+                    @change="setExitName($event.target.value)"/>
+            </div>
+            <div class="control">
+                <label for="exitTrans">{{$t('room_editor.transition')}}:</label>
+                <select id="exitTrans" :value="selectedEntity.transition" :title="$t('room_editor.tt_exit_trans')"
+                    @change="setExitProp({transition: $event.target.value})">
+                    <option :value="selectedEntity.TRANSITION_TYPES.NONE">{{$t('generic.no_option')}}</option>
+                    <option :value="selectedEntity.TRANSITION_TYPES.FADE">{{$t('room_editor.trans_fade')}}</option>
+                </select>
+            </div>
+            <div class="control">
+                <label for="exitEnding">{{$t('room_editor.is_ending')}}:</label>
+                <input id="exitEnding" type="checkbox" :checked="selectedEntity.isEnding" :title="$t('room_editor.tt_exit_is_ending')"
+                    @change="setExitProp({isEnding: $event.target.checked})"/>
+            </div>
+            <div v-show="!selectedEntity.isEnding" class="control">
+                <label for="exitDestRoom">{{$t('room_editor.dest_room')}}:</label>
+                <select id="exitDestRoom" :value="selectedEntity.destinationRoom" :title="$t('room_editor.tt_exit_dest_room')"
+                    @change="setExitProp({destinationRoom: nanToNull(parseInt($event.target.value))})">
+                    <option :value="null">{{$t('generic.no_option')}}</option>
+                    <option
+                        v-for="room in $store.getters['GameData/getAllRooms']"
+                        :key="room.ID"
+                        :value="room.ID">{{room.name}}</option>
+                </select>
+            </div>
+            <div v-show="!selectedEntity.isEnding && selectedEntity.destinationRoom != null" class="control">
+                <label for="exitDestExit">{{$t('room_editor.dest_exit')}}:</label>
+                <select id="exitDestExit" :value="selectedEntity.destinationExit" :title="$t('room_editor.tt_exit_dest_exit')"
+                    @change="setExitProp({destinationExit: parseInt($event.target.value)})">
+                    <option
+                        v-for="exit in destinationRoomExits"
+                        :key="exit.id"
+                        :value="exit.id">{{exit.name}}</option>
+                </select>
+            </div>
+            <div v-show="selectedEntity.isEnding" class="control">
+                <label for="endingDialog">{{$t('room_editor.end_dialog')}}:</label>
+                <textarea id="endingDialog" :value="selectedEntity.endingDialog" :title="$t('room_editor.tt_exit_end_dialog')"
+                    @change="setExitProp({endingDialog: $event.target.value})"></textarea>
+            </div>
+            <div class="control">
+                <label for="exitDelete">{{$t('room_editor.delete_exit')}}:</label>
+                <input id="exitDelete" type="button" :value="$t('generic.delete')" :title="$t('room_editor.tt_exit_delete')"
+                    @click="$emit('exit-delete', selectedEntity)" />
             </div>
         </div>
         <div v-show="showRoomProps" class="propContents">
@@ -135,13 +187,13 @@
 
 <script>
 import iro from '@jaames/iro';
-import {ROOM_TOOL_TYPE} from '@/common/Enums';
+import {ROOM_TOOL_TYPE, ENTITY_TYPE} from '@/common/Enums';
 import GroupList from '@/components/common/GroupList';
 import VarList from './VarList';
 
 export default {
     name: 'Properties',
-    props: ['camera', 'room', 'selectedTool', 'selectedInstance'],
+    props: ['camera', 'room', 'selectedTool', 'selectedEntity'],
     components: {
         GroupList,
         VarList
@@ -157,19 +209,39 @@ export default {
     computed: {
         showInstProps(){
             return (
-                this.selectedInstance &&
-                this.selectedTool != ROOM_TOOL_TYPE.CAMERA &&
-                this.selectedTool != ROOM_TOOL_TYPE.ROOM_PROPERTIES
-            )
+                this.selectedEntity &&
+                this.selectedEntity.TYPE == ENTITY_TYPE.INSTANCE &&
+                !this.showCameraProps &&
+                !this.showRoomProps
+            );
         },
         showCameraProps(){
             return (this.selectedTool == ROOM_TOOL_TYPE.CAMERA);
+        },
+        showExitProps(){
+            return (
+                this.selectedEntity &&
+                this.selectedEntity.TYPE == ENTITY_TYPE.EXIT &&
+                !this.showCameraProps &&
+                !this.showRoomProps
+            );
         },
         showRoomProps(){
             return (this.selectedTool == ROOM_TOOL_TYPE.ROOM_PROPERTIES);
         },
         showPlaceHolder(){
-            return !(this.showInstProps || this.showCameraProps || this.showRoomProps);
+            return !(this.showInstProps || this.showCameraProps || this.showExitProps || this.showRoomProps);
+        },
+        destinationRoomExits(){
+            if (this.selectedEntity.TYPE == ENTITY_TYPE.EXIT){
+                let allRooms = this.$store.getters['GameData/getAllRooms'];
+                let destRoom = allRooms.find(r => r.ID == this.selectedEntity.destinationRoom);
+                if (destRoom){
+                    return destRoom.getAllExits();
+                }
+            }
+
+            return null;
         }
     },
     mounted(){
@@ -181,11 +253,33 @@ export default {
         this.$refs.bgColorBtn.style.background = this.room.bgColor;
     },
     methods: {
+        checkNameCollisions(name, list){
+            let nameExists;
+
+            do{
+                nameExists = false;
+
+                for (let i = 0; i < list.length && !nameExists; i++){
+                    let nameMatch = (list[i].name == name);
+                    let idMatch = (list[i].id == this.selectedEntity.id);
+                    nameExists |=  nameMatch && !idMatch;
+                }
+
+                if (nameExists){
+                    name += '_' + this.$t('room_editor.duplicate_name_suffix');
+                }
+            } while(nameExists);
+
+            return name;
+        },
         setInstProp(propObj){
             this.$emit('inst-prop-set', propObj);
         },
         setCamProp(propObj){
             this.$emit('cam-prop-set', propObj);
+        },
+        setExitProp(propObj){
+            this.$emit('exit-prop-set', propObj);
         },
         setRoomProp(propObj){
             this.$emit('room-prop-set', propObj);
@@ -199,33 +293,25 @@ export default {
         },
         setInstanceName(newName){
             let instanceList = this.room.getAllInstances();
-            let nameExists;
+            newName = this.checkNameCollisions(newName, instanceList);
 
-            do{
-                nameExists = false;
+            this.setInstProp({name: newName});
+        },
+        setExitName(newName){
+            let exitList = this.room.getAllExits();
+            newName = this.checkNameCollisions(newName, exitList);
 
-                for (let i = 0; i < instanceList.length && !nameExists; i++){
-                    let nameMatch = (instanceList[i].instanceName == newName);
-                    let idMatch = (instanceList[i].id == this.selectedInstance.id);
-                    nameExists |=  nameMatch && !idMatch;
-                }
-
-                if (nameExists){
-                    newName += '_' + this.$t('room_editor.duplicate_name_suffix');
-                }
-            } while(nameExists);
-
-            this.setInstProp({instanceName: newName});
+            this.setExitProp({name: newName});
         },
         closeRoomBGColorEditor(){
             this.changeingBG = false;
         },
         nanToNull(inp){
-            if (inp){
-                return inp;
+            if (isNaN(inp)){
+                return null;
             }
             
-            return null;
+            return inp;
         }
     }
 }

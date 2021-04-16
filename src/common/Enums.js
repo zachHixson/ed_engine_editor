@@ -58,6 +58,7 @@ export const ROOM_TOOL_TYPE = {
     SELECT_MOVE: curEnum++,
     ADD_BRUSH: curEnum++,
     ERASER: curEnum++,
+    EXIT: curEnum++,
     CAMERA: curEnum++,
     ROOM_PROPERTIES: curEnum++,
     TOGGLE_GRID: curEnum++,
@@ -71,6 +72,9 @@ export const ROOM_ACTION = {
     INSTANCE_CHANGE: curEnum++,
     INSTANCE_GROUP_CHANGE: curEnum++,
     INSTANCE_VAR_CHANGE: curEnum++,
+    EXIT_ADD: curEnum++,
+    EXIT_CHANGE: curEnum++,
+    EXIT_DELETE: curEnum++,
     CAMERA_CHANGE: curEnum++,
     ROOM_PROP_CHANGE: curEnum++,
     ROOM_VAR_CHANGE: curEnum++
@@ -85,3 +89,9 @@ export const MOUSE_EVENT = {
     LEAVE: curEnum++
 }
 Object.freeze(MOUSE_EVENT);
+
+export const ENTITY_TYPE = {
+    INSTANCE: curEnum++,
+    EXIT: curEnum++
+}
+Object.freeze(ENTITY_TYPE);

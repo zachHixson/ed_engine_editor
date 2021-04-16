@@ -1,3 +1,4 @@
+import {ENTITY_TYPE} from '@/common/Enums';
 import Victor from 'victor';
 
 const COLLISION_OVERRIDE = {
@@ -12,13 +13,14 @@ class Instance{
         this.id = id;
         this.objRef = objRef;
         this.pos = new Victor(x, y);
-        this.instanceName = this.objRef.name + '_' + this.id;
+        this.name = this.objRef.name + '_' + this.id;
         this.zDepthOverride = null;
         this.collisionOverride = this.COLLISION_OVERRIDES.KEEP;
         this.groups = [];
         this.customVars = [];
     }
 
+    get TYPE(){return ENTITY_TYPE.INSTANCE}
     get COLLISION_OVERRIDES(){return COLLISION_OVERRIDE};
 
     get zDepth(){return (this.zDepthOverride) ? this.zDepthOverride : this.objRef.zDepth}

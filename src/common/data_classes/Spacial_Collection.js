@@ -1,5 +1,13 @@
+/*
+    This is completely cursed code.
+    This class basically needs to be able to access
+    data either by location, or by a loopable list.
+    Due to Javascript not directly supporting pointers
+    this is really hacked together and needs to be
+    refactored.
+*/
+
 import Linked_List from '../Linked_List';
-import Instance from './Instance';
 
 class Spacial_Collection{
     constructor(area, cellSize){
@@ -26,19 +34,19 @@ class Spacial_Collection{
         return sanitizedInstances;
     }
 
-    addInstance(objRef, pos){
-        let instNodeRef;
-        let newInstance = new Instance(this.curInstId++, objRef, pos);
+    add(data, pos){
+        let nodeRef;
         let spacialIdx = this.getSpacialCellIdx(pos);
-        this.zSort.push(newInstance);
-        instNodeRef = this.zSort.getLastNodeRef();
-        this.spacialGrid[spacialIdx].push(instNodeRef);
+        this.zSort.push(data);
+        nodeRef = this.zSort.getLastNodeRef();
+        this.spacialGrid[spacialIdx].push(nodeRef);
         this.resortZ();
+        this.curInstId++;
 
-        return newInstance;
+        return data;
     }
 
-    removeInstance(instId, pos = null){
+    remove(id, pos = null){
         let instRef = null;
         let spacialIdx;
         let cellList;
@@ -47,16 +55,16 @@ class Spacial_Collection{
         if (pos){
             spacialIdx = this.getSpacialCellIdx(pos);
             cellList = this.spacialGrid[spacialIdx];
-            instRef = cellList.findRef(instId, (i) => i.val.id);
+            instRef = cellList.findRef(id, (i) => i.val.id);
             
             cellList.removeByNodeRef(instRef);
             this.zSort.removeByNodeRef(instRef.val);
         }
         else{
-            instRef = this.zSort.findRef(instId, (i) => i.id);
+            instRef = this.zSort.findRef(id, (i) => i.id);
             spacialIdx = this.getSpacialCellIdx(instRef.val.pos);
             cellList = this.spacialGrid[spacialIdx];
-            cellRef = cellList.findRef(instId, (i) => i.val.id);
+            cellRef = cellList.findRef(id, (i) => i.val.id);
 
             this.zSort.removeByNodeRef(instRef);
             cellList.removeByNodeRef(cellRef);
@@ -66,7 +74,9 @@ class Spacial_Collection{
     }
 
     resortZ(){
-        this.zSort.sort((a, b) => a.zDepth < b.zDepth);
+        if (this.zSort.length > 0 && this.zSort.getFirst().zDepth != undefined){
+            this.zSort.sort((a, b) => a.zDepth < b.zDepth);
+        }
     }
 
     getSpacialCellIdx({x, y}){
@@ -78,11 +88,16 @@ class Spacial_Collection{
         return (cellY * this.cellCount) + cellX;
     }
 
-    getInstanceById(instId){
-        return this.zSort.find(instId, (i) => i.id);
+    getById(instId){
+        if (this.zSort.getFirst().hasOwnProperty(id)){
+            return this.zSort.find(instId, (i) => i.id);
+        }
+        else{
+            return null;
+        }
     }
 
-    getInstancesInRadius({x, y}, radius){
+    getByRadius({x, y}, radius){
         let outputInsts = [];
         let cellRadius = Math.floor(radius / this.cellSize) * this.cellSize;
         
@@ -103,7 +118,7 @@ class Spacial_Collection{
         return outputInsts;
     }
 
-    setInstancePosition(instRef, newPos){
+    setPositionByRef(instRef, newPos){
         let startSpacialIdx = this.getSpacialCellIdx(instRef.pos);
         let newSpacialIdx = this.getSpacialCellIdx(newPos);
 

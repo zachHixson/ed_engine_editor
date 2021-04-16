@@ -11,8 +11,9 @@ export default class Room_Edit_Renderer{
         this.cursorBuff = document.createElement('canvas');
         this.gridBuff = document.createElement('canvas');
         this.zDrawList = null;
+        this.exits = null;
         this.spriteCache = new Map();
-        this.selectedInstance = null;
+        this.selectedEntity = null;
         this.mouse = {
             down: false,
             pos: new Victor(0, 0),
@@ -24,6 +25,8 @@ export default class Room_Edit_Renderer{
         };
         this.cameraIcon = null;
         this.noSpriteSVG = null;
+        this.exitSVG = null;
+        this.endSVG = null;
 
         //cached data
         this.roundedCanvas = new Victor(0, 0);
@@ -48,28 +51,22 @@ export default class Room_Edit_Renderer{
     setRoomRef(roomObj){
         this.roomRef = roomObj;
         this.zDrawList = this.roomRef.zSortedList;
+        this.exits = this.roomRef.exitsList;
     }
 
-    setZDrawList(list){
-        this.zDrawList = list;
-        this.drawObjects();
-        this.composite();
-    }
-
-    setCameraSVG(svgIcon){
-        this.cameraIcon = svgIcon;
+    setSelection(instRef){
+        this.selectedEntity = instRef;
         this.drawCursor();
         this.composite();
     }
 
-    setSelectedInstance(instRef){
-        this.selectedInstance = instRef;
+    setSVG({camera, noSprite, exit, end}){
+        this.cameraIcon = camera;
+        this.noSpriteSVG = noSprite;
+        this.exitSVG = exit;
+        this.endSVG = end;
         this.drawCursor();
         this.composite();
-    }
-
-    setNoSpriteSVG(svg){
-        this.noSpriteSVG = svg;
     }
 
     setGridVisibility(newVisibility){
@@ -241,8 +238,8 @@ export default class Room_Edit_Renderer{
         ctx.fillRect(screenCell.x, screenCell.y, this.scaledCellWidth, this.scaledCellWidth);
 
         //draw selection cursor
-        if (this.selectedInstance){
-            let screenPos = this.selectedInstance.pos.clone();
+        if (this.selectedEntity){
+            let screenPos = this.selectedEntity.pos.clone();
             screenPos = this.worldToScreenPos(screenPos);
             ctx.strokeStyle = "blue";
             ctx.strokeRect(screenPos.x, screenPos.y, this.scaledCellWidth, this.scaledCellWidth);
@@ -257,6 +254,26 @@ export default class Room_Edit_Renderer{
             ctx.scale(scaleFac, scaleFac);
             ctx.drawImage(this.cameraIcon, 0, 0);
             ctx.resetTransform();
+        }
+
+        //draw exits
+        if (this.exits){
+            this.exits.forEach((exit) => {
+                let pos = Victor.fromObject(exit.pos);
+                let scaleFac = this.scaledCellWidth / this.exitSVG.width;
+                this.worldToScreenPos(pos);
+                ctx.translate(pos.x, pos.y);
+                ctx.scale(scaleFac, scaleFac);
+
+                if (exit.isEnding){
+                    ctx.drawImage(this.endSVG, 0, 0);
+                }
+                else{
+                    ctx.drawImage(this.exitSVG, 0, 0);
+                }
+                
+                ctx.resetTransform();
+            })
         }
     }
 

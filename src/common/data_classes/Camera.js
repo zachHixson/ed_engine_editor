@@ -42,7 +42,7 @@ class Camera {
 
     fromSaveData(camera){
         Object.assign(this, camera);
-        this.pos = new Victor().copy(camera.pos);
+        this.pos = Victor.fromObject(camera.pos);
 
         return this;
     }

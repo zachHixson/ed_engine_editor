@@ -11,6 +11,7 @@ class Game_Object extends Asset{
         this.zDepth = 0;
         this.isSolid = false;
         this.applyGravity = false;
+        this.triggerExits = false;
         this.customLogic = false;
         this.logicPreset = null;
         this.groups = [];

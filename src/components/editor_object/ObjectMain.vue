@@ -43,6 +43,10 @@
         <CategoryWrapper :title="$t('object_editor.heading_logic')" iconPath="assets/logic">
             <div class="options">
                 <div class="control">
+                    <label for="trigger_exits">{{$t('object_editor.trigger_exits')}}:</label>
+                    <input type="checkbox" id="trigger_exits" checked="false" v-model="object.triggerExits" :title="$t('object_editor.tt_trigger_exits')" />
+                </div>
+                <div class="control">
                     <label for="logic_type_select">{{$t('object_editor.logic_type')}}</label>
                     <select id="logic_type_select" v-model="object.customLogic" :title="$t('object_editor.tt_logic_type')">
                         <option :value="false">{{$t('object_editor.preset')}}</option>
