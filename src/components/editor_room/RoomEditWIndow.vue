@@ -19,10 +19,12 @@
             @mousedown="emitMouseEvent($event, mEvents.DOWN)"
             @mouseup="emitMouseEvent($event, mEvents.UP)"
             @mousemove="emitMouseEvent($event, mEvents.MOVE)">//Canvas Error</canvas>
-        <img ref="camera_icon" style="display: none" src="@/assets/camera_location.svg"/>
-        <img ref="noSprite_icon" style="display: none" src="@/assets/object_icon.svg" />
-        <img ref="exit_icon" style="display: none" src="@/assets/exit.svg" />
-        <img ref="end_icon" style="display: none" src="@/assets/end.svg" />
+        <div ref="canvasImages" style="display: none">
+            <img ref="camera_icon" src="@/assets/camera_location.svg" @load="checkImageLoading()"/>
+            <img ref="noSprite_icon" src="@/assets/object_icon.svg" @load="checkImageLoading()"/>
+            <img ref="exit_icon" src="@/assets/exit.svg" @load="checkImageLoading()"/>
+            <img ref="end_icon" src="@/assets/end.svg" @load="checkImageLoading()"/>
+        </div>
     </div>
 </template>
 
@@ -44,7 +46,8 @@ export default {
         return {
             canvasEl: null,
             canvasRenderer: null,
-            mEvents: MOUSE_EVENT
+            mEvents: MOUSE_EVENT,
+            loadedImages: 0
         }
     },
     computed: {
@@ -77,6 +80,13 @@ export default {
         this.canvasEl.addEventListener('wheel', this.$refs.navControlPanel.scroll);
         this.canvasEl.addEventListener('mouseleave', this.$refs.navControlPanel.mouseLeave);
 
+        this.canvasRenderer.setSVG({
+            camera: this.$refs.camera_icon,
+            noSprite: this.$refs.noSprite_icon,
+            exit: this.$refs.exit_icon,
+            end: this.$refs.end_icon
+        });
+
         if (this.selectedRoom){
             this.roomChange();
         }
@@ -98,12 +108,6 @@ export default {
     methods: {
         roomChange(){
             this.canvasRenderer.setRoomRef(this.selectedRoom);
-            this.canvasRenderer.setSVG({
-                camera: this.$refs.camera_icon,
-                noSprite: this.$refs.noSprite_icon,
-                exit: this.$refs.exit_icon,
-                end: this.$refs.end_icon
-            })
         },
         resize() {
             let wrapper = this.$refs.editWindow;
@@ -136,6 +140,13 @@ export default {
         },
         bgColorChanged(){
             this.canvasRenderer.bgColorChanged();
+        },
+        checkImageLoading(){
+            this.loadedImages++;
+            
+            if (this.loadedImages >= this.$refs.canvasImages.children.length){
+                this.canvasRenderer.fullRedraw();
+            }
         }
     }
 }

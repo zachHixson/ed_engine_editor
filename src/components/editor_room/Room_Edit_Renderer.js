@@ -65,8 +65,6 @@ export default class Room_Edit_Renderer{
         this.noSpriteSVG = noSprite;
         this.exitSVG = exit;
         this.endSVG = end;
-        this.drawCursor();
-        this.composite();
     }
 
     setGridVisibility(newVisibility){
