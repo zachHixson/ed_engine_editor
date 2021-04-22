@@ -40,7 +40,6 @@
 </template>
 
 <script>
-import {store} from 'vuex';
 import {CATEGORY_ID} from '@/common/Enums';
 import Category from './Category';
 import Asset from './Asset';

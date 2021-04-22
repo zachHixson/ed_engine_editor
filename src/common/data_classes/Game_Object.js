@@ -17,6 +17,18 @@ class Game_Object extends Asset{
         this.groups = [];
     }
 
+    toSaveData(){
+        let sanitized = Object.assign({}, this);
+        sanitized.sprite = this.sprite.ID;
+        return sanitized;
+    }
+
+    fromSaveData(object, spriteList){
+        Object.assign(this, object);
+        this.sprite = spriteList.find(s => s.ID == this.sprite);
+        return this;
+    }
+
     get type(){return CATEGORY_TYPE.OBJECT}
     get category_ID(){return CATEGORY_ID.OBJECT}
     get startFrame(){return this._startFrame}

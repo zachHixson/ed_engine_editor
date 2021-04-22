@@ -114,7 +114,7 @@ const mutations = {
     loadSaveData(state, loadObj){
         state.startRoomId = loadObj.startRoomId;
         state.sprites = loadObj.sprites.map(s => new Sprite().fromSaveData(s));
-        state.objects = loadObj.objects.map(o => new Game_Object().fromSaveData(o));
+        state.objects = loadObj.objects.map(o => new Game_Object().fromSaveData(o, state.sprites));
         state.rooms = loadObj.rooms.map(r => new Room().fromSaveData(r, state.objects));
     }
 };
