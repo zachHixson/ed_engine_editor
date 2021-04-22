@@ -61,7 +61,7 @@ import Victor from 'victor';
 import {ROOM_TOOL_TYPE, ROOM_ACTION, MOUSE_EVENT, CATEGORY_ID} from '@/common/Enums';
 import Undo_Store from '@/common/Undo_Store';
 import Util_2D from '@/common/Util_2D';
-import RoomEditWindow from './RoomEditWIndow';
+import RoomEditWindow from './RoomEditWindow';
 import Properties from './Properties';
 import Tool from '@/components/common/Tool';
 
