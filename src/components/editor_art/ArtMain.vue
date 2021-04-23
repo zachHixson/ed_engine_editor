@@ -27,7 +27,7 @@
 </template>
 
 <script>
-import {store, mapActions, mapGetters} from 'vuex';
+import {mapActions, mapGetters} from 'vuex';
 import Undo_Store from '@/common/Undo_Store';
 import {CATEGORY_ID} from '@/common/Enums';
 import LeftPanel from './LeftPanel';

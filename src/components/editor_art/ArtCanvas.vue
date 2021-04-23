@@ -16,7 +16,6 @@
 </template>
 
 <script>
-import {store} from 'vuex';
 import UndoPanel from "@/components/common/UndoPanel";
 import NavControlPanel from '@/components/common/NavControlPanel';
 import Art_Canvas_Renderer from './Art_Canvas_Renderer';

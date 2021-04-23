@@ -29,7 +29,6 @@
 </template>
 
 <script>
-import {store} from 'vuex';
 import AnimFrame from './AnimFrame';
 import AnimationPlayer from '@/components/common/AnimationPlayer';
 
@@ -113,6 +112,7 @@ export default {
             this.$emit('selectedFrameChanged');
         },
         newSpriteSelection(){
+            this.sprite = this.$store.getters['AssetBrowser/getSelectedAsset'];
             this.$refs.animPlayer.newSpriteSelection();
         }
     }
