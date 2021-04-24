@@ -241,8 +241,8 @@ export default {
             else if (mEvent.type == MOUSE_EVENT.UP){
                 this.mouse.down = false;
             }
-
-            if (toolScript){
+            
+            if (toolScript && mEvent.navToolState == null){
                 toolScript(mEvent);
             }
         },

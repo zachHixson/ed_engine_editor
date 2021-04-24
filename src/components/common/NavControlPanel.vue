@@ -13,7 +13,6 @@
 
 <script>
 import Victor from 'victor';
-import {store} from 'vuex';
 import NavControl from './NavControl';
 
 const ZOOM_SENSITIVITY = 0.03;
@@ -34,7 +33,6 @@ let mouse = {
     lastPosition: new Victor(0, 0),
     dragDistance: new Victor(0, 0)
 }
-let hotkeyTool = null;
 let keyMap = {};
 let zoomFac = 1;
 let rawOffset = new Victor(0, 0);

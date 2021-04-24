@@ -15,10 +15,9 @@
         <canvas
             ref="canvas"
             class="canvas"
-            @click="emitMouseEvent($event, mEvents.CLICK)"
-            @mousedown="emitMouseEvent($event, mEvents.DOWN)"
-            @mouseup="emitMouseEvent($event, mEvents.UP)"
-            @mousemove="emitMouseEvent($event, mEvents.MOVE)">//Canvas Error</canvas>
+            @mousedown="mouseDown"
+            @mouseup="mouseUp"
+            @mousemove="mouseMove">//Canvas Error</canvas>
         <div ref="canvasImages" style="display: none">
             <img ref="camera_icon" src="@/assets/camera_location.svg" @load="checkImageLoading()"/>
             <img ref="noSprite_icon" src="@/assets/object_icon.svg" @load="checkImageLoading()"/>
@@ -46,7 +45,6 @@ export default {
         return {
             canvasEl: null,
             canvasRenderer: null,
-            mEvents: MOUSE_EVENT,
             loadedImages: 0
         }
     },
@@ -67,16 +65,8 @@ export default {
         this.resize();
         this.canvasRenderer.navChange(this.$refs.navControlPanel.getNavState());
 
-        //bind canvas events
+        //bind events
         window.addEventListener('resize', this.resize);
-        this.canvasEl.addEventListener('mousedown', this.canvasRenderer.mouseDown.bind(this.canvasRenderer));
-        this.canvasEl.addEventListener('mouseup', this.canvasRenderer.mouseUp.bind(this.canvasRenderer));
-        this.canvasEl.addEventListener('mousemove', this.canvasRenderer.mouseMove.bind(this.canvasRenderer));
-
-        //Bind Nav Panel Events
-        this.canvasEl.addEventListener('mousedown', this.$refs.navControlPanel.mouseDown);
-        this.canvasEl.addEventListener('mouseup', this.$refs.navControlPanel.mouseUp);
-        this.canvasEl.addEventListener('mousemove', this.$refs.navControlPanel.mouseMove);
         this.canvasEl.addEventListener('wheel', this.$refs.navControlPanel.scroll);
         this.canvasEl.addEventListener('mouseleave', this.$refs.navControlPanel.mouseLeave);
 
@@ -92,20 +82,27 @@ export default {
         }
     },
     beforeDestroy() {
-        //unbind canvas events
+        //unbind events
         window.removeEventListener('resize', this.resize);
-        this.canvasEl.removeEventListener('mousedown', this.canvasRenderer.mouseDown.bind(this.canvasRenderer));
-        this.canvasEl.removeEventListener('mouseup', this.canvasRenderer.mouseUp.bind(this.canvasRenderer));
-        this.canvasEl.removeEventListener('mousemove', this.canvasRenderer.mouseMove.bind(this.canvasRenderer));
-
-        //unbind Nav Panel Events
-        this.canvasEl.removeEventListener('mousedown', this.$refs.navControlPanel.mouseDown);
-        this.canvasEl.removeEventListener('mouseup', this.$refs.navControlPanel.mouseUp);
-        this.canvasEl.removeEventListener('mousemove', this.$refs.navControlPanel.mouseMove);
         this.canvasEl.removeEventListener('wheel', this.$refs.navControlPanel.scroll);
         this.canvasEl.removeEventListener('mouseleave', this.$refs.navControlPanel.mouseLeave);
     },
     methods: {
+        mouseDown(event){
+            this.$refs.navControlPanel.mouseDown(event);
+            this.canvasRenderer.mouseDown(event);
+            this.emitMouseEvent(event, MOUSE_EVENT.DOWN);
+        },
+        mouseUp(event){
+            this.$refs.navControlPanel.mouseUp(event);
+            this.canvasRenderer.mouseUp(event);
+            this.emitMouseEvent(event, MOUSE_EVENT.UP);
+        },
+        mouseMove(event){
+            this.$refs.navControlPanel.mouseMove(event);
+            this.canvasRenderer.mouseMove(event);
+            this.emitMouseEvent(event, MOUSE_EVENT.MOVE);
+        },
         roomChange(){
             this.canvasRenderer.setRoomRef(this.selectedRoom);
         },
@@ -122,11 +119,15 @@ export default {
             }
         },
         emitMouseEvent(event, type){ 
-            let canvasPos = new Victor(event.offsetX, event.offsetY);
-            let worldPos = this.canvasRenderer.getMouseWorldPos();
-            let cell = this.canvasRenderer.getMouseCell();
-            let worldCell = this.canvasRenderer.getMouseWorldCell();
-            this.$emit('mouse-event', {type, canvasPos, worldPos, cell, worldCell});
+            if (event.which == 1){
+                let canvasPos = new Victor(event.offsetX, event.offsetY);
+                let worldPos = this.canvasRenderer.getMouseWorldPos();
+                let cell = this.canvasRenderer.getMouseCell();
+                let worldCell = this.canvasRenderer.getMouseWorldCell();
+                let navToolState = this.$refs.navControlPanel.hotkeyTool;
+                
+                this.$emit('mouse-event', {type, canvasPos, worldPos, cell, worldCell, navToolState});
+            }
         },
         instancesChanged(){
             this.canvasRenderer.instancesChanged();
