@@ -230,6 +230,10 @@ export default {
                 
                 this.$refs.editWindow.setSelection(this.editorSelection);
             }
+            else{
+                this.editorSelection = null;
+                this.$refs.editWindow.setSelection(this.editorSelection);
+            }
         },
         mouseEvent(mEvent){
             let toolScript = this.toolMap.get(this.curToolSelection);
