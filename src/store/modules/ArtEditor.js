@@ -1,7 +1,8 @@
-import Navigation from './Navigation';
+import {navStates, navGetters, navActions, navMutations} from './Navigation';
 import {ART_TOOL_SIZE, ART_TOOL_TYPE} from '@/common/Enums';
 
 const state = {
+    ...navStates(),
     selectedColor : "#FFFFFF",
     selectedSize: ART_TOOL_SIZE.SMALL,
     selectedTool: ART_TOOL_TYPE.BRUSH,
@@ -11,6 +12,7 @@ const state = {
 }
 
 const getters = {
+    ...navGetters(),
     getSelectedColor: state => state.selectedColor,
     getSelectedSize: state => state.selectedSize,
     getSelectedTool: state => state.selectedTool,
@@ -20,6 +22,7 @@ const getters = {
 };
 
 const actions = {
+    ...navActions(),
     selectColor({commit}, newColor){
         commit('selectColor', newColor);
     },
@@ -41,6 +44,7 @@ const actions = {
 };
 
 const mutations = {
+    ...navMutations(),
     selectColor: (state, newColor) => state.selectedColor = newColor,
     selectSize: (state, newSize) => state.selectedSize = newSize,
     selectTool: (state, newTool) => state.selectedTool = newTool,
@@ -49,15 +53,10 @@ const mutations = {
     setAnimPanelState: (state, newState) => state.animPanelOpen = newState
 };
 
-const modules = {
-    Navigation
-}
-
 export default {
     namespaced: true,
     state,
     getters,
     actions,
-    mutations,
-    modules
+    mutations
 };
