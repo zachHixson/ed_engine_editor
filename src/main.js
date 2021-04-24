@@ -5,19 +5,12 @@ import i18n from './i18n'
 
 Vue.config.productionTip = false
 
-new Vue({
-    store,
-    i18n,
-    render: h => h(App)
-}).$mount('#app')
-
 Vue.directive('click-outside', {
     bind: function (el, binding, vnode) {
         el.checkOutside = (event) => {
             if (!(el == event.target || el.contains(event.target))) {
                 vnode.context[binding.expression](event);
             }
-
         };
 
         document.body.addEventListener('click', el.checkOutside);
@@ -26,3 +19,9 @@ Vue.directive('click-outside', {
         document.body.removeEventListener('click', el.checkOutside)
     }
 });
+
+new Vue({
+    store,
+    i18n,
+    render: h => h(App)
+}).$mount('#app')

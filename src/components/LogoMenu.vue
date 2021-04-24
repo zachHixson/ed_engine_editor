@@ -1,6 +1,7 @@
 <template>
     <div class="logoMenu">
-        <button class="fileMenu" @click="(event)=>{event.stopPropagation(); fileVisible = !fileVisible}">
+        <button class="fileMenu" @click="(event)=>{event.stopPropagation(); fileVisible = !fileVisible}"
+            v-click-outside="closeFileMenu">
             ED
             <div ref="dropDown" class="dropDown" v-show="fileVisible">
                 <button
@@ -76,7 +77,6 @@ export default {
         }
     },
     mounted() {
-        document.addEventListener('click', this.clickOutside);
         document.addEventListener('keypress', (event) => {
             if (this.isRenaming && event.key == 'Enter'){
                 this.isRenaming = false;
@@ -84,31 +84,8 @@ export default {
         });
     },
     methods: {
-        clickOutside(event){
-            let dropDown = this.$refs.dropDown;
-            let editBox = this.$refs.displayEditBox;
-
-            if (dropDown){
-                this.fileVisible = !this.checkInBounds(event, dropDown);
-            }
-
-            if (editBox && this.isRenaming){
-                this.isRenaming = !this.checkInBounds(event, editBox);
-            }
-        },
-        checkInBounds(event, obj){
-            let bounds = obj.getBoundingClientRect();
-
-            if (
-                event.clientX > bounds.right ||
-                event.clientX < bounds.left ||
-                event.clientY < bounds.top ||
-                event.clientY > bounds.bottom
-            ){
-                return true;
-            }
-
-            return false;
+        closeFileMenu(){
+            this.fileVisible = false;
         },
         rename(){
             this.isRenaming = !this.isRenaming;
