@@ -26,7 +26,7 @@
                     <input type="checkbox" id="loop" checked="true" v-model="object.animLoop" :title="$t('object_editor.tt_loop')"/>
                 </div>
             </div>
-            <AnimationPlayer ref="animPlayer" :sprite="object.sprite" :fps="object.fps" :startFrame="object.startFrame"/>
+            <AnimationPlayer ref="animPlayer" :sprite="object.sprite" :fps="object.fps" :startFrame="startFrame"/>
         </CategoryWrapper>
         <CategoryWrapper :title="$t('object_editor.heading_physics')" iconPath="assets/physics">
             <div class="options">
@@ -104,7 +104,6 @@ export default {
             set(newFrame){
                 this.$refs.frameStart.value = this.object.startFrame;
                 this.object.startFrame = newFrame;
-                this.$refs.animPlayer.drawFrame();
             }
         }
     },

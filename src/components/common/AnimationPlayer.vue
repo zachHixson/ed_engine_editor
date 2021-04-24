@@ -36,6 +36,12 @@ export default {
             return this.animationLoop != null;
         }
     },
+    watch: {
+        startFrame: function(val) {
+            this.curFrameIdx = val;
+            this.drawFrame();
+        }
+    },
     mounted(){
         this.canvas = this.$refs.canvas;
         this.checkerBGBuff.width = this.canvas.width;
