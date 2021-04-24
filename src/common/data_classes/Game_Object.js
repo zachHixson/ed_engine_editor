@@ -17,6 +17,10 @@ class Game_Object extends Asset{
         this.groups = [];
     }
 
+    get thumbnailData(){
+        return this.sprite ? this.sprite.frames[this.startFrame] : null;
+    }
+
     toSaveData(){
         let sanitized = Object.assign({}, this);
         sanitized.sprite = this.sprite.ID;

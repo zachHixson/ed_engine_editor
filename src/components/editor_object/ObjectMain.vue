@@ -104,6 +104,7 @@ export default {
             set(newFrame){
                 this.$refs.frameStart.value = this.object.startFrame;
                 this.object.startFrame = newFrame;
+                this.$emit('asset-changed', this.object.ID);
             }
         }
     },
@@ -129,6 +130,8 @@ export default {
             this.$nextTick(()=>{
                 this.$refs.animPlayer.newSpriteSelection();
             });
+
+            this.$emit('asset-changed', this.object.ID);
         },
         validateFPS(){
             this.object.fps = Math.floor(this.object.fps);
