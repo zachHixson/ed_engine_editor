@@ -13,10 +13,10 @@
         </button>
         <div class="projNameBox">
             {{$t('editor_main.project_name')}}
-            <div ref="displayEditBox" class="displayEditBox">
+            <div ref="displayEditBox" class="displayEditBox" v-click-outside="stopRenaming">
                 <div v-show="!isRenaming" ref="projNameDisplay" class="projNameDisplay">{{projName}}</div>
-                <input v-show="isRenaming" ref="projNameEdit" type="text" class="projNameEdit" v-model="projName" />
-                <button class="renameBtn" @click="rename"><img class="renameBtnImg" src="@/assets/rename.svg" /></button>
+                <input v-show="isRenaming" ref="projNameEdit" type="text" class="projNameEdit" v-model="projName"/>
+                <button class="renameBtn" @click="isRenaming ? stopRenaming() : rename()"><img class="renameBtnImg" src="@/assets/rename.svg" /></button>
             </div>
         </div>
         <input type="file" ref="fileOpen" style="display: none" @change="loadProjectFile"/>
@@ -88,14 +88,14 @@ export default {
             this.fileVisible = false;
         },
         rename(){
-            this.isRenaming = !this.isRenaming;
-
-            if (this.isRenaming){
-                this.$nextTick(()=>{
-                    this.$refs.projNameEdit.focus();
-                    this.$refs.projNameEdit.select();
-                });
-            }
+            this.$nextTick(()=>{
+                this.isRenaming = true;
+                this.$refs.projNameEdit.focus();
+                this.$refs.projNameEdit.select();
+            });
+        },
+        stopRenaming(){
+            this.isRenaming = false;
         },
         new(){
             this.$emit('new-project');

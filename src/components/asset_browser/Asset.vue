@@ -1,6 +1,6 @@
 <template>
     <div ref="asset" class="asset" :class="{selected : isSelected}" @click="selectAsset">
-        <div class="leftFloat">
+        <div class="leftFloat" v-click-outside="stopRenaming">
             <canvas v-show="hasThumb" class="thumbnail" ref="thumbNail" width="20" height="20">Test</canvas>
             <img v-if="!hasThumb" class="thumbnail assetIcon" :src="require(`@/${defaultIcon}.svg`)" />
             <div v-show="isRenaming">
@@ -9,7 +9,7 @@
             <div v-show="!isRenaming">{{asset.name}}</div>
         </div>
         <div class="rightFloat">
-            <button class="rightButton" @click="(event)=>{event.stopPropagation(); rename();}">
+            <button class="rightButton" @click="(event)=>{event.stopPropagation(); this.isRenaming ? this.stopRenaming() : this.rename();}">
                 <img class="rightIcon" style="width:30px; height:30px;" src="@/assets/rename.svg" />
             </button>
             <button class="rightButton" @click="deleteAsset">
@@ -48,7 +48,6 @@ export default {
         }
     },
     mounted(){
-        document.addEventListener('click', this.clickOutside);
         document.addEventListener('keydown', (event)=>{
             if (event.key == 'Enter'){
                 this.isRenaming = false;
@@ -85,21 +84,8 @@ export default {
                 this.$refs.renameText.select();
             }, 10);
         },
-        clickOutside(event){
-            let rootEl = this.$refs.renameText;
-
-            if (rootEl){
-                let bounds = rootEl.getBoundingClientRect();
-
-                if (
-                    event.clientX > bounds.right ||
-                    event.clientX < bounds.left ||
-                    event.clientY < bounds.top ||
-                    event.clientY > bounds.bottom
-                ){
-                    this.isRenaming = false;
-                }
-            }
+        stopRenaming(){
+            this.isRenaming = false;
         },
         checkThumb(){
             let result = this.asset.thumbnailData && !this.thumbLoading;
