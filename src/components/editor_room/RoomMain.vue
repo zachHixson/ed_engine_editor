@@ -198,6 +198,7 @@ export default {
         toolClicked(tool){
             this.selectedTool = tool;
             this.$store.dispatch('RoomEditor/setSelectedTool', tool);
+            this.$store.dispatch('RoomEditor/setSelectedNavTool', null);
         },
         selectInstanceByPos(pos){
             let nearbyInst = this.selectedRoom.getInstancesInRadius(pos, 0);
@@ -246,7 +247,7 @@ export default {
                 this.mouse.down = false;
             }
             
-            if (toolScript && mEvent.navToolState == null){
+            if (toolScript){
                 toolScript(mEvent);
             }
         },

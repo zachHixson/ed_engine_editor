@@ -11,7 +11,8 @@
             class="navControlPanel"
             stateModule="RoomEditor"
             maxZoom="2"
-            @navChanged="canvasRenderer.navChange($event)"/>
+            @navChanged="canvasRenderer.navChange($event)"
+            @tool-selected="$store.dispatch('RoomEditor/setSelectedTool', null)"/>
         <canvas
             ref="canvas"
             class="canvas"
@@ -118,15 +119,17 @@ export default {
                 this.canvasRenderer.resize();
             }
         },
-        emitMouseEvent(event, type){ 
-            if (event.which == 1){
+        emitMouseEvent(event, type){
+            let selectedNavTool = this.$store.getters['RoomEditor/getSelectedNavTool'];
+            let navToolState = this.$refs.navControlPanel.hotkeyTool;
+
+            if (event.which == 1 && selectedNavTool == null && navToolState == null){
                 let canvasPos = new Victor(event.offsetX, event.offsetY);
                 let worldPos = this.canvasRenderer.getMouseWorldPos();
                 let cell = this.canvasRenderer.getMouseCell();
                 let worldCell = this.canvasRenderer.getMouseWorldCell();
-                let navToolState = this.$refs.navControlPanel.hotkeyTool;
                 
-                this.$emit('mouse-event', {type, canvasPos, worldPos, cell, worldCell, navToolState});
+                this.$emit('mouse-event', {type, canvasPos, worldPos, cell, worldCell});
             }
         },
         instancesChanged(){
