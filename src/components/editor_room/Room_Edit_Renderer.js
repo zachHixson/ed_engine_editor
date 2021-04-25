@@ -52,6 +52,7 @@ export default class Room_Edit_Renderer{
         this.roomRef = roomObj;
         this.zDrawList = this.roomRef.zSortedList;
         this.exits = this.roomRef.exitsList;
+        this.fullRedraw();
     }
 
     setSelection(instRef){
