@@ -17,6 +17,8 @@ class Asset{
         Object.assign(this, data);
         return this;
     }
+
+    purgeMissingReferences(){}
 }
 
 export default Asset;

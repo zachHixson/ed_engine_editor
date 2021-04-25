@@ -52,17 +52,25 @@ export default {
     computed: {
         gridEnabled(){
             return this.$store.getters["RoomEditor/getGridState"];
+        },
+        checkAssetDeletion(){
+            return this.$store.getters['GameData/getAllObjects'].length + this.$store.getters['GameData/getAllSprites'].length;
         }
     },
     watch: {
-        selectedRoom(newVal){
+        selectedRoom(){
             this.roomChange();
         },
-        editorSelection(newVal){
+        editorSelection(){
             this.setSelection();
         },
-        gridEnabled(newVal, oldVal){
+        gridEnabled(newVal){
             this.canvasRenderer.setGridVisibility(newVal);
+        },
+        checkAssetDeletion(newVal, oldVal){
+            if (newVal < oldVal){
+                this.canvasRenderer.drawObjects();
+            }
         }
     },
     mounted() {

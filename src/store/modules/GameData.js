@@ -59,6 +59,9 @@ const actions = {
     },
     loadSaveData({commit}, loadObj){
         commit('loadSaveData', loadObj);
+    },
+    purgeMissingReferences({commit}){
+        commit('purgeMissingReferences');
     }
 };
 
@@ -116,6 +119,10 @@ const mutations = {
         state.sprites = loadObj.sprites.map(s => new Sprite().fromSaveData(s));
         state.objects = loadObj.objects.map(o => new Game_Object().fromSaveData(o, state.sprites));
         state.rooms = loadObj.rooms.map(r => new Room().fromSaveData(r, state.objects));
+    },
+    purgeMissingReferences(){
+        state.objects.forEach(o => o.purgeMissingReferences(state.sprites));
+        state.rooms.forEach(r => r.purgeMissingReferences(state.objects, state.rooms));
     }
 };
 

@@ -126,6 +126,7 @@ export default {
 
             //Actually delete the asset from Vuex
             this.$store.dispatch('GameData/deleteAsset', {category: asset.category_ID, id: asset.ID});
+            this.$emit('asset-deleted');
         },
         selectAsset(asset, catId = null){
             if (asset && catId == null){

@@ -5,15 +5,14 @@
             @open-project="openProject"
             @save-project="saveProject" />
         <TopPanel class="topPanel" ref="topPanel"/>
-        <AssetBrowser class="assetBrowser" ref="assetBrowser" @asset-selected="updateEditorAsset" />
-        <EditorWindow class="editorWindow" ref="editorWindow" @asset-changed="updateAssetPreviews" />
+        <AssetBrowser class="assetBrowser" ref="assetBrowser" @asset-selected="updateEditorAsset" @asset-deleted="updateAfterDeletion" />
+        <EditorWindow class="editorWindow" ref="editorWindow" @asset-changed="updateAssetPreviews"/>
     </div>
 </template>
 
 <script>
 import {saveAs} from 'file-saver';
 import {EDITOR_ID} from '@/common/Enums';
-import ID_Generator from '@/common/ID_Generator';
 import LogoMenu from './components/LogoMenu';
 import TopPanel from './components/TopPanel';
 import AssetBrowser from './components/asset_browser/AssetBrowser';
@@ -38,6 +37,9 @@ export default {
         updateEditorAsset(){
             this.$refs.editorWindow.updateAssetSelection();
             this.$refs.topPanel.updateEditorTabs();
+        },
+        updateAfterDeletion(){
+            this.$store.dispatch('GameData/purgeMissingReferences');
         },
         newProject(){
             this.$store.dispatch('newProject');

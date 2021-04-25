@@ -66,6 +66,25 @@ class Room extends Asset{
         return this;
     }
 
+    purgeMissingReferences(objects, rooms){
+        this.instances.zSort.forEach((i) => {
+            let foundObj = objects.find(o => o.ID == i.objRef.ID);
+
+            if (!foundObj){
+                this.removeInstance(i.id, i.pos);
+            }
+        });
+
+        this.exits.zSort.forEach((e) => {
+            let foundRoom = rooms.find(r => r.ID == e.destinationRoom);
+
+            if (!foundRoom){
+                e.destinationRoom = null;
+                e.destinationExit = null;
+            }
+        });
+    }
+
     addInstance(objRef, pos){
         let newInstance = new Instance(this.instances.curInstId, objRef, pos);
         return this.instances.add(newInstance, pos);

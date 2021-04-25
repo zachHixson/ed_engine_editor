@@ -57,8 +57,8 @@ export default class Room_Edit_Renderer{
 
     setSelection(instRef){
         this.selectedEntity = instRef;
-        this.drawCursor();
-        this.composite();
+        this._drawCursor();
+        this._composite();
     }
 
     setSVG({camera, noSprite, exit, end}){
@@ -70,8 +70,8 @@ export default class Room_Edit_Renderer{
 
     setGridVisibility(newVisibility){
         this.showGrid = newVisibility;
-        this.drawGrid();
-        this.composite();
+        this._drawGrid();
+        this._composite();
     }
 
     recalcHalfCanvas(){
@@ -104,8 +104,8 @@ export default class Room_Edit_Renderer{
         this.mouse.pos.copy(worldCoords);
         this.mouse.cell.copy(cell);
 
-        this.drawCursor();
-        this.composite();
+        this._drawCursor();
+        this._composite();
     }
 
     navChange(navEventData){
@@ -117,13 +117,13 @@ export default class Room_Edit_Renderer{
     }
 
     instancesChanged(){
-        this.drawObjects();
-        this.drawCursor();
-        this.composite();
+        this._drawObjects();
+        this._drawCursor();
+        this._composite();
     }
 
     bgColorChanged(){
-        this.composite();
+        this._composite();
     }
 
     resize(){
@@ -138,31 +138,51 @@ export default class Room_Edit_Renderer{
         this.fullRedraw();
     }
 
-    composite(){
+    drawBackground(){
+        this._drawBackground();
+        this._composite();
+    }
+
+    drawObjects(){
+        this._drawObjects();
+        this._composite();
+    }
+
+    drawCursor(){
+        this._drawCursor();
+        this._composite();
+    }
+
+    drawGrid(){
+        this._drawGrid();
+        this._composite();
+    }
+
+    fullRedraw(){
+        this._drawObjects();
+        this._drawCursor();
+        this._drawGrid();
+        this._composite();
+    }
+
+    _composite(){
         let ctx = this.canvas.getContext('2d');
 
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        this.drawBackground();
+        this._drawBackground();
         ctx.drawImage(this.objBuff, 0, 0, this.objBuff.width, this.objBuff.height);
         ctx.drawImage(this.gridBuff, 0, 0, this.gridBuff.width, this.gridBuff.height);
         ctx.drawImage(this.cursorBuff, 0, 0, this.cursorBuff.width, this.cursorBuff.height);
     }
 
-    fullRedraw(){
-        this.drawObjects();
-        this.drawCursor();
-        this.drawGrid();
-        this.composite();
-    }
-
-    drawBackground(){
+    _drawBackground(){
         let ctx = this.canvas.getContext('2d');
         ctx.fillStyle = this.roomRef?.bgColor ?? 'white';
         ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
-    drawObjects(){
+    _drawObjects(){
         const NO_SPRITE_PADDING = 0.75;
 
         let ctx = this.objBuff.getContext('2d');
@@ -258,7 +278,7 @@ export default class Room_Edit_Renderer{
         }
     }
 
-    drawCursor(){
+    _drawCursor(){
         //draw mouse cursor
         let ctx = this.cursorBuff.getContext("2d");
         let screenCell = this.worldToScreenPos(this.getMouseWorldCell());
@@ -277,7 +297,7 @@ export default class Room_Edit_Renderer{
         }
     }
 
-    drawGrid(){
+    _drawGrid(){
         let ctx = this.gridBuff.getContext('2d');
         let maxDim = Math.max(this.gridBuff.width, this.gridBuff.height);
         let lineCount = Math.ceil(maxDim / this.scaledCellWidth);

@@ -33,6 +33,16 @@ class Game_Object extends Asset{
         return this;
     }
 
+    purgeMissingReferences(sprites){
+        if (this.sprite){
+            let spriteFound = sprites.find(s => s.ID == this.sprite.ID);
+            
+            if (!spriteFound){
+                this.sprite = null;
+            }
+        }
+    }
+
     get type(){return CATEGORY_TYPE.OBJECT}
     get category_ID(){return CATEGORY_ID.OBJECT}
     get startFrame(){return this._startFrame}
