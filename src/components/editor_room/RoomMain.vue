@@ -22,6 +22,7 @@
             ref="editWindow"
             class="editWindow"
             :selectedRoom="selectedRoom"
+            :editorSelection="editorSelection"
             :undoLength="undoStore.undoLength"
             :redoLength="undoStore.redoLength"
             @mouse-event="mouseEvent"
@@ -168,10 +169,6 @@ export default {
         this.revertMap.set(ROOM_ACTION.CAMERA_CHANGE, this.revertCameraChange);
         this.revertMap.set(ROOM_ACTION.ROOM_PROP_CHANGE, this.revertRoomPropChange);
         this.revertMap.set(ROOM_ACTION.ROOM_VAR_CHANGE, this.revertRoomVarChange);
-
-        this.$nextTick(()=>{
-            this.updateAssetSelection();
-        })
     },
     beforeDestroy() {
         this.$store.dispatch('RoomEditor/setPropPanelState', this.propertiesOpen);
@@ -179,17 +176,12 @@ export default {
     methods: {
         updateAssetSelection() {
             let selectedRoom = this.$store.getters['AssetBrowser/getSelectedRoom'];
-            this.selectedRoom = selectedRoom;
             
             if (selectedRoom && selectedRoom != this.selectedRoom){
-                this.$nextTick(()=>{
-                    this.updateEditorSelection(null);
-                });
+                this.editorSelection = null;
             }
-        },
-        updateEditorSelection(newSelection){
-            this.editorSelection = newSelection;
-            this.$refs.editWindow.setSelection(this.editorSelection);
+
+            this.selectedRoom = selectedRoom;
         },
         resize() {
             this.$nextTick(()=>{
@@ -229,14 +221,14 @@ export default {
 
                 //if selected instance is in current cell, then select next item in cell
                 if (selectedInListIdx >= 0){
-                    this.updateEditorSelection(instInCell[++selectedInListIdx % instInCell.length]);
+                    this.editorSelection = instInCell[++selectedInListIdx % instInCell.length];
                 }
                 else{
-                    this.updateEditorSelection(instInCell[0]);
+                    this.editorSelection = instInCell[0];
                 }
             }
             else{
-                this.updateEditorSelection(null);
+                this.editorSelection = null;
             }
         },
         mouseEvent(mEvent){
@@ -364,10 +356,10 @@ export default {
                 exitsAtCursor = exitsAtCursor.filter(e => Util_2D.compareVector(e.pos, mEvent.worldCell));
 
                 if (exitsAtCursor.length > 0){
-                    this.updateEditorSelection(exitsAtCursor[0]);
+                    this.editorSelection = exitsAtCursor[0];
                 }
                 else{
-                    this.updateEditorSelection(this.actionExitAdd({pos: mEvent.worldCell}));
+                    this.editorSelection = this.actionExitAdd({pos: mEvent.worldCell});
                 }
             }
         },
@@ -407,7 +399,7 @@ export default {
             this.$refs.editWindow.instancesChanged();
 
             if (instRef == this.editorSelection){
-                this.updateEditorSelection(null);
+                this.editorSelection = null;
             }
 
             if (makeCommit){
@@ -506,7 +498,7 @@ export default {
         },
         actionExitDelete({exitId, pos}, makeCommit = true){
             let exitRef = this.selectedRoom.removeExit(exitId, pos);
-            this.updateEditorSelection(null);
+            this.editorSelection = null;
             this.$refs.editWindow.instancesChanged();
 
             if (makeCommit){

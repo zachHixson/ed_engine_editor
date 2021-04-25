@@ -37,7 +37,7 @@ import Room_Edit_Renderer from './Room_Edit_Renderer';
 
 export default {
     name: 'RoomEditWindow',
-    props: ['selectedRoom', 'undoLength', 'redoLength'],
+    props: ['selectedRoom', 'editorSelection', 'undoLength', 'redoLength'],
     components: {
         NavControlPanel,
         UndoPanel
@@ -57,6 +57,9 @@ export default {
     watch: {
         selectedRoom(newVal){
             this.roomChange();
+        },
+        editorSelection(newVal){
+            this.setSelection();
         },
         gridEnabled(newVal, oldVal){
             this.canvasRenderer.setGridVisibility(newVal);
@@ -138,8 +141,8 @@ export default {
         instancesChanged(){
             this.canvasRenderer.instancesChanged();
         },
-        setSelection(newSelection){
-            this.canvasRenderer.setSelection(newSelection);
+        setSelection(){
+            this.canvasRenderer.setSelection(this.editorSelection);
         },
         cameraChanged(){
             this.canvasRenderer.drawCursor();

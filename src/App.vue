@@ -29,6 +29,7 @@ export default {
     },
     mounted(){
         this.$store.dispatch('newProject');
+        this.updateEditorAsset();
     },
     methods: {
         updateAssetPreviews(id){
