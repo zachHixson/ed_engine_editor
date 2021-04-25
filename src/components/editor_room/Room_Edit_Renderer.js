@@ -166,16 +166,17 @@ export default class Room_Edit_Renderer{
         const NO_SPRITE_PADDING = 0.75;
 
         let ctx = this.objBuff.getContext('2d');
-        let scaleFac = this.scaledCellWidth / 16;
-        let paddingOffset = this.scaledCellWidth - (this.scaledCellWidth * NO_SPRITE_PADDING);
-
-        paddingOffset /= 2;
 
         ctx.clearRect(0, 0, this.objBuff.width, this.objBuff.height);
         ctx.imageSmoothingEnabled = false;
         ctx.webkitImageSmoothingEnabled = false;
 
         if (this.zDrawList){
+            let scaleFac = this.scaledCellWidth / 16;
+            let paddingOffset = this.scaledCellWidth - (this.scaledCellWidth * NO_SPRITE_PADDING);
+
+            paddingOffset /= 2;
+
             this.zDrawList.forEach((inst) => {
                 let pos = Victor.fromObject(inst.pos);
                 let offset = 0;
@@ -224,36 +225,6 @@ export default class Room_Edit_Renderer{
                 }
             });
         }
-    }
-
-    drawCursor(){
-        //draw mouse cursor
-        let ctx = this.cursorBuff.getContext("2d");
-        let screenCell = this.worldToScreenPos(this.getMouseWorldCell());
-
-        ctx.clearRect(0, 0, this.cursorBuff.width, this.cursorBuff.height);
-
-        ctx.fillStyle = "#AAAAAA88";
-        ctx.fillRect(screenCell.x, screenCell.y, this.scaledCellWidth, this.scaledCellWidth);
-
-        //draw selection cursor
-        if (this.selectedEntity){
-            let screenPos = this.selectedEntity.pos.clone();
-            screenPos = this.worldToScreenPos(screenPos);
-            ctx.strokeStyle = "blue";
-            ctx.strokeRect(screenPos.x, screenPos.y, this.scaledCellWidth, this.scaledCellWidth);
-        }
-
-        //draw camera cursor
-        if (this.roomRef?.camera){
-            let scaleFac = this.scaledCellWidth / this.cameraIcon.width;
-            let screenPos = this.roomRef.camera.pos.clone();
-            screenPos = this.worldToScreenPos(screenPos);
-            ctx.translate(screenPos.x, screenPos.y);
-            ctx.scale(scaleFac, scaleFac);
-            ctx.drawImage(this.cameraIcon, 0, 0);
-            ctx.resetTransform();
-        }
 
         //draw exits
         if (this.exits){
@@ -273,6 +244,36 @@ export default class Room_Edit_Renderer{
                 
                 ctx.resetTransform();
             })
+        }
+
+        //draw camera cursor
+        if (this.roomRef?.camera){
+            let scaleFac = this.scaledCellWidth / this.cameraIcon.width;
+            let screenPos = this.roomRef.camera.pos.clone();
+            screenPos = this.worldToScreenPos(screenPos);
+            ctx.translate(screenPos.x, screenPos.y);
+            ctx.scale(scaleFac, scaleFac);
+            ctx.drawImage(this.cameraIcon, 0, 0);
+            ctx.resetTransform();
+        }
+    }
+
+    drawCursor(){
+        //draw mouse cursor
+        let ctx = this.cursorBuff.getContext("2d");
+        let screenCell = this.worldToScreenPos(this.getMouseWorldCell());
+
+        ctx.clearRect(0, 0, this.cursorBuff.width, this.cursorBuff.height);
+
+        ctx.fillStyle = "#AAAAAA88";
+        ctx.fillRect(screenCell.x, screenCell.y, this.scaledCellWidth, this.scaledCellWidth);
+
+        //draw selection cursor
+        if (this.selectedEntity){
+            let screenPos = this.selectedEntity.pos.clone();
+            screenPos = this.worldToScreenPos(screenPos);
+            ctx.strokeStyle = "blue";
+            ctx.strokeRect(screenPos.x, screenPos.y, this.scaledCellWidth, this.scaledCellWidth);
         }
     }
 
