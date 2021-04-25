@@ -406,6 +406,10 @@ export default {
             let instRef = this.selectedRoom.removeInstance(instId, pos);
             this.$refs.editWindow.instancesChanged();
 
+            if (instRef == this.editorSelection){
+                this.updateEditorSelection(null);
+            }
+
             if (makeCommit){
                 let data = {instId, instRef, pos}
                 this.undoStore.commit({action: ROOM_ACTION.DELETE, data})
