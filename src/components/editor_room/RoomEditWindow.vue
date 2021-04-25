@@ -55,6 +55,9 @@ export default {
         }
     },
     watch: {
+        selectedRoom(newVal){
+            this.roomChange();
+        },
         gridEnabled(newVal, oldVal){
             this.canvasRenderer.setGridVisibility(newVal);
         }

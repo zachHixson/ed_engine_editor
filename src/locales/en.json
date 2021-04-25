@@ -93,7 +93,7 @@
         "exit": "Exit Tool",
         "room_props": "Room Properties",
         "toggle_grid": "Toggle Grid",
-        "no_room_selected": "Select a room to edit it",
+        "no_room_selected": "Add a room, and select it to start editing",
         "duplicate_name_suffix": "copy",
         "new_var_prefix": "Var_",
         "new_exit_prefix": "Exit_",

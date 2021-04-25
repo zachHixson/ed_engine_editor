@@ -131,8 +131,7 @@ export default {
             return this.$store.getters['RoomEditor/getGridState'];
         },
         isRoomSelected() {
-            this.$nextTick(()=>{this.updateAssetSelection()});
-            return this.selectedRoom;
+            return this.selectedRoom != null;
         }
     },
     mounted() {
@@ -169,6 +168,10 @@ export default {
         this.revertMap.set(ROOM_ACTION.CAMERA_CHANGE, this.revertCameraChange);
         this.revertMap.set(ROOM_ACTION.ROOM_PROP_CHANGE, this.revertRoomPropChange);
         this.revertMap.set(ROOM_ACTION.ROOM_VAR_CHANGE, this.revertRoomVarChange);
+
+        this.$nextTick(()=>{
+            this.updateAssetSelection();
+        })
     },
     beforeDestroy() {
         this.$store.dispatch('RoomEditor/setPropPanelState', this.propertiesOpen);
@@ -176,13 +179,11 @@ export default {
     methods: {
         updateAssetSelection() {
             let selectedRoom = this.$store.getters['AssetBrowser/getSelectedRoom'];
+            this.selectedRoom = selectedRoom;
             
             if (selectedRoom && selectedRoom != this.selectedRoom){
-                this.selectedRoom = selectedRoom;
-                
                 this.$nextTick(()=>{
                     this.updateEditorSelection(null);
-                    this.$refs.editWindow.roomChange();
                 });
             }
         },
