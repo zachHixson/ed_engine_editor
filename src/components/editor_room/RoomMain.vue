@@ -179,11 +179,17 @@ export default {
             
             if (selectedRoom && selectedRoom != this.selectedRoom){
                 this.selectedRoom = selectedRoom;
+                this.updateEditorSelection(null);
 
                 this.$nextTick(()=>{
                     this.$refs.editWindow.roomChange();
                 });
             }
+        },
+        updateEditorSelection(newSelection){
+            this.editorSelection = newSelection;
+            this.$refs.editWindow.setSelection(this.editorSelection);
+
         },
         resize() {
             this.$nextTick(()=>{
@@ -223,17 +229,14 @@ export default {
 
                 //if selected instance is in current cell, then select next item in cell
                 if (selectedInListIdx >= 0){
-                    this.editorSelection = instInCell[++selectedInListIdx % instInCell.length];
+                    this.updateEditorSelection(instInCell[++selectedInListIdx % instInCell.length]);
                 }
                 else{
-                    this.editorSelection = instInCell[0];
+                    this.updateEditorSelection(instInCell[0]);
                 }
-                
-                this.$refs.editWindow.setSelection(this.editorSelection);
             }
             else{
-                this.editorSelection = null;
-                this.$refs.editWindow.setSelection(this.editorSelection);
+                this.updateEditorSelection(null);
             }
         },
         mouseEvent(mEvent){
@@ -361,12 +364,10 @@ export default {
                 exitsAtCursor = exitsAtCursor.filter(e => Util_2D.compareVector(e.pos, mEvent.worldCell));
 
                 if (exitsAtCursor.length > 0){
-                    this.editorSelection = exitsAtCursor[0];
-                    this.$refs.editWindow.setSelection(this.editorSelection);
+                    this.updateEditorSelection(exitsAtCursor[0]);
                 }
                 else{
-                    this.editorSelection = this.actionExitAdd({pos: mEvent.worldCell});
-                    this.$refs.editWindow.setSelection(this.editorSelection);
+                    this.updateEditorSelection(this.actionExitAdd({pos: mEvent.worldCell}));
                 }
             }
         },
@@ -501,8 +502,7 @@ export default {
         },
         actionExitDelete({exitId, pos}, makeCommit = true){
             let exitRef = this.selectedRoom.removeExit(exitId, pos);
-            this.editorSelection = null;
-            this.$refs.editWindow.setSelection(this.editorSelection);
+            this.updateEditorSelection(null);
             this.$refs.editWindow.instancesChanged();
 
             if (makeCommit){
