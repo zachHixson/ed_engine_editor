@@ -179,9 +179,9 @@ export default {
             
             if (selectedRoom && selectedRoom != this.selectedRoom){
                 this.selectedRoom = selectedRoom;
-                this.updateEditorSelection(null);
-
+                
                 this.$nextTick(()=>{
+                    this.updateEditorSelection(null);
                     this.$refs.editWindow.roomChange();
                 });
             }
@@ -189,7 +189,6 @@ export default {
         updateEditorSelection(newSelection){
             this.editorSelection = newSelection;
             this.$refs.editWindow.setSelection(this.editorSelection);
-
         },
         resize() {
             this.$nextTick(()=>{
