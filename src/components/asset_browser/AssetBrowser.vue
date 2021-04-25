@@ -109,35 +109,48 @@ export default {
             });
         },
         deleteAsset(asset){
-            let selectedAsset = this.getSelected();
+            let selectedAsset = null;
 
-            //select item adjacent to currently deleted item in the list
+            //determine which type of asset has been deleted
+            if (asset.category_ID == CATEGORY_ID.ROOM){
+                selectedAsset = this.$store.getters['AssetBrowser/getSelectedRoom'];
+            }
+            else{
+                selectedAsset = this.$store.getters['AssetBrowser/getSelectedAsset'];
+            }
+
+            //if the selected asset was deleted, shift the selection to the adjacent asset
             if (selectedAsset && asset.ID == selectedAsset.ID){
-                let newSelection = null;
-
-                for (let i = 0; i < this.selectedList.length; i++){
-                    if (this.selectedList[i].ID == asset.ID){
-                        newSelection = (i > 0) ? this.selectedList[i - 1] : this.selectedList[i + 1]
-                    }
-                }
-
-                this.selectAsset(newSelection);
+                this.selectAdjacent(asset);
             }
 
             //Actually delete the asset from Vuex
             this.$store.dispatch('GameData/deleteAsset', {category: asset.category_ID, id: asset.ID});
         },
-        selectAsset(asset){
-            if (asset.category_ID == CATEGORY_ID.ROOM){
+        selectAsset(asset, catId = null){
+            if (asset && catId == null){
+                catId = asset.category_ID;
+            }
+
+            if (catId == CATEGORY_ID.ROOM){
                 this.$store.dispatch('AssetBrowser/selectRoom', asset);
             }
             else{
                 this.$store.dispatch('AssetBrowser/selectAsset', asset);
             }
+
             this.$emit('asset-selected');
         },
-        getSelected(){
-            return this.$store.getters['AssetBrowser/getSelectedAsset'];
+        selectAdjacent(delAsset){
+            let newSelection = null;
+
+            for (let i = 0; i < this.selectedList.length; i++){
+                if (this.selectedList[i].ID == delAsset.ID){
+                    newSelection = (i > 0) ? this.selectedList[i - 1] : this.selectedList[i + 1]
+                }
+            }
+
+            this.selectAsset(newSelection, delAsset.category_ID);
         },
         updateAsset(id = null){
             for (let i = 0; i < this.$refs.assets.length; i++){
