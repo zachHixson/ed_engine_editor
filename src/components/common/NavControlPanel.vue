@@ -72,8 +72,8 @@ export default {
     mounted() {
         let extra = this.extra_controls || [];
         this.controls = [...extra, ...this.controls];
-        zoomFac = this.$store.getters[this.stateModule + '/getZoomFac'];
-        rawOffset = this.$store.getters[this.stateModule + '/getOffset'].clone();
+        zoomFac = this.$store.getters[this.stateModule + '/getNavZoom'];
+        rawOffset = this.$store.getters[this.stateModule + '/getNavOffset'].clone();
 
         document.addEventListener('keydown', this.registerKeys);
         document.addEventListener('keyup', this.unregisterKeys);
@@ -119,11 +119,11 @@ export default {
             }
 
             this.$store.dispatch(
-                this.stateModule + '/setZoomFac',
+                this.stateModule + '/setNavZoom',
                 zoomFac
             )
             this.$store.dispatch(
-                this.stateModule + '/setOffset',
+                this.stateModule + '/setNavOffset',
                 rawOffset
             )
 

@@ -59,8 +59,8 @@ export default {
     },
     beforeDestroy(){
         window.cancelAnimationFrame(this.updateFrame);
-        this.$store.dispatch('ArtEditor/setZoomFac', this.canvasEl.zoomFac);
-        this.$store.dispatch('ArtEditor/setOffset', this.canvasEl.offset);
+        this.$store.dispatch('ArtEditor/setNavZoom', this.canvasEl.zoomFac);
+        this.$store.dispatch('ArtEditor/setNavOffset', this.canvasEl.offset);
         this.canvasEl.beforeDestroy();
     },
     destroyed(){

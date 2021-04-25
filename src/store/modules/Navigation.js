@@ -8,39 +8,39 @@ import Victor from 'victor';
 
 function navStates(){
     return {
-        selectedTool: null,
-        zoomFac: 1,
-        offset: new Victor(0, 0)
+        selectedNavTool: null,
+        navZoom: 1,
+        navOffset: new Victor(0, 0)
     }
 }
 
 function navGetters() {
     return {
-        getSelectedNavTool: state => state.selectedTool,
-        getZoomFac: state => state.zoomFac,
-        getOffset: state => state.offset
+        getSelectedNavTool: state => state.selectedNavTool,
+        getNavZoom: state => state.navZoom,
+        getNavOffset: state => state.navOffset
     }
 };
 
 function navActions() {
     return {
         setSelectedNavTool({ commit }, newTool) {
-            commit('setTool', newTool);
+            commit('setNavTool', newTool);
         },
-        setZoomFac({ commit }, newZoomLevel) {
-            commit('setZoomFac', newZoomLevel);
+        setNavZoom({ commit }, newZoomLevel) {
+            commit('setNavZoom', newZoomLevel);
         },
-        setOffset({ commit }, newOffset){
-            commit('setOffset', newOffset);
+        setNavOffset({ commit }, newOffset){
+            commit('setNavOffset', newOffset);
         }
     }
 };
 
 function navMutations() {
     return {
-        setTool: (state, newTool) => state.selectedTool = newTool,
-        setZoomFac: (state, newZoomFac) => state.zoomFac = newZoomFac,
-        setOffset: (state, newOffset) => state.offset.copy(newOffset)
+        setNavTool: (state, newTool) => state.selectedNavTool = newTool,
+        setNavZoom: (state, newZoomFac) => state.navZoom = newZoomFac,
+        setNavOffset: (state, newOffset) => state.navOffset.copy(newOffset)
     }
 };
 
