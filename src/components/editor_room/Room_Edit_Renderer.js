@@ -313,7 +313,7 @@ export default class Room_Edit_Renderer{
             ctx.strokeStyle = "#BBB";
             ctx.lineWidth = 2;
             ctx.beginPath();
-            for (let i = 1; i < lineCount; i++){
+            for (let i = 1; i <= lineCount; i++){
                 let offset = i * 16;
                 let pos = new Victor(offset, offset);
 
