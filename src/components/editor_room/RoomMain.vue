@@ -605,7 +605,7 @@ export default {
             }
 
             if (varIdx >= 0){
-                if (newVal){
+                if (newVal != null){
                     varList[varIdx].val = newVal;
                 }
 
@@ -632,7 +632,7 @@ export default {
             if (varName && newName){
                 this.changeCustomVar(varList, {varName: newName, newName: varName});
             }
-            else if (newVal && oldVal){
+            else if (newVal != null && oldVal != null){
                 this.changeCustomVar(varList, {varName, newVal: oldVal});
             }
             else if (add){
