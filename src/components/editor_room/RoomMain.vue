@@ -535,6 +535,10 @@ export default {
             this.$refs.editWindow.instancesChanged();
         },
         revertAdd({instRef}){
+            if (instRef == this.editorSelection){
+                this.editorSelection = null;
+            }
+
             this.selectedRoom.removeInstance(instRef.id, instRef.pos);
             this.$refs.editWindow.instancesChanged();
         },
@@ -571,6 +575,10 @@ export default {
             this.$refs.editWindow.cameraChanged();
         },
         revertExitAdd({exitRef}){
+            if (exitRef == this.editorSelection){
+                this.editorSelection = null;
+            }
+            
             this.selectedRoom.removeExit(exitRef.id, exitRef.pos);
             this.$refs.editWindow.instancesChanged();
         },
