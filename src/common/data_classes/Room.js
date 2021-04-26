@@ -85,8 +85,8 @@ class Room extends Asset{
         });
     }
 
-    addInstance(objRef, pos){
-        let newInstance = new Instance(this.instances.curInstId, objRef, pos);
+    addInstance(objRef, pos, instRef = null){
+        let newInstance = (instRef) ? instRef : new Instance(this.instances.curInstId, objRef, pos);
         return this.instances.add(newInstance, pos);
     }
 
@@ -110,8 +110,8 @@ class Room extends Asset{
         this.instances.setPositionByRef(instRef, newPos);
     }
 
-    addExit(pos){
-        let newExit = new Exit(pos);
+    addExit(pos, exitRef = null){
+        let newExit = (exitRef) ? exitRef : new Exit(pos);
         return this.exits.add(newExit, pos);
     }
 

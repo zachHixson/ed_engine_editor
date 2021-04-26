@@ -381,11 +381,7 @@ export default {
         },
         actionAdd({objId, instRef, pos}, makeCommit = true){
             let object = this.$store.getters['GameData/getAllObjects'].filter((o) => o.ID == objId)[0];
-            let newInstance = this.selectedRoom.addInstance(object, pos);
-
-            if (instRef){
-                Object.assign(newInstance, instRef);
-            }
+            let newInstance = this.selectedRoom.addInstance(object, pos, instRef);
 
             this.$refs.editWindow.instancesChanged();
 
@@ -407,14 +403,15 @@ export default {
                 this.undoStore.commit({action: ROOM_ACTION.DELETE, data})
             }
         },
-        actionInstanceChange({newState}, makeCommit = true){
-            let oldState = Object.assign({}, this.editorSelection);
+        actionInstanceChange({newState, instRef}, makeCommit = true){
+            let curInstance = (instRef) ? instRef : this.editorSelection;
+            let oldState = Object.assign({}, curInstance);
 
-            Object.assign(this.editorSelection, newState);
+            Object.assign(curInstance, newState);
             this.$refs.editWindow.instancesChanged();
 
             if (makeCommit){
-                let data = {newState, oldState, instRef: this.editorSelection};
+                let data = {newState, oldState, instRef: curInstance};
                 this.undoStore.commit({action: ROOM_ACTION.INSTANCE_CHANGE, data});
             }
         },
@@ -467,13 +464,8 @@ export default {
             }
         },
         actionExitAdd({exitRef, pos}, makeCommit = true){
-            let newExit = this.selectedRoom.addExit(pos);
+            let newExit = this.selectedRoom.addExit(pos, exitRef);
             let newExitName = this.$t('room_editor.new_exit_prefix') + newExit.id;
-
-            if (exitRef){
-                Object.assign(newExit, exitRef);
-                newExitName = exitRef.name;
-            }
 
             newExit.name = newExitName;
             this.$refs.editWindow.instancesChanged();
@@ -535,7 +527,7 @@ export default {
             this.$refs.editWindow.instancesChanged();
         },
         revertAdd({instRef}){
-            if (instRef == this.editorSelection){
+            if (instRef.id == this.editorSelection?.id){
                 this.editorSelection = null;
             }
 
@@ -575,10 +567,10 @@ export default {
             this.$refs.editWindow.cameraChanged();
         },
         revertExitAdd({exitRef}){
-            if (exitRef == this.editorSelection){
+            if (exitRef.id == this.editorSelection?.id){
                 this.editorSelection = null;
             }
-            
+
             this.selectedRoom.removeExit(exitRef.id, exitRef.pos);
             this.$refs.editWindow.instancesChanged();
         },
