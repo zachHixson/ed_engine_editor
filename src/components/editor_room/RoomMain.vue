@@ -445,9 +445,9 @@ export default {
                 this.undoStore.commit({action: ROOM_ACTION.INSTANCE_GROUP_CHANGE, data});
             }
         },
-        actionInstanceVarChange({changeObj}, makeCommit = true){
-            let varList = this.editorSelection.customVars;
-            
+        actionInstanceVarChange({changeObj, instRef}, makeCommit = true){
+            let varList = (instRef) ? instRef.customVars : this.editorSelection.customVars;
+
             this.changeCustomVar(varList, changeObj);
 
             if (makeCommit){
