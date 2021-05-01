@@ -118,7 +118,6 @@ export default class Room_Edit_Renderer{
 
     instancesChanged(){
         this._drawObjects();
-        this._drawCursor();
         this._composite();
     }
 

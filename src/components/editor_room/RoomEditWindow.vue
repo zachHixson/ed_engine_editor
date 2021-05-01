@@ -153,8 +153,7 @@ export default {
             this.canvasRenderer.setSelection(this.editorSelection);
         },
         cameraChanged(){
-            this.canvasRenderer.drawCursor();
-            this.canvasRenderer.composite();
+            this.canvasRenderer.instancesChanged();
         },
         bgColorChanged(){
             this.canvasRenderer.bgColorChanged();
