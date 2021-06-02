@@ -1,0 +1,49 @@
+/*#46FAC5*/
+
+*{
+    /* Colors */
+    --main-bg: #EEEEEE;
+    --panel-bg: #AAAAAA;
+    --tool-panel-bg: #CCCCCC;
+    --top-bar: var(--main-bg);
+    --heading: #658894;
+    --text-light: #EEEEEE;
+    --text-dark: #333333;
+    --button-norm: #FA8814;
+    --button-hover: #ffd3d0;
+    --button-down: #C7244F;
+    --button-dark-norm: #6D94A1;
+    --button-dark-hover: #99CEE0;
+    --button-dark-down: #53717A;
+    --selection: #E07912;
+    --tab-active: #ffffff;
+    --tab-inactive: var(--heading);
+    --border: #39535c;
+
+    /* Settings */
+    --corner-radius: 10px;
+}
+
+blue_theme{
+    /* Colors */
+    --main-bg: #EEEEEE;
+    --panel-bg: #AAAAAA;
+    --tool-panel-bg: #CCCCCC;
+    --top-bar: var(--main-bg);
+    --heading: #658894;
+    --text-light: #EEEEEE;
+    --text-dark: #333333;
+    --button-norm: #28B5E0;
+    --button-hover: #2DCAFA;
+    --button-down: #16637A;
+    --button-dark-norm: #6D94A1;
+    --button-dark-hover: #99CEE0;
+    --button-dark-down: #53717A;
+    --selection: #249FC7;
+    --tab-active: #ffffff;
+    --tab-inactive: var(--heading);
+    --border: #39535c;
+
+    /* Settings */
+    --corner-radius: 10px;
+}

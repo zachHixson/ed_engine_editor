@@ -123,10 +123,11 @@ export default {
     box-sizing: border-box;
     width: 100%;
     padding: 5px;
+    border-radius: var(--corner-radius);
 }
 
 .selected{
-    background: green;
+    background: var(--selection);
 }
 
 .leftFloat{

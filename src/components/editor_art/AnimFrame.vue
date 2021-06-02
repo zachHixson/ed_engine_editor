@@ -14,7 +14,7 @@
             :title="$t('art_editor.delete_frame')"
             v-show="canDelete && hover"
             @click="deleteFrame">
-            X
+            <img class="btnIcon" src="@/assets/plus.svg" style="transform: rotate(45deg)" />
         </button>
         <button
             class="button copyFrame"
@@ -26,19 +26,18 @@
             class="button moveUp"
             v-show="hover && !isFirst"
             @click="moveFrame($event, -1)">
-            <img class="btnIcon" src="@/assets/arrow_01_up.svg" />
+            <img class="btnIcon" src="@/assets/arrow_01.svg" />
         </button>
         <button
             class="button moveDown"
             v-show="hover && !isLast"
             @click="moveFrame($event, 1)">
-            <img class="btnIcon" src="@/assets/arrow_01_down.svg" />
+            <img class="btnIcon" src="@/assets/arrow_01.svg" style="transform: rotate(-180deg)" />
         </button>
     </div>
 </template>
 
 <script>
-import {state} from 'vuex';
 import Util_2D from '@/common/Util_2D';
 import Draw_2D from '@/common/Draw_2D';
 
@@ -170,18 +169,18 @@ export default {
         position: relative;
         width: 100px;
         height: 100px;
-        border: 4px solid #CC6666;
+        border: 4px solid var(--border);
         border-radius: 10px;
         background: #CC0000;
         overflow: hidden;
     }
 
     .animFrame:hover:not(.selected){
-        border-color: #CC9999;
+        border-color: var(--button-hover);
     }
 
     .selected{
-        border-color: black;
+        border-color: var(--selection);
     }
 
     .button{
@@ -191,7 +190,7 @@ export default {
         align-items: center;
         width: 20px;
         height: 20px;
-        background: white;
+        background: var(--button-norm);
         border: none;
     }
 
@@ -201,7 +200,7 @@ export default {
     }
 
     .button:hover{
-        background: gray;
+        background: var(--button-hover);
     }
 
     .deleteFrame{

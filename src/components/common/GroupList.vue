@@ -17,13 +17,15 @@
                     v-for="(group, idx) in editList"
                     :key="group"
                     class="item">
-                    <input :value="group" @change="$emit('group-changed', {groupName: group, newName: validateName($event.target.value, group)})"/>
-                    <button class="deleteBtn" @click="$emit('group-changed', {groupName: group, remove: true, oldIdx: idx})">X</button>
+                    <input class="listInput" :value="group" @change="$emit('group-changed', {groupName: group, newName: validateName($event.target.value, group)})"/>
+                    <button class="deleteBtn" @click="$emit('group-changed', {groupName: group, remove: true, oldIdx: idx})">
+                        <img src="@/assets/plus.svg" style="transform: rotate(45deg)" />
+                    </button>
                 </div>
             </div>
         </div>
         <button class="addBtn" :title="tooltip_text" @click="addGroup">
-            +
+            <img src="@/assets/plus.svg" />
         </button>
     </div>
 </template>
@@ -80,7 +82,7 @@ export default {
     flex-direction: row;
 }
 
-input{
+.listInput{
     flex-grow: 1;
 }
 </style>

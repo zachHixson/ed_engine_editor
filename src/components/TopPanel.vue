@@ -1,8 +1,8 @@
 <template>
     <div class="topPanel">
         <div class="panelBox controls">
-            <div>Run</div>
-            <div>Debug</div>
+            <button class="iconBtn"><img class="icon" src="@/assets/debug.svg" /></button>
+            <button class="iconBtn"><img class="icon" src="@/assets/play.svg" /></button>
         </div>
         <transition-group name="tabs" tag="div" class="panelBox tabContainer">
             <EditorTab
@@ -101,7 +101,7 @@ export default {
 
 <style scoped>
 .topPanel{
-    background: #99FF99;
+    background: var(--top-bar);
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -119,10 +119,30 @@ export default {
     justify-content: flex-end;
 }
 
-.controls > *{
+.iconBtn{
+    --size: 50px;
+    display: flex;
+    width: var(--size);
+    height: var(--size);
+    background: var(--button-norm);
+    margin: 5px;
+    justify-content: center;
+    align-items: center;
+    border-radius: var(--corner-radius);
+    border: 2px solid var(--border);
+}
+
+.iconBtn:hover{
+    background: var(--button-hover);
+}
+
+.iconBtn:active{
+    background: var(--button-down);
+}
+
+.icon{
+    width: 100%;
     height: 100%;
-    background: #55AA55;
-    margin-left: 2px;
 }
 
 .tabContainer{

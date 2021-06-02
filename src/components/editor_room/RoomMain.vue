@@ -31,10 +31,10 @@
         <div v-else class="noRoomSelected">{{$t('room_editor.no_room_selected')}}</div>
         <div v-if="selectedRoom" class="propertyPanel">
             <button v-show="propertiesOpen" class="resizeBtn" @click="propertiesOpen = false; resize()">
-                &gt;
+                <img src="@/assets/arrow_01.svg" style="transform: rotate(90deg)"/>
             </button>
             <button v-show="!propertiesOpen" class="resizeBtn" @click="propertiesOpen = true; resize()">
-                &lt;
+                <img src="@/assets/arrow_01.svg" style="transform: rotate(-90deg)"/>
             </button>
             <div v-show="propertiesOpen" class="propertiesContents">
                 <Properties
@@ -677,14 +677,14 @@ export default {
     height: 100%;
     padding: 0;
     margin: 0;
-    background: #CCCCCC;
+    background: var(--tool-panel-bg);
 }
 
 .propertyPanel{
     display: flex;
     flex-direction: row;
     height: 100%;
-    background: #CCCCCC;
+    background: var(--tool-panel-bg);
     z-index: 5;
 }
 
@@ -697,10 +697,14 @@ export default {
     justify-content: center;
     align-items: center;
     align-self: center;
-    width: 10px;
     height: 50px;
     background: none;
     border: 1px solid black;
+}
+
+.resizeBtn > img{
+    width: 20px;
+    height: 20px;
 }
 
 .toolSpacer{

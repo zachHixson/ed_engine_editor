@@ -1,7 +1,11 @@
 <template>
     <div class="animPanel">
-        <button v-show="isOpen" ref="collapseBtn" class="resizeBtn" @click="toggleSize()">&gt;</button>
-        <button v-show="!isOpen" ref="expandBtn" class="resizeBtn" @click="toggleSize()">&lt;</button>
+        <button v-show="isOpen" ref="collapseBtn" class="resizeBtn" @click="toggleSize()">
+            <img src="@/assets/arrow_01.svg" style="transform: rotate(90deg)" />
+        </button>
+        <button v-show="!isOpen" ref="expandBtn" class="resizeBtn" @click="toggleSize()">
+            <img src="@/assets/arrow_01.svg" style="transform: rotate(-90deg)" />
+        </button>
         <div v-show="isOpen" ref="contents" class="panelContents">
             <div class="animPlayerWrapper">
                 <AnimationPlayer ref="animPlayer" :sprite="sprite" fps="12" startFrame="0"/>
@@ -20,7 +24,7 @@
                         @frameCopied="frameCopied"
                         @frameMoved="frameMoved"/>
                     <button class="addFrame" :title="$t('art_editor.add_frame')" @click="addFrame()">
-                        +
+                        <img src="@/assets/plus.svg" />
                     </button>
                 </div>
             </div>
@@ -124,7 +128,7 @@ export default {
         display: flex;
         flex-direction: row;
         height: 100%;
-        background: #FFAAAA;
+        background: var(--tool-panel-bg);
     }
 
     .panelContents{
@@ -160,14 +164,32 @@ export default {
         width: 50px;
         height: 50px;
         margin-top: 5px;
+        background: var(--button-norm);
+        border: 2px solid var(--border);
+        border-radius: var(--corner-radius);
+    }
+
+    .addFrame:hover{
+        background: var(--button-hover);
+    }
+
+    .addFrame > img{
+        width: 25px;
+        height: 25px;
     }
 
     .resizeBtn{
+        width: 20px;
         height: 50px;
         padding: 0;
         align-self: center;
         padding: 2px;
         background: none;
         border: 1px solid black;
+    }
+
+    .resizeBtn > img{
+        width: 100%;
+        height: 100%;
     }
 </style>

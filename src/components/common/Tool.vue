@@ -30,36 +30,37 @@ export default {
 </script>
 
 <style scoped>
-    .tool{
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 30pt;
-        height: 30pt;
-        background: red;
-        margin: 5px;
-        border-radius: 8pt;
-        border: 2px solid black;
-    }
+.tool{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 30pt;
+    height: 30pt;
+    background: var(--button-norm);
+    margin: 5px;
+    border-radius: 8pt;
+    border: 2px solid var(--border);
+}
 
-    .tool:hover:not(.controlSelected){
-        background: #AA0000;
-    }
+.tool:hover:not(.controlSelected){
+    background: var(--button-hover);
+}
 
-    .tool:active:hover{
-        background: #AA5500;
-    }
+.tool:active:hover{
+    background: var(--button-hover);
+    filter: brightness(0.8);
+}
 
-    .tool > *{
-        pointer-events: none;
-    }
+.tool > *{
+    pointer-events: none;
+}
 
-    .toolSelected {
-        background: #880000;
-    }
+.toolSelected {
+    background: var(--button-down);
+}
 
-    .icon {
-        width: 30px;
-        height: 30px;
-    }
+.icon {
+    width: 30px;
+    height: 30px;
+}
 </style>

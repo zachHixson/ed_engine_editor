@@ -169,6 +169,8 @@ export default {
 </script>
 
 <style scoped>
+@import '../common/formStyles.css';
+
 .objMain{
     display: flex;
     flex-direction: column;
@@ -197,24 +199,5 @@ export default {
 
 .control > *:last-child{
     margin-left: 5px;
-}
-
-input:not([type="checkbox"]), select{
-    box-sizing: border-box;
-    width: 150px;
-}
-
-.animPlaceholder{
-    display: block;
-    width: 200px;
-    height: 200px;
-    background: gray;
-}
-
-.gravPlaceholder{
-    width: 100px;
-    height: 100px;
-    border-radius: 100%;
-    background: white;
 }
 </style>

@@ -125,7 +125,7 @@ export default {
 .logoMenu{
     display: flex;
     flex-direction: row;
-    background: #FF9999;
+    background: var(--top-bar);
 }
 
 .fileMenu{
@@ -134,8 +134,20 @@ export default {
     width: 70px;
     height: 70px;
     background: none;
-    border: 1px solid black;
+    border: 2px solid black;
+    border-left: none;
+    border-top: none;
+    border-radius: 0px 0px var(--corner-radius) 0px;
     font-size: 2em;
+    background: var(--button-norm);
+}
+
+.fileMenu:hover{
+    background: var(--button-hover);
+}
+
+.fileMenu:active{
+    background: var(--button-down);
 }
 
 .dropDown{
@@ -151,7 +163,7 @@ export default {
 
 .choice{
     display: flex;
-    justify-content: start;
+    justify-content: flex-start;
     background: none;
     border: none;
     border-bottom: 1px solid black;
@@ -202,7 +214,6 @@ export default {
     align-items: center;
     background: none;
     border: none;
-    z-index: 1000;
 }
 
 .renameBtnImg{

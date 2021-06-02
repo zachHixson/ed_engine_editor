@@ -36,7 +36,8 @@
         "rooms": "Rooms",
         "sprite_prefix": "Drawing_",
         "object_prefix": "Object_",
-        "room_prefix": "Room_"
+        "room_prefix": "Room_",
+        "no_assets": "No assets in this list yet"
     },
     "art_editor":{
         "small_brush": "Small Brush",

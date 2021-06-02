@@ -1,0 +1,20 @@
+.control > input:not([type=checkbox]), select{
+    height: 30px;
+    width: 150px;
+    border-radius: var(--corner-radius);
+    border: 2px solid var(--border);
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+.control > input[type=checkbox]{
+    width: 20px;
+    height: 20px;
+}
+
+.control > button, .control > input[type=button]{
+    background: var(--button-dark-norm);
+    border: 2px solid var(--border);
+    color: var(--text-dark);
+    font-weight: bold;
+}

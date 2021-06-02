@@ -4,22 +4,22 @@
     align-items: center;
     width: 30pt;
     height: 30pt;
-    background: #AAAAFF;
-    border: 3px solid #AAAAAA;
+    background: var(--button-norm);
+    border: 3px solid var(--border);
     border-radius: 1000px;
     margin: 5px;
 }
 
 .viewportControl:hover:not(.controlSelected){
-    background: #9999DD;
+    background: var(--button-hover);
 }
 
 .viewportControl:active:hover{
-    background: #7676b9;
+    background: var(--button-down);
 }
 
 .controlSelected{
-    background: #7676b9;
+    filter: brightness(0.7);
 }
 
 .icon{

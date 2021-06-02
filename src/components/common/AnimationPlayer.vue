@@ -125,19 +125,41 @@ export default {
 </script>
 
 <style scoped>
-    .animationPlayer{
-        display: flex;
-        flex-direction: column;
-    }
+.animationPlayer{
+    display: flex;
+    flex-direction: column;
+    border: 2px solid var(--border);
+    border-radius: var(--corner-radius);
+    overflow: hidden;
+}
 
-    .buttons{
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-    }
+.buttons{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    background: var(--button-dark-norm);
+}
 
-    .btnImg{
-        width: 20px;
-        height: 20px;
-    }
+.buttons > button{
+    display: flex;
+    align-items: center;
+    background: none;
+    border: none;
+    border-radius: 3px;
+    padding: 3px;
+    margin: 2px;
+}
+
+.buttons > button:hover{
+    background: var(--button-dark-hover);
+}
+
+.buttons > button:active{
+    background: var(--button-dark-down);
+}
+
+.btnImg{
+    width: 20px;
+    height: 20px;
+}
 </style>

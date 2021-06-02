@@ -14,15 +14,19 @@
                 <div class="assetListColumn">
                     <div class="assetListHeading">
                         <div class="leftHeading">
-                            <button class="btn" @click="back">&lt;</button>
+                            <button class="btn" @click="back">
+                                <img src="@/assets/arrow_01.svg" style="transform: rotate(-90deg);"/>
+                            </button>
                             <img class="assetHeadingLogo" :src="require(`@/${selected_category.icon}.svg`)" />
                             {{selected_category.text}}
                         </div>
                         <div class="rightHeading">
-                            <button class="addButton btn" @click="addAsset">+</button>
+                            <button class="addButton btn" @click="addAsset">
+                                <img src="@/assets/plus.svg"/>
+                            </button>
                         </div>
                     </div>
-                    <div v-if="selectedList.length > 0" ref="assetList" class="assetList">
+                    <div ref="assetList" class="assetList">
                         <Asset
                             ref="assets"
                             v-for="asset in selectedList"
@@ -31,8 +35,8 @@
                             :defaultIcon="selected_category.icon"
                             @deleteAsset="deleteAsset"
                             @selectAsset="selectAsset"/>
+                            <div v-if="selectedList.length <= 0">{{$t('asset_browser.no_assets')}}</div>
                     </div>
-                    <div v-else>No Assets in list</div>
                 </div>
             </div>
         </div>
@@ -167,15 +171,17 @@ export default {
 </script>
 
 <style scoped>
-.assetBrowser{
-    background: #FFFF99;
-    overflow: hidden;
-    height: 100%;
+*{
+    --heading-font-size: 1.5em;
+    --btn-arrow-width: 15px;
+    --btn-arrow-height: 20px;
 }
 
-.title{
-    position: relative;
-    top: -4px;
+.assetBrowser{
+    background: var(--main-bg);
+    overflow: hidden;
+    height: 100%;
+    border-right: 1px solid black;
 }
 
 .slideWrapper{
@@ -185,6 +191,7 @@ export default {
     height: 100%;
     transition: right 100ms;
     transition-timing-function: ease-out;
+    padding-top: 10px;
 }
 
 .columns{
@@ -195,6 +202,9 @@ export default {
 }
 
 .categoryColumn{
+    box-sizing: border-box;
+    overflow: hidden;
+    padding-left: 10px;
     width: 50%;
 }
 
@@ -203,6 +213,7 @@ export default {
     flex-direction: column;
     width: 50%;
     height: 100%;
+    box-sizing: border-box;
 }
 
 .category_selected{
@@ -215,9 +226,15 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: 100%;
+    width: 98%;
     height: 50px;
-    background: #AAAAFF;;
+    background: var(--heading);
+    border-radius: 0px var(--corner-radius) var(--corner-radius) 0px;
+    border-left: none;
+    box-sizing: border-box;
+    font-size: var(--heading-font-size);
+    font-weight: bold;
+    color: var(--text-dark);
 }
 
 .assetHeadingLogo{
@@ -237,26 +254,37 @@ export default {
 }
 
 .btn{
-    background: none;
-    border: 1px solid black;
-    padding: 5px;
-    margin: 5px;
-}
-
-.btn:hover{
-    background: #5555FF;
-}
-
-.btn:active{
-    background: #2222FF;
-}
-
-.addButton{
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 20px;
-    height: 20px;
+    background: var(--button-dark-norm);
+    border: 2px solid var(--border);
+    padding: 5px;
+    margin: 5px;
+    border-radius: var(--corner-radius);
+}
+
+.btn > img{
+    width: var(--btn-arrow-width);
+    height: var(--btn-arrow-height);
+}
+
+.btn:hover{
+    background: var(--button-dark-hover);
+}
+
+.btn:active{
+    background: var(--button-dark-down);
+}
+
+.addButton{
+    width: 30px;
+    height: 30px;
+}
+
+.addButton > img{
+    width: 100%;
+    height: 100%;
 }
 
 .assetList{
@@ -264,5 +292,6 @@ export default {
     box-sizing: border-box;
     height: 100%;
     overflow-y: auto;
+    padding: 10px;
 }
 </style>

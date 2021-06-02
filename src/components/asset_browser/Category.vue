@@ -4,7 +4,9 @@
             <img class="icon" :src="require(`@/${icon}.svg`)" />
             {{text}}
         </div>
-        <button class="arrow" @click="$emit('category-clicked', {cat_ID, text, icon})">&gt;</button>
+        <button class="arrow" @click="$emit('category-clicked', {cat_ID, text, icon})">
+            <img src="@/assets/arrow_01.svg" style="transform: rotate(90deg);"/>
+        </button>
     </div>
 </template>
 
@@ -22,34 +24,48 @@ export default {
     justify-content: space-between;
     width: 100%;
     height: 50px;
-    background: #AAAAFF;
-    border: 1px solid black;
+    background: var(--heading);
+    border-right: none;
+    padding-left: 5px;
+    margin-bottom: 3px;
     box-sizing: border-box;
+    border-radius: var(--corner-radius) 0px 0px var(--corner-radius);
 }
 
 .iconTitle{
     display: flex;
     align-items: center;
+    font-weight: bold;
+    font-size: var(--heading-font-size);
+    color: var(--text-dark);
 }
 
 .icon{
-    width: 20px;
-    height: 20px;
+    width: 30px;
+    height: 30px;
     margin: 5px;
 }
 
 .arrow{
-    background: none;
-    border: 1px solid black;
+    display: flex;
+    align-items: center;
+    background: var(--button-dark-norm);
+    border: 2px solid var(--border);
+    border-radius: var(--corner-radius);
     padding: 5px;
     margin: 5px;
 }
 
+.arrow > img{
+    width: var(--btn-arrow-width);
+    height: var(--btn-arrow-height);
+}
+
 .arrow:hover{
-    background: #5555FF;
+    background: var(--button-dark-hover);
 }
 
 .arrow:active{
-    background: #2222FF;
+    background: var(--button-dark-down);
 }
 </style>

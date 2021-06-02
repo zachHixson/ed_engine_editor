@@ -26,11 +26,11 @@
                         @toolClicked="toolChanged"/>
                 </div>
             </div>
-            <button v-show="isOpen" class="collapseButton" ref="collapseButton" @click="toggleOpen">
-                &lt;
+            <button v-show="isOpen" class="resizeBtn" ref="collapseButton" @click="toggleOpen">
+                <img src="@/assets/arrow_01.svg" style="transform: rotate(-90deg)"/>
             </button>
-            <button v-show="!isOpen" class="collapseButton" ref="expandButton" @click="toggleOpen">
-                &gt;
+            <button v-show="!isOpen" class="resizeBtn" ref="expandButton" @click="toggleOpen">
+                <img src="@/assets/arrow_01.svg" style="transform: rotate(90deg)"/>
             </button>
         </div>
     </div>
@@ -180,9 +180,8 @@ export default {
         display: flex;
         flex-direction: row;
         justify-content: flex-end;
-        background: #FFAAAA;
+        background: var(--tool-panel-bg);
         height: 100%;
-        border-right: 1px solid black;
     }
 
     .panelContents{
@@ -221,13 +220,24 @@ export default {
         justify-content: center;
         align-items: center;
         flex-grow: 1;
-        width: 10pt;
-        height: 30pt;
+        width: 20px;
+        height: 50px;
         background: none;
         border: 1px solid black;
     }
 
-    .collapseButton > *{
-        pointer-events: none;
+    .resizeBtn{
+        width: 20px;
+        height: 50px;
+        padding: 0;
+        align-self: center;
+        padding: 2px;
+        background: none;
+        border: 1px solid black;
+    }
+
+    .resizeBtn > img{
+        width: 100%;
+        height: 100%;
     }
 </style>

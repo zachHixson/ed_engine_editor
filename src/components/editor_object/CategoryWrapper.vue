@@ -18,7 +18,7 @@ export default {
     justify-content: space-between;
     align-items: flex-start;
     flex-wrap: wrap;
-    background: rgb(201, 201, 201);
+    background: var(--tool-panel-bg);
     padding: 10px;
     margin-bottom: 10px;
     border-radius: 10px;
@@ -32,6 +32,9 @@ export default {
 .title{
     display: flex;
     align-items: center;
+    color: var(--text-dark);
+    font-weight: bold;
+    font-size: 1.5em;
 }
 
 .title > *{

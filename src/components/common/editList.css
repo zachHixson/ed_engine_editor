@@ -2,28 +2,32 @@
     text-align: center;
     padding: 5px;
     font-weight: bold;
+    color: var(--text-dark);
 }
 
 .editList{
     display: flex;
     flex-direction: column;
-    background: #008888;
+    background: var(--heading);
+    border: 2px solid var(--border);
     border-radius: 10px;
     overflow: hidden;
 }
 
-.heading{
+.editList > .heading{
     display: flex;
     flex-direction: row;
     justify-content: center;
+    color: var(--text-dark);
 }
 
-.heading > div{
+.editList > .heading > div{
     flex-grow: 1;
     text-align: center;
+    padding-bottom: 5px;
 }
 
-.list{
+.editList > .list{
     display: flex;
     flex-direction: column;
     min-height: 15px;
@@ -31,29 +35,50 @@
     overflow-y: auto;
 }
 
-input{
+.listInput{
     min-width: 0;
     border: 0;
     padding: 5px;
     border-bottom: 1px solid #DDD;
 }
 
-.addBtn{
+.editList > .addBtn{
     display: flex;
     flex-direction: row;
     justify-content: center;
-    background: #EEEEEE;
+    background: var(--button-dark-norm);
     border: none;
+    padding: 5px;
 }
 
 .addBtn:hover{
-    background: #DDDDDD;
+    background: var(--button-dark-hover);
+}
+
+.addBtn:active{
+    background: var(--button-dark-down);
+}
+
+.addBtn > img{
+    width: 20px;
+    height: 20px;
 }
 
 .deleteBtn{
+    background: var(--button-dark-norm);
     border: none;
+    border-bottom: 1px solid var(--button-dark-down);
 }
 
 .deleteBtn:hover{
-    background: #888888;
+    background: var(--button-dark-hover);
+}
+
+.deleteBtn:active{
+    background: var(--button-dark-down);
+}
+
+.deleteBtn > img{
+    width: 20px;
+    height: 20px;
 }

@@ -63,6 +63,8 @@ export default {
 </script>
 
 <style>
+@import 'components/common/colorScheme.css';
+
 html, body{
     height: 100%;
     margin: 0px;
@@ -77,8 +79,8 @@ html, body{
     grid-template-areas:
         "logoCorner topPanel"
         "assetBrowser editorWindow";
-    grid-template-columns: 200pt 1fr;
-    grid-template-rows: 80pt minmax(0, 1fr);
+    grid-template-columns: 250px 1fr;
+    grid-template-rows: 100pt minmax(0, 1fr);
     width: 100%;
     height: 100%;
     max-height: 100vh;

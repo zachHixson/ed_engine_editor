@@ -149,7 +149,9 @@
                     @click="$nextTick(()=>{changeingBG = !changeingBG})"
                     v-click-outside="closeRoomBGColorEditor">
                     <div v-show="changeingBG" ref="bgColorEditor" class="bgColorEditor">
-                        <div class="arrow"></div>
+                        <svg width="50" height="25" class="arrow">
+                            <path d="M0 25 L25 0 L50 25"/>
+                        </svg>
                         <div class="contents">
                             <div id="roomBgPicker"></div>
                         </div>
@@ -341,7 +343,7 @@ export default {
 .control{
     display: flex;
     flex-direction: row;
-    justify-content: end;
+    justify-content: flex-end;
     width: 100%;
 }
 
@@ -357,6 +359,8 @@ export default {
 
 .changeBgBtn{
     position: relative;
+    border: 2px solid var(--border);
+    border-radius: var(--corner-radius)
 }
 
 .bgColorEditor{
@@ -369,22 +373,26 @@ export default {
 
 .bgColorEditor > .arrow{
     align-self: flex-end;
-    width: 0;
-    height: 0;
-    border-left: 20px solid transparent;
-    border-right: 20px solid transparent;
-    border-bottom: 20px solid gray;
-    margin-right: 20px;
+    margin-bottom: -2px;
+    z-index: 4;
+}
+
+.bgColorEditor > .arrow > path{
+    fill: var(--heading);
+    stroke: var(--border);
+    stroke-width: 2px;
 }
 
 .bgColorEditor > .contents{
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: gray;
+    background: var(--heading);
     width: 100%;
     flex-grow: 1;
+    border: 2px solid var(--border);
     border-radius: 10px;
     padding: 10px;
+    z-index: 3;
 }
 </style>
