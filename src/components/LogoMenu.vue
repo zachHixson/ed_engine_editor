@@ -139,6 +139,7 @@ export default {
     border-top: none;
     border-radius: 0px 0px var(--corner-radius) 0px;
     font-size: 2em;
+    color: var(--button-icon);
     background: var(--button-norm);
 }
 

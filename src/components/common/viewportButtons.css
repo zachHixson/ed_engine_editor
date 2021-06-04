@@ -25,6 +25,8 @@
 .icon{
     width: 20pt;
     height: 20pt;
+    fill: red;
+    stroke: red;
 }
 
 .iconDisabled{

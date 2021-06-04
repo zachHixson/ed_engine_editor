@@ -19,19 +19,21 @@
                     class="item">
                     <input class="listInput" :value="group" @change="$emit('group-changed', {groupName: group, newName: validateName($event.target.value, group)})"/>
                     <button class="deleteBtn" @click="$emit('group-changed', {groupName: group, remove: true, oldIdx: idx})">
-                        <img src="@/assets/plus.svg" style="transform: rotate(45deg)" />
+                        <inline-svg :src="require('@/assets/plus.svg')" style="transform: rotate(45deg)"
+                            :transformSource="removeStroke"/>
                     </button>
                 </div>
             </div>
         </div>
         <button class="addBtn" :title="tooltip_text" @click="addGroup">
-            <img src="@/assets/plus.svg" />
+            <inline-svg :src="require('@/assets/plus.svg')"
+                :transformSource="removeStroke"/>
         </button>
     </div>
 </template>
 
 <script>
-import Util from '@/common/Util';
+import {getHighestEndingNumber, removeStroke} from '@/common/Util';
 
 export default {
     name: 'GroupList',
@@ -53,7 +55,7 @@ export default {
         },
         addGroup(){
             let nextNum = Math.max(
-                Util.getHighestEndingNumber(this.editList),
+                getHighestEndingNumber(this.editList),
                 (this.readOnlyList) ? Util.getHighestEndingNumber(this.readOnlyList) : []
             ) + 1;
 
@@ -65,7 +67,8 @@ export default {
                 let list = this.$refs.list;
                 list.scrollTop = list.scrollHeight - list.clientHeight;
             });
-        }
+        },
+        removeStroke
     }
 }
 </script>

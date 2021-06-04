@@ -1,6 +1,6 @@
 <template>
     <div class="viewportControl" :title="altText" @click="onClick">
-        <img
+        <inline-svg
             v-show="iconLoaded"
             class="icon"
             :class="{iconDisabled : !isActive}"

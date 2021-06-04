@@ -3,7 +3,7 @@ import {CATEGORY_ID} from '@/common/Enums';
 import Sprite from '@/common/data_classes/Sprite';
 import Game_Object from '@/common/data_classes/Game_Object';
 import Room from '@/common/data_classes/Room';
-import Util from '@/common/Util';
+import {getHighestEndingNumber} from '@/common/Util';
 
 const state = {
     startRoomId: null,
@@ -130,7 +130,7 @@ function getSuffixNum(list){
     const PADDING = 2;
     let requiredDigits;
     let nameList = list.map(l => l.name);
-    let largest = Util.getHighestEndingNumber(nameList);
+    let largest = getHighestEndingNumber(nameList);
     let output = "";
 
     largest++;

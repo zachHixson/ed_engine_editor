@@ -2,8 +2,11 @@ import Vue from 'vue'
 import App from './App.vue'
 import store from './store'
 import i18n from './i18n'
+import {InlineSvgPlugin} from 'vue-inline-svg'
 
-Vue.config.productionTip = false
+Vue.config.productionTip = false;
+
+Vue.use(InlineSvgPlugin);
 
 Vue.directive('click-outside', {
     bind: function (el, binding, vnode) {

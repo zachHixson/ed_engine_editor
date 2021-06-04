@@ -23,18 +23,20 @@
                         })"/>
                 </div>
                 <button class="deleteBtn" @click="$emit('var-changed', {varName: item.name, newVal: item.val, remove: true, oldIdx: idx})">
-                    <img src="@/assets/plus.svg" style="transform: rotate(45deg)" />
+                    <inline-svg :src="require('@/assets/plus.svg')" style="transform: rotate(45deg)"
+                        :transformSource="removeStroke"/>
                 </button>
             </div>
         </div>
         <button class="addBtn" :title="tooltip_text" @click="addVar">
-            <img src="@/assets/plus.svg" />
+            <inline-svg :src="require('@/assets/plus.svg')"
+                :transformSource="removeStroke"/>
         </button>
     </div>
 </template>
 
 <script>
-import Util from '@/common/Util';
+import {getHighestEndingNumber, removeStroke} from '@/common/Util';
 
 export default {
     name: 'VarList',
@@ -59,7 +61,7 @@ export default {
         },
         addVar(){
             let nameList = this.editList.map(v => v.name);
-            let nextNum = Util.getHighestEndingNumber(nameList) + 1;
+            let nextNum = getHighestEndingNumber(nameList) + 1;
 
             this.$emit('var-changed', {
                 add: true,
@@ -70,7 +72,8 @@ export default {
                 let list = this.$refs.list;
                 list.scrollTop = list.scrollHeight - list.clientHeight;
             });
-        }
+        },
+        removeStroke
     }
 }
 </script>

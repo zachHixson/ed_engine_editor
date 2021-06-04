@@ -2,7 +2,8 @@
     <div ref="asset" class="asset" :class="{selected : isSelected}" @click="selectAsset">
         <div class="leftFloat" v-click-outside="stopRenaming">
             <canvas v-show="hasThumb" class="thumbnail" ref="thumbNail" width="20" height="20">Test</canvas>
-            <img v-if="!hasThumb" class="thumbnail assetIcon" :src="require(`@/${defaultIcon}.svg`)" />
+            <inline-svg v-if="!hasThumb" class="thumbnail assetIcon" :src="require(`@/${defaultIcon}.svg`)"
+                :transformSource="removeStroke"/>
             <div v-show="isRenaming">
                 <input ref="renameText" v-model="asset.name" type="text" />
             </div>
@@ -10,10 +11,11 @@
         </div>
         <div class="rightFloat">
             <button class="rightButton" @click="(event)=>{event.stopPropagation(); this.isRenaming ? this.stopRenaming() : this.rename();}">
-                <img class="rightIcon" style="width:30px; height:30px;" src="@/assets/rename.svg" />
+                <inline-svg class="rightIcon" style="width:30px; height:30px;" :src="require('@/assets/rename.svg')"
+                    :transformSource="removeStroke"/>
             </button>
             <button class="rightButton" @click="deleteAsset">
-                <img class="rightIcon" src="@/assets/trash.svg" />
+                <inline-svg class="rightIcon" :src="require('@/assets/trash.svg')" :transformSource="removeStroke" />
             </button>
         </div>
     </div>
@@ -22,6 +24,7 @@
 <script>
 import Draw_2D from '@/common/Draw_2D';
 import Util_2D from '@/common/Util_2D';
+import {removeStroke} from '@/common/Util';
 
 export default {
     name: 'Asset',
@@ -111,7 +114,8 @@ export default {
                 this.thumbLoading = false;
                 this.checkThumb();
             }
-        }
+        },
+        removeStroke
     }
 }
 </script>
@@ -153,11 +157,14 @@ export default {
 .assetIcon{
     width: 20px;
     height: 20px;
+    fill: var(--button-icon);
+    stroke: var(--button-icon);
 }
 
 .rightIcon{
     width: 20px;
     height: 20px;
     margin: 3px;
+    stroke: var(--button-icon);
 }
 </style>

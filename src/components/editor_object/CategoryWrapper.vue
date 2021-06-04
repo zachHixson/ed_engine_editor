@@ -1,14 +1,23 @@
 <template>
     <div class="categoryWrapper">
-        <div class="title"><img class="icon" :src="require(`@/${iconPath}.svg`)" />{{title}}</div>
+        <div class="title">
+            <inline-svg class="icon" :src="require(`@/${iconPath}.svg`)"
+                :transformSource="removeStroke"/>
+            {{title}}
+        </div>
         <div class="contents"><slot /></div>
     </div>
 </template>
 
 <script>
+import {removeStroke} from '@/common/Util';
+
 export default {
     name: 'CategoryWrapper',
-    props: ['title', 'iconPath']
+    props: ['title', 'iconPath'],
+    methods: {
+        removeStroke
+    }
 }
 </script>
 
@@ -27,6 +36,8 @@ export default {
 .icon{
     width: 30px;
     height: 30px;
+    fill: var(--text-dark);
+    stroke: var(--text-dark);
 }
 
 .title{

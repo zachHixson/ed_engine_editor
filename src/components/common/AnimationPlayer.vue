@@ -5,11 +5,14 @@
         </canvas>
         <div class="buttons">
             <button @click="playAnimation()">
-                <img class="btnImg" src="@/assets/play.svg" v-show="!isPlaying" />
-                <img class="btnImg" src="@/assets/pause.svg" v-show="isPlaying" />
+                <inline-svg class="btnImg" :src="require('@/assets/play.svg')" v-show="!isPlaying"
+                    :transformSource="removeStroke"/>
+                <inline-svg class="btnImg" :src="require('@/assets/pause.svg')" v-show="isPlaying"
+                    :transformSource="removeStroke"/>
             </button>
             <button @click="stopAnimation()">
-                <img class="btnImg" src="@/assets/box_filled.svg" />
+                <inline-svg class="btnImg" :src="require('@/assets/box_filled.svg')"
+                    :transformSource="removeStroke"/>
             </button>
         </div>
     </div>
@@ -18,6 +21,7 @@
 <script>
 import Util_2D from '@/common/Util_2D';
 import Draw_2D from '@/common/Draw_2D';
+import {removeStroke} from '@/common/Util';
 
 export default {
     name: 'AnimationPlayer',
@@ -119,7 +123,8 @@ export default {
             this.$nextTick(()=>{
                 this.drawFrame();
             });
-        }
+        },
+        removeStroke
     }
 }
 </script>
@@ -161,5 +166,7 @@ export default {
 .btnImg{
     width: 20px;
     height: 20px;
+    fill: var(--text-dark);
+    stroke: var(--text-dark);
 }
 </style>

@@ -14,25 +14,29 @@
             :title="$t('art_editor.delete_frame')"
             v-show="canDelete && hover"
             @click="deleteFrame">
-            <img class="btnIcon" src="@/assets/plus.svg" style="transform: rotate(45deg)" />
+            <inline-svg class="btnIcon" :src="require('@/assets/plus.svg')" style="transform: rotate(45deg)"
+                :transformSource="removeStroke"/>
         </button>
         <button
             class="button copyFrame"
             v-show="hover"
             @click="copyFrame">
-            <img class="btnIcon" src="@/assets/copy.svg" />
+            <inline-svg class="btnIcon" :src="require('@/assets/copy.svg')"
+                :transformSource="removeStroke"/>
         </button>
         <button
             class="button moveUp"
             v-show="hover && !isFirst"
             @click="moveFrame($event, -1)">
-            <img class="btnIcon" src="@/assets/arrow_01.svg" />
+            <inline-svg  class="btnIcon" :src="require('@/assets/arrow_01.svg')"
+                :transformSource="removeStroke"/>
         </button>
         <button
             class="button moveDown"
             v-show="hover && !isLast"
             @click="moveFrame($event, 1)">
-            <img class="btnIcon" src="@/assets/arrow_01.svg" style="transform: rotate(-180deg)" />
+            <inline-svg class="btnIcon" :src="require('@/assets/arrow_01.svg')" style="transform: rotate(-180deg)"
+                :transformSource="removeStroke"/>
         </button>
     </div>
 </template>
@@ -40,6 +44,7 @@
 <script>
 import Util_2D from '@/common/Util_2D';
 import Draw_2D from '@/common/Draw_2D';
+import {removeStroke} from '@/common/Util';
 
 export default {
     name: 'AnimFrame',
@@ -159,67 +164,70 @@ export default {
             this.$store.dispatch('ArtEditor/selectFrame', selectFrame);
             this.$emit('selectedFrameChanged');
             this.$emit('frameMoved', {idx: this.index, dir});
-        }
+        },
+        removeStroke
     }
 }
 </script>
 
 <style>
-    .animFrame{
-        position: relative;
-        width: 100px;
-        height: 100px;
-        border: 4px solid var(--border);
-        border-radius: 10px;
-        background: #CC0000;
-        overflow: hidden;
-    }
+.animFrame{
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border: 4px solid var(--border);
+    border-radius: 10px;
+    background: #CC0000;
+    overflow: hidden;
+}
 
-    .animFrame:hover:not(.selected){
-        border-color: var(--button-hover);
-    }
+.animFrame:hover:not(.selected){
+    border-color: var(--button-hover);
+}
 
-    .selected{
-        border-color: var(--selection);
-    }
+.selected{
+    border-color: var(--selection);
+}
 
-    .button{
-        position: absolute;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 20px;
-        height: 20px;
-        background: var(--button-norm);
-        border: none;
-    }
+.button{
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 20px;
+    height: 20px;
+    background: var(--button-norm);
+    border: none;
+}
 
-    .btnIcon{
-        width: 15px;
-        height: 15px;
-    }
+.btnIcon{
+    width: 15px;
+    height: 15px;
+    fill: var(--button-icon);
+    stroke: var(--button-icon);
+}
 
-    .button:hover{
-        background: var(--button-hover);
-    }
+.button:hover{
+    background: var(--button-hover);
+}
 
-    .deleteFrame{
-        right: 0;
-        top: 0;
-    }
+.deleteFrame{
+    right: 0;
+    top: 0;
+}
 
-    .copyFrame{
-        right: 0;
-        bottom: 0;
-    }
+.copyFrame{
+    right: 0;
+    bottom: 0;
+}
 
-    .moveUp{
-        left: 0;
-        top: 0;
-    }
+.moveUp{
+    left: 0;
+    top: 0;
+}
 
-    .moveDown{
-        left: 0;
-        bottom: 0;
-    }
+.moveDown{
+    left: 0;
+    bottom: 0;
+}
 </style>

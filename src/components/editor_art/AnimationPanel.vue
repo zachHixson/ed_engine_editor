@@ -1,10 +1,12 @@
 <template>
     <div class="animPanel">
         <button v-show="isOpen" ref="collapseBtn" class="resizeBtn" @click="toggleSize()">
-            <img src="@/assets/arrow_01.svg" style="transform: rotate(90deg)" />
+            <inline-svg class="arrow" :src="require('@/assets/arrow_01.svg')" style="transform: rotate(90deg)"
+                :transformSource="removeStroke"/>
         </button>
         <button v-show="!isOpen" ref="expandBtn" class="resizeBtn" @click="toggleSize()">
-            <img src="@/assets/arrow_01.svg" style="transform: rotate(-90deg)" />
+            <inline-svg class="arrow" :src="require('@/assets/arrow_01.svg')" style="transform: rotate(-90deg)"
+                :transformSource="removeStroke"/>
         </button>
         <div v-show="isOpen" ref="contents" class="panelContents">
             <div class="animPlayerWrapper">
@@ -24,7 +26,8 @@
                         @frameCopied="frameCopied"
                         @frameMoved="frameMoved"/>
                     <button class="addFrame" :title="$t('art_editor.add_frame')" @click="addFrame()">
-                        <img src="@/assets/plus.svg" />
+                        <inline-svg class="icon" :src="require('@/assets/plus.svg')"
+                            :transformSource="removeStroke"/>
                     </button>
                 </div>
             </div>
@@ -35,6 +38,7 @@
 <script>
 import AnimFrame from './AnimFrame';
 import AnimationPlayer from '@/components/common/AnimationPlayer';
+import {removeStroke} from '@/common/Util';
 
 export default {
     name: 'AnimationPanel',
@@ -118,78 +122,83 @@ export default {
         newSpriteSelection(){
             this.sprite = this.$store.getters['AssetBrowser/getSelectedAsset'];
             this.$refs.animPlayer.newSpriteSelection();
-        }
+        },
+        removeStroke
     }
 }
 </script>
 
 <style scoped>
-    .animPanel{
-        display: flex;
-        flex-direction: row;
-        height: 100%;
-        background: var(--tool-panel-bg);
-    }
+.animPanel{
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    background: var(--tool-panel-bg);
+}
 
-    .panelContents{
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-    }
+.panelContents{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
 
-    .animPlayerWrapper{
-        display: flex;
-        justify-content: center;
-        border-bottom: 1px solid black;
-        padding: 10px;
-    }
+.animPlayerWrapper{
+    display: flex;
+    justify-content: center;
+    border-bottom: 1px solid black;
+    padding: 10px;
+}
 
-    .scrollWrapper{
-        overflow: auto;
-    }
+.scrollWrapper{
+    overflow: auto;
+}
 
-    .frames{
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        width: auto;
-        padding: 5px;
-    }
+.frames{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    width: auto;
+    padding: 5px;
+}
 
-    .animFrame{
-        margin-top: 5px;
-    }
+.animFrame{
+    margin-top: 5px;
+}
 
-    .addFrame{
-        width: 50px;
-        height: 50px;
-        margin-top: 5px;
-        background: var(--button-norm);
-        border: 2px solid var(--border);
-        border-radius: var(--corner-radius);
-    }
+.addFrame{
+    width: 50px;
+    height: 50px;
+    margin-top: 5px;
+    background: var(--button-norm);
+    border: 2px solid var(--border);
+    border-radius: var(--corner-radius);
+}
 
-    .addFrame:hover{
-        background: var(--button-hover);
-    }
+.addFrame:hover{
+    background: var(--button-hover);
+}
 
-    .addFrame > img{
-        width: 25px;
-        height: 25px;
-    }
+.addFrame > .icon{
+    width: 25px;
+    height: 25px;
+    fill: var(--button-icon);
+    stroke: var(--button-icon);
+}
 
-    .resizeBtn{
-        width: 20px;
-        height: 50px;
-        padding: 0;
-        align-self: center;
-        padding: 2px;
-        background: none;
-        border: 1px solid black;
-    }
+.resizeBtn{
+    width: 20px;
+    height: 50px;
+    padding: 0;
+    align-self: center;
+    padding: 2px;
+    background: none;
+    border: 1px solid black;
+}
 
-    .resizeBtn > img{
-        width: 100%;
-        height: 100%;
-    }
+.resizeBtn > .arrow{
+    width: 100%;
+    height: 100%;
+    fill: var(--button-icon);
+    stroke: var(--button-icon);
+}
 </style>

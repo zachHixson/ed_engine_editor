@@ -8,13 +8,14 @@
     --top-bar: var(--main-bg);
     --heading: #658894;
     --text-light: #EEEEEE;
-    --text-dark: #333333;
+    --text-dark: #000000;
     --button-norm: #FA8814;
     --button-hover: #ffd3d0;
     --button-down: #C7244F;
     --button-dark-norm: #6D94A1;
     --button-dark-hover: #99CEE0;
     --button-dark-down: #53717A;
+    --button-icon: #000000;
     --selection: #E07912;
     --tab-active: #ffffff;
     --tab-inactive: var(--heading);

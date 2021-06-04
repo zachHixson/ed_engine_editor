@@ -15,14 +15,16 @@
                     <div class="assetListHeading">
                         <div class="leftHeading">
                             <button class="btn" @click="back">
-                                <img src="@/assets/arrow_01.svg" style="transform: rotate(-90deg);"/>
+                                <inline-svg class="btn_icon" :src="require('@/assets/arrow_01.svg')"
+                                    style="transform: rotate(-90deg);" :transformSource="removeStroke"/>
                             </button>
-                            <img class="assetHeadingLogo" :src="require(`@/${selected_category.icon}.svg`)" />
+                            <inline-svg class="assetHeadingLogo" :src="require(`@/${selected_category.icon}.svg`)"
+                                :transformSource="removeStroke"/>
                             {{selected_category.text}}
                         </div>
                         <div class="rightHeading">
                             <button class="addButton btn" @click="addAsset">
-                                <img src="@/assets/plus.svg"/>
+                                <inline-svg class="addButton_icon" :src="require('@/assets/plus.svg')" :transformSource="removeStroke"/>
                             </button>
                         </div>
                     </div>
@@ -47,6 +49,7 @@
 import {CATEGORY_ID} from '@/common/Enums';
 import Category from './Category';
 import Asset from './Asset';
+import {removeStroke} from '@/common/Util.js';
 
 export default {
     name: 'AssetBrowser',
@@ -98,10 +101,10 @@ export default {
             this.selected_category = category;
             this.$refs.slideWrapper.classList.add('category_selected');
         },
-        back(event){
+        back(){
             this.$refs.slideWrapper.classList.remove('category_selected');
         },
-        addAsset(event){
+        addAsset(){
             let assetList = this.$refs.assetList;
 
             this.$store.dispatch('GameData/addAsset', this.selected_category.cat_ID);
@@ -165,7 +168,8 @@ export default {
                     curAsset.drawThumbnail();
                 }
             }
-        }
+        },
+        removeStroke
     }
 }
 </script>
@@ -241,6 +245,8 @@ export default {
     width: 30px;
     height: 30px;
     margin: 5px;
+    fill: var(--text-dark);
+    stroke: var(--text-dark);
 }
 
 .leftHeading{
@@ -264,9 +270,10 @@ export default {
     border-radius: var(--corner-radius);
 }
 
-.btn > img{
+.btn > .btn_icon{
     width: var(--btn-arrow-width);
     height: var(--btn-arrow-height);
+    stroke: var(--text-dark);
 }
 
 .btn:hover{
@@ -282,9 +289,11 @@ export default {
     height: 30px;
 }
 
-.addButton > img{
+.addButton > .addButton_icon{
     width: 100%;
     height: 100%;
+    stroke: var(--text-dark);
+    fill: var(--text-dark);
 }
 
 .assetList{
