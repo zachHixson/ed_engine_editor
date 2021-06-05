@@ -1,12 +1,6 @@
 <template>
     <div class="topPanel">
-        <div class="panelBox controls">
-            <button class="iconBtn"><inline-svg class="icon" :src="require('@/assets/debug.svg')"
-                :transformSource="removeStroke"/></button>
-            <button class="iconBtn"><inline-svg class="icon" :src="require('@/assets/play.svg')"
-                :transformSource="removeStroke"/></button>
-        </div>
-        <transition-group name="tabs" tag="div" class="panelBox tabContainer">
+        <transition-group name="tabs" tag="div" class="tabContainer">
             <EditorTab
                 v-for="tab in contextTabs"
                 :key="tab.id"
@@ -20,7 +14,6 @@
 <script>
 import EditorTab from './EditorTab';
 import {CATEGORY_ID, EDITOR_ID} from '@/common/Enums.js';
-import {removeStroke} from '@/common/Util.js';
 
 export default {
     name: 'TopPanel',
@@ -97,8 +90,7 @@ export default {
             else{
                 this.$store.dispatch('switchTab', EDITOR_ID.ROOM);
             }
-        },
-        removeStroke
+        }
     }
 }
 </script>
@@ -112,48 +104,10 @@ export default {
     overflow: hidden;
 }
 
-.panelBox{
-    display: flex;
-    flex-grow: 1;
-}
-
-.controls{
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-}
-
-.iconBtn{
-    --size: 50px;
-    display: flex;
-    width: var(--size);
-    height: var(--size);
-    background: var(--button-norm);
-    margin: 5px;
-    justify-content: center;
-    align-items: center;
-    border-radius: var(--corner-radius);
-    border: 2px solid var(--border);
-    fill: var(--button-icon);
-    stroke: var(--button-icon);
-}
-
-.iconBtn:hover{
-    background: var(--button-hover);
-}
-
-.iconBtn:active{
-    background: var(--button-down);
-}
-
-.icon{
-    width: 100%;
-    height: 100%;
-}
-
 .tabContainer{
     display: flex;
     flex-direction: row;
+    flex-grow: 1;
 }
 
 .tabs-enter-active{

@@ -182,7 +182,6 @@ export default {
 }
 
 .assetBrowser{
-    background: var(--main-bg);
     overflow: hidden;
     height: 100%;
     border-right: 1px solid black;

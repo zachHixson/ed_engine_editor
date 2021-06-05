@@ -1,10 +1,10 @@
 <template>
     <div id="app">
-        <LogoMenu class="logoMenu"
+        <HeaderPanel class="headerPanel"
             @new-project="newProject"
             @open-project="openProject"
             @save-project="saveProject" />
-        <TopPanel class="topPanel" ref="topPanel"/>
+        <TabPanel class="TabPanel" ref="TabPanel"/>
         <AssetBrowser class="assetBrowser" ref="assetBrowser" @asset-selected="updateEditorAsset" @asset-deleted="updateAfterDeletion" />
         <EditorWindow class="editorWindow" ref="editorWindow" @asset-changed="updateAssetPreviews"/>
     </div>
@@ -13,16 +13,16 @@
 <script>
 import {saveAs} from 'file-saver';
 import {EDITOR_ID} from '@/common/Enums';
-import LogoMenu from './components/LogoMenu';
-import TopPanel from './components/TopPanel';
+import HeaderPanel from './components/HeaderPanel';
+import TabPanel from './components/TabPanel';
 import AssetBrowser from './components/asset_browser/AssetBrowser';
 import EditorWindow from './components/EditorWindow';
 
 export default {
     name: 'App',
     components: {
-        LogoMenu,
-        TopPanel,
+        HeaderPanel,
+        TabPanel,
         AssetBrowser,
         EditorWindow
     },
@@ -36,7 +36,7 @@ export default {
         },
         updateEditorAsset(){
             this.$refs.editorWindow.updateAssetSelection();
-            this.$refs.topPanel.updateEditorTabs();
+            this.$refs.TabPanel.updateEditorTabs();
         },
         updateAfterDeletion(){
             this.$store.dispatch('GameData/purgeMissingReferences');
@@ -77,21 +77,23 @@ html, body{
     -moz-osx-font-smoothing: grayscale;
     display: grid;
     grid-template-areas:
-        "logoCorner topPanel"
+        "headerPanel headerPanel"
+        ". tabPanel"
         "assetBrowser editorWindow";
     grid-template-columns: 250px 1fr;
-    grid-template-rows: 100pt minmax(0, 1fr);
+    grid-template-rows: 60px 60px minmax(0, 1fr);
     width: 100%;
     height: 100%;
     max-height: 100vh;
+    background: var(--main-bg);
 }
 
-.logoMenu{
-    grid-area: logoCorner;
+.headerPanel{
+    grid-area: headerPanel;
 }
 
-.topPanel{
-    grid-area: topPanel;
+.TabPanel{
+    grid-area: tabPanel;
 }
 
 .assetBrowser{

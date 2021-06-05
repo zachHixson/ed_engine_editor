@@ -1,5 +1,5 @@
 <template>
-    <div class="logoMenu">
+    <div class="headerPanel">
         <button class="fileMenu" @click="(event)=>{event.stopPropagation(); fileVisible = !fileVisible}"
             v-click-outside="closeFileMenu">
             ED
@@ -12,22 +12,30 @@
             </div>
         </button>
         <div class="projNameBox">
-            {{$t('editor_main.project_name')}}
+            <div class="projTitle">{{$t('editor_main.project_name')}}</div>
             <div ref="displayEditBox" class="displayEditBox" v-click-outside="stopRenaming">
                 <div v-show="!isRenaming" ref="projNameDisplay" class="projNameDisplay">{{projName}}</div>
                 <input v-show="isRenaming" ref="projNameEdit" type="text" class="projNameEdit" v-model="projName"/>
                 <button class="renameBtn" @click="isRenaming ? stopRenaming() : rename()"><img class="renameBtnImg" src="@/assets/rename.svg" /></button>
             </div>
         </div>
+        <div class="controls">
+            <button class="iconBtn"><inline-svg class="icon" :src="require('@/assets/debug.svg')"
+                :transformSource="removeStroke"/></button>
+            <button class="iconBtn"><inline-svg class="icon" :src="require('@/assets/play.svg')"
+                :transformSource="removeStroke"/></button>
+        </div>
         <input type="file" ref="fileOpen" style="display: none" @change="loadProjectFile"/>
     </div>
 </template>
 
 <script>
+import {removeStroke} from '@/common/Util.js';
+
 let enumID = 0;
 
 export default {
-    name: 'Logomenu',
+    name: 'HeaderPanel',
     data() {
         return {
             fileVisible: false,
@@ -116,16 +124,17 @@ export default {
                 }
                 reader.readAsText(input.files[0]);
             }
-        }
+        },
+        removeStroke
     }
 }
 </script>
 
 <style scoped>
-.logoMenu{
+.headerPanel{
     display: flex;
     flex-direction: row;
-    background: var(--top-bar);
+    justify-content: space-between;
 }
 
 .fileMenu{
@@ -183,13 +192,18 @@ export default {
 
 .projNameBox{
     display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    padding: 10px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.projTitle{
+    font-size: 1.5em;
+    font-weight: bold;
+    color: var(--text-dark);
 }
 
 .displayEditBox{
-    position: relative;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -198,9 +212,11 @@ export default {
 
 .projNameDisplay{
     max-width: 8em;
+    width: 8em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-left: 10px;
 }
 
 .projNameEdit{
@@ -208,8 +224,6 @@ export default {
 }
 
 .renameBtn{
-    position: absolute;
-    right: 5px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -220,5 +234,39 @@ export default {
 .renameBtnImg{
     width: 30px;
     height: 30px;
+}
+
+.controls{
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+.iconBtn{
+    --size: 50px;
+    display: flex;
+    width: var(--size);
+    height: var(--size);
+    background: var(--button-norm);
+    margin: 5px;
+    justify-content: center;
+    align-items: center;
+    border-radius: var(--corner-radius);
+    border: 2px solid var(--border);
+    fill: var(--button-icon);
+    stroke: var(--button-icon);
+}
+
+.iconBtn:hover{
+    background: var(--button-hover);
+}
+
+.iconBtn:active{
+    background: var(--button-down);
+}
+
+.icon{
+    width: 100%;
+    height: 100%;
 }
 </style>
