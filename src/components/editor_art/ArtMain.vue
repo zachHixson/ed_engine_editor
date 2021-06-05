@@ -30,7 +30,7 @@
 import {mapActions, mapGetters} from 'vuex';
 import Undo_Store from '@/common/Undo_Store';
 import {CATEGORY_ID} from '@/common/Enums';
-import ToolPanel from './LeftPanel';
+import ToolPanel from './ToolPanel';
 import ArtCanvas from './ArtCanvas';
 import AnimationPanel from './AnimationPanel';
 
