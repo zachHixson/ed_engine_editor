@@ -1,7 +1,7 @@
 <template>
     <div class="artMain">
-        <LeftPanel
-            class="leftPanel"
+        <ToolPanel
+            class="toolPanel"
             @resized="resize"
             @tool-selected="toolSelected" />
         <ArtCanvas
@@ -30,7 +30,7 @@
 import {mapActions, mapGetters} from 'vuex';
 import Undo_Store from '@/common/Undo_Store';
 import {CATEGORY_ID} from '@/common/Enums';
-import LeftPanel from './LeftPanel';
+import ToolPanel from './LeftPanel';
 import ArtCanvas from './ArtCanvas';
 import AnimationPanel from './AnimationPanel';
 
@@ -39,7 +39,7 @@ const MAX_UNDO_STEPS = 32;
 export default {
     name: 'ArtEditor',
     components: {
-        LeftPanel,
+        ToolPanel,
         ArtCanvas,
         AnimationPanel
     },
@@ -150,14 +150,14 @@ export default {
 </script>
 
 <style scoped>
-    .artMain{
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        width: 100%;
-        height: 100%;
-        margin:none;
-        padding:none;
-        overflow: none;
-    }
+.artMain{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    height: 100%;
+    margin:none;
+    padding:none;
+    overflow: none;
+}
 </style>

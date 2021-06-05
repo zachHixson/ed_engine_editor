@@ -1,6 +1,6 @@
 <template>
-    <div class="leftPanel">
-        <div class="leftPanelWrapper" ref="leftPanelWrapper">
+    <div class="toolPanel">
+        <div class="toolPanelWrapper">
             <div v-show="isOpen" class="panelContents">
                 <div class="pickerWrapper">
                     <div id="picker" class="picker"></div>
@@ -37,13 +37,13 @@
 </template>
 
 <script>
-import {store, mapActions, mapGetters} from 'vuex';
+import {mapActions} from 'vuex';
 import iro from '@jaames/iro';
 import {ART_TOOL_SIZE, ART_TOOL_TYPE} from '@/common/Enums';
 import Tool from '@/components/common/Tool';
 
 export default {    
-    name : "LeftPanel",
+    name : "ToolPanel",
     components: {
         Tool
     },
@@ -141,7 +141,7 @@ export default {
         }
     },
     watch: {
-        selectedColor(newCol, oldCol){
+        selectedColor(newCol){
             this.colorPicker.color.hexString = newCol;
         }
     },
@@ -172,11 +172,11 @@ export default {
 </script>
 
 <style scoped>
-    .leftPanel{
+    .toolPanel{
         height: 100%;
     }
 
-    .leftPanelWrapper{
+    .toolPanelWrapper{
         display: flex;
         flex-direction: row;
         justify-content: flex-end;
