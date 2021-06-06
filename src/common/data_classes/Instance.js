@@ -30,7 +30,7 @@ class Instance{
     toSaveData(){
         let sanitized = Object.assign({}, this);
 
-        sanitized.objId = this.objRef.ID;
+        sanitized.objId = this.objRef.id;
         sanitized.pos = this.pos.toObject();
 
         delete sanitized.objRef;

@@ -8,12 +8,13 @@ import GameData from './modules/GameData';
 import ArtEditor from './modules/ArtEditor';
 import AssetBrowser from './modules/AssetBrowser';
 import RoomEditor from './modules/RoomEditor';
+import i18n from '@/i18n';
 
 Vue.use(Vuex);
 
 export default new Vuex.Store({
     state: {
-        projectName: 'untitled'
+        projectName: i18n.t('editor_main.default_name')
     },
     getters: {
         getProjectName: state => state.projectName,
@@ -23,7 +24,7 @@ export default new Vuex.Store({
                 projectName: state.projectName,
                 editor_version: EDITOR_VERSION,
                 newestID: ID_Generator.getCurrentID(),
-                selectedRoomId: AssetBrowser.state.selectedRoom.ID,
+                selectedRoomId: AssetBrowser.state.selectedRoom.id,
                 startRoom: getters['GameData/getStartRoom'],
                 sprites: getters['GameData/getSpriteSaveData'],
                 objects: getters['GameData/getObjectSaveData'],
@@ -52,7 +53,7 @@ export default new Vuex.Store({
             dispatch('GameData/loadSaveData', loadObj);
 
             if (loadObj.selectedRoomId != undefined){
-                let room = getters['GameData/getAllRooms'].filter(r => r.ID == loadObj.selectedRoomId)[0];
+                let room = getters['GameData/getAllRooms'].find(r => r.id == loadObj.selectedRoomId);
                 dispatch('AssetBrowser/selectRoom', room);
             }
         }
@@ -63,7 +64,7 @@ export default new Vuex.Store({
         },
         newProject: (state) => {
             let gameData = GameData.state;
-            state.projectName = 'untitled';
+            state.projectName = i18n.t('editor_main.default_name');
             gameData.sprites = [];
             gameData.objects = [];
             gameData.rooms = [];

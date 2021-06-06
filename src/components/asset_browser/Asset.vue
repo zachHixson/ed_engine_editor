@@ -5,9 +5,9 @@
             <inline-svg v-if="!hasThumb" class="thumbnail assetIcon" :src="require(`@/${defaultIcon}.svg`)"
                 :transformSource="removeStroke"/>
             <div v-show="isRenaming">
-                <input ref="renameText" v-model="asset.name" type="text" />
+                <input class="nameBox" ref="renameText" v-model="asset.name" type="text" />
             </div>
-            <div v-show="!isRenaming">{{asset.name}}</div>
+            <div class="nameBox" v-show="!isRenaming">{{asset.name}}</div>
         </div>
         <div class="rightFloat">
             <button class="rightButton" @click="(event)=>{event.stopPropagation(); this.isRenaming ? this.stopRenaming() : this.rename();}">
@@ -44,8 +44,8 @@ export default {
             let selectedRoom = this.$store.getters['AssetBrowser/getSelectedRoom'];
             let isSelected = false;
 
-            isSelected |= (selectedAsset) ? selectedAsset.ID == this.asset.ID : false
-            isSelected |= (selectedRoom) ? selectedRoom.ID == this.asset.ID : false
+            isSelected |= (selectedAsset) ? selectedAsset.id == this.asset.id : false
+            isSelected |= (selectedRoom) ? selectedRoom.id == this.asset.id : false
 
             return isSelected;
         }
@@ -107,10 +107,9 @@ export default {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
                 this.thumbLoading = true;
-                ctx.save()
                 ctx.scale(scaleFac, scaleFac);
                 ctx.drawImage(this.pixelBuff, 0, 0, this.pixelBuff.width, this.pixelBuff.height);
-                ctx.restore();
+                ctx.resetTransform();
                 this.thumbLoading = false;
                 this.checkThumb();
             }
@@ -128,6 +127,14 @@ export default {
     width: 100%;
     padding: 5px;
     border-radius: var(--corner-radius);
+}
+
+.nameBox{
+    min-width: 0;
+    max-width: 8em;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .selected{

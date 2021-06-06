@@ -25,7 +25,7 @@ export default {
     props: ['undoLength', 'redoLength'],
     data() {
         return {
-            canvasEl: null,
+            renderer: null,
             navControl: null,
             updateFrame: null,
             maxZoom: 2
@@ -39,18 +39,18 @@ export default {
         let canvas = this.$refs.canvas;
         
         this.navControl = this.$refs.navControlPanel;
-        this.canvasEl = new Art_Canvas_Renderer(canvas, this.getSelectedFrame());
-        this.canvasEl.setCommitCallback(this.onCommit.bind(this));
+        this.renderer = new Art_Canvas_Renderer(canvas, this.getSelectedFrame());
+        this.renderer.setCommitCallback(this.onCommit.bind(this));
         
         canvas.addEventListener('mousedown', this.mouseDown);
         canvas.addEventListener('mouseup', this.mouseUp);
         canvas.addEventListener('mousemove', this.mouseMove);
         canvas.addEventListener('wheel', this.wheel);
-        canvas.addEventListener('mouseleave', this.navControl.mouseLeave);
+        canvas.addEventListener('mouseleave', this.mouseLeave);
 
-        this.maxZoom = this.canvasEl.getZoomBounds().max
-        this.navControl.setViewBounds(this.canvasEl.getViewBounds());
-        this.navControl.setContentsBounds(this.canvasEl.getContentsBounds());
+        this.maxZoom = this.renderer.getZoomBounds().max
+        this.navControl.setViewBounds(this.renderer.getViewBounds());
+        this.navControl.setContentsBounds(this.renderer.getContentsBounds());
         this.navChanged(this.navControl.getNavState());
 
         this.setTool(this.selectedTool);
@@ -59,12 +59,12 @@ export default {
     },
     beforeDestroy(){
         window.cancelAnimationFrame(this.updateFrame);
-        this.$store.dispatch('ArtEditor/setNavZoom', this.canvasEl.zoomFac);
-        this.$store.dispatch('ArtEditor/setNavOffset', this.canvasEl.offset);
-        this.canvasEl.beforeDestroy();
+        this.$store.dispatch('ArtEditor/setNavZoom', this.renderer.zoomFac);
+        this.$store.dispatch('ArtEditor/setNavOffset', this.renderer.offset);
+        this.renderer.beforeDestroy();
     },
     destroyed(){
-        this.canvasEl = null;
+        this.renderer = null;
     },
     computed:{
         selectedColor(){
@@ -107,12 +107,12 @@ export default {
             this.navControl.mouseDown(event);
 
             if (this.navControl.hotkeyTool == null){
-                this.canvasEl.mouseDown(event);
+                this.renderer.mouseDown(event);
             }
         },
         mouseUp(event){
             if (this.navControl.hotkeyTool == null){
-                this.canvasEl.mouseUp(event);
+                this.renderer.mouseUp(event);
             }
 
             this.navControl.mouseUp(event);
@@ -121,8 +121,12 @@ export default {
             this.navControl.mouseMove(event);
 
             if (this.navControl.hotkeyTool == null){
-                this.canvasEl.mouseMove(event);
+                this.renderer.mouseMove(event);
             }
+        },
+        mouseLeave(event){
+            this.navControl.mouseLeave(event);
+            this.mouseUp(event);
         },
         wheel(event){
             this.navControl.scroll(event);
@@ -136,33 +140,33 @@ export default {
 
             this.$refs.navControlPanel.setContainerDimensions(wrapper.clientWidth, wrapper.clientHeight);
 
-            if (this.canvasEl){
-                this.canvasEl.resize();
-                this.maxZoom = this.canvasEl.getZoomBounds().max;
+            if (this.renderer){
+                this.renderer.resize();
+                this.maxZoom = this.renderer.getZoomBounds().max;
             }
         },
         navChanged(navState){
-            this.canvasEl.navChanged(navState);
+            this.renderer.navChanged(navState);
         },
         setColor(newColor){
-            this.canvasEl.setToolColor(newColor);
+            this.renderer.setToolColor(newColor);
         },
         setSize(newSize){
-            this.canvasEl.setToolSize(newSize);
+            this.renderer.setToolSize(newSize);
         },
         setTool(newTool){
-            this.canvasEl.setTool(newTool);
+            this.renderer.setTool(newTool);
         },
         setSprite(){
-            this.canvasEl.setSprite(this.getSelectedFrame());
+            this.renderer.setSprite(this.getSelectedFrame());
         },
         enableNav(){
             this.$emit('nav-selected');
-            this.canvasEl.disableDrawing();
+            this.renderer.disableDrawing();
         },
         disableNav(){
             this.$emit('nav-deselected');
-            this.canvasEl.enableDrawing();
+            this.renderer.enableDrawing();
         },
         onCommit(){
             this.$emit('spriteDataChanged');

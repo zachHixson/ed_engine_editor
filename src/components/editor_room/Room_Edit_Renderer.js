@@ -211,7 +211,7 @@ export default class Room_Edit_Renderer{
                 ){
                     let spriteBuff;
 
-                    if (inst.objRef.sprite){
+                    if (inst.objRef.sprite && inst.objRef.editorFrame){
                         //cache sprites once they are already drawn once
                         if (this.spriteCache.has(inst.editorFrameID)){
                             spriteBuff = this.spriteCache.get(inst.editorFrameID);
@@ -236,11 +236,10 @@ export default class Room_Edit_Renderer{
                     }
 
                     //draw sprite
-                    ctx.save();
                     ctx.translate(pos.x + offset, pos.y + offset);
                     ctx.scale(scaleFac, scaleFac);
                     ctx.drawImage(spriteBuff, 0, 0);
-                    ctx.restore();
+                    ctx.resetTransform();
                 }
             });
         }

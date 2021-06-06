@@ -3,8 +3,8 @@ import {CATEGORY_ID, CATEGORY_TYPE} from '../Enums';
 
 class Asset{
     constructor(){
-        this.ID = ID_Generator.newID();
-        this.name = this.ID;
+        this.id = ID_Generator.newID();
+        this.name = this.id;
     }
 
     get type(){return CATEGORY_TYPE.UNDEFINED}

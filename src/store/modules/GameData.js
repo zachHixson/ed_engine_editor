@@ -108,7 +108,7 @@ const mutations = {
         }
 
         for (let i = 0; !hasFound && i < curList.length; i++){
-            if (curList[i].ID == id){
+            if (curList[i].id == id){
                 curList.splice(i, 1);
                 hasFound = true;
             }

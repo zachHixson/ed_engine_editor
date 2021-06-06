@@ -75,7 +75,7 @@ export default {
             this.commitFullState();
             this.getSprite().updateFrame(this.getSelectedFrame());
             this.updateFrameIDs();
-            this.$emit('asset-changed', this.getSprite().ID);
+            this.$emit('asset-changed', this.getSprite().id);
         },
         selectedFrameChanged(){
             this.$refs.artCanvas.setSprite();

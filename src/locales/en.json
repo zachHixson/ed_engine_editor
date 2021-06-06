@@ -5,6 +5,7 @@
     },
     "editor_main":{
         "project_name": "Project Name:",
+        "default_name": "untitled project",
         "room_tab" : "Room",
         "art_tab" : "Art",
         "object_tab" : "Object",

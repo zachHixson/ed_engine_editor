@@ -299,7 +299,7 @@ export default {
 
                     if (!hasVisited && this.mouse.down){
                         if (this.mouse.down && selectedAsset?.category_ID == CATEGORY_ID.OBJECT){
-                            this.actionAdd({objId: selectedAsset.ID, pos: mEvent.worldCell});
+                            this.actionAdd({objId: selectedAsset.id, pos: mEvent.worldCell});
                             this.squashCounter++;
                         }
                         
@@ -324,7 +324,7 @@ export default {
                     }
 
                     if (!removedFromCell && this.mouse.down){
-                        let instances = this.selectedRoom.getInstancesInRadius(mEvent.worldCell, 60);
+                        let instances = this.selectedRoom.getInstancesInRadius(mEvent.worldCell, 0);
                         instances = instances.filter((i) => Util_2D.compareVector(i.pos, mEvent.worldCell));
                         instances.sort((a, b) => a.zDepth > b.zDepth);
 
@@ -352,11 +352,11 @@ export default {
         },
         toolExit(mEvent){
             if (mEvent.type == MOUSE_EVENT.DOWN){
-                let exitsAtCursor = this.selectedRoom.getExitsAtPosition(mEvent.worldCell);
-                exitsAtCursor = exitsAtCursor.filter(e => Util_2D.compareVector(e.pos, mEvent.worldCell));
+                let exitAtCursor = this.selectedRoom.getExitsAtPosition(mEvent.worldCell)
+                    .find(e => Util_2D.compareVector(e.pos, mEvent.worldCell));
 
-                if (exitsAtCursor.length > 0){
-                    this.editorSelection = exitsAtCursor[0];
+                if (exitAtCursor){
+                    this.editorSelection = exitAtCursor;
                 }
                 else{
                     this.editorSelection = this.actionExitAdd({pos: mEvent.worldCell});
@@ -380,7 +380,7 @@ export default {
             }
         },
         actionAdd({objId, instRef, pos}, makeCommit = true){
-            let object = this.$store.getters['GameData/getAllObjects'].filter((o) => o.ID == objId)[0];
+            let object = this.$store.getters['GameData/getAllObjects'].find((o) => o.id == objId);
             let newInstance = this.selectedRoom.addInstance(object, pos, instRef);
 
             this.$refs.editWindow.instancesChanged();

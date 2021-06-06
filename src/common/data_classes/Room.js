@@ -44,7 +44,7 @@ class Room extends Asset{
 
         for (let i = 0; i < room.instancesSerial.length; i++){
             let curInstance = room.instancesSerial[i];
-            let objRef = objectList.find(o => o.ID == curInstance.objId);
+            let objRef = objectList.find(o => o.id == curInstance.objId);
             let newInstance;
 
             newInstance = this.addInstance(objRef, Victor.fromObject(curInstance.pos));
@@ -68,7 +68,7 @@ class Room extends Asset{
 
     purgeMissingReferences(objects, rooms){
         this.instances.zSort.forEach((i) => {
-            let foundObj = objects.find(o => o.ID == i.objRef.ID);
+            let foundObj = objects.find(o => o.id == i.objRef.id);
 
             if (!foundObj){
                 this.removeInstance(i.id, i.pos);
@@ -76,7 +76,7 @@ class Room extends Asset{
         });
 
         this.exits.zSort.forEach((e) => {
-            let foundRoom = rooms.find(r => r.ID == e.destinationRoom);
+            let foundRoom = rooms.find(r => r.id == e.destinationRoom);
 
             if (!foundRoom){
                 e.destinationRoom = null;

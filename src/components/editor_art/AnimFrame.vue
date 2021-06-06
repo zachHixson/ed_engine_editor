@@ -14,7 +14,7 @@
             :title="$t('art_editor.delete_frame')"
             v-show="canDelete && hover"
             @click="deleteFrame">
-            <inline-svg class="btnIcon" :src="require('@/assets/plus.svg')" style="transform: rotate(45deg)"
+            <inline-svg class="btnIcon" :src="require('@/assets/trash.svg')" style="fill: none"
                 :transformSource="removeStroke"/>
         </button>
         <button
@@ -109,10 +109,9 @@ export default {
                 ctx.imageSmoothingEnabled = false;
                 ctx.webkitImageSmoothingEnabled = false;
 
-                ctx.save();
                 ctx.scale(scaleFac, scaleFac);
                 ctx.drawImage(this.pixelBuff, 0, 0, this.pixelBuff.width, this.pixelBuff.height);
-                ctx.restore();
+                ctx.resetTransform();
             }
         },
         updateCanvas(){

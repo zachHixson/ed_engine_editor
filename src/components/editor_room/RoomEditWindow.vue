@@ -11,7 +11,7 @@
             class="navControlPanel"
             stateModule="RoomEditor"
             maxZoom="2"
-            @navChanged="canvasRenderer.navChange($event)"
+            @navChanged="renderer.navChange($event)"
             @tool-selected="$store.dispatch('RoomEditor/setSelectedTool', null)"/>
         <canvas
             ref="canvas"
@@ -45,7 +45,7 @@ export default {
     data() {
         return {
             canvasEl: null,
-            canvasRenderer: null,
+            renderer: null,
             loadedImages: 0
         }
     },
@@ -65,27 +65,27 @@ export default {
             this.setSelection();
         },
         gridEnabled(newVal){
-            this.canvasRenderer.setGridVisibility(newVal);
+            this.renderer.setGridVisibility(newVal);
         },
         checkAssetDeletion(newVal, oldVal){
             if (newVal < oldVal){
-                this.canvasRenderer.drawObjects();
+                this.renderer.drawObjects();
             }
         }
     },
     mounted() {
         //Setup Canvas and renderer
         this.canvasEl = this.$refs.canvas;
-        this.canvasRenderer = new Room_Edit_Renderer(this.canvasEl);
+        this.renderer = new Room_Edit_Renderer(this.canvasEl);
         this.resize();
-        this.canvasRenderer.navChange(this.$refs.navControlPanel.getNavState());
+        this.renderer.navChange(this.$refs.navControlPanel.getNavState());
 
         //bind events
         window.addEventListener('resize', this.resize);
         this.canvasEl.addEventListener('wheel', this.$refs.navControlPanel.scroll);
         this.canvasEl.addEventListener('mouseleave', this.$refs.navControlPanel.mouseLeave);
 
-        this.canvasRenderer.setSVG({
+        this.renderer.setSVG({
             camera: this.$refs.camera_icon,
             noSprite: this.$refs.noSprite_icon,
             exit: this.$refs.exit_icon,
@@ -105,21 +105,21 @@ export default {
     methods: {
         mouseDown(event){
             this.$refs.navControlPanel.mouseDown(event);
-            this.canvasRenderer.mouseDown(event);
+            this.renderer.mouseDown(event);
             this.emitMouseEvent(event, MOUSE_EVENT.DOWN);
         },
         mouseUp(event){
             this.$refs.navControlPanel.mouseUp(event);
-            this.canvasRenderer.mouseUp(event);
+            this.renderer.mouseUp(event);
             this.emitMouseEvent(event, MOUSE_EVENT.UP);
         },
         mouseMove(event){
             this.$refs.navControlPanel.mouseMove(event);
-            this.canvasRenderer.mouseMove(event);
+            this.renderer.mouseMove(event);
             this.emitMouseEvent(event, MOUSE_EVENT.MOVE);
         },
         roomChange(){
-            this.canvasRenderer.setRoomRef(this.selectedRoom);
+            this.renderer.setRoomRef(this.selectedRoom);
         },
         resize() {
             let wrapper = this.$refs.editWindow;
@@ -129,8 +129,8 @@ export default {
 
             this.$refs.navControlPanel.setContainerDimensions(wrapper.clientWidth, wrapper.clientHeight);
 
-            if (this.canvasRenderer){
-                this.canvasRenderer.resize();
+            if (this.renderer){
+                this.renderer.resize();
             }
         },
         emitMouseEvent(event, type){
@@ -139,30 +139,30 @@ export default {
 
             if (event.which == 1 && selectedNavTool == null && navToolState == null){
                 let canvasPos = new Victor(event.offsetX, event.offsetY);
-                let worldPos = this.canvasRenderer.getMouseWorldPos();
-                let cell = this.canvasRenderer.getMouseCell();
-                let worldCell = this.canvasRenderer.getMouseWorldCell();
+                let worldPos = this.renderer.getMouseWorldPos();
+                let cell = this.renderer.getMouseCell();
+                let worldCell = this.renderer.getMouseWorldCell();
                 
                 this.$emit('mouse-event', {type, canvasPos, worldPos, cell, worldCell});
             }
         },
         instancesChanged(){
-            this.canvasRenderer.instancesChanged();
+            this.renderer.instancesChanged();
         },
         setSelection(){
-            this.canvasRenderer.setSelection(this.editorSelection);
+            this.renderer.setSelection(this.editorSelection);
         },
         cameraChanged(){
-            this.canvasRenderer.instancesChanged();
+            this.renderer.instancesChanged();
         },
         bgColorChanged(){
-            this.canvasRenderer.bgColorChanged();
+            this.renderer.bgColorChanged();
         },
         checkImageLoading(){
             this.loadedImages++;
             
             if (this.loadedImages >= this.$refs.canvasImages.children.length){
-                this.canvasRenderer.fullRedraw();
+                this.renderer.fullRedraw();
             }
         }
     }

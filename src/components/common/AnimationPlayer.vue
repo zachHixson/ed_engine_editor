@@ -74,10 +74,9 @@ export default {
                 ctx.imageSmoothingEnabled = false;
                 ctx.webkitImageSmoothingEnabled = false;
 
-                ctx.save();
                 ctx.scale(scaleFac, scaleFac);
                 ctx.drawImage(this.pixelBuff, 0, 0, this.pixelBuff.width, this.pixelBuff.height);
-                ctx.restore();
+                ctx.resetTransform();
             }
         },
         advanceFrame(){

@@ -18,24 +18,36 @@ class Game_Object extends Asset{
     }
 
     get thumbnailData(){
-        return this.sprite ? this.sprite.frames[this.startFrame] : null;
+        let thumbnail = this.sprite?.frames[this._startFrame];
+
+        if (!thumbnail){
+            return null;
+        }
+        
+        for (let i = 0; i < thumbnail.length; i++){
+            if (thumbnail[i] != ''){
+                return thumbnail;
+            }
+        }
+
+        return null;
     }
 
     toSaveData(){
         let sanitized = Object.assign({}, this);
-        sanitized.sprite = this.sprite.ID;
+        sanitized.sprite = this.sprite.id;
         return sanitized;
     }
 
     fromSaveData(object, spriteList){
         Object.assign(this, object);
-        this.sprite = spriteList.find(s => s.ID == this.sprite);
+        this.sprite = spriteList.find(s => s.id == this.sprite);
         return this;
     }
 
     purgeMissingReferences(sprites){
         if (this.sprite){
-            let spriteFound = sprites.find(s => s.ID == this.sprite.ID);
+            let spriteFound = sprites.find(s => s.id == this.sprite.id);
             
             if (!spriteFound){
                 this.sprite = null;
@@ -46,7 +58,7 @@ class Game_Object extends Asset{
     get type(){return CATEGORY_TYPE.OBJECT}
     get category_ID(){return CATEGORY_ID.OBJECT}
     get startFrame(){return this._startFrame}
-    get editorFrame(){return this.sprite.frames[this._startFrame]}
+    get editorFrame(){return this.thumbnailData;}
     get editorFrameID(){return this.sprite.frameIDs[this._startFrame]}
 
     set startFrame(frame){

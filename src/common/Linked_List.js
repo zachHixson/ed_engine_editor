@@ -2,6 +2,7 @@ class Linked_List{
     constructor(){
         this.start = null;
         this.end = null;
+        this.lastInserted = null;
         this.length = 0;
     }
 
@@ -44,11 +45,11 @@ class Linked_List{
     }
 
     getLastNodeRef(){
-        if (this.end){
-            return this.end;
-        }
+        return this.end;
+    }
 
-        return null;
+    getLastInsertedRef(){
+        return this.lastInserted;
     }
 
     find(val, accessFunc = (a) => a){
@@ -80,6 +81,8 @@ class Linked_List{
             this.end.next = newNode;
             this.end = newNode;
         }
+
+        this.lastInserted = newNode;
 
         this.length++;
     }
@@ -136,11 +139,42 @@ class Linked_List{
 
             lNode.next = newNode;
             this.length++;
+            this.lastInserted = newNode;
             return true;
         }
         else{
             return false;
         }
+    }
+
+    insertSorted(val, smallestFunc = (a, b) => a < b){
+        let lNode = this.start;
+        let rNode = lNode ? lNode.next : null;
+        let newNode = null;
+
+        if (!lNode){
+            this.start = new Node(val);
+            this.end = this.start;
+            this.lastInserted = this.start;
+            this.length++;
+            return this.start;
+        }
+
+        while (lNode.next && smallestFunc(lNode.val, val)){
+            lNode = lNode.next;
+            rNode = lNode.next;
+        }
+
+        newNode = new Node(val, rNode, lNode)
+
+        if (rNode){
+            rNode.prev = newNode;
+        }
+
+        lNode.next = newNode;
+        this.lastInserted = lNode.next;
+        this.length++;
+        return;
     }
 
     clear(){

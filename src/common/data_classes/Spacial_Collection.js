@@ -37,10 +37,9 @@ class Spacial_Collection{
     add(data, pos){
         let nodeRef;
         let spacialIdx = this.getSpacialCellIdx(pos);
-        this.zSort.push(data);
-        nodeRef = this.zSort.getLastNodeRef();
+        this.zSort.insertSorted(data, (a, b) => a.zDepth <= b.zDepth);
+        nodeRef = this.zSort.getLastInsertedRef();
         this.spacialGrid[spacialIdx].push(nodeRef);
-        this.resortZ();
         this.curInstId++;
 
         return data;
@@ -114,7 +113,7 @@ class Spacial_Collection{
                 }
             }
         }
-
+        
         return outputInsts;
     }
 

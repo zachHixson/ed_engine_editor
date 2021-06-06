@@ -65,7 +65,6 @@ class Art_Canvas_Renderer{
         ctx.imageSmoothingEnabled = false;
         ctx.webkitImageSmoothingEnabled = false;
 
-        ctx.save();
         ctx.translate(
             (this.canvas.width / 2) + (this.offset.x * this.zoomFac),
             (this.canvas.height / 2) + (this.offset.y * this.zoomFac)
@@ -78,7 +77,7 @@ class Art_Canvas_Renderer{
         ctx.drawImage(this.pixelBuff, 0, 0, this.pixelBuff.width, this.pixelBuff.height);
         ctx.drawImage(this.previewBuff, 0, 0, this.previewBuff.width, this.previewBuff.height);
 
-        ctx.restore();
+        ctx.resetTransform();
 
 
         ctx.drawImage(this.gridBuff, 0, 0, this.gridBuff.width, this.gridBuff.height);
@@ -290,7 +289,6 @@ class Art_Canvas_Renderer{
         const HALF_WIDTH = CANVAS_WIDTH / 2;
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, this.checkerStencilBuff.width, this.checkerStencilBuff.height);
-        ctx.save();
         ctx.translate(
             (this.canvas.width / 2) + (this.offset.x * this.zoomFac),
             (this.canvas.height / 2) + (this.offset.y * this.zoomFac)
@@ -301,7 +299,7 @@ class Art_Canvas_Renderer{
             CANVAS_WIDTH * this.zoomFac,
             CANVAS_WIDTH * this.zoomFac
         );
-        ctx.restore();
+        ctx.resetTransform();
 
         //remove after debugging
         ctx.fillStyle = "black";
@@ -328,7 +326,6 @@ class Art_Canvas_Renderer{
 
         ctx.clearRect(0, 0, this.gridBuff.width, this.gridBuff.height);
 
-        ctx.save();
         ctx.translate(
             (this.canvas.width / 2) + (this.offset.x * this.zoomFac),
             (this.canvas.height / 2) + (this.offset.y * this.zoomFac)
@@ -337,7 +334,7 @@ class Art_Canvas_Renderer{
 
         //draw grid
         ctx.strokeStyle = "black";
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1;
         ctx.beginPath();
         for (let i = 1; i < GRID_DIV; i++) {
             let curLine = i * PIXEL_SIZE;
@@ -351,7 +348,7 @@ class Art_Canvas_Renderer{
             ctx.lineTo(HALF_CANVAS, pos.y);
         }
 
-        ctx.restore();
+        ctx.resetTransform();
         ctx.stroke();
     }
 

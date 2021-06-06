@@ -90,7 +90,7 @@ export default {
 
             for (let i = 0; i < sprites.length; i++){
                 spriteChoices.push({
-                    id: sprites[i].ID,
+                    id: sprites[i].id,
                     name: sprites[i].name
                 });
             }
@@ -104,7 +104,7 @@ export default {
             set(newFrame){
                 this.$refs.frameStart.value = this.object.startFrame;
                 this.object.startFrame = newFrame;
-                this.$emit('asset-changed', this.object.ID);
+                this.$emit('asset-changed', this.object.id);
             }
         }
     },
@@ -120,7 +120,7 @@ export default {
 
             if (selectedSpriteId >= 0){
                 let allSprites = this.$store.getters['GameData/getAllSprites'];
-                let selectedSprite = allSprites.find(s => s.ID == selectedSpriteId);
+                let selectedSprite = allSprites.find(s => s.id == selectedSpriteId);
                 this.object.sprite = selectedSprite;
             }
             else{
@@ -131,7 +131,7 @@ export default {
                 this.$refs.animPlayer.newSpriteSelection();
             });
 
-            this.$emit('asset-changed', this.object.ID);
+            this.$emit('asset-changed', this.object.id);
         },
         validateFPS(){
             this.object.fps = Math.floor(this.object.fps);
@@ -141,7 +141,7 @@ export default {
             this.object = this.getSelectedObject();
             
             if (this.object.sprite){
-                this.$refs.spriteSelector.value = this.object.sprite.ID;
+                this.$refs.spriteSelector.value = this.object.sprite.id;
             }
             else{
                 this.$refs.spriteSelector.value = -1;

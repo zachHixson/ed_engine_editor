@@ -76,8 +76,8 @@
                     <option :value="null">{{$t('generic.no_option')}}</option>
                     <option
                         v-for="object in objects"
-                        :key="object.ID"
-                        :value="object.ID">{{object.name}}</option>
+                        :key="object.id"
+                        :value="object.id">{{object.name}}</option>
                 </select>
             </div>
             <div v-show="camera.moveType == camera.MOVE_TYPES.FOLLOW" class="control">
@@ -116,8 +116,8 @@
                     <option :value="null">{{$t('generic.no_option')}}</option>
                     <option
                         v-for="room in $store.getters['GameData/getAllRooms']"
-                        :key="room.ID"
-                        :value="room.ID">{{room.name}}</option>
+                        :key="room.id"
+                        :value="room.id">{{room.name}}</option>
                 </select>
             </div>
             <div v-show="!selectedEntity.isEnding && selectedEntity.destinationRoom != null" class="control">
@@ -176,7 +176,7 @@
             <div class="control">
                 <label for="roomSetStart">{{$t('room_editor.set_start_room')}}:</label>
                 <input id="roomSetStart" type="button" value="Set" :title="$t('room_editor.tt_room_starting_room')"
-                    @click="$store.dispatch('GameData/setStartRoomId', room.ID)" />
+                    @click="$store.dispatch('GameData/setStartRoomId', room.id)" />
             </div>
             <VarList
                 :editList="room.customVars"
@@ -237,7 +237,7 @@ export default {
         destinationRoomExits(){
             if (this.selectedEntity.TYPE == ENTITY_TYPE.EXIT){
                 let allRooms = this.$store.getters['GameData/getAllRooms'];
-                let destRoom = allRooms.find(r => r.ID == this.selectedEntity.destinationRoom);
+                let destRoom = allRooms.find(r => r.id == this.selectedEntity.destinationRoom);
                 if (destRoom){
                     return destRoom.getAllExits();
                 }

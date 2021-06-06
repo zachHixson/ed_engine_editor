@@ -32,7 +32,7 @@
                         <Asset
                             ref="assets"
                             v-for="asset in selectedList"
-                            :key="asset.ID"
+                            :key="asset.id"
                             :asset="asset"
                             :defaultIcon="selected_category.icon"
                             @deleteAsset="deleteAsset"
@@ -127,12 +127,12 @@ export default {
             }
 
             //if the selected asset was deleted, shift the selection to the adjacent asset
-            if (selectedAsset && asset.ID == selectedAsset.ID){
+            if (selectedAsset && asset.id == selectedAsset.id){
                 this.selectAdjacent(asset);
             }
 
             //Actually delete the asset from Vuex
-            this.$store.dispatch('GameData/deleteAsset', {category: asset.category_ID, id: asset.ID});
+            this.$store.dispatch('GameData/deleteAsset', {category: asset.category_ID, id: asset.id});
             this.$emit('asset-deleted');
         },
         selectAsset(asset, catId = null){
@@ -153,7 +153,7 @@ export default {
             let newSelection = null;
 
             for (let i = 0; i < this.selectedList.length; i++){
-                if (this.selectedList[i].ID == delAsset.ID){
+                if (this.selectedList[i].id == delAsset.id){
                     newSelection = (i > 0) ? this.selectedList[i - 1] : this.selectedList[i + 1]
                 }
             }
@@ -164,7 +164,7 @@ export default {
             for (let i = 0; i < this.$refs.assets.length; i++){
                 let curAsset = this.$refs.assets[i];
 
-                if (id == null || curAsset.asset.ID == id){
+                if (id == null || curAsset.asset.id == id){
                     curAsset.drawThumbnail();
                 }
             }

@@ -25,18 +25,6 @@ const NAV_TOOL = {
 }
 Object.freeze(NAV_TOOL);
 
-let mouse = {
-    position: new Victor(0, 0),
-    down: false,
-    mmDown: false,
-    downPosition: new Victor(0, 0),
-    lastPosition: new Victor(0, 0),
-    dragDistance: new Victor(0, 0)
-}
-let keyMap = {};
-let zoomFac = 1;
-let rawOffset = new Victor(0, 0);
-
 export default {
     name: 'NavControlPanel',
     props: ['stateModule', 'extra_controls', 'maxZoom'],
@@ -63,7 +51,18 @@ export default {
             viewBounds: [-500, -500, 500, 500],
             contentsBounds: [0, 0, 500, 500],
             containerDimensions: new Victor(0, 0),
-            hotkeyTool: null
+            hotkeyTool: null,
+            mouse: {
+                position: new Victor(0, 0),
+                down: false,
+                mmDown: false,
+                downPosition: new Victor(0, 0),
+                lastPosition: new Victor(0, 0),
+                dragDistance: new Victor(0, 0)
+            },
+            keyMap: {},
+            zoomFac: 1,
+            rawOffset: new Victor(0, 0)
         }
     },
     components: {
@@ -72,8 +71,8 @@ export default {
     mounted() {
         let extra = this.extra_controls || [];
         this.controls = [...extra, ...this.controls];
-        zoomFac = this.$store.getters[this.stateModule + '/getNavZoom'];
-        rawOffset = this.$store.getters[this.stateModule + '/getNavOffset'].clone();
+        this.zoomFac = this.$store.getters[this.stateModule + '/getNavZoom'];
+        this.rawOffset = this.$store.getters[this.stateModule + '/getNavOffset'].clone();
 
         document.addEventListener('keydown', this.registerKeys);
         document.addEventListener('keyup', this.unregisterKeys);
@@ -96,23 +95,23 @@ export default {
         mouseDown(event){
             switch(event.which){
                 case 1:
-                    mouse.down = true;
+                    this.mouse.down = true;
                     break;
                 case 2:
-                    mouse.mmDown = true;
-                    keyMap['mmb'] = true;
+                    this.mouse.mmDown = true;
+                    this.keyMap['mmb'] = true;
                     break;
             }
 
-            mouse.downPosition.x = event.offsetX;
-            mouse.downPosition.y = event.offsetY;
+            this.mouse.downPosition.x = event.offsetX;
+            this.mouse.downPosition.y = event.offsetY;
 
             this.detectKeyCombo();
         },
         mouseUp(event){
-            mouse.down = false;
-            mouse.mmDown = false;
-            keyMap['mmb'] = false;
+            this.mouse.down = false;
+            this.mouse.mmDown = false;
+            this.keyMap['mmb'] = false;
 
             if (this.hotkeyTool == NAV_TOOL.PAN){
                 this.hotkeyTool = null;
@@ -120,21 +119,21 @@ export default {
 
             this.$store.dispatch(
                 this.stateModule + '/setNavZoom',
-                zoomFac
+                this.zoomFac
             )
             this.$store.dispatch(
                 this.stateModule + '/setNavOffset',
-                rawOffset
+                this.rawOffset
             )
 
             this.detectKeyCombo();
         },
         mouseMove(event){
-            mouse.lastPosition.copy(mouse.position);
-            mouse.position.x = event.offsetX;
-            mouse.position.y = event.offsetY;
+            this.mouse.lastPosition.copy(this.mouse.position);
+            this.mouse.position.x = event.offsetX;
+            this.mouse.position.y = event.offsetY;
 
-            if (mouse.down || mouse.mmDown){
+            if (this.mouse.down || this.mouse.mmDown){
                 let navTool = this.hotkeyTool ?? this.$store.getters[
                     this.stateModule + '/getSelectedNavTool'
                 ];
@@ -153,38 +152,38 @@ export default {
         },
         scroll(event){
             let zoomDir = event.deltaY < 0 ? 1 : -1;
-            zoomDir *= ZOOM_WHEEL_AMT * (zoomFac / this.maxZoom);
-            this.setZoom(zoomFac + zoomDir);
+            zoomDir *= ZOOM_WHEEL_AMT * (this.zoomFac / this.maxZoom);
+            this.setZoom(this.zoomFac + zoomDir);
         },
         registerKeys(event){
-            keyMap[event.key] = true;
+            this.keyMap[event.key] = true;
             this.detectKeyCombo();
         },
         unregisterKeys(event){
-            keyMap[event.key] = false;
+            this.keyMap[event.key] = false;
             this.detectKeyCombo();
         },
         detectKeyCombo(){
             let keyDown = false;
 
-            if (keyMap[' '] && mouse.down){
+            if (this.keyMap[' '] && this.mouse.down){
                 this.hotkeyTool = NAV_TOOL.PAN;
             }
             
-            if (keyMap['Control'] && keyMap['f']){
+            if (this.keyMap['Control'] && this.keyMap['f']){
                 event.preventDefault();
                 this.centerView();
             }
-            else if (keyMap['Control'] && mouse.down){
+            else if (this.keyMap['Control'] && this.mouse.down){
                 this.hotkeyTool = NAV_TOOL.ZOOM;
             }
 
-            if (keyMap['mmb']){
+            if (this.keyMap['mmb']){
                 this.hotkeyTool = NAV_TOOL.PAN;
             }
 
-            for (let key in keyMap){
-                if (keyMap[key]){
+            for (let key in this.keyMap){
+                if (this.keyMap[key]){
                     keyDown = true;
                 }
             }
@@ -194,7 +193,7 @@ export default {
             }
         },
         getNavState(){
-            return {rawOffset, zoomFac};
+            return {rawOffset: this.rawOffset, zoomFac: this.zoomFac};
         },
         deselectTool(){
             this.selectedTool = null;
@@ -227,26 +226,26 @@ export default {
             this.containerDimensions.y = height;
         },
         setZoom(newZoom){
-            zoomFac = Math.min(Math.max(newZoom, 0.5), this.maxZoom);
-            this.$emit('navChanged', {rawOffset, zoomFac});
+            this.zoomFac = Math.min(Math.max(newZoom, 0.5), this.maxZoom);
+            this.$emit('navChanged', {rawOffset: this.rawOffset, zoomFac: this.zoomFac});
         },
         pan(){
-            let curMouse = new Victor(0,0).copy(mouse.position);
-            let downPos = new Victor(0,0).copy(mouse.lastPosition);
+            let curMouse = new Victor(0,0).copy(this.mouse.position);
+            let downPos = new Victor(0,0).copy(this.mouse.lastPosition);
             let difference = curMouse.subtract(downPos);
 
-            difference.divide(new Victor(zoomFac, zoomFac));
-            rawOffset.add(difference);
+            difference.divide(new Victor(this.zoomFac, this.zoomFac));
+            this.rawOffset.add(difference);
 
-            this.$emit('navChanged', {rawOffset, zoomFac});
+            this.$emit('navChanged', {rawOffset: this.rawOffset, zoomFac: this.zoomFac});
         },
         zoom(){
-            let yDifference = mouse.position.y - mouse.lastPosition.y;
-            yDifference *= zoomFac / this.maxZoom;
+            let yDifference = this.mouse.position.y - this.mouse.lastPosition.y;
+            yDifference *= this.zoomFac / this.maxZoom;
             yDifference *= ZOOM_SENSITIVITY;
-            this.setZoom(zoomFac + yDifference);
+            this.setZoom(this.zoomFac + yDifference);
 
-            this.$emit('navChanged', {rawOffset, zoomFac});
+            this.$emit('navChanged', {rawOffset: this.rawOffset, zoomFac: this.zoomFac});
         },
         centerView(){
             let cornerUL = new Victor(
@@ -268,9 +267,9 @@ export default {
             );
 
             this.setZoom((minContainerDim / maxContentsDim) * .99);
-            rawOffset.x = 0;
-            rawOffset.y = 0;
-            this.$emit('navChanged', {rawOffset, zoomFac});
+            this.rawOffset.x = 0;
+            this.rawOffset.y = 0;
+            this.$emit('navChanged', {rawOffset: this.rawOffset, zoomFac: this.zoomFac});
         }
     }
 }
