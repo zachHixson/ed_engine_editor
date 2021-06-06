@@ -31,6 +31,7 @@ export default {
     width: 100%;
     height: 50px;
     background: var(--heading);
+    border: 2px solid var(--border);
     border-right: none;
     padding-left: 5px;
     margin-bottom: 3px;

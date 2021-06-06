@@ -1,6 +1,6 @@
 <template>
     <div class="toolPanel">
-        <div class="toolPanelWrapper">
+        <div class="toolPanelWrapper" :class="{toolPanelWrapperClosed : !isOpen}">
             <div v-show="isOpen" class="panelContents">
                 <div class="pickerWrapper">
                     <div id="picker" class="picker"></div>
@@ -26,12 +26,12 @@
                         @toolClicked="toolChanged"/>
                 </div>
             </div>
-            <button v-show="isOpen" class="resizeBtn" ref="collapseButton" @click="toggleOpen">
-                <img src="@/assets/arrow_01.svg" style="transform: rotate(-90deg)"/>
-            </button>
-            <button v-show="!isOpen" class="resizeBtn" ref="expandButton" @click="toggleOpen">
-                <img src="@/assets/arrow_01.svg" style="transform: rotate(90deg)"/>
-            </button>
+            <div class="resizeBtnWrapper">
+                <button class="resizeBtn" ref="collapseButton" @click="toggleOpen">
+                    <img v-show="isOpen" src="@/assets/arrow_01.svg" style="transform: rotate(-90deg)"/>
+                    <img v-show="!isOpen" src="@/assets/brush.svg" />
+                </button>
+            </div>
         </div>
     </div>
 </template>
@@ -172,72 +172,87 @@ export default {
 </script>
 
 <style scoped>
-    .toolPanel{
-        height: 100%;
-    }
+.toolPanelWrapper{
+    position: relative;
+    background: var(--tool-panel-bg);
+    border: 2px solid var(--border);
+    border-left: none;
+    border-radius: 0px var(--corner-radius) var(--corner-radius) 0px;
+    height: 95%;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+}
 
-    .toolPanelWrapper{
-        display: flex;
-        flex-direction: row;
-        justify-content: flex-end;
-        background: var(--tool-panel-bg);
-        height: 100%;
-    }
+.toolPanelWrapperClosed{
+    border: none;
+}
 
-    .panelContents{
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        align-content:flex-start;
-        flex-grow: 1;
-        width: 200pt;
-        height: 100%;
-    }
+.panelContents{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    align-content:flex-start;
+    flex-grow: 1;
+    width: 200pt;
+    height: 100%;
+    overflow-y: auto;
+}
 
-    .pickerWrapper{
-        display: flex;
-        justify-content: center;
-        padding: 10pt;
-    }
+.pickerWrapper{
+    display: flex;
+    justify-content: center;
+    padding: 10pt;
+}
 
-    .brushSizeContainer{
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        border-bottom: 1px solid black;
-        width: 100%;
-    }
+.brushSizeContainer{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    border-bottom: 1px solid black;
+    width: 100%;
+}
 
-    .toolType{
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
+.toolType{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
 
-    .collapseButton{
-        align-self: center;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-grow: 1;
-        width: 20px;
-        height: 50px;
-        background: none;
-        border: 1px solid black;
-    }
+.collapseButton{
+    align-self: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+    width: 20px;
+    height: 50px;
+    background: none;
+    border: 1px solid black;
+}
 
-    .resizeBtn{
-        width: 20px;
-        height: 50px;
-        padding: 0;
-        align-self: center;
-        padding: 2px;
-        background: none;
-        border: 1px solid black;
-    }
+.resizeBtnWrapper{
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translate(100%, -50%);
+}
 
-    .resizeBtn > img{
-        width: 100%;
-        height: 100%;
-    }
+.resizeBtn{
+    position: relative;
+    width: 30px;
+    height: 70px;
+    padding: 0;
+    padding: 2px;
+    background: var(--tool-panel-bg);
+    border: 2px solid var(--border);
+    border-left: none;
+    border-radius: 0px var(--corner-radius) var(--corner-radius) 0px;
+    z-index: 15;
+}
+
+.resizeBtn > img{
+    width: 100%;
+    height: 100%;
+}
 </style>

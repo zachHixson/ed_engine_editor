@@ -46,5 +46,6 @@ export default {
 .editorWindow{
     display: flex;
     box-sizing: border-box;
+    border-left: 2px solid var(--border);
 }
 </style>

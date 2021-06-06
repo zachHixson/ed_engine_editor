@@ -1,13 +1,13 @@
 <template>
-    <div class="animPanel">
-        <button v-show="isOpen" ref="collapseBtn" class="resizeBtn" @click="toggleSize()">
-            <inline-svg class="arrow" :src="require('@/assets/arrow_01.svg')" style="transform: rotate(90deg)"
-                :transformSource="removeStroke"/>
-        </button>
-        <button v-show="!isOpen" ref="expandBtn" class="resizeBtn" @click="toggleSize()">
-            <inline-svg class="arrow" :src="require('@/assets/arrow_01.svg')" style="transform: rotate(-90deg)"
-                :transformSource="removeStroke"/>
-        </button>
+    <div class="animPanel" :class="{animPanelClosed : !isOpen}">
+        <div class="resizeBtnWrapper">
+            <button ref="collapseBtn" class="resizeBtn" @click="toggleSize()">
+                <inline-svg v-show="isOpen" class="arrow" :src="require('@/assets/arrow_01.svg')" style="transform: rotate(90deg)"
+                    :transformSource="removeStroke"/>
+                <inline-svg v-show="!isOpen" class="arrow" :src="require('@/assets/animation.svg')"
+                    :transformSource="removeStroke"/>
+            </button>
+        </div>
         <div v-show="isOpen" ref="contents" class="panelContents">
             <div class="animPlayerWrapper">
                 <AnimationPlayer ref="animPlayer" :sprite="sprite" fps="12" startFrame="0"/>
@@ -49,12 +49,9 @@ export default {
     props: ['frameIDs'],
     data(){
         return {
-            isOpen: false,
+            isOpen: this.isOpen = this.$store.getters['ArtEditor/isAnimPanelOpen'],
             sprite: this.$store.getters['AssetBrowser/getSelectedAsset']
         }
-    },
-    beforeMount(){
-        this.isOpen = this.$store.getters['ArtEditor/isAnimPanelOpen'];
     },
     beforeDestroy(){
         this.$store.dispatch('ArtEditor/setAnimPanelState', this.isOpen);
@@ -130,10 +127,20 @@ export default {
 
 <style scoped>
 .animPanel{
+    position: relative;
     display: flex;
     flex-direction: row;
-    height: 100%;
+    height: 95%;
+    top: 50%;
+    transform: translateY(-50%);
     background: var(--tool-panel-bg);
+    border: 2px solid var(--border);
+    border-right: none;
+    border-radius: var(--corner-radius) 0px 0px var(--corner-radius);
+}
+
+.animPanelClosed{
+    border: none;
 }
 
 .panelContents{
@@ -185,14 +192,25 @@ export default {
     stroke: var(--button-icon);
 }
 
+.resizeBtnWrapper{
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
 .resizeBtn{
-    width: 20px;
-    height: 50px;
+    position: relative;
+    left: -100%;
+    width: 30px;
+    height: 70px;
     padding: 0;
     align-self: center;
     padding: 2px;
-    background: none;
-    border: 1px solid black;
+    background: var(--tool-panel-bg);
+    border: 2px solid var(--border);
+    border-right: none;
+    border-radius: var(--corner-radius) 0px 0px var(--corner-radius);
 }
 
 .resizeBtn > .arrow{

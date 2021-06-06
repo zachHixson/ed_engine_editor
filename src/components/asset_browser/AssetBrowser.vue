@@ -184,7 +184,6 @@ export default {
 .assetBrowser{
     overflow: hidden;
     height: 100%;
-    border-right: 1px solid black;
 }
 
 .slideWrapper{
@@ -232,8 +231,9 @@ export default {
     width: 98%;
     height: 50px;
     background: var(--heading);
-    border-radius: 0px var(--corner-radius) var(--corner-radius) 0px;
+    border: 2px solid var(--border);
     border-left: none;
+    border-radius: 0px var(--corner-radius) var(--corner-radius) 0px;
     box-sizing: border-box;
     font-size: var(--heading-font-size);
     font-weight: bold;

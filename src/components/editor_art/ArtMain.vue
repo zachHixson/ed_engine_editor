@@ -151,6 +151,7 @@ export default {
 
 <style scoped>
 .artMain{
+    position: relative;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -158,6 +159,7 @@ export default {
     height: 100%;
     margin:none;
     padding:none;
-    overflow: none;
+    overflow: hidden;
+    background: white;
 }
 </style>

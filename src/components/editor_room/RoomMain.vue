@@ -30,12 +30,12 @@
             @redo="applyChronoStep(undoStore.stepForward(), actionMap)"/>
         <div v-else class="noRoomSelected">{{$t('room_editor.no_room_selected')}}</div>
         <div v-if="selectedRoom" class="propertyPanel">
-            <button v-show="propertiesOpen" class="resizeBtn" @click="propertiesOpen = false; resize()">
-                <img src="@/assets/arrow_01.svg" style="transform: rotate(90deg)"/>
-            </button>
-            <button v-show="!propertiesOpen" class="resizeBtn" @click="propertiesOpen = true; resize()">
-                <img src="@/assets/arrow_01.svg" style="transform: rotate(-90deg)"/>
-            </button>
+            <div class="resizeBtnWrapper">
+                <button class="resizeBtn" @click="propertiesOpen = !propertiesOpen; resize()">
+                    <img v-show="propertiesOpen" src="@/assets/arrow_01.svg" style="transform: rotate(90deg)"/>
+                    <img v-show="!propertiesOpen" src="@/assets/gear.svg" style="transform: rotate(-90deg)"/>
+                </button>
+            </div>
             <div v-show="propertiesOpen" class="propertiesContents">
                 <Properties
                     ref="props"
@@ -667,24 +667,36 @@ export default {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
     width: 100%;
     height: 100%;
+    background: white;
+    overflow: hidden;
 }
 
 .toolPanel{
-    flex-shrink: 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
     width: auto;
-    height: 100%;
+    height: 95%;
     padding: 0;
     margin: 0;
     background: var(--tool-panel-bg);
+    border: 2px solid var(--border);
+    border-left: none;
+    border-radius: 0px var(--corner-radius) var(--corner-radius) 0px;
 }
 
 .propertyPanel{
+    position: relative;
     display: flex;
     flex-direction: row;
-    height: 100%;
+    height: 95%;
     background: var(--tool-panel-bg);
+    border: 2px solid var(--border);
+    border-right: none;
+    border-radius: var(--corner-radius) 0px 0px var(--corner-radius);
     z-index: 5;
 }
 
@@ -692,19 +704,31 @@ export default {
     width: 250px;
 }
 
+.resizeBtnWrapper{
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
 .resizeBtn{
+    position: relative;
+    left: -100%;
     display: flex;
     justify-content: center;
     align-items: center;
     align-self: center;
-    height: 50px;
-    background: none;
-    border: 1px solid black;
+    width: 30px;
+    height: 70px;
+    background: var(--tool-panel-bg);
+    border: 2px solid var(--border);
+    border-right: none;
+    border-radius: var(--corner-radius) 0px 0px var(--corner-radius);
 }
 
 .resizeBtn > img{
-    width: 20px;
-    height: 20px;
+    width: 100%;
+    height: 100%;
 }
 
 .toolSpacer{
