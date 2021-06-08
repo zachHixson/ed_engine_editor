@@ -27,7 +27,7 @@ class Sprite extends Asset{
     toSaveData(){
         let stripped = Object.assign({}, this);
         stripped.frames = this.getFramesCopy();
-        this.compressFrames(stripped.frames);
+        stripped.frames = this.compressFrames(stripped.frames);
         delete stripped.frameIDs;
 
         return stripped;
@@ -79,6 +79,16 @@ class Sprite extends Asset{
         let id = this.frameIDs[idx];
         this.frameIDs[idx] = this.frameIDs[idx + dir];
         this.frameIDs[idx + dir] = id;
+    }
+
+    compareFrames(frame1, frame2){
+        for (let i = 0; i < frame1.length; i++){
+            if (frame1[i] != frame2[i]){
+                return false;
+            }
+        }
+
+        return true;
     }
 
     getFramesCopy(){
@@ -133,31 +143,101 @@ class Sprite extends Asset{
     }
 
     compressFrames(frames){
-        //strip '#' from frames
-        for (let f = 0; f < frames.length; f++){
-            for (let p = 0; p < frames[f].length; p++){
-                let curFrame = frames[f][p];
+        let compressed = this._compTemporal(frames);
+        compressed = this._compFrame(compressed);
+        return compressed;
+    }
 
-                if (curFrame.length > 0){
-                    curFrame = curFrame.substring(1, curFrame.length);
+    _compTemporal(frameList){
+        for (let i = 0; i < frameList.length; i++){
+            let curRange = 0;
+            let isSame = true;
+
+            //look ahead and find a range of identical frames
+            for (let checkFrame = i + 1; checkFrame < frameList.length && isSame; checkFrame++){
+                if (this.compareFrames(frameList[i], frameList[checkFrame])){
+                    curRange++;
+                }
+                else{
+                    isSame = false;
                 }
 
-                frames[f][p] = curFrame;
+                checkFrame++;
+            }
+
+            //Replace range of identical frames with marker to indicate how many frames to be duplicated
+            if (curRange > 0){
+                frameList.splice(i + 1, curRange, [curRange.toString()]);
+                i += 1;
+            }
+        }
+
+        return frameList;
+    }
+
+    _compFrame(frameList){
+        for (let i = 0; i < frameList.length; i++){
+            //Find full frame
+            if (frameList[i].length > 1){
+                //Find ranges within that frame that can be compressed
+                for (let p = 0; p < frameList[i].length; p++){
+                    let curRange = 0;
+                    let isSame = true;
+                    
+                    //Check current pixel against nex pixels until a different one is found
+                    for (let check = p + 1; check < frameList[i].length && isSame; check++){
+                        if (frameList[i][p] == frameList[i][check]){
+                            curRange++;
+                        }
+                        else{
+                            isSame = false;
+                        }
+                    }
+
+                    //Replace range of identical pixels with a marker indicating how many pixels to duplicate
+                    if (curRange > 0){
+                        frameList[i].splice(p + 1, curRange, curRange.toString());
+                        p += 1;
+                    }
+                }
+            }
+        }
+
+        return frameList;
+    }
+
+    decompressFrames(frames){
+        this._decompTemporal(frames);
+        this._decompFrame(frames);
+    }
+
+    _decompTemporal(frameList){
+        for (let i = 0; i < frameList.length; i++){
+            //Find marker
+            if (frameList[i].length == 1){
+                let range = parseInt(frameList[i]);
+                
+                //Insert range of duplicates in place of the marker
+                if (range > 0){
+                    let dupedFrames = new Array(range).fill([...frameList[i - 1]]);
+                    frameList.splice(i, 1, ...dupedFrames);
+                }
             }
         }
     }
 
-    decompressFrames(frames){
-        //Add '#' back to frames
-        for (let f = 0; f < frames.length; f++){
-            for (let p = 0; p < frames[f].length; p++){
-                let curFrame = frames[f][p];
+    _decompFrame(frameList){
+        for (let i = 0; i < frameList.length; i++){
+            for (let p = 1; p < frameList[i].length; p++){
+                //If the pixel is parsable as an int, then it's a marker
+                let range = parseInt(frameList[i][p]);
 
-                if (curFrame.length == 6){
-                    curFrame = '#' + curFrame;
+                //Splice in new array of duplicated pixels
+                if (range){
+                    let dupedPixels = new Array(range).fill(frameList[i][p - 1]);
+                    frameList[i].splice(p, 1, ...dupedPixels);
+                    p += range;
                 }
-
-                frames[f][p] = curFrame;
             }
         }
     }

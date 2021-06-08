@@ -1,10 +1,12 @@
 /*
+    ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠
     This is completely cursed code.
     This class basically needs to be able to access
     data either by location, or by a loopable list.
     Due to Javascript not directly supporting pointers
     this is really hacked together and needs to be
     refactored.
+    ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠
 */
 
 import Linked_List from '../Linked_List';
