@@ -28,24 +28,22 @@ class Tool{
         }
     }
 
-    mouseDown(event){
-        if (!this.canDraw){
-            return
+    mouseDown(){
+        if (this.canDraw){
+            this.isMouseDown = true;
         }
-        
-        this.isMouseDown = true;
     }
 
-    mouseUp(event){
-        if (!this.canDraw){
-            return
+    mouseUp(){
+        if (this.canDraw){
+            this.isMouseDown = false;
         }
-        
-        this.isMouseDown = false;
     }
 
-    mouseMove(event){
-        this.updateCursorBuff();
+    mouseMove(){
+        if (this.canDraw){
+            this.updateCursorBuff();
+        }
     }
 
     setMouseCell(vec){
@@ -70,6 +68,14 @@ class Tool{
 
     setToolSize(num){
         this.brushSize = num;
+    }
+
+    enableDrawing(){
+        this.canDraw = true;
+    }
+
+    disableDrawing(){
+        this.canDraw = false;
     }
 
     beforeDestroy(){}

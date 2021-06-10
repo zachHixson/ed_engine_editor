@@ -1,7 +1,7 @@
 <template>
     <div class="animPanel" :class="{animPanelClosed : !isOpen}">
         <div class="resizeBtnWrapper">
-            <button ref="collapseBtn" class="resizeBtn" @click="toggleSize()">
+            <button ref="collapseBtn" class="resizeBtn" @click="isOpen = !isOpen;">
                 <inline-svg v-show="isOpen" class="arrow" :src="require('@/assets/arrow_01.svg')" style="transform: rotate(90deg)"
                     :transformSource="removeStroke"/>
                 <inline-svg v-show="!isOpen" class="arrow" :src="require('@/assets/animation.svg')"
@@ -46,26 +46,16 @@ export default {
         AnimFrame,
         AnimationPlayer
     },
-    props: ['frameIDs'],
+    props: ['sprite', 'frameIDs'],
     data(){
         return {
-            isOpen: this.isOpen = this.$store.getters['ArtEditor/isAnimPanelOpen'],
-            sprite: this.$store.getters['AssetBrowser/getSelectedAsset']
+            isOpen: this.isOpen = this.$store.getters['ArtEditor/isAnimPanelOpen']
         }
     },
     beforeDestroy(){
         this.$store.dispatch('ArtEditor/setAnimPanelState', this.isOpen);
     },
     methods: {
-        toggleSize(){
-            this.isOpen = !this.isOpen;
-            this.$nextTick(()=>{
-                if (this.isOpen){
-                    this.$refs.animPlayer.frameDataChanged();
-                }
-                this.$emit('resized');
-            });
-        },
         updateFramePreviews(range = [0, -1]){
             if (range[1] == -1){
                 range[1] = this.sprite.frames.length - 1;
@@ -82,9 +72,6 @@ export default {
                     this.$refs.animFrame[i].updateCanvas();
                 }
             }
-        },
-        getSelectedFrame(){
-            return this.$store.getters['ArtEditor/getSelectedFrame'];
         },
         addFrame(){
             let newFrameIdx = this.sprite.addFrame();
@@ -115,10 +102,6 @@ export default {
         },
         selectedFrameChanged(idx){
             this.$emit('selectedFrameChanged');
-        },
-        newSpriteSelection(){
-            this.sprite = this.$store.getters['AssetBrowser/getSelectedAsset'];
-            this.$refs.animPlayer.newSpriteSelection();
         },
         removeStroke
     }

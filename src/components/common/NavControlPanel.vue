@@ -89,8 +89,10 @@ export default {
 
             if (control.id == NAV_TOOL.CENTER){
                 this.centerView();
-                this.deselectTool();
             }
+        },
+        setHotkeyTool(newTool){
+            this.hotkeyTool = newTool;
         },
         mouseDown(event){
             switch(event.which){
@@ -114,7 +116,7 @@ export default {
             this.keyMap['mmb'] = false;
 
             if (this.hotkeyTool == NAV_TOOL.PAN){
-                this.hotkeyTool = null;
+                this.setHotkeyTool(null);
             }
 
             this.$store.dispatch(
@@ -167,7 +169,7 @@ export default {
             let keyDown = false;
 
             if (this.keyMap[' '] && this.mouse.down){
-                this.hotkeyTool = NAV_TOOL.PAN;
+                this.setHotkeyTool(NAV_TOOL.PAN);
             }
             
             if (this.keyMap['Control'] && this.keyMap['f']){
@@ -175,11 +177,11 @@ export default {
                 this.centerView();
             }
             else if (this.keyMap['Control'] && this.mouse.down){
-                this.hotkeyTool = NAV_TOOL.ZOOM;
+                this.setHotkeyTool(NAV_TOOL.ZOOM);
             }
 
             if (this.keyMap['mmb']){
-                this.hotkeyTool = NAV_TOOL.PAN;
+                this.setHotkeyTool(NAV_TOOL.PAN);
             }
 
             for (let key in this.keyMap){
@@ -189,19 +191,11 @@ export default {
             }
 
             if (!keyDown){
-                this.hotkeyTool = null;
+                this.setHotkeyTool(null);
             }
         },
         getNavState(){
             return {rawOffset: this.rawOffset, zoomFac: this.zoomFac};
-        },
-        deselectTool(){
-            this.selectedTool = null;
-            this.$store.dispatch(
-                this.stateModule + '/setSelectedNavTool',
-                null
-            )
-            this.$emit('tool-deselected');
         },
         setViewBounds(newBounds){
             if (newBounds.length < 4){

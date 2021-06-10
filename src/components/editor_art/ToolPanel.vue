@@ -12,7 +12,7 @@
                         :icon="size.icon"
                         :tool="size.tool"
                         :name="size.name"
-                        :curSelection="selectedSize"
+                        :curSelection="toolSize"
                         @toolClicked="sizeChanged"/>
                 </div>
                 <div class="toolType">
@@ -22,7 +22,7 @@
                         :icon="brush.icon"
                         :tool="brush.tool"
                         :name="brush.name"
-                        :curSelection="selectedTool"
+                        :curSelection="toolId"
                         @toolClicked="toolChanged"/>
                 </div>
             </div>
@@ -37,7 +37,6 @@
 </template>
 
 <script>
-import {mapActions} from 'vuex';
 import iro from '@jaames/iro';
 import {ART_TOOL_SIZE, ART_TOOL_TYPE} from '@/common/Enums';
 import Tool from '@/components/common/Tool';
@@ -49,7 +48,7 @@ export default {
     },
     data() {
         return {
-            isOpen: true,
+            isOpen: this.$store.getters['ArtEditor/isToolPanelOpen'],
             colorPicker: null,
             brushSizes: [
                 {
@@ -114,11 +113,13 @@ export default {
                     name: this.$t('art_editor.eye_dropper_tool'),
                     icon: 'assets/eye_dropper'
                 }
-            ]
+            ],
+            toolColor: this.$store.getters['ArtEditor/getSelectedColor'],
+            toolSize: this.$store.getters['ArtEditor/getSelectedSize'],
+            toolId: this.$store.getters['ArtEditor/getSelectedTool'],
         }
     },
     mounted(){
-        this.isOpen = this.$store.getters['ArtEditor/isToolPanelOpen'];
         this.colorPicker = new iro.ColorPicker('#picker', {
             color: this.selectedColor,
             width: 200
@@ -128,44 +129,38 @@ export default {
     },
     beforeDestroy(){
         this.$store.dispatch('ArtEditor/setToolPanelState', this.isOpen);
+        this.$store.dispatch('ArtEditor/selectColor', this.toolColor.hexString);
+        this.$store.dispatch('ArtEditor/selectSize', this.toolSize);
+        this.$store.dispatch('ArtEditor/selectTool', this.toolId);
     },
     computed: {
-        selectedSize(){
-            return this.$store.getters['ArtEditor/getSelectedSize'];
-        },
-        selectedTool(){
-            return this.$store.getters['ArtEditor/getSelectedTool'];
-        },
-        selectedColor(){
+        storedColor(){
             return this.$store.getters['ArtEditor/getSelectedColor'];
         }
     },
     watch: {
-        selectedColor(newCol){
+        storedColor(newCol){
             this.colorPicker.color.hexString = newCol;
         }
     },
     methods:{
-        ...mapActions({
-            selectColor: 'ArtEditor/selectColor',
-            selectSize: 'ArtEditor/selectSize',
-            selectTool: 'ArtEditor/selectTool'
-        }),
         toggleOpen(){
             this.isOpen = !this.isOpen;
             this.$nextTick(()=>{
                 this.$emit('resized');
             });
         },
-        colorChanged(color){
-            this.selectColor(color.hexString);
+        colorChanged(newColor){
+            this.toolColor = newColor;
+            this.$emit('color-selected', newColor.hexString);
         },
         sizeChanged(newSize){
-            this.selectSize(newSize);
+            this.toolSize = newSize;
+            this.$emit('size-selected', newSize);
         },
         toolChanged(newTool){
-            this.selectTool(newTool);
-            this.$emit('tool-selected');
+            this.toolId = newTool
+            this.$emit('tool-selected', newTool);
         }
     }
 }

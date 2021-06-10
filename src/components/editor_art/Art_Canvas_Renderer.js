@@ -1,14 +1,5 @@
 import Victor from 'victor';
-import Util_2D from '@/common/Util_2D';
 import Draw_2D from '@/common/Draw_2D';
-import {ART_TOOL_TYPE} from '@/common/Enums';
-import Brush from './tools/Brush';
-import Bucket from './tools/Bucket';
-import Line_Brush from './tools/Line_Brush';
-import Box_Brush from './tools/Box_Brush';
-import Ellipse_Brush from './tools/Ellipse_Brush';
-import Eraser from './tools/Eraser';
-import Eye_Dropper from './tools/Eye_Dropper';
 
 const GRID_DIV = 16;
 const CANVAS_WIDTH = GRID_DIV * 20;
@@ -25,14 +16,7 @@ class Art_Canvas_Renderer{
         this.previewData = new Array(this.spriteData.length).fill('');
         this.offset = new Victor(0, 0);
         this.zoomFac = 1;
-        this.mouse = {
-            down: false,
-            cell: new Victor(0, 0)
-        }
-        this.toolColor = null;
-        this.toolSize = null;
-        this.tool = null;
-        this.commitCallback;
+        this.mouseCell = new Victor(0, 0);
 
         this.pixelBuff.width = GRID_DIV;
         this.pixelBuff.height = GRID_DIV;
@@ -95,7 +79,7 @@ class Art_Canvas_Renderer{
         this.fullRedraw();
     }
 
-    updateMouse(event){
+    updateMouseCell(event){
         const CELL_SIZE = (CANVAS_WIDTH / GRID_DIV) * this.zoomFac;
         let mouseCell = new Victor(event.offsetX, event.offsetY);
         let windowHalfWidth = new Victor(this.canvas.width / 2, this.canvas.height / 2);
@@ -112,7 +96,7 @@ class Art_Canvas_Renderer{
         mouseCell.x = Math.floor(mouseCell.x);
         mouseCell.y = Math.floor(mouseCell.y);
 
-        this.mouse.cell.copy(mouseCell);
+        this.mouseCell.copy(mouseCell);
     }
 
     navChanged({rawOffset, zoomFac}){
@@ -127,158 +111,40 @@ class Art_Canvas_Renderer{
         this.composite();
     }
 
-    disableDrawing(){
-        if (this.tool == null){
-            return;
-        }
-
-        this.tool.canDraw = false;
-    }
-
-    enableDrawing(){
-        if (this.tool == null){
-            return;
-        }
-
-        this.tool.canDraw = true;
-    }
-
-    setToolColor(newColor){
-        this.toolColor = newColor;
-
-        if (this.tool){
-            this.tool.setToolColor(this.toolColor);
-        }
-    }
-
-    setToolSize(newSize){
-        this.toolSize = newSize;
-
-        if (this.tool != null){
-            this.tool.setToolSize(this.toolSize);
-        }
-    }
-
-    setTool(newTool){
-        if (this.tool != null){
-            this.tool.beforeDestroy();
-        }
-
-        if (newTool == null){
-            let ctx = this.previewBuff.getContext('2d');
-            
-            this.tool = null;
-            ctx.clearRect(0, 0, this.previewBuff.width, this.previewBuff.height);
-            this.composite();
-        }
-        else{
-            switch(newTool){
-                case ART_TOOL_TYPE.BRUSH:
-                    this.tool = new Brush();
-                    break;
-                case ART_TOOL_TYPE.BUCKET:
-                    this.tool = new Bucket();
-                    break;
-                case ART_TOOL_TYPE.LINE:
-                    this.tool = new Line_Brush();
-                    break;
-                case ART_TOOL_TYPE.BOX:
-                    this.tool = new Box_Brush();
-                    break;
-                case ART_TOOL_TYPE.BOX_FILL:
-                    this.tool = new Box_Brush(true);
-                    break;
-                case ART_TOOL_TYPE.ELLIPSE:
-                    this.tool = new Ellipse_Brush();
-                    break;
-                case ART_TOOL_TYPE.ELLIPSE_FILL:
-                    this.tool = new Ellipse_Brush(true);
-                    break;
-                case ART_TOOL_TYPE.ERASER:
-                    this.tool = new Eraser();
-                    break;
-                case ART_TOOL_TYPE.EYE_DROPPER:
-                    this.tool = new Eye_Dropper();
-                    break;
-                default:
-                    this.tool = new Brush();
-                    console.warn("Warning: Unkown brush: \"" + newTool + ".\" Defaulting to standard brush");
-                    break;
-            }
-
-            this.tool.setPreviewBuff(this.previewData);
-            this.tool.setPixelBuff(this.spriteData);
-            this.tool.setMouseCell(this.mouse.cell);
-            this.tool.setToolColor(this.toolColor);
-            this.tool.setToolSize(this.toolSize);
-            this.tool.setCommitCallback(this.commitStroke.bind(this));
-            this.drawPreviewBuffer();
-        }
+    unsetTool(){
+        let ctx = this.previewBuff.getContext('2d');
+        
+        this.tool = null;
+        ctx.clearRect(0, 0, this.previewBuff.width, this.previewBuff.height);
+        this.composite();
     }
 
     setSprite(newSprite){
         this.spriteData = newSprite;
         this.previewData.fill('');
 
-        if (this.tool != null){
-            this.tool.beforeDestroy();
-            this.tool.setPixelBuff(newSprite);
-        }
-
         this.drawSpriteData();
         this.drawPreviewBuffer();
         this.composite();
     }
 
-    setCommitCallback(callback){
-        this.commitCallback = callback;
-    }
-
-    mouseDown(event){
-        if (this.tool == null){
-            return;
-        }
-
-        this.tool.mouseDown(event);
+    mouseDown(){
         this.drawSpriteData();
         this.drawPreviewBuffer();
         this.composite();
     }
 
-    mouseUp(event){
-        if (this.tool == null){
-            return;
-        }
-
-        this.tool.mouseUp(event);
+    mouseUp(){
         this.drawSpriteData();
         this.drawPreviewBuffer();
         this.composite();
     }
 
     mouseMove(event){
-        this.updateMouse(event);
-
-        if (this.tool == null){
-            return;
-        }
-
-        this.tool.mouseMove(event);
+        this.updateMouseCell(event);
         this.drawSpriteData();
         this.drawPreviewBuffer();
         this.composite();
-    }
-
-    commitStroke(){
-        if (this.commitCallback != null){
-            this.commitCallback();
-        }
-    }
-
-    beforeDestroy(){
-        if (this.tool){
-            this.tool.beforeDestroy();
-        }
     }
 
     drawCheckerBG(canvas = this.checkerBGBuff){
@@ -353,9 +219,7 @@ class Art_Canvas_Renderer{
     }
 
     drawPreviewBuffer(canvas = this.previewBuff){
-        if (this.tool){
-            this.drawPixelData(canvas, this.previewData);
-        }
+        this.drawPixelData(canvas, this.previewData);
     }
 
     getSpriteDimensions(){

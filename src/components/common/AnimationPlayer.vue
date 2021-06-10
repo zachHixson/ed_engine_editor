@@ -41,6 +41,9 @@ export default {
         }
     },
     watch: {
+        sprite(){
+            this.newSpriteSelection();
+        },
         startFrame: function(val) {
             this.curFrameIdx = val;
             this.drawFrame();
