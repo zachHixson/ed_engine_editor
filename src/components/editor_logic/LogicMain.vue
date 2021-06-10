@@ -7,8 +7,9 @@
 <script>
 export default {
     name: 'LogicEditor',
-    methods: {
-        updateAssetSelection(){
+    props: ['selectedAsset'],
+    watch: {
+        selectedAsset(){
             //
         }
     }

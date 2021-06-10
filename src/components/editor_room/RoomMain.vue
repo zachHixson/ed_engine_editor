@@ -29,7 +29,7 @@
             @undo="applyChronoStep(undoStore.stepBack(), revertMap)"
             @redo="applyChronoStep(undoStore.stepForward(), actionMap)"/>
         <div v-else class="noRoomSelected">{{$t('room_editor.no_room_selected')}}</div>
-        <div v-if="selectedRoom" class="propertyPanel">
+        <div v-if="selectedRoom" class="propertyPanel" :class="{propertiesClosed : !propertiesOpen}">
             <div class="resizeBtnWrapper">
                 <button class="resizeBtn" @click="propertiesOpen = !propertiesOpen; resize()">
                     <img v-show="propertiesOpen" src="@/assets/arrow_01.svg" style="transform: rotate(90deg)"/>
@@ -68,6 +68,7 @@ import Tool from '@/components/common/Tool';
 
 export default {
     name: 'RoomEditor',
+    props: ['selectedAsset', 'selectedRoom'],
     components: {
         RoomEditWindow,
         Properties,
@@ -76,7 +77,6 @@ export default {
     data() {
         return {
             propertiesOpen: this.$store.getters['RoomEditor/getPropPanelState'],
-            selectedRoom: this.$store.getters['AssetBrowser/getSelectedRoom'],
             editorSelection: null,
             tools: [
                 {
@@ -135,6 +135,13 @@ export default {
             return this.selectedRoom != null;
         }
     },
+    watch: {
+        selectedRoom(newRoom){
+            if (newRoom && newRoom != this.selectedRoom){
+                this.editorSelection = null;
+            }
+        }
+    },
     mounted() {
         this.resize();
 
@@ -174,15 +181,6 @@ export default {
         this.$store.dispatch('RoomEditor/setPropPanelState', this.propertiesOpen);
     },
     methods: {
-        updateAssetSelection() {
-            let selectedRoom = this.$store.getters['AssetBrowser/getSelectedRoom'];
-            
-            if (selectedRoom && selectedRoom != this.selectedRoom){
-                this.editorSelection = null;
-            }
-
-            this.selectedRoom = selectedRoom;
-        },
         resize() {
             this.$nextTick(()=>{
                 if (this.$refs.editWindow){
@@ -285,8 +283,6 @@ export default {
             }
         },
         toolAddBrush(mEvent){
-            let selectedAsset = this.$store.getters['AssetBrowser/getSelectedAsset'];
-
             switch(mEvent.type){
                 case MOUSE_EVENT.MOVE:
                 case MOUSE_EVENT.DOWN:
@@ -298,8 +294,8 @@ export default {
                     }
 
                     if (!hasVisited && this.mouse.down){
-                        if (this.mouse.down && selectedAsset?.category_ID == CATEGORY_ID.OBJECT){
-                            this.actionAdd({objId: selectedAsset.id, pos: mEvent.worldCell});
+                        if (this.mouse.down && this.selectedAsset?.category_ID == CATEGORY_ID.OBJECT){
+                            this.actionAdd({objId: this.selectedAsset.id, pos: mEvent.worldCell});
                             this.squashCounter++;
                         }
                         
@@ -702,6 +698,10 @@ export default {
 
 .propertiesContents{
     width: 250px;
+}
+
+.propertiesClosed{
+    border: none;
 }
 
 .resizeBtnWrapper{

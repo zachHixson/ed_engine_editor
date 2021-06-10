@@ -30,6 +30,7 @@ export default {
     background: var(--tool-panel-bg);
     padding: 10px;
     margin-bottom: 10px;
+    border: 2px solid var(--border);
     border-radius: 10px;
 }
 

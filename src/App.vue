@@ -35,7 +35,6 @@ export default {
             this.$refs.assetBrowser.updateAsset(id);
         },
         updateEditorAsset(){
-            this.$refs.editorWindow.updateAssetSelection();
             this.$refs.TabPanel.updateEditorTabs();
         },
         updateAfterDeletion(){

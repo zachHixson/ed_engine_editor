@@ -1,6 +1,10 @@
 <template>
     <div class="editorWindow">
-        <component ref="editor" :is="currentEditor" @asset-changed="$emit('asset-changed', $event)" />
+        <component ref="editor"
+        :is="currentEditor"
+        :selectedAsset="selectedAsset"
+        :selectedRoom="selectedRoom"
+        @asset-changed="$emit('asset-changed', $event)" />
     </div>
 </template>
 
@@ -32,11 +36,12 @@ export default {
                 default:
                     return RoomEditor;
             }
-        }
-    },
-    methods: {
-        updateAssetSelection(){
-            this.$refs.editor.updateAssetSelection();
+        },
+        selectedAsset(){
+            return this.$store.getters['AssetBrowser/getSelectedAsset'];
+        },
+        selectedRoom(){
+            return this.$store.getters['AssetBrowser/getSelectedRoom'];
         }
     }
 }

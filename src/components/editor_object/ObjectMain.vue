@@ -13,30 +13,30 @@
                         </option>
                     </select>
                 </div>
-                <div v-if="object.sprite" class="control">
+                <div v-if="selectedAsset.sprite" class="control">
                     <label for="frameStart">{{$t('object_editor.start_frame')}}</label>
                     <input type="number" ref="frameStart" id="frameStart"  v-model="startFrame" :title="$t('object_editor.tt_start_frame')"/>
                 </div>
-                <div v-if="object.sprite" class="control">
+                <div v-if="selectedAsset.sprite" class="control">
                     <label for="fps">{{$t('object_editor.fps')}}</label>
-                    <input type="number" id="fps" value="6" v-model="object.fps" @change="validateFPS" :title="$t('object_editor.tt_fps')"/>
+                    <input type="number" id="fps" value="6" v-model="selectedAsset.fps" @change="validateFPS" :title="$t('object_editor.tt_fps')"/>
                 </div>
-                <div v-if="object.sprite" class="control">
+                <div v-if="selectedAsset.sprite" class="control">
                     <label for="loop">{{$t('object_editor.loop')}}</label>
-                    <input type="checkbox" id="loop" checked="true" v-model="object.animLoop" :title="$t('object_editor.tt_loop')"/>
+                    <input type="checkbox" id="loop" checked="true" v-model="selectedAsset.animLoop" :title="$t('object_editor.tt_loop')"/>
                 </div>
             </div>
-            <AnimationPlayer ref="animPlayer" :sprite="object.sprite" :fps="object.fps" :startFrame="startFrame"/>
+            <AnimationPlayer ref="animPlayer" :sprite="selectedAsset.sprite" :fps="selectedAsset.fps" :startFrame="startFrame"/>
         </CategoryWrapper>
         <CategoryWrapper :title="$t('object_editor.heading_physics')" iconPath="assets/physics">
             <div class="options">
                 <div class="control">
                     <label for="isSolid">{{$t('object_editor.is_solid')}}</label>
-                    <input type="checkbox" id="isSolid" checked="true" v-model="object.isSolid" :title="$t('object_editor.tt_solid')"/>
+                    <input type="checkbox" id="isSolid" checked="true" v-model="selectedAsset.isSolid" :title="$t('object_editor.tt_solid')"/>
                 </div>
                 <div class="control">
                     <label for="useGravity">{{$t('object_editor.apply_gravity')}}</label>
-                    <input type="checkbox" id="useGravity" checked="true" v-model="object.applyGravity" :title="$t('object_editor.tt_gravity')"/>
+                    <input type="checkbox" id="useGravity" checked="true" v-model="selectedAsset.applyGravity" :title="$t('object_editor.tt_gravity')"/>
                 </div>
             </div>
         </CategoryWrapper>
@@ -44,21 +44,21 @@
             <div class="options">
                 <div class="control">
                     <label for="trigger_exits">{{$t('object_editor.trigger_exits')}}:</label>
-                    <input type="checkbox" id="trigger_exits" checked="false" v-model="object.triggerExits" :title="$t('object_editor.tt_trigger_exits')" />
+                    <input type="checkbox" id="trigger_exits" checked="false" v-model="selectedAsset.triggerExits" :title="$t('object_editor.tt_trigger_exits')" />
                 </div>
                 <div class="control">
                     <label for="logic_type_select">{{$t('object_editor.logic_type')}}</label>
-                    <select id="logic_type_select" v-model="object.customLogic" :title="$t('object_editor.tt_logic_type')">
+                    <select id="logic_type_select" v-model="selectedAsset.customLogic" :title="$t('object_editor.tt_logic_type')">
                         <option :value="false">{{$t('object_editor.preset')}}</option>
                         <option :value="true">{{$t('object_editor.custom')}}</option>
                     </select>
                 </div>
-                <div v-if="!object.customLogic" class="control">
+                <div v-if="!selectedAsset.customLogic" class="control">
                     <label for="logic_preset_select">{{$t('object_editor.logic_preset')}}</label>
                     <select id="logic_preset_select" :title="$t('object_editor.tt_logic_preset')"></select>
                 </div>
                 <GroupList
-                    :editList="object.groups"
+                    :editList="selectedAsset.groups"
                     :tooltip_text="$t('object_editor.tt_groups')"
                     @group-changed="groupChanged"/>
             </div>
@@ -73,15 +73,11 @@ import CategoryWrapper from './CategoryWrapper';
 
 export default {
     name: 'ObjectEditor',
+    props: ['selectedAsset'],
     components: {
         AnimationPlayer,
         GroupList,
         CategoryWrapper
-    },
-    data() {
-        return {
-            object: this.getSelectedObject()
-        }
     },
     computed: {
         spriteChoices() {
@@ -99,69 +95,61 @@ export default {
         },
         startFrame: {
             get(){
-                return this.object.startFrame;
+                return this.selectedAsset.startFrame;
             },
             set(newFrame){
-                this.$refs.frameStart.value = this.object.startFrame;
-                this.object.startFrame = newFrame;
-                this.$emit('asset-changed', this.object.id);
+                this.$refs.frameStart.value = this.selectedAsset.startFrame;
+                this.selectedAsset.startFrame = newFrame;
+                this.$emit('asset-changed', this.selectedAsset.id);
             }
         }
     },
-    mounted() {
-        this.updateAssetSelection();
+    watch: {
+        selectedAsset(){
+            if (this.selectedAsset.sprite){
+                this.$refs.spriteSelector.value = this.selectedAsset.sprite.id;
+            }
+            else{
+                this.$refs.spriteSelector.value = -1;
+            }
+        }
     },
     methods: {
-        getSelectedObject() {
-            return this.$store.getters['AssetBrowser/getSelectedAsset'];
-        },
         setObjectSprite() {
             let selectedSpriteId = this.$refs.spriteSelector.value;
 
             if (selectedSpriteId >= 0){
                 let allSprites = this.$store.getters['GameData/getAllSprites'];
                 let selectedSprite = allSprites.find(s => s.id == selectedSpriteId);
-                this.object.sprite = selectedSprite;
+                this.selectedAsset.sprite = selectedSprite;
             }
             else{
-                this.object.sprite = null;
+                this.selectedAsset.sprite = null;
             }
 
             this.$nextTick(()=>{
                 this.$refs.animPlayer.newSpriteSelection();
             });
 
-            this.$emit('asset-changed', this.object.id);
+            this.$emit('asset-changed', this.selectedAsset.id);
         },
         validateFPS(){
-            this.object.fps = Math.floor(this.object.fps);
+            this.selectedAsset.fps = Math.floor(this.selectedAsset.fps);
             this.$refs.animPlayer.fpsChanged();
-        },
-        updateAssetSelection() {
-            this.object = this.getSelectedObject();
-            
-            if (this.object.sprite){
-                this.$refs.spriteSelector.value = this.object.sprite.id;
-            }
-            else{
-                this.$refs.spriteSelector.value = -1;
-            }
-
-            this.$refs.animPlayer.newSpriteSelection();
         },
         groupChanged({add, groupName, newName, remove}){
             if (add){
-                this.object.groups.push(groupName);
+                this.selectedAsset.groups.push(groupName);
             }
 
             if (newName){
-                let groupIdx = this.object.groups.indexOf(groupName);
-                this.object.groups[groupIdx] = newName;
+                let groupIdx = this.selectedAsset.groups.indexOf(groupName);
+                this.selectedAsset.groups[groupIdx] = newName;
             }
 
             if (remove){
-                let groupIdx = this.object.groups.indexOf(groupName);
-                this.object.groups.splice(groupIdx, 1);
+                let groupIdx = this.selectedAsset.groups.indexOf(groupName);
+                this.selectedAsset.groups.splice(groupIdx, 1);
             }
         }
     }

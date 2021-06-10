@@ -10,7 +10,7 @@
             class="artCanvas"
             ref="artCanvas"
             :tool="tool"
-            :spriteFrame="currentSprite.frames[selectedFrameIdx]"
+            :spriteFrame="selectedAsset.frames[selectedFrameIdx]"
             :undoLength="undoStore.undoLength"
             :redoLength="undoStore.redoLength"
             @nav-selected="navSelected()"
@@ -22,7 +22,7 @@
         <AnimationPanel
             class="animPanel"
             ref="animPanel"
-            :sprite="currentSprite"
+            :sprite="selectedAsset"
             :frameIDs="frameIDs"
             @resized="resize"
             @selectedFrameChanged="selectedFrameChanged()"
@@ -51,23 +51,38 @@ const MAX_UNDO_STEPS = 32;
 
 export default {
     name: 'ArtEditor',
+    props: ['selectedAsset'],
     components: {
         ToolPanel,
         ArtCanvas,
         AnimationPanel
     },
     data(){
-        return {
+        return{
             undoStore: new Undo_Store(MAX_UNDO_STEPS),
-            currentSprite: this.$store.getters['AssetBrowser/getSelectedAsset'],
-            frameIDs: this.$store.getters['AssetBrowser/getSelectedAsset'].frameIDs,
+            frameIDs: this.selectedAsset.frameIDs,
             toolMap: new Map(),
             tool: new Brush()
         }
     },
-    computed: {
+    computed:{
         selectedFrameIdx(){
             return this.$store.getters['ArtEditor/getSelectedFrame'];
+        }
+    },
+    watch:{
+        selectedAsset(){
+            this.undoStore.clear();
+
+            if (this.selectedAsset && this.selectedAsset.category_ID == CATEGORY_ID.SPRITE){
+                let selectedFrame = this.$store.getters['ArtEditor/getSelectedFrame'];
+
+                this.updateFrameIDs()
+
+                if (this.selectedAsset.frames.length < selectedFrame + 1){
+                    this.$store.dispatch('ArtEditor/selectFrame', 0);
+                }
+            }
         }
     },
     mounted(){
@@ -96,9 +111,9 @@ export default {
         spriteDataChanged(){
             this.$refs.animPanel.updateFramePreviews();
             this.commitFullState();
-            this.currentSprite.updateFrame(this.selectedFrameIdx);
+            this.selectedAsset.updateFrame(this.selectedFrameIdx);
             this.updateFrameIDs();
-            this.$emit('asset-changed', this.currentSprite.id);
+            this.$emit('asset-changed', this.selectedAsset.id);
         },
         selectedFrameChanged(){
             this.updateFrameIDs();
@@ -141,10 +156,10 @@ export default {
             let prevStep = this.undoStore.stepBack();
 
             if (prevStep && prevStep.spriteData){
-                this.currentSprite.setFramesFromArray(prevStep.spriteData);
+                this.selectedAsset.setFramesFromArray(prevStep.spriteData);
             }
             else{
-                this.currentSprite.setFramesFromArray(this.undoStore.initialState.spriteData);
+                this.selectedAsset.setFramesFromArray(this.undoStore.initialState.spriteData);
             }
 
             this.updateFrameIDs();
@@ -157,7 +172,7 @@ export default {
             let nextStep = this.undoStore.stepForward();
 
             if (nextStep && nextStep.spriteData){
-                this.currentSprite.setFramesFromArray(nextStep.spriteData);
+                this.selectedAsset.setFramesFromArray(nextStep.spriteData);
             }
 
             this.updateFrameIDs();
@@ -168,26 +183,11 @@ export default {
         },
         packageUndoData(){
             return {
-                spriteData: [...this.currentSprite.getFramesCopy()]
-            }
-        },
-        updateAssetSelection(){
-            let newAsset = this.$store.getters['AssetBrowser/getSelectedAsset'];
-            this.undoStore.clear();
-
-            if (newAsset && newAsset.category_ID == CATEGORY_ID.SPRITE){
-                let selectedFrame = this.$store.getters['ArtEditor/getSelectedFrame'];
-
-                this.currentSprite = newAsset;
-                this.updateFrameIDs()
-
-                if (this.currentSprite.frames.length < selectedFrame + 1){
-                    this.$store.dispatch('ArtEditor/selectFrame', 0);
-                }
+                spriteData: [...this.selectedAsset.getFramesCopy()]
             }
         },
         updateFrameIDs(){
-            this.frameIDs = this.currentSprite.frameIDs;
+            this.frameIDs = this.selectedAsset.frameIDs;
         }
     }
 }
