@@ -1,5 +1,5 @@
 import Victor from 'victor';
-import Draw_2D from '@/common/Draw_2D';
+import {drawCheckerBG, drawPixelData} from '@/common/Draw_2D';
 
 const GRID_DIV = 16;
 const CANVAS_WIDTH = GRID_DIV * 20;
@@ -148,7 +148,7 @@ class Art_Canvas_Renderer{
     }
 
     drawCheckerBG(canvas = this.checkerBGBuff){
-        Draw_2D.drawCheckerBG(canvas, 10, "#AAA", "#CCC");
+        drawCheckerBG(canvas, 10, "#AAA", "#CCC");
     }
 
     drawBGStencil(ctx = this.checkerStencilBuff.getContext('2d')){
@@ -174,11 +174,11 @@ class Art_Canvas_Renderer{
     }
 
     drawPixelData(canvas, pixelData){
-        if (pixelData != null){
+        if (pixelData){
             let ctx = canvas.getContext('2d');
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            Draw_2D.drawPixelData(canvas, pixelData);
+            drawPixelData(canvas, pixelData);
         }
     }
 

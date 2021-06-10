@@ -1,7 +1,6 @@
 <template>
     <div class="tool" :class="{toolSelected : isSelected}" @click="click" :title="name">
-        <inline-svg v-show="iconLoaded" class="icon" ref="iconImg" :src="require(`@/${icon}.svg`)" @error="iconLoaded = false"
-            :transformSource="removeStroke"/>
+        <img v-show="iconLoaded" class="icon" ref="iconImg" :src="require(`@/${icon}.svg`)" @error="iconLoaded = false"/>
         <div v-show="!iconLoaded" class="altText" ref="altText">
             {{name}}
         </div>
@@ -9,8 +8,6 @@
 </template>
 
 <script>
-import {removeStroke} from '@/common/Util.js';
-
 export default {
     name: 'Tool',
     props: ['icon', 'tool', 'name', 'curSelection', 'toggled'],
@@ -27,8 +24,7 @@ export default {
     methods: {
         click(event){
             this.$emit('toolClicked', this.tool);
-        },
-        removeStroke
+        }
     }
 }
 </script>

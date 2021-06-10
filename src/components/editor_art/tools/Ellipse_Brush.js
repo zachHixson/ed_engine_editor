@@ -1,7 +1,7 @@
 import Tool from './Tool';
 import {ART_TOOL_SIZE} from '@/common/Enums';
 import Victor from 'victor';
-import Util_2D from '@/common/Util_2D';
+import {isInBounds, get2DIdx} from '@/common/Util_2D';
 
 class Ellipse_Brush extends Tool{
     constructor(isFilled = false){
@@ -25,16 +25,16 @@ class Ellipse_Brush extends Tool{
 
         if (
             this.isMouseDown &&
-            Util_2D.isInBounds(this.startPos.x, this.startPos.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
+            isInBounds(this.startPos.x, this.startPos.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
         ){
             this.drawEllipse(this.startPos, this.mouseCell, this.brushPxSize);
         }
 
         if (
             !this.isMouseDown &&
-            Util_2D.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
+            isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
         ){
-            this.previewBuff[Util_2D.get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = this.color;
+            this.previewBuff[get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = this.color;
         }
     }
 
@@ -51,8 +51,8 @@ class Ellipse_Brush extends Tool{
 
         for (let x = x1; x <= x2; x++){
             for (let y = y1; y <= y2; y++){
-                if (Util_2D.isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
-                    let xyIdx = Util_2D.get2DIdx(x, y, this.cellWidth);
+                if (isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
+                    let xyIdx = get2DIdx(x, y, this.cellWidth);
                     let curPoint = this.isPointInEllipse(new Victor(x, y), midPoint, a, b);
                     let innerA = a - thickness;
                     let innerB = b - thickness;

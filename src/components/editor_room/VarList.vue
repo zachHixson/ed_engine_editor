@@ -23,14 +23,12 @@
                         })"/>
                 </div>
                 <button class="deleteBtn" @click="$emit('var-changed', {varName: item.name, newVal: item.val, remove: true, oldIdx: idx})">
-                    <inline-svg :src="require('@/assets/plus.svg')" style="transform: rotate(45deg)"
-                        :transformSource="removeStroke"/>
+                    <img src="@/assets/plus.svg" style="transform: rotate(45deg)"/>
                 </button>
             </div>
         </div>
         <button class="addBtn" :title="tooltip_text" @click="addVar">
-            <inline-svg :src="require('@/assets/plus.svg')"
-                :transformSource="removeStroke"/>
+            <img src="@/assets/plus.svg"/>
         </button>
     </div>
 </template>

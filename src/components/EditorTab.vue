@@ -1,7 +1,7 @@
 <template>
     <div class="editorTab" @click="tabClick" :class="{tabSelected : isSelected}">
         <div class="tabEl logoBox">
-            <inline-svg class="tabImg" :src="require(`@/${logoPath}.svg`)" :transformSource="removeStroke"/>
+            <img class="tabImg" :src="require(`@/${logoPath}.svg`)"/>
         </div>
         <div class="tabEl name">
             {{tabText}}
@@ -11,7 +11,6 @@
 
 <script>
 import {mapActions, mapGetters} from 'vuex';
-import {removeStroke} from '@/common/Util';
 
 export default {
     name: 'EditorTab',
@@ -20,8 +19,7 @@ export default {
         ...mapActions(['switchTab']),
         tabClick(e) {
             this.switchTab(this.editorID);
-        },
-        removeStroke
+        }
     },
     computed: {
         ...mapGetters(['selectedTab']),

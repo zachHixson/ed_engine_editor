@@ -20,18 +20,14 @@
             </div>
         </div>
         <div class="controls">
-            <button class="iconBtn"><inline-svg class="icon" :src="require('@/assets/debug.svg')"
-                :transformSource="removeStroke"/></button>
-            <button class="iconBtn"><inline-svg class="icon" :src="require('@/assets/play.svg')"
-                :transformSource="removeStroke"/></button>
+            <button class="iconBtn"><img class="icon" src="@/assets/debug.svg"/></button>
+            <button class="iconBtn"><img class="icon" src="@/assets/play.svg"/></button>
         </div>
         <input type="file" ref="fileOpen" style="display: none" @change="loadProjectFile"/>
     </div>
 </template>
 
 <script>
-import {removeStroke} from '@/common/Util.js';
-
 let enumID = 0;
 
 export default {
@@ -124,8 +120,7 @@ export default {
                 }
                 reader.readAsText(input.files[0]);
             }
-        },
-        removeStroke
+        }
     }
 }
 </script>

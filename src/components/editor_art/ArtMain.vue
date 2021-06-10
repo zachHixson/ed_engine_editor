@@ -132,10 +132,13 @@ export default {
             this.tool.setToolSize(newSize);
         },
         toolSelected(newTool){
+            let prevSize = this.tool.brushSize;
+            let prevColor = this.tool.color;
+
             this.$store.dispatch('ArtEditor/setSelectedNavTool', null);
             this.tool = this.getTool(newTool);
-            this.tool.brushSize = this.$store.getters['ArtEditor/getSelectedSize'];
-            this.tool.color = this.$store.getters['ArtEditor/getSelectedColor'];
+            this.tool.setToolSize(prevSize);
+            this.tool.setToolColor(prevColor);
             this.tool.setCommitCallback(this.spriteDataChanged.bind(this));
         },
         getTool(newTool){

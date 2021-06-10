@@ -1,25 +1,19 @@
 <template>
     <div class="category">
         <div class="iconTitle">
-            <inline-svg class="icon" :src="require(`@/${icon}.svg`)" :transformSource="removeStroke"></inline-svg>
+            <img class="icon" :src="require(`@/${icon}.svg`)"/>
             {{text}}
         </div>
         <button class="arrow" @click="$emit('category-clicked', {cat_ID, text, icon})">
-            <inline-svg class="arrow_icon" :src="require('@/assets/arrow_01.svg')" style="transform: rotate(90deg);"
-                :transformSource="removeStroke"></inline-svg>
+            <img class="arrow_icon" src="@/assets/arrow_01.svg" style="transform: rotate(90deg);"/>
         </button>
     </div>
 </template>
 
 <script>
-import {removeStroke} from '@/common/Util.js'
-
 export default {
     type: 'Category',
-    props: ['cat_ID', 'text', 'icon'],
-    methods: {
-        removeStroke
-    }
+    props: ['cat_ID', 'text', 'icon']
 }
 </script>
 

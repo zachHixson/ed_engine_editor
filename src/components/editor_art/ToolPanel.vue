@@ -121,7 +121,7 @@ export default {
     },
     mounted(){
         this.colorPicker = new iro.ColorPicker('#picker', {
-            color: this.selectedColor,
+            color: this.toolColor,
             width: 200
         });
         this.colorPicker.on("color:change", this.colorChanged);
@@ -129,7 +129,7 @@ export default {
     },
     beforeDestroy(){
         this.$store.dispatch('ArtEditor/setToolPanelState', this.isOpen);
-        this.$store.dispatch('ArtEditor/selectColor', this.toolColor.hexString);
+        this.$store.dispatch('ArtEditor/selectColor', this.toolColor);
         this.$store.dispatch('ArtEditor/selectSize', this.toolSize);
         this.$store.dispatch('ArtEditor/selectTool', this.toolId);
     },
@@ -151,8 +151,8 @@ export default {
             });
         },
         colorChanged(newColor){
-            this.toolColor = newColor;
-            this.$emit('color-selected', newColor.hexString);
+            this.toolColor = newColor.hexString;
+            this.$emit('color-selected', this.toolColor);
         },
         sizeChanged(newSize){
             this.toolSize = newSize;

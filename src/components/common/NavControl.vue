@@ -5,8 +5,7 @@
         :title="control.altText"
         @click="onClick"
         :class="{controlSelected : isSelected}">
-        <inline-svg v-show="iconLoaded" class="icon" ref="iconImg" :src="require(`@/${this.control.icon}.svg`)" @error="iconLoaded = false"
-            :transformSource="removeStroke"/>
+        <img v-show="iconLoaded" class="icon" ref="iconImg" :src="require(`@/${this.control.icon}.svg`)" @error="iconLoaded = false"/>
         <div v-show="!iconLoaded" class="altText" ref="altText">
             {{control.altText}}
         </div>
@@ -14,8 +13,6 @@
 </template>
 
 <script>
-import {removeStroke} from '@/common/Util';
-
 export default {
     name: 'NavControl',
     props: ['stateModule', 'control'],
@@ -41,8 +38,7 @@ export default {
                     this.control.id
                 );
             }
-        },
-        removeStroke
+        }
     }
 }
 </script>

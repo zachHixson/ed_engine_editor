@@ -1,5 +1,5 @@
 import {ART_TOOL_SIZE} from '@/common/Enums';
-import Util_2D from '@/common/Util_2D';
+import {get2DIdx, clamp} from '@/common/Util_2D';
 
 class Tool{
     constructor(){
@@ -10,7 +10,7 @@ class Tool{
         this.color = "#FFFFFF";
         this.size = null;
         this.isMouseDown = false;
-        this.brushSize = 0;
+        this.brushSize = ART_TOOL_SIZE.SMALL;
         this.canDraw = true;
         this.commitCallback;
     }
@@ -106,14 +106,14 @@ class Tool{
     }
 
     fillRect(x1, y1, x2, y2, color = this.color){
-        let startX = Util_2D.clamp(x1, 0, this.cellWidth - 1);
-        let startY = Util_2D.clamp(y1, 0, this.cellWidth - 1);
-        let endX = Util_2D.clamp(x2, 0, this.cellWidth - 1);
-        let endY = Util_2D.clamp(y2, 0, this.cellWidth - 1);
+        let startX = clamp(x1, 0, this.cellWidth - 1);
+        let startY = clamp(y1, 0, this.cellWidth - 1);
+        let endX = clamp(x2, 0, this.cellWidth - 1);
+        let endY = clamp(y2, 0, this.cellWidth - 1);
 
         for (let x = startX; x <= endX; x++){
             for (let y = startY; y <= endY; y++){
-                this.previewBuff[Util_2D.get2DIdx(x, y, this.cellWidth)] = color;
+                this.previewBuff[get2DIdx(x, y, this.cellWidth)] = color;
             }
         }
     }

@@ -99,6 +99,7 @@ export default {
             }
         },
         mouseLeave(event){
+            this.mouseMove(event);
             this.navControl.mouseLeave(event);
             this.mouseUp(event);
         },

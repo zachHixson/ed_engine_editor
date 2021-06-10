@@ -1,7 +1,7 @@
 import Tool from './Tool';
 import {ART_TOOL_SIZE} from '@/common/Enums';
 import Victor from 'victor';
-import Util_2D from '@/common/Util_2D';
+import {isInBounds, get2DIdx} from '@/common/Util_2D';
 
 class Box_Brush extends Tool{
     constructor(isFilled = false){
@@ -25,18 +25,18 @@ class Box_Brush extends Tool{
 
         if (
             this.isMouseDown &&
-            Util_2D.isInBounds(this.startPos.x, this.startPos.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
+            isInBounds(this.startPos.x, this.startPos.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
         ){
             this.drawBox(this.startPos, this.mouseCell, this.brushPxSize);
         }
 
         if (
             !this.isMouseDown &&
-            Util_2D.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
+            isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
         ){
             switch(this.brushSize){
                 case ART_TOOL_SIZE.SMALL:
-                    this.previewBuff[Util_2D.get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = this.color;
+                    this.previewBuff[get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = this.color;
                     break;
                 case ART_TOOL_SIZE.MEDIUM:
                     this.fillRect(this.mouseCell.x, this.mouseCell.y, this.mouseCell.x + 1, this.mouseCell.y + 1);
@@ -56,9 +56,9 @@ class Box_Brush extends Tool{
 
         for (let x = x1; x <= x2; x++){
             for (let y = y1; y <= y2; y++){
-                let xyIdx = Util_2D.get2DIdx(x, y, this.cellWidth);
+                let xyIdx = get2DIdx(x, y, this.cellWidth);
                 
-                if (Util_2D.isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
+                if (isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
                     if (this.isFilled){
                         this.previewBuff[xyIdx] = this.color;
                     }

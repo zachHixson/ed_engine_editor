@@ -61,7 +61,7 @@ import Vue from 'vue';
 import Victor from 'victor';
 import {ROOM_TOOL_TYPE, ROOM_ACTION, MOUSE_EVENT, CATEGORY_ID} from '@/common/Enums';
 import Undo_Store from '@/common/Undo_Store';
-import Util_2D from '@/common/Util_2D';
+import {compareVector} from '@/common/Util_2D';
 import RoomEditWindow from './RoomEditWindow';
 import Properties from './Properties';
 import Tool from '@/components/common/Tool';
@@ -205,7 +205,7 @@ export default {
 
                 //get instances in same sell
                 for (let i = 0; i < nearbyInst.length; i++){
-                    if (Util_2D.compareVector(pos, nearbyInst[i].pos)){
+                    if (compareVector(pos, nearbyInst[i].pos)){
                         instInCell.push(nearbyInst[i]);
                     }
                 }
@@ -251,7 +251,7 @@ export default {
                         this.selectInstanceByPos(mEvent.worldCell);
                         this.mouse.newSelection = true;
                     }
-                    else if (Util_2D.compareVector(this.editorSelection.pos, mEvent.worldCell)){
+                    else if (compareVector(this.editorSelection.pos, mEvent.worldCell)){
                         this.mouse.downOnSelection = true;
                         this.mouse.cellCache.push(mEvent.worldCell.clone());
                     }
@@ -260,7 +260,7 @@ export default {
                     if (
                         this.mouse.down &&
                         this.mouse.downOnSelection &&
-                        !Util_2D.compareVector(this.mouse.cellCache[0], mEvent.worldCell)
+                        !compareVector(this.mouse.cellCache[0], mEvent.worldCell)
                     ){
                         this.actionMove({instRef: this.editorSelection, newPos: mEvent.worldCell});
                         this.squashCounter++;
@@ -268,7 +268,7 @@ export default {
                     }
                     break;
                 case MOUSE_EVENT.UP:
-                    if (Util_2D.compareVector(mEvent.worldPos, this.mouse.wpLastDown) && !this.mouse.newSelection){
+                    if (compareVector(mEvent.worldPos, this.mouse.wpLastDown) && !this.mouse.newSelection){
                         this.selectInstanceByPos(mEvent.worldCell);
                     }
 
@@ -290,7 +290,7 @@ export default {
 
                     //check if cell has already been visited
                     for (let i = 0; i < this.mouse.cellCache.length; i++){
-                        hasVisited |= Util_2D.compareVector(this.mouse.cellCache[i], mEvent.worldCell);
+                        hasVisited |= compareVector(this.mouse.cellCache[i], mEvent.worldCell);
                     }
 
                     if (!hasVisited && this.mouse.down){
@@ -316,12 +316,12 @@ export default {
                     let removedFromCell = false;
 
                     if (this.mouse.cellCache.length > 0){
-                        removedFromCell |= Util_2D.compareVector(this.mouse.cellCache[0], mEvent.worldCell);
+                        removedFromCell |= compareVector(this.mouse.cellCache[0], mEvent.worldCell);
                     }
 
                     if (!removedFromCell && this.mouse.down){
                         let instances = this.selectedRoom.getInstancesInRadius(mEvent.worldCell, 0);
-                        instances = instances.filter((i) => Util_2D.compareVector(i.pos, mEvent.worldCell));
+                        instances = instances.filter((i) => compareVector(i.pos, mEvent.worldCell));
                         instances.sort((a, b) => a.zDepth > b.zDepth);
 
                         if (instances.length > 0){
@@ -349,7 +349,7 @@ export default {
         toolExit(mEvent){
             if (mEvent.type == MOUSE_EVENT.DOWN){
                 let exitAtCursor = this.selectedRoom.getExitsAtPosition(mEvent.worldCell)
-                    .find(e => Util_2D.compareVector(e.pos, mEvent.worldCell));
+                    .find(e => compareVector(e.pos, mEvent.worldCell));
 
                 if (exitAtCursor){
                     this.editorSelection = exitAtCursor;

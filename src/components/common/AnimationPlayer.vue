@@ -5,23 +5,19 @@
         </canvas>
         <div class="buttons">
             <button @click="playAnimation()">
-                <inline-svg class="btnImg" :src="require('@/assets/play.svg')" v-show="!isPlaying"
-                    :transformSource="removeStroke"/>
-                <inline-svg class="btnImg" :src="require('@/assets/pause.svg')" v-show="isPlaying"
-                    :transformSource="removeStroke"/>
+                <img class="btnImg" src="@/assets/play.svg" v-show="!isPlaying"/>
+                <img class="btnImg" src="@/assets/pause.svg" v-show="isPlaying"/>
             </button>
             <button @click="stopAnimation()">
-                <inline-svg class="btnImg" :src="require('@/assets/box_filled.svg')"
-                    :transformSource="removeStroke"/>
+                <img class="btnImg" src="@/assets/box_filled.svg"/>
             </button>
         </div>
     </div>
 </template>
 
 <script>
-import Util_2D from '@/common/Util_2D';
-import Draw_2D from '@/common/Draw_2D';
-import {removeStroke} from '@/common/Util';
+import {getSpriteDimensions} from '@/common/Util_2D';
+import {drawCheckerBG, drawPixelData} from '@/common/Draw_2D';
 
 export default {
     name: 'AnimationPlayer',
@@ -54,7 +50,7 @@ export default {
         this.checkerBGBuff.width = this.canvas.width;
         this.checkerBGBuff.height = this.canvas.height;
 
-        Draw_2D.drawCheckerBG(this.checkerBGBuff, 4, '#AAA', '#CCC');
+        drawCheckerBG(this.checkerBGBuff, 4, '#AAA', '#CCC');
         if (this.sprite){
             this.pixelBuff.width = this.sprite.dimensions;
             this.pixelBuff.height = this.sprite.dimensions;
@@ -70,9 +66,9 @@ export default {
 
             if (this.sprite && this.sprite.frames[this.curFrameIdx] != null){
                 let frame = this.sprite.frames[this.curFrameIdx];
-                let scaleFac = this.canvas.width / Util_2D.getSpriteDimensions(frame);
+                let scaleFac = this.canvas.width / getSpriteDimensions(frame);
 
-                Draw_2D.drawPixelData(this.pixelBuff, frame);
+                drawPixelData(this.pixelBuff, frame);
 
                 ctx.imageSmoothingEnabled = false;
                 ctx.webkitImageSmoothingEnabled = false;
@@ -125,8 +121,7 @@ export default {
             this.$nextTick(()=>{
                 this.drawFrame();
             });
-        },
-        removeStroke
+        }
     }
 }
 </script>

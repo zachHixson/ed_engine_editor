@@ -2,8 +2,7 @@
     <div ref="asset" class="asset" :class="{selected : isSelected}" @click="selectAsset">
         <div class="leftFloat" v-click-outside="stopRenaming">
             <canvas v-show="hasThumb" class="thumbnail" ref="thumbNail" width="20" height="20">Test</canvas>
-            <inline-svg v-if="!hasThumb" class="thumbnail assetIcon" :src="require(`@/${defaultIcon}.svg`)"
-                :transformSource="removeStroke"/>
+            <img v-if="!hasThumb" class="thumbnail assetIcon" :src="require(`@/${defaultIcon}.svg`)"/>
             <div v-show="isRenaming">
                 <input class="nameBox" ref="renameText" v-model="asset.name" type="text" />
             </div>
@@ -11,20 +10,18 @@
         </div>
         <div class="rightFloat">
             <button class="rightButton" @click="(event)=>{event.stopPropagation(); this.isRenaming ? this.stopRenaming() : this.rename();}">
-                <inline-svg class="rightIcon" style="width:30px; height:30px;" :src="require('@/assets/rename.svg')"
-                    :transformSource="removeStroke"/>
+                <img class="rightIcon" style="width:30px; height:30px;" src="@/assets/rename.svg"/>
             </button>
             <button class="rightButton" @click="deleteAsset">
-                <inline-svg class="rightIcon" :src="require('@/assets/trash.svg')" :transformSource="removeStroke" />
+                <img class="rightIcon" src="@/assets/trash.svg"/>
             </button>
         </div>
     </div>
 </template>
 
 <script>
-import Draw_2D from '@/common/Draw_2D';
-import Util_2D from '@/common/Util_2D';
-import {removeStroke} from '@/common/Util';
+import {drawPixelData} from '@/common/Draw_2D';
+import {getSpriteDimensions} from '@/common/Util_2D';
 
 export default {
     name: 'Asset',
@@ -99,10 +96,10 @@ export default {
             if (this.checkThumb()){
                 let canvas = this.$refs.thumbNail;
                 let ctx = canvas.getContext('2d');
-                let pixelDim = Util_2D.getSpriteDimensions(this.asset.thumbnailData);
+                let pixelDim = getSpriteDimensions(this.asset.thumbnailData);
                 let scaleFac = canvas.width / pixelDim;
 
-                Draw_2D.drawPixelData(this.pixelBuff, this.asset.thumbnailData);
+                drawPixelData(this.pixelBuff, this.asset.thumbnailData);
 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -113,8 +110,7 @@ export default {
                 this.thumbLoading = false;
                 this.checkThumb();
             }
-        },
-        removeStroke
+        }
     }
 }
 </script>

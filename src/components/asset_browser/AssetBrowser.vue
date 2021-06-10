@@ -15,16 +15,14 @@
                     <div class="assetListHeading">
                         <div class="leftHeading">
                             <button class="btn" @click="back">
-                                <inline-svg class="btn_icon" :src="require('@/assets/arrow_01.svg')"
-                                    style="transform: rotate(-90deg);" :transformSource="removeStroke"/>
+                                <img class="btn_icon" src="@/assets/arrow_01.svg" style="transform: rotate(-90deg);"/>
                             </button>
-                            <inline-svg class="assetHeadingLogo" :src="require(`@/${selected_category.icon}.svg`)"
-                                :transformSource="removeStroke"/>
+                            <img class="assetHeadingLogo" :src="require(`@/${selected_category.icon}.svg`)"/>
                             {{selected_category.text}}
                         </div>
                         <div class="rightHeading">
                             <button class="addButton btn" @click="addAsset">
-                                <inline-svg class="addButton_icon" :src="require('@/assets/plus.svg')" :transformSource="removeStroke"/>
+                                <img class="addButton_icon" src="@/assets/plus.svg"/>
                             </button>
                         </div>
                     </div>
@@ -49,7 +47,6 @@
 import {CATEGORY_ID} from '@/common/Enums';
 import Category from './Category';
 import Asset from './Asset';
-import {removeStroke} from '@/common/Util.js';
 
 export default {
     name: 'AssetBrowser',
@@ -168,8 +165,7 @@ export default {
                     curAsset.drawThumbnail();
                 }
             }
-        },
-        removeStroke
+        }
     }
 }
 </script>

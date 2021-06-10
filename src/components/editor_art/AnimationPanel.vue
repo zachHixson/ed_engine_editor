@@ -1,11 +1,9 @@
 <template>
     <div class="animPanel" :class="{animPanelClosed : !isOpen}">
         <div class="resizeBtnWrapper">
-            <button ref="collapseBtn" class="resizeBtn" @click="isOpen = !isOpen;">
-                <inline-svg v-show="isOpen" class="arrow" :src="require('@/assets/arrow_01.svg')" style="transform: rotate(90deg)"
-                    :transformSource="removeStroke"/>
-                <inline-svg v-show="!isOpen" class="arrow" :src="require('@/assets/animation.svg')"
-                    :transformSource="removeStroke"/>
+            <button ref="collapseBtn" class="resizeBtn" @click="toggleOpen">
+                <img v-show="isOpen" class="arrow" src="@/assets/arrow_01.svg" style="transform: rotate(90deg)"/>
+                <img v-show="!isOpen" class="arrow" src="@/assets/animation.svg"/>
             </button>
         </div>
         <div v-show="isOpen" ref="contents" class="panelContents">
@@ -26,8 +24,7 @@
                         @frameCopied="frameCopied"
                         @frameMoved="frameMoved"/>
                     <button class="addFrame" :title="$t('art_editor.add_frame')" @click="addFrame()">
-                        <inline-svg class="icon" :src="require('@/assets/plus.svg')"
-                            :transformSource="removeStroke"/>
+                        <img class="icon" src="@/assets/plus.svg"/>
                     </button>
                 </div>
             </div>
@@ -38,7 +35,6 @@
 <script>
 import AnimFrame from './AnimFrame';
 import AnimationPlayer from '@/components/common/AnimationPlayer';
-import {removeStroke} from '@/common/Util';
 
 export default {
     name: 'AnimationPanel',
@@ -56,6 +52,14 @@ export default {
         this.$store.dispatch('ArtEditor/setAnimPanelState', this.isOpen);
     },
     methods: {
+        toggleOpen(){
+            this.isOpen = !this.isOpen;
+
+            this.$nextTick(()=>{
+                this.$refs.animPlayer.frameDataChanged();
+                this.$emit('resized');
+            })
+        },
         updateFramePreviews(range = [0, -1]){
             if (range[1] == -1){
                 range[1] = this.sprite.frames.length - 1;
@@ -102,8 +106,7 @@ export default {
         },
         selectedFrameChanged(idx){
             this.$emit('selectedFrameChanged');
-        },
-        removeStroke
+        }
     }
 }
 </script>

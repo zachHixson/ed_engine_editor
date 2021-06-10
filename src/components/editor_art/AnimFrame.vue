@@ -14,37 +14,32 @@
             :title="$t('art_editor.delete_frame')"
             v-show="canDelete && hover"
             @click="deleteFrame">
-            <inline-svg class="btnIcon" :src="require('@/assets/trash.svg')" style="fill: none"
-                :transformSource="removeStroke"/>
+            <img class="btnIcon" src="@/assets/trash.svg" style="fill: none"/>
         </button>
         <button
             class="button copyFrame"
             v-show="hover"
             @click="copyFrame">
-            <inline-svg class="btnIcon" :src="require('@/assets/copy.svg')"
-                :transformSource="removeStroke"/>
+            <img class="btnIcon" src="@/assets/copy.svg"/>
         </button>
         <button
             class="button moveUp"
             v-show="hover && !isFirst"
             @click="moveFrame($event, -1)">
-            <inline-svg  class="btnIcon" :src="require('@/assets/arrow_01.svg')"
-                :transformSource="removeStroke"/>
+            <img  class="btnIcon" src="@/assets/arrow_01.svg"/>
         </button>
         <button
             class="button moveDown"
             v-show="hover && !isLast"
             @click="moveFrame($event, 1)">
-            <inline-svg class="btnIcon" :src="require('@/assets/arrow_01.svg')" style="transform: rotate(-180deg)"
-                :transformSource="removeStroke"/>
+            <img class="btnIcon" src="@/assets/arrow_01.svg" style="transform: rotate(-180deg)"/>
         </button>
     </div>
 </template>
 
 <script>
-import Util_2D from '@/common/Util_2D';
-import Draw_2D from '@/common/Draw_2D';
-import {removeStroke} from '@/common/Util';
+import {getSpriteDimensions} from '@/common/Util_2D';
+import {drawCheckerBG, drawPixelData} from '@/common/Draw_2D';
 
 export default {
     name: 'AnimFrame',
@@ -67,7 +62,7 @@ export default {
         this.pixelBuff.width = this.getSprite().dimensions;
         this.pixelBuff.height = this.getSprite().dimensions;
 
-        Draw_2D.drawCheckerBG(this.checkerBGBuff, 4, '#AAA', '#CCC');
+        drawCheckerBG(this.checkerBGBuff, 4, '#AAA', '#CCC');
 
         this.drawCanvas();
     },
@@ -102,9 +97,9 @@ export default {
             ctx.drawImage(this.checkerBGBuff, 0, 0, this.canvas.width, this.canvas.height);
 
             if (frame != null){
-                let scaleFac = this.canvas.width / Util_2D.getSpriteDimensions(frame);
+                let scaleFac = this.canvas.width / getSpriteDimensions(frame);
 
-                Draw_2D.drawPixelData(this.pixelBuff, frame);
+                drawPixelData(this.pixelBuff, frame);
 
                 ctx.imageSmoothingEnabled = false;
                 ctx.webkitImageSmoothingEnabled = false;
@@ -163,8 +158,7 @@ export default {
             this.$store.dispatch('ArtEditor/selectFrame', selectFrame);
             this.$emit('selectedFrameChanged');
             this.$emit('frameMoved', {idx: this.index, dir});
-        },
-        removeStroke
+        }
     }
 }
 </script>

@@ -1,5 +1,7 @@
 import Victor from 'victor';
-import Draw_2D from '@/common/Draw_2D';
+import {drawPixelData} from '@/common/Draw_2D';
+
+const NO_SPRITE_PADDING = 0.75;
 
 export default class Room_Edit_Renderer{
     constructor(element){
@@ -182,69 +184,77 @@ export default class Room_Edit_Renderer{
     }
 
     _drawObjects(){
-        const NO_SPRITE_PADDING = 0.75;
-
         let ctx = this.objBuff.getContext('2d');
 
         ctx.clearRect(0, 0, this.objBuff.width, this.objBuff.height);
         ctx.imageSmoothingEnabled = false;
         ctx.webkitImageSmoothingEnabled = false;
 
+        this._drawInstances(ctx);
+        this._drawExits(ctx);
+        this._drawCameraCursor(ctx);
+    }
+
+    _drawInstances(ctx){
         if (this.zDrawList){
-            let scaleFac = this.scaledCellWidth / 16;
             let paddingOffset = this.scaledCellWidth - (this.scaledCellWidth * NO_SPRITE_PADDING);
 
             paddingOffset /= 2;
 
             this.zDrawList.forEach((inst) => {
-                let pos = Victor.fromObject(inst.pos);
-                let offset = 0;
-
-                this.worldToScreenPos(pos);
-
-                //only draw sprite if it's within the view bounds
-                if (
-                    pos.x > -this.scaledCellWidth &&
-                    pos.x < this.objBuff.width + this.scaledCellWidth &&
-                    pos.y > -this.scaledCellWidth &&
-                    pos.y < this.objBuff.height + this.scaledCellWidth
-                ){
-                    let spriteBuff;
-
-                    if (inst.objRef.sprite && inst.objRef.editorFrame){
-                        //cache sprites once they are already drawn once
-                        if (this.spriteCache.has(inst.editorFrameID)){
-                            spriteBuff = this.spriteCache.get(inst.editorFrameID);
-                        }
-                        else{
-                            spriteBuff = this.newSpriteBuff();
-                            Draw_2D.drawPixelData(spriteBuff, inst.editorFrame);
-                            this.spriteCache.set(inst.editorFrameID, spriteBuff);
-                        }
-
-                        scaleFac = this.scaledCellWidth / spriteBuff.width;
-                    }
-                    else if (this.noSpriteSVG){
-                        spriteBuff = this.noSpriteSVG;
-                        scaleFac = this.scaledCellWidth / spriteBuff.width;
-                        scaleFac *= NO_SPRITE_PADDING;
-                        offset = paddingOffset;
-                    }
-                    else{
-                        //This prevents a rare edge case where spriteBuff goes undefined
-                        spriteBuff = document.createElement('canvas');
-                    }
-
-                    //draw sprite
-                    ctx.translate(pos.x + offset, pos.y + offset);
-                    ctx.scale(scaleFac, scaleFac);
-                    ctx.drawImage(spriteBuff, 0, 0);
-                    ctx.resetTransform();
-                }
+                this._drawInstance(ctx, inst, paddingOffset);
             });
         }
+    }
 
-        //draw exits
+    _drawInstance(ctx, inst, paddingOffset){
+        let pos = Victor.fromObject(inst.pos);
+        let offset = 0;
+
+        this.worldToScreenPos(pos);
+
+        //only draw sprite if it's within the view bounds
+        if (
+            pos.x > -this.scaledCellWidth &&
+            pos.x < this.objBuff.width + this.scaledCellWidth &&
+            pos.y > -this.scaledCellWidth &&
+            pos.y < this.objBuff.height + this.scaledCellWidth
+        ){
+            let spriteBuff;
+            let scaleFac;
+
+            if (inst.objRef.sprite && inst.objRef.editorFrame){
+                //cache sprites after they are parsed once
+                spriteBuff = this.spriteCache.get(inst.editorFrameID);
+
+                if (!spriteBuff){
+                    spriteBuff = this.newSpriteBuff();
+                    drawPixelData(spriteBuff, inst.editorFrame);
+                    this.spriteCache.set(inst.editorFrameID, spriteBuff);
+                }
+
+                scaleFac = this.scaledCellWidth / spriteBuff.width;
+            }
+            else if (this.noSpriteSVG){
+                spriteBuff = this.noSpriteSVG;
+                scaleFac = this.scaledCellWidth / spriteBuff.width;
+                scaleFac *= NO_SPRITE_PADDING;
+                offset = paddingOffset;
+            }
+            else{
+                //This prevents a rare edge case where spriteBuff goes undefined
+                spriteBuff = document.createElement('canvas');
+            }
+
+            //draw sprite
+            ctx.translate(pos.x + offset, pos.y + offset);
+            ctx.scale(scaleFac, scaleFac);
+            ctx.drawImage(spriteBuff, 0, 0);
+            ctx.resetTransform();
+        }
+    }
+
+    _drawExits(ctx){
         if (this.exits){
             this.exits.forEach((exit) => {
                 let pos = Victor.fromObject(exit.pos);
@@ -263,8 +273,9 @@ export default class Room_Edit_Renderer{
                 ctx.resetTransform();
             })
         }
+    }
 
-        //draw camera cursor
+    _drawCameraCursor(ctx){
         if (this.roomRef?.camera){
             let scaleFac = this.scaledCellWidth / this.cameraIcon.width;
             let screenPos = this.roomRef.camera.pos.clone();
