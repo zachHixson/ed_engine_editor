@@ -234,7 +234,7 @@ export default {
 
             if (mEvent.type == MOUSE_EVENT.DOWN){
                 this.mouse.down = true;
-                this.mouse.wpLastDown.copy(mEvent.worldPos);
+                this.mouse.wpLastDown.copy(mEvent.worldCell);
             }
             else if (mEvent.type == MOUSE_EVENT.UP){
                 this.mouse.down = false;
@@ -268,7 +268,7 @@ export default {
                     }
                     break;
                 case MOUSE_EVENT.UP:
-                    if (compareVector(mEvent.worldPos, this.mouse.wpLastDown) && !this.mouse.newSelection){
+                    if (compareVector(mEvent.worldCell, this.mouse.wpLastDown) && !this.mouse.newSelection){
                         this.selectInstanceByPos(mEvent.worldCell);
                     }
 

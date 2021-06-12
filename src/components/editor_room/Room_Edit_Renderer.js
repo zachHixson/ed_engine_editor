@@ -4,7 +4,7 @@ import {drawPixelData} from '@/common/Draw_2D';
 const NO_SPRITE_PADDING = 0.75;
 
 export default class Room_Edit_Renderer{
-    constructor(element){
+    constructor(element, navState){
         this.cell_px_width = 50;
         this.showGrid = true;
         this.roomRef = null;
@@ -16,15 +16,8 @@ export default class Room_Edit_Renderer{
         this.exits = null;
         this.spriteCache = new Map();
         this.selectedEntity = null;
-        this.mouse = {
-            down: false,
-            pos: new Victor(0, 0),
-            cell: new Victor(0, 0)
-        };
-        this.navData = {
-            rawOffset: new Victor(0, 0),
-            zoomFac: 1
-        };
+        this.mouseCell = new Victor(0, 0);
+        this.navState = navState;
         this.cameraIcon = null;
         this.noSpriteSVG = null;
         this.exitSVG = null;
@@ -32,22 +25,18 @@ export default class Room_Edit_Renderer{
 
         //cached data
         this.roundedCanvas = new Victor(0, 0);
-        this.scaledCellWidth = this.cell_px_width * this.navData.zoomFac;
+        this.scaledCellWidth = this.cell_px_width * this.navState.zoomFac;
         this.halfCanvas = new Victor(0, 0);
         this.recalcRoundedCanvas();
         this.recalcHalfCanvas();
     }
 
-    getMouseWorldPos(){
-        return this.mouse.pos;
-    }
-
     getMouseCell(){
-        return this.mouse.cell;
+        return this.mouseCell;
     }
 
     getMouseWorldCell(){
-        return this.mouse.cell.clone().multiplyScalar(16);
+        return this.mouseCell.clone().multiplyScalar(16);
     }
 
     setRoomRef(roomObj){
@@ -86,14 +75,6 @@ export default class Room_Edit_Renderer{
         this.roundedCanvas.y = Math.ceil(this.canvas.height / this.scaledCellWidth) * this.scaledCellWidth;
     }
 
-    mouseDown(event){
-        this.mouse.down = true;
-    }
-
-    mouseUp(event){
-        this.mouse.down = false;
-    }
-
     mouseMove(event){
         let screenCoords = new Victor(event.offsetX, event.offsetY);
         let worldCoords = this.screenToWorldPos(screenCoords.clone());
@@ -103,17 +84,14 @@ export default class Room_Edit_Renderer{
         cell.subtractScalar(0.5);
         cell.unfloat();
 
-        this.mouse.pos.copy(worldCoords);
-        this.mouse.cell.copy(cell);
+        this.mouseCell.copy(cell);
 
         this._drawCursor();
         this._composite();
     }
 
-    navChange(navEventData){
-        this.navData.rawOffset.copy(navEventData.rawOffset);
-        this.navData.zoomFac = navEventData.zoomFac;
-        this.scaledCellWidth = this.cell_px_width * this.navData.zoomFac;
+    navChange(){
+        this.scaledCellWidth = this.cell_px_width * this.navState.zoomFac;
         this.recalcRoundedCanvas();
         this.fullRedraw();
     }
@@ -364,8 +342,8 @@ export default class Room_Edit_Renderer{
 
     screenToWorldPos(pt){
         pt.subtract(this.halfCanvas);
-        pt.divideScalar(this.navData.zoomFac);
-        pt.subtract(this.navData.rawOffset);
+        pt.divideScalar(this.navState.zoomFac);
+        pt.subtract(this.navState.offset);
         pt.divideScalar(this.cell_px_width / 16);
 
         return pt;
@@ -373,8 +351,8 @@ export default class Room_Edit_Renderer{
 
     worldToScreenPos(pt){
         pt.multiplyScalar(this.cell_px_width / 16);
-        pt.add(this.navData.rawOffset);
-        pt.multiplyScalar(this.navData.zoomFac);
+        pt.add(this.navState.offset);
+        pt.multiplyScalar(this.navState.zoomFac);
         pt.add(this.halfCanvas);
 
         return pt;

@@ -18,6 +18,8 @@
 import UndoPanel from "@/components/common/UndoPanel";
 import NavControlPanel from '@/components/common/NavControlPanel';
 import Art_Canvas_Renderer from './Art_Canvas_Renderer';
+import Victor from 'victor';
+import {getSpriteDimensions} from '@/common/Util_2D';
 
 export default {
     name: "ArtCanvas",
@@ -28,47 +30,61 @@ export default {
     },
     data() {
         return {
+            canvas: null,
             renderer: null,
+            previewData: new Array(this.spriteFrame.length).fill(''),
             navControl: null,
             maxZoom: 2,
             toolMap: new Map(),
-            enableDrawing: true
+            enableDrawing: true,
+            mouseCell: new Victor(),
+            navState: {
+                zoomFac: 1,
+                offset: new Victor()
+            }
+        }
+    },
+    computed: {
+        GRID_DIV(){
+            return getSpriteDimensions(this.spriteFrame);
+        },
+        CANVAS_WIDTH(){
+            return this.GRID_DIV * 20;
         }
     },
     watch: {
         tool(){
-            let renderer = this.renderer;
-
             this.tool.beforeDestroy();
-            this.tool.setPreviewBuff(renderer.previewData);
             this.tool.setPixelBuff(this.spriteFrame);
-            this.tool.setMouseCell(renderer.mouseCell);
+            this.tool.setPreviewBuff(this.previewData);
+            this.tool.setMouseCell(this.mouseCell);
         },
         spriteFrame(){
             this.renderer.setSprite(this.spriteFrame);
-            this.tool.setPixelBuff(this.spriteFrame)
+            this.tool.setPixelBuff(this.spriteFrame);
+            this.previewData.fill('');
         }
     },
     mounted(){
-        let canvas = this.$refs.canvas;
+        this.canvas = this.$refs.canvas;
         
         this.navControl = this.$refs.navControlPanel;
-        this.renderer = new Art_Canvas_Renderer(canvas, this.spriteFrame);
+        this.renderer = new Art_Canvas_Renderer(this.canvas, this.spriteFrame, this.previewData, this.navState);
         
-        canvas.addEventListener('mousedown', this.mouseDown);
-        canvas.addEventListener('mouseup', this.mouseUp);
-        canvas.addEventListener('mousemove', this.mouseMove);
-        canvas.addEventListener('wheel', this.wheel);
-        canvas.addEventListener('mouseleave', this.mouseLeave);
+        this.canvas.addEventListener('mousedown', this.mouseDown);
+        this.canvas.addEventListener('mouseup', this.mouseUp);
+        this.canvas.addEventListener('mousemove', this.mouseMove);
+        this.canvas.addEventListener('wheel', this.wheel);
+        this.canvas.addEventListener('mouseleave', this.mouseLeave);
 
-        this.maxZoom = this.renderer.getZoomBounds().max
-        this.navControl.setViewBounds(this.renderer.getViewBounds());
-        this.navControl.setContentsBounds(this.renderer.getContentsBounds());
+        this.maxZoom = this.getZoomBounds().max;
+        this.navControl.setViewBounds(this.getViewBounds());
+        this.navControl.setContentsBounds(this.getContentsBounds());
         this.navChanged(this.navControl.getNavState());
     },
     beforeDestroy(){
-        this.$store.dispatch('ArtEditor/setNavZoom', this.renderer.zoomFac);
-        this.$store.dispatch('ArtEditor/setNavOffset', this.renderer.offset);
+        this.$store.dispatch('ArtEditor/setNavZoom', this.navState.zoomFac);
+        this.$store.dispatch('ArtEditor/setNavOffset', this.navState.offset);
     },
     destroyed(){
         this.renderer = null;
@@ -94,6 +110,7 @@ export default {
             this.navControl.mouseMove(event);
 
             if (this.navControl.hotkeyTool == null){
+                this.updateMouseCell(event);
                 this.$emit('mouse-move', event);
                 this.renderer.mouseMove(event);
             }
@@ -117,21 +134,52 @@ export default {
 
             if (this.renderer){
                 this.renderer.resize();
-                this.maxZoom = this.renderer.getZoomBounds().max;
+                this.maxZoom = this.getZoomBounds().max;
             }
         },
         navChanged(navState){
+            this.navState.zoomFac = navState.zoomFac;
+            this.navState.offset.copy(navState.rawOffset);
             this.renderer.navChanged(navState);
         },
         enableNav(){
             this.$emit('nav-selected');
             this.tool.disableDrawing();
         },
+        getViewBounds(){
+            return [-500, -500, 500, 500];
+        },
+        getContentsBounds(){
+            return [0, 0, this.CANVAS_WIDTH, this.CANVAS_WIDTH];
+        },
+        getZoomBounds(){
+            let maxZoom = (Math.max(this.canvas.clientWidth, this.canvas.clientHeight) / this.CANVAS_WIDTH) * 2;
+            return {min: 0.5, max: maxZoom};
+        },
         undo(){
             this.$emit('undo');
         },
         redo(){
             this.$emit('redo');
+        },
+        updateMouseCell(event){
+            const CELL_SIZE = (this.CANVAS_WIDTH / this.GRID_DIV) * this.navState.zoomFac;
+            let mouseCell = new Victor(event.offsetX, event.offsetY);
+            let windowHalfWidth = new Victor(this.canvas.width / 2, this.canvas.height / 2);
+            let canvasHalfWidth = new Victor(this.CANVAS_WIDTH / 2, this.CANVAS_WIDTH / 2);
+            let scaledOffset = this.navState.offset.clone().multiplyScalar(this.navState.zoomFac);
+
+            canvasHalfWidth.multiplyScalar(this.navState.zoomFac);
+
+            mouseCell.subtract(windowHalfWidth);
+            mouseCell.add(canvasHalfWidth);
+            mouseCell.subtract(scaledOffset);
+            mouseCell.divideScalar(CELL_SIZE);
+
+            mouseCell.x = Math.floor(mouseCell.x);
+            mouseCell.y = Math.floor(mouseCell.y);
+
+            this.mouseCell.copy(mouseCell);
         }
     }
 }

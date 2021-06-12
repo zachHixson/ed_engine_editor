@@ -1,11 +1,9 @@
 import Victor from 'victor';
 import {drawCheckerBG, drawPixelData} from '@/common/Draw_2D';
-
-const GRID_DIV = 16;
-const CANVAS_WIDTH = GRID_DIV * 20;
+import {getSpriteDimensions} from '@/common/Util_2D';
 
 class Art_Canvas_Renderer{
-    constructor(element, spriteData){
+    constructor(element, spriteData, previewData, navState){
         this.canvas = element;
         this.checkerBGBuff = document.createElement("canvas");
         this.checkerStencilBuff = document.createElement("canvas");
@@ -13,15 +11,19 @@ class Art_Canvas_Renderer{
         this.gridBuff = document.createElement("canvas");
         this.previewBuff = document.createElement("canvas");
         this.spriteData = spriteData;
-        this.previewData = new Array(this.spriteData.length).fill('');
-        this.offset = new Victor(0, 0);
-        this.zoomFac = 1;
-        this.mouseCell = new Victor(0, 0);
+        this.previewData = previewData;
+        this.navState = navState;
 
-        this.pixelBuff.width = GRID_DIV;
-        this.pixelBuff.height = GRID_DIV;
-        this.previewBuff.width = GRID_DIV;
-        this.previewBuff.height = GRID_DIV;
+        this.GRID_DIV = getSpriteDimensions(spriteData);
+        this.CANVAS_WIDTH = this.GRID_DIV * 20;
+
+        Object.defineProperty(this, "GRID_DIV", {configurable: false, writable: false});
+        Object.defineProperty(this, "CANVAS_WIDTH", {configurable: false, writable: false});
+
+        this.pixelBuff.width = this.GRID_DIV;
+        this.pixelBuff.height = this.GRID_DIV;
+        this.previewBuff.width = this.GRID_DIV;
+        this.previewBuff.height = this.GRID_DIV;
 
         this.resize();
     }
@@ -39,9 +41,9 @@ class Art_Canvas_Renderer{
     }
 
     composite(ctx = this.canvas.getContext("2d")){
-        const HALF_CANVAS = CANVAS_WIDTH / 2;
+        const HALF_CANVAS = this.CANVAS_WIDTH / 2;
 
-        let scaleFac = (CANVAS_WIDTH / GRID_DIV) * this.zoomFac;
+        let scaleFac = (this.CANVAS_WIDTH / this.GRID_DIV) * this.navState.zoomFac;
 
         ctx.drawImage(this.checkerBGBuff, 0, 0, this.checkerBGBuff.width, this.checkerBGBuff.height);
 
@@ -50,11 +52,11 @@ class Art_Canvas_Renderer{
         ctx.webkitImageSmoothingEnabled = false;
 
         ctx.translate(
-            (this.canvas.width / 2) + (this.offset.x * this.zoomFac),
-            (this.canvas.height / 2) + (this.offset.y * this.zoomFac)
+            (this.canvas.width / 2) + (this.navState.offset.x * this.navState.zoomFac),
+            (this.canvas.height / 2) + (this.navState.offset.y * this.navState.zoomFac)
         );
         ctx.translate(
-            -HALF_CANVAS * this.zoomFac, -HALF_CANVAS * this.zoomFac
+            -HALF_CANVAS * this.navState.zoomFac, -HALF_CANVAS * this.navState.zoomFac
         )
         ctx.scale(scaleFac, scaleFac);
 
@@ -79,30 +81,7 @@ class Art_Canvas_Renderer{
         this.fullRedraw();
     }
 
-    updateMouseCell(event){
-        const CELL_SIZE = (CANVAS_WIDTH / GRID_DIV) * this.zoomFac;
-        let mouseCell = new Victor(event.offsetX, event.offsetY);
-        let windowHalfWidth = new Victor(this.canvas.width / 2, this.canvas.height / 2);
-        let canvasHalfWidth = new Victor(CANVAS_WIDTH / 2, CANVAS_WIDTH / 2);
-        let scaledOffset = this.offset.clone().multiplyScalar(this.zoomFac);
-
-        canvasHalfWidth.multiplyScalar(this.zoomFac);
-
-        mouseCell.subtract(windowHalfWidth);
-        mouseCell.add(canvasHalfWidth);
-        mouseCell.subtract(scaledOffset);
-        mouseCell.divideScalar(CELL_SIZE);
-
-        mouseCell.x = Math.floor(mouseCell.x);
-        mouseCell.y = Math.floor(mouseCell.y);
-
-        this.mouseCell.copy(mouseCell);
-    }
-
-    navChanged({rawOffset, zoomFac}){
-        this.offset = rawOffset.clone();
-        this.zoomFac = zoomFac;
-        
+    navChanged(){        
         this.drawBGStencil();
         this.drawSpriteData();
         this.drawGrid();
@@ -111,17 +90,8 @@ class Art_Canvas_Renderer{
         this.composite();
     }
 
-    unsetTool(){
-        let ctx = this.previewBuff.getContext('2d');
-        
-        this.tool = null;
-        ctx.clearRect(0, 0, this.previewBuff.width, this.previewBuff.height);
-        this.composite();
-    }
-
     setSprite(newSprite){
         this.spriteData = newSprite;
-        this.previewData.fill('');
 
         this.drawSpriteData();
         this.drawPreviewBuffer();
@@ -140,8 +110,7 @@ class Art_Canvas_Renderer{
         this.composite();
     }
 
-    mouseMove(event){
-        this.updateMouseCell(event);
+    mouseMove(){
         this.drawSpriteData();
         this.drawPreviewBuffer();
         this.composite();
@@ -152,18 +121,18 @@ class Art_Canvas_Renderer{
     }
 
     drawBGStencil(ctx = this.checkerStencilBuff.getContext('2d')){
-        const HALF_WIDTH = CANVAS_WIDTH / 2;
+        const HALF_WIDTH = this.CANVAS_WIDTH / 2;
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, this.checkerStencilBuff.width, this.checkerStencilBuff.height);
         ctx.translate(
-            (this.canvas.width / 2) + (this.offset.x * this.zoomFac),
-            (this.canvas.height / 2) + (this.offset.y * this.zoomFac)
+            (this.canvas.width / 2) + (this.navState.offset.x * this.navState.zoomFac),
+            (this.canvas.height / 2) + (this.navState.offset.y * this.navState.zoomFac)
         );
         ctx.clearRect(
-            -HALF_WIDTH * this.zoomFac,
-            -HALF_WIDTH * this.zoomFac,
-            CANVAS_WIDTH * this.zoomFac,
-            CANVAS_WIDTH * this.zoomFac
+            -HALF_WIDTH * this.navState.zoomFac,
+            -HALF_WIDTH * this.navState.zoomFac,
+            this.CANVAS_WIDTH * this.navState.zoomFac,
+            this.CANVAS_WIDTH * this.navState.zoomFac
         );
         ctx.resetTransform();
 
@@ -187,22 +156,22 @@ class Art_Canvas_Renderer{
     }
  
     drawGrid(ctx = this.gridBuff.getContext("2d")){
-        const PIXEL_SIZE = Math.round(CANVAS_WIDTH / GRID_DIV);
-        const HALF_CANVAS = CANVAS_WIDTH / 2;
+        const PIXEL_SIZE = Math.round(this.CANVAS_WIDTH / this.GRID_DIV);
+        const HALF_CANVAS = this.CANVAS_WIDTH / 2;
 
         ctx.clearRect(0, 0, this.gridBuff.width, this.gridBuff.height);
 
         ctx.translate(
-            (this.canvas.width / 2) + (this.offset.x * this.zoomFac),
-            (this.canvas.height / 2) + (this.offset.y * this.zoomFac)
+            (this.canvas.width / 2) + (this.navState.offset.x * this.navState.zoomFac),
+            (this.canvas.height / 2) + (this.navState.offset.y * this.navState.zoomFac)
         );
-        ctx.scale(this.zoomFac, this.zoomFac);
+        ctx.scale(this.navState.zoomFac, this.navState.zoomFac);
 
         //draw grid
         ctx.strokeStyle = "black";
         ctx.lineWidth = 1;
         ctx.beginPath();
-        for (let i = 1; i < GRID_DIV; i++) {
+        for (let i = 1; i < this.GRID_DIV; i++) {
             let curLine = i * PIXEL_SIZE;
             let pos = new Victor(curLine, curLine);
 
@@ -220,26 +189,6 @@ class Art_Canvas_Renderer{
 
     drawPreviewBuffer(canvas = this.previewBuff){
         this.drawPixelData(canvas, this.previewData);
-    }
-
-    getSpriteDimensions(){
-        if (this.spriteData == null){
-            return 0;
-        }
-        return Math.ceil(Math.sqrt(this.spriteData.length));
-    }
-
-    getViewBounds(){
-        return [-500, -500, 500, 500];
-    }
-
-    getContentsBounds(){
-        return [0, 0, CANVAS_WIDTH, CANVAS_WIDTH];
-    }
-
-    getZoomBounds(){
-        let maxZoom = (Math.max(this.canvas.clientWidth, this.canvas.clientHeight) / CANVAS_WIDTH) * 2;
-        return {min: 0.5, max: maxZoom};
     }
 }
 

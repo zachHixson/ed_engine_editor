@@ -11,7 +11,7 @@
             class="navControlPanel"
             stateModule="RoomEditor"
             maxZoom="2"
-            @navChanged="renderer.navChange($event)"
+            @navChanged="navChange"
             @tool-selected="$store.dispatch('RoomEditor/setSelectedTool', null)"/>
         <canvas
             ref="canvas"
@@ -46,7 +46,11 @@ export default {
         return {
             canvasEl: null,
             renderer: null,
-            loadedImages: 0
+            loadedImages: 0,
+            navState: {
+                offset: new Victor(),
+                zoomFac: 1
+            }
         }
     },
     computed: {
@@ -76,9 +80,9 @@ export default {
     mounted() {
         //Setup Canvas and renderer
         this.canvasEl = this.$refs.canvas;
-        this.renderer = new Room_Edit_Renderer(this.canvasEl);
+        this.renderer = new Room_Edit_Renderer(this.canvasEl, this.navState);
         this.resize();
-        this.renderer.navChange(this.$refs.navControlPanel.getNavState());
+        this.navChange(this.$refs.navControlPanel.getNavState());
 
         //bind events
         window.addEventListener('resize', this.resize);
@@ -105,12 +109,10 @@ export default {
     methods: {
         mouseDown(event){
             this.$refs.navControlPanel.mouseDown(event);
-            this.renderer.mouseDown(event);
             this.emitMouseEvent(event, MOUSE_EVENT.DOWN);
         },
         mouseUp(event){
             this.$refs.navControlPanel.mouseUp(event);
-            this.renderer.mouseUp(event);
             this.emitMouseEvent(event, MOUSE_EVENT.UP);
         },
         mouseMove(event){
@@ -133,17 +135,21 @@ export default {
                 this.renderer.resize();
             }
         },
+        navChange(event){
+            this.navState.offset.copy(event.rawOffset);
+            this.navState.zoomFac = event.zoomFac;
+            this.renderer.navChange();
+        },
         emitMouseEvent(event, type){
             let selectedNavTool = this.$store.getters['RoomEditor/getSelectedNavTool'];
             let navToolState = this.$refs.navControlPanel.hotkeyTool;
 
             if (event.which == 1 && selectedNavTool == null && navToolState == null){
                 let canvasPos = new Victor(event.offsetX, event.offsetY);
-                let worldPos = this.renderer.getMouseWorldPos();
                 let cell = this.renderer.getMouseCell();
                 let worldCell = this.renderer.getMouseWorldCell();
                 
-                this.$emit('mouse-event', {type, canvasPos, worldPos, cell, worldCell});
+                this.$emit('mouse-event', {type, canvasPos, cell, worldCell});
             }
         },
         instancesChanged(){
