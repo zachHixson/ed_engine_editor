@@ -15,29 +15,15 @@
 <script>
 export default {
     name: 'NavControl',
-    props: ['stateModule', 'control'],
+    props: ['stateModule', 'control', "isSelected"],
     data() {
         return {
             iconLoaded: true
         }
     },
-    computed: {
-        isSelected() {
-            return this.$store.getters[
-                this.stateModule + '/getSelectedNavTool'
-            ] == this.control.id;
-        }
-    },
     methods: {
         onClick() {
             this.$emit('click', this.control);
-
-            if (!this.control.oneshot){
-                this.$store.dispatch(
-                    this.stateModule + '/setSelectedNavTool',
-                    this.control.id
-                );
-            }
         }
     }
 }

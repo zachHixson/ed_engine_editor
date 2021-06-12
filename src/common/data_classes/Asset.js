@@ -1,10 +1,15 @@
 import ID_Generator from '@/common/ID_Generator';
 import {CATEGORY_ID, CATEGORY_TYPE} from '../Enums';
+import Victor from 'victor';
 
 class Asset{
     constructor(){
         this.id = ID_Generator.newID();
         this.name = this.id;
+        this.navState = {
+            offset: new Victor(0, 0),
+            zoomFac: 1
+        }
     }
 
     get type(){return CATEGORY_TYPE.UNDEFINED}
@@ -15,6 +20,10 @@ class Asset{
 
     fromSaveData(data){
         Object.assign(this, data);
+        this.navState = {
+            offset: new Victor.fromObject(data.navState.offset),
+            zoomFac: data.navState.zoomFac
+        }
         return this;
     }
 

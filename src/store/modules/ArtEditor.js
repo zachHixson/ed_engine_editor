@@ -1,28 +1,26 @@
-import {navStates, navGetters, navActions, navMutations} from './Navigation';
 import {ART_TOOL_SIZE, ART_TOOL_TYPE} from '@/common/Enums';
 
 const state = {
-    ...navStates(),
     selectedColor : "#FFFFFF",
     selectedSize: ART_TOOL_SIZE.SMALL,
     selectedTool: ART_TOOL_TYPE.BRUSH,
+    selectedNavTool: null,
     selectedFrame: 0,
     toolPanelOpen: true,
     animPanelOpen: false
 }
 
 const getters = {
-    ...navGetters(),
     getSelectedColor: state => state.selectedColor,
     getSelectedSize: state => state.selectedSize,
     getSelectedTool: state => state.selectedTool,
+    getSelectedNavTool: state => state.selectedNavTool,
     getSelectedFrame: state => state.selectedFrame,
     isToolPanelOpen: state => state.toolPanelOpen,
     isAnimPanelOpen: state => state.animPanelOpen
 };
 
 const actions = {
-    ...navActions(),
     selectColor({commit}, newColor){
         commit('selectColor', newColor);
     },
@@ -31,6 +29,9 @@ const actions = {
     },
     selectTool({commit}, newTool){
         commit('selectTool', newTool);
+    },
+    setSelectedNavTool({commit}, newTool){
+        commit('setSelectedNavTool', newTool);
     },
     selectFrame({commit}, newFrame){
         commit('selectFrame', newFrame);
@@ -44,10 +45,10 @@ const actions = {
 };
 
 const mutations = {
-    ...navMutations(),
     selectColor: (state, newColor) => state.selectedColor = newColor,
     selectSize: (state, newSize) => state.selectedSize = newSize,
     selectTool: (state, newTool) => state.selectedTool = newTool,
+    setSelectedNavTool: (state, newTool) => state.selectedNavTool = newTool,
     selectFrame: (state, newFrame) => state.selectedFrame = newFrame,
     setToolPanelState: (state, newState) => state.toolPanelOpen = newState,
     setAnimPanelState: (state, newState) => state.animPanelOpen = newState

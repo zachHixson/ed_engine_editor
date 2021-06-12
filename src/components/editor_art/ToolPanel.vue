@@ -115,8 +115,7 @@ export default {
                 }
             ],
             toolColor: this.$store.getters['ArtEditor/getSelectedColor'],
-            toolSize: this.$store.getters['ArtEditor/getSelectedSize'],
-            toolId: this.$store.getters['ArtEditor/getSelectedTool'],
+            toolSize: this.$store.getters['ArtEditor/getSelectedSize']
         }
     },
     mounted(){
@@ -131,11 +130,18 @@ export default {
         this.$store.dispatch('ArtEditor/setToolPanelState', this.isOpen);
         this.$store.dispatch('ArtEditor/selectColor', this.toolColor);
         this.$store.dispatch('ArtEditor/selectSize', this.toolSize);
-        this.$store.dispatch('ArtEditor/selectTool', this.toolId);
     },
     computed: {
         storedColor(){
             return this.$store.getters['ArtEditor/getSelectedColor'];
+        },
+        toolId: {
+            get: function(){
+                return this.$store.getters['ArtEditor/getSelectedTool'];
+            },
+            set: function(newTool){
+                this.$store.dispatch('ArtEditor/selectTool', newTool);
+            }
         }
     },
     watch: {

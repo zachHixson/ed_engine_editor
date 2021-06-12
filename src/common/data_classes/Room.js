@@ -39,7 +39,7 @@ class Room extends Asset{
     }
 
     fromSaveData(room, objectList){
-        Object.assign(this, room);
+        super.fromSaveData(room);
         this.camera = new Camera().fromSaveData(room.cameraProps);
 
         for (let i = 0; i < room.instancesSerial.length; i++){

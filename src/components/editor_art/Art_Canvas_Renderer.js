@@ -65,7 +65,6 @@ class Art_Canvas_Renderer{
 
         ctx.resetTransform();
 
-
         ctx.drawImage(this.gridBuff, 0, 0, this.gridBuff.width, this.gridBuff.height);
         ctx.drawImage(this.checkerStencilBuff, 0, 0, this.checkerStencilBuff.width, this.checkerStencilBuff.height);
     }
@@ -90,12 +89,11 @@ class Art_Canvas_Renderer{
         this.composite();
     }
 
-    setSprite(newSprite){
+    setSprite(newSprite, navRef){
         this.spriteData = newSprite;
+        this.navState = navRef;
 
-        this.drawSpriteData();
-        this.drawPreviewBuffer();
-        this.composite();
+        this.fullRedraw();
     }
 
     mouseDown(){

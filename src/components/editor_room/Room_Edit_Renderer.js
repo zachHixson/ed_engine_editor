@@ -43,7 +43,8 @@ export default class Room_Edit_Renderer{
         this.roomRef = roomObj;
         this.zDrawList = this.roomRef.zSortedList;
         this.exits = this.roomRef.exitsList;
-        this.fullRedraw();
+        this.navState = this.roomRef.navState;
+        this.navChange();
     }
 
     setSelection(instRef){

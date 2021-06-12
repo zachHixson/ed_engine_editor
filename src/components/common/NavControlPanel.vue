@@ -2,11 +2,11 @@
     <div class="navControlPanel">
         <div class="controls">
             <NavControl
-                v-bind:key="control.id"
+                :key="control.id"
                 v-for="control in controls"
-                v-bind:control="control"
-                v-bind:stateModule="stateModule"
-                v-on:click="controlClick" />
+                :control="control"
+                :isSelected="selectedNavTool == control.id"
+                @click="controlClick" />
         </div>
     </div>
 </template>
@@ -27,7 +27,10 @@ Object.freeze(NAV_TOOL);
 
 export default {
     name: 'NavControlPanel',
-    props: ['stateModule', 'extra_controls', 'maxZoom'],
+    props: ['asset', 'selectedNavTool', 'extra_controls', 'maxZoom'],
+    components: {
+        NavControl
+    },
     data(){
         return {
             controls: [
@@ -61,18 +64,16 @@ export default {
                 dragDistance: new Victor(0, 0)
             },
             keyMap: {},
-            zoomFac: 1,
-            rawOffset: new Victor(0, 0)
         }
     },
-    components: {
-        NavControl
+    computed: {
+        navState(){
+            return this.asset.navState;
+        }
     },
     mounted() {
         let extra = this.extra_controls || [];
         this.controls = [...extra, ...this.controls];
-        this.zoomFac = this.$store.getters[this.stateModule + '/getNavZoom'];
-        this.rawOffset = this.$store.getters[this.stateModule + '/getNavOffset'].clone();
 
         document.addEventListener('keydown', this.registerKeys);
         document.addEventListener('keyup', this.unregisterKeys);
@@ -80,11 +81,7 @@ export default {
     methods: {
         controlClick(control){
             if (!control.oneshot){
-                this.$store.dispatch(
-                    this.stateModule + '/setSelectedNavTool',
-                    control.id
-                );
-                this.$emit('tool-selected');
+                this.$emit('tool-selected', control.id);
             }
 
             if (control.id == NAV_TOOL.CENTER){
@@ -119,15 +116,6 @@ export default {
                 this.setHotkeyTool(null);
             }
 
-            this.$store.dispatch(
-                this.stateModule + '/setNavZoom',
-                this.zoomFac
-            )
-            this.$store.dispatch(
-                this.stateModule + '/setNavOffset',
-                this.rawOffset
-            )
-
             this.detectKeyCombo();
         },
         mouseMove(event){
@@ -136,9 +124,7 @@ export default {
             this.mouse.position.y = event.offsetY;
 
             if (this.mouse.down || this.mouse.mmDown){
-                let navTool = this.hotkeyTool ?? this.$store.getters[
-                    this.stateModule + '/getSelectedNavTool'
-                ];
+                let navTool = this.hotkeyTool ?? this.selectedNavTool;
                 switch (navTool){
                     case NAV_TOOL.PAN:
                         this.pan();
@@ -154,8 +140,8 @@ export default {
         },
         scroll(event){
             let zoomDir = event.deltaY < 0 ? 1 : -1;
-            zoomDir *= ZOOM_WHEEL_AMT * (this.zoomFac / this.maxZoom);
-            this.setZoom(this.zoomFac + zoomDir);
+            zoomDir *= ZOOM_WHEEL_AMT * (this.navState.zoomFac / this.maxZoom);
+            this.setZoom(this.navState.zoomFac + zoomDir);
         },
         registerKeys(event){
             this.keyMap[event.key] = true;
@@ -195,7 +181,7 @@ export default {
             }
         },
         getNavState(){
-            return {rawOffset: this.rawOffset, zoomFac: this.zoomFac};
+            return this.navState;
         },
         setViewBounds(newBounds){
             if (newBounds.length < 4){
@@ -220,26 +206,26 @@ export default {
             this.containerDimensions.y = height;
         },
         setZoom(newZoom){
-            this.zoomFac = Math.min(Math.max(newZoom, 0.5), this.maxZoom);
-            this.$emit('navChanged', {rawOffset: this.rawOffset, zoomFac: this.zoomFac});
+            this.navState.zoomFac = Math.min(Math.max(newZoom, 0.5), this.maxZoom);
+            this.$emit('navChanged', this.navState);
         },
         pan(){
             let curMouse = new Victor(0,0).copy(this.mouse.position);
             let downPos = new Victor(0,0).copy(this.mouse.lastPosition);
             let difference = curMouse.subtract(downPos);
 
-            difference.divide(new Victor(this.zoomFac, this.zoomFac));
-            this.rawOffset.add(difference);
+            difference.divide(new Victor(this.navState.zoomFac, this.navState.zoomFac));
+            this.navState.offset.add(difference);
 
-            this.$emit('navChanged', {rawOffset: this.rawOffset, zoomFac: this.zoomFac});
+            this.$emit('navChanged', this.navState);
         },
         zoom(){
             let yDifference = this.mouse.position.y - this.mouse.lastPosition.y;
-            yDifference *= this.zoomFac / this.maxZoom;
+            yDifference *= this.navState.zoomFac / this.maxZoom;
             yDifference *= ZOOM_SENSITIVITY;
-            this.setZoom(this.zoomFac + yDifference);
+            this.setZoom(this.navState.zoomFac + yDifference);
 
-            this.$emit('navChanged', {rawOffset: this.rawOffset, zoomFac: this.zoomFac});
+            this.$emit('navChanged', this.navState);
         },
         centerView(){
             let cornerUL = new Victor(
@@ -261,9 +247,9 @@ export default {
             );
 
             this.setZoom((minContainerDim / maxContentsDim) * .99);
-            this.rawOffset.x = 0;
-            this.rawOffset.y = 0;
-            this.$emit('navChanged', {rawOffset: this.rawOffset, zoomFac: this.zoomFac});
+            this.navState.offset.x = 0;
+            this.navState.offset.y = 0;
+            this.$emit('navChanged', this.navState);
         }
     }
 }

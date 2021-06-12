@@ -1,24 +1,25 @@
 import {ROOM_TOOL_TYPE} from '@/common/Enums';
-import {navStates, navGetters, navActions, navMutations} from './Navigation';
 
 const state = {
-    ...navStates(),
     selectedTool: ROOM_TOOL_TYPE.SELECT_MOVE,
+    selectedNavTool: null,
     propertiesOpen: false,
     viewGrid: true
 }
 
 const getters = {
-    ...navGetters(),
     getSelectedTool: state => state.selectedTool,
+    getSelectedNavTool: state => state.selectedNavTool,
     getPropPanelState: state => state.propertiesOpen,
     getGridState: state => state.viewGrid
 }
 
 const actions = {
-    ...navActions(),
     setSelectedTool({commit}, newTool){
         commit('setSelectedTool', newTool);
+    },
+    setSelectedNavTool({commit}, newTool){
+        commit('setSelectedNavTool', newTool);
     },
     setPropPanelState({commit}, newState){
         commit('setPropPanelState', newState);
@@ -29,8 +30,8 @@ const actions = {
 }
 
 const mutations = {
-    ...navMutations(),
     setSelectedTool: (state, newTool) => state.selectedTool = newTool,
+    setSelectedNavTool: (state, newTool) => state.selectedNavTool = newTool,
     setPropPanelState: (state, newState) => state.propertiesOpen = newState,
     setGridState: (state, newState) => state.viewGrid = newState
 }

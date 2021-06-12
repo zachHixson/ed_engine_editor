@@ -9,10 +9,11 @@
         <NavControlPanel
             ref="navControlPanel"
             class="navControlPanel"
-            stateModule="RoomEditor"
+            :asset="selectedRoom"
+            :selectedNavTool="selectedNavTool"
             maxZoom="2"
-            @navChanged="navChange"
-            @tool-selected="$store.dispatch('RoomEditor/setSelectedTool', null)"/>
+            @navChanged="renderer.navChange()"
+            @tool-selected="navToolSelected"/>
         <canvas
             ref="canvas"
             class="canvas"
@@ -46,11 +47,7 @@ export default {
         return {
             canvasEl: null,
             renderer: null,
-            loadedImages: 0,
-            navState: {
-                offset: new Victor(),
-                zoomFac: 1
-            }
+            loadedImages: 0
         }
     },
     computed: {
@@ -58,7 +55,11 @@ export default {
             return this.$store.getters["RoomEditor/getGridState"];
         },
         checkAssetDeletion(){
+            //if eather of the following values change, it will trigger an update for the watcher of this prop
             return this.$store.getters['GameData/getAllObjects'].length + this.$store.getters['GameData/getAllSprites'].length;
+        },
+        selectedNavTool(){
+            return this.$store.getters['RoomEditor/getSelectedNavTool'];
         }
     },
     watch: {
@@ -80,9 +81,8 @@ export default {
     mounted() {
         //Setup Canvas and renderer
         this.canvasEl = this.$refs.canvas;
-        this.renderer = new Room_Edit_Renderer(this.canvasEl, this.navState);
+        this.renderer = new Room_Edit_Renderer(this.canvasEl, this.selectedRoom.navState);
         this.resize();
-        this.navChange(this.$refs.navControlPanel.getNavState());
 
         //bind events
         window.addEventListener('resize', this.resize);
@@ -135,11 +135,6 @@ export default {
                 this.renderer.resize();
             }
         },
-        navChange(event){
-            this.navState.offset.copy(event.rawOffset);
-            this.navState.zoomFac = event.zoomFac;
-            this.renderer.navChange();
-        },
         emitMouseEvent(event, type){
             let selectedNavTool = this.$store.getters['RoomEditor/getSelectedNavTool'];
             let navToolState = this.$refs.navControlPanel.hotkeyTool;
@@ -170,6 +165,10 @@ export default {
             if (this.loadedImages >= this.$refs.canvasImages.children.length){
                 this.renderer.fullRedraw();
             }
+        },
+        navToolSelected(tool){
+            this.$store.dispatch('RoomEditor/setSelectedTool', null);
+            this.$store.dispatch('RoomEditor/setSelectedNavTool', tool);
         }
     }
 }

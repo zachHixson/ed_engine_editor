@@ -34,7 +34,7 @@ class Sprite extends Asset{
     }
 
     fromSaveData(data){
-        Object.assign(this, data);
+        super.fromSaveData(data);
         this.decompressFrames(this.frames);
         this.hashAllFrames();
 

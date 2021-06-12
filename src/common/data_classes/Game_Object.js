@@ -15,6 +15,8 @@ class Game_Object extends Asset{
         this.customLogic = false;
         this.logicPreset = null;
         this.groups = [];
+
+        delete this.navState;
     }
 
     get thumbnailData(){
@@ -40,7 +42,7 @@ class Game_Object extends Asset{
     }
 
     fromSaveData(object, spriteList){
-        Object.assign(this, object);
+        super.fromSaveData(object);
         this.sprite = spriteList.find(s => s.id == this.sprite);
         return this;
     }

@@ -7,9 +7,10 @@
         <NavControlPanel
             class="navControlPanel"
             ref="navControlPanel"
-            stateModule="ArtEditor"
+            :asset="sprite"
+            :selectedNavTool="selectedNavTool"
             :maxZoom="maxZoom"
-            @navChanged="navChanged"
+            @navChanged="renderer.navChanged()"
             @tool-selected="enableNav"/>
     </div>
 </template>
@@ -23,7 +24,7 @@ import {getSpriteDimensions} from '@/common/Util_2D';
 
 export default {
     name: "ArtCanvas",
-    props: ['tool', 'spriteFrame', 'undoLength', 'redoLength'],
+    props: ['tool', 'sprite', 'spriteFrame', 'undoLength', 'redoLength'],
     components: {
         UndoPanel,
         NavControlPanel
@@ -37,11 +38,7 @@ export default {
             maxZoom: 2,
             toolMap: new Map(),
             enableDrawing: true,
-            mouseCell: new Victor(),
-            navState: {
-                zoomFac: 1,
-                offset: new Victor()
-            }
+            mouseCell: new Victor()
         }
     },
     computed: {
@@ -50,6 +47,12 @@ export default {
         },
         CANVAS_WIDTH(){
             return this.GRID_DIV * 20;
+        },
+        navState(){
+            return this.sprite.navState;
+        },
+        selectedNavTool(){
+            return this.$store.getters['ArtEditor/getSelectedNavTool'];
         }
     },
     watch: {
@@ -60,7 +63,7 @@ export default {
             this.tool.setMouseCell(this.mouseCell);
         },
         spriteFrame(){
-            this.renderer.setSprite(this.spriteFrame);
+            this.renderer.setSprite(this.spriteFrame, this.navState);
             this.tool.setPixelBuff(this.spriteFrame);
             this.previewData.fill('');
         }
@@ -80,11 +83,6 @@ export default {
         this.maxZoom = this.getZoomBounds().max;
         this.navControl.setViewBounds(this.getViewBounds());
         this.navControl.setContentsBounds(this.getContentsBounds());
-        this.navChanged(this.navControl.getNavState());
-    },
-    beforeDestroy(){
-        this.$store.dispatch('ArtEditor/setNavZoom', this.navState.zoomFac);
-        this.$store.dispatch('ArtEditor/setNavOffset', this.navState.offset);
     },
     destroyed(){
         this.renderer = null;
@@ -137,12 +135,9 @@ export default {
                 this.maxZoom = this.getZoomBounds().max;
             }
         },
-        navChanged(navState){
-            this.navState.zoomFac = navState.zoomFac;
-            this.navState.offset.copy(navState.rawOffset);
-            this.renderer.navChanged(navState);
-        },
-        enableNav(){
+        enableNav(navTool){
+            this.$store.dispatch('ArtEditor/selectTool', null);
+            this.$store.dispatch('ArtEditor/setSelectedNavTool', navTool);
             this.$emit('nav-selected');
             this.tool.disableDrawing();
         },

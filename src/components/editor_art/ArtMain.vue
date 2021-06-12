@@ -10,10 +10,10 @@
             class="artCanvas"
             ref="artCanvas"
             :tool="tool"
+            :sprite="selectedAsset"
             :spriteFrame="selectedAsset.frames[selectedFrameIdx]"
             :undoLength="undoStore.undoLength"
             :redoLength="undoStore.redoLength"
-            @nav-selected="navSelected()"
             @mouse-down="tool.mouseDown($event)"
             @mouse-up="tool.mouseUp($event)"
             @mouse-move="tool.mouseMove($event)"
@@ -121,9 +121,6 @@ export default {
         frameAdded(){
             this.commitFullState();
             this.updateFrameIDs();
-        },
-        navSelected(){
-            this.$store.dispatch('ArtEditor/selectTool', null);
         },
         colorSelected(newColor){
             this.tool.setToolColor(newColor);
