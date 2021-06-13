@@ -9,7 +9,7 @@
         <NavControlPanel
             ref="navControlPanel"
             class="navControlPanel"
-            :asset="selectedRoom"
+            :navState="selectedRoom.navState"
             :selectedNavTool="selectedNavTool"
             maxZoom="2"
             @navChanged="renderer.navChange()"
@@ -87,7 +87,7 @@ export default {
         //bind events
         window.addEventListener('resize', this.resize);
         this.canvasEl.addEventListener('wheel', this.$refs.navControlPanel.scroll);
-        this.canvasEl.addEventListener('mouseleave', this.$refs.navControlPanel.mouseLeave);
+        this.canvasEl.addEventListener('mouseleave', this.mouseLeave);
 
         this.renderer.setSVG({
             camera: this.$refs.camera_icon,
@@ -117,8 +117,13 @@ export default {
         },
         mouseMove(event){
             this.$refs.navControlPanel.mouseMove(event);
-            this.renderer.mouseMove(event);
             this.emitMouseEvent(event, MOUSE_EVENT.MOVE);
+            this.renderer.mouseMove(event);
+        },
+        mouseLeave(event){
+            this.$refs.navControlPanel.mouseLeave(event);
+            this.emitMouseEvent(event, MOUSE_EVENT.UP);
+            this.renderer.mouseMove(event);
         },
         roomChange(){
             this.renderer.setRoomRef(this.selectedRoom);

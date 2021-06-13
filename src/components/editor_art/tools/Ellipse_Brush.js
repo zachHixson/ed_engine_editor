@@ -24,14 +24,14 @@ class Ellipse_Brush extends Tool{
         this.clearPreviewBuff();
 
         if (
-            this.isMouseDown &&
+            this._mouseDown &&
             isInBounds(this.startPos.x, this.startPos.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
         ){
             this.drawEllipse(this.startPos, this.mouseCell, this.brushPxSize);
         }
 
         if (
-            !this.isMouseDown &&
+            !this._mouseDown &&
             isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
         ){
             this.previewBuff[get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = this.color;

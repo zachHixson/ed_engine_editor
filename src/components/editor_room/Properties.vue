@@ -2,13 +2,13 @@
     <div class="properties">
         <div v-if="showInstProps" class="propContents">
             <div class="heading">{{$t('room_editor.object_properties_heading')}}</div>
-            <div class="control">
-                <label>{{$t('room_editor.object_type')}}:</label>
-                <div class="info">{{selectedEntity.objRef.name}}</div>
+            <div class="info" style="margin-top: var(--margin);">
+                <div>{{$t('room_editor.object_type')}}:</div>
+                <div>{{selectedEntity.objRef.name}}</div>
             </div>
-            <div class="control">
-                <label>{{$t('room_editor.instance_id')}}:</label>
-                <div class="info">{{selectedEntity.id}}</div>
+            <div class="info" style="margin-bottom: var(--margin);">
+                <div>{{$t('room_editor.instance_id')}}:</div>
+                <div>{{selectedEntity.id}}</div>
             </div>
             <div class="control">
                 <label for="instName">{{$t('room_editor.instance_name')}}:</label>
@@ -337,13 +337,23 @@ export default {
 
 .heading{
     font-size: 1.3em;
+    font-weight: bold;
     margin-bottom: 10px;
+}
+
+.info{
+    --margin: 20px;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
 }
 
 .control{
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
+    align-items: center;
     width: 100%;
 }
 
@@ -351,7 +361,7 @@ export default {
     text-align: right;
 }
 
-.control > input, .control > select, .control > button, .control > .info{
+.control > input, .control > select, .control > button{
     width: 100px;
     box-sizing: border-box;
     margin-left: 10px;
@@ -359,8 +369,13 @@ export default {
 
 .changeBgBtn{
     position: relative;
+    height: 40px;
     border: 2px solid var(--border);
-    border-radius: var(--corner-radius)
+    border-radius: var(--corner-radius);
+}
+
+.changeBgBtn:hover{
+    border-color: var(--button-dark-hover);
 }
 
 .bgColorEditor{

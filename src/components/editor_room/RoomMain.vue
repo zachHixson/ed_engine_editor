@@ -136,8 +136,8 @@ export default {
         }
     },
     watch: {
-        selectedRoom(newRoom){
-            if (newRoom && newRoom != this.selectedRoom){
+        selectedRoom(newRoom, oldRoom){
+            if (newRoom && oldRoom && newRoom.id != oldRoom.id){
                 this.editorSelection = null;
             }
         }

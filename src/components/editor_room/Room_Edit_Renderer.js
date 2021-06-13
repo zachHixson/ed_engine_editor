@@ -1,5 +1,6 @@
 import Victor from 'victor';
 import {drawPixelData} from '@/common/Draw_2D';
+import {mod} from '@/common/Util';
 
 const NO_SPRITE_PADDING = 0.75;
 
@@ -366,8 +367,4 @@ export default class Room_Edit_Renderer{
 
         return newBuff;
     }
-}
-
-function mod(n, m){
-    return ((n%m)+m)%m;
 }

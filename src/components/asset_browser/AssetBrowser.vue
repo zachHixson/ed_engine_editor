@@ -3,13 +3,17 @@
         <div ref="slideWrapper" class="slideWrapper">
             <div class="columns">
                 <div class="categoryColumn">
-                    <Category
+                    <div class="category"
                         v-for="category in categories"
-                        :key="category.cat_ID"
-                        :cat_ID="category.cat_ID"
-                        :text="category.text"
-                        :icon="category.icon"
-                        @category-clicked="openCategory"/>
+                        :key="category.cat_ID">
+                        <div class="cat_title">
+                            <img class="cat_icon" :src="require(`@/${category.icon}.svg`)"/>
+                            {{category.text}}
+                        </div>
+                        <button class="btn" @click="openCategory(category)">
+                            <img class="btn_icon" src="@/assets/arrow_01.svg" style="transform: rotate(90deg);"/>
+                        </button>
+                    </div>
                 </div>
                 <div class="assetListColumn">
                     <div class="assetListHeading">
@@ -45,7 +49,6 @@
 
 <script>
 import {CATEGORY_ID} from '@/common/Enums';
-import Category from './Category';
 import Asset from './Asset';
 
 export default {
@@ -73,7 +76,6 @@ export default {
         }
     },
     components: {
-        Category,
         Asset
     },
     computed: {
@@ -212,6 +214,37 @@ export default {
     width: 50%;
     height: 100%;
     box-sizing: border-box;
+}
+
+.category{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 50px;
+    background: var(--heading);
+    border: 2px solid var(--border);
+    border-right: none;
+    padding-left: 5px;
+    margin-bottom: 3px;
+    box-sizing: border-box;
+    border-radius: var(--corner-radius) 0px 0px var(--corner-radius);
+}
+
+.cat_title{
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+    font-size: var(--heading-font-size);
+    color: var(--text-dark);
+}
+
+.cat_icon{
+    width: 30px;
+    height: 30px;
+    margin: 5px;
+    fill: var(--text-dark);
+    stroke: var(--text-dark);
 }
 
 .category_selected{

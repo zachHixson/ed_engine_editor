@@ -2,21 +2,19 @@
     <div class="artMain">
         <ToolPanel
             class="toolPanel"
-            @resized="resize"
-            @color-selected="colorSelected"
-            @size-selected="sizeSelected"
-            @tool-selected="toolSelected" />
+            @resized="resize"/>
         <ArtCanvas
             class="artCanvas"
             ref="artCanvas"
             :tool="tool"
-            :sprite="selectedAsset"
+            :navState="selectedAsset.navState"
             :spriteFrame="selectedAsset.frames[selectedFrameIdx]"
             :undoLength="undoStore.undoLength"
             :redoLength="undoStore.redoLength"
-            @mouse-down="tool.mouseDown($event)"
-            @mouse-up="tool.mouseUp($event)"
-            @mouse-move="tool.mouseMove($event)"
+            @mouse-down="mouseDown"
+            @mouse-up="mouseUp"
+            @mouse-move="mouseMove"
+            @mouse-leave="mouseLeave"
             @undo="undo()"
             @redo="redo()" />
         <AnimationPanel
@@ -62,12 +60,21 @@ export default {
             undoStore: new Undo_Store(MAX_UNDO_STEPS),
             frameIDs: this.selectedAsset.frameIDs,
             toolMap: new Map(),
-            tool: new Brush()
+            tool: null
         }
     },
     computed:{
         selectedFrameIdx(){
             return this.$store.getters['ArtEditor/getSelectedFrame'];
+        },
+        toolColor(){
+            return this.$store.getters['ArtEditor/getSelectedColor'];
+        },
+        toolSize(){
+            return this.$store.getters['ArtEditor/getSelectedSize'];
+        },
+        toolId(){
+            return this.$store.getters['ArtEditor/getSelectedTool'];
         }
     },
     watch:{
@@ -83,6 +90,15 @@ export default {
                     this.$store.dispatch('ArtEditor/selectFrame', 0);
                 }
             }
+        },
+        toolColor(newColor){
+            this.tool.setToolColor(newColor);
+        },
+        toolSize(newSize){
+            this.tool.setToolSize(newSize);
+        },
+        toolId(newTool){
+            this.toolSelected(newTool);
         }
     },
     mounted(){
@@ -122,21 +138,17 @@ export default {
             this.commitFullState();
             this.updateFrameIDs();
         },
-        colorSelected(newColor){
-            this.tool.setToolColor(newColor);
-        },
-        sizeSelected(newSize){
-            this.tool.setToolSize(newSize);
-        },
         toolSelected(newTool){
-            let prevSize = this.tool.brushSize;
-            let prevColor = this.tool.color;
-
-            this.$store.dispatch('ArtEditor/setSelectedNavTool', null);
-            this.tool = this.getTool(newTool);
-            this.tool.setToolSize(prevSize);
-            this.tool.setToolColor(prevColor);
-            this.tool.setCommitCallback(this.spriteDataChanged.bind(this));
+            if (newTool){
+                this.$store.dispatch('ArtEditor/setSelectedNavTool', null);
+                this.tool = this.getTool(newTool);
+                this.tool.setToolSize(this.$store.getters['ArtEditor/getSelectedSize']);
+                this.tool.setToolColor(this.$store.getters['ArtEditor/getSelectedColor']);
+                this.tool.setCommitCallback(this.spriteDataChanged.bind(this));
+            }
+            else{
+                this.tool = null;
+            }
         },
         getTool(newTool){
             let getter = this.toolMap.get(newTool);
@@ -147,6 +159,27 @@ export default {
             else{
                 console.warn("Warning: Unkown brush: \"" + newTool + ".\" Defaulting to standard brush");
                 return new Brush();
+            }
+        },
+        mouseDown(event){
+            if (this.tool){
+                console.log(this.tool)
+                this.tool.mouseDown(event);
+            }
+        },
+        mouseUp(event){
+            if (this.tool){
+                this.tool.mouseUp(event);
+            }
+        },
+        mouseMove(event){
+            if (this.tool){
+                this.tool.mouseMove(event);
+            }
+        },
+        mouseLeave(event){
+            if (this.tool){
+                this.tool.mouseLeave(event);
             }
         },
         commitFullState(){

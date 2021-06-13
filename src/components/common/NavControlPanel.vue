@@ -17,6 +17,7 @@ import NavControl from './NavControl';
 
 const ZOOM_SENSITIVITY = 0.03;
 const ZOOM_WHEEL_AMT = 0.8;
+const PRECISION = 100;
 
 const NAV_TOOL = {
     PAN: 0,
@@ -27,7 +28,7 @@ Object.freeze(NAV_TOOL);
 
 export default {
     name: 'NavControlPanel',
-    props: ['asset', 'selectedNavTool', 'extra_controls', 'maxZoom'],
+    props: ['navState', 'selectedNavTool', 'maxZoom'],
     components: {
         NavControl
     },
@@ -66,15 +67,7 @@ export default {
             keyMap: {},
         }
     },
-    computed: {
-        navState(){
-            return this.asset.navState;
-        }
-    },
     mounted() {
-        let extra = this.extra_controls || [];
-        this.controls = [...extra, ...this.controls];
-
         document.addEventListener('keydown', this.registerKeys);
         document.addEventListener('keyup', this.unregisterKeys);
     },
@@ -206,7 +199,8 @@ export default {
             this.containerDimensions.y = height;
         },
         setZoom(newZoom){
-            this.navState.zoomFac = Math.min(Math.max(newZoom, 0.5), this.maxZoom);
+            newZoom = Math.min(Math.max(newZoom, 0.5), this.maxZoom);
+            this.navState.zoomFac = Math.round(newZoom * PRECISION) / PRECISION;
             this.$emit('navChanged', this.navState);
         },
         pan(){
@@ -216,6 +210,10 @@ export default {
 
             difference.divide(new Victor(this.navState.zoomFac, this.navState.zoomFac));
             this.navState.offset.add(difference);
+
+            this.navState.offset.multiplyScalar(PRECISION);
+            this.navState.offset.unfloat();
+            this.navState.offset.divideScalar(PRECISION);
 
             this.$emit('navChanged', this.navState);
         },

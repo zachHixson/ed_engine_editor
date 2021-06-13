@@ -20,8 +20,8 @@
             </div>
         </div>
         <div class="controls">
-            <button class="iconBtn"><img class="icon" src="@/assets/debug.svg"/></button>
-            <button class="iconBtn"><img class="icon" src="@/assets/play.svg"/></button>
+            <button class="iconBtn" :title="$t('editor_main.debug')"><img class="icon" src="@/assets/debug.svg"/></button>
+            <button class="iconBtn" :title="$t('editor_main.run')"><img class="icon" src="@/assets/play.svg"/></button>
         </div>
         <input type="file" ref="fileOpen" style="display: none" @change="loadProjectFile"/>
     </div>

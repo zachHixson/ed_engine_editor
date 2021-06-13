@@ -9,7 +9,7 @@
                     v-for="group in readOnlyList"
                     :key="group"
                     class="item">
-                    <input :value="group" disabled/>
+                    <input class="listInput readOnly" :value="group" disabled/>
                 </div>
             </div>
             <div>
@@ -54,7 +54,7 @@ export default {
         addGroup(){
             let nextNum = Math.max(
                 getHighestEndingNumber(this.editList),
-                (this.readOnlyList) ? Util.getHighestEndingNumber(this.readOnlyList) : []
+                (this.readOnlyList) ? getHighestEndingNumber(this.readOnlyList) : []
             ) + 1;
 
             this.$emit('group-changed', {
@@ -84,5 +84,9 @@ export default {
 
 .listInput{
     flex-grow: 1;
+}
+
+.readOnly{
+    opacity: 75%;
 }
 </style>

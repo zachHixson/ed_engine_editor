@@ -14,12 +14,13 @@
     background: var(--button-hover);
 }
 
-.viewportControl:active:hover{
+.viewportControl:active{
     background: var(--button-down);
+    filter: brightness(0.8);
 }
 
 .controlSelected{
-    filter: brightness(0.7);
+    background: var(--button-down);
 }
 
 .icon{

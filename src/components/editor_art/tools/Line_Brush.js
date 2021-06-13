@@ -23,7 +23,7 @@ class Line_Brush extends Tool{
         this.clearPreviewBuff();
 
         if (
-            this.isMouseDown &&
+            this._mouseDown &&
             isInBounds(this.startPos.x, this.startPos.y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)
         ){
             let dx = (this.mouseCell.x - this.startPos.x);
@@ -53,7 +53,7 @@ class Line_Brush extends Tool{
         }
 
         if (
-            !this.isMouseDown &&
+            !this._mouseDown &&
             isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
         ){
             switch(this.brushSize){

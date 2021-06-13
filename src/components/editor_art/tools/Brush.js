@@ -13,7 +13,7 @@ class Brush extends Tool{
     }
 
     updateCursorBuff(){
-        if (!this.isMouseDown){
+        if (!this._mouseDown){
             this.clearPreviewBuff();
         }
 

@@ -113,27 +113,33 @@ export default {
                     name: this.$t('art_editor.eye_dropper_tool'),
                     icon: 'assets/eye_dropper'
                 }
-            ],
-            toolColor: this.$store.getters['ArtEditor/getSelectedColor'],
-            toolSize: this.$store.getters['ArtEditor/getSelectedSize']
+            ]
         }
     },
     mounted(){
         this.colorPicker = new iro.ColorPicker('#picker', {
-            color: this.toolColor,
+            color: this.$store.getters['ArtEditor/getSelectedColor'],
             width: 200
         });
         this.colorPicker.on("color:change", this.colorChanged);
         this.$emit('resized');
     },
-    beforeDestroy(){
-        this.$store.dispatch('ArtEditor/setToolPanelState', this.isOpen);
-        this.$store.dispatch('ArtEditor/selectColor', this.toolColor);
-        this.$store.dispatch('ArtEditor/selectSize', this.toolSize);
-    },
     computed: {
-        storedColor(){
-            return this.$store.getters['ArtEditor/getSelectedColor'];
+        toolColor: {
+            get: function(){
+                this.$store.getters['ArtEditor/getSelectedColor'];
+            },
+            set: function(newCol){
+                this.$store.dispatch('ArtEditor/selectColor', newCol);
+            }
+        },
+        toolSize: {
+            get: function(){
+                this.$store.getters['ArtEditor/getSelectedSize'];
+            },
+            set: function(newSize){
+                this.$store.dispatch('ArtEditor/selectSize', newSize);
+            }
         },
         toolId: {
             get: function(){
@@ -145,7 +151,7 @@ export default {
         }
     },
     watch: {
-        storedColor(newCol){
+        toolColor(newCol){
             this.colorPicker.color.hexString = newCol;
         }
     },
@@ -158,15 +164,12 @@ export default {
         },
         colorChanged(newColor){
             this.toolColor = newColor.hexString;
-            this.$emit('color-selected', this.toolColor);
         },
         sizeChanged(newSize){
             this.toolSize = newSize;
-            this.$emit('size-selected', newSize);
         },
         toolChanged(newTool){
             this.toolId = newTool
-            this.$emit('tool-selected', newTool);
         }
     }
 }

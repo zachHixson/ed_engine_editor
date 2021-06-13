@@ -9,7 +9,7 @@ class Tool{
         this.mouseCell = null;
         this.color = "#FFFFFF";
         this.size = null;
-        this.isMouseDown = false;
+        this._mouseDown = false;
         this.brushSize = ART_TOOL_SIZE.SMALL;
         this.canDraw = true;
         this.commitCallback;
@@ -30,13 +30,13 @@ class Tool{
 
     mouseDown(){
         if (this.canDraw){
-            this.isMouseDown = true;
+            this._mouseDown = true;
         }
     }
 
     mouseUp(){
         if (this.canDraw){
-            this.isMouseDown = false;
+            this._mouseDown = false;
         }
     }
 
@@ -44,6 +44,14 @@ class Tool{
         if (this.canDraw){
             this.updateCursorBuff();
         }
+    }
+
+    mouseLeave(){
+        if (this.canDraw && this._mouseDown){
+            this.mouseUp();
+        }
+
+        this._mouseDown = false;
     }
 
     setMouseCell(vec){

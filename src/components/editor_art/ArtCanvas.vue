@@ -7,7 +7,7 @@
         <NavControlPanel
             class="navControlPanel"
             ref="navControlPanel"
-            :asset="sprite"
+            :navState="navState"
             :selectedNavTool="selectedNavTool"
             :maxZoom="maxZoom"
             @navChanged="renderer.navChanged()"
@@ -24,7 +24,7 @@ import {getSpriteDimensions} from '@/common/Util_2D';
 
 export default {
     name: "ArtCanvas",
-    props: ['tool', 'sprite', 'spriteFrame', 'undoLength', 'redoLength'],
+    props: ['tool', 'navState', 'spriteFrame', 'undoLength', 'redoLength'],
     components: {
         UndoPanel,
         NavControlPanel
@@ -48,19 +48,18 @@ export default {
         CANVAS_WIDTH(){
             return this.GRID_DIV * 20;
         },
-        navState(){
-            return this.sprite.navState;
-        },
         selectedNavTool(){
             return this.$store.getters['ArtEditor/getSelectedNavTool'];
         }
     },
     watch: {
         tool(){
-            this.tool.beforeDestroy();
-            this.tool.setPixelBuff(this.spriteFrame);
-            this.tool.setPreviewBuff(this.previewData);
-            this.tool.setMouseCell(this.mouseCell);
+            if (this.tool){
+                this.tool.beforeDestroy();
+                this.tool.setPixelBuff(this.spriteFrame);
+                this.tool.setPreviewBuff(this.previewData);
+                this.tool.setMouseCell(this.mouseCell);
+            }
         },
         spriteFrame(){
             this.renderer.setSprite(this.spriteFrame, this.navState);
@@ -116,7 +115,7 @@ export default {
         mouseLeave(event){
             this.mouseMove(event);
             this.navControl.mouseLeave(event);
-            this.mouseUp(event);
+            this.$emit('mouse-leave', event);
         },
         wheel(event){
             this.navControl.scroll(event);

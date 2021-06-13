@@ -42,12 +42,12 @@ export default {
     border: 2px solid var(--border);
 }
 
-.tool:hover:not(.controlSelected){
+.tool:hover:not(.toolSelected){
     background: var(--button-hover);
 }
 
-.tool:active:hover{
-    background: var(--button-hover);
+.tool:active{
+    background: var(--button-down);
     filter: brightness(0.8);
 }
 

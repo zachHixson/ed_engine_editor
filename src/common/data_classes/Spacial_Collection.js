@@ -10,6 +10,7 @@
 */
 
 import Linked_List from '../Linked_List';
+import {mod} from '@/common/Util';
 
 class Spacial_Collection{
     constructor(area, cellSize){
@@ -39,6 +40,7 @@ class Spacial_Collection{
     add(data, pos){
         let nodeRef;
         let spacialIdx = this.getSpacialCellIdx(pos);
+
         this.zSort.insertSorted(data, (a, b) => a.zDepth <= b.zDepth);
         nodeRef = this.zSort.getLastInsertedRef();
         this.spacialGrid[spacialIdx].push(nodeRef);
@@ -86,7 +88,8 @@ class Spacial_Collection{
         let offsetY = y + halfArea;
         let cellX = Math.floor(offsetX / this.cellSize);
         let cellY = Math.floor(offsetY / this.cellSize);
-        return (cellY * this.cellCount) + cellX;
+        let cellIdx = (cellY * this.cellCount) + cellX;
+        return Math.floor(mod(cellIdx, this.spacialGrid.length));
     }
 
     getById(instId){

@@ -31,7 +31,7 @@ class Eraser extends Tool{
             this.canCommit = true;
 
             //erase sprite data
-            if (this.isMouseDown){
+            if (this._mouseDown){
                 switch(this.brushSize){
                     case ART_TOOL_SIZE.SMALL:
                         this.pixelBuff[get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = '';

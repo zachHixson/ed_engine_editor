@@ -24,3 +24,7 @@ export function removeStroke(svg){
 
     return svg;
 }
+
+export function mod(n, m){
+    return ((n%m)+m)%m;
+}

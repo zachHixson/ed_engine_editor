@@ -7,6 +7,10 @@
     box-sizing: border-box;
 }
 
+.control > input:not([type=checkbox]):hover, select:hover{
+    border-color: var(--button-dark-hover)
+}
+
 .control > input[type=checkbox]{
     width: 20px;
     height: 20px;
@@ -17,4 +21,13 @@
     border: 2px solid var(--border);
     color: var(--text-dark);
     font-weight: bold;
+}
+
+.control > button:hover, .control > input[type=button]:hover{
+    background: var(--button-dark-hover);
+    border-color: var(--button-dark-norm);
+}
+
+.control > button:active, .control > input[type=button]:active{
+    background: var(--button-dark-down);
 }
