@@ -87,6 +87,7 @@ export default {
         //bind events
         window.addEventListener('resize', this.resize);
         this.canvasEl.addEventListener('wheel', this.$refs.navControlPanel.scroll);
+        this.canvasEl.addEventListener('mouseenter', ()=>{this.renderer.enableCursor = true});
         this.canvasEl.addEventListener('mouseleave', this.mouseLeave);
 
         this.renderer.setSVG({
@@ -123,12 +124,13 @@ export default {
         mouseLeave(event){
             this.$refs.navControlPanel.mouseLeave(event);
             this.emitMouseEvent(event, MOUSE_EVENT.UP);
+            this.renderer.enableCursor = false;
             this.renderer.mouseMove(event);
         },
         roomChange(){
             this.renderer.setRoomRef(this.selectedRoom);
         },
-        resize() {
+        resize(){
             let wrapper = this.$refs.editWindow;
             
             this.canvasEl.width = Math.max(wrapper.clientWidth, 1);

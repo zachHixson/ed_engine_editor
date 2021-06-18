@@ -1,7 +1,7 @@
 <template>
     <div ref="asset" class="asset" :class="{selected : isSelected}" @click="selectAsset">
         <div class="leftFloat" v-click-outside="stopRenaming">
-            <canvas v-show="hasThumb" class="thumbnail" ref="thumbNail" width="20" height="20">Test</canvas>
+            <canvas v-show="hasThumb" class="thumbnail" ref="thumbNail" width="20" height="20">Error</canvas>
             <img v-if="!hasThumb" class="thumbnail assetIcon" :src="require(`@/${defaultIcon}.svg`)"/>
             <div v-show="isRenaming">
                 <input class="nameBox" ref="renameText" v-model="asset.name" type="text" />
@@ -29,7 +29,6 @@ export default {
     data(){
         return {
             isRenaming: false,
-            dblClickCheck: false,
             hasThumb: false,
             thumbLoading: false,
             pixelBuff: document.createElement('canvas')
@@ -41,8 +40,8 @@ export default {
             let selectedRoom = this.$store.getters['AssetBrowser/getSelectedRoom'];
             let isSelected = false;
 
-            isSelected |= (selectedAsset) ? selectedAsset.id == this.asset.id : false
-            isSelected |= (selectedRoom) ? selectedRoom.id == this.asset.id : false
+            isSelected |= (selectedAsset) ? selectedAsset.id == this.asset.id : false;
+            isSelected |= (selectedRoom) ? selectedRoom.id == this.asset.id : false;
 
             return isSelected;
         }
@@ -53,6 +52,8 @@ export default {
                 this.isRenaming = false;
             }
         });
+
+        this.$refs.asset.addEventListener('dblclick', this.rename)
 
         this.pixelBuff.width = 16;
         this.pixelBuff.height = 16;
@@ -67,15 +68,7 @@ export default {
         },
         selectAsset(event){
             event.preventDefault();
-
-            if (this.dblClickCheck){
-                this.rename();
-            }
-            else{
-                this.$emit('selectAsset', this.asset);
-                this.dblClickCheck = true;
-                setTimeout(()=>{this.dblClickCheck = false}, 200);
-            }
+            this.$emit('selectAsset', this.asset);
         },
         rename(){
             this.isRenaming = true;

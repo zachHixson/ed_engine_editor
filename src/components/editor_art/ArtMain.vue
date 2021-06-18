@@ -163,7 +163,6 @@ export default {
         },
         mouseDown(event){
             if (this.tool){
-                console.log(this.tool)
                 this.tool.mouseDown(event);
             }
         },

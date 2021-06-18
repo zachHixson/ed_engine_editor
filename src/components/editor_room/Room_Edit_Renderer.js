@@ -18,6 +18,7 @@ export default class Room_Edit_Renderer{
         this.spriteCache = new Map();
         this.selectedEntity = null;
         this.mouseCell = new Victor(0, 0);
+        this.enableCursor = false;
         this.navState = navState;
         this.cameraIcon = null;
         this.noSpriteSVG = null;
@@ -268,20 +269,22 @@ export default class Room_Edit_Renderer{
     }
 
     _drawCursor(){
-        //draw mouse cursor
-        let ctx = this.cursorBuff.getContext("2d");
+        let ctx = this.cursorBuff.getContext('2d');
         let screenCell = this.worldToScreenPos(this.getMouseWorldCell());
 
         ctx.clearRect(0, 0, this.cursorBuff.width, this.cursorBuff.height);
 
-        ctx.fillStyle = "#AAAAAA88";
-        ctx.fillRect(screenCell.x, screenCell.y, this.scaledCellWidth, this.scaledCellWidth);
+        //draw mouse cursor
+        if (this.enableCursor){
+            ctx.fillStyle = '#AAAAAA88';
+            ctx.fillRect(screenCell.x, screenCell.y, this.scaledCellWidth, this.scaledCellWidth);
+        }
 
         //draw selection cursor
         if (this.selectedEntity){
             let screenPos = this.selectedEntity.pos.clone();
             screenPos = this.worldToScreenPos(screenPos);
-            ctx.strokeStyle = "blue";
+            ctx.strokeStyle = 'blue';
             ctx.strokeRect(screenPos.x, screenPos.y, this.scaledCellWidth, this.scaledCellWidth);
         }
     }
@@ -299,7 +302,7 @@ export default class Room_Edit_Renderer{
 
         if (this.showGrid){
             //draw lines
-            ctx.strokeStyle = "#BBB";
+            ctx.strokeStyle = '#BBB';
             ctx.lineWidth = 2;
             ctx.beginPath();
             for (let i = 1; i <= lineCount; i++){
@@ -322,13 +325,13 @@ export default class Room_Edit_Renderer{
             ctx.stroke();
 
             //draw origin axis
-            ctx.strokeStyle = "#FF0000";
+            ctx.strokeStyle = '#FF0000';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(0, origin.y);
             ctx.lineTo(this.canvas.width, origin.y);
             ctx.stroke();
-            ctx.strokeStyle = "#00FF00";
+            ctx.strokeStyle = '#00FF00';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(origin.x, 0);

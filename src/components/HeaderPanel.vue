@@ -86,14 +86,16 @@ export default {
                 this.isRenaming = false;
             }
         });
+
+        this.$refs.displayEditBox.addEventListener('dblclick', this.rename);
     },
     methods: {
         closeFileMenu(){
             this.fileVisible = false;
         },
         rename(){
+            this.isRenaming = true;
             this.$nextTick(()=>{
-                this.isRenaming = true;
                 this.$refs.projNameEdit.focus();
                 this.$refs.projNameEdit.select();
             });
