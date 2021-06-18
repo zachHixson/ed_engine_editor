@@ -10,6 +10,8 @@
             :navState="navState"
             :selectedNavTool="selectedNavTool"
             :maxZoom="maxZoom"
+            :contentsBounds="contentsBounds"
+            :unitScale="UNIT_WIDTH"
             @navChanged="renderer.navChanged()"
             @tool-selected="enableNav"/>
     </div>
@@ -21,6 +23,8 @@ import NavControlPanel from '@/components/common/NavControlPanel';
 import Art_Canvas_Renderer from './Art_Canvas_Renderer';
 import Victor from 'victor';
 import {getSpriteDimensions} from '@/common/Util_2D';
+
+const DEFAULT_CELL_SIZE = 20;
 
 export default {
     name: "ArtCanvas",
@@ -38,7 +42,8 @@ export default {
             maxZoom: 2,
             toolMap: new Map(),
             enableDrawing: true,
-            mouseCell: new Victor()
+            mouseCell: new Victor(),
+            unitScale: 1
         }
     },
     computed: {
@@ -46,7 +51,14 @@ export default {
             return getSpriteDimensions(this.spriteFrame);
         },
         CANVAS_WIDTH(){
-            return this.GRID_DIV * 20;
+            return this.GRID_DIV * DEFAULT_CELL_SIZE;
+        },
+        UNIT_WIDTH(){
+            return DEFAULT_CELL_SIZE / this.GRID_DIV;
+        },
+        contentsBounds(){
+            let halfCanvas = (this.CANVAS_WIDTH / 2) * 1;
+            return [-halfCanvas, -halfCanvas, halfCanvas, halfCanvas];
         },
         selectedNavTool(){
             return this.$store.getters['ArtEditor/getSelectedNavTool'];
@@ -80,8 +92,6 @@ export default {
         this.canvas.addEventListener('mouseleave', this.mouseLeave);
 
         this.maxZoom = this.getZoomBounds().max;
-        this.navControl.setViewBounds(this.getViewBounds());
-        this.navControl.setContentsBounds(this.getContentsBounds());
     },
     destroyed(){
         this.renderer = null;
@@ -139,12 +149,6 @@ export default {
             this.$store.dispatch('ArtEditor/setSelectedNavTool', navTool);
             this.$emit('nav-selected');
             this.tool.disableDrawing();
-        },
-        getViewBounds(){
-            return [-500, -500, 500, 500];
-        },
-        getContentsBounds(){
-            return [0, 0, this.CANVAS_WIDTH, this.CANVAS_WIDTH];
         },
         getZoomBounds(){
             let maxZoom = (Math.max(this.canvas.clientWidth, this.canvas.clientHeight) / this.CANVAS_WIDTH) * 2;

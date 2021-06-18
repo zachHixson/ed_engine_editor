@@ -130,6 +130,35 @@ class Room extends Asset{
     removeExit(exitId, pos = null){
         return this.exits.remove(exitId, pos);
     }
+
+    getContentsBounds(){
+        let bounds = new Array(4);
+
+        bounds[0] = this.camera.pos.x;
+        bounds[1] = this.camera.pos.y;
+        bounds[2] = this.camera.pos.x;
+        bounds[3] = this.camera.pos.y;
+
+        this.instances.zSort.forEach((i)=>{
+            bounds[0] = Math.min(i.pos.x, bounds[0]);
+            bounds[1] = Math.min(i.pos.y, bounds[1]);
+            bounds[2] = Math.max(i.pos.x, bounds[2]);
+            bounds[3] = Math.max(i.pos.y, bounds[3]);
+        });
+        this.exits.zSort.forEach((i)=>{
+            bounds[0] = Math.min(i.pos.x, bounds[0]);
+            bounds[1] = Math.min(i.pos.y, bounds[1]);
+            bounds[2] = Math.max(i.pos.x, bounds[2]);
+            bounds[3] = Math.max(i.pos.y, bounds[3]);
+        });
+
+        bounds[2] += 16;
+        bounds[3] += 16;
+        bounds[1] *= -1;
+        bounds[3] *= -1;
+
+        return bounds;
+    }
 }
 
 export default Room;

@@ -11,6 +11,8 @@
             class="navControlPanel"
             :navState="selectedRoom.navState"
             :selectedNavTool="selectedNavTool"
+            :contentsBounds="contentsBounds"
+            :unitScale="unitWidth"
             maxZoom="2"
             @navChanged="renderer.navChange()"
             @tool-selected="navToolSelected"/>
@@ -47,7 +49,9 @@ export default {
         return {
             canvasEl: null,
             renderer: null,
-            loadedImages: 0
+            loadedImages: 0,
+            contentsBounds: [0, 0, 0, 0],
+            unitWidth: 1
         }
     },
     computed: {
@@ -82,6 +86,8 @@ export default {
         //Setup Canvas and renderer
         this.canvasEl = this.$refs.canvas;
         this.renderer = new Room_Edit_Renderer(this.canvasEl, this.selectedRoom.navState);
+        this.contentsBounds = this.selectedRoom.getContentsBounds();
+        this.unitWidth = this.renderer.UNIT_WIDTH;
         this.resize();
 
         //bind events
@@ -155,12 +161,14 @@ export default {
             }
         },
         instancesChanged(){
+            this.contentsBounds = this.selectedRoom.getContentsBounds();
             this.renderer.instancesChanged();
         },
         setSelection(){
             this.renderer.setSelection(this.editorSelection);
         },
         cameraChanged(){
+            this.contentsBounds = this.selectedRoom.getContentsBounds();
             this.renderer.instancesChanged();
         },
         bgColorChanged(){

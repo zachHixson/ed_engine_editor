@@ -28,7 +28,7 @@ Object.freeze(NAV_TOOL);
 
 export default {
     name: 'NavControlPanel',
-    props: ['navState', 'selectedNavTool', 'maxZoom'],
+    props: ['navState', 'selectedNavTool', 'maxZoom', 'contentsBounds', 'unitScale'],
     components: {
         NavControl
     },
@@ -52,8 +52,6 @@ export default {
                     oneshot: true
                 }
             ],
-            viewBounds: [-500, -500, 500, 500],
-            contentsBounds: [0, 0, 500, 500],
             containerDimensions: new Victor(0, 0),
             hotkeyTool: null,
             mouse: {
@@ -65,6 +63,7 @@ export default {
                 dragDistance: new Victor(0, 0)
             },
             keyMap: {},
+            unitSize: 1
         }
     },
     mounted() {
@@ -100,7 +99,7 @@ export default {
 
             this.detectKeyCombo();
         },
-        mouseUp(event){
+        mouseUp(){
             this.mouse.down = false;
             this.mouse.mmDown = false;
             this.keyMap['mmb'] = false;
@@ -176,24 +175,6 @@ export default {
         getNavState(){
             return this.navState;
         },
-        setViewBounds(newBounds){
-            if (newBounds.length < 4){
-                return -1;
-            }
-
-            for (let i = 0; i < this.viewBounds.length; i++){
-                this.viewBounds[i] = newBounds[i];
-            }
-        },
-        setContentsBounds(newBounds){
-            if (newBounds.length < 4){
-                return -1;
-            }
-
-            for (let i = 0; i < this.contentsBounds.length; i++){
-                this.contentsBounds[i] = newBounds[i];
-            }
-        },
         setContainerDimensions(width, height){
             this.containerDimensions.x = width;
             this.containerDimensions.y = height;
@@ -238,15 +219,21 @@ export default {
                 Math.abs(cornerUL.x - cornerBR.x),
                 Math.abs(cornerUL.y - cornerBR.y)
             );
+            let midPoint = new Victor(
+                (this.contentsBounds[0] + this.contentsBounds[2]) / -2,
+                (this.contentsBounds[1] + this.contentsBounds[3]) / 2
+            );
             let maxContentsDim = Math.max(dimensions.x, dimensions.y);
             let minContainerDim = Math.min(
                 this.containerDimensions.x,
                 this.containerDimensions.y
             );
 
-            this.setZoom((minContainerDim / maxContentsDim) * .99);
-            this.navState.offset.x = 0;
-            this.navState.offset.y = 0;
+            minContainerDim /= this.unitScale;
+            midPoint.multiplyScalar(this.unitScale);
+
+            this.setZoom(minContainerDim / maxContentsDim);
+            this.navState.offset.copy(midPoint);
             this.$emit('navChanged', this.navState);
         }
     }
