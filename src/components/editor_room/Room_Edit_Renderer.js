@@ -6,7 +6,6 @@ const NO_SPRITE_PADDING = 0.75;
 
 export default class Room_Edit_Renderer{
     constructor(element, navState){
-        this.cell_px_width = 50;
         this.showGrid = true;
         this.roomRef = null;
         this.canvas = element;
@@ -32,6 +31,9 @@ export default class Room_Edit_Renderer{
         this.recalcRoundedCanvas();
         this.recalcHalfCanvas();
     }
+
+    get CELL_PX_WIDTH(){return 50};
+    get UNIT_WIDTH(){return this.CELL_PX_WIDTH / 16};
 
     getMouseCell(){
         return this.mouseCell;
@@ -94,7 +96,7 @@ export default class Room_Edit_Renderer{
     }
 
     navChange(){
-        this.scaledCellWidth = this.cell_px_width * this.navState.zoomFac;
+        this.scaledCellWidth = this.CELL_PX_WIDTH * this.navState.zoomFac;
         this.recalcRoundedCanvas();
         this.fullRedraw();
     }
@@ -349,13 +351,13 @@ export default class Room_Edit_Renderer{
         pt.subtract(this.halfCanvas);
         pt.divideScalar(this.navState.zoomFac);
         pt.subtract(this.navState.offset);
-        pt.divideScalar(this.cell_px_width / 16);
+        pt.divideScalar(this.UNIT_WIDTH);
 
         return pt;
     }
 
     worldToScreenPos(pt){
-        pt.multiplyScalar(this.cell_px_width / 16);
+        pt.multiplyScalar(this.UNIT_WIDTH);
         pt.add(this.navState.offset);
         pt.multiplyScalar(this.navState.zoomFac);
         pt.add(this.halfCanvas);

@@ -2,7 +2,7 @@ import Victor from 'victor';
 import {drawCheckerBG, drawPixelData} from '@/common/Draw_2D';
 import {getSpriteDimensions} from '@/common/Util_2D';
 
-class Art_Canvas_Renderer{
+export default class Art_Canvas_Renderer{
     constructor(element, spriteData, previewData, navState){
         this.canvas = element;
         this.checkerBGBuff = document.createElement("canvas");
@@ -28,6 +28,13 @@ class Art_Canvas_Renderer{
         this.resize();
     }
 
+    getTranslate(){
+        return new Victor(
+            (this.canvas.width / 2) + (this.navState.offset.x * this.navState.zoomFac),
+            (this.canvas.height / 2) + (this.navState.offset.y * this.navState.zoomFac)
+        );
+    }
+
     fullRedraw(){
         let ctx = this.canvas.getContext("2d");
 
@@ -44,20 +51,17 @@ class Art_Canvas_Renderer{
         const HALF_CANVAS = this.CANVAS_WIDTH / 2;
 
         let scaleFac = (this.CANVAS_WIDTH / this.GRID_DIV) * this.navState.zoomFac;
+        let halfScale = -HALF_CANVAS * this.navState.zoomFac;
+        let translate = this.getTranslate();
 
         ctx.drawImage(this.checkerBGBuff, 0, 0, this.checkerBGBuff.width, this.checkerBGBuff.height);
 
-        //draw pixel and preview buffers
+        //draw pixel and preview buffers (they require a transformation)
         ctx.imageSmoothingEnabled = false;
         ctx.webkitImageSmoothingEnabled = false;
 
-        ctx.translate(
-            (this.canvas.width / 2) + (this.navState.offset.x * this.navState.zoomFac),
-            (this.canvas.height / 2) + (this.navState.offset.y * this.navState.zoomFac)
-        );
-        ctx.translate(
-            -HALF_CANVAS * this.navState.zoomFac, -HALF_CANVAS * this.navState.zoomFac
-        )
+        ctx.translate(translate.x, translate.y);
+        ctx.translate(halfScale, halfScale)
         ctx.scale(scaleFac, scaleFac);
 
         ctx.drawImage(this.pixelBuff, 0, 0, this.pixelBuff.width, this.pixelBuff.height);
@@ -65,6 +69,7 @@ class Art_Canvas_Renderer{
 
         ctx.resetTransform();
 
+        //draw buffers that don't require a transformation
         ctx.drawImage(this.gridBuff, 0, 0, this.gridBuff.width, this.gridBuff.height);
         ctx.drawImage(this.checkerStencilBuff, 0, 0, this.checkerStencilBuff.width, this.checkerStencilBuff.height);
     }
@@ -119,19 +124,15 @@ class Art_Canvas_Renderer{
     }
 
     drawBGStencil(ctx = this.checkerStencilBuff.getContext('2d')){
-        const HALF_WIDTH = this.CANVAS_WIDTH / 2;
+        const FULL_WIDTH = this.CANVAS_WIDTH * this.navState.zoomFac;
+        const HALF_WIDTH = -FULL_WIDTH / 2;
+
+        let translate = this.getTranslate();
+        
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, this.checkerStencilBuff.width, this.checkerStencilBuff.height);
-        ctx.translate(
-            (this.canvas.width / 2) + (this.navState.offset.x * this.navState.zoomFac),
-            (this.canvas.height / 2) + (this.navState.offset.y * this.navState.zoomFac)
-        );
-        ctx.clearRect(
-            -HALF_WIDTH * this.navState.zoomFac,
-            -HALF_WIDTH * this.navState.zoomFac,
-            this.CANVAS_WIDTH * this.navState.zoomFac,
-            this.CANVAS_WIDTH * this.navState.zoomFac
-        );
+        ctx.translate(translate.x, translate.y);
+        ctx.clearRect(HALF_WIDTH, HALF_WIDTH, FULL_WIDTH, FULL_WIDTH);
         ctx.resetTransform();
 
         //remove after debugging
@@ -157,12 +158,11 @@ class Art_Canvas_Renderer{
         const PIXEL_SIZE = Math.round(this.CANVAS_WIDTH / this.GRID_DIV);
         const HALF_CANVAS = this.CANVAS_WIDTH / 2;
 
+        let translate = this.getTranslate();
+
         ctx.clearRect(0, 0, this.gridBuff.width, this.gridBuff.height);
 
-        ctx.translate(
-            (this.canvas.width / 2) + (this.navState.offset.x * this.navState.zoomFac),
-            (this.canvas.height / 2) + (this.navState.offset.y * this.navState.zoomFac)
-        );
+        ctx.translate(translate.x, translate.y);
         ctx.scale(this.navState.zoomFac, this.navState.zoomFac);
 
         //draw grid
@@ -189,5 +189,3 @@ class Art_Canvas_Renderer{
         this.drawPixelData(canvas, this.previewData);
     }
 }
-
-export default Art_Canvas_Renderer;
