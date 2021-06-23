@@ -10,8 +10,8 @@ class Room extends Asset{
     constructor(){
         super();
         this.camera = new Camera();
-        this.instances = new Spacial_Collection(2000, 80);
-        this.exits = new Spacial_Collection(2000, 80);
+        this.instances = new Spacial_Collection(2000, 64);
+        this.exits = new Spacial_Collection(2000, 64);
         this.bgColor = "#FFFFFF";
         this.persist = false;
         this.useGravity = false;
