@@ -127,7 +127,7 @@ export default {
     computed: {
         toolColor: {
             get: function(){
-                this.$store.getters['ArtEditor/getSelectedColor'];
+                return this.$store.getters['ArtEditor/getSelectedColor'];
             },
             set: function(newCol){
                 this.$store.dispatch('ArtEditor/selectColor', newCol);
@@ -135,7 +135,7 @@ export default {
         },
         toolSize: {
             get: function(){
-                this.$store.getters['ArtEditor/getSelectedSize'];
+                return this.$store.getters['ArtEditor/getSelectedSize'];
             },
             set: function(newSize){
                 this.$store.dispatch('ArtEditor/selectSize', newSize);
