@@ -28,3 +28,7 @@ export function removeStroke(svg){
 export function mod(n, m){
     return ((n%m)+m)%m;
 }
+
+export function clamp(x, min, max){
+    return Math.max(Math.min(x, max), min);
+}

@@ -1,4 +1,5 @@
 import {get2DIdx, getSpriteDimensions} from './Util_2D';
+import {clamp} from './Util';
 
 export function drawCheckerBG(canvas, checkerSize, lightCol = '#AAA', darkCol = '#CCC'){
     let ctx = canvas.getContext('2d');
@@ -66,4 +67,18 @@ export function hexToRGBA(hexStr){
         b: parseInt(hexStr.substring(4 + offset, 6 + offset), 16),
         a: parseInt(hexStr.substring(6 + offset, 8 + offset), 16)
     }
+}
+
+export function RGBAToHex(r = 0, g = 0, b = 0, a = 255){
+    r = clamp(r, 0, 255);
+    g = clamp(g, 0, 255);
+    b = clamp(b, 0, 255);
+    a = clamp(a, 0, 255);
+    
+    let hexR = r.toString(16).padStart(2, '0');
+    let hexG = g.toString(16).padStart(2, '0');
+    let hexB = b.toString(16).padStart(2, '0');
+    let hexA = a.toString(16).padStart(2, '0');
+
+    return '#' + hexR + hexG + hexB + hexA;
 }
