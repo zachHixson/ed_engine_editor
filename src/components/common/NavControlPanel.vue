@@ -14,6 +14,7 @@
 <script>
 import Victor from 'victor';
 import NavControl from './NavControl';
+import HotkeyMap from '@/components/common/HotkeyMap';
 
 const ZOOM_SENSITIVITY = 0.03;
 const ZOOM_WHEEL_AMT = 0.8;
@@ -38,18 +39,20 @@ export default {
                 {
                     id: NAV_TOOL.PAN,
                     altText: this.$t('navigation.pan_tool'),
-                    icon: 'assets/navigation_hand'
+                    icon: 'assets/navigation_hand',
+                    action: () => this.$emit('tool-selected', NAV_TOOL.PAN)
                 },
                 {
                     id: NAV_TOOL.ZOOM,
                     altText: this.$t('navigation.zoom_tool'),
-                    icon: 'assets/navigation_magglass'
+                    icon: 'assets/navigation_magglass',
+                    action: () => this.$emit('tool-selected', NAV_TOOL.ZOOM)
                 },
                 {
                     id: NAV_TOOL.CENTER,
                     altText: this.$t('navigation.center_view'),
                     icon: 'assets/navigation_center',
-                    oneshot: true
+                    action: () => this.centerView()
                 }
             ],
             containerDimensions: new Victor(0, 0),
@@ -62,60 +65,55 @@ export default {
                 lastPosition: new Victor(0, 0),
                 dragDistance: new Victor(0, 0)
             },
-            keyMap: {},
+            hotkeyMap: new HotkeyMap(),
+            hotkeyDown: null,
+            hotkeyUp: null,
             unitSize: 1
         }
     },
-    mounted() {
-        document.addEventListener('keydown', this.registerKeys);
-        document.addEventListener('keyup', this.unregisterKeys);
+    mounted(){
+        let hotToolMacro = (keyArr, tool) => [keyArr, this.setHotkeyTool, [tool], this.setHotkeyTool, [null]];
+
+        this.hotkeyDown = this.hotkeyMap.keyDown.bind(this.hotkeyMap);
+        this.hotkeyUp = this.hotkeyMap.keyUp.bind(this.hotkeyMap);
+
+        window.addEventListener('keydown', this.hotkeyDown);
+        window.addEventListener('keyup', this.hotkeyUp);
+
+        this.hotkeyMap.bindKey(...hotToolMacro(['mmb'], NAV_TOOL.PAN));
+        this.hotkeyMap.bindKey(...hotToolMacro([' ', 'lmb'], NAV_TOOL.PAN));
+        this.hotkeyMap.bindKey(...hotToolMacro(['control', 'lmb'], NAV_TOOL.ZOOM));
+        this.hotkeyMap.bindKey(['control', 'f'], this.centerView);
+    },
+    beforeDestroy(){
+        window.removeEventListener('keydown', this.hotkeyDown);
+        window.removeEventListener('keyup', this.hotkeyUp);
     },
     methods: {
         controlClick(control){
-            if (!control.oneshot){
-                this.$emit('tool-selected', control.id);
-            }
-
-            if (control.id == NAV_TOOL.CENTER){
-                this.centerView();
-            }
+            control.action();
         },
         setHotkeyTool(newTool){
             this.hotkeyTool = newTool;
         },
         mouseDown(event){
-            switch(event.which){
-                case 1:
-                    this.mouse.down = true;
-                    break;
-                case 2:
-                    this.mouse.mmDown = true;
-                    this.keyMap['mmb'] = true;
-                    break;
-            }
-
+            this.hotkeyMap.mouseDown(event);
             this.mouse.downPosition.x = event.offsetX;
             this.mouse.downPosition.y = event.offsetY;
-
-            this.detectKeyCombo();
         },
-        mouseUp(){
-            this.mouse.down = false;
-            this.mouse.mmDown = false;
-            this.keyMap['mmb'] = false;
+        mouseUp(event){
+            this.hotkeyMap.mouseUp(event);
 
             if (this.hotkeyTool == NAV_TOOL.PAN){
                 this.setHotkeyTool(null);
             }
-
-            this.detectKeyCombo();
         },
         mouseMove(event){
             this.mouse.lastPosition.copy(this.mouse.position);
             this.mouse.position.x = event.offsetX;
             this.mouse.position.y = event.offsetY;
 
-            if (this.mouse.down || this.mouse.mmDown){
+            if (this.hotkeyMap.checkKeys(['lmb', 'mmb'])){
                 let navTool = this.hotkeyTool ?? this.selectedNavTool;
                 switch (navTool){
                     case NAV_TOOL.PAN:
@@ -127,50 +125,17 @@ export default {
                 }
             }
         },
+        mouseEnter(){
+            this.hotkeyMap.enabled = true;
+        },
         mouseLeave(event){
             this.mouseUp(event);
+            this.hotkeyMap.enabled = false;
         },
         scroll(event){
-            let zoomDir = event.deltaY < 0 ? 1 : -1;
+            let zoomDir = (event.deltaY < 0) ? 1 : -1;
             zoomDir *= ZOOM_WHEEL_AMT * (this.navState.zoomFac / this.maxZoom);
             this.setZoom(this.navState.zoomFac + zoomDir);
-        },
-        registerKeys(event){
-            this.keyMap[event.key] = true;
-            this.detectKeyCombo();
-        },
-        unregisterKeys(event){
-            this.keyMap[event.key] = false;
-            this.detectKeyCombo();
-        },
-        detectKeyCombo(){
-            let keyDown = false;
-
-            if (this.keyMap[' '] && this.mouse.down){
-                this.setHotkeyTool(NAV_TOOL.PAN);
-            }
-            
-            if (this.keyMap['Control'] && this.keyMap['f']){
-                event.preventDefault();
-                this.centerView();
-            }
-            else if (this.keyMap['Control'] && this.mouse.down){
-                this.setHotkeyTool(NAV_TOOL.ZOOM);
-            }
-
-            if (this.keyMap['mmb']){
-                this.setHotkeyTool(NAV_TOOL.PAN);
-            }
-
-            for (let key in this.keyMap){
-                if (this.keyMap[key]){
-                    keyDown = true;
-                }
-            }
-
-            if (!keyDown){
-                this.setHotkeyTool(null);
-            }
         },
         getNavState(){
             return this.navState;

@@ -26,8 +26,10 @@
             :undoLength="undoStore.undoLength"
             :redoLength="undoStore.redoLength"
             @mouse-event="mouseEvent"
-            @undo="applyChronoStep(undoStore.stepBack(), revertMap)"
-            @redo="applyChronoStep(undoStore.stepForward(), actionMap)"/>
+            @undo="stepBackward"
+            @redo="stepForward"
+            @mouseenter.native="hotkeyMap.mouseEnter"
+            @mouseleave.native="hotkeyMap.mouseLeave"/>
         <div v-else class="noRoomSelected">{{$t('room_editor.no_room_selected')}}</div>
         <div v-if="selectedRoom" class="propertyPanel" :class="{propertiesClosed : !propertiesOpen}">
             <div class="resizeBtnWrapper">
@@ -59,12 +61,13 @@
 <script>
 import Vue from 'vue';
 import Victor from 'victor';
-import {ROOM_TOOL_TYPE, ROOM_ACTION, MOUSE_EVENT, CATEGORY_ID} from '@/common/Enums';
+import {ROOM_TOOL_TYPE, ROOM_ACTION, MOUSE_EVENT, CATEGORY_ID, ENTITY_TYPE} from '@/common/Enums';
 import Undo_Store from '@/common/Undo_Store';
 import {compareVector} from '@/common/Util_2D';
 import RoomEditWindow from './RoomEditWindow';
 import Properties from './Properties';
 import Tool from '@/components/common/Tool';
+import HotkeyMap from '@/components/common/HotkeyMap';
 
 export default {
     name: 'RoomEditor',
@@ -111,6 +114,9 @@ export default {
                 }
             ],
             undoStore: new Undo_Store(32, false),
+            hotkeyMap: new HotkeyMap(),
+            hotkeyDown: null,
+            hotkeyUp: null,
             toolMap: new Map(),
             actionMap: new Map(),
             revertMap: new Map(),
@@ -143,44 +149,83 @@ export default {
         }
     },
     mounted() {
+        this.hotkeyDown = this.hotkeyMap.keyDown.bind(this.hotkeyMap);
+        this.hotkeyUp = this.hotkeyMap.keyUp.bind(this.hotkeyMap);
+
+        window.addEventListener('keydown', this.hotkeyDown);
+        window.addEventListener('keyup', this.hotkeyUp);
+
         this.resize();
-
-        this.toolMap.set(ROOM_TOOL_TYPE.SELECT_MOVE, this.toolSelectMove);
-        this.toolMap.set(ROOM_TOOL_TYPE.ADD_BRUSH, this.toolAddBrush);
-        this.toolMap.set(ROOM_TOOL_TYPE.ERASER, this.toolEraser);
-        this.toolMap.set(ROOM_TOOL_TYPE.EXIT, this.toolExit);
-        this.toolMap.set(ROOM_TOOL_TYPE.CAMERA, this.toolCamera);
-
-        this.actionMap.set(ROOM_ACTION.MOVE, this.actionMove);
-        this.actionMap.set(ROOM_ACTION.ADD, this.actionAdd);
-        this.actionMap.set(ROOM_ACTION.DELETE, this.actionDelete);
-        this.actionMap.set(ROOM_ACTION.INSTANCE_CHANGE, this.actionInstanceChange);
-        this.actionMap.set(ROOM_ACTION.INSTANCE_GROUP_CHANGE, this.actionInstanceGroupChange);
-        this.actionMap.set(ROOM_ACTION.INSTANCE_VAR_CHANGE, this.actionInstanceVarChange);
-        this.actionMap.set(ROOM_ACTION.EXIT_ADD, this.actionExitAdd);
-        this.actionMap.set(ROOM_ACTION.EXIT_CHANGE, this.actionExitChange);
-        this.actionMap.set(ROOM_ACTION.EXIT_DELETE, this.actionExitDelete);
-        this.actionMap.set(ROOM_ACTION.CAMERA_CHANGE, this.actionCameraChange);
-        this.actionMap.set(ROOM_ACTION.ROOM_PROP_CHANGE, this.actionRoomPropChange);
-        this.actionMap.set(ROOM_ACTION.ROOM_VAR_CHANGE, this.actionRoomVarChange);
-
-        this.revertMap.set(ROOM_ACTION.MOVE, this.revertMove);
-        this.revertMap.set(ROOM_ACTION.ADD, this.revertAdd);
-        this.revertMap.set(ROOM_ACTION.DELETE, this.revertDelete);
-        this.revertMap.set(ROOM_ACTION.INSTANCE_CHANGE, this.revertInstanceChange);
-        this.revertMap.set(ROOM_ACTION.INSTANCE_GROUP_CHANGE, this.revertInstanceGroupChange);
-        this.revertMap.set(ROOM_ACTION.INSTANCE_VAR_CHANGE, this.revertInstanceVarChange);
-        this.revertMap.set(ROOM_ACTION.EXIT_ADD, this.revertExitAdd);
-        this.revertMap.set(ROOM_ACTION.EXIT_CHANGE, this.revertExitChange);
-        this.revertMap.set(ROOM_ACTION.EXIT_DELETE, this.revertExitDelete);
-        this.revertMap.set(ROOM_ACTION.CAMERA_CHANGE, this.revertCameraChange);
-        this.revertMap.set(ROOM_ACTION.ROOM_PROP_CHANGE, this.revertRoomPropChange);
-        this.revertMap.set(ROOM_ACTION.ROOM_VAR_CHANGE, this.revertRoomVarChange);
+        this.bindHotkeys();
+        this.bindTools();
+        this.bindActions();
+        this.bindReversions();
     },
     beforeDestroy() {
         this.$store.dispatch('RoomEditor/setPropPanelState', this.propertiesOpen);
+
+        window.removeEventListener('keydown', this.hotkeyDown);
+        window.removeEventListener('keydown', this.hotkeyUp);
     },
     methods: {
+        bindHotkeys(){
+            let deleteEntity = () => {
+                let type = this.editorSelection?.TYPE;
+
+                if (type == ENTITY_TYPE.INSTANCE){
+                    this.actionDelete(this.editorSelection);
+                }
+                else if (type == ENTITY_TYPE.EXIT){
+                    this.actionExitDelete(this.editorSelection);
+                }
+            }
+
+            this.hotkeyMap.bindKey(['s'], this.toolClicked, [ROOM_TOOL_TYPE.SELECT_MOVE]);
+            this.hotkeyMap.bindKey(['b'], this.toolClicked, [ROOM_TOOL_TYPE.ADD_BRUSH]);
+            this.hotkeyMap.bindKey(['e'], this.toolClicked, [ROOM_TOOL_TYPE.ERASER]);
+            this.hotkeyMap.bindKey(['c'], this.toolClicked, [ROOM_TOOL_TYPE.CAMERA]);
+            this.hotkeyMap.bindKey(['x'], this.toolClicked, [ROOM_TOOL_TYPE.EXIT]);
+            this.hotkeyMap.bindKey(['r'], this.toolClicked, [ROOM_TOOL_TYPE.ROOM_PROPERTIES]);
+            this.hotkeyMap.bindKey(['g'], ()=>{this.$store.dispatch('RoomEditor/setGridState', !this.viewGrid)});
+            this.hotkeyMap.bindKey(['n'], ()=>{this.propertiesOpen = !this.propertiesOpen; this.resize()});
+            this.hotkeyMap.bindKey(['delete'], deleteEntity);
+            this.hotkeyMap.bindKey(['backspace'], deleteEntity);
+        },
+        bindTools(){
+            this.toolMap.set(ROOM_TOOL_TYPE.SELECT_MOVE, this.toolSelectMove);
+            this.toolMap.set(ROOM_TOOL_TYPE.ADD_BRUSH, this.toolAddBrush);
+            this.toolMap.set(ROOM_TOOL_TYPE.ERASER, this.toolEraser);
+            this.toolMap.set(ROOM_TOOL_TYPE.EXIT, this.toolExit);
+            this.toolMap.set(ROOM_TOOL_TYPE.CAMERA, this.toolCamera);
+        },
+        bindActions(){
+            this.actionMap.set(ROOM_ACTION.MOVE, this.actionMove);
+            this.actionMap.set(ROOM_ACTION.ADD, this.actionAdd);
+            this.actionMap.set(ROOM_ACTION.DELETE, this.actionDelete);
+            this.actionMap.set(ROOM_ACTION.INSTANCE_CHANGE, this.actionInstanceChange);
+            this.actionMap.set(ROOM_ACTION.INSTANCE_GROUP_CHANGE, this.actionInstanceGroupChange);
+            this.actionMap.set(ROOM_ACTION.INSTANCE_VAR_CHANGE, this.actionInstanceVarChange);
+            this.actionMap.set(ROOM_ACTION.EXIT_ADD, this.actionExitAdd);
+            this.actionMap.set(ROOM_ACTION.EXIT_CHANGE, this.actionExitChange);
+            this.actionMap.set(ROOM_ACTION.EXIT_DELETE, this.actionExitDelete);
+            this.actionMap.set(ROOM_ACTION.CAMERA_CHANGE, this.actionCameraChange);
+            this.actionMap.set(ROOM_ACTION.ROOM_PROP_CHANGE, this.actionRoomPropChange);
+            this.actionMap.set(ROOM_ACTION.ROOM_VAR_CHANGE, this.actionRoomVarChange);
+        },
+        bindReversions(){
+            this.revertMap.set(ROOM_ACTION.MOVE, this.revertMove);
+            this.revertMap.set(ROOM_ACTION.ADD, this.revertAdd);
+            this.revertMap.set(ROOM_ACTION.DELETE, this.revertDelete);
+            this.revertMap.set(ROOM_ACTION.INSTANCE_CHANGE, this.revertInstanceChange);
+            this.revertMap.set(ROOM_ACTION.INSTANCE_GROUP_CHANGE, this.revertInstanceGroupChange);
+            this.revertMap.set(ROOM_ACTION.INSTANCE_VAR_CHANGE, this.revertInstanceVarChange);
+            this.revertMap.set(ROOM_ACTION.EXIT_ADD, this.revertExitAdd);
+            this.revertMap.set(ROOM_ACTION.EXIT_CHANGE, this.revertExitChange);
+            this.revertMap.set(ROOM_ACTION.EXIT_DELETE, this.revertExitDelete);
+            this.revertMap.set(ROOM_ACTION.CAMERA_CHANGE, this.revertCameraChange);
+            this.revertMap.set(ROOM_ACTION.ROOM_PROP_CHANGE, this.revertRoomPropChange);
+            this.revertMap.set(ROOM_ACTION.ROOM_VAR_CHANGE, this.revertRoomVarChange);
+        },
         resize() {
             this.$nextTick(()=>{
                 if (this.$refs.editWindow){
@@ -386,8 +431,8 @@ export default {
                 this.undoStore.commit({action: ROOM_ACTION.ADD, data});
             }
         },
-        actionDelete({instId, pos}, makeCommit = true){
-            let instRef = this.selectedRoom.removeInstance(instId, pos);
+        actionDelete({id, pos}, makeCommit = true){
+            let instRef = this.selectedRoom.removeInstance(id, pos);
             this.$refs.editWindow.instancesChanged();
 
             if (instRef == this.editorSelection){
@@ -395,7 +440,7 @@ export default {
             }
 
             if (makeCommit){
-                let data = {instId, instRef, pos}
+                let data = {id, instRef, pos}
                 this.undoStore.commit({action: ROOM_ACTION.DELETE, data})
             }
         },
@@ -484,13 +529,13 @@ export default {
                 this.undoStore.commit({action: ROOM_ACTION.EXIT_CHANGE, data});
             }
         },
-        actionExitDelete({exitId, pos}, makeCommit = true){
-            let exitRef = this.selectedRoom.removeExit(exitId, pos);
+        actionExitDelete({id, pos}, makeCommit = true){
+            let exitRef = this.selectedRoom.removeExit(id, pos);
             this.editorSelection = null;
             this.$refs.editWindow.instancesChanged();
 
             if (makeCommit){
-                let data = {exitId, exitRef, pos};
+                let data = {id, exitRef, pos};
                 this.undoStore.commit({action: ROOM_ACTION.EXIT_DELETE, data});
             }
         },
@@ -636,6 +681,16 @@ export default {
             }
             else if (remove){
                 this.changeCustomVar(varList, {varName, newVal, oldIdx});
+            }
+        },
+        stepBackward(){
+            if (this.undoStore.undoLength > 0){
+                this.applyChronoStep(this.undoStore.stepBack(), this.revertMap);
+            }
+        },
+        stepForward(){
+            if (this.undoStore.redoLength > 0){
+                this.applyChronoStep(this.undoStore.stepForward(), this.actionMap);
             }
         },
         applyChronoStep(step, map){

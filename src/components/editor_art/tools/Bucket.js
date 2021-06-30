@@ -1,5 +1,6 @@
 import Tool from './Tool';
-import {get2DIdx, isInBounds, clamp} from '@/common/Util_2D';
+import {get2DIdx, isInBounds} from '@/common/Util_2D';
+import {clamp} from '@/common/Util';
 
 class Bucket extends Tool{
     constructor(){

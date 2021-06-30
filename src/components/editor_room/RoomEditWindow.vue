@@ -93,7 +93,7 @@ export default {
         //bind events
         window.addEventListener('resize', this.resize);
         this.canvasEl.addEventListener('wheel', this.$refs.navControlPanel.scroll);
-        this.canvasEl.addEventListener('mouseenter', ()=>{this.renderer.enableCursor = true});
+        this.canvasEl.addEventListener('mouseenter', this.mouseEnter);
         this.canvasEl.addEventListener('mouseleave', this.mouseLeave);
 
         this.renderer.setSVG({
@@ -126,6 +126,10 @@ export default {
             this.$refs.navControlPanel.mouseMove(event);
             this.emitMouseEvent(event, MOUSE_EVENT.MOVE);
             this.renderer.mouseMove(event);
+        },
+        mouseEnter(event){
+            this.$refs.navControlPanel.mouseEnter(event);
+            this.renderer.enableCursor = true;
         },
         mouseLeave(event){
             this.$refs.navControlPanel.mouseLeave(event);

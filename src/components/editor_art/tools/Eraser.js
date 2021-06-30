@@ -1,6 +1,7 @@
 import Tool from './Tool';
 import {ART_TOOL_SIZE} from '@/common/Enums';
-import {isInBounds, get2DIdx, clamp} from '@/common/Util_2D';
+import {isInBounds, get2DIdx} from '@/common/Util_2D';
+import {clamp} from '@/common/Util';
 
 class Eraser extends Tool{
     constructor(){

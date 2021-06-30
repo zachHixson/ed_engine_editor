@@ -35,6 +35,7 @@
 <script>
 import AnimFrame from './AnimFrame';
 import AnimationPlayer from '@/components/common/AnimationPlayer';
+import HotkeyMap from '@/components/common/HotkeyMap';
 
 export default {
     name: 'AnimationPanel',
@@ -45,13 +46,56 @@ export default {
     props: ['sprite', 'frameIDs'],
     data(){
         return {
-            isOpen: this.isOpen = this.$store.getters['ArtEditor/isAnimPanelOpen']
+            isOpen: this.isOpen = this.$store.getters['ArtEditor/isAnimPanelOpen'],
+            hotkeyMap: new HotkeyMap(),
+            hotkeyDown: null,
+            hotkeyUp: null
         }
     },
+    computed: {
+        selectedFrameIdx(){
+            return this.$store.getters['ArtEditor/getSelectedFrame'];
+        }
+    },
+    mounted(){
+        this.hotkeyDown = this.hotkeyMap.keyDown.bind(this.hotkeyMap);
+        this.hotkeyUp = this.hotkeyMap.keyUp.bind(this.hotkeyMap);
+
+        window.addEventListener('keydown', this.hotkeyDown);
+        window.addEventListener('keyup', this.hotkeyUp);
+
+        this.hotkeyMap.enabled = true;
+        this.bindHotkeys();
+    },
     beforeDestroy(){
+        window.removeEventListener('keydown', this.hotkeyDown);
+        window.removeEventListener('keyup', this.hotkeyUp);
+        
         this.$store.dispatch('ArtEditor/setAnimPanelState', this.isOpen);
     },
     methods: {
+        bindHotkeys(){
+            let prevFrame = () => {
+                if (this.selectedFrameIdx > 0){
+                    let newIdx = this.selectedFrameIdx - 1;
+                    this.$store.dispatch('ArtEditor/selectFrame', newIdx);
+                    this.selectedFrameChanged(newIdx);
+                }
+            }
+            let nextFrame = () => {
+                if (this.selectedFrameIdx < this.sprite.frames.length - 1){
+                    let newIdx = this.selectedFrameIdx + 1;
+                    this.$store.dispatch('ArtEditor/selectFrame', newIdx);
+                    this.selectedFrameChanged(newIdx);
+                }
+            }
+
+            this.hotkeyMap.bindKey(['n'], this.toggleOpen);
+            this.hotkeyMap.bindKey(['arrowleft'], prevFrame);
+            this.hotkeyMap.bindKey(['arrowright'], nextFrame);
+            this.hotkeyMap.bindKey(['arrowdown'], this.$refs.animPlayer.playAnimation);
+            this.hotkeyMap.bindKey(['escape'], this.$refs.animPlayer.stopAnimation);
+        },
         toggleOpen(){
             this.isOpen = !this.isOpen;
 

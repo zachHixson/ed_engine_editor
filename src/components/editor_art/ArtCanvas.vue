@@ -62,6 +62,9 @@ export default {
         },
         selectedNavTool(){
             return this.$store.getters['ArtEditor/getSelectedNavTool'];
+        },
+        toolSize(){
+            return this.$store.getters['ArtEditor/getSelectedSize'];
         }
     },
     watch: {
@@ -71,7 +74,15 @@ export default {
                 this.tool.setPixelBuff(this.spriteFrame);
                 this.tool.setPreviewBuff(this.previewData);
                 this.tool.setMouseCell(this.mouseCell);
+                this.tool.updateCursorBuff();
+                this.renderer.mouseMove();
             }
+        },
+        toolSize(){
+           if (this.tool){
+               this.tool.updateCursorBuff();
+               this.renderer.mouseMove();
+           }
         },
         spriteFrame(){
             this.renderer.setSprite(this.spriteFrame, this.navState);
@@ -81,7 +92,6 @@ export default {
     },
     mounted(){
         this.canvas = this.$refs.canvas;
-        
         this.navControl = this.$refs.navControlPanel;
         this.renderer = new Art_Canvas_Renderer(this.canvas, this.spriteFrame, this.previewData, this.navState);
         
@@ -89,6 +99,7 @@ export default {
         this.canvas.addEventListener('mouseup', this.mouseUp);
         this.canvas.addEventListener('mousemove', this.mouseMove);
         this.canvas.addEventListener('wheel', this.wheel);
+        this.canvas.addEventListener('mouseenter', this.navControl.mouseEnter);
         this.canvas.addEventListener('mouseleave', this.mouseLeave);
 
         this.maxZoom = this.getZoomBounds().max;

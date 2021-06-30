@@ -37,6 +37,7 @@
 </template>
 
 <script>
+import HotkeyMap from '@/components/common/HotkeyMap';
 import iro from '@jaames/iro';
 import {ART_TOOL_SIZE, ART_TOOL_TYPE} from '@/common/Enums';
 import Tool from '@/components/common/Tool';
@@ -113,16 +114,32 @@ export default {
                     name: this.$t('art_editor.eye_dropper_tool'),
                     icon: 'assets/eye_dropper'
                 }
-            ]
+            ],
+            hotkeyMap: new HotkeyMap(),
+            hotkeyDown: null,
+            hotkeyUp: null
         }
     },
     mounted(){
+        this.hotkeyDown = this.hotkeyMap.keyDown.bind(this.hotkeyMap);
+        this.hotkeyUp = this.hotkeyMap.keyUp.bind(this.hotkeyMap);
+
+        window.addEventListener('keydown', this.hotkeyDown);
+        window.addEventListener('keyup', this.hotkeyUp);
+        
+        this.bindHotkeys();
+
         this.colorPicker = new iro.ColorPicker('#picker', {
             color: this.$store.getters['ArtEditor/getSelectedColor'],
             width: 200
         });
         this.colorPicker.on("color:change", this.colorChanged);
+
         this.$emit('resized');
+    },
+    beforeDestroy(){
+        window.removeEventListener('keydown', this.hotkeyDown);
+        window.removeEventListener('keyup', this.hotkeyUp);
     },
     computed: {
         toolColor: {
@@ -156,6 +173,27 @@ export default {
         }
     },
     methods:{
+        bindHotkeys(){
+            this.hotkeyMap.enabled = true;
+
+            this.hotkeyMap.bindKey(['t'], this.toggleOpen);
+
+            //size hotkeys
+            this.hotkeyMap.bindKey(['1'], this.sizeChanged, [ART_TOOL_SIZE.SMALL]);
+            this.hotkeyMap.bindKey(['2'], this.sizeChanged, [ART_TOOL_SIZE.MEDIUM]);
+            this.hotkeyMap.bindKey(['3'], this.sizeChanged, [ART_TOOL_SIZE.LARGE]);
+
+            //layout based hotkeys
+            this.hotkeyMap.bindKey(['b'], this.toolChanged, [ART_TOOL_TYPE.BRUSH]);
+            this.hotkeyMap.bindKey(['f'], this.toolChanged, [ART_TOOL_TYPE.BUCKET]);
+            this.hotkeyMap.bindKey(['x'], this.toolChanged, [ART_TOOL_TYPE.LINE]);
+            this.hotkeyMap.bindKey(['s'], this.toolChanged, [ART_TOOL_TYPE.BOX]);
+            this.hotkeyMap.bindKey(['alt', 's'], this.toolChanged, [ART_TOOL_TYPE.BOX_FILL]);
+            this.hotkeyMap.bindKey(['c'], this.toolChanged, [ART_TOOL_TYPE.ELLIPSE]);
+            this.hotkeyMap.bindKey(['alt', 'c'], this.toolChanged, [ART_TOOL_TYPE.ELLIPSE_FILL]);
+            this.hotkeyMap.bindKey(['e'], this.toolChanged, [ART_TOOL_TYPE.ERASER]);
+            this.hotkeyMap.bindKey(['d'], this.toolChanged, [ART_TOOL_TYPE.EYE_DROPPER]);
+        },
         toggleOpen(){
             this.isOpen = !this.isOpen;
             this.$nextTick(()=>{

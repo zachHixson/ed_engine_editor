@@ -7,6 +7,7 @@
 
 <script>
 import UndoButton from '@/components/common/UndoButton';
+import HotkeyMap from '@/components/common/HotkeyMap'
 
 export default {
     name: 'UndoPanel',
@@ -14,12 +15,14 @@ export default {
     components: {
         UndoButton
     },
-    data() {
+    data(){
         return {
-            keyMap: {}
+            hotkeyMap: new HotkeyMap(),
+            keyDown: null,
+            keyUp: null
         }
     },
-    computed: {
+    computed:{
         undoActive(){
             return (this.undoLength > 0);
         },
@@ -27,28 +30,20 @@ export default {
             return (this.redoLength > 0);
         }
     },
-    mounted() {
-        document.addEventListener('keydown', this.registerKeys);
-        document.addEventListener('keyup', this.unregisterKeys);
-    },
-    methods: {
-        registerKeys(event){
-            this.keyMap[event.key] = true;
-            this.detectKeyCombo();
-        },
-        unregisterKeys(event){
-            this.keyMap[event.key] = false;
-            this.detectKeyCombo();
-        },
-        detectKeyCombo(){
-            if (this.keyMap['Control'] && this.keyMap['z']){
-                this.$emit('undo');
-            }
+    mounted(){
+        this.keyDown = this.hotkeyMap.keyDown.bind(this.hotkeyMap);
+        this.keyUp = this.hotkeyMap.keyUp.bind(this.hotkeyMap);
 
-            if (this.keyMap['Control'] && this.keyMap['Z']){
-                this.$emit('redo');
-            }
-        }
+        document.addEventListener('keydown', this.keyDown);
+        document.addEventListener('keyup', this.keyUp);
+
+        this.hotkeyMap.enabled = true;
+        this.hotkeyMap.bindKey(['control', 'z'], this.$emit.bind(this), ['undo']);
+        this.hotkeyMap.bindKey(['control', 'shift', 'z'], this.$emit.bind(this), ['redo']);
+    },
+    beforeDestroy(){
+        document.removeEventListener('keydown', this.keyDown);
+        document.removeEventListener('keyup', this.keyUp);
     }
 }
 </script>
