@@ -55,7 +55,7 @@ class Room extends Asset{
 
         for (let i = 0; i < room.exitsSerial.length; i++){
             let curExitData = room.exitsSerial[i];
-            let newExit = new Exit().fromSaveData(curExitData);
+            let newExit = new Exit(this.exits.curId).fromSaveData(curExitData);
             this.exits.add(newExit, newExit.pos);
         }
 
@@ -86,7 +86,7 @@ class Room extends Asset{
     }
 
     addInstance(objRef, pos, instRef = null){
-        let newInstance = (instRef) ? instRef : new Instance(this.instances.curInstId, objRef, pos);
+        let newInstance = (instRef) ? instRef : new Instance(this.instances.curId, pos, objRef);
         return this.instances.add(newInstance, pos);
     }
 
@@ -111,7 +111,7 @@ class Room extends Asset{
     }
 
     addExit(pos, exitRef = null){
-        let newExit = (exitRef) ? exitRef : new Exit(pos);
+        let newExit = (exitRef) ? exitRef : new Exit(this.exits.curId, pos);
         return this.exits.add(newExit, pos);
     }
 

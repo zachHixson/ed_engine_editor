@@ -9,10 +9,10 @@ const COLLISION_OVERRIDE = {
 Object.freeze(COLLISION_OVERRIDE);
 
 class Instance{
-    constructor(id, objRef, {x, y}){
+    constructor(id, pos, objRef){
         this.id = id;
         this.objRef = objRef;
-        this.pos = new Victor(x, y);
+        this.pos = new Victor.fromObject(pos);
         this.name = this.objRef.name + '_' + this.id;
         this.zDepthOverride = null;
         this.collisionOverride = this.COLLISION_OVERRIDES.KEEP;

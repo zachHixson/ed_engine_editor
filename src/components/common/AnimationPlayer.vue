@@ -82,7 +82,7 @@ export default {
             this.curFrameIdx = (this.curFrameIdx + 1) % this.sprite.frames.length;
         },
         playAnimation(){
-            if (this.animationLoop == null && this.fps > 0){
+            if (this.sprite && this.animationLoop == null && this.fps > 0){
                 let intervalTime = 1000/this.fps;
 
                 this.animationLoop = setInterval(()=>{

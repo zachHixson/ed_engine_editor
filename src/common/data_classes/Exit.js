@@ -9,10 +9,10 @@ const TRANSITION = {
 Object.freeze(TRANSITION)
 
 class Exit{
-    constructor(pos = {x:0, y:0}){
-        this.id = ID_Generator.newID();
+    constructor(id, pos = {x:0, y:0}){
+        this.id = id;
         this.name = this.id.toString();
-        this.pos = new Victor(pos.x, pos.y);
+        this.pos = new Victor.fromObject(pos);
         this.isEnding = false;
         this.destinationRoom = null;
         this.destinationExit = null;

@@ -14,7 +14,7 @@ import {mod} from '@/common/Util';
 
 class Spacial_Collection{
     constructor(area, cellSize){
-        this.curInstId = 0;
+        this.curId = 0;
         this.area = area;
         this.cellSize = cellSize;
         this.cellCount = this.area / this.cellSize;
@@ -44,7 +44,7 @@ class Spacial_Collection{
         this.zSort.insertSorted(data, (a, b) => a.zDepth <= b.zDepth);
         nodeRef = this.zSort.getLastInsertedRef();
         this.spacialGrid[spacialIdx].push(nodeRef);
-        this.curInstId++;
+        this.curId++;
 
         return data;
     }
