@@ -50,7 +50,7 @@ export default {
         this.checkerBGBuff.width = this.canvas.width;
         this.checkerBGBuff.height = this.canvas.height;
 
-        drawCheckerBG(this.checkerBGBuff, 4, '#AAA', '#CCC');
+        drawCheckerBG(this.checkerBGBuff, 4, "#B5B5B5", '#CCCCCC');
         if (this.sprite){
             this.pixelBuff.width = this.sprite.dimensions;
             this.pixelBuff.height = this.sprite.dimensions;

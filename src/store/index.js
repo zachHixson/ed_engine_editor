@@ -19,7 +19,6 @@ export default new Vuex.Store({
     getters: {
         getProjectName: state => state.projectName,
         getSaveData: (state, getters) => {
-            let gameData = GameData.state;
             let saveObj = {
                 projectName: state.projectName,
                 editor_version: EDITOR_VERSION,

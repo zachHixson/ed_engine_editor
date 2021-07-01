@@ -120,7 +120,7 @@ export default class Art_Canvas_Renderer{
     }
 
     drawCheckerBG(canvas = this.checkerBGBuff){
-        drawCheckerBG(canvas, 10, "#AAA", "#CCC");
+        drawCheckerBG(canvas, 10, "#B5B5B5", "#CCCCCC");
     }
 
     drawBGStencil(ctx = this.checkerStencilBuff.getContext('2d')){

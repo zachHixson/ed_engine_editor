@@ -62,7 +62,7 @@ export default {
         this.pixelBuff.width = this.getSprite().dimensions;
         this.pixelBuff.height = this.getSprite().dimensions;
 
-        drawCheckerBG(this.checkerBGBuff, 4, '#AAA', '#CCC');
+        drawCheckerBG(this.checkerBGBuff, 4, "#B5B5B5", '#CCCCCC');
 
         this.drawCanvas();
     },
