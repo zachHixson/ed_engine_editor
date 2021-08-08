@@ -4,7 +4,7 @@ export const CATEGORY_ID = {
     UNDEFINED: -1,
     SPRITE: curEnum++,
     OBJECT: curEnum++,
-    TILE: curEnum++,
+    LOGIC: curEnum++,
     ROOM: curEnum++
 }
 Object.freeze(CATEGORY_ID);
@@ -13,7 +13,7 @@ export const CATEGORY_TYPE = {
     UNDEFINED: 'UNDEFINED',
     SPRITE: 'SPRITE',
     OBJECT: 'OBJECT',
-    TILE: 'TILE',
+    LOGIC: 'LOGIC',
     ROOM: 'ROOM'
 }
 Object.freeze(CATEGORY_TYPE);

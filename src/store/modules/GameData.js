@@ -2,6 +2,7 @@ import i18n from '@/i18n';
 import {CATEGORY_ID} from '@/common/Enums';
 import Sprite from '@/common/data_classes/Sprite';
 import Game_Object from '@/common/data_classes/Game_Object';
+import Logic from '@/common/data_classes/Logic';
 import Room from '@/common/data_classes/Room';
 import {getHighestEndingNumber} from '@/common/Util';
 
@@ -9,6 +10,7 @@ const state = {
     startRoomId: null,
     sprites: [],
     objects: [],
+    logic: [],
     rooms: []
 };
 
@@ -41,6 +43,7 @@ const getters = {
     getEmptySprite: () => new Array(16 * 16).fill(''),
     getAllSprites: state => state.sprites,
     getAllObjects: state => state.objects,
+    getAllLogic: state => state.logic,
     getAllRooms: state => state.rooms,
     getSpriteSaveData: state => state.sprites.map(s => s.toSaveData()),
     getObjectSaveData: state => state.objects.map(o => o.toSaveData()),
@@ -83,6 +86,12 @@ const mutations = {
                 newObject.name = objName;
                 state.objects.push(newObject);
                 break;
+            case CATEGORY_ID.LOGIC:
+                let logicName = i18n.tc(`asset_browser.logic_prefix`) + getSuffixNum(state.logic);
+                let newLogic = new Logic();
+                newLogic.name = logicName;
+                state.logic.push(newLogic);
+                break;
             case CATEGORY_ID.ROOM:
                 let roomName = i18n.tc(`asset_browser.room_prefix`) + getSuffixNum(state.rooms);
                 let newRoom = new Room();
@@ -101,6 +110,9 @@ const mutations = {
                 break;
             case CATEGORY_ID.OBJECT:
                 curList = state.objects;
+                break;
+            case CATEGORY_ID.LOGIC:
+                curList = state.logic;
                 break;
             case CATEGORY_ID.ROOM:
                 curList = state.rooms;

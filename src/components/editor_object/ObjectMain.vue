@@ -3,7 +3,7 @@
         <CategoryWrapper :title="$t('object_editor.heading_sprite')" iconPath="assets/sprite_icon">
             <div class="options">
                 <div class="control">
-                    <label for="drawing_select">{{$t('object_editor.sprite_selector')}}</label>
+                    <label for="drawing_select">{{$t('object_editor.sprite_selector')}}:</label>
                     <select ref="spriteSelector" id="drawing_select" @change="setObjectSprite" :title="$t('object_editor.tt_sprite')">
                         <option
                             v-for="sprite in spriteChoices"
@@ -14,15 +14,15 @@
                     </select>
                 </div>
                 <div v-if="selectedAsset.sprite" class="control">
-                    <label for="frameStart">{{$t('object_editor.start_frame')}}</label>
+                    <label for="frameStart">{{$t('object_editor.start_frame')}}:</label>
                     <input type="number" ref="frameStart" id="frameStart"  v-model="startFrame" :title="$t('object_editor.tt_start_frame')"/>
                 </div>
                 <div v-if="selectedAsset.sprite" class="control">
-                    <label for="fps">{{$t('object_editor.fps')}}</label>
+                    <label for="fps">{{$t('object_editor.fps')}}:</label>
                     <input type="number" id="fps" value="6" v-model="selectedAsset.fps" @change="validateFPS" :title="$t('object_editor.tt_fps')"/>
                 </div>
                 <div v-if="selectedAsset.sprite" class="control">
-                    <label for="loop">{{$t('object_editor.loop')}}</label>
+                    <label for="loop">{{$t('object_editor.loop')}}:</label>
                     <input type="checkbox" id="loop" checked="true" v-model="selectedAsset.animLoop" :title="$t('object_editor.tt_loop')"/>
                 </div>
             </div>
@@ -31,11 +31,11 @@
         <CategoryWrapper :title="$t('object_editor.heading_physics')" iconPath="assets/physics">
             <div class="options">
                 <div class="control">
-                    <label for="isSolid">{{$t('object_editor.is_solid')}}</label>
+                    <label for="isSolid">{{$t('object_editor.is_solid')}}:</label>
                     <input type="checkbox" id="isSolid" checked="true" v-model="selectedAsset.isSolid" :title="$t('object_editor.tt_solid')"/>
                 </div>
                 <div class="control">
-                    <label for="useGravity">{{$t('object_editor.apply_gravity')}}</label>
+                    <label for="useGravity">{{$t('object_editor.apply_gravity')}}:</label>
                     <input type="checkbox" id="useGravity" checked="true" v-model="selectedAsset.applyGravity" :title="$t('object_editor.tt_gravity')"/>
                 </div>
             </div>
@@ -47,15 +47,29 @@
                     <input type="checkbox" id="trigger_exits" checked="false" v-model="selectedAsset.triggerExits" :title="$t('object_editor.tt_trigger_exits')" />
                 </div>
                 <div class="control">
-                    <label for="logic_type_select">{{$t('object_editor.logic_type')}}</label>
+                    <label for="logic_type_select">{{$t('object_editor.logic_type')}}:</label>
                     <select id="logic_type_select" v-model="selectedAsset.customLogic" :title="$t('object_editor.tt_logic_type')">
                         <option :value="false">{{$t('object_editor.preset')}}</option>
                         <option :value="true">{{$t('object_editor.custom')}}</option>
                     </select>
                 </div>
                 <div v-if="!selectedAsset.customLogic" class="control">
-                    <label for="logic_preset_select">{{$t('object_editor.logic_preset')}}</label>
-                    <select id="logic_preset_select" :title="$t('object_editor.tt_logic_preset')"></select>
+                    <label for="logic_preset_select">{{$t('object_editor.logic_preset')}}:</label>
+                    <select id="logic_preset_select" :title="$t('object_editor.tt_logic_preset')">
+                        <option :value="null">{{$t('generic.no_option')}}</option>
+                    </select>
+                </div>
+                <div v-if="selectedAsset.customLogic" class="control">
+                    <label for="logic_script_select">{{$t('object_editor.logic_script')}}:</label>
+                    <select id="logic_script_select" v-model="selectedAsset.logicScript" :title="$t('object_editor.tt_logic_script')">
+                        <option :value="null">{{$t('generic.no_option')}}</option>
+                        <option
+                            v-for="script in $store.getters['GameData/getAllLogic']"
+                            :key="script.id"
+                            :value="script.id">
+                            {{script.name}}
+                        </option>
+                    </select>
                 </div>
                 <GroupList
                     :editList="selectedAsset.groups"

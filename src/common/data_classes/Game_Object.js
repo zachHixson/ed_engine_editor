@@ -14,6 +14,7 @@ class Game_Object extends Asset{
         this.triggerExits = false;
         this.customLogic = false;
         this.logicPreset = null;
+        this.logicScript = null;
         this.groups = [];
 
         delete this.navState;

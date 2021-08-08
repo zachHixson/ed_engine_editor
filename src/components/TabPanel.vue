@@ -68,6 +68,8 @@ export default {
                         break;
                     case CATEGORY_ID.OBJECT:
                         this.contextTabs.push(this.editorTabs['object']);
+                        break;
+                    case CATEGORY_ID.LOGIC:
                         this.contextTabs.push(this.editorTabs['logic']);
                 }
 
@@ -81,6 +83,9 @@ export default {
                             break;
                         case CATEGORY_ID.OBJECT:
                             newTab = EDITOR_ID.OBJECT;
+                            break;
+                        case CATEGORY_ID.LOGIC:
+                            newTab = EDITOR_ID.LOGIC;
                             break;
                     }
 

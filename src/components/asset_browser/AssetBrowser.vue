@@ -68,6 +68,11 @@ export default {
                     icon: 'assets/object_icon'
                 },
                 {
+                    cat_ID: CATEGORY_ID.LOGIC,
+                    text: this.$t("asset_browser.logic"),
+                    icon: 'assets/logic'
+                },
+                {
                     cat_ID: CATEGORY_ID.ROOM,
                     text: this.$t("asset_browser.rooms"),
                     icon: 'assets/room_icon'
@@ -85,6 +90,8 @@ export default {
                     return this.$store.getters['GameData/getAllSprites'];
                 case CATEGORY_ID.OBJECT:
                     return this.$store.getters['GameData/getAllObjects'];
+                case CATEGORY_ID.LOGIC:
+                    return this.$store.getters['GameData/getAllLogic'];
                 case CATEGORY_ID.ROOM:
                     return this.$store.getters['GameData/getAllRooms'];
             }
