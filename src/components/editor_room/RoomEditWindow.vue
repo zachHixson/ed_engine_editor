@@ -133,7 +133,7 @@ export default {
         },
         mouseLeave(event){
             this.$refs.navControlPanel.mouseLeave(event);
-            this.emitMouseEvent(event, MOUSE_EVENT.UP);
+            this.emitMouseEvent(event, MOUSE_EVENT.LEAVE);
             this.renderer.enableCursor = false;
             this.renderer.mouseMove(event);
         },

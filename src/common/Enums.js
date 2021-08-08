@@ -86,7 +86,8 @@ export const MOUSE_EVENT = {
     DOWN: curEnum++,
     UP: curEnum++,
     MOVE: curEnum++,
-    LEAVE: curEnum++
+    LEAVE: curEnum++,
+    ENTER: curEnum++
 }
 Object.freeze(MOUSE_EVENT);
 
