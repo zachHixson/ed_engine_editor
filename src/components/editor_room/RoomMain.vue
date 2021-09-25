@@ -248,7 +248,7 @@ export default {
                 let selectedInListIdx = -1;
                 let instInCell = [];
 
-                //get instances in same sell
+                //get instances in same cell
                 for (let i = 0; i < nearbyInst.length; i++){
                     if (compareVector(pos, nearbyInst[i].pos)){
                         instInCell.push(nearbyInst[i]);

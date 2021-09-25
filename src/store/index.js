@@ -82,6 +82,6 @@ export default new Vuex.Store({
         GameData,
         ArtEditor,
         AssetBrowser,
-        RoomEditor
+        RoomEditor,
     }
 });
