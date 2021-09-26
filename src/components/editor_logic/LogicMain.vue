@@ -30,6 +30,9 @@
                     <img v-show="!showEvents" src="@/assets/arrow_01.svg" style="transform: rotate(90deg)"/>
                 </button>
             </div>
+            <div class="undo-panel-wrapper">
+                <UndoPanel class="undo-panel" />
+            </div>
         </div>
         <div v-if="showAddEventModal" class="modal-wrapper">
             <div class="modal-bg"></div>
@@ -81,10 +84,13 @@
                 </div>
             </div>
             <div class="resizeBtn-left-wrapper">
-                <button class="resizeBtn resizeBtn-left" @click="showLibrary = !showLibrary" :style="showEvents ? 'transform: translateX(2px);' : ''">
+                <button class="resizeBtn resizeBtn-left" @click="showLibrary = !showLibrary" :style="showLibrary ? 'transform: translateX(2px);' : ''">
                     <img v-show="showLibrary" src="@/assets/arrow_01.svg" style="transform: rotate(90deg)"/>
                     <img v-show="!showLibrary" src="@/assets/arrow_01.svg" style="transform: rotate(-90deg)"/>
                 </button>
+            </div>
+            <div class="nav-control-wrapper">
+                <NavControlPanel class="nav-control" />
             </div>
         </div>
     </div>
@@ -94,6 +100,8 @@
 import {DEFAULT_EVENTS} from '@/common/data_classes/node_libraries/Events';
 import {NODE_LIST} from '@/common/data_classes/node_libraries/Node_Library';
 import Node from '@/common/data_classes/Node';
+import UndoPanel from '@/components/common/UndoPanel';
+import NavControlPanel from '@/components/common/NavControlPanel';
 
 export default {
     name: 'LogicEditor',
@@ -107,6 +115,10 @@ export default {
             selectedEventId: null,
             selectedCategory: null,
         }
+    },
+    components: {
+        UndoPanel,
+        NavControlPanel,
     },
     watch: {
         selectedAsset(){
@@ -462,5 +474,27 @@ export default {
 
 .node-category:hover{
     filter: brightness(1.1);
+}
+
+.undo-panel-wrapper{
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.undo-panel{
+    position: relative;
+    right: -100%;
+}
+
+.nav-control-wrapper{
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.nav-control{
+    position: relative;
+    left: -100%;
 }
 </style>
