@@ -11,13 +11,13 @@
                 <div class="events-wrapper">
                     <div
                         v-for="event in addedEvents"
-                        :key="event.id"
+                        :key="event"
                         class="list-item"
-                        :style="event.id == selectedEventId ? 'background: var(--button-norm)' : ''"
-                        @click="selectEvent(event.id)">
-                        <div class="name">{{event.name}}</div>
+                        :style="event == selectedEventId ? 'background: var(--button-norm)' : ''"
+                        @click="selectEvent(event)">
+                        <div class="name">{{event}}</div>
                         <div class="buttons">
-                            <button class="eventBtn" @click="removeEvent($event, event.id)">
+                            <button class="eventBtn" @click="removeEvent($event, event)">
                                 <img class="icon" src="@/assets/trash.svg" />
                             </button>
                         </div>
@@ -53,6 +53,11 @@
                         {{event}}
                     </button>
                 </div>
+            </div>
+        </div>
+        <div class="node-viewport">
+            <div class="node-nav-wrapper">
+                TEst
             </div>
         </div>
         <div class="node-library-wrapper">
@@ -92,6 +97,7 @@
             <div class="nav-control-wrapper">
                 <NavControlPanel class="nav-control" />
             </div>
+            <div ref="testDiv"></div>
         </div>
     </div>
 </template>
@@ -99,7 +105,6 @@
 <script>
 import {DEFAULT_EVENTS} from '@/common/data_classes/node_libraries/Events';
 import {NODE_LIST} from '@/common/data_classes/node_libraries/Node_Library';
-import Node from '@/common/data_classes/Node';
 import UndoPanel from '@/components/common/UndoPanel';
 import NavControlPanel from '@/components/common/NavControlPanel';
 
@@ -111,7 +116,6 @@ export default {
             showEvents: true,
             showLibrary: true,
             showAddEventModal: false,
-            addedEvents: [],
             selectedEventId: null,
             selectedCategory: null,
         }
@@ -135,6 +139,9 @@ export default {
 
             return eventList;
         },
+        addedEvents(){
+            return this.selectedAsset.eventsList;
+        },
         nodeCategories(){
             let categories = [];
 
@@ -153,43 +160,30 @@ export default {
         },
     },
     mounted(){
-        this.recomputeEventList();
-        
-        if (this.addedEvents.length > 0){
-            let curSelectedEvent = this.selectedAsset.editorSelectedEventId;
-            this.selectEvent(curSelectedEvent ? curSelectedEvent : this.addedEvents[0].id);
+        let curSelectedEvent = this.selectedAsset.editorSelectedEventId;
+
+        if (curSelectedEvent){
+            this.selectEvent(curSelectedEvent ? curSelectedEvent : this.selectedAsset.eventsList[0].id);
         }
     },
     methods: {
-        recomputeEventList(){
-            this.addedEvents = [];
-            
-            this.selectedAsset.events.forEach((event, id) => {
-                if (event){
-                    let name = id;
-                    this.addedEvents.push({id, name});
-                }
-            });
-        },
         addEvent(eventId){
             if (!this.isAddedEvent(eventId)){
-                let eventTemplate = DEFAULT_EVENTS.get(eventId);
-                this.selectedAsset.events.set(eventId, new Node(eventTemplate));
-                this.recomputeEventList();
+                this.selectedAsset.registerEvent(eventId);
+                this.selectedAsset.eventsList
                 this.showAddEventModal = false;
                 this.selectEvent(eventId);
             }
         },
         removeEvent(jsEvent, eventId){
             jsEvent.stopPropagation();
-            this.selectedAsset.events.set(eventId, null);
-            this.recomputeEventList();
+            this.selectedAsset.unregisterEvent(eventId);
         },
         isAddedEvent(eventId){
             let isActive = false;
 
-            for (let i = 0; !isActive && i < this.addedEvents.length; i++){
-                isActive |= this.addedEvents[i].id == eventId;
+            for (let i = 0; !isActive && i < this.selectedAsset.eventsList.length; i++){
+                isActive |= this.selectedAsset.eventsList[i].id == eventId;
             }
 
             return isActive;
@@ -415,6 +409,12 @@ export default {
     opacity: 50%;
 }
 
+.node-viewport{
+    width: 100%;
+    height: 100%;
+    background: white;
+}
+
 .node-library-wrapper{
     position: absolute;
     top: 0;
@@ -480,21 +480,25 @@ export default {
     position: absolute;
     top: 0;
     right: 0;
+    pointer-events: none;
 }
 
 .undo-panel{
     position: relative;
     right: -100%;
+    pointer-events: auto;
 }
 
 .nav-control-wrapper{
     position: absolute;
     top: 0;
     left: 0;
+    pointer-events: none;
 }
 
 .nav-control{
     position: relative;
     left: -100%;
+    pointer-events: auto;
 }
 </style>

@@ -3,7 +3,8 @@ import Victor from 'victor';
 class Node{
     constructor(template, id){
         this.templateId = template.id;
-        this.nodeId = 0;
+        this.nodeId = id;
+        this.domRef = null;
         this.pos = new Victor();
         this.inTriggers = new Map();
         this.outTriggers = new Map();

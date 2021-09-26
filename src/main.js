@@ -3,6 +3,7 @@ import App from './App.vue'
 import store from './store'
 import i18n from './i18n'
 
+window.IS_EDITOR = true;
 Vue.config.productionTip = false;
 
 Vue.directive('click-outside', {
