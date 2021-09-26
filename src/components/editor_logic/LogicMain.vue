@@ -1,8 +1,8 @@
 <template>
     <div class="logicMain">
         <div class="event-panel-wrapper">
-            <div v-show="showEvents" class="event-panel">
-                <div class="events-heading">
+            <div v-show="showEvents" class="side-panel event-panel">
+                <div class="side-panel-heading">
                     <div>Events</div>
                     <button class="open-close-btn" @click="showAddEventModal = true">
                         <img src="@/assets/plus.svg" />
@@ -12,7 +12,7 @@
                     <div
                         v-for="event in addedEvents"
                         :key="event.id"
-                        class="event"
+                        class="list-item"
                         :style="event.id == selectedEventId ? 'background: var(--button-norm)' : ''"
                         @click="selectEvent(event.id)">
                         <div class="name">{{event.name}}</div>
@@ -24,8 +24,8 @@
                     </div>
                 </div>
             </div>
-            <div class="resizeBtn-wrapper">
-                <button class="resizeBtn" @click="showEvents = !showEvents" :style="showEvents ? 'transform: translateX(-2px);' : ''">
+            <div class="resizeBtn-right-wrapper">
+                <button class="resizeBtn resizeBtn-right" @click="showEvents = !showEvents" :style="showEvents ? 'transform: translateX(-2px);' : ''">
                     <img v-show="showEvents" src="@/assets/arrow_01.svg" style="transform: rotate(-90deg)"/>
                     <img v-show="!showEvents" src="@/assets/arrow_01.svg" style="transform: rotate(90deg)"/>
                 </button>
@@ -52,11 +52,47 @@
                 </div>
             </div>
         </div>
+        <div class="node-library-wrapper">
+            <div v-show="showLibrary" class="side-panel node-library">
+                <div class="side-panel-heading">
+                    Add Nodes
+                </div>
+                <div class="slide-wrapper" :class="selectedCategory ? 'slide-wrapper-trans' : ''">
+                    <div class="library-column node-category-list">
+                        <div
+                            v-for="(category, idx) in nodeCategories"
+                            :key="idx"
+                            class="node-category"
+                            @click="selectedCategory = category">
+                            {{category}}
+                        </div>
+                    </div>
+                    <div class="library-column node-category-contents">
+                        <div class="list-item" @click="selectedCategory = null">
+                            &lt;
+                        </div>
+                        <div
+                            v-for="node in filteredNodes"
+                            :key="node.id"
+                            class="list-item">
+                            {{node.id}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="resizeBtn-left-wrapper">
+                <button class="resizeBtn resizeBtn-left" @click="showLibrary = !showLibrary" :style="showEvents ? 'transform: translateX(2px);' : ''">
+                    <img v-show="showLibrary" src="@/assets/arrow_01.svg" style="transform: rotate(90deg)"/>
+                    <img v-show="!showLibrary" src="@/assets/arrow_01.svg" style="transform: rotate(-90deg)"/>
+                </button>
+            </div>
+        </div>
     </div>
 </template>
 
 <script>
 import {DEFAULT_EVENTS} from '@/common/data_classes/node_libraries/Events';
+import {NODE_LIST} from '@/common/data_classes/node_libraries/Node_Library';
 import Node from '@/common/data_classes/Node';
 
 export default {
@@ -65,9 +101,11 @@ export default {
     data(){
         return {
             showEvents: true,
+            showLibrary: true,
             showAddEventModal: false,
             addedEvents: [],
             selectedEventId: null,
+            selectedCategory: null,
         }
     },
     watch: {
@@ -84,6 +122,22 @@ export default {
             });
 
             return eventList;
+        },
+        nodeCategories(){
+            let categories = [];
+
+            for (let i = 0; i < NODE_LIST.length; i++){
+                let curNode = NODE_LIST[i];
+
+                if (!categories.includes(curNode.category)){
+                    categories.push(curNode.category);
+                }
+            }
+
+            return categories;
+        },
+        filteredNodes(){
+            return NODE_LIST.filter(node => node.category == this.selectedCategory);
         },
     },
     mounted(){
@@ -141,6 +195,7 @@ export default {
     position: relative;
     width: 100%;
     height: 100%;
+    overflow: hidden;
 }
 
 .event-panel-wrapper{
@@ -152,24 +207,29 @@ export default {
     height: 100%;
 }
 
-.event-panel{
+.side-panel{
     display: flex;
     flex-direction: column;
+    width: 220px;
     height: 95%;
-    min-width: 200px;
     background: var(--tool-panel-bg);
     border: 2px solid var(--border);
-    border-left: none;
-    border-radius: 0px var(--corner-radius) var(--corner-radius) 0px;
     overflow: hidden;
 }
 
-.events-heading{
+.side-panel-heading{
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
     padding: 10px;
+    border-bottom: 2px solid var(--border);
+}
+
+.event-panel{
+    min-width: 200px;
+    border-left: none;
+    border-radius: 0px var(--corner-radius) var(--corner-radius) 0px;
 }
 
 .events-wrapper{
@@ -197,24 +257,29 @@ export default {
     background: var(--button-dark-norm);
 }
 
-.event{
+.list-item{
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
     margin: 8px;
+    margin-bottom: 0;
     padding: 10px;
-    background: var(--button-dark-norm);
+    background: var(--tool-panel-bg);
     border-radius: var(--corner-radius);
     border: 2px solid var(--border);
     user-select: none;
 }
 
-.event > div:not(:last-child){
+.list-item > div:not(:last-child){
     margin-right: 10px;
 }
 
-.event > .buttons{
+.list-item:hover{
+    filter: brightness(1.1);
+}
+
+.list-item > .buttons{
     white-space: nowrap;
 }
 
@@ -228,22 +293,35 @@ export default {
     height: 20px;
 }
 
-.resizeBtn-wrapper{
+.resizeBtn-right-wrapper{
     position: absolute;
     right: 0px;
 }
 
+.resizeBtn-left-wrapper{
+    position: absolute;
+    left: 0px;
+}
+
 .resizeBtn{
     position: relative;
-    right: -100%;
     width: 30px;
     height: 70px;
-    padding: 0;
     padding: 2px;
     background: var(--tool-panel-bg);
     border: 2px solid var(--border);
+}
+
+.resizeBtn-right{
+    right: -100%;
     border-left: none;
     border-radius: 0px var(--corner-radius) var(--corner-radius) 0px;
+}
+
+.resizeBtn-left{
+    right: 100%;
+    border-right: none;
+    border-radius: var(--corner-radius) 0px 0px var(--corner-radius);
 }
 
 .resizeBtn > img{
@@ -302,7 +380,7 @@ export default {
 .add-event{
     display: flex;
     justify-content: center;
-    background: var(--panel-bg);
+    background: var(--tool-panel-bg);
     padding: 20px;
     margin: 10px;
     border: none;
@@ -323,5 +401,66 @@ export default {
 
 .add-grayed{
     opacity: 50%;
+}
+
+.node-library-wrapper{
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+}
+
+.node-library{
+    min-width: 200px;
+    border-right: none;
+    border-radius: var(--corner-radius) 0px 0px var(--corner-radius);
+}
+
+.slide-wrapper{
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    width: 200%;
+    left: 0;
+    transition-property: left;
+    transition-duration: 100ms;
+    transition-timing-function: ease-out;
+}
+
+.slide-wrapper-trans{
+    left: -100%;
+    transition-property: left;
+    transition-duration: 100ms;
+    transition-timing-function: ease-out;
+}
+
+.library-column{
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    height: 100%;
+}
+
+.node-category{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 40px;
+    padding-left: 10px;
+    margin-left: 10px;
+    background: var(--tool-panel-bg);
+    border-bottom: 2px solid var(--border);
+    border-left: 2px solid var(--border);
+}
+
+.node-category:last-child{
+    border-radius: 0px 0px 0px var(--corner-radius);
+}
+
+.node-category:hover{
+    filter: brightness(1.1);
 }
 </style>
