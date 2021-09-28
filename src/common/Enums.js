@@ -5,7 +5,7 @@ export const CATEGORY_ID = {
     SPRITE: curEnum++,
     OBJECT: curEnum++,
     LOGIC: curEnum++,
-    ROOM: curEnum++
+    ROOM: curEnum++,
 }
 Object.freeze(CATEGORY_ID);
 
@@ -14,7 +14,7 @@ export const CATEGORY_TYPE = {
     SPRITE: 'SPRITE',
     OBJECT: 'OBJECT',
     LOGIC: 'LOGIC',
-    ROOM: 'ROOM'
+    ROOM: 'ROOM',
 }
 Object.freeze(CATEGORY_TYPE);
 
@@ -22,7 +22,7 @@ export const EDITOR_ID = {
     ROOM: curEnum++,
     ART: curEnum++,
     OBJECT: curEnum++,
-    LOGIC: curEnum++
+    LOGIC: curEnum++,
 }
 Object.freeze(EDITOR_ID);
 
@@ -30,14 +30,14 @@ export const EDITOR_TYPE = {
     ROOM: 'ROOM',
     ART: 'ART',
     OBJECT: 'OBJECT',
-    LOGIC: 'LOGIC'
+    LOGIC: 'LOGIC',
 }
 Object.freeze(EDITOR_TYPE);
 
 export const ART_TOOL_SIZE = {
     SMALL: curEnum++,
     MEDIUM: curEnum++,
-    LARGE: curEnum++
+    LARGE: curEnum++,
 }
 Object.freeze(ART_TOOL_SIZE);
 
@@ -50,7 +50,7 @@ export const ART_TOOL_TYPE = {
     ELLIPSE: curEnum++,
     ELLIPSE_FILL: curEnum++,
     ERASER: curEnum++,
-    EYE_DROPPER: curEnum++
+    EYE_DROPPER: curEnum++,
 }
 Object.freeze(ART_TOOL_TYPE);
 
@@ -77,7 +77,7 @@ export const ROOM_ACTION = {
     EXIT_DELETE: curEnum++,
     CAMERA_CHANGE: curEnum++,
     ROOM_PROP_CHANGE: curEnum++,
-    ROOM_VAR_CHANGE: curEnum++
+    ROOM_VAR_CHANGE: curEnum++,
 }
 Object.freeze(ROOM_ACTION);
 
@@ -87,12 +87,22 @@ export const MOUSE_EVENT = {
     UP: curEnum++,
     MOVE: curEnum++,
     LEAVE: curEnum++,
-    ENTER: curEnum++
+    ENTER: curEnum++,
 }
 Object.freeze(MOUSE_EVENT);
 
 export const ENTITY_TYPE = {
     INSTANCE: curEnum++,
-    EXIT: curEnum++
+    EXIT: curEnum++,
 }
 Object.freeze(ENTITY_TYPE);
+
+export const LOGIC_ACTION = {
+    ADD_NODE: curEnum++,
+    DELETE_NODE: curEnum++,
+    MOVE: curEnum++,
+    CONNECT: curEnum++,
+    DISCONNECT: curEnum++,
+    INPUT_CHANGE: curEnum++,
+}
+Object.freeze(LOGIC_ACTION);

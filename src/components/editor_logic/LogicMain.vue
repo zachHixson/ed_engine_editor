@@ -13,7 +13,7 @@
                         v-for="event in addedEvents"
                         :key="event"
                         class="list-item"
-                        :style="event == selectedEventId ? 'background: var(--button-norm)' : ''"
+                        :style="event == selectedAsset.selectedEventId ? 'background: var(--button-norm)' : ''"
                         @click="selectEvent(event)">
                         <div class="name">{{event}}</div>
                         <div class="buttons">
@@ -55,9 +55,12 @@
                 </div>
             </div>
         </div>
-        <div class="node-viewport">
-            <div class="node-nav-wrapper">
-                TEst
+        <div ref="nodeVP" class="node-viewport">
+            <div ref="nodeNav" class="node-nav-wrapper">
+                <Node
+                    v-for="node in selectedAsset.selectedNodeList"
+                    :key="node.id"
+                    :nodeObj="node" />
             </div>
         </div>
         <div class="node-library-wrapper">
@@ -65,7 +68,8 @@
                 <div class="side-panel-heading">
                     Add Nodes
                 </div>
-                <div class="slide-wrapper" :class="selectedCategory ? 'slide-wrapper-trans' : ''">
+                <div v-if="!selectedAsset.selectedEventId">Add an event in order to add nodes</div>
+                <div v-if="selectedAsset.selectedEventId" class="slide-wrapper" :class="selectedCategory ? 'slide-wrapper-trans' : ''">
                     <div class="library-column node-category-list">
                         <div
                             v-for="(category, idx) in nodeCategories"
@@ -82,7 +86,8 @@
                         <div
                             v-for="node in filteredNodes"
                             :key="node.id"
-                            class="list-item">
+                            class="list-item"
+                            @click="actionAddNode({templateId: node.id})">
                             {{node.id}}
                         </div>
                     </div>
@@ -103,10 +108,13 @@
 </template>
 
 <script>
+import Victor from 'victor';
+import {LOGIC_ACTION} from '@/common/Enums';
 import {DEFAULT_EVENTS} from '@/common/data_classes/node_libraries/Events';
 import {NODE_LIST} from '@/common/data_classes/node_libraries/Node_Library';
 import UndoPanel from '@/components/common/UndoPanel';
 import NavControlPanel from '@/components/common/NavControlPanel';
+import Node from '@/components/editor_logic/Node';
 
 export default {
     name: 'LogicEditor',
@@ -116,18 +124,15 @@ export default {
             showEvents: true,
             showLibrary: true,
             showAddEventModal: false,
-            selectedEventId: null,
             selectedCategory: null,
+            actionMap: new Map(),
+            revertMap: new Map(),
         }
     },
     components: {
         UndoPanel,
         NavControlPanel,
-    },
-    watch: {
-        selectedAsset(){
-            //
-        }
+        Node,
     },
     computed: {
         addableEvents(){
@@ -160,16 +165,41 @@ export default {
         },
     },
     mounted(){
-        let curSelectedEvent = this.selectedAsset.editorSelectedEventId;
+        let curSelectedEvent = this.selectedAsset.selectedEventId;
 
         if (curSelectedEvent){
             this.selectEvent(curSelectedEvent ? curSelectedEvent : this.selectedAsset.eventsList[0].id);
         }
+
+        this.bindActions();
+        this.bindReversions();
     },
     methods: {
+        bindActions(){
+            this.actionMap.set(LOGIC_ACTION.ADD_NODE, this.actionAddNode);
+            this.actionMap.set(LOGIC_ACTION.DELETE_NODE, this.actionDeleteNode);
+            this.actionMap.set(LOGIC_ACTION.MOVE, this.actionMoveNode);
+            this.actionMap.set(LOGIC_ACTION.CONNECT, this.actionConnectNode);
+            this.actionMap.set(LOGIC_ACTION.DISCONNECT, this.actionDisconnectNode);
+            this.actionMap.set(LOGIC_ACTION.INPUT_CHANGE, this.actionInputChange);
+        },
+        bindReversions(){
+            this.revertMap.set(LOGIC_ACTION.ADD_NODE, this.revertAddNode);
+            this.revertMap.set(LOGIC_ACTION.DELETE_NODE, this.revertDeleteNode);
+            this.revertMap.set(LOGIC_ACTION.MOVE, this.revertMoveNode);
+            this.revertMap.set(LOGIC_ACTION.CONNECT, this.revertConnectNode);
+            this.revertMap.set(LOGIC_ACTION.DISCONNECT, this.revertDisconnectNode);
+            this.revertMap.set(LOGIC_ACTION.INPUT_CHANGE, this.revertInputChange);
+        },
+        getNewNodePos(){
+            let nodeNav = this.$refs.nodeNav;
+            let screenCenter = new Victor(nodeNav.clientWidth, nodeNav.clientHeight);
+            let pos = screenCenter.clone().divideScalar(2);
+            return pos;
+        },
         addEvent(eventId){
             if (!this.isAddedEvent(eventId)){
-                this.selectedAsset.registerEvent(eventId);
+                this.selectedAsset.registerEvent(eventId, this.getNewNodePos());
                 this.selectedAsset.eventsList
                 this.showAddEventModal = false;
                 this.selectEvent(eventId);
@@ -183,15 +213,29 @@ export default {
             let isActive = false;
 
             for (let i = 0; !isActive && i < this.selectedAsset.eventsList.length; i++){
-                isActive |= this.selectedAsset.eventsList[i].id == eventId;
+                isActive |= this.selectedAsset.eventsList[i] == eventId;
             }
 
             return isActive;
         },
         selectEvent(eventId){
-            this.selectedAsset.editorSelectedEventId = eventId;
-            this.selectedEventId = this.selectedAsset.editorSelectedEventId;
-        }
+            this.selectedAsset.selectedEventId = eventId;
+        },
+        actionAddNode({templateId, nodeRef}, makeCommit = true){
+            let pos = this.getNewNodePos();
+            let newNode = this.selectedAsset.addNode(templateId, pos, nodeRef);
+        },
+        actionDeleteNode(){},
+        actionMoveNode(){},
+        actionConnectNode(){},
+        actionDisconnectNod(){},
+        actionInputChange(){},
+        revertAddNode(){},
+        revertDeleteNode(){},
+        revertMoveNode(){},
+        revertConnectNode(){},
+        revertDisconnectNod(){},
+        revertInputChange(){},
     }
 }
 </script>
@@ -413,6 +457,11 @@ export default {
     width: 100%;
     height: 100%;
     background: white;
+}
+
+.node-nav-wrapper{
+    width: 100%;
+    height: 100%;
 }
 
 .node-library-wrapper{

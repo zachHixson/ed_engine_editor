@@ -1,16 +1,20 @@
 import Victor from 'victor';
 
 class Node{
-    constructor(template, id){
+    constructor(template, id, pos = new Victor()){
         this.templateId = template.id;
         this.nodeId = id;
-        this.domRef = null;
-        this.pos = new Victor();
+        this.isEvent = false;
         this.inTriggers = new Map();
         this.outTriggers = new Map();
         this.inputs = new Map();
         this.outputs = new Map();
         this.methods = new Map();
+
+        if (window.IS_EDITOR){
+            this.domRef = null;
+            this.pos = pos.clone();
+        }
 
         template.inTriggers?.forEach(trigger => {
             this.inTriggers.set(trigger.id, trigger.execute);
@@ -76,6 +80,18 @@ class Node{
 
     throwError(messageId){
         console.error(messageId);
+    }
+
+    setDomRef(domRef){
+        this.domRef = domRef;
+        this.domRef.style.left = this.pos.x + "px";
+        this.domRef.style.top = this.pos.y + "px";
+    }
+
+    setPos(newPos){
+        this.pos.copy(newPos);
+        this.domRef.style.left = this.pos.x + "px";
+        this.domRef.style.top = this.pos.y + "px";
     }
 }
 
