@@ -98,8 +98,8 @@ export default {
         },
         mouseDown(event){
             this.hotkeyMap.mouseDown(event);
-            this.mouse.downPosition.x = event.offsetX;
-            this.mouse.downPosition.y = event.offsetY;
+            this.mouse.downPosition.x = event.clientX;
+            this.mouse.downPosition.y = event.clientY;
         },
         mouseUp(event){
             this.hotkeyMap.mouseUp(event);
@@ -110,8 +110,8 @@ export default {
         },
         mouseMove(event){
             this.mouse.lastPosition.copy(this.mouse.position);
-            this.mouse.position.x = event.offsetX;
-            this.mouse.position.y = event.offsetY;
+            this.mouse.position.x = event.clientX;
+            this.mouse.position.y = event.clientY;
 
             if (this.hotkeyMap.checkKeys(['lmb', 'mmb'])){
                 let navTool = this.hotkeyTool ?? this.selectedNavTool;

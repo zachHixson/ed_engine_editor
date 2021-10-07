@@ -8,6 +8,7 @@ import GameData from './modules/GameData';
 import ArtEditor from './modules/ArtEditor';
 import AssetBrowser from './modules/AssetBrowser';
 import RoomEditor from './modules/RoomEditor';
+import LogicEditor from './modules/LogicEditor';
 import i18n from '@/i18n';
 
 Vue.use(Vuex);
@@ -83,5 +84,6 @@ export default new Vuex.Store({
         ArtEditor,
         AssetBrowser,
         RoomEditor,
+        LogicEditor,
     }
 });

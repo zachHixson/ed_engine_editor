@@ -84,14 +84,14 @@ class Node{
 
     setDomRef(domRef){
         this.domRef = domRef;
-        this.domRef.style.left = this.pos.x + "px";
-        this.domRef.style.top = this.pos.y + "px";
+        this.domRef.style.left = this.pos.x + 'px';
+        this.domRef.style.top = this.pos.y + 'px';
     }
 
     setPos(newPos){
         this.pos.copy(newPos);
-        this.domRef.style.left = this.pos.x + "px";
-        this.domRef.style.top = this.pos.y + "px";
+        this.domRef.style.left = this.pos.x + 'px';
+        this.domRef.style.top = this.pos.y + 'px';
     }
 }
 
