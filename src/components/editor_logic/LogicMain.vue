@@ -65,7 +65,7 @@
             <div ref="nodeNav" class="node-nav-wrapper">
                 <Node
                     v-for="node in selectedAsset.selectedNodeList"
-                    :key="node.id"
+                    :key="node.nodeId"
                     :nodeObj="node"
                     :viewport="nodeViewportEl"
                     :navWrapper="nodeNavEl"

@@ -41,7 +41,7 @@ class Logic extends Asset{
 
     registerEvent(eventId, pos = new Victor()){
         let eventTamplate = DEFAULT_EVENTS.get(eventId);
-        let newEvent = new Node(eventTamplate, 0, pos);
+        let newEvent = new Node(eventTamplate, this.nextNodeId, pos);
         newEvent.isEvent = true;
 
         if (window.IS_EDITOR){
