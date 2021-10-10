@@ -2,7 +2,7 @@
     <div class="node"
         @mousedown="mouseDown">
         <div class="heading">
-            {{nodeObj.templateId}}
+            {{$t('node.' + nodeObj.templateId)}}
             <div class="triggers">
                 <div class="socket-column">
                     <div
@@ -10,7 +10,7 @@
                         :key="inTrigger"
                         class="socket socket-left">
                         <div>&lt;</div>
-                        <div>{{inTrigger}}</div>
+                        <div>{{$t('node.' + inTrigger)}}</div>
                     </div>
                 </div>
                 <div class="socket-column">
@@ -18,7 +18,7 @@
                         v-for="outTrigger in outTriggers"
                         :key="outTrigger"
                         class="socket socket-right">
-                        <div>{{outTrigger}}</div>
+                        <div>{{$t('node.' + outTrigger)}}</div>
                         <div>&gt;</div>
                     </div>
                 </div>
@@ -31,7 +31,8 @@
                         v-for="input in inputs"
                         :key="input.id"
                         class="socket">
-                        i
+                        <div>&lt;</div>
+                        <div>{{$t('node.' + input.id)}}</div>
                     </div>
                 </div>
                 <div class="socket-column">
@@ -39,7 +40,7 @@
                         v-for="output in outputs"
                         :key="output.id"
                         class="socket">
-                        <div>o</div>
+                        <div>{{$t('node.' + output.id)}}</div>
                         <div>&gt;</div>
                     </div>
                 </div>
@@ -64,12 +65,10 @@ export default {
     },
     computed: {
         inTriggers(){
-            //return Array.from(this.nodeObj.inTriggers, ([id]) => {return id});
-            return ['12345', '2', '3']
+            return Array.from(this.nodeObj.inTriggers, ([id]) => {return id});
         },
         outTriggers(){
-            //return Array.from(this.nodeObj.outTriggers, ([id]) => {return id});
-            return ['12345', '2', '3']
+            return Array.from(this.nodeObj.outTriggers, ([id]) => {return id});
         },
         inputs(){
             return Array.from(this.nodeObj.inputs, ([id, input]) => {return {

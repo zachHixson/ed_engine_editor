@@ -3,7 +3,7 @@
         <div class="event-panel-wrapper">
             <div v-show="showEvents" class="side-panel event-panel">
                 <div class="side-panel-heading">
-                    <div>Events</div>
+                    <div>{{$t('logic_editor.event_panel_heading')}}</div>
                     <button class="open-close-btn" @click="showAddEventModal = true">
                         <img src="@/assets/plus.svg" />
                     </button>
@@ -15,7 +15,7 @@
                         class="list-item"
                         :style="event == selectedAsset.selectedEventId ? 'background: var(--button-norm)' : ''"
                         @click="selectEvent(event)">
-                        <div class="name">{{event}}</div>
+                        <div class="name">{{$t('node.' + event)}}</div>
                         <div class="buttons">
                             <button class="eventBtn" @click="removeEvent($event, event)">
                                 <img class="icon" src="@/assets/trash.svg" />
@@ -50,7 +50,7 @@
                         v-for="event in addableEvents"
                         :key="event"
                         @click="addEvent(event)">
-                        {{event}}
+                        {{$t('node.' + event)}}
                     </button>
                 </div>
             </div>
@@ -77,9 +77,9 @@
         <div class="node-library-wrapper">
             <div v-show="showLibrary" class="side-panel node-library">
                 <div class="side-panel-heading">
-                    Add Nodes
+                    {{$t('logic_editor.node_panel_heading')}}
                 </div>
-                <div v-if="!selectedAsset.selectedEventId">Add an event in order to add nodes</div>
+                <div v-if="!selectedAsset.selectedEventId">{{$t('logic_editor.node_panel_empty_warning')}}</div>
                 <div v-if="selectedAsset.selectedEventId" class="slide-wrapper" :class="selectedCategory ? 'slide-wrapper-trans' : ''">
                     <div class="library-column node-category-list">
                         <div
