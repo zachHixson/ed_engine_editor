@@ -56,6 +56,7 @@
             </div>
         </div>
         <div
+            :style="(selectedAsset.selectedEventId) ? '' : 'background: white'"
             ref="nodeVP"
             class="node-viewport"
             @click="mouseClick"
@@ -113,7 +114,7 @@
                 <NavControlPanel
                     ref="navControlPanel"
                     class="nav-control"
-                    :navState="selectedAsset.navState"
+                    :navState="curNavState"
                     :selectedNavTool="selectedNavTool"
                     :contentsBounds="contentsBounds"
                     :unitScale="1"
@@ -209,7 +210,10 @@ export default {
         },
         nodeDraggingEnabled(){
             return this.selectedNavTool == null;
-        }
+        },
+        curNavState(){
+            return this.selectedAsset.navState;
+        },
     },
     mounted(){
         let curSelectedEvent = this.selectedAsset.selectedEventId;
@@ -255,7 +259,7 @@ export default {
             this.revertMap.set(LOGIC_ACTION.INPUT_CHANGE, this.revertInputChange);
         },
         getNewNodePos(){
-            let vpBounds = this.nodeViewportEl.getBoundingClientRect()
+            let vpBounds = this.nodeViewportEl.getBoundingClientRect();
             let vpUl = new Victor(vpBounds.left, vpBounds.top);
             let vpBr = new Victor(vpBounds.right, vpBounds.bottom);
             let midpoint = vpUl.clone().add(vpBr).divideScalar(2);
@@ -276,7 +280,10 @@ export default {
         },
         addEvent(eventId){
             if (!this.isAddedEvent(eventId)){
-                this.selectedAsset.registerEvent(eventId, this.getNewNodePos());
+                let navSize = new Victor(this.nodeNavEl.offsetWidth, this.nodeNavEl.offsetHeight);
+                let navCenter = navSize.clone().divideScalar(2);
+
+                this.selectedAsset.registerEvent(eventId, navCenter);
                 this.showAddEventModal = false;
                 this.selectEvent(eventId);
             }
@@ -296,6 +303,7 @@ export default {
         },
         selectEvent(eventId){
             this.selectedAsset.selectedEventId = eventId;
+            this.navChange(this.selectedAsset.navState);
         },
         mouseClick(jsEvent){
             let mouseUpPos = new Victor(jsEvent.clientX, jsEvent.clientY);
@@ -315,22 +323,22 @@ export default {
         mouseMove(jsEvent){
             this.$refs.navControlPanel.mouseMove(jsEvent);
         },
-        navChange(jsEvent){
+        navChange(newState){
             const TILE_SIZE = 100;
 
             let vpEl = this.nodeViewportEl;
             let navEl = this.nodeNavEl;
 
             //update navWrapper
-            navEl.style.left = (jsEvent.offset.x * jsEvent.zoomFac) + 'px';
-            navEl.style.top = (jsEvent.offset.y * jsEvent.zoomFac) + 'px';
-            navEl.style.transform = 'scale(' + jsEvent.zoomFac + ')';
+            navEl.style.left = (newState.offset.x * newState.zoomFac) + 'px';
+            navEl.style.top = (newState.offset.y * newState.zoomFac) + 'px';
+            navEl.style.transform = 'scale(' + newState.zoomFac + ')';
 
             //update grid background
-            let tileSize = jsEvent.zoomFac * TILE_SIZE;
+            let tileSize = newState.zoomFac * TILE_SIZE;
             let center = new Victor(vpEl.clientWidth, vpEl.clientHeight).divideScalar(2);
 
-            center.add(jsEvent.offset.clone().multiplyScalar(jsEvent.zoomFac));
+            center.add(newState.offset.clone().multiplyScalar(newState.zoomFac));
             this.nodeViewportEl.style.backgroundSize = `${tileSize}px ${tileSize}px`;
             this.nodeViewportEl.style.backgroundPosition = `left ${center.x}px top ${center.y}px`;
         },

@@ -17,8 +17,10 @@ class Logic extends Asset{
             //the following 3 properties act as pointers to the data in the respective Map().
             //Vue does not observe Map() changes, but it can watch a pointer to the same data.
             this.eventsList = [];
-            this.selectedNodeList = null;
+            this.selectedNodeList = [];
             this.selectedConnectionsList = null;
+            
+            delete this.navState;
         }
 
         DEFAULT_EVENTS.forEach(event => {
@@ -28,8 +30,10 @@ class Logic extends Asset{
 
     get type(){return CATEGORY_TYPE.LOGIC}
     get category_ID(){return CATEGORY_ID.LOGIC}
-    get nextNodeId(){return this._nextId++};
-    get selectedEventId(){return this._selectedEventId};
+    get nextNodeId(){return this._nextId++}
+    get selectedEventId(){return this._selectedEventId}
+    get selectedEvent(){return (this.selectedEventId) ? this.events.get(this.selectedEventId) : this.defaultNavState}
+    get navState(){return (this.selectedEventId) ? this.selectedEvent.navState : this.defaultNavState}
 
     set selectedEventId(newId){
         let currentTree = this.events.get(newId);
@@ -37,6 +41,11 @@ class Logic extends Asset{
         this._selectedEventId = newId;
         this.selectedNodeList = (newId) ? currentTree.nodes : [];
         this.selectedConnectionsList = (newId) ? currentTree.connections : [];
+    }
+    set navState(newState){
+        if (this.selectedEventId){
+            this.selectedEventId.navState = newState;
+        }
     }
 
     registerEvent(eventId, pos = new Victor()){
@@ -49,6 +58,7 @@ class Logic extends Asset{
                 entry: newEvent,
                 nodes: [newEvent],
                 connections: [],
+                navState: this.defaultNavState,
             });
 
             this.refreshEditorEventList();

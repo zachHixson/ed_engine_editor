@@ -6,15 +6,19 @@ class Asset{
     constructor(){
         this.id = ID_Generator.newID();
         this.name = this.id;
-        this.navState = {
-            offset: new Victor(0, 0),
-            zoomFac: 1
+
+        if (window.IS_EDITOR){
+            this.navState = this.defaultNavState;
         }
     }
 
     get type(){return CATEGORY_TYPE.UNDEFINED}
     get category_ID(){return CATEGORY_ID.UNDEFINED}
     get thumbnailData(){return null}
+    get defaultNavState(){return {
+        offset: new Victor(0, 0),
+        zoomFac: 1,
+    }}
     
     toSaveData(){return this}
 
