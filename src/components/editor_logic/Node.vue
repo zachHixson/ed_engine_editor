@@ -53,7 +53,7 @@ import Victor from 'victor';
 
 export default {
     name: 'Node',
-    props: ['nodeObj', 'viewport', 'navWrapper', 'canDrag'],
+    props: ['nodeObj', 'clientToNav', 'canDrag'],
     data(){
         return {
             idDragging: false,
@@ -117,23 +117,10 @@ export default {
         },
         mouseMove(event){
             if (this.isDragging){
-                /*
-                    - Calculate mouse's viewport position (based on "client space", so that the hierarchy is irrelivent)
-                    - Calculate the mouse's position in the navWrapper in percentage (IE: x:50%, y:25%)
-                    - Multiply percentage by viewport dimensions to get mouse position in "nav space" (viewport and
-                      navWrapper dimensions will always be the same since CSS scale does not change pixel values of width/height)
-                */
-                let vpBounds = this.viewport.getBoundingClientRect();
-                let vpOrigin = new Victor(vpBounds.left, vpBounds.top);
-                let vpSize = new Victor(vpBounds.right - vpBounds.left, vpBounds.bottom - vpBounds.top);
-                let mousePos = new Victor(event.clientX, event.clientY).subtract(vpOrigin).add(this.dragOffset);
-                let navBounds = this.navWrapper.getBoundingClientRect();
-                let navOrigin = new Victor(navBounds.left, navBounds.top).subtract(vpOrigin);
-                let navSize = new Victor(navBounds.right - navBounds.left, navBounds.bottom - navBounds.top);
-                let navPercent = mousePos.clone().subtract(navOrigin).divide(navSize);
-                let nodeVpPos = vpSize.clone().multiply(navPercent);
+                let mousePos = new Victor(event.clientX, event.clientY).add(this.dragOffset);
+                let navPos = this.clientToNav(mousePos);
 
-                this.nodeObj.setPos(nodeVpPos);
+                this.nodeObj.setPos(navPos);
             }
         },
     }

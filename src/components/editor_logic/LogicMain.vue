@@ -67,8 +67,7 @@
                     v-for="node in selectedAsset.selectedNodeList"
                     :key="node.nodeId"
                     :nodeObj="node"
-                    :viewport="nodeViewportEl"
-                    :navWrapper="nodeNavEl"
+                    :clientToNav="convertClientToNavPos"
                     :canDrag="nodeDraggingEnabled"
                     class="node"
                     @node-moved="updateNodeBounds"/>
@@ -152,6 +151,7 @@ export default {
             mouseMoveEvent: null,
             mouseDownPos: new Victor(0, 0),
             contentsBounds: [0, 0, 0, 0],
+            convertClientToNavPos: null,
         }
     },
     components: {
@@ -216,6 +216,7 @@ export default {
 
         this.nodeViewportEl = this.$refs.nodeVP;
         this.nodeNavEl = this.$refs.nodeNav;
+        this.convertClientToNavPos = this.clientToNavPos.bind(this);
 
         this.nodeViewportEl.addEventListener('wheel', this.$refs.navControlPanel.scroll);
         this.nodeViewportEl.addEventListener ('mouseenter', this.$refs.navControlPanel.mouseEnter);
@@ -254,10 +255,24 @@ export default {
             this.revertMap.set(LOGIC_ACTION.INPUT_CHANGE, this.revertInputChange);
         },
         getNewNodePos(){
-            let nodeNav = this.$refs.nodeNav;
-            let screenCenter = new Victor(nodeNav.clientWidth, nodeNav.clientHeight);
-            let pos = screenCenter.clone().divideScalar(2);
-            return pos;
+            let vpBounds = this.nodeViewportEl.getBoundingClientRect()
+            let vpUl = new Victor(vpBounds.left, vpBounds.top);
+            let vpBr = new Victor(vpBounds.right, vpBounds.bottom);
+            let midpoint = vpUl.clone().add(vpBr).divideScalar(2);
+            let navPos = this.convertClientToNavPos(midpoint);
+
+            for (let i = 0; i < this.selectedAsset.selectedNodeList.length; i++){
+                let curNode = this.selectedAsset.selectedNodeList[i];
+
+                if (curNode.pos.isEqualTo(navPos)){
+                    let size = 50;
+                    let ul = new Victor(-size, -size);
+                    let br = new Victor(size, size);
+                    navPos.add(new Victor(0, 0).randomize(ul, br));
+                }
+            }
+            
+            return navPos;
         },
         addEvent(eventId){
             if (!this.isAddedEvent(eventId)){
@@ -321,6 +336,25 @@ export default {
         },
         navToolSelected(newTool){
             this.$store.dispatch('LogicEditor/selectNavTool', newTool);
+        },
+        clientToNavPos(pos){
+            /*
+                - Calculate mouse's viewport position (based on "client space", so that the hierarchy is irrelivent)
+                - Calculate the mouse's position in the navWrapper in percentage (IE: x:50%, y:25%)
+                - Multiply percentage by viewport dimensions to get mouse position in "nav space" (viewport and
+                    navWrapper dimensions will always be the same since CSS scale does not change pixel values of width/height)
+            */
+            let vpBounds = this.nodeViewportEl.getBoundingClientRect();
+            let vpOrigin = new Victor(vpBounds.left, vpBounds.top);
+            let vpSize = new Victor(this.nodeViewportEl.clientWidth, this.nodeViewportEl.clientHeight);
+            let navBounds = this.nodeNavEl.getBoundingClientRect();
+            let navOrigin = new Victor(navBounds.left, navBounds.top).subtract(vpOrigin);
+            let navSize = new Victor(navBounds.right - navBounds.left, navBounds.bottom - navBounds.top);
+            let offsetPos = pos.clone().subtract(vpOrigin);
+            let navPercent = offsetPos.clone().subtract(navOrigin).divide(navSize);
+            let nodeNavPos = vpSize.clone().multiply(navPercent);
+
+            return nodeNavPos;
         },
         updateNodeBounds(){
             let nodes = this.selectedAsset.selectedNodeList;
