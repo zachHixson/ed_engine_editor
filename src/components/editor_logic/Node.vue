@@ -7,7 +7,7 @@
                 <div class="socket-column">
                     <div
                         v-for="inTrigger in inTriggers"
-                        :key="inTrigger"
+                        :key="inTrigger.id"
                         class="socket socket-left">
                         <div>&lt;</div>
                         <div>{{$t('node.' + inTrigger)}}</div>
@@ -16,7 +16,7 @@
                 <div class="socket-column">
                     <div
                         v-for="outTrigger in outTriggers"
-                        :key="outTrigger"
+                        :key="outTrigger.id"
                         class="socket socket-right">
                         <div>{{$t('node.' + outTrigger)}}</div>
                         <div>&gt;</div>
