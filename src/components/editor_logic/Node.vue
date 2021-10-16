@@ -30,7 +30,7 @@
                     <div
                         v-for="input in inputs"
                         :key="input.id"
-                        class="socket">
+                        class="socket socket-left">
                         <div>&lt;</div>
                         <div>{{$t('node.' + input.id)}}</div>
                     </div>
@@ -39,7 +39,7 @@
                     <div
                         v-for="output in outputs"
                         :key="output.id"
-                        class="socket">
+                        class="socket socket-right">
                         <div>{{$t('node.' + output.id)}}</div>
                         <div>&gt;</div>
                     </div>
@@ -128,9 +128,12 @@ export default {
 
 <style scoped>
 .node{
+    display: flex;
+    flex-direction: column;
     position: absolute;
     left: 0;
     top: 0;
+    width: max-content;
     min-width: 100px;
     transform: translate(-50%, -50%);
     background: var(--tool-panel-bg);
@@ -171,9 +174,11 @@ export default {
 
 .socket-left{
     justify-content: flex-start;
+    text-align: left;
 }
 
 .socket-right{
     justify-content: flex-end;
+    text-align: right;
 }
 </style>
