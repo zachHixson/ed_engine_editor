@@ -3,46 +3,37 @@
         @mousedown="mouseDown">
         <div class="heading">
             {{$t('node.' + nodeObj.templateId)}}
-            <div class="triggers">
-                <div class="socket-column">
-                    <div
+            <div class="io">
+                <div class="socket-column" style="align-items: flex-start">
+                    <Trigger
                         v-for="inTrigger in inTriggers"
-                        :key="inTrigger.id"
-                        class="socket socket-left">
-                        <div>&lt;</div>
-                        <div>{{$t('node.' + inTrigger)}}</div>
-                    </div>
+                        :key="inTrigger"
+                        :triggerId="inTrigger"
+                        :isInput="true"/>
                 </div>
-                <div class="socket-column">
-                    <div
+                <div class="socket-column" style="align-items: flex-end">
+                    <Trigger
                         v-for="outTrigger in outTriggers"
-                        :key="outTrigger.id"
-                        class="socket socket-right">
-                        <div>{{$t('node.' + outTrigger)}}</div>
-                        <div>&gt;</div>
-                    </div>
+                        :key="outTrigger"
+                        :triggerId="outTrigger"/>
                 </div>
             </div>
         </div>
         <div class="body">
-            <div class="sockets">
-                <div class="socket-column">
-                    <div
+            <div class="io">
+                <div class="socket-column"  style="align-items: flex-start">
+                    <DataSocket
                         v-for="input in inputs"
                         :key="input.id"
-                        class="socket socket-left">
-                        <div>&lt;</div>
-                        <div>{{$t('node.' + input.id)}}</div>
-                    </div>
+                        :socket="input"
+                        :isInput="true"/>
                 </div>
-                <div class="socket-column">
-                    <div
+                <div class="socket-column" style="align-items: flex-end">
+                    <DataSocket
                         v-for="output in outputs"
                         :key="output.id"
-                        class="socket socket-right">
-                        <div>{{$t('node.' + output.id)}}</div>
-                        <div>&gt;</div>
-                    </div>
+                        :socket="output"
+                        :isInput="false"/>
                 </div>
             </div>
         </div>
@@ -51,6 +42,8 @@
 
 <script>
 import Victor from 'victor';
+import Trigger from './Trigger';
+import DataSocket from './DataSocket';
 
 export default {
     name: 'Node',
@@ -62,6 +55,10 @@ export default {
             mouseUpEvent: null,
             mouseMoveEvent: null,
         }
+    },
+    components: {
+        Trigger,
+        DataSocket,
     },
     computed: {
         inTriggers(){
@@ -148,37 +145,17 @@ export default {
     background: var(--heading);
 }
 
-.triggers{
+.io{
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    width: 100%;
-}
-
-.sockets{
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
+    gap: 10px;
     width: 100%;
 }
 
 .socket-column{
     display: flex;
     flex-direction: column;
-}
-
-.socket{
-    display: flex;
-    flex-direction: row;
-}
-
-.socket-left{
-    justify-content: flex-start;
-    text-align: left;
-}
-
-.socket-right{
-    justify-content: flex-end;
-    text-align: right;
+    align-items: stretch;
 }
 </style>

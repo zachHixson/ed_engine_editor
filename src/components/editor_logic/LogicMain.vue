@@ -414,7 +414,7 @@ export default {
         actionDeleteNode(){},
         actionMoveNode(){},
         actionConnectNode(){},
-        actionDisconnectNod(){},
+        actionDisconnectNode(){},
         actionInputChange(){},
         revertAddNode(){},
         revertDeleteNode(){},
