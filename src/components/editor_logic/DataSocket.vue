@@ -7,7 +7,7 @@
             <div v-if="socket.type == SOCKET_TYPE.OBJECT" class="selfBox">{{$t('logic_editor.self')}}</div>
         </div>
         <svg width="20" height="20" class="socket_icon" @mousedown="mouseDown">
-            <circle v-if="socket.type == SOCKET_TYPE.ANY" cx="10" cy="10" r="6" style="fill: #000000" />
+            <circle v-if="socket.type == SOCKET_TYPE.ANY" cx="10" cy="10" r="6" style="fill: #222222" />
             <polygon v-if="socket.type == SOCKET_TYPE.NUMBER" points="10,3 17,10 10,17 3,10" style="fill: #FFCE52" />
             <rect v-if="socket.type == SOCKET_TYPE.STRING" x="4" y="8" width="12" height="6" style="fill: #5280FF" />
             <rect v-if="socket.type == SOCKET_TYPE.OBJECT" x="4" y="4" width="12" height="12" style="fill: #FF85AE" />
@@ -63,6 +63,7 @@ export default {
     display: flex;
     flex-direction: row;
     align-items: center;
+    gap: 5px;
 }
 
 .isInput{

@@ -53,6 +53,7 @@ export default {
     display: flex;
     flex-direction: row;
     align-items: center;
+    gap: 5px;
 }
 
 .isInput{

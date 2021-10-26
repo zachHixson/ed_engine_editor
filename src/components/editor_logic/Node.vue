@@ -2,7 +2,7 @@
     <div class="node"
         @mousedown="mouseDown">
         <div class="heading">
-            {{$t('node.' + nodeObj.templateId)}}
+            <div class="node-name">{{$t('node.' + nodeObj.templateId)}}</div>
             <div class="io">
                 <div class="socket-column" style="align-items: flex-start">
                     <Trigger
@@ -142,7 +142,12 @@ export default {
 }
 
 .heading{
+    padding-bottom: 5px;
     background: var(--heading);
+}
+
+.node-name{
+    padding: 5px;
 }
 
 .io{
@@ -151,11 +156,14 @@ export default {
     justify-content: space-between;
     gap: 10px;
     width: 100%;
+    padding-top: 5px;
+    padding-bottom: 5px;
 }
 
 .socket-column{
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    gap: 5px;
 }
 </style>
