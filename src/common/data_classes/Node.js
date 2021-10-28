@@ -22,8 +22,8 @@ class Node{
 
         template.outTriggers?.forEach(trigger => {
             this.outTriggers.set(trigger, {
-                node: null,
-                triggerId: null,
+                id: null,
+                connection: null,
             });
         });
 
@@ -38,8 +38,7 @@ class Node{
         template.outputs?.forEach(output => {
             this.outputs.set(output.id, {
                 type: output.type,
-                cached: output.value,
-                computed: output.computed,
+                get: output.get,
             });
         });
 

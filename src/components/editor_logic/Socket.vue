@@ -6,11 +6,19 @@
             <input v-if="socket.type == SOCKET_TYPE.STRING" type="text" v-model="socket.value" />
             <div v-if="socket.type == SOCKET_TYPE.OBJECT" class="selfBox">{{$t('logic_editor.self')}}</div>
         </div>
-        <svg width="20" height="20" class="socket_icon" @mousedown="mouseDown">
+        <svg v-if="!isTrigger" width="20" height="20" class="socket_icon" @mousedown="mouseDown">
             <circle v-if="socket.type == SOCKET_TYPE.ANY" cx="10" cy="10" r="6" style="fill: #222222" />
             <polygon v-if="socket.type == SOCKET_TYPE.NUMBER" points="10,3 17,10 10,17 3,10" style="fill: #FFCE52" />
             <rect v-if="socket.type == SOCKET_TYPE.STRING" x="4" y="8" width="12" height="6" style="fill: #5280FF" />
             <rect v-if="socket.type == SOCKET_TYPE.OBJECT" x="4" y="4" width="12" height="12" style="fill: #FF85AE" />
+        </svg>
+        <svg
+            v-if="isTrigger"
+            width="20"
+            height="20"
+            class="trigger_icon"
+            @mousedown="mouseDown">
+            <polygon points="3,3 17,10 3,16"/>
         </svg>
     </div>
 </template>
@@ -20,7 +28,7 @@ import Victor from 'victor';
 import {SOCKET_TYPE} from '@/common/data_classes/Node_Enums';
 
 export default {
-    name: 'DataSocket',
+    name: 'Socket',
     props: ['socket', 'isInput'],
     data(){
         return {
@@ -31,6 +39,9 @@ export default {
         SOCKET_TYPE(){
             return SOCKET_TYPE;
         },
+        isTrigger(){
+            return this.socket.type == undefined;
+        }
     },
     mounted(){
         this.mouseUpBinding = this.mouseUp.bind(this);
@@ -69,6 +80,17 @@ export default {
 .isInput{
     justify-content: flex-start;
     flex-direction: row-reverse;
+}
+
+.trigger_icon{
+    fill: none;
+    stroke: white;
+    stroke-width: 2px;
+    stroke-linejoin: round;
+}
+
+.trigger_icon:hover{
+    fill: #FFFFFF88;
 }
 
 .socket_icon{

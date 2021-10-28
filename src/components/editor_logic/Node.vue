@@ -5,31 +5,31 @@
             <div class="node-name">{{$t('node.' + nodeObj.templateId)}}</div>
             <div class="io">
                 <div class="socket-column" style="align-items: flex-start">
-                    <Trigger
+                    <Socket
                         v-for="inTrigger in inTriggers"
                         :key="inTrigger"
-                        :triggerId="inTrigger"
+                        :socket="{id: inTrigger}"
                         :isInput="true"/>
                 </div>
                 <div class="socket-column" style="align-items: flex-end">
-                    <Trigger
+                    <Socket
                         v-for="outTrigger in outTriggers"
                         :key="outTrigger"
-                        :triggerId="outTrigger"/>
+                        :socket="{id: outTrigger}"/>
                 </div>
             </div>
         </div>
         <div class="body">
             <div class="io">
                 <div class="socket-column"  style="align-items: flex-start">
-                    <DataSocket
+                    <Socket
                         v-for="input in inputs"
                         :key="input.id"
                         :socket="input"
                         :isInput="true"/>
                 </div>
                 <div class="socket-column" style="align-items: flex-end">
-                    <DataSocket
+                    <Socket
                         v-for="output in outputs"
                         :key="output.id"
                         :socket="output"
@@ -42,8 +42,7 @@
 
 <script>
 import Victor from 'victor';
-import Trigger from './Trigger';
-import DataSocket from './DataSocket';
+import Socket from './Socket';
 
 export default {
     name: 'Node',
@@ -57,8 +56,7 @@ export default {
         }
     },
     components: {
-        Trigger,
-        DataSocket,
+        Socket,
     },
     computed: {
         inTriggers(){
