@@ -22,13 +22,14 @@ class Node{
 
         template.outTriggers?.forEach(trigger => {
             this.outTriggers.set(trigger, {
-                id: null,
+                id: trigger,
                 connection: null,
             });
         });
 
         template.inputs?.forEach(input => {
             this.inputs.set(input.id, {
+                id: input.id,
                 type: input.type,
                 value: input.default ?? 0,
                 connection: null,
@@ -37,6 +38,7 @@ class Node{
 
         template.outputs?.forEach(output => {
             this.outputs.set(output.id, {
+                id: output.id,
                 type: output.type,
                 get: output.get,
             });

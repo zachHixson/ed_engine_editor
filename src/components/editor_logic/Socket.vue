@@ -1,12 +1,19 @@
 <template>
     <div class="dataSocket" :class="isInput ? 'isInput' : ''">
         <div class="socket_name">{{$t('node.' + socket.id)}}</div>
-        <div v-if="isInput" class="inputBox">
+        <div v-if="isInput && !isConnected" class="inputBox">
             <input v-if="socket.type == SOCKET_TYPE.NUMBER" type="number" v-model="socket.value" />
             <input v-if="socket.type == SOCKET_TYPE.STRING" type="text" v-model="socket.value" />
             <div v-if="socket.type == SOCKET_TYPE.OBJECT" class="selfBox">{{$t('logic_editor.self')}}</div>
         </div>
-        <svg v-if="!isTrigger" width="20" height="20" class="socket_icon" @mousedown="mouseDown">
+        <svg
+            v-if="!isTrigger"
+            ref="socketConnection"
+            width="20" height="20"
+            class="socket_icon"
+            @mousedown="mouseDown"
+            @mouseenter="mouseEnter"
+            @mouseLeave="mouseLeave">
             <circle v-if="socket.type == SOCKET_TYPE.ANY" cx="10" cy="10" r="6" style="fill: #222222" />
             <polygon v-if="socket.type == SOCKET_TYPE.NUMBER" points="10,3 17,10 10,17 3,10" style="fill: #FFCE52" />
             <rect v-if="socket.type == SOCKET_TYPE.STRING" x="4" y="8" width="12" height="6" style="fill: #5280FF" />
@@ -14,25 +21,28 @@
         </svg>
         <svg
             v-if="isTrigger"
+            ref="socketConnection"
             width="20"
             height="20"
             class="trigger_icon"
-            @mousedown="mouseDown">
+            @mousedown="mouseDown"
+            @mouseenter="mouseEnter"
+            @mouseleave="mouseLeave">
             <polygon points="3,3 17,10 3,16"/>
         </svg>
     </div>
 </template>
 
 <script>
-import Victor from 'victor';
 import {SOCKET_TYPE} from '@/common/data_classes/Node_Enums';
+import Node_Connection from '@/common/data_classes/Node_Connection';
 
 export default {
     name: 'Socket',
     props: ['socket', 'isInput'],
     data(){
         return {
-            mouseUpBinding: null,
+            isConnected: false,
         }
     },
     computed: {
@@ -41,29 +51,46 @@ export default {
         },
         isTrigger(){
             return this.socket.type == undefined;
-        }
-    },
-    mounted(){
-        this.mouseUpBinding = this.mouseUp.bind(this);
-
-        window.addEventListener('click', this.mouseUpBinding);
-    },
-    beforeDestroy(){
-        window.removeEventListener('click', this.mouseUpBinding);
+        },
+        canConnect(){
+            return !(this.isConnected && (this.isTrigger ^ this.isInput));
+        },
     },
     methods: {
         mouseDown(event){
+            let connection = new Node_Connection();
+
             event.stopPropagation();
-            this.$emit('mouse-down', {
-                id: this.socket.id,
-                pos: new Victor(event.clientX, event.clientY),
+
+            if (this.isInput){
+                connection.endSocketId = this.socket.id;
+                connection.endSocketEl = this.$refs.socketConnection;
+            }
+            else{
+                connection.startSocketId = this.socket.id;
+                connection.startSocketEl = this.$refs.socketConnection;
+            }
+
+            connection.type = this.socket.type;
+            connection.canConnect = this.canConnect;
+            connection.onConnectCallback = this.onConnect.bind(this);
+
+            this.$emit('mouse-down', connection);
+        },
+        mouseEnter(event){
+            this.$emit('socket-over', {
+                socketData: this.socket,
+                isInput: this.isInput,
+                canConnect: this.canConnect,
+                socketEl: this.$refs.socketConnection,
+                onConnectCallback: this.onConnect.bind(this),
             });
         },
-        mouseUp(event){
-            this.$emit('mouse-up', {
-                id: this.socket.id,
-                pos: new Victor(event.clientX, event.clientY),
-            });
+        mouseLeave(event){
+            this.$emit('socket-over', null);
+        },
+        onConnect(){
+            this.isConnected = true;
         },
     },
 }

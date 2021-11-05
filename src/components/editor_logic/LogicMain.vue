@@ -66,12 +66,25 @@
             <div ref="nodeNav" class="node-nav-wrapper">
                 <Node
                     v-for="node in selectedAsset.selectedNodeList"
-                    :key="node.nodeId"
+                    :key="node.nodeId + 'node'"
+                    ref="nodeEls"
                     :nodeObj="node"
-                    :clientToNav="convertClientToNavPos"
+                    :clientToNavSpace="convertClientToNavPos"
                     :canDrag="nodeDraggingEnabled"
                     class="node"
-                    @node-moved="updateNodeBounds"/>
+                    @node-moved="updateNodeBounds"
+                    @socket-down="createConnection"
+                    @socket-over="currentSocketOver = $event"/>
+                <Connection
+                    v-for="connection in selectedAsset.selectedConnectionsList"
+                    :key="connection.id + 'connection'"
+                    ref="connectionEls"
+                    :connectionObj="connection"
+                    :clientToNavSpace="convertClientToNavPos"
+                    :navWrapper="$refs.nodeNav"
+                    :curSocketOver="currentSocketOver"
+                    :allConnections="selectedAsset.selectedConnectionsList"
+                    @remove-connection="selectedAsset.removeConnection($event)"/>
             </div>
         </div>
         <div class="node-library-wrapper">
@@ -122,7 +135,6 @@
                     @navChanged="navChange"
                     @tool-selected="navToolSelected"/>
             </div>
-            <div ref="testDiv"></div>
         </div>
     </div>
 </template>
@@ -135,6 +147,7 @@ import {NODE_LIST} from '@/common/data_classes/node_libraries/Node_Library';
 import UndoPanel from '@/components/common/UndoPanel';
 import NavControlPanel from '@/components/common/NavControlPanel';
 import Node from '@/components/editor_logic/Node';
+import Connection from '@/components/editor_logic/Connection';
 
 export default {
     name: 'LogicEditor',
@@ -153,12 +166,14 @@ export default {
             mouseDownPos: new Victor(0, 0),
             contentsBounds: [0, 0, 0, 0],
             convertClientToNavPos: null,
+            currentSocketOver: null,
         }
     },
     components: {
         UndoPanel,
         NavControlPanel,
         Node,
+        Connection,
     },
     computed: {
         selectedNavTool(){
@@ -215,12 +230,14 @@ export default {
             return this.selectedAsset.navState;
         },
     },
+    created(){
+        this.convertClientToNavPos = this.clientToNavPos.bind(this);
+    },
     mounted(){
         let curSelectedEvent = this.selectedAsset.selectedEventId;
 
         this.nodeViewportEl = this.$refs.nodeVP;
         this.nodeNavEl = this.$refs.nodeNav;
-        this.convertClientToNavPos = this.clientToNavPos.bind(this);
 
         this.nodeViewportEl.addEventListener('wheel', this.$refs.navControlPanel.scroll);
         this.nodeViewportEl.addEventListener ('mouseenter', this.$refs.navControlPanel.mouseEnter);
@@ -235,6 +252,7 @@ export default {
         this.bindActions();
         this.bindReversions();
         this.navChange(this.selectedAsset.navState);
+        this.relinkConnections();
     },
     beforeDestroy(){
         this.nodeViewportEl.removeEventListener('wheel', this.$refs.navControlPanel.scroll);
@@ -406,6 +424,21 @@ export default {
             if (this.$refs.navControlPanel){
                 this.$refs.navControlPanel.setContainerDimensions(this.nodeViewportEl.clientWidth, this.nodeViewportEl.clientHeight);
             }
+        },
+        createConnection(connectionObj){
+            this.selectedAsset.addConnection(connectionObj);
+        },
+        relinkConnections(){
+            let nodeEls = this.$refs.nodeEls;
+            let connectionEls = this.$refs.connectionEls;
+            let nodeInfo = new Map();
+
+            nodeEls?.forEach(nodeEl => {
+                let info = nodeEl.getRelinkInfo();
+                nodeInfo.set(info.id, info);
+            });
+
+            connectionEls?.forEach(connectionEl => connectionEl.relink(nodeInfo));
         },
         actionAddNode({templateId, nodeRef}, makeCommit = true){
             let pos = this.getNewNodePos();

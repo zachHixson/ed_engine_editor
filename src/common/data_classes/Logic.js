@@ -9,16 +9,17 @@ class Logic extends Asset{
     constructor(){
         super();
         this.events = new Map();
-        this._nextId = 0;
 
         if (window.IS_EDITOR){
             this._selectedEventId = null;
+            this._nextNodeId = 0;
+            this._nextConnectionId = 0;
 
             //the following 3 properties act as pointers to the data in the respective Map().
             //Vue does not observe Map() changes, but it can watch a pointer to the same data.
             this.eventsList = [];
             this.selectedNodeList = [];
-            this.selectedConnectionsList = null;
+            this.selectedConnectionsList = [];
             
             delete this.navState;
         }
@@ -30,9 +31,9 @@ class Logic extends Asset{
 
     get type(){return CATEGORY_TYPE.LOGIC}
     get category_ID(){return CATEGORY_ID.LOGIC}
-    get nextNodeId(){return this._nextId++}
+    get nextNodeId(){return this._nextNodeId++};
     get selectedEventId(){return this._selectedEventId}
-    get selectedEvent(){return (this.selectedEventId) ? this.events.get(this.selectedEventId) : this.defaultNavState}
+    get selectedEvent(){return (this.selectedEventId) ? this.events.get(this.selectedEventId) : null}
     get navState(){return (this.selectedEventId) ? this.selectedEvent.navState : this.defaultNavState}
 
     set selectedEventId(newId){
@@ -99,6 +100,25 @@ class Logic extends Asset{
         }
 
         return null;
+    }
+
+    addConnection(connectionObj){
+        connectionObj.id = this._nextConnectionId++;
+
+        if (window.IS_EDITOR){
+            this.selectedConnectionsList.push(connectionObj);
+        }
+    }
+
+    removeConnection(id){
+        for (let i = 0; i < this.selectedConnectionsList.length; i++){
+            let connection = this.selectedConnectionsList[i];
+
+            if (connection.id == id){
+                this.selectedConnectionsList.splice(i, 1);
+                return;
+            }
+        }
     }
 }
 

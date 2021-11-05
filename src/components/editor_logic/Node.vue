@@ -8,14 +8,21 @@
                     <Socket
                         v-for="inTrigger in inTriggers"
                         :key="inTrigger"
+                        ref="inTriggers"
                         :socket="{id: inTrigger}"
-                        :isInput="true"/>
+                        :isInput="true"
+                        @mouse-down="socketDown"
+                        @socket-over="socketOver"/>
                 </div>
                 <div class="socket-column" style="align-items: flex-end">
                     <Socket
                         v-for="outTrigger in outTriggers"
                         :key="outTrigger"
-                        :socket="{id: outTrigger}"/>
+                        ref="outTriggers"
+                        :socket="{id: outTrigger}"
+                        :isInput="false"
+                        @mouse-down="socketDown"
+                        @socket-over="socketOver"/>
                 </div>
             </div>
         </div>
@@ -25,15 +32,21 @@
                     <Socket
                         v-for="input in inputs"
                         :key="input.id"
+                        ref="inData"
                         :socket="input"
-                        :isInput="true"/>
+                        :isInput="true"
+                        @mouse-down="socketDown"
+                        @socket-over="socketOver"/>
                 </div>
                 <div class="socket-column" style="align-items: flex-end">
                     <Socket
                         v-for="output in outputs"
                         :key="output.id"
+                        ref="outData"
                         :socket="output"
-                        :isInput="false"/>
+                        :isInput="false"
+                        @mouse-down="socketDown"
+                        @socket-over="socketOver"/>
                 </div>
             </div>
         </div>
@@ -46,13 +59,14 @@ import Socket from './Socket';
 
 export default {
     name: 'Node',
-    props: ['nodeObj', 'clientToNav', 'canDrag'],
+    props: ['nodeObj', 'clientToNavSpace', 'canDrag'],
     data(){
         return {
             idDragging: false,
             dragOffset: new Victor(0, 0),
             mouseUpEvent: null,
             mouseMoveEvent: null,
+            connections: [],
         }
     },
     components: {
@@ -87,6 +101,10 @@ export default {
 
         window.addEventListener('mouseup', this.mouseUpEvent);
         window.addEventListener('mousemove', this.mouseMoveEvent);
+
+        this.$nextTick(()=>{
+            this.$el.style.width = this.$el.offsetWidth + 'px';
+        });
     },
     beforeDestroy(){
         window.removeEventListener('mouseup', this.mouseUpEvent);
@@ -112,9 +130,58 @@ export default {
         mouseMove(event){
             if (this.isDragging){
                 let mousePos = new Victor(event.clientX, event.clientY).add(this.dragOffset);
-                let navPos = this.clientToNav(mousePos);
+                let navPos = this.clientToNavSpace(mousePos);
 
                 this.nodeObj.setPos(navPos);
+                this.updateConnections();
+            }
+        },
+        socketDown(connection){
+            let socket = connection.startSocketEl ?? connection.endSocketEl;
+
+            if (socket.isInput){
+                connection.endNode = this.nodeObj;
+            }
+            else{
+                connection.startNode = this.nodeObj;
+            }
+
+            connection.registerUpdateCallback = this.registerUpdate.bind(this);
+
+            this.$emit('socket-down', connection);
+        },
+        socketOver(event){
+            if (event){
+                event.node = this.nodeObj;
+                event.registerUpdateCallback = this.registerUpdate.bind(this);
+            }
+            
+            this.$emit('socket-over', event);
+        },
+        registerUpdate(connectionEl){
+            this.connections.push(connectionEl);
+        },
+        updateConnections(){
+            for (let i = 0; i < this.connections.length; i++){
+                this.connections[i].update();
+            }
+        },
+        getRelinkInfo(){
+            let inTriggers = this.$refs.inTriggers ?? [];
+            let outTriggers = this.$refs.outTriggers ?? [];
+            let inData = this.$refs.inData ?? [];
+            let outData = this.$refs.outData ?? [];
+            let allSocketEls = [...inTriggers, ...outTriggers, ...inData, ...outData];
+            let socketElMap = new Map();
+
+            allSocketEls.forEach(socketEl => {
+                socketElMap.set(socketEl.socket.id, socketEl);
+            });
+
+            return {
+                id: this.nodeObj.nodeId,
+                el: this,
+                sockets: socketElMap,
             }
         },
     }
