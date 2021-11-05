@@ -236,9 +236,11 @@
         "all_types_iAny": "iAny",
         "all_types_iObject": "iObject",
         "all_types_iString": "iString",
+        "all_types_iBool": "iBool",
         "all_types_oNumber": "oNumber",
         "all_types_oAny": "oAny",
         "all_types_oObject": "oObject",
-        "all_types_oString": "oString"
+        "all_types_oString": "oString",
+        "all_types_oBool": "oBool"
     }
 }

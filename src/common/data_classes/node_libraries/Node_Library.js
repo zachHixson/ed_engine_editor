@@ -56,12 +56,14 @@ export const NODE_LIST = [
             {id: 'all_types_iAny', type: SOCKET_TYPE.ANY, default: null},
             {id: 'all_types_iObject', type: SOCKET_TYPE.OBJECT, default: null},
             {id: 'all_types_iString', type: SOCKET_TYPE.STRING, default: 'Default'},
+            {id: 'all_types_iBool', type: SOCKET_TYPE.BOOL, defualt: false},
         ],
         outputs: [
             {id: 'all_types_oNumber', type: SOCKET_TYPE.NUMBER, execute: 'do_thing'},
             {id: 'all_types_oAny', type: SOCKET_TYPE.ANY, execute: 'do_thing'},
             {id: 'all_types_oObject', type: SOCKET_TYPE.OBJECT, execute: 'do_thing'},
             {id: 'all_types_oString', type: SOCKET_TYPE.STRING, execute: 'do_thing'},
+            {id: 'all_types_oBool', type: SOCKET_TYPE.BOOL, execute: 'do_thing'},
         ],
     },
 ];

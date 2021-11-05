@@ -41,7 +41,6 @@ export default {
     },
     mounted(){
         this.mouseMoveHandler = this.mouseMove.bind(this);
-        this.updatePath();
 
         //Check if the connection is still in the process of being connected
         if (!!this.connectionObj.startSocketEl ^ !!this.connectionObj.endSocketEl){

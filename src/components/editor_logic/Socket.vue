@@ -5,6 +5,7 @@
             <input v-if="socket.type == SOCKET_TYPE.NUMBER" type="number" v-model="socket.value" />
             <input v-if="socket.type == SOCKET_TYPE.STRING" type="text" v-model="socket.value" />
             <div v-if="socket.type == SOCKET_TYPE.OBJECT" class="selfBox">{{$t('logic_editor.self')}}</div>
+            <input v-if="socket.type == SOCKET_TYPE.BOOL" type="checkbox" v-model="socket.value" />
         </div>
         <svg
             v-if="!isTrigger"
@@ -18,6 +19,7 @@
             <polygon v-if="socket.type == SOCKET_TYPE.NUMBER" points="10,3 17,10 10,17 3,10" style="fill: #FFCE52" />
             <rect v-if="socket.type == SOCKET_TYPE.STRING" x="4" y="8" width="12" height="6" style="fill: #5280FF" />
             <rect v-if="socket.type == SOCKET_TYPE.OBJECT" x="4" y="4" width="12" height="12" style="fill: #FF85AE" />
+            <polygon v-if="socket.type == SOCKET_TYPE.BOOL" points="3,10 7,4 13,4 17,10 13,16 7,16" style="fill: #FF5555" />
         </svg>
         <svg
             v-if="isTrigger"
