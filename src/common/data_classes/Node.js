@@ -49,38 +49,25 @@ class Node{
         }
     }
 
-    triggerNode(triggerInId){
-        let trigger = this.triggers.get(triggerInId).bind(this);
-        trigger();
-    }
+    toSaveData(){
+        let inputs = [];
 
-    triggerNext(triggerOutId){
-        //get next node and connected input
-        //trigger that node's input
-    }
+        this.inputs.forEach(({id, value}) => inputs.push({id, value}));
 
-    getOutput(outputId){
-        let output = this.outputs.get(outputId);
-        
-        if (output.computed){
-            let computed = output.computed.bind(this);
-            return computed();
-        }
-        else if (output.cached){
-            return output.cached;
-        }
-        else{
-            console.error('Node template')
+        return {
+            templateId: this.templateId,
+            nodeId: this.nodeId,
+            pos: this.pos.toObject(),
+            inputs,
         }
     }
 
-    method(methodName, argArray = []){
-        let method = this.methods.get(methodName).bind(this);
-        method(...argArray);
-    }
+    fromSaveData(data){
+        data.inputs.forEach(input => {
+            this.inputs.get(input.id).value = input.value;
+        });
 
-    throwError(messageId){
-        console.error(messageId);
+        return this;
     }
 
     setDomRef(domRef){

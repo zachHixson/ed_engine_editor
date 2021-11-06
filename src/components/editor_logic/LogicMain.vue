@@ -322,6 +322,10 @@ export default {
         selectEvent(eventId){
             this.selectedAsset.selectedEventId = eventId;
             this.navChange(this.selectedAsset.navState);
+
+            this.$nextTick(()=>{
+                this.relinkConnections();
+            })
         },
         mouseClick(jsEvent){
             let mouseUpPos = new Victor(jsEvent.clientX, jsEvent.clientY);

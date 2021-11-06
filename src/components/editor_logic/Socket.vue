@@ -2,10 +2,10 @@
     <div class="dataSocket" :class="isInput ? 'isInput' : ''">
         <div class="socket_name">{{$t('node.' + socket.id)}}</div>
         <div v-if="isInput && !isConnected" class="inputBox">
-            <input v-if="socket.type == SOCKET_TYPE.NUMBER" type="number" v-model="socket.value" />
-            <input v-if="socket.type == SOCKET_TYPE.STRING" type="text" v-model="socket.value" />
+            <input v-if="socket.type == SOCKET_TYPE.NUMBER" type="number" v-model="socket.input.value" />
+            <input v-if="socket.type == SOCKET_TYPE.STRING" type="text" v-model="socket.input.value" />
             <div v-if="socket.type == SOCKET_TYPE.OBJECT" class="selfBox">{{$t('logic_editor.self')}}</div>
-            <input v-if="socket.type == SOCKET_TYPE.BOOL" type="checkbox" v-model="socket.value" />
+            <input v-if="socket.type == SOCKET_TYPE.BOOL" type="checkbox" v-model="socket.input.value" />
         </div>
         <svg
             v-if="!isTrigger"

@@ -2,6 +2,7 @@ import Victor from 'victor';
 import Asset from './Asset';
 import {CATEGORY_TYPE, CATEGORY_ID} from '../Enums';
 import Node from './Node';
+import Node_Connection from './Node_Connection';
 import {DEFAULT_EVENTS} from './node_libraries/Events';
 import {NODE_MAP} from './node_libraries/Node_Library';
 
@@ -49,6 +50,76 @@ class Logic extends Asset{
         }
     }
 
+    toSaveData(){
+        let logic = {
+            id: this.id,
+            name: this.name,
+            selectedEventId: this._selectedEventId,
+            nextNodeId: this._nextNodeId,
+            nextConnectionId: this._nextConnectionId,
+            events: new Array(this.eventsList.length),
+        }
+
+        for (let i = 0; i < this.eventsList.length; i++){
+            let eventId = this.eventsList[i];
+            let eventObj = this.events.get(this.eventsList[i]);
+
+            logic.events[i] = {
+                entry: {
+                    templateId: eventId,
+                    id: eventObj.entry.nodeId,
+                    pos: eventObj.entry.pos.toObject(),
+                },
+                nodes: eventObj.nodes.map(node => node.toSaveData()),
+                connections: eventObj.connections.map(connection => connection.toSaveData()),
+                navState: eventObj.navState,
+            };
+
+            //remove first node since it's always the event node which we need to recreate anyways
+            logic.events[i].nodes.splice(0, 1);
+        }
+
+        return logic;
+    }
+
+    fromSaveData(data){
+        this.id = data.id;
+        this.name = data.name;
+        this._selectedEventId = data.selectedEventId;
+        this._nextNodeId = data.nextNodeId;
+        this._nextConnectionId = data.nextConnectionId;
+
+        for (let i = 0; i < data.events.length; i++){
+            let eventData = data.events[i];
+            let entryTemplate = DEFAULT_EVENTS.get(eventData.entry.templateId);
+            let entry = new Node(entryTemplate, eventData.entry.id, Victor.fromObject(eventData.entry.pos));
+            let nodes = [entry, ...eventData.nodes.map(node => new Node(
+                NODE_MAP.get(node.templateId),
+                node.nodeId,
+                Victor.fromObject(node.pos)
+            ).fromSaveData(node))];
+            let nodeMap = new Map();
+
+            nodes.forEach(node => nodeMap.set(node.nodeId, node));
+
+            this.events.set(eventData.entry.templateId, {
+                entry,
+                nodes,
+                connections: eventData.connections.map(
+                    connection => new Node_Connection(connection).fromSaveData(connection, nodeMap)
+                ),
+                navState: {
+                    offset: Victor.fromObject(eventData.navState.offset),
+                    zoomFac: eventData.navState.zoomFac,
+                },
+            });
+        }
+
+        this.refreshEditorEventList();
+
+        return this;
+    }
+
     registerEvent(eventId, pos = new Victor()){
         let eventTamplate = DEFAULT_EVENTS.get(eventId);
         let newEvent = new Node(eventTamplate, this.nextNodeId, pos);
@@ -76,7 +147,7 @@ class Logic extends Asset{
     }
 
     refreshEditorEventList(){
-        this.eventsList = [];
+        this.eventsList.splice(0);
 
         this.events.forEach((event, id) => {
             if (event){

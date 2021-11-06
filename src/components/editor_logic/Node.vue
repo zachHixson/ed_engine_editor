@@ -83,14 +83,13 @@ export default {
             return Array.from(this.nodeObj.inputs, ([id, input]) => {return {
                 id,
                 type: input.type,
-                value: input.value,
+                input,
             }});
         },
         outputs(){
             return Array.from(this.nodeObj.outputs, ([id, input]) => {return {
                 id,
                 type: input.type,
-                value: input.value,
             }});
         },
     },

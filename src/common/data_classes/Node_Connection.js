@@ -9,8 +9,23 @@ class Node_Connection{
         this.endNode = inpObj.endNode ?? null;
         this.endSocketId = inpObj.endSocketId ?? null;
         this.endSocketEl = inpObj.endSocketEl ?? null;
-        this.registerUpdateCallback = inpObj.registerUpdateCallback;
-        this.onConnectCallback = inpObj.onConnectCallback;
+        this.registerUpdateCallback = inpObj.registerUpdateCallback ?? null;
+        this.onConnectCallback = inpObj.onConnectCallback ?? null;
+    }
+
+    toSaveData(){
+        let {id, type, startNode, startSocketId, endNode, endSocketId} = this;
+        let startNodeId = startNode.nodeId;
+        let endNodeId = endNode.nodeId;
+
+        return {id, type, startNodeId, startSocketId, endNodeId, endSocketId};
+    }
+
+    fromSaveData(data, nodeMap){
+        this.startNode = nodeMap.get(data.startNodeId);
+        this.endNode = nodeMap.get(data.endNodeId);
+
+        return this;
     }
 }
 

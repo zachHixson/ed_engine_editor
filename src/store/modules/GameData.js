@@ -47,7 +47,8 @@ const getters = {
     getAllRooms: state => state.rooms,
     getSpriteSaveData: state => state.sprites.map(s => s.toSaveData()),
     getObjectSaveData: state => state.objects.map(o => o.toSaveData()),
-    getRoomSaveData: state => state.rooms.map(r => r.toSaveData())
+    getRoomSaveData: state => state.rooms.map(r => r.toSaveData()),
+    getLogicSaveData: state => state.logic.map(r => r.toSaveData()),
 };
 
 const actions = {
@@ -131,6 +132,7 @@ const mutations = {
         state.sprites = loadObj.sprites.map(s => new Sprite().fromSaveData(s));
         state.objects = loadObj.objects.map(o => new Game_Object().fromSaveData(o, state.sprites));
         state.rooms = loadObj.rooms.map(r => new Room().fromSaveData(r, state.objects));
+        state.logic = loadObj.logic.map(l => new Logic().fromSaveData(l));
     },
     purgeMissingReferences(){
         state.objects.forEach(o => o.purgeMissingReferences(state.sprites));

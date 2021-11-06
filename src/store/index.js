@@ -28,7 +28,8 @@ export default new Vuex.Store({
                 startRoom: getters['GameData/getStartRoom'],
                 sprites: getters['GameData/getSpriteSaveData'],
                 objects: getters['GameData/getObjectSaveData'],
-                rooms: getters['GameData/getRoomSaveData']
+                rooms: getters['GameData/getRoomSaveData'],
+                logic: getters['GameData/getLogicSaveData'],
             }
     
             return JSON.stringify(saveObj);
