@@ -176,10 +176,17 @@ class Logic extends Asset{
     }
 
     deleteNode(nodeRef){
-        let curEvent = this.events.get(this.selectedEventId);
-        let nodeIdx = curEvent.nodes.indexOf(node => node.nodeId == nodeRef.nodeId);
+        let nodeIdx = -1;
+
+        for (let i = 0; nodeIdx < 0 && i < this.selectedEvent.nodes.length; i++){
+            let node = this.selectedEvent.nodes[i];
+
+            if (node.nodeId == nodeRef.nodeId){
+                nodeIdx = i;
+            }
+        }
         
-        curEvent.nodes.splice(nodeIdx, 1);
+        this.selectedEvent.nodes.splice(nodeIdx, 1);
     }
 
     addConnection(connectionObj){

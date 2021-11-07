@@ -497,7 +497,7 @@ export default {
         },
         deleteSelectedNodes(){
             for (let i = 0; i < this.selectedNodes.length; i++){
-                let nodeRef = this.selectedNodes[i]
+                let nodeRef = this.selectedNodes[i];
                 this.actionDeleteNode({nodeRef}, true);
             }
 
@@ -509,15 +509,19 @@ export default {
         },
         actionDeleteNode({nodeRef}, makeCommit = true){
             if (!nodeRef.isEvent){
+                let connectionDelList = [];
+
                 //find and delete connections attached to the node
                 this.selectedAsset.eventConnectionsList.forEach(connection => {
                     let startNodeId = connection.startNode.nodeId;
                     let endNodeId = connection.endNode.nodeId;
 
                     if (startNodeId == nodeRef.nodeId || endNodeId == nodeRef.nodeId){
-                        this.selectedAsset.removeConnection(connection.id);
+                        connectionDelList.push(connection.id);
                     }
                 });
+
+                connectionDelList.forEach(id => this.selectedAsset.removeConnection(id));
 
                 //delete node
                 this.selectedAsset.deleteNode(nodeRef);
