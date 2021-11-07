@@ -101,6 +101,7 @@ class Logic extends Asset{
             ).fromSaveData(node))];
             let nodeMap = new Map();
 
+            entry.isEvent = true;
             nodes.forEach(node => nodeMap.set(node.nodeId, node));
 
             this.events.set(eventData.entry.templateId, {
