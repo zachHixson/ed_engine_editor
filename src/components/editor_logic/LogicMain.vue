@@ -258,7 +258,7 @@ export default {
 
         window.addEventListener('keydown', this.hotkeyDownHandler);
         window.addEventListener('keyup', this.hotkeyDownHandler);
-        window.addEventListener('mouseup', this.mouseUp)
+        window.addEventListener('mouseup', this.mouseUp);
         this.nodeViewportEl.addEventListener('wheel', this.$refs.navControlPanel.scroll);
         this.nodeViewportEl.addEventListener ('mouseenter', this.mouseEnter);
         this.nodeViewportEl.addEventListener ('mouseleave', this.mouseLeave);
@@ -276,6 +276,7 @@ export default {
         this.relinkConnections();
     },
     beforeDestroy(){
+        window.removeEventListener('mouseup', this.mouseUp);
         this.nodeViewportEl.removeEventListener('wheel', this.$refs.navControlPanel.scroll);
         this.nodeViewportEl.removeEventListener('mouseenter', this.$refs.navControlPanel.mouseEnter);
         this.nodeViewportEl.removeEventListener('mouseleave', this.$refs.navControlPanel.mouseLeave);
