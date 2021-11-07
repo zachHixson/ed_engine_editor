@@ -19,8 +19,9 @@ class Logic extends Asset{
             //the following 3 properties act as pointers to the data in the respective Map().
             //Vue does not observe Map() changes, but it can watch a pointer to the same data.
             this.eventsList = [];
-            this.selectedNodeList = [];
-            this.selectedConnectionsList = [];
+            this.eventNodeList = [];
+            this.eventConnectionsList = [];
+            this.selectedNodes = [];
             
             delete this.navState;
         }
@@ -41,8 +42,8 @@ class Logic extends Asset{
         let currentTree = this.events.get(newId);
 
         this._selectedEventId = newId;
-        this.selectedNodeList = (newId) ? currentTree.nodes : [];
-        this.selectedConnectionsList = (newId) ? currentTree.connections : [];
+        this.eventNodeList = (newId) ? currentTree.nodes : [];
+        this.eventConnectionsList = (newId) ? currentTree.connections : [];
     }
     set navState(newState){
         if (this.selectedEventId){
@@ -173,20 +174,27 @@ class Logic extends Asset{
         return null;
     }
 
+    deleteNode(nodeRef){
+        let curEvent = this.events.get(this.selectedEventId);
+        let nodeIdx = curEvent.nodes.indexOf(node => node.nodeId == nodeRef.nodeId);
+        
+        curEvent.nodes.splice(nodeIdx, 1);
+    }
+
     addConnection(connectionObj){
         connectionObj.id = this._nextConnectionId++;
 
         if (window.IS_EDITOR){
-            this.selectedConnectionsList.push(connectionObj);
+            this.eventConnectionsList.push(connectionObj);
         }
     }
 
     removeConnection(id){
-        for (let i = 0; i < this.selectedConnectionsList.length; i++){
-            let connection = this.selectedConnectionsList[i];
+        for (let i = 0; i < this.eventConnectionsList.length; i++){
+            let connection = this.eventConnectionsList[i];
 
             if (connection.id == id){
-                this.selectedConnectionsList.splice(i, 1);
+                this.eventConnectionsList.splice(i, 1);
                 return;
             }
         }

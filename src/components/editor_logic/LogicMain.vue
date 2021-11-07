@@ -61,31 +61,41 @@
             class="node-viewport"
             @click="mouseClick"
             @mousedown="mouseDown"
-            @mouseup="mouseUp"
             @mousemove="mouseMove">
             <div ref="nodeNav" class="node-nav-wrapper">
                 <Node
-                    v-for="node in selectedAsset.selectedNodeList"
+                    v-for="node in selectedAsset.eventNodeList"
                     :key="node.nodeId + 'node'"
                     ref="nodeEls"
                     :nodeObj="node"
                     :clientToNavSpace="convertClientToNavPos"
                     :canDrag="nodeDraggingEnabled"
+                    :selectedNodes="selectedNodes"
                     class="node"
+                    @mouse-down="selectNode"
                     @node-moved="updateNodeBounds"
                     @socket-down="createConnection"
                     @socket-over="currentSocketOver = $event"/>
                 <Connection
-                    v-for="connection in selectedAsset.selectedConnectionsList"
+                    v-for="connection in selectedAsset.eventConnectionsList"
                     :key="connection.id + 'connection'"
                     ref="connectionEls"
                     :connectionObj="connection"
                     :clientToNavSpace="convertClientToNavPos"
                     :navWrapper="$refs.nodeNav"
                     :curSocketOver="currentSocketOver"
-                    :allConnections="selectedAsset.selectedConnectionsList"
+                    :allConnections="selectedAsset.eventConnectionsList"
                     @remove-connection="selectedAsset.removeConnection($event)"/>
             </div>
+        </div>
+        <div
+            class="trash-wrapper"
+            :class="isDraggingNode ? 'tras-wrapper-show' : 'trash-wrapper-hide'">
+            <button
+                class="trash-button"
+                @mouseup="trashMouseUp">
+                <img src="@/assets/trash.svg" />
+            </button>
         </div>
         <div class="node-library-wrapper">
             <div v-show="showLibrary" class="side-panel node-library">
@@ -148,6 +158,7 @@ import UndoPanel from '@/components/common/UndoPanel';
 import NavControlPanel from '@/components/common/NavControlPanel';
 import Node from '@/components/editor_logic/Node';
 import Connection from '@/components/editor_logic/Connection';
+import HotkeyMap from '@/components/common/HotkeyMap';
 
 export default {
     name: 'LogicEditor',
@@ -160,13 +171,14 @@ export default {
             revertMap: new Map(),
             nodeViewportEl: null,
             nodeNavEl: null,
-            mouseDownEvent: null,
-            mouseUpEvent: null,
-            mouseMoveEvent: null,
             mouseDownPos: new Victor(0, 0),
             contentsBounds: [0, 0, 0, 0],
             convertClientToNavPos: null,
             currentSocketOver: null,
+            isDraggingNode: false,
+            hotkeyMap: new HotkeyMap(),
+            hotkeyDownHandler: null,
+            hotkeyUpHandler: null,
         }
     },
     components: {
@@ -229,9 +241,14 @@ export default {
         curNavState(){
             return this.selectedAsset.navState;
         },
+        selectedNodes(){
+            return this.selectedAsset.selectedNodes;
+        }
     },
     created(){
         this.convertClientToNavPos = this.clientToNavPos.bind(this);
+        this.hotkeyDownHandler = this.hotkeyMap.keyDown.bind(this.hotkeyMap);
+        this.hotkeyUpHandler = this.hotkeyMap.keyUp.bind(this.hotkeyMap);
     },
     mounted(){
         let curSelectedEvent = this.selectedAsset.selectedEventId;
@@ -239,9 +256,12 @@ export default {
         this.nodeViewportEl = this.$refs.nodeVP;
         this.nodeNavEl = this.$refs.nodeNav;
 
+        window.addEventListener('keydown', this.hotkeyDownHandler);
+        window.addEventListener('keyup', this.hotkeyDownHandler);
+        window.addEventListener('mouseup', this.mouseUp)
         this.nodeViewportEl.addEventListener('wheel', this.$refs.navControlPanel.scroll);
-        this.nodeViewportEl.addEventListener ('mouseenter', this.$refs.navControlPanel.mouseEnter);
-        this.nodeViewportEl.addEventListener ('mouseleave', this.$refs.navControlPanel.mouseLeave);
+        this.nodeViewportEl.addEventListener ('mouseenter', this.mouseEnter);
+        this.nodeViewportEl.addEventListener ('mouseleave', this.mouseLeave);
         window.addEventListener('resize', this.resize);
         this.resize();
 
@@ -249,6 +269,7 @@ export default {
             this.selectEvent(curSelectedEvent ? curSelectedEvent : this.selectedAsset.eventsList[0].id);
         }
 
+        this.bindHotkeys();
         this.bindActions();
         this.bindReversions();
         this.navChange(this.selectedAsset.navState);
@@ -260,6 +281,9 @@ export default {
         this.nodeViewportEl.removeEventListener('mouseleave', this.$refs.navControlPanel.mouseLeave);
     },
     methods: {
+        bindHotkeys(){
+            this.hotkeyMap.bindKey(['delete'], this.deleteSelectedNodes);
+        },
         bindActions(){
             this.actionMap.set(LOGIC_ACTION.ADD_NODE, this.actionAddNode);
             this.actionMap.set(LOGIC_ACTION.DELETE_NODE, this.actionDeleteNode);
@@ -283,8 +307,8 @@ export default {
             let midpoint = vpUl.clone().add(vpBr).divideScalar(2);
             let navPos = this.convertClientToNavPos(midpoint);
 
-            for (let i = 0; i < this.selectedAsset.selectedNodeList.length; i++){
-                let curNode = this.selectedAsset.selectedNodeList[i];
+            for (let i = 0; i < this.selectedAsset.eventNodeList.length; i++){
+                let curNode = this.selectedAsset.eventNodeList[i];
 
                 if (curNode.pos.isEqualTo(navPos)){
                     let size = 50;
@@ -333,6 +357,10 @@ export default {
             if (mouseUpPos.isEqualTo(this.mouseDownPos)){
                 this.$store.dispatch('LogicEditor/selectNavTool', null);
             }
+
+            if (jsEvent.target == jsEvent.currentTarget){
+                this.deselectAllNodes();
+            }
         },
         mouseDown(jsEvent){
             this.mouseDownPos.x = jsEvent.clientX;
@@ -340,7 +368,21 @@ export default {
             this.$refs.navControlPanel.mouseDown(jsEvent);
         },
         mouseUp(jsEvent){
+            this.isDraggingNode = false;
             this.$refs.navControlPanel.mouseUp(jsEvent);
+        },
+        mouseEnter(jsEvent){
+            this.hotkeyMap.mouseEnter();
+            this.$refs.navControlPanel.mouseEnter(jsEvent);
+        },
+        mouseLeave(jsEvent){
+            this.hotkeyMap.mouseLeave();
+            this.$refs.navControlPanel.mouseLeave(jsEvent);
+        },
+        trashMouseUp(){
+            if (this.isDraggingNode){
+                this.deleteSelectedNodes();
+            }
         },
         mouseMove(jsEvent){
             this.$refs.navControlPanel.mouseMove(jsEvent);
@@ -387,7 +429,7 @@ export default {
             return nodeNavPos;
         },
         updateNodeBounds(){
-            let nodes = this.selectedAsset.selectedNodeList;
+            let nodes = this.selectedAsset.eventNodeList;
 
             if (nodes.length == 0){
                 this.contentsBounds = [0, 0, 0, 0];
@@ -444,11 +486,42 @@ export default {
 
             connectionEls?.forEach(connectionEl => connectionEl.relink(nodeInfo));
         },
+        selectNode(nodeObj){
+            this.selectedNodes.splice(0);
+            this.selectedNodes.push(nodeObj);
+            this.isDraggingNode = true;
+        },
+        deselectAllNodes(){
+            this.selectedNodes.splice(0);
+        },
+        deleteSelectedNodes(){
+            for (let i = 0; i < this.selectedNodes.length; i++){
+                let nodeRef = this.selectedNodes[i]
+                this.actionDeleteNode({nodeRef}, true);
+            }
+
+            this.deselectAllNodes();
+        },
         actionAddNode({templateId, nodeRef}, makeCommit = true){
             let pos = this.getNewNodePos();
             let newNode = this.selectedAsset.addNode(templateId, pos, nodeRef);
         },
-        actionDeleteNode(){},
+        actionDeleteNode({nodeRef}, makeCommit = true){
+            if (!nodeRef.isEvent){
+                //find and delete connections attached to the node
+                this.selectedAsset.eventConnectionsList.forEach(connection => {
+                    let startNodeId = connection.startNode.nodeId;
+                    let endNodeId = connection.endNode.nodeId;
+
+                    if (startNodeId == nodeRef.nodeId || endNodeId == nodeRef.nodeId){
+                        this.selectedAsset.removeConnection(connection.id);
+                    }
+                });
+
+                //delete node
+                this.selectedAsset.deleteNode(nodeRef);
+            }
+        },
         actionMoveNode(){},
         actionConnectNode(){},
         actionDisconnectNode(){},
@@ -692,6 +765,45 @@ export default {
     background-image:
         linear-gradient(to right, var(--grid-col) 2px, transparent 1px),
         linear-gradient(to bottom, var(--grid-col) 2px, transparent 1px);
+}
+
+.trash-wrapper{
+    position: absolute;
+    bottom: 0px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    width: 100%;
+    padding-bottom: 5px;
+    transition: transform 0.1s ease-in-out;
+}
+
+.trash-wrapper-show{
+    transform: translateY(0%);
+}
+
+.trash-wrapper-hide{
+    transform: translateY(100%);
+}
+
+.trash-button{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 50px;
+    height: 50px;
+    background: var(--button-norm);
+    border: 3px solid var(--border);
+    border-radius: var(--corner-radius);
+}
+
+.trash-button:hover{
+    background: var(--button-hover);
+}
+
+.trash-button > img{
+    width: 100%;
+    height: 100%;
 }
 
 .node-nav-wrapper{

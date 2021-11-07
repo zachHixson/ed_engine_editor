@@ -1,5 +1,5 @@
 <template>
-    <div class="node"
+    <div class="node" :style="isSelected ? 'border-color: var(--button-norm)' : ''"
         @mousedown="mouseDown">
         <div class="heading">
             <div class="node-name">{{$t('node.' + nodeObj.templateId)}}</div>
@@ -59,7 +59,7 @@ import Socket from './Socket';
 
 export default {
     name: 'Node',
-    props: ['nodeObj', 'clientToNavSpace', 'canDrag'],
+    props: ['nodeObj', 'clientToNavSpace', 'canDrag', 'selectedNodes'],
     data(){
         return {
             idDragging: false,
@@ -92,6 +92,9 @@ export default {
                 type: input.type,
             }});
         },
+        isSelected(){
+            return this.selectedNodes.find(nodeObj => nodeObj.nodeId == this.nodeObj.nodeId) != undefined;
+        },
     },
     mounted(){
         this.nodeObj.setDomRef(this.$el);
@@ -111,6 +114,8 @@ export default {
     },
     methods: {
         mouseDown(event){
+            this.$emit("mouse-down", this.nodeObj);
+
             if (event.which == 1 && this.canDrag){
                 let mousePos = new Victor(event.clientX, event.clientY);
                 let nodeBounds = this.$el.getBoundingClientRect();
