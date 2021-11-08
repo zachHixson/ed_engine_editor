@@ -87,6 +87,15 @@
                     :allConnections="selectedAsset.eventConnectionsList"
                     @remove-connection="selectedAsset.removeConnection($event)"/>
             </div>
+            <svg class="selection-box-wrapper" width="100%" height="100%">
+                <rect
+                    v-show="selectionBox.active"
+                    ref="selectionBox"
+                    :x="selectionBox.origin.x"
+                    :y="selectionBox.origin.y"
+                    :width="selectionBox.dim.x"
+                    :height="selectionBox.dim.y" />
+            </svg>
         </div>
         <div
             class="trash-wrapper"
@@ -179,6 +188,11 @@ export default {
             hotkeyMap: new HotkeyMap(),
             hotkeyDownHandler: null,
             hotkeyUpHandler: null,
+            selectionBox: {
+                active: false,
+                origin: new Victor(0, 0),
+                dim: new Victor(0, 0),
+            },
         }
     },
     components: {
@@ -243,7 +257,7 @@ export default {
         },
         selectedNodes(){
             return this.selectedAsset.selectedNodes;
-        }
+        },
     },
     created(){
         this.convertClientToNavPos = this.clientToNavPos.bind(this);
@@ -359,7 +373,7 @@ export default {
                 this.$store.dispatch('LogicEditor/selectNavTool', null);
             }
 
-            if (jsEvent.target == jsEvent.currentTarget){
+            if (jsEvent.target == jsEvent.currentTarget && mouseUpPos.distance(this.mouseDownPos) < 5){
                 this.deselectAllNodes();
             }
         },
@@ -367,10 +381,23 @@ export default {
             this.mouseDownPos.x = jsEvent.clientX;
             this.mouseDownPos.y = jsEvent.clientY;
             this.$refs.navControlPanel.mouseDown(jsEvent);
+
+            //position selection box
+            if (jsEvent.which == 1 && jsEvent.target == jsEvent.currentTarget){
+                let vpBounds = this.nodeViewportEl.getBoundingClientRect();
+                let vpOrigin = new Victor(vpBounds.left, vpBounds.top);
+                let startPos = new Victor(jsEvent.clientX, jsEvent.clientY).subtract(vpOrigin);
+
+                this.selectionBox.active = true;
+                this.selectionBox.origin.copy(startPos);
+                this.selectionBox.dim.zero();
+            }
         },
         mouseUp(jsEvent){
             this.isDraggingNode = false;
             this.$refs.navControlPanel.mouseUp(jsEvent);
+            this.selectionBox.active = false;
+            this.selectNodesInBox();
         },
         mouseEnter(jsEvent){
             this.hotkeyMap.mouseEnter();
@@ -386,7 +413,24 @@ export default {
             }
         },
         mouseMove(jsEvent){
+            let vpBounds = this.nodeViewportEl.getBoundingClientRect();
+            let vpOrigin = new Victor(vpBounds.left, vpBounds.top);
+            let newOrigin = new Victor(jsEvent.clientX, jsEvent.clientY).subtract(vpOrigin);
+            let selectionBoxDim = new Victor(jsEvent.clientX, jsEvent.clientY).subtract(this.mouseDownPos);
+
             this.$refs.navControlPanel.mouseMove(jsEvent);
+            this.selectionBox.dim.copy(selectionBoxDim);
+
+            //if rectangle dimensions are negative, set origin to mouse position
+            if (selectionBoxDim.x < 0){
+                this.selectionBox.origin.x = newOrigin.x;
+                this.selectionBox.dim.x = Math.abs(this.selectionBox.dim.x);
+            }
+
+            if (selectionBoxDim.y < 0){
+                this.selectionBox.origin.y = newOrigin.y;
+                this.selectionBox.dim.y = Math.abs(this.selectionBox.dim.y);
+            }
         },
         navChange(newState){
             const TILE_SIZE = 100;
@@ -491,6 +535,19 @@ export default {
             this.selectedNodes.splice(0);
             this.selectedNodes.push(nodeObj);
             this.isDraggingNode = true;
+        },
+        selectNodesInBox(){
+            this.selectedAsset.eventNodeList.forEach(node => {
+                let selectionBounds = this.$refs.selectionBox.getBoundingClientRect();
+                let nodeBounds = node.domRef.getBoundingClientRect();
+
+                if (
+                    selectionBounds.right >= nodeBounds.left && nodeBounds.right >= selectionBounds.left &&
+                    selectionBounds.bottom >= nodeBounds.top && nodeBounds.bottom >= selectionBounds.top
+                ){
+                    this.selectedNodes.push(node);
+                }
+            });
         },
         deselectAllNodes(){
             this.selectedNodes.splice(0);
@@ -770,6 +827,19 @@ export default {
     background-image:
         linear-gradient(to right, var(--grid-col) 2px, transparent 1px),
         linear-gradient(to bottom, var(--grid-col) 2px, transparent 1px);
+}
+
+.selection-box-wrapper{
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+}
+
+.selection-box-wrapper > *{
+    fill: #5588FF55;
+    stroke: #5588FF;
+    rx: 5px;
 }
 
 .trash-wrapper{
