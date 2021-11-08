@@ -186,13 +186,12 @@ export default {
             currentSocketOver: null,
             isDraggingNode: false,
             hotkeyMap: new HotkeyMap(),
-            hotkeyDownHandler: null,
-            hotkeyUpHandler: null,
             selectionBox: {
                 active: false,
                 origin: new Victor(0, 0),
                 dim: new Victor(0, 0),
             },
+            shiftDown: false,
         }
     },
     components: {
@@ -270,8 +269,8 @@ export default {
         this.nodeViewportEl = this.$refs.nodeVP;
         this.nodeNavEl = this.$refs.nodeNav;
 
-        window.addEventListener('keydown', this.hotkeyDownHandler);
-        window.addEventListener('keyup', this.hotkeyDownHandler);
+        window.addEventListener('keydown', this.keyDown);
+        window.addEventListener('keyup', this.keyUp);
         window.addEventListener('mouseup', this.mouseUp);
         this.nodeViewportEl.addEventListener('wheel', this.$refs.navControlPanel.scroll);
         this.nodeViewportEl.addEventListener ('mouseenter', this.mouseEnter);
@@ -290,6 +289,8 @@ export default {
         this.relinkConnections();
     },
     beforeDestroy(){
+        window.removeEventListener('keydown', this.keyDown);
+        window.removeEventListener('keyUp', this.keyUp);
         window.removeEventListener('mouseup', this.mouseUp);
         this.nodeViewportEl.removeEventListener('wheel', this.$refs.navControlPanel.scroll);
         this.nodeViewportEl.removeEventListener('mouseenter', this.$refs.navControlPanel.mouseEnter);
@@ -373,9 +374,20 @@ export default {
                 this.$store.dispatch('LogicEditor/selectNavTool', null);
             }
 
-            if (jsEvent.target == jsEvent.currentTarget && mouseUpPos.distance(this.mouseDownPos) < 5){
+            if (
+                jsEvent.target == jsEvent.currentTarget &&
+                !this.shiftDown &&
+                mouseUpPos.distance(this.mouseDownPos) < 5){
                 this.deselectAllNodes();
             }
+        },
+        keyDown(jsEvent){
+            this.hotkeyMap.keyDown(jsEvent);
+            if (jsEvent.key == 'Shift') this.shiftDown = true;
+        },
+        keyUp(jsEvent){
+            this.hotkeyMap.keyUp(jsEvent);
+            if (jsEvent.key == 'Shift') this.shiftDown = false;
         },
         mouseDown(jsEvent){
             this.mouseDownPos.x = jsEvent.clientX;
@@ -532,7 +544,10 @@ export default {
             connectionEls?.forEach(connectionEl => connectionEl.relink(nodeInfo));
         },
         selectNode(nodeObj){
-            this.selectedNodes.splice(0);
+            if (!this.shiftDown){
+                this.deselectAllNodes();
+            }
+
             this.selectedNodes.push(nodeObj);
             this.isDraggingNode = true;
         },
