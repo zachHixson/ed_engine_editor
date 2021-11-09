@@ -73,8 +73,10 @@
                     :selectedNodes="selectedNodes"
                     :allConnections="selectedAsset.eventConnectionsList"
                     class="node"
-                    @mouse-down="selectNode"
-                    @node-moved="updateNodeBounds"
+                    @node-clicked="nodeClick"
+                    @node-down="nodeDown"
+                    @node-moved="moveSelectedNodes"
+                    @node-move-end="nodeMoveEnd"
                     @socket-down="createConnection"
                     @socket-over="currentSocketOver = $event"/>
                 <Connection
@@ -379,7 +381,8 @@ export default {
             if (
                 jsEvent.target == jsEvent.currentTarget &&
                 !this.shiftDown &&
-                mouseUpPos.distance(this.mouseDownPos) < 5){
+                mouseUpPos.distance(this.mouseDownPos) < 5
+            ){
                 this.deselectAllNodes();
             }
         },
@@ -487,6 +490,71 @@ export default {
 
             return nodeNavPos;
         },
+        resize(){
+            if (this.$refs.navControlPanel){
+                this.$refs.navControlPanel.setContainerDimensions(this.nodeViewportEl.clientWidth, this.nodeViewportEl.clientHeight);
+            }
+        },
+        createConnection(connectionObj){
+            this.selectedAsset.addConnection(connectionObj);
+        },
+        relinkConnections(){
+            let nodeEls = this.$refs.nodeEls;
+            let connectionEls = this.$refs.connectionEls;
+            let nodeInfo = new Map();
+
+            nodeEls?.forEach(nodeEl => {
+                let info = nodeEl.getRelinkInfo();
+                nodeInfo.set(info.id, info);
+            });
+
+            connectionEls?.forEach(connectionEl => connectionEl.relink(nodeInfo));
+        },
+        nodeClick({nodeObj, jsEvent}){
+            let mousePos = new Victor(jsEvent.clientX, jsEvent.clientY);
+
+            if (this.mouseDownPos.distance(mousePos) < 2){
+                this.deselectAllNodes();
+                this.selectedNodes.push(nodeObj);
+            }
+        },
+        nodeDown(node){
+            let alreadySelected = !!this.selectedNodes.find(n => n.nodeId == node.nodeId);
+
+            if (!alreadySelected) {
+                if (!this.shiftDown){
+                    this.deselectAllNodes();
+                }
+
+                this.selectedNodes.push(node);
+            }
+
+            this.isDraggingNode = true;
+        },
+        nodeMoveEnd(){
+            this.updateNodeBounds();
+        },
+        moveSelectedNodes(velocity){
+            for (let i = 0; i < this.selectedNodes.length; i++){
+                let curNode = this.selectedNodes[i];
+                let newPos = curNode.pos.clone().add(velocity);
+
+                curNode.setPos(newPos);
+            }
+        },
+        selectNodesInBox(){
+            this.selectedAsset.eventNodeList.forEach(node => {
+                let selectionBounds = this.$refs.selectionBox.getBoundingClientRect();
+                let nodeBounds = node.domRef.getBoundingClientRect();
+                let overlapX = selectionBounds.right >= nodeBounds.left && nodeBounds.right >= selectionBounds.left;
+                let overlapY = selectionBounds.bottom >= nodeBounds.top && nodeBounds.bottom >= selectionBounds.top;
+                let isSelected = this.selectedNodes.find(n => n.nodeId == node.nodeId);
+
+                if (overlapX && overlapY && !isSelected){
+                    this.selectedNodes.push(node);
+                }
+            });
+        },
         updateNodeBounds(){
             let nodes = this.selectedAsset.eventNodeList;
 
@@ -524,47 +592,6 @@ export default {
             this.contentsBounds[1] = -ul.y;
             this.contentsBounds[2] = br.x;
             this.contentsBounds[3] = -br.y;
-        },
-        resize(){
-            if (this.$refs.navControlPanel){
-                this.$refs.navControlPanel.setContainerDimensions(this.nodeViewportEl.clientWidth, this.nodeViewportEl.clientHeight);
-            }
-        },
-        createConnection(connectionObj){
-            this.selectedAsset.addConnection(connectionObj);
-        },
-        relinkConnections(){
-            let nodeEls = this.$refs.nodeEls;
-            let connectionEls = this.$refs.connectionEls;
-            let nodeInfo = new Map();
-
-            nodeEls?.forEach(nodeEl => {
-                let info = nodeEl.getRelinkInfo();
-                nodeInfo.set(info.id, info);
-            });
-
-            connectionEls?.forEach(connectionEl => connectionEl.relink(nodeInfo));
-        },
-        selectNode(nodeObj){
-            if (!this.shiftDown){
-                this.deselectAllNodes();
-            }
-
-            this.selectedNodes.push(nodeObj);
-            this.isDraggingNode = true;
-        },
-        selectNodesInBox(){
-            this.selectedAsset.eventNodeList.forEach(node => {
-                let selectionBounds = this.$refs.selectionBox.getBoundingClientRect();
-                let nodeBounds = node.domRef.getBoundingClientRect();
-
-                if (
-                    selectionBounds.right >= nodeBounds.left && nodeBounds.right >= selectionBounds.left &&
-                    selectionBounds.bottom >= nodeBounds.top && nodeBounds.bottom >= selectionBounds.top
-                ){
-                    this.selectedNodes.push(node);
-                }
-            });
         },
         deselectAllNodes(){
             this.selectedNodes.splice(0);

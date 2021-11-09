@@ -14,6 +14,7 @@ class Node{
         if (window.IS_EDITOR){
             this.domRef = null;
             this.pos = pos.clone();
+            this.updateConnectionsCallback = null;
         }
 
         template.inTriggers?.forEach(trigger => {
@@ -82,6 +83,7 @@ class Node{
         this.pos.copy(newPos);
         this.domRef.style.left = this.pos.x + 'px';
         this.domRef.style.top = this.pos.y + 'px';
+        this.updateConnectionsCallback();
     }
 }
 

@@ -1,5 +1,6 @@
 <template>
     <div class="node" :style="isSelected ? 'border-color: var(--button-norm)' : ''"
+        @click="$emit('node-clicked', {nodeObj, jsEvent: $event})"
         @mousedown="mouseDown">
         <div class="heading">
             <div class="node-name">{{$t('node.' + nodeObj.templateId)}}</div>
@@ -99,6 +100,7 @@ export default {
     },
     mounted(){
         this.nodeObj.setDomRef(this.$el);
+        this.nodeObj.updateConnectionsCallback = this.updateConnections.bind(this);
         this.mouseUpEvent = this.mouseUp.bind(this);
         this.mouseMoveEvent = this.mouseMove.bind(this);
 
@@ -115,7 +117,7 @@ export default {
     },
     methods: {
         mouseDown(event){
-            this.$emit("mouse-down", this.nodeObj);
+            this.$emit("node-down", this.nodeObj);
 
             if (event.which == 1 && this.canDrag){
                 let mousePos = new Victor(event.clientX, event.clientY);
@@ -127,18 +129,19 @@ export default {
         },
         mouseUp(){
             if (this.isDragging = true){
-                this.$emit('node-moved');
+                this.$emit('node-move-end');
             }
 
             this.isDragging = false;
         },
         mouseMove(event){
             if (this.isDragging){
+                let startPos = this.nodeObj.pos.clone();
                 let mousePos = new Victor(event.clientX, event.clientY).add(this.dragOffset);
                 let navPos = this.clientToNavSpace(mousePos);
+                let velocity = navPos.clone().subtract(startPos);
 
-                this.nodeObj.setPos(navPos);
-                this.updateConnections();
+                this.$emit('node-moved', velocity);
             }
         },
         socketDown(connection){
