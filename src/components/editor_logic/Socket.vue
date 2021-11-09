@@ -2,10 +2,10 @@
     <div class="dataSocket" :class="isInput ? 'isInput' : ''">
         <div class="socket_name">{{$t('node.' + socket.id)}}</div>
         <div v-if="isInput && !isConnected" class="inputBox">
-            <input v-if="socket.type == SOCKET_TYPE.NUMBER" type="number" v-model="socket.input.value" />
-            <input v-if="socket.type == SOCKET_TYPE.STRING" type="text" v-model="socket.input.value" />
+            <input v-if="socket.type == SOCKET_TYPE.NUMBER" type="number" v-model="socket.value" />
+            <input v-if="socket.type == SOCKET_TYPE.STRING" type="text" v-model="socket.value" />
             <div v-if="socket.type == SOCKET_TYPE.OBJECT" class="selfBox">{{$t('logic_editor.self')}}</div>
-            <input v-if="socket.type == SOCKET_TYPE.BOOL" type="checkbox" v-model="socket.input.value" />
+            <input v-if="socket.type == SOCKET_TYPE.BOOL" type="checkbox" v-model="socket.value" />
         </div>
         <svg
             v-if="!isTrigger"
@@ -41,18 +41,16 @@ import Node_Connection from '@/common/data_classes/Node_Connection';
 
 export default {
     name: 'Socket',
-    props: ['socket', 'isInput'],
-    data(){
-        return {
-            isConnected: false,
-        }
-    },
+    props: ['socket', 'isInput', 'parentConnections'],
     computed: {
         SOCKET_TYPE(){
             return SOCKET_TYPE;
         },
         isTrigger(){
             return this.socket.type == undefined;
+        },
+        isConnected(){
+            return !!this.parentConnections.find(c => c.startSocketId == this.socket.id || c.endSocketId == this.socket.id);
         },
         canConnect(){
             return !(this.isConnected && (this.isTrigger ^ this.isInput));
@@ -75,7 +73,6 @@ export default {
 
             connection.type = this.socket.type;
             connection.canConnect = this.canConnect;
-            connection.onConnectCallback = this.onConnect.bind(this);
 
             this.$emit('mouse-down', connection);
         },
@@ -85,14 +82,10 @@ export default {
                 isInput: this.isInput,
                 canConnect: this.canConnect,
                 socketEl: this.$refs.socketConnection,
-                onConnectCallback: this.onConnect.bind(this),
             });
         },
         mouseLeave(event){
             this.$emit('socket-over', null);
-        },
-        onConnect(){
-            this.isConnected = true;
         },
     },
 }

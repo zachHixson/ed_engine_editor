@@ -41,6 +41,7 @@ export default {
     },
     mounted(){
         this.mouseMoveHandler = this.mouseMove.bind(this);
+        this.connectionObj.connectionComponent = this;
 
         //Check if the connection is still in the process of being connected
         if (!!this.connectionObj.startSocketEl ^ !!this.connectionObj.endSocketEl){
@@ -52,7 +53,6 @@ export default {
 
             this.$nextTick(()=>{
                 this.setInitialMousePos();
-                this.connectionObj.registerUpdateCallback(this);
                 this.update();
             });
         }
@@ -62,27 +62,16 @@ export default {
         this.connectionObj.startSocketEl = null;
         this.connectionObj.endSocketEl = null;
         this.connectionObj.registerUpdateCallback = null;
-        this.connectionObj.onConnectCallback = null;
     },
     methods: {
         relink(nodeInfoMap){
             let start = nodeInfoMap.get(this.connectionObj.startNode.nodeId);
             let end = nodeInfoMap.get(this.connectionObj.endNode.nodeId);
-            let startNodeEl = start.el;
-            let endNodeEl = end.el;
             let startSocketEl = start.sockets.get(this.connectionObj.startSocketId);
             let endSocketEl = end.sockets.get(this.connectionObj.endSocketId);
-            let startUpdateCallback = startNodeEl.registerUpdate.bind(startNodeEl);
-            let endUpdateCallback = endNodeEl.registerUpdate.bind(endNodeEl);
-            let startOnConnect = startSocketEl.onConnect.bind(startSocketEl);
-            let endOnConnect = endSocketEl.onConnect.bind(endSocketEl);
 
             this.connectionObj.startSocketEl = startSocketEl.$refs.socketConnection;
             this.connectionObj.endSocketEl = endSocketEl.$refs.socketConnection;
-            startUpdateCallback(this);
-            endUpdateCallback(this);
-            startOnConnect();
-            endOnConnect();
 
             this.update();
         },
@@ -199,10 +188,6 @@ export default {
                 this.connectionObj.startSocketId = this.curSocketOver.socketData.id;
                 this.connectionObj.startSocketEl = this.curSocketOver.socketEl;
             }
-
-            this.curSocketOver.registerUpdateCallback(this);
-            this.curSocketOver.onConnectCallback();
-            this.connectionObj.onConnectCallback();
 
             this.$nextTick(()=>{
                 this.checkLoop();

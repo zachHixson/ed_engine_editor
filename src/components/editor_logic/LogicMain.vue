@@ -71,6 +71,7 @@
                     :clientToNavSpace="convertClientToNavPos"
                     :canDrag="nodeDraggingEnabled"
                     :selectedNodes="selectedNodes"
+                    :allConnections="selectedAsset.eventConnectionsList"
                     class="node"
                     @mouse-down="selectNode"
                     @node-moved="updateNodeBounds"
@@ -94,7 +95,8 @@
                     :x="selectionBox.origin.x"
                     :y="selectionBox.origin.y"
                     :width="selectionBox.dim.x"
-                    :height="selectionBox.dim.y" />
+                    :height="selectionBox.dim.y"
+                    rx="5px" />
             </svg>
         </div>
         <div
@@ -854,7 +856,6 @@ export default {
 .selection-box-wrapper > *{
     fill: #5588FF55;
     stroke: #5588FF;
-    rx: 5px;
 }
 
 .trash-wrapper{

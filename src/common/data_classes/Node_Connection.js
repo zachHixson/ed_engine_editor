@@ -3,14 +3,13 @@ class Node_Connection{
         this.id = inpObj.id;
         this.type = inpObj.type;
         this.canConnect = inpObj.canConnect;
+        this.connectionComponent = inpObj.connectionComponent ?? null;
         this.startNode = inpObj.startNode ?? null;
         this.startSocketId = inpObj.startSocketId ?? null;
         this.startSocketEl = inpObj.startSocketEl ?? null;
         this.endNode = inpObj.endNode ?? null;
         this.endSocketId = inpObj.endSocketId ?? null;
         this.endSocketEl = inpObj.endSocketEl ?? null;
-        this.registerUpdateCallback = inpObj.registerUpdateCallback ?? null;
-        this.onConnectCallback = inpObj.onConnectCallback ?? null;
     }
 
     toSaveData(){

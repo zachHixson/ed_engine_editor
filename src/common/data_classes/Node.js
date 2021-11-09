@@ -17,7 +17,9 @@ class Node{
         }
 
         template.inTriggers?.forEach(trigger => {
-            this.inTriggers.set(trigger.id, trigger.execute);
+            this.inTriggers.set(trigger.id, {
+                id: trigger.id,
+            });
         });
 
         template.outTriggers?.forEach(trigger => {

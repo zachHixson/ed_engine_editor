@@ -7,20 +7,22 @@
                 <div class="socket-column" style="align-items: flex-start">
                     <Socket
                         v-for="inTrigger in inTriggers"
-                        :key="inTrigger"
+                        :key="inTrigger.id"
                         ref="inTriggers"
-                        :socket="{id: inTrigger}"
+                        :socket="inTrigger"
                         :isInput="true"
+                        :parentConnections="connections"
                         @mouse-down="socketDown"
                         @socket-over="socketOver"/>
                 </div>
                 <div class="socket-column" style="align-items: flex-end">
                     <Socket
                         v-for="outTrigger in outTriggers"
-                        :key="outTrigger"
+                        :key="outTrigger.id"
                         ref="outTriggers"
-                        :socket="{id: outTrigger}"
+                        :socket="outTrigger"
                         :isInput="false"
+                        :parentConnections="connections"
                         @mouse-down="socketDown"
                         @socket-over="socketOver"/>
                 </div>
@@ -35,6 +37,7 @@
                         ref="inData"
                         :socket="input"
                         :isInput="true"
+                        :parentConnections="connections"
                         @mouse-down="socketDown"
                         @socket-over="socketOver"/>
                 </div>
@@ -45,6 +48,7 @@
                         ref="outData"
                         :socket="output"
                         :isInput="false"
+                        :parentConnections="connections"
                         @mouse-down="socketDown"
                         @socket-over="socketOver"/>
                 </div>
@@ -59,14 +63,13 @@ import Socket from './Socket';
 
 export default {
     name: 'Node',
-    props: ['nodeObj', 'clientToNavSpace', 'canDrag', 'selectedNodes'],
+    props: ['nodeObj', 'clientToNavSpace', 'canDrag', 'selectedNodes', 'allConnections'],
     data(){
         return {
             idDragging: false,
             dragOffset: new Victor(0, 0),
             mouseUpEvent: null,
             mouseMoveEvent: null,
-            connections: [],
         }
     },
     components: {
@@ -74,27 +77,25 @@ export default {
     },
     computed: {
         inTriggers(){
-            return Array.from(this.nodeObj.inTriggers, ([id]) => {return id});
+            return Array.from(this.nodeObj.inTriggers, ([id, trigger]) => trigger);
         },
         outTriggers(){
-            return Array.from(this.nodeObj.outTriggers, ([id]) => {return id});
+            return Array.from(this.nodeObj.outTriggers, ([id, trigger]) => trigger);
         },
         inputs(){
-            return Array.from(this.nodeObj.inputs, ([id, input]) => {return {
-                id,
-                type: input.type,
-                input,
-            }});
+            return Array.from(this.nodeObj.inputs, ([id, input]) => input);
         },
         outputs(){
-            return Array.from(this.nodeObj.outputs, ([id, input]) => {return {
-                id,
-                type: input.type,
-            }});
+            return Array.from(this.nodeObj.outputs, ([id, input]) => input);
         },
         isSelected(){
             return this.selectedNodes.find(nodeObj => nodeObj.nodeId == this.nodeObj.nodeId) != undefined;
         },
+        connections(){
+            return this.allConnections.filter(
+                c => (c.startNode?.nodeId == this.nodeObj.nodeId || c.endNode?.nodeId == this.nodeObj.nodeId)
+            );
+        }
     },
     mounted(){
         this.nodeObj.setDomRef(this.$el);
@@ -141,33 +142,27 @@ export default {
             }
         },
         socketDown(connection){
-            let socket = connection.startSocketEl ?? connection.endSocketEl;
+            let isInput = !connection.startSocketEl;
 
-            if (socket.isInput){
+            if (isInput){
                 connection.endNode = this.nodeObj;
             }
             else{
                 connection.startNode = this.nodeObj;
             }
 
-            connection.registerUpdateCallback = this.registerUpdate.bind(this);
-
             this.$emit('socket-down', connection);
         },
         socketOver(event){
             if (event){
                 event.node = this.nodeObj;
-                event.registerUpdateCallback = this.registerUpdate.bind(this);
             }
             
             this.$emit('socket-over', event);
         },
-        registerUpdate(connectionEl){
-            this.connections.push(connectionEl);
-        },
         updateConnections(){
             for (let i = 0; i < this.connections.length; i++){
-                this.connections[i].update();
+                this.connections[i].connectionComponent.update();
             }
         },
         getRelinkInfo(){
