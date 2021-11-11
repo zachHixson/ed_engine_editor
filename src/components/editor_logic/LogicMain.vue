@@ -113,10 +113,32 @@
         <div class="node-library-wrapper">
             <div v-show="showLibrary" class="side-panel node-library">
                 <div class="side-panel-heading">
-                    {{$t('logic_editor.node_panel_heading')}}
+                    <div class="fade-out" :style="isSearching ? 'opacity: 0;':''">{{$t('logic_editor.node_panel_heading')}}</div>
+                    <div class="search-btn-wrapper" :class="isSearching ? 'search-btn-wrapper-searching':''">
+                        <button v-if="isSearching" class="cancel-search-btn" @click="isSearching = false">
+                            &lt;
+                        </button>
+                        <button
+                            class="search-btn"
+                            :class="!isSearching ? 'search-btn-active':''"
+                            @click="isSearching = true; searchQuery=''">
+                            <img style="width: 20px; height: 20px;" src="@/assets/navigation_magglass.svg" />
+                        </button>
+                        <transition name="grow">
+                            <input
+                                v-if="isSearching"
+                                class="search-box"
+                                :class="isSearching ? 'search-box-show':''"
+                                v-model="searchQuery"
+                                type="text" />
+                        </transition>
+                    </div>
                 </div>
                 <div v-if="!selectedAsset.selectedEventId">{{$t('logic_editor.node_panel_empty_warning')}}</div>
-                <div v-if="selectedAsset.selectedEventId" class="slide-wrapper" :class="selectedCategory ? 'slide-wrapper-trans' : ''">
+                <div
+                    v-if="selectedAsset.selectedEventId"
+                    class="slide-wrapper"
+                    :class="selectedCategory || isSearching ? 'slide-wrapper-trans' : ''">
                     <div class="library-column node-category-list">
                         <div
                             v-for="(category, idx) in nodeCategories"
@@ -127,7 +149,7 @@
                         </div>
                     </div>
                     <div class="library-column node-category-contents">
-                        <div class="list-item" @click="selectedCategory = null">
+                        <div v-if="!isSearching" class="list-item" @click="selectedCategory = null">
                             &lt;
                         </div>
                         <div
@@ -196,6 +218,8 @@ export default {
                 dim: new Victor(0, 0),
             },
             shiftDown: false,
+            isSearching: false,
+            searchQuery: '',
         }
     },
     components: {
@@ -250,6 +274,14 @@ export default {
             return categories;
         },
         filteredNodes(){
+            if (this.isSearching){
+                if (this.searchQuery.trim().length > 0){
+                    return NODE_LIST.filter(node => node.id.includes(this.searchQuery.toLowerCase()));
+                }
+
+                return NODE_LIST;
+            }
+
             return NODE_LIST.filter(node => node.category == this.selectedCategory);
         },
         nodeDraggingEnabled(){
@@ -931,6 +963,76 @@ export default {
     width: 100%;
     height: 100%;
     pointer-events: none;
+}
+
+.fade-out{
+    opacity: 1;
+    transition: opacity 0.2s ease-out;
+}
+
+.search-btn-wrapper{
+    position: absolute;
+    left: 100%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    transform: translateX(-130%);
+    transition: all 0.3s ease-out;
+}
+
+.search-btn-wrapper-searching{
+    transform: translateX(0);
+    left: 5px;
+}
+
+.search-btn{
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 2em;
+    height: 2em;
+    border: none;
+    background: var(--tool-panel-bg);
+    border-radius: var(--corner-radius);
+    overflow: hidden;
+}
+
+.search-btn-active:hover{
+    filter: brightness(1.2);
+}
+
+.search-btn-active:active{
+    filter: brightness(0.8);
+}
+
+.cancel-search-btn{
+    height: 2em;
+    margin-left: 5px;
+    background: var(--button-dark-norm);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+}
+
+.cancel-search-btn:hover{
+    background: var(--button-dark-hover);
+}
+
+.cancel-search-btn:active{
+    background: var(--button-dark-down);
+}
+
+.search-box{
+    margin-left: 5px;
+    width: 0%;
+    flex-grow: 0;
+}
+
+.search-box-show{
+    flex-grow: 1;
+}
+
+.grow-enter-active, .grow-leave-active{
+    transition: all 0.1s ease-out;
 }
 
 .node-library-wrapper{
