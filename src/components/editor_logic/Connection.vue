@@ -39,7 +39,6 @@
 
 <script>
 import Victor from 'victor';
-import {SOCKET_TYPE} from '@/common/data_classes/Node_Enums';
 
 const PADDING = 20;
 const HANDLE_WIDTH = 100;
@@ -47,7 +46,7 @@ const HANDLE_DIST = 70;
 
 export default {
     name: 'connection',
-    props: ['connectionObj', 'clientToNavSpace', 'navWrapper', 'curSocketOver', 'allConnections'],
+    props: ['connectionObj', 'clientToNavSpace', 'navWrapper', 'allConnections'],
     data(){
         return {
             startPoint: new Victor(0, 0),
@@ -68,10 +67,6 @@ export default {
         flipVertical(){
             return (this.startPoint.y > this.endPoint.y);
         },
-        isPartialConnection(){
-            let connection = this.connectionObj;
-            return (!!connection.startSocketEl ^ !!connection.endSocketEl)
-        },
         isFullConnection(){
             let connection = this.connectionObj;
             return (!!connection.startSocketEl && !!connection.endSocketEl);
@@ -83,7 +78,7 @@ export default {
         this.connectionObj.connectionComponent = this;
 
         //Check if the connection is still in the process of being connected
-        if (this.isPartialConnection){
+        if (!this.isFullConnection){
             this.registerConnectEvents();
             this.$nextTick(()=>{
                 this.setInitialMousePos();
@@ -94,16 +89,13 @@ export default {
     beforeDestroy(){
         window.removeEventListener('mousemove', this.mouseMoveHandler);
         window.removeEventListener('mousemove', this.mouseDragHandler);
-        this.connectionObj.startSocketEl = null;
-        this.connectionObj.endSocketEl = null;
-        this.connectionObj.registerUpdateCallback = null;
+        this.connectionObj.componentDestructor();
     },
     methods: {
         registerConnectEvents(){
             window.addEventListener('mousemove', this.mouseMoveHandler);
             window.addEventListener('mouseup', ()=>{
                 window.removeEventListener('mousemove', this.mouseMoveHandler);
-                this.connectSocket();
             }, {once: true});
         },
         relink(nodeInfoMap){
@@ -224,6 +216,8 @@ export default {
             let dragDistance = this.navMouseDown.distance(this.mousePos);
 
             if (dragDistance > 5){
+                this.$emit('drag-start', this.connectionObj);
+                
                 if (this.grabbedHandle == 1){
                     this.connectionObj.endSocketId = null;
                     this.connectionObj.endSocketEl = null;
@@ -254,82 +248,10 @@ export default {
         navToSVGSpace(point){
             return point.clone().subtract(this.cssOrigin);
         },
-        connectSocket(){
-            let typeMatch = this.curSocketOver?.socketData.type == this.connectionObj.type;
-            let anyMatch = this.curSocketOver?.socketData.type == SOCKET_TYPE.ANY && !!this.connectionObj.type;
-            let directionMatch = !!this.connectionObj.startSocketEl == !!this.curSocketOver?.isInput;
-
-            if (!(
-                this.curSocketOver &&
-                (typeMatch || anyMatch) &&
-                directionMatch &&
-                this.connectionObj.canConnect &&
-                this.curSocketOver.canConnect
-            )){
-                this.$emit('remove-connection', this.connectionObj.id);
-                return;
-            }
-
-            if (this.curSocketOver.isInput){
-                this.connectionObj.endNode = this.curSocketOver.node;
-                this.connectionObj.endSocketId = this.curSocketOver.socketData.id;
-                this.connectionObj.endSocketEl = this.curSocketOver.socketEl;
-            }
-            else{
-                this.connectionObj.startNode = this.curSocketOver.node;
-                this.connectionObj.startSocketId = this.curSocketOver.socketData.id;
-                this.connectionObj.startSocketEl = this.curSocketOver.socketEl;
-            }
-
-            this.mouseOver = false;
-
-            this.$nextTick(()=>{
-                this.checkLoop();
-                this.update();
-            });
-        },
-        checkLoop(){
-            let connectionMap = new Map();
-            let checkedNodes = new Map();
-
-            for (let i = 0; i < this.allConnections.length; i++){
-                let connection = this.allConnections[i];
-                let id = connection.startNode.nodeId + '/' + connection.startSocketId;
-                connectionMap.set(id, connection);
-            }
-
-            if (_checkLoop(this.connectionObj, connectionMap, checkedNodes)){
-                this.$emit('remove-connection', this.connectionObj.id);
-            }
-        }
     },
 }
 
-function _checkLoop(connection, connectionMap, checkedNodes){
-    let curNode = connection.endNode;
-    let socketArr = [];
 
-    if (checkedNodes.get(curNode.nodeId)){
-        return true;
-    }
-
-    checkedNodes.set(curNode.nodeId, true);
-
-    curNode.outTriggers?.forEach(trigger => socketArr.push(trigger));
-    curNode.outputs?.forEach(output => socketArr.push(output));
-
-    for (let i = 0; i < socketArr.length; i++){
-        let socket = socketArr[i];
-        let connectionPath = curNode.nodeId + '/' + socket.id;
-        let nextConnection = connectionMap.get(connectionPath);
-
-        if (nextConnection){
-            return _checkLoop(nextConnection, connectionMap, checkedNodes);
-        }
-    }
-
-    return false;
-}
 </script>
 
 <style scoped>

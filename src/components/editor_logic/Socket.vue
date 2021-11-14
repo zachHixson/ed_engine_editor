@@ -2,10 +2,10 @@
     <div class="dataSocket" :class="isInput ? 'isInput' : ''">
         <div class="socket_name">{{$t('node.' + socket.id)}}</div>
         <div v-if="isInput && !isConnected" class="inputBox">
-            <input v-if="socket.type == SOCKET_TYPE.NUMBER" type="number" v-model="socket.value" />
-            <input v-if="socket.type == SOCKET_TYPE.STRING" type="text" v-model="socket.value" />
-            <div v-if="socket.type == SOCKET_TYPE.OBJECT" class="selfBox">{{$t('logic_editor.self')}}</div>
-            <input v-if="socket.type == SOCKET_TYPE.BOOL" type="checkbox" v-model="socket.value" />
+            <input v-if="socket.type == SOCKET_TYPE.NUMBER" ref="input" type="number" :value="socket.value" @change="valueChanged"/>
+            <input v-if="socket.type == SOCKET_TYPE.STRING" ref="input" type="text" :value="socket.value" />
+            <div v-if="socket.type == SOCKET_TYPE.OBJECT" ref="input" class="selfBox">{{$t('logic_editor.self')}}</div>
+            <input v-if="socket.type == SOCKET_TYPE.BOOL" ref="input" type="checkbox" :value="socket.value" />
         </div>
         <svg
             v-if="!isTrigger"
@@ -57,6 +57,13 @@ export default {
         },
     },
     methods: {
+        valueChanged(){
+            this.$emit('value-changed', {
+                socket: this.socket,
+                oldVal: this.socket.value,
+                newVal: this.$refs.input.value,
+            });
+        },
         mouseDown(event){
             let connection = new Node_Connection();
 

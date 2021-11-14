@@ -40,7 +40,8 @@
                         :isInput="true"
                         :parentConnections="connections"
                         @mouse-down="socketDown"
-                        @socket-over="socketOver"/>
+                        @socket-over="socketOver"
+                        @value-changed="$emit('socket-value-changed', $event)"/>
                 </div>
                 <div class="socket-column" style="align-items: flex-end">
                     <Socket
@@ -102,10 +103,8 @@ export default {
         this.nodeObj.setDomRef(this.$el);
         this.nodeObj.updateConnectionsCallback = this.updateConnections.bind(this);
         this.mouseUpEvent = this.mouseUp.bind(this);
-        this.mouseMoveEvent = this.mouseMove.bind(this);
 
         window.addEventListener('mouseup', this.mouseUpEvent);
-        window.addEventListener('mousemove', this.mouseMoveEvent);
 
         this.$nextTick(()=>{
             this.$el.style.width = this.$el.offsetWidth + 'px';
@@ -128,21 +127,11 @@ export default {
             }
         },
         mouseUp(){
-            if (this.isDragging = true){
+            if (this.isDragging == true){
                 this.$emit('node-move-end');
             }
 
             this.isDragging = false;
-        },
-        mouseMove(event){
-            if (this.isDragging){
-                let startPos = this.nodeObj.pos.clone();
-                let mousePos = new Victor(event.clientX, event.clientY).add(this.dragOffset);
-                let navPos = this.clientToNavSpace(mousePos);
-                let velocity = navPos.clone().subtract(startPos);
-
-                this.$emit('node-moved', velocity);
-            }
         },
         socketDown(connection){
             let isInput = !connection.startSocketEl;

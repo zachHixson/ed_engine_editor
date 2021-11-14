@@ -7,6 +7,7 @@ class Undo_Store{
         this.redoStore = new Linked_List();
         this.initialState = null;
         this.returnPrevStep = returnPrevStep;
+        this.cache = new Map();
     }
 
     get undoLength(){return this.undoStore.length}
@@ -78,4 +79,34 @@ class Undo_Store{
     }
 }
 
+const UndoHelpers = {
+    stepBackward(){
+        if (this.undoStore.undoLength > 0){
+            this.applyChronoStep(this.undoStore.stepBack(), this.revertMap);
+        }
+    },
+    stepForward(){
+        if (this.undoStore.redoLength > 0){
+            this.applyChronoStep(this.undoStore.stepForward(), this.actionMap);
+        }
+    },
+    applyChronoStep(step, map){
+        if (step.squashList){
+            for (let i = 0; i < step.squashList.length; i++){
+                this.applyChronoStep(step.squashList[i], map);
+            }
+        }
+        else{
+            let action = map.get(step.action);
+            
+            action(step.data, false);
+        }
+    },
+    squashActions(){
+        this.undoStore.squashCommits(this.squashCounter);
+        this.squashCounter = 0;
+    }
+}
+
 export default Undo_Store;
+export {UndoHelpers};

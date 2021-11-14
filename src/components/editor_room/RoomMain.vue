@@ -62,7 +62,7 @@
 import Vue from 'vue';
 import Victor from 'victor';
 import {ROOM_TOOL_TYPE, ROOM_ACTION, MOUSE_EVENT, CATEGORY_ID, ENTITY_TYPE} from '@/common/Enums';
-import Undo_Store from '@/common/Undo_Store';
+import Undo_Store, {UndoHelpers} from '@/common/Undo_Store';
 import {compareVector} from '@/common/Util_2D';
 import RoomEditWindow from './RoomEditWindow';
 import Properties from './Properties';
@@ -168,6 +168,7 @@ export default {
         window.removeEventListener('keydown', this.hotkeyUp);
     },
     methods: {
+        ...UndoHelpers,
         bindHotkeys(){
             let deleteEntity = () => {
                 let type = this.editorSelection?.TYPE;
@@ -683,32 +684,6 @@ export default {
                 this.changeCustomVar(varList, {varName, newVal, oldIdx});
             }
         },
-        stepBackward(){
-            if (this.undoStore.undoLength > 0){
-                this.applyChronoStep(this.undoStore.stepBack(), this.revertMap);
-            }
-        },
-        stepForward(){
-            if (this.undoStore.redoLength > 0){
-                this.applyChronoStep(this.undoStore.stepForward(), this.actionMap);
-            }
-        },
-        applyChronoStep(step, map){
-            if (step.squashList){
-                for (let i = 0; i < step.squashList.length; i++){
-                    this.applyChronoStep(step.squashList[i], map);
-                }
-            }
-            else{
-                let action = map.get(step.action);
-                
-                action(step.data, false);
-            }
-        },
-        squashActions(){
-            this.undoStore.squashCommits(this.squashCounter);
-            this.squashCounter = 0;
-        }
     }
 }
 </script>

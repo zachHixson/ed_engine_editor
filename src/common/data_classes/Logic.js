@@ -161,7 +161,7 @@ class Logic extends Asset{
     addNode(templateId, pos, nodeRef = null){
         if (window.IS_EDITOR){
             let nodeTemplate = NODE_MAP.get(templateId);
-            let newNode = (nodeRef) ? nodeRef : new Node(nodeTemplate, this.nextNodeId, pos);
+            let newNode = nodeRef ?? new Node(nodeTemplate, this.nextNodeId, pos);
             let curEvent = this.events.get(this.selectedEventId);
 
             curEvent.nodes.push(newNode);
@@ -190,7 +190,9 @@ class Logic extends Asset{
     }
 
     addConnection(connectionObj){
-        connectionObj.id = this._nextConnectionId++;
+        if (!connectionObj.id){
+            connectionObj.id = this._nextConnectionId++;
+        }
 
         if (window.IS_EDITOR){
             this.eventConnectionsList.push(connectionObj);

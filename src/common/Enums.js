@@ -99,10 +99,10 @@ Object.freeze(ENTITY_TYPE);
 
 export const LOGIC_ACTION = {
     ADD_NODE: curEnum++,
-    DELETE_NODE: curEnum++,
+    DELETE_NODES: curEnum++,
     MOVE: curEnum++,
     CONNECT: curEnum++,
     DISCONNECT: curEnum++,
-    INPUT_CHANGE: curEnum++,
+    CHANGE_INPUT: curEnum++,
 }
 Object.freeze(LOGIC_ACTION);

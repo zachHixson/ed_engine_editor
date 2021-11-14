@@ -12,6 +12,12 @@ class Node_Connection{
         this.endSocketEl = inpObj.endSocketEl ?? null;
     }
 
+    componentDestructor(){
+        this.connectionComponent = null;
+        this.startSocketEl = null;
+        this.endSocketEl = null;
+    }
+
     toSaveData(){
         let {id, type, startNode, startSocketId, endNode, endSocketId} = this;
         let startNodeId = startNode.nodeId;
@@ -25,6 +31,10 @@ class Node_Connection{
         this.endNode = nodeMap.get(data.endNodeId);
 
         return this;
+    }
+
+    updateComponent(){
+        this.connectionComponent.update();
     }
 }
 

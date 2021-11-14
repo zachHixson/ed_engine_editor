@@ -31,7 +31,12 @@
                 </button>
             </div>
             <div class="undo-panel-wrapper">
-                <UndoPanel class="undo-panel" />
+                <UndoPanel
+                    class="undo-panel"
+                    :undoLength="undoStore.undoLength"
+                    :redoLength="undoStore.redoLength"
+                    @undo="stepBackward"
+                    @redo="stepForward"/>
             </div>
         </div>
         <div v-if="showAddEventModal" class="modal-wrapper">
@@ -75,10 +80,10 @@
                     class="node"
                     @node-clicked="nodeClick"
                     @node-down="nodeDown"
-                    @node-moved="moveSelectedNodes"
                     @node-move-end="nodeMoveEnd"
                     @socket-down="createConnection"
-                    @socket-over="currentSocketOver = $event"/>
+                    @socket-over="currentSocketOver = $event"
+                    @socket-value-changed="actionChangeInput($event)"/>
                 <Connection
                     v-for="connection in selectedAsset.eventConnectionsList"
                     :key="connection.id + 'connection'"
@@ -86,9 +91,8 @@
                     :connectionObj="connection"
                     :clientToNavSpace="convertClientToNavPos"
                     :navWrapper="$refs.nodeNav"
-                    :curSocketOver="currentSocketOver"
                     :allConnections="selectedAsset.eventConnectionsList"
-                    @remove-connection="selectedAsset.removeConnection($event)"/>
+                    @drag-start="dragConnection"/>
             </div>
             <svg class="selection-box-wrapper" width="100%" height="100%">
                 <rect
@@ -189,11 +193,14 @@ import Victor from 'victor';
 import {LOGIC_ACTION} from '@/common/Enums';
 import {DEFAULT_EVENTS} from '@/common/data_classes/node_libraries/Events';
 import {NODE_LIST} from '@/common/data_classes/node_libraries/Node_Library';
+import {SOCKET_TYPE} from '@/common/data_classes/Node_Enums';
+import Node_Connection from '@/common/data_classes/Node_Connection';
 import UndoPanel from '@/components/common/UndoPanel';
 import NavControlPanel from '@/components/common/NavControlPanel';
 import Node from '@/components/editor_logic/Node';
 import Connection from '@/components/editor_logic/Connection';
 import HotkeyMap from '@/components/common/HotkeyMap';
+import Undo_Store, {UndoHelpers} from '@/common/Undo_Store';
 
 export default {
     name: 'LogicEditor',
@@ -206,11 +213,15 @@ export default {
             revertMap: new Map(),
             nodeViewportEl: null,
             nodeNavEl: null,
+            undoStore: new Undo_Store(32, false),
+            squashCounter: 0,
             mouseDownPos: new Victor(0, 0),
+            lastMouseDragPos: new Victor(0, 0),
             contentsBounds: [0, 0, 0, 0],
             convertClientToNavPos: null,
             currentSocketOver: null,
             isDraggingNode: false,
+            draggingConnection: null,
             hotkeyMap: new HotkeyMap(),
             selectionBox: {
                 active: false,
@@ -333,24 +344,25 @@ export default {
         this.nodeViewportEl.removeEventListener('mouseleave', this.$refs.navControlPanel.mouseLeave);
     },
     methods: {
+        ...UndoHelpers,
         bindHotkeys(){
             this.hotkeyMap.bindKey(['delete'], this.deleteSelectedNodes);
         },
         bindActions(){
             this.actionMap.set(LOGIC_ACTION.ADD_NODE, this.actionAddNode);
-            this.actionMap.set(LOGIC_ACTION.DELETE_NODE, this.actionDeleteNode);
-            this.actionMap.set(LOGIC_ACTION.MOVE, this.actionMoveNode);
-            this.actionMap.set(LOGIC_ACTION.CONNECT, this.actionConnectNode);
-            this.actionMap.set(LOGIC_ACTION.DISCONNECT, this.actionDisconnectNode);
-            this.actionMap.set(LOGIC_ACTION.INPUT_CHANGE, this.actionInputChange);
+            this.actionMap.set(LOGIC_ACTION.DELETE_NODES, this.actionDeleteNodes);
+            this.actionMap.set(LOGIC_ACTION.MOVE, this.actionMoveNodes);
+            this.actionMap.set(LOGIC_ACTION.CONNECT, this.actionMakeConnection);
+            this.actionMap.set(LOGIC_ACTION.DISCONNECT, this.actionRemoveConnection);
+            this.actionMap.set(LOGIC_ACTION.CHANGE_INPUT, this.actionChangeInput);
         },
         bindReversions(){
             this.revertMap.set(LOGIC_ACTION.ADD_NODE, this.revertAddNode);
-            this.revertMap.set(LOGIC_ACTION.DELETE_NODE, this.revertDeleteNode);
-            this.revertMap.set(LOGIC_ACTION.MOVE, this.revertMoveNode);
-            this.revertMap.set(LOGIC_ACTION.CONNECT, this.revertConnectNode);
-            this.revertMap.set(LOGIC_ACTION.DISCONNECT, this.revertDisconnectNode);
-            this.revertMap.set(LOGIC_ACTION.INPUT_CHANGE, this.revertInputChange);
+            this.revertMap.set(LOGIC_ACTION.DELETE_NODES, this.revertDeleteNodes);
+            this.revertMap.set(LOGIC_ACTION.MOVE, this.revertMoveNodes);
+            this.revertMap.set(LOGIC_ACTION.CONNECT, this.revertMakeConnection);
+            this.revertMap.set(LOGIC_ACTION.DISCONNECT, this.revertRemoveConnection);
+            this.revertMap.set(LOGIC_ACTION.CHANGE_INPUT, this.revertChangeInput);
         },
         getNewNodePos(){
             let vpBounds = this.nodeViewportEl.getBoundingClientRect();
@@ -429,6 +441,7 @@ export default {
         mouseDown(jsEvent){
             this.mouseDownPos.x = jsEvent.clientX;
             this.mouseDownPos.y = jsEvent.clientY;
+            this.lastMouseDragPos.copy(this.mouseDownPos);
             this.$refs.navControlPanel.mouseDown(jsEvent);
 
             //position selection box
@@ -447,6 +460,33 @@ export default {
             this.$refs.navControlPanel.mouseUp(jsEvent);
             this.selectionBox.active = false;
             this.selectNodesInBox();
+
+            if (this.draggingConnection){
+                let socketOver = this.currentSocketOver;
+                let connectionObj = this.draggingConnection;
+                let typeMatch = socketOver?.socketData.type == connectionObj.type;
+                let anyMatch = socketOver?.socketData.type == SOCKET_TYPE.ANY && !!connectionObj.type;
+                let directionMatch = !!connectionObj.startSocketEl == !!socketOver?.isInput;
+
+                if (
+                    socketOver &&
+                    (typeMatch || anyMatch) &&
+                    directionMatch &&
+                    connectionObj.canConnect &&
+                    socketOver.canConnect
+                ){
+                    let leftNode = (socketOver.isInput) ? socketOver.node : connectionObj.startNode;
+                    let rightNode = !(socketOver.isInput) ? socketOver.node : connectionObj.startNode;
+
+                    if (!this.checkLoop(leftNode, rightNode)){
+                        this.actionMakeConnection({connectionObj, socketOver});
+                        this.draggingConnection = null;
+                        return;
+                    }
+                }
+
+                this.actionRemoveConnection({connectionObj});
+            }
         },
         mouseEnter(jsEvent){
             this.hotkeyMap.mouseEnter();
@@ -479,6 +519,17 @@ export default {
             if (selectionBoxDim.y < 0){
                 this.selectionBox.origin.y = newOrigin.y;
                 this.selectionBox.dim.y = Math.abs(this.selectionBox.dim.y);
+            }
+
+            //calculate node velocity and move nodes if applicable
+            if (this.isDraggingNode){
+                let startPos = this.clientToNavPos(this.lastMouseDragPos);
+                let mousePos = new Victor(jsEvent.clientX, jsEvent.clientY);
+                let mouseNavPos = this.clientToNavPos(mousePos);
+                let velocity = mouseNavPos.subtract(startPos);
+                
+                this.actionMoveNodes({nodeRefList: this.selectedNodes, velocity}, false);
+                this.lastMouseDragPos.copy(mousePos);
             }
         },
         navChange(newState){
@@ -529,6 +580,13 @@ export default {
         },
         createConnection(connectionObj){
             this.selectedAsset.addConnection(connectionObj);
+            this.draggingConnection = connectionObj;
+        },
+        dragConnection(connectionObj){
+            let {startNode, startSocketId, endNode, endSocketId} = connectionObj;
+
+            this.draggingConnection = connectionObj;
+            this.undoStore.cache.set('prev_socket', {startNode, startSocketId, endNode, endSocketId});
         },
         relinkConnections(){
             let nodeEls = this.$refs.nodeEls;
@@ -564,15 +622,8 @@ export default {
             this.isDraggingNode = true;
         },
         nodeMoveEnd(){
+            this.actionMoveNodes({nodeRefList: this.selectedNodes}, true);
             this.updateNodeBounds();
-        },
-        moveSelectedNodes(velocity){
-            for (let i = 0; i < this.selectedNodes.length; i++){
-                let curNode = this.selectedNodes[i];
-                let newPos = curNode.pos.clone().add(velocity);
-
-                curNode.setPos(newPos);
-            }
         },
         selectNodesInBox(){
             this.selectedAsset.eventNodeList.forEach(node => {
@@ -629,48 +680,218 @@ export default {
             this.selectedNodes.splice(0);
         },
         deleteSelectedNodes(){
-            for (let i = 0; i < this.selectedNodes.length; i++){
-                let nodeRef = this.selectedNodes[i];
-                this.actionDeleteNode({nodeRef}, true);
+            this.actionDeleteNodes({nodeRefList: this.selectedNodes}, true);
+            this.deselectAllNodes();
+        },
+        checkLoop(leftNode, rightNode){
+            let connectionMap = new Map();
+            let checkedNodes = new Map();
+            let connections = this.selectedAsset.eventConnectionsList;
+
+            for (let i = 0; i < connections.length; i++){
+                let connection = connections[i];
+                let id = connection.startNode.nodeId + '/' + connection.startSocketId;
+                connectionMap.set(id, connection);
             }
 
-            this.deselectAllNodes();
+            checkedNodes.set(rightNode.nodeId, true);
+
+            return _checkLoop({endNode: leftNode}, connectionMap, checkedNodes);
         },
         actionAddNode({templateId, nodeRef}, makeCommit = true){
             let pos = this.getNewNodePos();
             let newNode = this.selectedAsset.addNode(templateId, pos, nodeRef);
-        },
-        actionDeleteNode({nodeRef}, makeCommit = true){
-            if (!nodeRef.isEvent){
-                let connectionDelList = [];
 
-                //find and delete connections attached to the node
-                this.selectedAsset.eventConnectionsList.forEach(connection => {
-                    let startNodeId = connection.startNode.nodeId;
-                    let endNodeId = connection.endNode.nodeId;
-
-                    if (startNodeId == nodeRef.nodeId || endNodeId == nodeRef.nodeId){
-                        connectionDelList.push(connection.id);
-                    }
-                });
-
-                connectionDelList.forEach(id => this.selectedAsset.removeConnection(id));
-
-                //delete node
-                this.selectedAsset.deleteNode(nodeRef);
+            if (makeCommit){
+                let data = {templateId, nodeRef: newNode};
+                this.undoStore.commit({action: LOGIC_ACTION.ADD_NODE, data});
             }
         },
-        actionMoveNode(){},
-        actionConnectNode(){},
-        actionDisconnectNode(){},
-        actionInputChange(){},
-        revertAddNode(){},
-        revertDeleteNode(){},
-        revertMoveNode(){},
-        revertConnectNode(){},
-        revertDisconnectNod(){},
-        revertInputChange(){},
+        actionDeleteNodes({nodeRefList}, makeCommit = true){
+            let connectionRefList = [];
+
+            nodeRefList.forEach(node => {
+                if (!node.isEvent){
+                    //find and delete connections attached to the node
+                    this.selectedAsset.eventConnectionsList.forEach(connection => {
+                        let startNodeId = connection.startNode.nodeId;
+                        let endNodeId = connection.endNode.nodeId;
+
+                        if (startNodeId == node.nodeId || endNodeId == node.nodeId){
+                            connectionRefList.push(connection);
+                        }
+                    });
+
+                    connectionRefList.forEach(c => this.selectedAsset.removeConnection(c.id));
+
+                    //delete node
+                    this.selectedAsset.deleteNode(node);
+                }
+            });
+
+            if (makeCommit){
+                let data = {nodeRefList: [...nodeRefList], connectionRefList: [...connectionRefList]};
+                this.undoStore.commit({action: LOGIC_ACTION.DELETE_NODES, data});
+            }
+        },
+        actionMoveNodes({nodeRefList, velocity}, makeCommit = true){
+            if (makeCommit){
+                let startVec = this.undoStore.cache.get('move_start');
+
+                if (startVec){
+                    let totalVel = nodeRefList[0].pos.clone().subtract(startVec);
+                    let data = {nodeRefList: [...nodeRefList], velocity: totalVel};
+
+                    this.undoStore.commit({action: LOGIC_ACTION.MOVE, data});
+                    this.undoStore.cache.delete('move_start');
+                }
+
+                return;
+            }
+
+            for (let i = 0; i < nodeRefList.length; i++){
+                let curNode = nodeRefList[i];
+                let newPos = curNode.pos.clone().add(velocity);
+
+                curNode.setPos(newPos);
+            }
+
+            if (!this.undoStore.cache.get('move_start')){
+                this.undoStore.cache.set('move_start', nodeRefList[0].pos.clone());
+            }
+        },
+        actionMakeConnection({connectionObj, socketOver}, makeCommit = true){
+            if (socketOver.isInput){
+                connectionObj.endNode = socketOver.node;
+                connectionObj.endSocketId = socketOver.socketData.id;
+                connectionObj.endSocketEl = socketOver.socketEl;
+            }
+            else{
+                connectionObj.startNode = socketOver.node;
+                connectionObj.startSocketId = socketOver.socketData.id;
+                connectionObj.startSocketEl = socketOver.socketEl;
+            }
+
+            //if connection was removed entirely by a previous undo, we need to recreate
+            if (!connectionObj.connectionComponent){
+                this.selectedAsset.addConnection(connectionObj);
+            }
+
+            //if this is being connected through a redo, then the socketEl reference might be deprecated and needs a relink
+            if (!socketOver.socketEl){
+                this.$nextTick(()=>{
+                    this.relinkConnections();
+                })
+            }
+
+            if (makeCommit){
+                let prevSocket = this.undoStore.cache.get('prev_socket');
+                let socketOverCopy = Object.assign({}, socketOver);
+
+                delete socketOverCopy.socketEl;
+
+                let data = {connectionObj, socketOver: socketOverCopy, prevSocket};
+                this.undoStore.commit({action: LOGIC_ACTION.CONNECT, data});
+
+                this.$nextTick(()=>{
+                    connectionObj.updateComponent();
+                });
+            }
+
+            this.undoStore.cache.delete('prev_socket');
+        },
+        actionRemoveConnection({connectionObj}, makeCommit = true){
+             makeCommit &= !!(connectionObj.startNode && connectionObj.endNode);
+
+            if (makeCommit){
+                let data = {connectionObj: Object.assign(new Node_Connection(), connectionObj)};
+                let prevSocket = this.undoStore.cache.get('prev_socket');
+
+                Object.assign(data.connectionObj, prevSocket);
+                this.undoStore.commit({action: LOGIC_ACTION.DISCONNECT, data});
+            }
+
+            this.selectedAsset.removeConnection(connectionObj.id);
+        },
+        actionChangeInput({socket, oldVal, newVal}, makeCommit = true){
+            socket.value = newVal;
+
+            if (makeCommit){
+                let data = {socket, oldVal, newVal};
+                this.undoStore.commit({action: LOGIC_ACTION.CHANGE_INPUT, data});
+            }
+        },
+        revertAddNode({nodeRef}){
+            this.selectedAsset.deleteNode(nodeRef);
+        },
+        revertDeleteNodes({nodeRefList, connectionRefList}){
+            nodeRefList.forEach(node => {
+                this.selectedAsset.addNode(node.templateId, null, node);
+            });
+
+            connectionRefList.forEach(connection => {
+                this.selectedAsset.addConnection(connection);
+            });
+
+            this.$nextTick(()=>{
+                this.relinkConnections();
+            })
+        },
+        revertMoveNodes({nodeRefList, velocity}){
+            for (let i = 0; i < nodeRefList.length; i++){
+                let curNode = nodeRefList[i];
+                let newPos = curNode.pos.clone().subtract(velocity);
+
+                curNode.setPos(newPos);
+            }
+        },
+        revertMakeConnection({connectionObj, prevSocket}){
+            if (prevSocket){
+                Object.assign(connectionObj, prevSocket);
+                this.relinkConnections();
+            }
+            else{
+                this.selectedAsset.removeConnection(connectionObj.id);
+            }
+        },
+        revertRemoveConnection({connectionObj}){
+            this.selectedAsset.addConnection(connectionObj);
+            
+            this.$nextTick(()=>{
+                this.relinkConnections();
+            })
+        },
+        revertChangeInput({socket, oldVal}){
+            socket.value = oldVal;
+        },
     }
+}
+
+function _checkLoop(connection, connectionMap, checkedNodes){
+    let curNode = connection.endNode;
+    let socketArr = [];
+    let foundLoop = false;
+
+    if (checkedNodes.get(curNode.nodeId)){
+        return true;
+    }
+
+    checkedNodes.set(curNode.nodeId, true);
+
+    curNode.outTriggers?.forEach(trigger => socketArr.push(trigger));
+    curNode.outputs?.forEach(output => socketArr.push(output));
+
+    for (let i = 0; !foundLoop && i < socketArr.length; i++){
+        let socket = socketArr[i];
+        let connectionPath = curNode.nodeId + '/' + socket.id;
+        let nextConnection = connectionMap.get(connectionPath);
+
+        if (nextConnection){
+            foundLoop |= _checkLoop(nextConnection, connectionMap, checkedNodes);
+        }
+    }
+
+    return foundLoop;
 }
 </script>
 
