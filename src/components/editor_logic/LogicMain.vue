@@ -347,6 +347,10 @@ export default {
         ...UndoHelpers,
         bindHotkeys(){
             this.hotkeyMap.bindKey(['delete'], this.deleteSelectedNodes);
+            this.hotkeyMap.bindKey(['backspace'], this.deleteSelectedNodes);
+            this.hotkeyMap.bindKey(['t'], ()=>{this.showEvents = !this.showEvents});
+            this.hotkeyMap.bindKey(['n'], ()=>{this.showLibrary = !this.showLibrary});
+            this.hotkeyMap.bindKey(['control', 'a'], this.selectAllNodes);
         },
         bindActions(){
             this.actionMap.set(LOGIC_ACTION.ADD_NODE, this.actionAddNode);
@@ -675,6 +679,10 @@ export default {
             this.contentsBounds[1] = -ul.y;
             this.contentsBounds[2] = br.x;
             this.contentsBounds[3] = -br.y;
+        },
+        selectAllNodes(){
+            this.selectedNodes.splice(0);
+            this.selectedNodes.push(...this.selectedAsset.eventNodeList);
         },
         deselectAllNodes(){
             this.selectedNodes.splice(0);
