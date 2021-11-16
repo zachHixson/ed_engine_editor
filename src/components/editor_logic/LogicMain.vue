@@ -68,6 +68,15 @@
             @mousedown="mouseDown"
             @mousemove="mouseMove">
             <div ref="nodeNav" class="node-nav-wrapper">
+                <Connection
+                    v-for="connection in selectedAsset.eventConnectionsList"
+                    :key="connection.id + 'connection'"
+                    ref="connectionEls"
+                    :connectionObj="connection"
+                    :clientToNavSpace="convertClientToNavPos"
+                    :navWrapper="$refs.nodeNav"
+                    :allConnections="selectedAsset.eventConnectionsList"
+                    @drag-start="dragConnection"/>
                 <Node
                     v-for="node in selectedAsset.eventNodeList"
                     :key="node.nodeId + 'node'"
@@ -84,15 +93,6 @@
                     @socket-down="createConnection"
                     @socket-over="currentSocketOver = $event"
                     @socket-value-changed="actionChangeInput($event)"/>
-                <Connection
-                    v-for="connection in selectedAsset.eventConnectionsList"
-                    :key="connection.id + 'connection'"
-                    ref="connectionEls"
-                    :connectionObj="connection"
-                    :clientToNavSpace="convertClientToNavPos"
-                    :navWrapper="$refs.nodeNav"
-                    :allConnections="selectedAsset.eventConnectionsList"
-                    @drag-start="dragConnection"/>
             </div>
             <svg class="selection-box-wrapper" width="100%" height="100%">
                 <rect

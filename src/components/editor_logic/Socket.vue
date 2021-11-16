@@ -30,7 +30,11 @@
             @mousedown="mouseDown"
             @mouseenter="mouseEnter"
             @mouseleave="mouseLeave">
-            <polygon points="3,3 17,10 3,16"/>
+            <g v-if="isConnected">
+                <polygon points="3,3 17,10 3,16" fill="white"/>
+                <polygon points="4,4 15,10 4,15" style="stroke: gray; stroke-width: 3px;"/>
+            </g>
+            <polygon points="3,3 17,10 3,16" stroke="white"/>
         </svg>
     </div>
 </template>
@@ -122,7 +126,7 @@ export default {
 }
 
 .trigger_icon:hover{
-    fill: #FFFFFF88;
+    fill: #AAAAAA;
 }
 
 .socket_icon{
