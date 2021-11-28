@@ -70,7 +70,7 @@
             <div ref="nodeNav" class="node-nav-wrapper">
                 <Connection
                     v-for="connection in selectedAsset.eventConnectionsList"
-                    :key="connection.id + 'connection'"
+                    :key="`connection,${selectedAsset.id},${selectedAsset.selectedEventId},${connection.id}`"
                     ref="connectionEls"
                     :connectionObj="connection"
                     :clientToNavSpace="convertClientToNavPos"
@@ -79,7 +79,7 @@
                     @drag-start="dragConnection"/>
                 <Node
                     v-for="node in selectedAsset.eventNodeList"
-                    :key="node.nodeId + 'node'"
+                    :key="`node,${selectedAsset.id},${selectedAsset.selectedEventId},${node.nodeId}`"
                     ref="nodeEls"
                     :nodeObj="node"
                     :clientToNavSpace="convertClientToNavPos"
@@ -238,6 +238,14 @@ export default {
         NavControlPanel,
         Node,
         Connection,
+    },
+    watch: {
+        selectedAsset(){
+            this.$nextTick(()=>{
+                this.relinkConnections();
+                this.navChange(this.curNavState);
+            })
+        }
     },
     computed: {
         selectedNavTool(){

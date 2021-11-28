@@ -69,7 +69,7 @@ export default {
         },
         isFullConnection(){
             let connection = this.connectionObj;
-            return (!!connection.startSocketEl && !!connection.endSocketEl);
+            return (connection.startSocketId != null && connection.endSocketId != null);
         },
     },
     mounted(){
@@ -108,7 +108,9 @@ export default {
             this.connectionObj.startSocketEl = startSocketEl.$refs.socketConnection;
             this.connectionObj.endSocketEl = endSocketEl.$refs.socketConnection;
 
-            this.update();
+            this.$nextTick(()=>{
+                this.update();
+            });
         },
         setInitialMousePos(){
             if (this.connectionObj.startSocketEl){
