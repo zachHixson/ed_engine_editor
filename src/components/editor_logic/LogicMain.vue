@@ -487,7 +487,7 @@ export default {
                     connectionObj.canConnect &&
                     socketOver.canConnect
                 ){
-                    let leftNode = (socketOver.isInput) ? socketOver.node : connectionObj.startNode;
+                    let leftNode = (socketOver.isInput) ? socketOver.node : connectionObj.endNode;
                     let rightNode = !(socketOver.isInput) ? socketOver.node : connectionObj.startNode;
 
                     if (!this.checkLoop(leftNode, rightNode)){
@@ -704,7 +704,7 @@ export default {
             let checkedNodes = new Map();
             let connections = this.selectedAsset.eventConnectionsList;
 
-            for (let i = 0; i < connections.length; i++){
+            for (let i = 0; i < connections.length - 1; i++){
                 let connection = connections[i];
                 let id = connection.startNode.nodeId + '/' + connection.startSocketId;
                 connectionMap.set(id, connection);
