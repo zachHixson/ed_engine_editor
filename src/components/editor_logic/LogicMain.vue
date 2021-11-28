@@ -27,7 +27,7 @@
             <div class="resizeBtn-right-wrapper">
                 <button class="resizeBtn resizeBtn-right" @click="showEvents = !showEvents" :style="showEvents ? 'transform: translateX(-2px);' : ''">
                     <img v-show="showEvents" src="@/assets/arrow_01.svg" style="transform: rotate(-90deg)"/>
-                    <img v-show="!showEvents" src="@/assets/arrow_01.svg" style="transform: rotate(90deg)"/>
+                    <img v-show="!showEvents" src="@/assets/event.svg"/>
                 </button>
             </div>
             <div class="undo-panel-wrapper">
@@ -153,8 +153,8 @@
                         </div>
                     </div>
                     <div class="library-column node-category-contents">
-                        <div v-if="!isSearching" class="list-item" @click="selectedCategory = null">
-                            &lt;
+                        <div v-if="!isSearching" class="list-item category-back-btn" @click="selectedCategory = null">
+                            <img v-show="showLibrary" src="@/assets/arrow_01.svg" />
                         </div>
                         <div
                             v-for="node in filteredNodes"
@@ -169,7 +169,7 @@
             <div class="resizeBtn-left-wrapper">
                 <button class="resizeBtn resizeBtn-left" @click="showLibrary = !showLibrary" :style="showLibrary ? 'transform: translateX(2px);' : ''">
                     <img v-show="showLibrary" src="@/assets/arrow_01.svg" style="transform: rotate(90deg)"/>
-                    <img v-show="!showLibrary" src="@/assets/arrow_01.svg" style="transform: rotate(-90deg)"/>
+                    <img v-show="!showLibrary" src="@/assets/hamburger.svg"/>
                 </button>
             </div>
             <div class="nav-control-wrapper">
@@ -1319,6 +1319,18 @@ function _checkLoop(connection, connectionMap, checkedNodes){
 
 .node-category:last-child{
     border-radius: 0px 0px 0px var(--corner-radius);
+}
+
+.category-back-btn{
+    display: flex;
+    flex-direction: row;
+    width: min-content;
+    background: var(--heading);
+}
+
+.category-back-btn > img{
+    width: 20px;
+    transform: rotate(-90deg);
 }
 
 .node-category:hover{

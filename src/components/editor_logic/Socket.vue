@@ -30,11 +30,7 @@
             @mousedown="mouseDown"
             @mouseenter="mouseEnter"
             @mouseleave="mouseLeave">
-            <g v-if="isConnected">
-                <polygon points="3,3 17,10 3,16" fill="white"/>
-                <polygon points="4,4 15,10 4,15" style="stroke: gray; stroke-width: 3px;"/>
-            </g>
-            <polygon points="3,3 17,10 3,16" stroke="white"/>
+            <polygon points="3,3 17,10 3,16" :fill="isConnected ? 'white':''" stroke="#444444" stroke-width="2px"/>
         </svg>
     </div>
 </template>
@@ -119,14 +115,14 @@ export default {
 }
 
 .trigger_icon{
-    fill: none;
+    fill: #444444;
     stroke: white;
     stroke-width: 2px;
     stroke-linejoin: round;
 }
 
 .trigger_icon:hover{
-    fill: #AAAAAA;
+    filter: brightness(2);
 }
 
 .socket_icon{

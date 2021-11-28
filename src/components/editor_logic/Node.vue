@@ -2,58 +2,58 @@
     <div class="node" :style="isSelected ? 'border-color: var(--button-norm)' : ''"
         @click="$emit('node-clicked', {nodeObj, jsEvent: $event})"
         @mousedown="mouseDown">
-        <div class="heading">
-            <div class="node-name">{{$t('node.' + nodeObj.templateId)}}</div>
-            <div class="io">
-                <div class="socket-column" style="align-items: flex-start">
-                    <Socket
-                        v-for="inTrigger in inTriggers"
-                        :key="inTrigger.id"
-                        ref="inTriggers"
-                        :socket="inTrigger"
-                        :isInput="true"
-                        :parentConnections="connections"
-                        @mouse-down="socketDown"
-                        @socket-over="socketOver"/>
-                </div>
-                <div class="socket-column" style="align-items: flex-end">
-                    <Socket
-                        v-for="outTrigger in outTriggers"
-                        :key="outTrigger.id"
-                        ref="outTriggers"
-                        :socket="outTrigger"
-                        :isInput="false"
-                        :parentConnections="connections"
-                        @mouse-down="socketDown"
-                        @socket-over="socketOver"/>
-                </div>
+        <div class="heading" :style="'background:' + headingColor">
+            <div v-if="nodeObj.isEvent" class="node-icon"><img src="@/assets/event.svg"/></div>
+            <div>{{$t('node.' + nodeObj.templateId)}}</div>
+        </div>
+        <div v-if="showTriggers" class="io">
+            <div class="socket-column" style="align-items: flex-start">
+                <Socket
+                    v-for="inTrigger in inTriggers"
+                    :key="inTrigger.id"
+                    ref="inTriggers"
+                    :socket="inTrigger"
+                    :isInput="true"
+                    :parentConnections="connections"
+                    @mouse-down="socketDown"
+                    @socket-over="socketOver"/>
+            </div>
+            <div class="socket-column" style="align-items: flex-end">
+                <Socket
+                    v-for="outTrigger in outTriggers"
+                    :key="outTrigger.id"
+                    ref="outTriggers"
+                    :socket="outTrigger"
+                    :isInput="false"
+                    :parentConnections="connections"
+                    @mouse-down="socketDown"
+                    @socket-over="socketOver"/>
             </div>
         </div>
-        <div class="body">
-            <div class="io">
-                <div class="socket-column"  style="align-items: flex-start">
-                    <Socket
-                        v-for="input in inputs"
-                        :key="input.id"
-                        ref="inData"
-                        :socket="input"
-                        :isInput="true"
-                        :parentConnections="connections"
-                        @mouse-down="socketDown"
-                        @socket-over="socketOver"
-                        @value-changed="$emit('socket-value-changed', $event)"/>
-                </div>
-                <div class="socket-column" style="align-items: flex-end">
-                    <Socket
-                        v-for="output in outputs"
-                        :key="output.id"
-                        ref="outData"
-                        :socket="output"
-                        :isInput="false"
-                        :parentConnections="connections"
-                        @mouse-down="socketDown"
-                        @socket-over="socketOver"/>
-                </div>
+        <div v-if="showTriggers && showDataSockets" class="separator"></div>
+        <div v-if="showDataSockets" class="io">
+            <div class="socket-column"  style="align-items: flex-start">
+                <Socket
+                    v-for="input in inputs"
+                    :key="input.id"
+                    ref="inData"
+                    :socket="input"
+                    :isInput="true"
+                    :parentConnections="connections"
+                    @mouse-down="socketDown"
+                    @socket-over="socketOver"
+                    @value-changed="$emit('socket-value-changed', $event)"/>
+            </div>
+            <div class="socket-column" style="align-items: flex-end">
+                <Socket
+                    v-for="output in outputs"
+                    :key="output.id"
+                    ref="outData"
+                    :socket="output"
+                    :isInput="false"
+                    :parentConnections="connections"
+                    @mouse-down="socketDown"
+                    @socket-over="socketOver"/>
             </div>
         </div>
     </div>
@@ -90,6 +90,12 @@ export default {
         outputs(){
             return Array.from(this.nodeObj.outputs, ([id, input]) => input);
         },
+        showTriggers(){
+            return this.inTriggers.length > 0 || this.outTriggers.length > 0;
+        },
+        showDataSockets(){
+            return this.inputs.length > 0 || this.outputs.length > 0;
+        },
         isSelected(){
             return this.selectedNodes.find(nodeObj => nodeObj.nodeId == this.nodeObj.nodeId) != undefined;
         },
@@ -97,6 +103,13 @@ export default {
             return this.allConnections.filter(
                 c => (c.startNode?.nodeId == this.nodeObj.nodeId || c.endNode?.nodeId == this.nodeObj.nodeId)
             );
+        },
+        headingColor(){
+            if (this.nodeObj.isEvent){
+                return '#DF554B';
+            }
+
+            return getComputedStyle(document.body).getPropertyValue('--heading');
         }
     },
     mounted(){
@@ -195,15 +208,33 @@ export default {
     overflow: hidden;
     user-select: none;
     pointer-events: all;
+    box-sizing: border-box;
 }
 
 .heading{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
     padding-bottom: 5px;
-    background: var(--heading);
+    padding: 5px;
 }
 
-.node-name{
-    padding: 5px;
+.node-icon{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 20px;
+    height: 20px;
+}
+
+.node-icon > img{
+    width: auto;
+    height: auto;
+}
+
+.separator{
+    border-bottom: 2px solid #00000033;
 }
 
 .io{
