@@ -129,14 +129,16 @@ export default {
     },
     methods: {
         mouseDown(event){
+            if (event.which == 1){
             this.$emit("node-down", this.nodeObj);
 
-            if (event.which == 1 && this.canDrag){
-                let mousePos = new Victor(event.clientX, event.clientY);
-                let nodeBounds = this.$el.getBoundingClientRect();
-                let nodeOrigin = new Victor(nodeBounds.left + nodeBounds.right, nodeBounds.top + nodeBounds.bottom).divideScalar(2);
-                this.dragOffset.copy(nodeOrigin.clone().subtract(mousePos));
-                this.isDragging = true;
+                if (this.canDrag){
+                    let mousePos = new Victor(event.clientX, event.clientY);
+                    let nodeBounds = this.$el.getBoundingClientRect();
+                    let nodeOrigin = new Victor(nodeBounds.left + nodeBounds.right, nodeBounds.top + nodeBounds.bottom).divideScalar(2);
+                    this.dragOffset.copy(nodeOrigin.clone().subtract(mousePos));
+                    this.isDragging = true;
+                }
             }
         },
         mouseUp(){
@@ -208,7 +210,6 @@ export default {
     overflow: hidden;
     user-select: none;
     pointer-events: all;
-    box-sizing: border-box;
 }
 
 .heading{
