@@ -508,8 +508,9 @@ export default {
             this.hotkeyMap.mouseLeave();
             this.$refs.navControlPanel.mouseLeave(jsEvent);
         },
-        trashMouseUp(){
+        trashMouseUp(jsEvent){
             if (this.isDraggingNode){
+                jsEvent.stopPropagation()
                 this.deleteSelectedNodes();
             }
         },
