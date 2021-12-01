@@ -15,6 +15,7 @@
                     :socket="inTrigger"
                     :isInput="true"
                     :parentConnections="connections"
+                    :parentId="nodeObj.nodeId"
                     @mouse-down="socketDown"
                     @socket-over="socketOver"/>
             </div>
@@ -26,6 +27,7 @@
                     :socket="outTrigger"
                     :isInput="false"
                     :parentConnections="connections"
+                    :parentId="nodeObj.nodeId"
                     @mouse-down="socketDown"
                     @socket-over="socketOver"/>
             </div>
@@ -40,6 +42,7 @@
                     :socket="input"
                     :isInput="true"
                     :parentConnections="connections"
+                    :parentId="nodeObj.nodeId"
                     @mouse-down="socketDown"
                     @socket-over="socketOver"
                     @value-changed="$emit('socket-value-changed', $event)"/>
@@ -52,6 +55,7 @@
                     :socket="output"
                     :isInput="false"
                     :parentConnections="connections"
+                    :parentId="nodeObj.nodeId"
                     @mouse-down="socketDown"
                     @socket-over="socketOver"/>
             </div>

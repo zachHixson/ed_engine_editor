@@ -41,7 +41,7 @@ import Node_Connection from '@/common/data_classes/Node_Connection';
 
 export default {
     name: 'Socket',
-    props: ['socket', 'isInput', 'parentConnections'],
+    props: ['socket', 'isInput', 'parentConnections', 'parentId'],
     computed: {
         SOCKET_TYPE(){
             return SOCKET_TYPE;
@@ -50,7 +50,10 @@ export default {
             return this.socket.type == undefined;
         },
         isConnected(){
-            return !!this.parentConnections.find(c => c.startSocketId == this.socket.id || c.endSocketId == this.socket.id);
+            return !!this.parentConnections.find(c => (
+                c.startSocketId == this.socket.id && c.startNode.nodeId == this.parentId ||
+                c.endSocketId == this.socket.id && c.endNode.nodeId == this.parentId
+            ));
         },
         canConnect(){
             return !(this.isConnected && (this.isTrigger ^ this.isInput));
