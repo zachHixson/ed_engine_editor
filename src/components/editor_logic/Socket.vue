@@ -2,8 +2,8 @@
     <div class="dataSocket" :class="isInput ? 'isInput' : ''">
         <div class="socket_name">{{$t('node.' + socket.id)}}</div>
         <div v-if="isInput && !isConnected" class="inputBox">
-            <input v-if="socket.type == SOCKET_TYPE.NUMBER" ref="input" type="number" :value="socket.value" @change="valueChanged"/>
-            <input v-if="socket.type == SOCKET_TYPE.STRING" ref="input" type="text" :value="socket.value"  @change="valueChanged"/>
+            <input v-if="socket.type == SOCKET_TYPE.NUMBER" ref="input" type="number" :value="socket.value" @change="valueChanged" @mousemove="$event.stopPropagation()"/>
+            <input v-if="socket.type == SOCKET_TYPE.STRING" ref="input" type="text" :value="socket.value"  @change="valueChanged" @mousemove="$event.stopPropagation()"/>
             <div v-if="socket.type == SOCKET_TYPE.OBJECT" ref="input" class="selfBox">{{$t('logic_editor.self')}}</div>
             <input v-if="socket.type == SOCKET_TYPE.BOOL" ref="input" type="checkbox" :value="socket.value"  @change="valueChanged"/>
         </div>
