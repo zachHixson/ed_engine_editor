@@ -42,7 +42,7 @@ import Victor from 'victor';
 
 const PADDING = 20;
 const HANDLE_WIDTH = 100;
-const HANDLE_DIST = 70;
+const GRAB_DIST = 70;
 
 export default {
     name: 'connection',
@@ -59,7 +59,7 @@ export default {
             mouseDragHandler: null,
             grabbedHandle: null,
             navMouseDown: new Victor(0, 0),
-            mousePos: new Victor(0, 0),
+            navMousePos: new Victor(0, 0),
             mouseOver: false,
         }
     },
@@ -113,16 +113,12 @@ export default {
             });
         },
         setInitialMousePos(){
-            if (this.connectionObj.startSocketEl){
-                let startSocketBounds = this.connectionObj.startSocketEl.getBoundingClientRect();
-                let midPoint = this.centerFromBounds(startSocketBounds);
-                this.mousePos.copy(midPoint);
-            }
-            else{
-                let endSocketBounds = this.connectionObj.endSocketEl.getBoundingClientRect();
-                let midPoint = this.centerFromBounds(endSocketBounds);
-                this.mousePos.copy(midPoint);
-            }
+            let socketEl = this.connectionObj.startSocketEl ?? this.connectionObj.endSocketEl;
+            let bounds = socketEl.getBoundingClientRect();
+            let midPoint = this.centerFromBounds(bounds);
+            let navMidPoint = this.clientToNavSpace(midPoint);
+
+            this.navMousePos.copy(navMidPoint);
         },
         update(){
             this.updateStartPoint();
@@ -134,7 +130,7 @@ export default {
         },
         updateStartPoint(){
             if (!this.connectionObj.startSocketEl){
-                this.startPoint.copy(this.mousePos);
+                this.startPoint.copy(this.navMousePos);
                 return;
             }
 
@@ -144,7 +140,7 @@ export default {
         },
         updateEndPoint(){
             if (!this.connectionObj.endSocketEl){
-                this.endPoint.copy(this.mousePos);
+                this.endPoint.copy(this.navMousePos);
                 return;
             }
 
@@ -174,14 +170,15 @@ export default {
             let startCoord = this.navToSVGSpace(this.startPoint);
             let endCoord = this.navToSVGSpace(this.endPoint);
             let vPaddingDir = -this.flipVertical;
+            let handleWidth = Math.min(HANDLE_WIDTH, Math.abs(this.startPoint.x - this.endPoint.x) / 2);
 
             if (this.flipVertical){
                 startCoord.y = this.height;
             }
 
             this.path = `M ${startCoord.x} ${startCoord.y + (vPaddingDir * PADDING)}
-                         C ${startCoord.x + HANDLE_WIDTH + PADDING} ${startCoord.y + (vPaddingDir * PADDING)},
-                           ${endCoord.x - HANDLE_WIDTH - PADDING} ${endCoord.y},
+                         C ${startCoord.x + handleWidth + PADDING} ${startCoord.y + (vPaddingDir * PADDING)},
+                           ${endCoord.x - handleWidth - PADDING} ${endCoord.y},
                            ${endCoord.x} ${endCoord.y}`;
         },
         mouseDown(event){
@@ -194,10 +191,10 @@ export default {
             let distToStart = this.navMouseDown.distance(this.startPoint);
             let distToEnd = this.navMouseDown.distance(this.endPoint);
 
-            if (distToEnd < HANDLE_DIST){
+            if (distToEnd < GRAB_DIST){
                 this.grabbedHandle = 1;
             }
-            else if (distToStart < HANDLE_DIST){
+            else if (distToStart < GRAB_DIST){
                 this.grabbedHandle = -1;
             }
 
@@ -215,7 +212,7 @@ export default {
         mouseDrag(event){
             this.updateMousePos(event);
 
-            let dragDistance = this.navMouseDown.distance(this.mousePos);
+            let dragDistance = this.navMouseDown.distance(this.navMousePos);
 
             if (dragDistance > 5){
                 this.$emit('drag-start', this.connectionObj);
@@ -238,7 +235,7 @@ export default {
             let clientMousePos = new Victor(event.clientX, event.clientY);
             let navMousePos = this.clientToNavSpace(clientMousePos);
 
-            this.mousePos.copy(navMousePos);
+            this.navMousePos.copy(navMousePos);
         },
         centerFromBounds(bounds){
             let ul = new Victor(bounds.left, bounds.top);
