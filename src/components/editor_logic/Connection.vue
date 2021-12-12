@@ -172,7 +172,7 @@ export default {
             let startCoord = this.navToSVGSpace(this.startPoint);
             let endCoord = this.navToSVGSpace(this.endPoint);
             let vPaddingDir = -this.flipVertical;
-            let yShrinkFac = Math.min(Math.abs(this.startPoint.y - this.endPoint.y) / Y_SHRINK_LIMIT, 1);
+            let yShrinkFac = Math.min(this.startPoint.distance(this.endPoint), Y_SHRINK_LIMIT) / Y_SHRINK_LIMIT;
             let handleWidth = HANDLE_WIDTH * yShrinkFac;
 
             if (this.flipVertical){
