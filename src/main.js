@@ -23,29 +23,29 @@ Vue.directive('click-outside', {
 
 Vue.directive('input-active', {
     bind: function(el){
-        const onFocus = ()=>{
+        el.onFocus = ()=>{
             window.EDITOR.textFocused = true
             document.dispatchEvent(new Event('input-focus-changed'));
         };
-        const onBlur = ()=>{
+        el.onBlur = ()=>{
             window.EDITOR.textFocused = false;
             document.dispatchEvent(new Event('input-focus-changed'));
         };
-        const stopProp = (event)=>{event.stopPropagation()};
+        el.stopProp = (event)=>{event.stopPropagation()};
 
-        el.addEventListener('focus', onFocus);
-        el.addEventListener('blur', onBlur);
-        el.addEventListener('mousedown', stopProp);
-        el.addEventListener('click', stopProp);
-        el.addEventListener('mousemove', stopProp);
+        el.addEventListener('focus', el.onFocus);
+        el.addEventListener('blur', el.onBlur);
+        el.addEventListener('mousedown', el.stopProp);
+        el.addEventListener('click', el.stopProp);
+        el.addEventListener('mousemove', el.stopProp);
     },
 
     unbind: function(el){
-        el.removeEventListener('focus', onFocus);
-        el.removeEventListener('blur', onBlur);
-        el.removeEventListener('mousedown', stopProp);
-        el.removeEventListener('click', stopProp);
-        el.removeEventListener('mousemove', stopProp);
+        el.removeEventListener('focus', el.onFocus);
+        el.removeEventListener('blur', el.onBlur);
+        el.removeEventListener('mousedown', el.stopProp);
+        el.removeEventListener('click', el.stopProp);
+        el.removeEventListener('mousemove', el.stopProp);
     },
 })
 
