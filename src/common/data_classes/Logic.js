@@ -11,7 +11,7 @@ class Logic extends Asset{
         super();
         this.events = new Map();
 
-        if (window.IS_EDITOR){
+        if (window.EDITOR){
             this._selectedEventId = null;
             this._nextNodeId = 0;
             this._nextConnectionId = 0;
@@ -127,7 +127,7 @@ class Logic extends Asset{
         let newEvent = new Node(eventTamplate, this.nextNodeId, pos);
         newEvent.isEvent = true;
 
-        if (window.IS_EDITOR){
+        if (window.EDITOR){
             this.events.set(eventId, {
                 entry: newEvent,
                 nodes: [newEvent],
@@ -142,7 +142,7 @@ class Logic extends Asset{
     unregisterEvent(eventId){
         this.events.set(eventId, null);
 
-        if (window.IS_EDITOR){
+        if (window.EDITOR){
             this.refreshEditorEventList();
         }
     }
@@ -158,7 +158,7 @@ class Logic extends Asset{
     }
 
     addNode(templateId, pos, nodeRef = null){
-        if (window.IS_EDITOR){
+        if (window.EDITOR){
             let nodeTemplate = NODE_MAP.get(templateId);
             let newNode = nodeRef ?? new Node(nodeTemplate, this.nextNodeId, pos);
             let curEvent = this.events.get(this.selectedEventId);
@@ -193,7 +193,7 @@ class Logic extends Asset{
             connectionObj.id = this._nextConnectionId++;
         }
 
-        if (window.IS_EDITOR){
+        if (window.EDITOR){
             this.eventConnectionsList.push(connectionObj);
         }
     }

@@ -7,7 +7,7 @@ class Asset{
         this.id = ID_Generator.newID();
         this.name = this.id;
 
-        if (window.IS_EDITOR){
+        if (window.EDITOR){
             this.navState = this.defaultNavState;
         }
     }

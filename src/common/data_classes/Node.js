@@ -11,7 +11,7 @@ class Node{
         this.outputs = new Map();
         this.methods = new Map();
 
-        if (window.IS_EDITOR){
+        if (window.EDITOR){
             this.domRef = null;
             this.pos = pos.clone();
             this.updateConnectionsCallback = null;

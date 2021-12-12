@@ -327,6 +327,7 @@ export default {
         window.addEventListener('keydown', this.keyDown);
         window.addEventListener('keyup', this.keyUp);
         window.addEventListener('mouseup', this.mouseUp);
+        document.addEventListener('input-focus-changed', this.inputFocusChanged);
         this.nodeViewportEl.addEventListener('wheel', this.$refs.navControlPanel.scroll);
         this.nodeViewportEl.addEventListener ('mouseenter', this.mouseEnter);
         this.nodeViewportEl.addEventListener ('mouseleave', this.mouseLeave);
@@ -347,6 +348,7 @@ export default {
         window.removeEventListener('keydown', this.keyDown);
         window.removeEventListener('keyUp', this.keyUp);
         window.removeEventListener('mouseup', this.mouseUp);
+        document.removeEventListener('input-focus-changed', this.inputFocusChanged);
         this.nodeViewportEl.removeEventListener('wheel', this.$refs.navControlPanel.scroll);
         this.nodeViewportEl.removeEventListener('mouseenter', this.$refs.navControlPanel.mouseEnter);
         this.nodeViewportEl.removeEventListener('mouseleave', this.$refs.navControlPanel.mouseLeave);
@@ -579,6 +581,9 @@ export default {
         },
         navToolSelected(newTool){
             this.$store.dispatch('LogicEditor/selectNavTool', newTool);
+        },
+        inputFocusChanged(){
+            this.hotkeyMap.enabled = !window.EDITOR.textFocused;
         },
         clientToNavPos(pos){
             /*
