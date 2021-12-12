@@ -167,10 +167,13 @@ export default {
             this.$el.style.top = this.cssOrigin.y + 'px';
         },
         updatePath(){
+            const Y_SHRINK_LIMIT = 200;
+
             let startCoord = this.navToSVGSpace(this.startPoint);
             let endCoord = this.navToSVGSpace(this.endPoint);
             let vPaddingDir = -this.flipVertical;
-            let handleWidth = Math.min(HANDLE_WIDTH, Math.abs(this.startPoint.x - this.endPoint.x) / 2);
+            let yShrinkFac = Math.min(Math.abs(this.startPoint.y - this.endPoint.y) / Y_SHRINK_LIMIT, 1);
+            let handleWidth = HANDLE_WIDTH * yShrinkFac;
 
             if (this.flipVertical){
                 startCoord.y = this.height;
