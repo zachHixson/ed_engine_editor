@@ -480,6 +480,8 @@ export default {
                 let anyMatch = socketOver?.socketData.type == SOCKET_TYPE.ANY && !!connectionObj.type;
                 let directionMatch = !!connectionObj.startSocketEl == !!socketOver?.isInput;
 
+                this.draggingConnection = null;
+
                 if (
                     socketOver &&
                     (typeMatch || anyMatch) &&
@@ -492,7 +494,6 @@ export default {
 
                     if (!this.checkLoop(leftNode, rightNode)){
                         this.actionMakeConnection({connectionObj, socketOver});
-                        this.draggingConnection = null;
                         return;
                     }
                 }
