@@ -408,7 +408,19 @@ export default {
         },
         removeEvent(jsEvent, eventId){
             jsEvent.stopPropagation();
+
+            const curSelection = this.selectedAsset.selectedEventId;
+            const curEventIdx = this.addedEvents.indexOf(eventId);
+
             this.selectedAsset.unregisterEvent(eventId);
+
+            this.$nextTick(()=>{
+                if (curSelection == eventId){
+                    let newIdx = Math.min(curEventIdx, this.addedEvents.length - 1);
+                    let newSelection = this.addedEvents[newIdx];
+                    this.selectEvent(newSelection ?? null);
+                }
+            })
         },
         isAddedEvent(eventId){
             let isActive = false;

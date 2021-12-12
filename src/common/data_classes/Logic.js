@@ -143,7 +143,6 @@ class Logic extends Asset{
         this.events.set(eventId, null);
 
         if (window.IS_EDITOR){
-            this.selectedEventId = null;
             this.refreshEditorEventList();
         }
     }
