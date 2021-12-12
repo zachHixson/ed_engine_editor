@@ -14,7 +14,7 @@
             class="socket_icon"
             @mousedown="mouseDown"
             @mouseenter="mouseEnter"
-            @mouseLeave="mouseLeave">
+            @mouseleave="mouseLeave">
             <circle v-if="socket.type == SOCKET_TYPE.ANY" cx="10" cy="10" r="6" style="fill: #222222" />
             <polygon v-if="socket.type == SOCKET_TYPE.NUMBER" points="10,3 17,10 10,17 3,10" style="fill: #FFCE52" />
             <rect v-if="socket.type == SOCKET_TYPE.STRING" x="4" y="8" width="12" height="6" style="fill: #5280FF" />
