@@ -1,5 +1,5 @@
 <template>
-    <div class="roomMain">
+    <div class="roomMain" :style="'background:' + this.selectedRoom.bgColor">
         <div v-if="selectedRoom" class="toolPanel">
             <Tool
                 :key="tool.tool"
@@ -703,7 +703,6 @@ export default {
     align-items: center;
     width: 100%;
     height: 100%;
-    background: white;
     overflow: hidden;
 }
 
