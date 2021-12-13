@@ -38,7 +38,8 @@
                             :asset="asset"
                             :defaultIcon="selected_category.icon"
                             @deleteAsset="deleteAsset"
-                            @selectAsset="selectAsset"/>
+                            @selectAsset="selectAsset"
+                            @renamed="assetRenamed" />
                             <div v-if="selectedList.length <= 0">{{$t('asset_browser.no_assets')}}</div>
                     </div>
                 </div>
@@ -173,6 +174,23 @@ export default {
                 if (id == null || curAsset.asset.id == id){
                     curAsset.drawThumbnail();
                 }
+            }
+        },
+        assetRenamed({asset, oldName}){
+            let duplicateName = false;
+
+            for (let i = 0; i < this.selectedList.length; i++){
+                let curAsset = this.selectedList[i];
+
+                duplicateName |= (curAsset.name == asset.name) && !(curAsset == asset);
+            }
+
+            if (asset.name.trim().length <= 0){
+                asset.name == oldName;
+            }
+
+            if (duplicateName){
+                asset.name += '_' + this.$t('room_editor.duplicate_name_suffix');
             }
         }
     }

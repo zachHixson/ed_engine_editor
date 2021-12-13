@@ -29,6 +29,7 @@ export default {
     data(){
         return {
             isRenaming: false,
+            oldName: null,
             hasThumb: false,
             thumbLoading: false,
             pixelBuff: document.createElement('canvas')
@@ -69,6 +70,7 @@ export default {
         },
         rename(){
             this.isRenaming = true;
+            this.oldName = this.asset.name;
             document.addEventListener('keydown', this.onEnterPress);
             this.$nextTick(()=>{
                 this.$refs.renameText.focus();
@@ -76,12 +78,15 @@ export default {
             }, 10);
         },
         stopRenaming(){
-            this.isRenaming = false;
-            document.removeEventListener('keydown', this.onEnterPress);
+            if (this.isRenaming){
+                this.isRenaming = false;
+                this.$emit('renamed', {asset: this.asset, oldName: this.oldName});
+                document.removeEventListener('keydown', this.onEnterPress);
+            }
         },
         onEnterPress(event){
             if (event.key == 'Enter'){
-                this.isRenaming = false;
+                this.stopRenaming();
             }
         },
         checkThumb(){
