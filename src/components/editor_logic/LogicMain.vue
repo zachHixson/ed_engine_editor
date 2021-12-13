@@ -135,7 +135,8 @@
                                 class="search-box"
                                 :class="isSearching ? 'search-box-show':''"
                                 v-model="searchQuery"
-                                type="text" />
+                                type="text"
+                                v-input-active/>
                         </transition>
                     </div>
                 </div>
@@ -246,6 +247,9 @@ export default {
                 this.relinkConnections();
                 this.navChange(this.curNavState);
             })
+        },
+        inputActive(newState){
+            this.hotkeyMap.enabled = !newState;
         }
     },
     computed: {
@@ -313,6 +317,9 @@ export default {
         selectedNodes(){
             return this.selectedAsset.selectedNodes;
         },
+        inputActive(){
+            return this.$store.getters['getInputActive'];;
+        }
     },
     created(){
         this.convertClientToNavPos = this.clientToNavPos.bind(this);
@@ -328,7 +335,6 @@ export default {
         window.addEventListener('keydown', this.keyDown);
         window.addEventListener('keyup', this.keyUp);
         window.addEventListener('mouseup', this.mouseUp);
-        document.addEventListener('input-focus-changed', this.inputFocusChanged);
         this.nodeViewportEl.addEventListener('wheel', this.$refs.navControlPanel.scroll);
         this.nodeViewportEl.addEventListener ('mouseenter', this.mouseEnter);
         this.nodeViewportEl.addEventListener ('mouseleave', this.mouseLeave);
@@ -349,7 +355,6 @@ export default {
         window.removeEventListener('keydown', this.keyDown);
         window.removeEventListener('keyUp', this.keyUp);
         window.removeEventListener('mouseup', this.mouseUp);
-        document.removeEventListener('input-focus-changed', this.inputFocusChanged);
         this.nodeViewportEl.removeEventListener('wheel', this.$refs.navControlPanel.scroll);
         this.nodeViewportEl.removeEventListener('mouseenter', this.$refs.navControlPanel.mouseEnter);
         this.nodeViewportEl.removeEventListener('mouseleave', this.$refs.navControlPanel.mouseLeave);
@@ -517,7 +522,9 @@ export default {
             }
         },
         mouseEnter(jsEvent){
-            this.hotkeyMap.mouseEnter();
+            if (!this.inputActive){
+                this.hotkeyMap.mouseEnter();
+            }
             this.$refs.navControlPanel.mouseEnter(jsEvent);
         },
         mouseLeave(jsEvent){
@@ -582,9 +589,6 @@ export default {
         },
         navToolSelected(newTool){
             this.$store.dispatch('LogicEditor/selectNavTool', newTool);
-        },
-        inputFocusChanged(){
-            this.hotkeyMap.enabled = !window.EDITOR.textFocused;
         },
         clientToNavPos(pos){
             /*

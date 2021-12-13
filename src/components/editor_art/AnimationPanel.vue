@@ -52,10 +52,18 @@ export default {
             hotkeyUp: null
         }
     },
+    watch: {
+        inputActive(newState){
+            this.hotkeyMap.enabled = !newState;
+        },
+    },
     computed: {
         selectedFrameIdx(){
             return this.$store.getters['ArtEditor/getSelectedFrame'];
-        }
+        },
+        inputActive(){
+            return this.$store.getters['getInputActive'];
+        },
     },
     mounted(){
         this.hotkeyDown = this.hotkeyMap.keyDown.bind(this.hotkeyMap);

@@ -13,7 +13,7 @@
             <div class="control">
                 <label for="instName">{{$t('room_editor.instance_name')}}:</label>
                 <input id="instName" type="text" :value="selectedEntity.name" :title="$t('room_editor.tt_inst_name')"
-                    @change="setInstanceName($event.target.value)"/>
+                    @change="setInstanceName($event.target.value)" v-input-active/>
             </div>
             <div class="control">
                 <label for="instCollisionOvrr">{{$t('room_editor.collision')}}:</label>
@@ -27,7 +27,7 @@
             <div class="control">
                 <label for="instCustDepth">{{$t('room_editor.custom_depth')}}:</label>
                 <input id="instCustDepth" type="number" :value="selectedEntity.zDepthOverride" :title="$t('room_editor.tt_cust_depth')"
-                    @change="setInstProp({zDepthOverride: nanToNull(parseInt($event.target.value))})"/>
+                    @change="setInstProp({zDepthOverride: nanToNull(parseInt($event.target.value))})" v-input-active/>
             </div>
             <GroupList
                 :editList="selectedEntity.groups"
@@ -43,7 +43,7 @@
             <div class="control">
                 <label for="cameraSize">{{$t('room_editor.camera_size')}}:</label>
                 <input id="cameraSize" type="number" :value="camera.size" :title="$t('room_editor.tt_camera_size')"
-                    @change="setCamProp({size: $event.target.value}); $event.target.value = camera.size"/>
+                    @change="setCamProp({size: $event.target.value}); $event.target.value = camera.size" v-input-active/>
             </div>
             <div class="control">
                 <label for="camMoveType">{{$t('room_editor.camera_move_type')}}:</label>
@@ -67,7 +67,7 @@
             <div v-show="camera.moveType == camera.MOVE_TYPES.SCROLL" class="control">
                 <label for="camScrollSpeed">{{$t('room_editor.scroll_speed')}}: </label>
                 <input id="camScrollSpeed" type="number" step="any" :value="camera.scrollSpeed" :title="$t('room_editor.tt_camera_scroll_speed')"
-                    @change="setCamProp({scrollSpeed: parseFloat($event.target.value)})"/>
+                    @change="setCamProp({scrollSpeed: parseFloat($event.target.value)})" v-input-active/>
             </div>
             <div v-show="camera.moveType == camera.MOVE_TYPES.FOLLOW" class="control">
                 <label for="camFollowObj">{{$t('room_editor.follow_obj')}}: </label>
@@ -94,7 +94,7 @@
             <div class="control">
                 <label for="exitName">{{$t('room_editor.exit_name')}}:</label>
                 <input id="exitName" type="text" :value="selectedEntity.name" :title="$t('room_editor.tt_exit_name')"
-                    @change="setExitName($event.target.value)"/>
+                    @change="setExitName($event.target.value)" v-input-active/>
             </div>
             <div class="control">
                 <label for="exitTrans">{{$t('room_editor.transition')}}:</label>
@@ -171,7 +171,7 @@
             <div v-show="room.useGravity" class="control">
                 <label for="roomGrav">{{$t('room_editor.gravity')}}:</label>
                 <input id="roomGrav" type="number" step="any" :value="room.gravity" :title="$t('room_editor.tt_room_gravity')"
-                    @change="setRoomProp({gravity: parseFloat($event.target.value)})"/>
+                    @change="setRoomProp({gravity: parseFloat($event.target.value)})" v-input-active/>
             </div>
             <div class="control">
                 <label for="roomSetStart">{{$t('room_editor.set_start_room')}}:</label>

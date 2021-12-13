@@ -42,7 +42,7 @@ import iro from '@jaames/iro';
 import {ART_TOOL_SIZE, ART_TOOL_TYPE} from '@/common/Enums';
 import Tool from '@/components/common/Tool';
 
-export default {    
+export default {
     name : "ToolPanel",
     components: {
         Tool
@@ -141,6 +141,14 @@ export default {
         window.removeEventListener('keydown', this.hotkeyDown);
         window.removeEventListener('keyup', this.hotkeyUp);
     },
+    watch: {
+        toolColor(newCol){
+            this.colorPicker.color.hexString = newCol;
+        },
+        inputActive(newState){
+            this.hotkeyMap.enabled = !newState;
+        },
+    },
     computed: {
         toolColor: {
             get: function(){
@@ -165,12 +173,10 @@ export default {
             set: function(newTool){
                 this.$store.dispatch('ArtEditor/selectTool', newTool);
             }
-        }
-    },
-    watch: {
-        toolColor(newCol){
-            this.colorPicker.color.hexString = newCol;
-        }
+        },
+        inputActive(){
+            return this.$store.getters['getInputActive'];
+        },
     },
     methods:{
         bindHotkeys(){

@@ -15,7 +15,7 @@
             <div class="projTitle">{{$t('editor_main.project_name')}}</div>
             <div ref="displayEditBox" class="displayEditBox" v-click-outside="stopRenaming">
                 <div v-show="!isRenaming" ref="projNameDisplay" class="projNameDisplay">{{projName}}</div>
-                <input v-show="isRenaming" ref="projNameEdit" type="text" class="projNameEdit" v-model="projName"/>
+                <input v-show="isRenaming" ref="projNameEdit" type="text" class="projNameEdit" v-model="projName" v-input-active/>
                 <button class="renameBtn" @click="isRenaming ? stopRenaming() : rename()"><img class="renameBtnImg" src="@/assets/rename.svg" /></button>
             </div>
         </div>

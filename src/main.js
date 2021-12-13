@@ -24,12 +24,10 @@ Vue.directive('click-outside', {
 Vue.directive('input-active', {
     bind: function(el){
         el.onFocus = ()=>{
-            window.EDITOR.textFocused = true
-            document.dispatchEvent(new Event('input-focus-changed'));
+            store.dispatch('setInputActive', true);
         };
         el.onBlur = ()=>{
-            window.EDITOR.textFocused = false;
-            document.dispatchEvent(new Event('input-focus-changed'));
+            store.dispatch('setInputActive', false);
         };
         el.stopProp = (event)=>{event.stopPropagation()};
 

@@ -4,7 +4,7 @@
             <canvas v-show="hasThumb" class="thumbnail" ref="thumbNail" width="20" height="20">Error</canvas>
             <img v-if="!hasThumb" class="thumbnail assetIcon" :src="require(`@/${defaultIcon}.svg`)"/>
             <div v-show="isRenaming">
-                <input class="nameBox" ref="renameText" v-model="asset.name" type="text" />
+                <input class="nameBox" ref="renameText" v-model="asset.name" type="text" v-input-active/>
             </div>
             <div class="nameBox" v-show="!isRenaming">{{asset.name}}</div>
         </div>

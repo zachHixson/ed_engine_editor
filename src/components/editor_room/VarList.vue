@@ -14,13 +14,13 @@
                 class="item">
                 <div class="val">
                     <input class="inpName listInput" type="text" :value="item.name"
-                        @change="validateNewName($event.target, item.name, $event.target.value)"/>
+                        @change="validateNewName($event.target, item.name, $event.target.value)" v-input-active/>
                     <input class="inpVal listInput" type="text" :value="item.val"
                         @change="$emit('var-changed', {
                             varName: item.name,
                             oldVal: item.val,
                             newVal: $event.target.value
-                        })"/>
+                        })" v-input-active/>
                 </div>
                 <button class="deleteBtn" @click="$emit('var-changed', {varName: item.name, newVal: item.val, remove: true, oldIdx: idx})">
                     <img src="@/assets/plus.svg" style="transform: rotate(45deg)"/>

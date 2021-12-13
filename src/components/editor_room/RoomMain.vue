@@ -28,8 +28,8 @@
             @mouse-event="mouseEvent"
             @undo="stepBackward"
             @redo="stepForward"
-            @mouseenter.native="hotkeyMap.mouseEnter"
-            @mouseleave.native="hotkeyMap.mouseLeave"/>
+            @mouseenter.native="mouse.inWindow = true"
+            @mouseleave.native="mouse.inWindow = false"/>
         <div v-else class="noRoomSelected">{{$t('room_editor.no_room_selected')}}</div>
         <div v-if="selectedRoom" class="propertyPanel" :class="{propertiesClosed : !propertiesOpen}">
             <div class="resizeBtnWrapper">
@@ -125,9 +125,20 @@ export default {
                 wpLastDown: new Victor(0, 0),
                 downOnSelection: false,
                 newSelection: false,
-                cellCache: []
+                cellCache: [],
+                inWindow: false,
             },
             squashCounter: 0
+        }
+    },
+    watch: {
+        selectedRoom(newRoom, oldRoom){
+            if (newRoom && oldRoom && newRoom.id != oldRoom.id){
+                this.editorSelection = null;
+            }
+        },
+        inputActive(newVal){
+            this.hotkeyMap.enabled = !newVal && this.mouse.inWindow;
         }
     },
     computed: {
@@ -139,14 +150,10 @@ export default {
         },
         isRoomSelected() {
             return this.selectedRoom != null;
-        }
-    },
-    watch: {
-        selectedRoom(newRoom, oldRoom){
-            if (newRoom && oldRoom && newRoom.id != oldRoom.id){
-                this.editorSelection = null;
-            }
-        }
+        },
+        inputActive(){
+            return this.$store.getters['getInputActive'];
+        },
     },
     mounted() {
         this.hotkeyDown = this.hotkeyMap.keyDown.bind(this.hotkeyMap);

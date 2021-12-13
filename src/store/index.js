@@ -15,7 +15,8 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
     state: {
-        projectName: i18n.t('editor_main.default_name')
+        projectName: i18n.t('editor_main.default_name'),
+        inputActive: false,
     },
     getters: {
         getProjectName: state => state.projectName,
@@ -33,7 +34,8 @@ export default new Vuex.Store({
             }
     
             return JSON.stringify(saveObj);
-        }
+        },
+        getInputActive: state => state.inputActive,
     },
     actions: {
         setProjectName({commit}, newName){
@@ -57,6 +59,9 @@ export default new Vuex.Store({
                 let room = getters['GameData/getAllRooms'].find(r => r.id == loadObj.selectedRoomId);
                 dispatch('AssetBrowser/selectRoom', room);
             }
+        },
+        setInputActive({commit}, newState){
+            commit('setInputActive', newState);
         }
     },
     mutations: {
@@ -77,6 +82,9 @@ export default new Vuex.Store({
             state.projectName = loadObj.projectName;
             gameData.editor_version = loadObj.editor_version;
             ID_Generator.setID(loadObj.newestID);
+        },
+        setInputActive: (state, newState) => {
+            state.inputActive = newState;
         }
     },
     modules: {
