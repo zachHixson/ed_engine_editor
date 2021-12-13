@@ -96,6 +96,7 @@ export default {
             window.addEventListener('mousemove', this.mouseMoveHandler);
             window.addEventListener('mouseup', ()=>{
                 window.removeEventListener('mousemove', this.mouseMoveHandler);
+                this.mouseOver = false;
             }, {once: true});
         },
         relink(nodeInfoMap){
