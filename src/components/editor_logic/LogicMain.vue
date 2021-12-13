@@ -76,6 +76,7 @@
                     :clientToNavSpace="convertClientToNavPos"
                     :navWrapper="$refs.nodeNav"
                     :allConnections="selectedAsset.eventConnectionsList"
+                    :draggingConnection="draggingConnection"
                     @drag-start="dragConnection"/>
                 <Node
                     v-for="node in selectedAsset.eventNodeList"

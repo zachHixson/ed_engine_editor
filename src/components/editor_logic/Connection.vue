@@ -28,9 +28,9 @@
                 class="line"
                 :d="path"
                 stroke="none"
-                stroke-width="8"
+                stroke-width="12"
                 fill="none"
-                @mouseenter="mouseOver = true"
+                @mouseenter="mouseOver = !isDraggingAnotherConnection"
                 @mouseleave="mouseOver = false"
                 @mousedown="mouseDown"/>
         </svg>
@@ -46,7 +46,7 @@ const GRAB_DIST = 70;
 
 export default {
     name: 'connection',
-    props: ['connectionObj', 'clientToNavSpace', 'navWrapper', 'allConnections'],
+    props: ['connectionObj', 'clientToNavSpace', 'navWrapper', 'allConnections', 'draggingConnection'],
     data(){
         return {
             startPoint: new Victor(0, 0),
@@ -71,6 +71,9 @@ export default {
             let connection = this.connectionObj;
             return (connection.startSocketId != null && connection.endSocketId != null);
         },
+        isDraggingAnotherConnection(){
+            return (this.draggingConnection && this.draggingConnection != this.connectionObj);
+        }
     },
     mounted(){
         this.mouseMoveHandler = this.mouseMove.bind(this);
@@ -265,6 +268,6 @@ export default {
 }
 
 .line{
-    pointer-events: visible;
+    pointer-events: visibleStroke;
 }
 </style>
