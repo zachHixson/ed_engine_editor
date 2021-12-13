@@ -47,18 +47,15 @@ export default {
         }
     },
     mounted(){
-        document.addEventListener('keydown', (event)=>{
-            if (event.key == 'Enter'){
-                this.isRenaming = false;
-            }
-        });
-
-        this.$refs.asset.addEventListener('dblclick', this.rename)
+        this.$refs.asset.addEventListener('dblclick', this.rename);
 
         this.pixelBuff.width = 16;
         this.pixelBuff.height = 16;
 
         this.drawThumbnail();
+    },
+    beforeDestroy(){
+        document.removeEventListener('keydown', this.onEnterPress);
     },
     methods: {
         deleteAsset(event){
@@ -72,6 +69,7 @@ export default {
         },
         rename(){
             this.isRenaming = true;
+            document.addEventListener('keydown', this.onEnterPress);
             this.$nextTick(()=>{
                 this.$refs.renameText.focus();
                 this.$refs.renameText.select();
@@ -79,6 +77,12 @@ export default {
         },
         stopRenaming(){
             this.isRenaming = false;
+            document.removeEventListener('keydown', this.onEnterPress);
+        },
+        onEnterPress(event){
+            if (event.key == 'Enter'){
+                this.isRenaming = false;
+            }
         },
         checkThumb(){
             let result = this.asset.thumbnailData && !this.thumbLoading;
