@@ -1,5 +1,5 @@
 <template>
-    <div class="roomMain" :style="'background:' + this.selectedRoom.bgColor">
+    <div class="roomMain" :style="cssBG">
         <div v-if="selectedRoom" class="toolPanel">
             <Tool
                 :key="tool.tool"
@@ -153,6 +153,10 @@ export default {
         },
         inputActive(){
             return this.$store.getters['getInputActive'];
+        },
+        cssBG(){
+            let color =  this.selectedRoom?.bgColor ?? '#FFFFFF'
+            return 'background:' + color;
         },
     },
     mounted() {
