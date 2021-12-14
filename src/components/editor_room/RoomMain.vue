@@ -68,6 +68,7 @@ import RoomEditWindow from './RoomEditWindow';
 import Properties from './Properties';
 import Tool from '@/components/common/Tool';
 import HotkeyMap from '@/components/common/HotkeyMap';
+import Instance from "@/common/data_classes/Instance";
 
 export default {
     name: 'RoomEditor',
@@ -351,8 +352,7 @@ export default {
 
                     if (!hasVisited && this.mouse.down){
                         if (this.mouse.down && this.selectedAsset?.category_ID == CATEGORY_ID.OBJECT){
-                            this.actionAdd({objId: this.selectedAsset.id, pos: mEvent.worldCell});
-                            this.squashCounter++;
+                            this.actionAdd({objId: this.selectedAsset.id, pos: mEvent.worldCell}, false);
                         }
                         
                         this.mouse.cellCache.push(mEvent.worldCell.clone());
@@ -360,7 +360,7 @@ export default {
 
                     break;
                 case MOUSE_EVENT.UP:
-                    this.squashActions();
+                    this.actionAdd({}, true);
                     this.mouse.cellCache = [];
                     break;
             }
@@ -435,15 +435,35 @@ export default {
                 this.undoStore.cache.set('move_start', {instRef, oldPos: instRef.pos.clone()});
             }
         },
-        actionAdd({objId, instRef, pos}, makeCommit = true){
+        actionAdd({objId, instRefList = [], pos}, makeCommit = true){
             let object = this.$store.getters['GameData/getAllObjects'].find((o) => o.id == objId);
-            let newInstance = this.selectedRoom.addInstance(object, pos, instRef);
+            let cacheList = this.undoStore.cache.get('add_list');
+            let newInst;
+
+            if (makeCommit){
+                let data = {instRefList: cacheList};
+                console.log(cacheList)
+                this.undoStore.commit({action: ROOM_ACTION.ADD, data});
+                this.undoStore.cache.delete('add_list');
+                return;
+            }
+
+            if (objId){
+                newInst = new Instance(this.selectedRoom.curInstId, pos, object);
+                instRefList.push(newInst);
+            }
+
+            for (let i = 0; i < instRefList.length; i++){
+                this.selectedRoom.addInstance(instRefList[i]);
+            }
 
             this.$refs.editWindow.instancesChanged();
 
-            if (makeCommit){
-                let data = {objId, pos: pos.clone(), instRef: newInstance};
-                this.undoStore.commit({action: ROOM_ACTION.ADD, data});
+            if (cacheList){
+                cacheList.push(newInst);
+            }
+            else if (newInst){
+                this.undoStore.cache.set('add_list', [newInst]);
             }
         },
         actionDelete({id, pos}, makeCommit = true){
@@ -582,12 +602,17 @@ export default {
             this.selectedRoom.setInstancePosition(instRef, oldPos);
             this.$refs.editWindow.instancesChanged();
         },
-        revertAdd({instRef}){
-            if (instRef.id == this.editorSelection?.id){
-                this.editorSelection = null;
+        revertAdd({instRefList}){
+            for (let i = 0; i < instRefList.length; i++){
+                let instRef = instRefList[i];
+
+                if (instRef.id == this.editorSelection?.id){
+                    this.editorSelection = null;
+                }
+
+                this.selectedRoom.removeInstance(instRef.id, instRef.pos);
             }
 
-            this.selectedRoom.removeInstance(instRef.id, instRef.pos);
             this.$refs.editWindow.instancesChanged();
         },
         revertDelete({instRef}){

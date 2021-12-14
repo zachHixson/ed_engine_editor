@@ -17,12 +17,16 @@ class Room extends Asset{
         this.useGravity = false;
         this.gravity = 9.81;
         this.customVars = [];
+        this._curInstId = 0;
+        this._curExitId = 0;
     }
 
     get type(){return CATEGORY_TYPE.ROOM}
     get category_ID(){return CATEGORY_ID.ROOM}
     get zSortedList(){return this.instances.zSort}
     get exitsList(){return this.exits.zSort}
+    get curInstId(){return this._curInstId++};
+    get curExitId(){return this._curExitId++};
 
     toSaveData(){
         let sanitized = Object.assign({}, this);
@@ -45,9 +49,10 @@ class Room extends Asset{
         for (let i = 0; i < room.instancesSerial.length; i++){
             let curInstance = room.instancesSerial[i];
             let objRef = objectList.find(o => o.id == curInstance.objId);
-            let newInstance;
+            let newInstance = new Instance(curInstance.id, Victor.fromObject(curInstance.pos), objRef);
 
-            newInstance = this.addInstance(objRef, Victor.fromObject(curInstance.pos));
+            this._curInstId = Math.max(newInstance.id + 1, this._curInstId);
+
             delete curInstance.pos;
             delete curInstance.objId;
             Object.assign(newInstance, curInstance);
@@ -55,7 +60,8 @@ class Room extends Asset{
 
         for (let i = 0; i < room.exitsSerial.length; i++){
             let curExitData = room.exitsSerial[i];
-            let newExit = new Exit(this.exits.curId).fromSaveData(curExitData);
+            let newExit = new Exit(curExitData.id).fromSaveData(curExitData);
+            this._curExitId = Math.max(newExit.id + 1, this._curExitId);
             this.exits.add(newExit, newExit.pos);
         }
 
@@ -85,9 +91,8 @@ class Room extends Asset{
         });
     }
 
-    addInstance(objRef, pos, instRef = null){
-        let newInstance = (instRef) ? instRef : new Instance(this.instances.curId, pos, objRef);
-        return this.instances.add(newInstance, pos);
+    addInstance(newInstance){
+        return this.instances.add(newInstance, newInstance.pos);
     }
 
     getInstanceById(instId){
@@ -111,7 +116,7 @@ class Room extends Asset{
     }
 
     addExit(pos, exitRef = null){
-        let newExit = (exitRef) ? exitRef : new Exit(this.exits.curId, pos);
+        let newExit = (exitRef) ? exitRef : new Exit(this.curExitId, pos);
         return this.exits.add(newExit, pos);
     }
 
