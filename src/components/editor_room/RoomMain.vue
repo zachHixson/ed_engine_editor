@@ -139,7 +139,7 @@ export default {
         },
         inputActive(newVal){
             this.hotkeyMap.enabled = !newVal && this.mouse.inWindow;
-        }
+        },
     },
     computed: {
         curToolSelection() {
@@ -319,8 +319,7 @@ export default {
                         this.mouse.downOnSelection &&
                         !compareVector(this.mouse.cellCache[0], mEvent.worldCell)
                     ){
-                        this.actionMove({instRef: this.editorSelection, newPos: mEvent.worldCell});
-                        this.squashCounter++;
+                        this.actionMove({instRef: this.editorSelection, newPos: mEvent.worldCell}, false);
                         this.mouse.cellCache[0].copy(mEvent.worldCell);
                     }
                     break;
@@ -329,8 +328,8 @@ export default {
                         this.selectInstanceByPos(mEvent.worldCell);
                     }
 
-                    if (this.squashCounter > 0){
-                        this.squashActions();
+                    if (this.undoStore.cache.get('move_start')){
+                        this.actionMove({}, true);
                     }
 
                     this.mouse.downOnSelection = false;
@@ -417,19 +416,23 @@ export default {
             }
         },
         actionMove({instId, instRef, newPos}, makeCommit = true){
-            let oldPos;
+            if (makeCommit){
+                let {instRef, oldPos} = this.undoStore.cache.get('move_start');
+                let data = {instId: instRef.id, instRef, newPos: instRef.pos.clone(), oldPos};
+                this.undoStore.commit({action: ROOM_ACTION.MOVE, data});
+                this.undoStore.cache.delete('move_start');
+                return;
+            }
 
             if (!instRef){
                 instRef = this.selectedRoom.getInstanceById(instId);
             }
 
-            oldPos = instRef.pos.clone();
             this.selectedRoom.setInstancePosition(instRef, newPos);
             this.$refs.editWindow.instancesChanged();
-
-            if (makeCommit){
-                let data = {instId: instRef.id, instRef, newPos: newPos.clone(), oldPos}
-                this.undoStore.commit({action: ROOM_ACTION.MOVE, data});
+            
+            if (!this.undoStore.cache.get('move_start')){
+                this.undoStore.cache.set('move_start', {instRef, oldPos: instRef.pos.clone()});
             }
         },
         actionAdd({objId, instRef, pos}, makeCommit = true){
