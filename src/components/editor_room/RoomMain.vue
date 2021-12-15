@@ -466,8 +466,8 @@ export default {
                 this.undoStore.cache.set('add_list', [newInst]);
             }
         },
-        actionDelete({id, pos}, makeCommit = true){
-            let instRef = this.selectedRoom.removeInstance(id, pos);
+        actionDelete({instId, pos}, makeCommit = true){
+            let instRef = this.selectedRoom.removeInstance(instId, pos);
             this.$refs.editWindow.instancesChanged();
 
             if (instRef == this.editorSelection){
@@ -475,7 +475,7 @@ export default {
             }
 
             if (makeCommit){
-                let data = {id, instRef, pos}
+                let data = {instId, instRef, pos}
                 this.undoStore.commit({action: ROOM_ACTION.DELETE, data})
             }
         },
@@ -564,13 +564,13 @@ export default {
                 this.undoStore.commit({action: ROOM_ACTION.EXIT_CHANGE, data});
             }
         },
-        actionExitDelete({id, pos}, makeCommit = true){
-            let exitRef = this.selectedRoom.removeExit(id, pos);
+        actionExitDelete({instId, pos}, makeCommit = true){
+            let exitRef = this.selectedRoom.removeExit(instId, pos);
             this.editorSelection = null;
             this.$refs.editWindow.instancesChanged();
 
             if (makeCommit){
-                let data = {id, exitRef, pos};
+                let data = {instId, exitRef, pos};
                 this.undoStore.commit({action: ROOM_ACTION.EXIT_DELETE, data});
             }
         },
