@@ -129,7 +129,6 @@ export default {
                 cellCache: [],
                 inWindow: false,
             },
-            squashCounter: 0
         }
     },
     watch: {
@@ -381,15 +380,14 @@ export default {
                         instances.sort((a, b) => a.zDepth > b.zDepth);
 
                         if (instances.length > 0){
-                            this.actionDelete({instId: instances[0].id, pos: instances[0].pos});
-                            this.squashCounter++;
+                            this.actionDelete({instId: instances[0].id, pos: instances[0].pos}, false);
                         }
 
                         this.mouse.cellCache[0] = mEvent.worldCell;
                     }
                     break;
                 case MOUSE_EVENT.UP:
-                    this.squashActions();
+                    this.actionDelete({}, true);
             }
         },
         toolCamera(mEvent){
@@ -442,7 +440,6 @@ export default {
 
             if (makeCommit){
                 let data = {instRefList: cacheList};
-                console.log(cacheList)
                 this.undoStore.commit({action: ROOM_ACTION.ADD, data});
                 this.undoStore.cache.delete('add_list');
                 return;
@@ -466,17 +463,37 @@ export default {
                 this.undoStore.cache.set('add_list', [newInst]);
             }
         },
-        actionDelete({instId, pos}, makeCommit = true){
-            let instRef = this.selectedRoom.removeInstance(instId, pos);
-            this.$refs.editWindow.instancesChanged();
-
-            if (instRef == this.editorSelection){
-                this.editorSelection = null;
-            }
+        actionDelete({instId, instRefList = [], pos}, makeCommit = true){
+            let cacheList = this.undoStore.cache.get('delete_list');
+            let instRef;
 
             if (makeCommit){
-                let data = {instId, instRef, pos}
+                let data = {instRefList: cacheList};
                 this.undoStore.commit({action: ROOM_ACTION.DELETE, data})
+                this.undoStore.cache.delete('delete_list');
+                return;
+            }
+
+            if (instId != undefined){
+                instRef = this.selectedRoom.removeInstance(instId, pos);
+
+                if (instRef == this.editorSelection){
+                    this.editorSelection = null;
+                }
+            }
+
+            for (let i = 0; i < instRefList.length; i++){
+                let inst = instRefList[i]
+                this.selectedRoom.removeInstance(inst.id, inst.pos);
+            }
+
+            this.$refs.editWindow.instancesChanged();
+
+            if (cacheList){
+                cacheList.push(instRef);
+            }
+            else if (instRef){
+                this.undoStore.cache.set('delete_list', [instRef]);
             }
         },
         actionInstanceChange({newState, instRef}, makeCommit = true){
@@ -615,9 +632,11 @@ export default {
 
             this.$refs.editWindow.instancesChanged();
         },
-        revertDelete({instRef}){
-            let instance = this.selectedRoom.addInstance(instRef.objRef, instRef.pos);
-            Object.assign(instance, instRef);
+        revertDelete({instRefList}){
+            for (let i = 0; i < instRefList.length; i++){
+                this.selectedRoom.addInstance(instRefList[i]);
+            }
+
             this.$refs.editWindow.instancesChanged();
         },
         revertInstanceChange({oldState, instRef}){

@@ -216,7 +216,6 @@ export default {
             nodeViewportEl: null,
             nodeNavEl: null,
             undoStore: new Undo_Store(32, false),
-            squashCounter: 0,
             mouseDownPos: new Victor(0, 0),
             lastMouseDragPos: new Victor(0, 0),
             contentsBounds: [0, 0, 0, 0],

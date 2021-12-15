@@ -26,16 +26,6 @@ class Undo_Store{
         }
     }
 
-    squashCommits(num){
-        let squashList = new Array(num);
-
-        for (let i = num - 1; i >= 0; i--){
-            squashList[i] = this.undoStore.pop();
-        }
-
-        this.undoStore.push({squashList});
-    }
-
     peekLastUndo(){
         return this.undoStore.getLast();
     }
@@ -44,10 +34,6 @@ class Undo_Store{
         let redoStep = this.undoStore.pop();
 
         if (redoStep){
-            if (redoStep.squashList){
-                redoStep.squashList.reverse();
-            }
-
             this.redoStore.push(redoStep);
         }
 
@@ -63,10 +49,6 @@ class Undo_Store{
         let undoStep = this.redoStore.pop();
 
         if (undoStep){
-            if (undoStep.squashList){
-                undoStep.squashList.reverse();
-            }
-            
             this.undoStore.push(undoStep);
         }
 
@@ -91,21 +73,10 @@ const UndoHelpers = {
         }
     },
     applyChronoStep(step, map){
-        if (step.squashList){
-            for (let i = 0; i < step.squashList.length; i++){
-                this.applyChronoStep(step.squashList[i], map);
-            }
-        }
-        else{
-            let action = map.get(step.action);
-            
-            action(step.data, false);
-        }
+        let action = map.get(step.action);
+        
+        action(step.data, false);
     },
-    squashActions(){
-        this.undoStore.squashCommits(this.squashCounter);
-        this.squashCounter = 0;
-    }
 }
 
 export default Undo_Store;
