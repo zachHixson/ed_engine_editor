@@ -581,13 +581,13 @@ export default {
                 this.undoStore.commit({action: ROOM_ACTION.EXIT_CHANGE, data});
             }
         },
-        actionExitDelete({instId, pos}, makeCommit = true){
-            let exitRef = this.selectedRoom.removeExit(instId, pos);
+        actionExitDelete({exitId, pos}, makeCommit = true){
+            let exitRef = this.selectedRoom.removeExit(exitId, pos);
             this.editorSelection = null;
             this.$refs.editWindow.instancesChanged();
 
             if (makeCommit){
-                let data = {instId, exitRef, pos};
+                let data = {exitId, exitRef, pos};
                 this.undoStore.commit({action: ROOM_ACTION.EXIT_DELETE, data});
             }
         },
