@@ -21,7 +21,7 @@ import {drawCheckerBG, drawPixelData} from '@/common/Draw_2D';
 
 export default {
     name: 'AnimationPlayer',
-    props: ['sprite', 'selectedFrame', 'fps', 'startFrame'],
+    props: ['sprite', 'fps', 'startFrame'],
     data(){
         return {
             curFrameIdx: 0,
@@ -42,10 +42,6 @@ export default {
         },
         startFrame: function(val) {
             this.curFrameIdx = val;
-            this.drawFrame();
-        },
-        selectedFrame(){
-            console.log("Works?")
             this.drawFrame();
         },
     },
