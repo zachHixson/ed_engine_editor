@@ -43,7 +43,11 @@ export default {
         startFrame: function(val) {
             this.curFrameIdx = val;
             this.drawFrame();
-        }
+        },
+        selectedFrame(){
+            console.log("Works?")
+            this.drawFrame();
+        },
     },
     mounted(){
         this.canvas = this.$refs.canvas;
@@ -55,6 +59,8 @@ export default {
             this.pixelBuff.width = this.sprite.dimensions;
             this.pixelBuff.height = this.sprite.dimensions;
         }
+
+        this.$parent.$on('frameDeleted', this.onFrameDelete);
 
         this.newSpriteSelection();
     },
@@ -121,7 +127,11 @@ export default {
             this.$nextTick(()=>{
                 this.drawFrame();
             });
-        }
+        },
+        onFrameDelete(){
+            this.curFrameIdx = Math.min(this.curFrameIdx, this.sprite.frames.length - 1);
+            this.drawFrame();
+        },
     }
 }
 </script>

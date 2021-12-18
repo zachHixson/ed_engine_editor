@@ -58,8 +58,13 @@ export default {
         },
     },
     computed: {
-        selectedFrameIdx(){
-            return this.$store.getters['ArtEditor/getSelectedFrame'];
+        selectedFrameIdx: {
+            get: function(){
+                return this.$store.getters['ArtEditor/getSelectedFrame'];
+            },
+            set: function(newIdx){
+                this.$store.dispatch('ArtEditor/selectFrame', newIdx);
+            },
         },
         inputActive(){
             return this.$store.getters['getInputActive'];
@@ -135,6 +140,8 @@ export default {
             this.$emit('frameAdded');
         },
         deleteFrame(idx){
+            this.sprite.deleteFrame(idx);
+            this.selectedFrameIdx = Math.min(this.selectedFrameIdx, this.sprite.frames.length - 1);
             this.$emit('frameDeleted');
         },
         frameMoved({idx, dir}){

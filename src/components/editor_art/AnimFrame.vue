@@ -117,17 +117,8 @@ export default {
             this.$emit('selectedFrameChanged');
         },
         deleteFrame(event){
-            let selectedFrame = this.selectedFrameIdx;
-
             event.stopPropagation();
             event.cancelBubble = true;
-
-            if (selectedFrame >= this.sprite.frames.length - 1){
-                selectedFrame -= 1;
-            }
-
-            this.sprite.deleteFrame(this.index);
-            this.$store.dispatch('ArtEditor/selectFrame', selectedFrame);
             this.$emit('frameDeleted', this.index);
         },
         copyFrame(event){
