@@ -120,7 +120,7 @@ export default {
             ],
             hotkeyMap: new HotkeyMap(),
             hotkeyDown: null,
-            hotkeyUp: null
+            hotkeyUp: null,
         }
     },
     mounted(){

@@ -121,3 +121,34 @@ export function HSVToRGB(h, s, v){
         b: out[2]
     }
 }
+
+export function RGBToHSV(r, g, b){
+    let rp = r / 255;
+    let gp = g / 255;
+    let bp = b / 255;
+    let cmax = Math.max(rp, gp, bp);
+    let cmin = Math.min(rp, gp, bp);
+    let delta = cmax - cmin;
+    let hue;
+    let sat;
+    let val;
+
+    if (delta == 0){
+        hue = 0;
+    }
+    else if (cmax == rp){
+        hue = ((gp - bp) / delta) % 6;
+    }
+    else if (cmax == gp){
+        hue = (bp - rp) / delta + 2;
+    }
+    else if (cmax == bp){
+        hue = (rp - gp) / delta + 4;
+    }
+
+    hue *= 60;
+    sat = (cmax == 0) ? 0 : delta / cmax;
+    val = cmax;
+
+    return {hue, sat, val};
+}
