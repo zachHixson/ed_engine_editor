@@ -25,6 +25,7 @@
                         :curSelection="toolId"
                         @toolClicked="toolChanged"/>
                 </div>
+                <ColorPicker />
             </div>
             <div class="resizeBtnWrapper">
                 <button class="resizeBtn" ref="collapseButton" @click="toggleOpen">
@@ -38,6 +39,7 @@
 
 <script>
 import HotkeyMap from '@/components/common/HotkeyMap';
+import ColorPicker from '@/components/common/ColorPicker';
 import iro from '@jaames/iro';
 import {ART_TOOL_SIZE, ART_TOOL_TYPE} from '@/common/Enums';
 import Tool from '@/components/common/Tool';
@@ -45,7 +47,8 @@ import Tool from '@/components/common/Tool';
 export default {
     name : "ToolPanel",
     components: {
-        Tool
+        ColorPicker,
+        Tool,
     },
     data() {
         return {

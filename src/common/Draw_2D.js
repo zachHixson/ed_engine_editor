@@ -82,3 +82,42 @@ export function RGBAToHex(r = 0, g = 0, b = 0, a = 255){
 
     return '#' + hexR + hexG + hexB + hexA;
 }
+
+export function HSVToRGB(h, s, v){
+    let c = v * s;
+    let x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    let m = v - c;
+    let out;
+
+    if (0 <= h && h < 60){
+        out = [c, x, 0];
+    }
+    else if (h < 120){
+        out = [x, c, 0];
+    }
+    else if (h < 180){
+        out = [0, c, x];
+    }
+    else if (h < 240){
+        out = [0, x, c];
+    }
+    else if (h < 300){
+        out = [x, 0, c];
+    }
+    else if (h <= 360){
+        out = [c, 0, x];
+    }
+    else{
+        console.trace("Error: Hue is not 0-360 [" + h + "]");
+    }
+
+    for (let i = 0; i < out.length; i++){
+        out[i] = Math.floor((out[i] + m) * 255);
+    }
+
+    return {
+        r: out[0],
+        g: out[1],
+        b: out[2]
+    }
+}

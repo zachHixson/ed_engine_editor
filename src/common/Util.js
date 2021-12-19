@@ -32,3 +32,7 @@ export function mod(n, m){
 export function clamp(x, min, max){
     return Math.max(Math.min(x, max), min);
 }
+
+export function lerp(a, b, t){
+    return t * (b - a) + a;
+}
