@@ -141,6 +141,9 @@ export default {
         inputActive(newVal){
             this.hotkeyMap.enabled = !newVal && this.mouse.inWindow;
         },
+        inWindow(newVal){
+            this.hotkeyMap.enabled = newVal && !this.inputActive;
+        },
     },
     computed: {
         curToolSelection() {
@@ -154,6 +157,9 @@ export default {
         },
         inputActive(){
             return this.$store.getters['getInputActive'];
+        },
+        inWindow(){
+            return this.mouse.inWindow;
         },
         cssBG(){
             let color =  this.selectedRoom?.bgColor ?? '#FFFFFF'
