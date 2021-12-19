@@ -2,7 +2,7 @@
     <div class="headerPanel">
         <button class="fileMenu" @click="(event)=>{event.stopPropagation(); fileVisible = !fileVisible}"
             v-click-outside="closeFileMenu">
-            ED
+            Ed
             <div ref="dropDown" class="dropDown" v-show="fileVisible">
                 <button
                     v-for="choice in choices"
