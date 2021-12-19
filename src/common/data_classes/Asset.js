@@ -1,5 +1,5 @@
 import ID_Generator from '@/common/ID_Generator';
-import {CATEGORY_ID, CATEGORY_TYPE} from '../Enums';
+import {CATEGORY_ID} from '../Enums';
 import Victor from 'victor';
 
 class Asset{
@@ -12,7 +12,6 @@ class Asset{
         }
     }
 
-    get type(){return CATEGORY_TYPE.UNDEFINED}
     get category_ID(){return CATEGORY_ID.UNDEFINED}
     get thumbnailData(){return null}
     get defaultNavState(){return {

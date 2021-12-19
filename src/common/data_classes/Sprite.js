@@ -1,5 +1,5 @@
 import Asset from './Asset';
-import {CATEGORY_ID, CATEGORY_TYPE} from '../Enums';
+import {CATEGORY_ID} from '../Enums';
 
 class Sprite extends Asset{
     constructor(dimensions = 16){
@@ -12,7 +12,6 @@ class Sprite extends Asset{
         this.hashAllFrames();
     }
 
-    get type(){return CATEGORY_TYPE.SPRITE}
     get category_ID(){return CATEGORY_ID.SPRITE}
     get thumbnailData(){
         for (let i = 0; i < this.frames[0].length; i++){

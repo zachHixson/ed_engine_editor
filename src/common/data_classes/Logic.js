@@ -1,6 +1,6 @@
 import Victor from 'victor';
 import Asset from './Asset';
-import {CATEGORY_TYPE, CATEGORY_ID} from '../Enums';
+import {CATEGORY_ID} from '../Enums';
 import Node from './Node';
 import Node_Connection from './Node_Connection';
 import {DEFAULT_EVENTS} from './node_libraries/Events';
@@ -31,7 +31,6 @@ class Logic extends Asset{
         });
     }
 
-    get type(){return CATEGORY_TYPE.LOGIC}
     get category_ID(){return CATEGORY_ID.LOGIC}
     get nextNodeId(){return this._nextNodeId++};
     get selectedEventId(){return this._selectedEventId}

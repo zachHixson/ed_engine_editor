@@ -1,5 +1,5 @@
 import Asset from './Asset';
-import {CATEGORY_ID, CATEGORY_TYPE} from '../Enums';
+import {CATEGORY_ID} from '../Enums';
 
 class Game_Object extends Asset{
     constructor(){
@@ -58,7 +58,6 @@ class Game_Object extends Asset{
         }
     }
 
-    get type(){return CATEGORY_TYPE.OBJECT}
     get category_ID(){return CATEGORY_ID.OBJECT}
     get startFrame(){return this._startFrame}
     get editorFrame(){return this.thumbnailData;}

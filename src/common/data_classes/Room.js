@@ -1,7 +1,7 @@
 import Victor from 'victor';
 import Asset from './Asset';
 import Camera from './Camera';
-import {CATEGORY_ID, CATEGORY_TYPE} from '../Enums';
+import {CATEGORY_ID} from '../Enums';
 import Spacial_Collection from './Spacial_Collection';
 import Instance from './Instance';
 import Exit from './Exit';
@@ -20,8 +20,7 @@ class Room extends Asset{
         this._curInstId = 0;
         this._curExitId = 0;
     }
-
-    get type(){return CATEGORY_TYPE.ROOM}
+    
     get category_ID(){return CATEGORY_ID.ROOM}
     get zSortedList(){return this.instances.zSort}
     get exitsList(){return this.exits.zSort}

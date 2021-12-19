@@ -1,108 +1,87 @@
-let curEnum = 0;
-
-export const CATEGORY_ID = {
-    UNDEFINED: -1,
-    SPRITE: curEnum++,
-    OBJECT: curEnum++,
-    LOGIC: curEnum++,
-    ROOM: curEnum++,
+function createEnum(list){
+    const outObj = {};
+    list.forEach(e => outObj[e] = Symbol(e));
+    Object.freeze(outObj);
+    return outObj;
 }
-Object.freeze(CATEGORY_ID);
 
-export const CATEGORY_TYPE = {
-    UNDEFINED: 'UNDEFINED',
-    SPRITE: 'SPRITE',
-    OBJECT: 'OBJECT',
-    LOGIC: 'LOGIC',
-    ROOM: 'ROOM',
-}
-Object.freeze(CATEGORY_TYPE);
+export const CATEGORY_ID = createEnum([
+    'UNDEFINED',
+    'SPRITE',
+    'OBJECT',
+    'LOGIC',
+    'ROOM',
+]);
 
-export const EDITOR_ID = {
-    ROOM: curEnum++,
-    ART: curEnum++,
-    OBJECT: curEnum++,
-    LOGIC: curEnum++,
-}
-Object.freeze(EDITOR_ID);
+export const EDITOR_ID = createEnum([
+    'ROOM',
+    'ART',
+    'OBJECT',
+    'LOGIC',
+]);
 
-export const EDITOR_TYPE = {
-    ROOM: 'ROOM',
-    ART: 'ART',
-    OBJECT: 'OBJECT',
-    LOGIC: 'LOGIC',
-}
-Object.freeze(EDITOR_TYPE);
+export const ART_TOOL_SIZE = createEnum([
+    'SMALL',
+    'MEDIUM',
+    'LARGE',
+]);
 
-export const ART_TOOL_SIZE = {
-    SMALL: curEnum++,
-    MEDIUM: curEnum++,
-    LARGE: curEnum++,
-}
-Object.freeze(ART_TOOL_SIZE);
+export const ART_TOOL_TYPE = createEnum([
+    'BRUSH',
+    'BUCKET',
+    'LINE',
+    'BOX',
+    'BOX_FILL',
+    'ELLIPSE',
+    'ELLIPSE_FILL',
+    'ERASER',
+    'EYE_DROPPER',
+]);
 
-export const ART_TOOL_TYPE = {
-    BRUSH: curEnum++,
-    BUCKET: curEnum++,
-    LINE: curEnum++,
-    BOX: curEnum++,
-    BOX_FILL: curEnum++,
-    ELLIPSE: curEnum++,
-    ELLIPSE_FILL: curEnum++,
-    ERASER: curEnum++,
-    EYE_DROPPER: curEnum++,
-}
-Object.freeze(ART_TOOL_TYPE);
+export const ROOM_TOOL_TYPE = createEnum([
+    'SELECT_MOVE',
+    'ADD_BRUSH',
+    'ERASER',
+    'EXIT',
+    'CAMERA',
+    'ROOM_PROPERTIES',
+    'TOGGLE_GRID',
+]);
 
-export const ROOM_TOOL_TYPE = {
-    SELECT_MOVE: curEnum++,
-    ADD_BRUSH: curEnum++,
-    ERASER: curEnum++,
-    EXIT: curEnum++,
-    CAMERA: curEnum++,
-    ROOM_PROPERTIES: curEnum++,
-    TOGGLE_GRID: curEnum++,
-}
-Object.freeze(ROOM_TOOL_TYPE);
+export const ROOM_ACTION = createEnum([
+    'MOVE',
+    'ADD',
+    'DELETE',
+    'INSTANCE_CHANGE',
+    'INSTANCE_GROUP_CHANGE',
+    'INSTANCE_VAR_CHANGE',
+    'EXIT_ADD',
+    'EXIT_CHANGE',
+    'EXIT_DELETE',
+    'CAMERA_CHANGE',
+    'ROOM_PROP_CHANGE',
+    'ROOM_VAR_CHANGE',
+]);
 
-export const ROOM_ACTION = {
-    MOVE: curEnum++,
-    ADD: curEnum++,
-    DELETE: curEnum++,
-    INSTANCE_CHANGE: curEnum++,
-    INSTANCE_GROUP_CHANGE: curEnum++,
-    INSTANCE_VAR_CHANGE: curEnum++,
-    EXIT_ADD: curEnum++,
-    EXIT_CHANGE: curEnum++,
-    EXIT_DELETE: curEnum++,
-    CAMERA_CHANGE: curEnum++,
-    ROOM_PROP_CHANGE: curEnum++,
-    ROOM_VAR_CHANGE: curEnum++,
-}
-Object.freeze(ROOM_ACTION);
+export const MOUSE_EVENT = createEnum([
+    'CLICK',
+    'DOWN',
+    'UP',
+    'MOVE',
+    'LEAVE',
+    'ENTER',
+]);
 
-export const MOUSE_EVENT = {
-    CLICK: curEnum++,
-    DOWN: curEnum++,
-    UP: curEnum++,
-    MOVE: curEnum++,
-    LEAVE: curEnum++,
-    ENTER: curEnum++,
-}
-Object.freeze(MOUSE_EVENT);
+export const ENTITY_TYPE = createEnum([
+    'INSTANCE',
+    'EXIT',
+]);
 
-export const ENTITY_TYPE = {
-    INSTANCE: curEnum++,
-    EXIT: curEnum++,
-}
-Object.freeze(ENTITY_TYPE);
-
-export const LOGIC_ACTION = {
-    ADD_NODE: curEnum++,
-    DELETE_NODES: curEnum++,
-    MOVE: curEnum++,
-    CONNECT: curEnum++,
-    DISCONNECT: curEnum++,
-    CHANGE_INPUT: curEnum++,
-}
-Object.freeze(LOGIC_ACTION);
+export const LOGIC_ACTION = createEnum([
+    'ADD_NODE',
+    'DELETE_NODES',
+    'MOVE',
+    'CONNECT',
+    'DISCONNECT',
+    'CHANGE_INPUT',
+]);
