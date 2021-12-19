@@ -116,9 +116,8 @@ class Room extends Asset{
         this.instances.setPositionByRef(instRef, newPos);
     }
 
-    addExit(pos, exitRef = null){
-        let newExit = (exitRef) ? exitRef : new Exit(this.curExitId, pos);
-        return this.exits.add(newExit, pos);
+    addExit(newExit){
+        return this.exits.add(newExit, newExit.pos);
     }
 
     getExitById(exitId){

@@ -69,6 +69,7 @@ import Properties from './Properties';
 import Tool from '@/components/common/Tool';
 import HotkeyMap from '@/components/common/HotkeyMap';
 import Instance from "@/common/data_classes/Instance";
+import Exit from "@/common/data_classes/Exit";
 
 export default {
     name: 'RoomEditor',
@@ -557,8 +558,9 @@ export default {
             }
         },
         actionExitAdd({exitRef, pos}, makeCommit = true){
-            let newExit = this.selectedRoom.addExit(pos, exitRef);
+            let newExit = exitRef ?? new Exit(this.selectedRoom.curExitId, pos);
             let newExitName = this.$t('room_editor.new_exit_prefix') + newExit.id;
+            this.selectedRoom.addExit(newExit);
 
             newExit.name = newExitName;
             this.$refs.editWindow.instancesChanged();
