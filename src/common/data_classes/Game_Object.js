@@ -38,13 +38,13 @@ class Game_Object extends Asset{
 
     toSaveData(){
         let sanitized = Object.assign({}, this);
-        sanitized.sprite = this.sprite.id;
+        sanitized.sprite = this.sprite?.id ?? null;
         return sanitized;
     }
 
     fromSaveData(object, spriteList){
         super.fromSaveData(object);
-        this.sprite = spriteList.find(s => s.id == this.sprite);
+        this.sprite = spriteList.find(s => s.id == this.sprite) ?? null;
         return this;
     }
 

@@ -33,7 +33,8 @@ class Sprite extends Asset{
     }
 
     fromSaveData(data){
-        super.fromSaveData(data);
+        Object.assign(this, data);
+        this.navState = this.parseNavData(data.navState);
         this.decompressFrames(this.frames);
         this.hashAllFrames();
 

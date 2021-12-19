@@ -18,15 +18,19 @@ class Asset{
         offset: new Victor(0, 0),
         zoomFac: 1,
     }}
+
+    parseNavData(navData){
+        return {
+            offset: new Victor.fromObject(navData.offset),
+            zoomFac: navData.zoomFac
+        }
+    }
     
     toSaveData(){return this}
 
     fromSaveData(data){
         Object.assign(this, data);
-        this.navState = {
-            offset: new Victor.fromObject(data.navState.offset),
-            zoomFac: data.navState.zoomFac
-        }
+        this.navState = this.parseNavData(data.navState);
         return this;
     }
 

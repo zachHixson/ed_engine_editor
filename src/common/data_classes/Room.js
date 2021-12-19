@@ -42,14 +42,16 @@ class Room extends Asset{
     }
 
     fromSaveData(room, objectList){
-        super.fromSaveData(room);
+        Object.assign(this, room);
+        this.navState = this.parseNavData(room.navState);
         this.camera = new Camera().fromSaveData(room.cameraProps);
 
         for (let i = 0; i < room.instancesSerial.length; i++){
             let curInstance = room.instancesSerial[i];
             let objRef = objectList.find(o => o.id == curInstance.objId);
             let newInstance = new Instance(curInstance.id, Victor.fromObject(curInstance.pos), objRef);
-
+            
+            this.addInstance(newInstance)
             this._curInstId = Math.max(newInstance.id + 1, this._curInstId);
 
             delete curInstance.pos;

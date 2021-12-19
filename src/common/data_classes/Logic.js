@@ -109,10 +109,7 @@ class Logic extends Asset{
                 connections: eventData.connections.map(
                     connection => new Node_Connection(connection).fromSaveData(connection, nodeMap)
                 ),
-                navState: {
-                    offset: Victor.fromObject(eventData.navState.offset),
-                    zoomFac: eventData.navState.zoomFac,
-                },
+                navState: this.parseNavData(eventData.navState),
             });
         }
 
