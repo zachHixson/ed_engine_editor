@@ -5,8 +5,7 @@
                 ref="canvas"
                 width="200"
                 height="200"
-                @mousedown="mouseDown"
-                @mouseup="mouseUp">
+                @mousedown="mouseDown">
                 //Error loading canvas
             </canvas>
             <div ref="cursor" class="cursor"></div>
@@ -41,7 +40,8 @@ export default {
         this.moveCursorToColor(this.selectedColor);
     },
     beforeDestroy(){
-        document.removeEventListener("mousemove", this.mouseMove);
+        document.removeEventListener('mousemove', this.mouseMove);
+        document.removeEventListener('mouseup', this.mouseUp);
     },
     methods: {
         drawWheel(){
@@ -60,9 +60,6 @@ export default {
                 let val = 1;
                 let rgb = HSVToRGB(hue, sat, val);
 
-                /*
-                    Need to use image data instead
-                */
                 colors[pIdx + 0] = rgb.r;
                 colors[pIdx + 1] = rgb.g;
                 colors[pIdx + 2] = rgb.b;
@@ -131,11 +128,13 @@ export default {
         },
         mouseDown(event){
             this.updateCursorPos(event.clientX, event.clientY);
-            document.addEventListener("mousemove", this.mouseMove);
+            document.addEventListener('mousemove', this.mouseMove);
+            document.addEventListener('mouseup', this.mouseUp);
             this.$emit('change-start');
         },
         mouseUp(event){
-            document.removeEventListener("mousemove", this.mouseMove);
+            document.removeEventListener('mousemove', this.mouseMove);
+            document.removeEventListener('mouseup', this.mouseUp);
             this.$emit('change-end');
         },
         mouseMove(event){
