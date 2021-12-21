@@ -8,10 +8,14 @@
                 @mousedown="wheelDown">
                 //Error loading canvas
             </canvas>
-            <div ref="cursor" class="cursor"></div>
+            <div ref="cursor" class="cursor">
+                <div class="cursorInside"></div>
+            </div>
         </div>
         <div ref="slider" class="valueSlider" @mousedown="valueDown">
-            <div ref="valueCursor" class="valueCursor"></div>
+            <div ref="valueCursor" class="valueCursor">
+                <div class="valueCursorInside"></div>
+            </div>
         </div>
     </div>
 </template>
@@ -49,9 +53,10 @@ export default {
         this.canvas = this.$refs.canvas;
         this.slider = this.$refs.slider;
 
-        Object.assign(this.wheelBuffer, {width: this.canvas.width, height: this.canvas.height});
-        Object.assign(this.valueBuffer, {width: this.canvas.width, height: this.canvas.height});
-        Object.assign(this.circleBuffer, {width: this.canvas.width, height: this.canvas.height});
+        let canvasDim = {width: this.canvas.width, height: this.canvas.height};
+        Object.assign(this.wheelBuffer, canvasDim);
+        Object.assign(this.valueBuffer, canvasDim);
+        Object.assign(this.circleBuffer, canvasDim);
 
         this.drawWheel();
         this.drawCircleBuff();
@@ -136,9 +141,8 @@ export default {
             this.updateCursorColors();
         },
         updateValuePos(x){
-            let slideBounds = this.slider.getBoundingClientRect();
             let halfCursorWidth = this.$refs.valueCursor.clientWidth / 2;
-            let slideX = slideBounds.left;
+            let slideX = this.slider.getBoundingClientRect().left;
             let cursorX = x - slideX - halfCursorWidth;
             let rBound = this.slider.clientWidth - this.$refs.valueCursor.clientWidth;
             let fac;
@@ -166,7 +170,6 @@ export default {
             this.$refs.cursor.style.background = this.selectedColor;
             this.$refs.valueCursor.style.background = this.selectedColor;
             this.slider.style.backgroundImage = `linear-gradient(to right, black, ${hexHS})`;
-            console.log(this.slider.style.backgroundImage)
         },
         moveCursorToColor(hex){
             let wheelBounds = this.canvas.getBoundingClientRect();
@@ -197,17 +200,17 @@ export default {
         },
         wheelMove(event){
             this.updateCursorPos(event.clientX, event.clientY);
-            this.$emit('changed');
+            this.$emit('changed', this.selectedColor);
         },
         valueMove(event){
             this.updateValuePos(event.clientX);
-            this.$emit('changed');
+            this.$emit('changed', this.selectedColor);
         },
-        mouseUp(event){
+        mouseUp(){
             document.removeEventListener('mousemove', this.wheelMove);
             document.removeEventListener('mousemove', this.valueMove);
             document.removeEventListener('mouseup', this.mouseUp);
-            this.$emit('change-end');
+            this.$emit('change-end', this.selectedColor);
         },
     }
 }
@@ -227,12 +230,21 @@ export default {
     position: absolute;
     left: 0;
     top: 0;
+    box-sizing: border-box;
     width: 20px;
     height: 20px;
     background: white;
     border: 2px solid black;
     border-radius: 50%;
     pointer-events: none;
+}
+
+.cursorInside{
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    border: 2px solid white;
+    border-radius: 50%;
 }
 
 .valueSlider{
@@ -247,9 +259,19 @@ export default {
     position: absolute;
     left: 0;
     top: 0;
+    box-sizing: border-box;
     width: 30px;
     height: 30px;
+    border: 2px solid black;
     border-radius: 50%;
     background: purple;
+}
+
+.valueCursorInside{
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    border:2px solid white;
+    border-radius: 50%;
 }
 </style>
