@@ -3,7 +3,10 @@
         <div class="toolPanelWrapper" :class="{toolPanelWrapperClosed : !isOpen}">
             <div v-show="isOpen" class="panelContents">
                 <div class="pickerWrapper">
-                    <div id="picker" class="picker"></div>
+                    <ColorPicker
+                        width="200"
+                        :color="toolColor"
+                        @change-end="colorChanged"/>
                 </div>
                 <div class="brushSizeContainer">
                     <Tool
@@ -25,7 +28,6 @@
                         :curSelection="toolId"
                         @toolClicked="toolChanged"/>
                 </div>
-                <ColorPicker />
             </div>
             <div class="resizeBtnWrapper">
                 <button class="resizeBtn" ref="collapseButton" @click="toggleOpen">
@@ -40,7 +42,6 @@
 <script>
 import HotkeyMap from '@/components/common/HotkeyMap';
 import ColorPicker from '@/components/common/ColorPicker';
-import iro from '@jaames/iro';
 import {ART_TOOL_SIZE, ART_TOOL_TYPE} from '@/common/Enums';
 import Tool from '@/components/common/Tool';
 
@@ -132,12 +133,6 @@ export default {
         
         this.bindHotkeys();
 
-        this.colorPicker = new iro.ColorPicker('#picker', {
-            color: this.$store.getters['ArtEditor/getSelectedColor'],
-            width: 200
-        });
-        this.colorPicker.on("color:change", this.colorChanged);
-
         this.$emit('resized');
     },
     beforeDestroy(){
@@ -145,9 +140,6 @@ export default {
         window.removeEventListener('keyup', this.hotkeyUp);
     },
     watch: {
-        toolColor(newCol){
-            this.colorPicker.color.hexString = newCol;
-        },
         inputActive(newState){
             this.hotkeyMap.enabled = !newState;
         },
@@ -210,7 +202,7 @@ export default {
             });
         },
         colorChanged(newColor){
-            this.toolColor = newColor.hexString;
+            this.toolColor = newColor;
         },
         sizeChanged(newSize){
             this.toolSize = newSize;

@@ -3,8 +3,8 @@
         <div class="wheelWrapper">
             <canvas
                 ref="canvas"
-                width="200"
-                height="200"
+                :width="width"
+                :height="width"
                 @mousedown="wheelDown">
                 //Error loading canvas
             </canvas>
@@ -14,7 +14,9 @@
         </div>
         <div ref="slider" class="valueSlider" @mousedown="valueDown">
             <div ref="valueCursor" class="valueCursor">
-                <div class="valueCursorInside"></div>
+                <div class="valueCursorOutside" ref="valueCursorBG">
+                    <div class="valueCursorInside"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -26,7 +28,7 @@ import {HSVToRGB, RGBAToHex, hexToRGBA, RGBToHSV} from '@/common/Draw_2D';
 
 export default {
     name: 'ColorPicker',
-    props: ['color'],
+    props: ['color', 'width'],
     data(){
         return {
             canvas: null,
@@ -42,8 +44,10 @@ export default {
     },
     watch: {
         color(newVal){
-            this.selectedColor = newVal;
-            this.moveCursorToColor(this.selectedColor);
+            if (newVal != this.selectedColor){
+                this.selectedColor = newVal;
+                this.moveCursorToColor(this.selectedColor);
+            }
         },
         valuePos(){
             this.composite();
@@ -79,7 +83,7 @@ export default {
                 let pos = new Victor(i % this.canvas.width, Math.floor(i / this.canvas.width));
                 let relPos = new Victor(pos.x / this.canvas.width, pos.y / this.canvas.height).subtractScalar(0.5).multiplyScalar(2);
                 let hue = (Math.atan2(relPos.y, relPos.x) + Math.PI) * (180 / Math.PI);
-                let sat = relPos.length();
+                let sat = relPos.length() * 1.15;
                 let val = 1;
                 let rgb = HSVToRGB(hue, sat, val);
 
@@ -118,13 +122,12 @@ export default {
         },
         updateCursorPos(x, y){
             let canvas = this.$refs.canvas;
-            let halfSize = this.$refs.cursor.clientWidth / 2;
             let halfCanvas = canvas.width / 2;
             let canvasBounds = canvas.getBoundingClientRect();
             let cursorClientPos = new Victor(x, y);
             let wheelClintPos = new Victor(canvasBounds.left, canvasBounds.top);
             let cursorPos = cursorClientPos.subtract(wheelClintPos);
-            let lengthBounds = halfCanvas - this.$refs.cursor.clientWidth / 2;
+            let lengthBounds = halfCanvas - this.$refs.cursor.clientWidth / 2 - 3;
 
             this.cursorPos.copy(cursorPos);
             this.cursorPos.subtractScalar(halfCanvas);
@@ -136,8 +139,8 @@ export default {
 
             this.cursorPos.addScalar(halfCanvas).unfloat();
 
-            this.$refs.cursor.style.left = this.cursorPos.x - halfSize + 'px';
-            this.$refs.cursor.style.top = this.cursorPos.y - halfSize + 'px';
+            this.$refs.cursor.style.left = this.cursorPos.x + 'px';
+            this.$refs.cursor.style.top = this.cursorPos.y + 'px';
             this.updateCursorColors();
         },
         updateValuePos(x){
@@ -168,7 +171,7 @@ export default {
             this.selectedHS = hexHS;
             this.selectedColor = hexHSV;
             this.$refs.cursor.style.background = this.selectedColor;
-            this.$refs.valueCursor.style.background = this.selectedColor;
+            this.$refs.valueCursorBG.style.background = this.selectedColor;
             this.slider.style.backgroundImage = `linear-gradient(to right, black, ${hexHS})`;
         },
         moveCursorToColor(hex){
@@ -179,7 +182,7 @@ export default {
             let rgb = hexToRGBA(hex);
             let hsv = RGBToHSV(rgb.r, rgb.g, rgb.b);
             let hueRad = hsv.hue * (Math.PI / 180)
-            let pos = new Victor(-Math.cos(hueRad), Math.sin(hueRad)).multiplyScalar(hsv.sat * halfCanvas);
+            let pos = new Victor(-Math.cos(hueRad), -Math.sin(hueRad)).multiplyScalar(hsv.sat * halfCanvas);
 
             pos.addScalar(halfCanvas);
             pos.add(wheelPos);
@@ -220,6 +223,7 @@ export default {
 .colorPicker{
     display: flex;
     flex-direction: column;
+    gap: 10px;
 }
 
 .wheelWrapper{
@@ -233,6 +237,7 @@ export default {
     box-sizing: border-box;
     width: 20px;
     height: 20px;
+    transform: translate(-50%, -50%);
     background: white;
     border: 2px solid black;
     border-radius: 50%;
@@ -259,12 +264,22 @@ export default {
     position: absolute;
     left: 0;
     top: 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
     box-sizing: border-box;
     width: 30px;
     height: 30px;
+    border-radius: 50%;
+}
+
+.valueCursorOutside{
+    box-sizing: border-box;
+    width: 80%;
+    height: 80%;
     border: 2px solid black;
     border-radius: 50%;
-    background: purple;
 }
 
 .valueCursorInside{
