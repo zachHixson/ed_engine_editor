@@ -9,7 +9,6 @@
     "i18n:report": "vue-cli-service i18n:report --src './src/**/*.?(js|vue)' --locales './src/locales/**/*.json'"
   },
   "dependencies": {
-    "@jaames/iro": "^5.1.8",
     "core-js": "^3.6.5",
     "file-saver": "^2.0.2",
     "victor": "^1.1.0",
