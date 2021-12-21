@@ -605,7 +605,6 @@ export default {
             Object.assign(this.selectedRoom, newState);
 
             if (oldState.bgColor != this.selectedRoom.bgColor){
-                this.$refs.props.updateBGColorPicker(this.selectedRoom.bgColor);
                 this.bgColorChanged();
             }
 

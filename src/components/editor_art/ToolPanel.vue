@@ -54,7 +54,6 @@ export default {
     data() {
         return {
             isOpen: this.$store.getters['ArtEditor/isToolPanelOpen'],
-            colorPicker: null,
             brushSizes: [
                 {
                     tool: ART_TOOL_SIZE.SMALL,

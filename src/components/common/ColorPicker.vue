@@ -203,11 +203,11 @@ export default {
         },
         wheelMove(event){
             this.updateCursorPos(event.clientX, event.clientY);
-            this.$emit('changed', this.selectedColor);
+            this.$emit('change', this.selectedColor);
         },
         valueMove(event){
             this.updateValuePos(event.clientX);
-            this.$emit('changed', this.selectedColor);
+            this.$emit('change', this.selectedColor);
         },
         mouseUp(){
             document.removeEventListener('mousemove', this.wheelMove);

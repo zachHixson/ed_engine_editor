@@ -152,8 +152,8 @@
                         <svg width="50" height="25" class="arrow">
                             <path d="M0 25 L25 0 L50 25"/>
                         </svg>
-                        <div class="contents">
-                            <div id="roomBgPicker"></div>
+                        <div v-if="changeingBG" class="contents">
+                            <ColorPicker :color="this.room.bgColor" width="150" @change="setRoomBgColor"/>
                         </div>
                     </div>
                 </button>
@@ -188,24 +188,24 @@
 </template>
 
 <script>
-import iro from '@jaames/iro';
 import {ROOM_TOOL_TYPE, ENTITY_TYPE} from '@/common/Enums';
 import GroupList from '@/components/common/GroupList';
 import VarList from './VarList';
+import ColorPicker from '@/components/common/ColorPicker';
 
 export default {
     name: 'Properties',
     props: ['camera', 'room', 'selectedTool', 'selectedEntity'],
     components: {
         GroupList,
-        VarList
+        VarList,
+        ColorPicker,
     },
     data(){
         return {
             TOOL_ENUMS: ROOM_TOOL_TYPE,
             objects: this.$store.getters['GameData/getAllObjects'],
             changeingBG: false,
-            colorPicker: null
         }
     },
     computed: {
@@ -247,11 +247,6 @@ export default {
         }
     },
     mounted(){
-        this.colorPicker = new iro.ColorPicker('#roomBgPicker', {
-            color: this.room.bgColor,
-            width: 150
-        });
-        this.colorPicker.on("input:end", this.setRoomBgColor);
         this.$refs.bgColorBtn.style.background = this.room.bgColor;
     },
     methods: {
@@ -287,11 +282,8 @@ export default {
             this.$emit('room-prop-set', propObj);
         },
         setRoomBgColor(color){
-            this.updateBGColorPicker(color.hexString);
-            this.setRoomProp({bgColor: color.hexString});
-        },
-        updateBGColorPicker(hexColor){
-            this.$refs.bgColorBtn.style.background = hexColor;
+            this.$refs.bgColorBtn.style.background = color;
+            this.setRoomProp({bgColor: color});
         },
         setInstanceName(newName){
             let instanceList = this.room.getAllInstances();
