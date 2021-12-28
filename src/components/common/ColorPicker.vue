@@ -78,19 +78,19 @@ export default {
             let colors = new Uint8ClampedArray(this.canvas.width * this.canvas.height * 4);
             let imgData;
 
-            for (let i = 0; i < colors.length; i++){
-                let pIdx = i * 4;
-                let pos = new Victor(i % this.canvas.width, Math.floor(i / this.canvas.width));
+            for (let i = 0; i < colors.length; i += 4){
+                let posIdx = i / 4;
+                let pos = new Victor(posIdx % this.canvas.width, Math.floor(posIdx / this.canvas.width));
                 let relPos = new Victor(pos.x / this.canvas.width, pos.y / this.canvas.height).subtractScalar(0.5).multiplyScalar(2);
                 let hue = (Math.atan2(relPos.y, relPos.x) + Math.PI) * (180 / Math.PI);
                 let sat = relPos.length() * 1.15;
                 let val = 1;
                 let rgb = HSVToRGB(hue, sat, val);
 
-                colors[pIdx + 0] = rgb.r;
-                colors[pIdx + 1] = rgb.g;
-                colors[pIdx + 2] = rgb.b;
-                colors[pIdx + 3] = 255;
+                colors[i + 0] = rgb.r;
+                colors[i + 1] = rgb.g;
+                colors[i + 2] = rgb.b;
+                colors[i + 3] = 255;
             }
 
             imgData = new ImageData(colors, this.canvas.width);
