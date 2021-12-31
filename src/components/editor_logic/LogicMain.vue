@@ -193,9 +193,9 @@
 <script>
 import Victor from 'victor';
 import {LOGIC_ACTION} from '@/common/Enums';
-import {DEFAULT_EVENTS} from '@/common/data_classes/node_libraries/Events';
-import {NODE_LIST} from '@/common/data_classes/node_libraries/Node_Library';
-import {SOCKET_TYPE} from '@/common/data_classes/Node_Enums';
+import {DEFAULT_EVENTS} from '@/common/nodes/Events';
+import {NODE_LIST} from '@/common/nodes/Node_Library';
+import {SOCKET_TYPE} from '@/common/nodes/Node_Enums';
 import Node_Connection from '@/common/data_classes/Node_Connection';
 import UndoPanel from '@/components/common/UndoPanel';
 import NavControlPanel from '@/components/common/NavControlPanel';

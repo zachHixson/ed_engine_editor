@@ -1,4 +1,4 @@
-import {SOCKET_TYPE} from '../Node_Enums';
+import {SOCKET_TYPE} from '@/common/nodes/Node_Enums';
 
 const defaultEvents = [
     {

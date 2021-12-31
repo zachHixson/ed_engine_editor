@@ -3,8 +3,8 @@ import Asset from './Asset';
 import {CATEGORY_ID} from '../Enums';
 import Node from './Node';
 import Node_Connection from './Node_Connection';
-import {DEFAULT_EVENTS} from './node_libraries/Events';
-import {NODE_MAP} from './node_libraries/Node_Library';
+import {DEFAULT_EVENTS} from '@/common/nodes/Events';
+import {NODE_MAP} from '@/common/nodes/Node_Library';
 
 class Logic extends Asset{
     constructor(){
