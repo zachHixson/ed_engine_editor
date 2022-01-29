@@ -24,7 +24,7 @@
 
 <script>
 import Victor from 'victor';
-import {HSVToRGB, RGBAToHex, hexToRGBA, RGBToHSV} from '@/common/Draw_2D';
+import {HSVToRGB, RGBAToHex, hexToRGBA, RGBToHSV} from '@shared/Draw_2D';
 
 export default {
     name: 'ColorPicker',

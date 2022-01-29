@@ -1,4 +1,4 @@
-import {ENTITY_TYPE} from '@/common/Enums';
+import {ENTITY_TYPE} from '@shared/Enums';
 import Victor from 'victor';
 
 const COLLISION_OVERRIDE = {

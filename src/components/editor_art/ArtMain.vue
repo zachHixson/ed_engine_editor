@@ -32,8 +32,8 @@
 </template>
 
 <script>
-import Undo_Store from '@/common/Undo_Store';
-import {CATEGORY_ID, ART_TOOL_TYPE} from '@/common/Enums';
+import Undo_Store from '@/components/common/Undo_Store';
+import {CATEGORY_ID, ART_TOOL_TYPE} from '@shared/Enums';
 import ToolPanel from './ToolPanel';
 import ArtCanvas from './ArtCanvas';
 import AnimationPanel from './AnimationPanel';

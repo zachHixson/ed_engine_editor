@@ -33,7 +33,7 @@
 
 <script>
 import Victor from 'victor';
-import {MOUSE_EVENT} from '@/common/Enums';
+import {MOUSE_EVENT} from '@shared/Enums';
 import NavControlPanel from '@/components/common/NavControlPanel';
 import UndoPanel from '@/components/common/UndoPanel';
 import Room_Edit_Renderer from './Room_Edit_Renderer';

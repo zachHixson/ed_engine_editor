@@ -1,6 +1,6 @@
-import {ART_TOOL_SIZE} from '@/common/Enums';
-import {get2DIdx} from '@/common/Util_2D';
-import {clamp} from '@/common/Util';
+import {ART_TOOL_SIZE} from '@shared/Enums';
+import {get2DIdx} from '@shared/Util_2D';
+import {clamp} from '@shared/Util';
 
 class Tool{
     constructor(){

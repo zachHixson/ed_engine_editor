@@ -42,7 +42,7 @@
 <script>
 import HotkeyMap from '@/components/common/HotkeyMap';
 import ColorPicker from '@/components/common/ColorPicker';
-import {ART_TOOL_SIZE, ART_TOOL_TYPE} from '@/common/Enums';
+import {ART_TOOL_SIZE, ART_TOOL_TYPE} from '@shared/Enums';
 import Tool from '@/components/common/Tool';
 
 export default {

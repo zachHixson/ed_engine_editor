@@ -1,5 +1,5 @@
-import {ENTITY_TYPE} from '@/common/Enums';
-import ID_Generator from '@/common/ID_Generator';
+import {ENTITY_TYPE} from '@shared/Enums';
+import ID_Generator from '@shared/ID_Generator';
 import Victor from 'victor';
 
 const TRANSITION = {

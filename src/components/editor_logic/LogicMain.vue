@@ -192,17 +192,17 @@
 
 <script>
 import Victor from 'victor';
-import {LOGIC_ACTION} from '@/common/Enums';
-import {DEFAULT_EVENTS} from '@/common/nodes/Events';
-import {NODE_LIST} from '@/common/nodes/Node_Library';
-import {SOCKET_TYPE} from '@/common/nodes/Node_Enums';
-import Node_Connection from '@/common/data_classes/Node_Connection';
+import {LOGIC_ACTION} from '@shared/Enums';
+import {DEFAULT_EVENTS} from '@shared/nodes/Events';
+import {NODE_LIST} from '@shared/nodes/Node_Library';
+import {SOCKET_TYPE} from '@shared/nodes/Node_Enums';
+import Node_Connection from '@shared/data_classes/Node_Connection';
 import UndoPanel from '@/components/common/UndoPanel';
 import NavControlPanel from '@/components/common/NavControlPanel';
 import Node from '@/components/editor_logic/Node';
 import Connection from '@/components/editor_logic/Connection';
 import HotkeyMap from '@/components/common/HotkeyMap';
-import Undo_Store, {UndoHelpers} from '@/common/Undo_Store';
+import Undo_Store, {UndoHelpers} from '@/components/common/Undo_Store';
 
 export default {
     name: 'LogicEditor',

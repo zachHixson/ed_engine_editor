@@ -10,7 +10,7 @@
 
 <script>
 import {mapGetters} from 'vuex';
-import {EDITOR_ID} from '@/common/Enums';
+import {EDITOR_ID} from '@shared/Enums';
 import RoomEditor from './editor_room/RoomMain';
 import ArtEditor from './editor_art/ArtMain';
 import ObjectEditor from './editor_object/ObjectMain';

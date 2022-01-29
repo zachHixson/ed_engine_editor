@@ -1,6 +1,6 @@
 import Tool from './Tool';
-import {ART_TOOL_SIZE} from '@/common/Enums';
-import {isInBounds, get2DIdx} from '@/common/Util_2D';
+import {ART_TOOL_SIZE} from '@shared/Enums';
+import {isInBounds, get2DIdx} from '@shared/Util_2D';
 
 class Brush extends Tool{
     constructor(){

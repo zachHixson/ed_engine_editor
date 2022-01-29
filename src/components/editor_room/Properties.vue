@@ -188,7 +188,7 @@
 </template>
 
 <script>
-import {ROOM_TOOL_TYPE, ENTITY_TYPE} from '@/common/Enums';
+import {ROOM_TOOL_TYPE, ENTITY_TYPE} from '@shared/Enums';
 import GroupList from '@/components/common/GroupList';
 import VarList from './VarList';
 import ColorPicker from '@/components/common/ColorPicker';

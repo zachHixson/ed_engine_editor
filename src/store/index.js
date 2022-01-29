@@ -1,8 +1,8 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import {version as EDITOR_VERSION} from '@/../package.json';
-import ID_Generator from '@/common/ID_Generator';
-import {CATEGORY_ID} from '@/common/Enums';
+import ID_Generator from '@shared/ID_Generator';
+import {CATEGORY_ID} from '@shared/Enums';
 import MainWindow from './modules/MainWindow';
 import GameData from './modules/GameData';
 import ArtEditor from './modules/ArtEditor';

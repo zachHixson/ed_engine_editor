@@ -1,4 +1,4 @@
-import ID_Generator from '@/common/ID_Generator';
+import ID_Generator from '@shared/ID_Generator';
 import {CATEGORY_ID} from '../Enums';
 import Victor from 'victor';
 

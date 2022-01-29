@@ -1,10 +1,10 @@
 import i18n from '@/i18n';
-import {CATEGORY_ID} from '@/common/Enums';
-import Sprite from '@/common/data_classes/Sprite';
-import Game_Object from '@/common/data_classes/Game_Object';
-import Logic from '@/common/data_classes/Logic';
-import Room from '@/common/data_classes/Room';
-import {getHighestEndingNumber} from '@/common/Util';
+import {CATEGORY_ID} from '@shared/Enums';
+import Sprite from '@shared/data_classes/Sprite';
+import Game_Object from '@shared/data_classes/Game_Object';
+import Logic from '@shared/data_classes/Logic';
+import Room from '@shared/data_classes/Room';
+import {getHighestEndingNumber} from '@shared/Util';
 
 const state = {
     startRoomId: null,

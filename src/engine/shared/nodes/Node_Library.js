@@ -1,4 +1,4 @@
-import {SOCKET_TYPE} from '@/common/nodes/Node_Enums';
+import {SOCKET_TYPE} from '@shared/nodes/Node_Enums';
 
 export const NODE_LIST = [
     {

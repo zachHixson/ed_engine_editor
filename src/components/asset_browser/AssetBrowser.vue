@@ -49,7 +49,7 @@
 </template>
 
 <script>
-import {CATEGORY_ID} from '@/common/Enums';
+import {CATEGORY_ID} from '@shared/Enums';
 import Asset from './Asset';
 
 export default {

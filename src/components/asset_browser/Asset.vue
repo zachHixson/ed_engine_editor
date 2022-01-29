@@ -20,8 +20,8 @@
 </template>
 
 <script>
-import {drawPixelData} from '@/common/Draw_2D';
-import {getSpriteDimensions} from '@/common/Util_2D';
+import {drawPixelData} from '@shared/Draw_2D';
+import {getSpriteDimensions} from '@shared/Util_2D';
 
 export default {
     name: 'Asset',

@@ -36,8 +36,8 @@
 </template>
 
 <script>
-import {SOCKET_TYPE} from '@/common/nodes/Node_Enums';
-import Node_Connection from '@/common/data_classes/Node_Connection';
+import {SOCKET_TYPE} from '@shared/nodes/Node_Enums';
+import Node_Connection from '@shared/data_classes/Node_Connection';
 
 export default {
     name: 'Socket',

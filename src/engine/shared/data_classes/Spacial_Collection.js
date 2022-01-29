@@ -10,7 +10,7 @@
 */
 
 import Linked_List from '../Linked_List';
-import {mod} from '@/common/Util';
+import {mod} from '@shared/Util';
 
 class Spacial_Collection{
     constructor(area, cellSize){

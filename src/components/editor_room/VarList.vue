@@ -34,7 +34,7 @@
 </template>
 
 <script>
-import {getHighestEndingNumber, removeStroke} from '@/common/Util';
+import {getHighestEndingNumber, removeStroke} from '@shared/Util';
 
 export default {
     name: 'VarList',

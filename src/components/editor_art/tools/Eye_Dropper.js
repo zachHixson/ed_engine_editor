@@ -1,5 +1,5 @@
 import Tool from './Tool';
-import {isInBounds, get2DIdx} from '@/common/Util_2D';
+import {isInBounds, get2DIdx} from '@shared/Util_2D';
 import store from '@/store';
 
 class Eye_Dropper extends Tool{

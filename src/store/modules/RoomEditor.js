@@ -1,4 +1,4 @@
-import {ROOM_TOOL_TYPE} from '@/common/Enums';
+import {ROOM_TOOL_TYPE} from '@shared/Enums';
 
 const state = {
     selectedTool: ROOM_TOOL_TYPE.SELECT_MOVE,

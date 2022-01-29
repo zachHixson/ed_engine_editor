@@ -1,4 +1,4 @@
-import {ART_TOOL_SIZE, ART_TOOL_TYPE} from '@/common/Enums';
+import {ART_TOOL_SIZE, ART_TOOL_TYPE} from '@shared/Enums';
 
 const state = {
     selectedColor : "#FFFFFF",

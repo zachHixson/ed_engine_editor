@@ -1,4 +1,4 @@
-import Linked_List from '@/common/Linked_List';
+import Linked_List from '@shared/Linked_List';
 
 class Undo_Store{
     constructor(stepLimit = 1, returnPrevStep = true){

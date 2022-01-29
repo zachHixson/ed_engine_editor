@@ -31,7 +31,7 @@
 </template>
 
 <script>
-import {getHighestEndingNumber} from '@/common/Util';
+import {getHighestEndingNumber} from '@shared/Util';
 
 export default {
     name: 'GroupList',

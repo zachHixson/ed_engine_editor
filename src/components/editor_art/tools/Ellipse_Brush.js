@@ -1,7 +1,7 @@
 import Tool from './Tool';
-import {ART_TOOL_SIZE} from '@/common/Enums';
+import {ART_TOOL_SIZE} from '@shared/Enums';
 import Victor from 'victor';
-import {isInBounds, get2DIdx} from '@/common/Util_2D';
+import {isInBounds, get2DIdx} from '@shared/Util_2D';
 
 class Ellipse_Brush extends Tool{
     constructor(isFilled = false){

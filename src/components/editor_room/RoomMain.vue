@@ -61,15 +61,15 @@
 <script>
 import Vue from 'vue';
 import Victor from 'victor';
-import {ROOM_TOOL_TYPE, ROOM_ACTION, MOUSE_EVENT, CATEGORY_ID, ENTITY_TYPE} from '@/common/Enums';
-import Undo_Store, {UndoHelpers} from '@/common/Undo_Store';
-import {compareVector} from '@/common/Util_2D';
+import {ROOM_TOOL_TYPE, ROOM_ACTION, MOUSE_EVENT, CATEGORY_ID, ENTITY_TYPE} from '@shared/Enums';
+import Undo_Store, {UndoHelpers} from '@/components/common/Undo_Store';
+import {compareVector} from '@shared/Util_2D';
 import RoomEditWindow from './RoomEditWindow';
 import Properties from './Properties';
 import Tool from '@/components/common/Tool';
 import HotkeyMap from '@/components/common/HotkeyMap';
-import Instance from "@/common/data_classes/Instance";
-import Exit from "@/common/data_classes/Exit";
+import Instance from "@shared/data_classes/Instance";
+import Exit from "@shared/data_classes/Exit";
 
 export default {
     name: 'RoomEditor',

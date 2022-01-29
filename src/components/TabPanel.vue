@@ -13,7 +13,7 @@
 
 <script>
 import EditorTab from './EditorTab';
-import {CATEGORY_ID, EDITOR_ID} from '@/common/Enums.js';
+import {CATEGORY_ID, EDITOR_ID} from '@shared/Enums.js';
 
 export default {
     name: 'TopPanel',

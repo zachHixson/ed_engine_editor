@@ -1,6 +1,6 @@
 import Victor from 'victor';
-import {drawPixelData, hexToRGBA, RGBAToHex} from '@/common/Draw_2D';
-import {mod, clamp} from '@/common/Util';
+import {drawPixelData, hexToRGBA, RGBAToHex} from '@shared/Draw_2D';
+import {mod, clamp} from '@shared/Util';
 
 const NO_SPRITE_PADDING = 0.75;
 

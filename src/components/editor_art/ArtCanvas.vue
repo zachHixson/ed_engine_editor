@@ -22,7 +22,7 @@ import UndoPanel from "@/components/common/UndoPanel";
 import NavControlPanel from '@/components/common/NavControlPanel';
 import Art_Canvas_Renderer from './Art_Canvas_Renderer';
 import Victor from 'victor';
-import {getSpriteDimensions} from '@/common/Util_2D';
+import {getSpriteDimensions} from '@shared/Util_2D';
 
 const DEFAULT_CELL_SIZE = 20;
 
