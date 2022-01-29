@@ -1,5 +1,5 @@
 import ID_Generator from '@shared/ID_Generator';
-import {CATEGORY_ID} from '../Enums';
+import {CATEGORY_ID} from '@shared/Enums';
 import Victor from 'victor';
 
 class Asset{

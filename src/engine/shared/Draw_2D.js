@@ -1,5 +1,5 @@
-import {get2DIdx, getSpriteDimensions} from './Util_2D';
-import {clamp} from './Util';
+import {get2DIdx, getSpriteDimensions} from '@shared/Util_2D';
+import {clamp} from '@shared/Util';
 
 export function drawCheckerBG(canvas, checkerSize, lightCol = '#AAA', darkCol = '#CCC'){
     let ctx = canvas.getContext('2d');

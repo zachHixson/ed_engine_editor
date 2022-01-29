@@ -1,10 +1,10 @@
 import Victor from 'victor';
-import Asset from './Asset';
-import Camera from './Camera';
-import {CATEGORY_ID} from '../Enums';
-import Spacial_Collection from './Spacial_Collection';
-import Instance from './Instance';
-import Exit from './Exit';
+import Asset from '@shared/data_classes/Asset';
+import Camera from '@shared/data_classes/Camera';
+import {CATEGORY_ID} from '@shared/Enums';
+import Spacial_Collection from '@shared/data_classes/Spacial_Collection';
+import Instance from '@shared/data_classes/Instance';
+import Exit from '@shared/data_classes/Exit';
 
 class Room extends Asset{
     constructor(){

@@ -1,5 +1,5 @@
-import Asset from './Asset';
-import {CATEGORY_ID} from '../Enums';
+import Asset from '@shared/data_classes/Asset';
+import {CATEGORY_ID} from '@shared/Enums';
 
 class Game_Object extends Asset{
     constructor(){

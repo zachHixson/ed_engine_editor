@@ -9,7 +9,7 @@
     ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠
 */
 
-import Linked_List from '../Linked_List';
+import Linked_List from '@shared/Linked_List';
 import {mod} from '@shared/Util';
 
 class Spacial_Collection{

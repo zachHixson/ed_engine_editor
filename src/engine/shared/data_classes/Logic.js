@@ -1,8 +1,8 @@
 import Victor from 'victor';
-import Asset from './Asset';
-import {CATEGORY_ID} from '../Enums';
-import Node from './Node';
-import Node_Connection from './Node_Connection';
+import Asset from '@shared/data_classes/Asset';
+import {CATEGORY_ID} from '@shared/Enums';
+import Node from '@shared/data_classes/Node';
+import Node_Connection from '@shared/data_classes/Node_Connection';
 import {DEFAULT_EVENTS} from '@shared/nodes/Events';
 import {NODE_MAP} from '@shared/nodes/Node_Library';
 
