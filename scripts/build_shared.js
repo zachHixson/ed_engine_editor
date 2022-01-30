@@ -19,7 +19,7 @@ sharedPaths.forEach(path => {
 });
 
 const sharedMinified = uglify.minify(sharedContents, {output: {quote_style: 2}}).code;
-const formatted = 'export const sharedLibraryFile = \'' + sharedMinified + '\';';
+const formatted = 'export default let sharedLibraryFile = \'' + sharedMinified + '\';';
 
 if (!fs.existsSync(outputPath)){
     fs.mkdirSync(outputPath);
