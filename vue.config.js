@@ -12,7 +12,7 @@ module.exports = {
   configureWebpack: {
     resolve: {
       alias: {
-        '@shared': path.resolve(__dirname, 'src/engine/shared'),
+        '@shared': path.resolve(__dirname, './shared'),
       }
     }
   },
