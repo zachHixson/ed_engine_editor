@@ -106,8 +106,10 @@ export default {
             this.drawFrame();
         },
         fpsChanged(){
-            this.pauseAnimation();
-            this.playAnimation();
+            if (this.animationLoop){
+                this.pauseAnimation();
+                this.playAnimation();
+            }
         },
         newSpriteSelection(){
             if (this.sprite){
