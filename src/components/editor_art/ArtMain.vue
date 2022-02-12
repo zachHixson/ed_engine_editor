@@ -63,8 +63,13 @@ export default {
         }
     },
     computed:{
-        selectedFrameIdx(){
-            return this.$store.getters['ArtEditor/getSelectedFrame'];
+        selectedFrameIdx: {
+            get: function(){
+                return this.$store.getters['ArtEditor/getSelectedFrame'];
+            },
+            set: function(newIdx){
+                this.$store.dispatch('ArtEditor/selectFrame', newIdx);
+            },
         },
         toolColor(){
             return this.$store.getters['ArtEditor/getSelectedColor'];
@@ -191,6 +196,10 @@ export default {
             }
             else{
                 this.selectedAsset.setFramesFromArray(this.undoStore.initialState.spriteData);
+            }
+
+            if (this.selectedFrameIdx > this.selectedAsset.frames.length - 1){
+                this.selectedFrameIdx--;
             }
 
             this.updateFrameIDs();
