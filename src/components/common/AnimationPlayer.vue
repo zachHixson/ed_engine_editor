@@ -18,7 +18,7 @@
 <script>
 export default {
     name: 'AnimationPlayer',
-    props: ['sprite', 'fps', 'startFrame'],
+    props: ['sprite', 'fps', 'startFrame', 'loop'],
     data(){
         return {
             curFrameIdx: 0,
@@ -78,7 +78,14 @@ export default {
             }
         },
         advanceFrame(){
-            this.curFrameIdx = (this.curFrameIdx + 1) % this.sprite.frames.length;
+            let nextFrame = (this.curFrameIdx + 1);
+
+            if (this.loop){
+                this.curFrameIdx = nextFrame % this.sprite.frames.length;
+            }
+            else{
+                this.curFrameIdx = Math.min(nextFrame, this.sprite.frames.length - 1);
+            }
         },
         playAnimation(){
             if (this.sprite && this.animationLoop == null && this.fps > 0){

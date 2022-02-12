@@ -26,7 +26,7 @@
                     <input type="checkbox" id="loop" checked="true" v-model="selectedAsset.animLoop" :title="$t('object_editor.tt_loop')"/>
                 </div>
             </div>
-            <AnimationPlayer ref="animPlayer" :sprite="selectedAsset.sprite" :fps="selectedAsset.fps" :startFrame="startFrame"/>
+            <AnimationPlayer ref="animPlayer" :sprite="selectedAsset.sprite" :fps="selectedAsset.fps" :startFrame="startFrame" :loop="selectedAsset.animLoop"/>
         </CategoryWrapper>
         <CategoryWrapper :title="$t('object_editor.heading_physics')" iconPath="assets/physics">
             <div class="options">

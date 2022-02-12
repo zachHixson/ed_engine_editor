@@ -8,7 +8,7 @@
         </div>
         <div v-show="isOpen" ref="contents" class="panelContents">
             <div class="animPlayerWrapper">
-                <AnimationPlayer ref="animPlayer" :sprite="sprite" fps="12" startFrame="0"/>
+                <AnimationPlayer ref="animPlayer" :sprite="sprite" fps="12" startFrame="0" :loop="true"/>
             </div>
             <div class="scrollWrapper">
                 <div v-if="isOpen" class="frames">
