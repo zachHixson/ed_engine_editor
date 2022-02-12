@@ -32,8 +32,6 @@
 </template>
 
 <script>
-import Victor from 'victor';
-import {MOUSE_EVENT} from '@shared/Enums';
 import NavControlPanel from '@/components/common/NavControlPanel';
 import UndoPanel from '@/components/common/UndoPanel';
 import Room_Edit_Renderer from './Room_Edit_Renderer';
@@ -116,15 +114,15 @@ export default {
     methods: {
         mouseDown(event){
             this.$refs.navControlPanel.mouseDown(event);
-            this.emitMouseEvent(event, MOUSE_EVENT.DOWN);
+            this.emitMouseEvent(event, Shared.MOUSE_EVENT.DOWN);
         },
         mouseUp(event){
             this.$refs.navControlPanel.mouseUp(event);
-            this.emitMouseEvent(event, MOUSE_EVENT.UP);
+            this.emitMouseEvent(event, Shared.MOUSE_EVENT.UP);
         },
         mouseMove(event){
             this.$refs.navControlPanel.mouseMove(event);
-            this.emitMouseEvent(event, MOUSE_EVENT.MOVE);
+            this.emitMouseEvent(event, Shared.MOUSE_EVENT.MOVE);
             this.renderer.mouseMove(event);
         },
         mouseEnter(event){
@@ -133,7 +131,7 @@ export default {
         },
         mouseLeave(event){
             this.$refs.navControlPanel.mouseLeave(event);
-            this.emitMouseEvent(event, MOUSE_EVENT.LEAVE);
+            this.emitMouseEvent(event, Shared.MOUSE_EVENT.LEAVE);
             this.renderer.enableCursor = false;
             this.renderer.mouseMove(event);
         },

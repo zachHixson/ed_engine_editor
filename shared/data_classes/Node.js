@@ -1,6 +1,4 @@
-import Victor from 'victor';
-
-class Node{
+Shared.Node = class {
     constructor(template, id, pos = new Victor()){
         this.templateId = template.id;
         this.nodeId = id;
@@ -85,6 +83,4 @@ class Node{
         this.domRef.style.top = this.pos.y + 'px';
         this.updateConnectionsCallback();
     }
-}
-
-export default Node;
+};

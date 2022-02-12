@@ -16,9 +16,6 @@
 </template>
 
 <script>
-import {getSpriteDimensions} from '@shared/Util_2D';
-import {drawCheckerBG, drawPixelData} from '@shared/Draw_2D';
-
 export default {
     name: 'AnimationPlayer',
     props: ['sprite', 'fps', 'startFrame'],
@@ -50,7 +47,7 @@ export default {
         this.checkerBGBuff.width = this.canvas.width;
         this.checkerBGBuff.height = this.canvas.height;
 
-        drawCheckerBG(this.checkerBGBuff, 4, "#B5B5B5", '#CCCCCC');
+        Shared.drawCheckerBG(this.checkerBGBuff, 4, "#B5B5B5", '#CCCCCC');
         if (this.sprite){
             this.pixelBuff.width = this.sprite.dimensions;
             this.pixelBuff.height = this.sprite.dimensions;
@@ -68,9 +65,9 @@ export default {
 
             if (this.sprite && this.sprite.frames[this.curFrameIdx] != null){
                 let frame = this.sprite.frames[this.curFrameIdx];
-                let scaleFac = this.canvas.width / getSpriteDimensions(frame);
+                let scaleFac = this.canvas.width / Shared.getSpriteDimensions(frame);
 
-                drawPixelData(this.pixelBuff, frame);
+                Shared.drawPixelData(this.pixelBuff, frame);
 
                 ctx.imageSmoothingEnabled = false;
                 ctx.webkitImageSmoothingEnabled = false;

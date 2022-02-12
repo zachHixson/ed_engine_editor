@@ -1,4 +1,4 @@
-class Linked_List{
+Shared.Linked_List = class {
     constructor(){
         this.start = null;
         this.end = null;
@@ -72,12 +72,12 @@ class Linked_List{
         let newNode;
 
         if (this.start == null){
-            newNode = new Node(val);
+            newNode = new this.Node(val);
             this.start = newNode;
             this.end = newNode;
         }
         else{
-            newNode = new Node(val, null, this.end);
+            newNode = new this.Node(val, null, this.end);
             this.end.next = newNode;
             this.end = newNode;
         }
@@ -135,7 +135,7 @@ class Linked_List{
 
         if (lNode){
             let rNode = lNode.next;
-            let newNode = new Node(val, rNode, lNode);
+            let newNode = new this.Node(val, rNode, lNode);
 
             lNode.next = newNode;
             this.length++;
@@ -153,7 +153,7 @@ class Linked_List{
         let newNode = null;
 
         if (!lNode){
-            this.start = new Node(val);
+            this.start = new this.Node(val);
             this.end = this.start;
             this.lastInserted = this.start;
             this.length++;
@@ -165,7 +165,7 @@ class Linked_List{
             rNode = lNode.next;
         }
 
-        newNode = new Node(val, rNode, lNode)
+        newNode = new this.Node(val, rNode, lNode)
 
         if (rNode){
             rNode.prev = newNode;
@@ -302,14 +302,12 @@ class Linked_List{
             curNode = curNode.next;
         }
     }
-}
 
-class Node{
-    constructor(val, next = null, prev = null){
-        this.val = val;
-        this.next = next;
-        this.prev = prev;
+    Node = class {
+        constructor(val, next = null, prev = null){
+            this.val = val;
+            this.next = next;
+            this.prev = prev;
+        }
     }
-}
-
-export default Linked_List;
+};

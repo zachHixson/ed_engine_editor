@@ -191,12 +191,6 @@
 </template>
 
 <script>
-import Victor from 'victor';
-import {LOGIC_ACTION} from '@shared/Enums';
-import {DEFAULT_EVENTS} from '@shared/nodes/Events';
-import {NODE_LIST} from '@shared/nodes/Node_Library';
-import {SOCKET_TYPE} from '@shared/nodes/Node_Enums';
-import Node_Connection from '@shared/data_classes/Node_Connection';
 import UndoPanel from '@/components/common/UndoPanel';
 import NavControlPanel from '@/components/common/NavControlPanel';
 import Node from '@/components/editor_logic/Node';
@@ -274,7 +268,7 @@ export default {
         addableEvents(){
             let eventList = [];
 
-            DEFAULT_EVENTS.forEach(event => {
+            Shared.DEFAULT_EVENTS.forEach(event => {
                 eventList.push(event.id);
             });
 
@@ -286,8 +280,8 @@ export default {
         nodeCategories(){
             let categories = [];
 
-            for (let i = 0; i < NODE_LIST.length; i++){
-                let curNode = NODE_LIST[i];
+            for (let i = 0; i < Shared.NODE_LIST.length; i++){
+                let curNode = Shared.NODE_LIST[i];
 
                 if (!categories.includes(curNode.category)){
                     categories.push(curNode.category);
@@ -299,13 +293,13 @@ export default {
         filteredNodes(){
             if (this.isSearching){
                 if (this.searchQuery.trim().length > 0){
-                    return NODE_LIST.filter(node => node.id.includes(this.searchQuery.toLowerCase()));
+                    return Shared.NODE_LIST.filter(node => node.id.includes(this.searchQuery.toLowerCase()));
                 }
 
-                return NODE_LIST;
+                return Shared.NODE_LIST;
             }
 
-            return NODE_LIST.filter(node => node.category == this.selectedCategory);
+            return Shared.NODE_LIST.filter(node => node.category == this.selectedCategory);
         },
         nodeDraggingEnabled(){
             return this.selectedNavTool == null;
@@ -368,20 +362,20 @@ export default {
             this.hotkeyMap.bindKey(['control', 'a'], this.selectAllNodes);
         },
         bindActions(){
-            this.actionMap.set(LOGIC_ACTION.ADD_NODE, this.actionAddNode);
-            this.actionMap.set(LOGIC_ACTION.DELETE_NODES, this.actionDeleteNodes);
-            this.actionMap.set(LOGIC_ACTION.MOVE, this.actionMoveNodes);
-            this.actionMap.set(LOGIC_ACTION.CONNECT, this.actionMakeConnection);
-            this.actionMap.set(LOGIC_ACTION.DISCONNECT, this.actionRemoveConnection);
-            this.actionMap.set(LOGIC_ACTION.CHANGE_INPUT, this.actionChangeInput);
+            this.actionMap.set(Shared.LOGIC_ACTION.ADD_NODE, this.actionAddNode);
+            this.actionMap.set(Shared.LOGIC_ACTION.DELETE_NODES, this.actionDeleteNodes);
+            this.actionMap.set(Shared.LOGIC_ACTION.MOVE, this.actionMoveNodes);
+            this.actionMap.set(Shared.LOGIC_ACTION.CONNECT, this.actionMakeConnection);
+            this.actionMap.set(Shared.LOGIC_ACTION.DISCONNECT, this.actionRemoveConnection);
+            this.actionMap.set(Shared.LOGIC_ACTION.CHANGE_INPUT, this.actionChangeInput);
         },
         bindReversions(){
-            this.revertMap.set(LOGIC_ACTION.ADD_NODE, this.revertAddNode);
-            this.revertMap.set(LOGIC_ACTION.DELETE_NODES, this.revertDeleteNodes);
-            this.revertMap.set(LOGIC_ACTION.MOVE, this.revertMoveNodes);
-            this.revertMap.set(LOGIC_ACTION.CONNECT, this.revertMakeConnection);
-            this.revertMap.set(LOGIC_ACTION.DISCONNECT, this.revertRemoveConnection);
-            this.revertMap.set(LOGIC_ACTION.CHANGE_INPUT, this.revertChangeInput);
+            this.revertMap.set(Shared.LOGIC_ACTION.ADD_NODE, this.revertAddNode);
+            this.revertMap.set(Shared.LOGIC_ACTION.DELETE_NODES, this.revertDeleteNodes);
+            this.revertMap.set(Shared.LOGIC_ACTION.MOVE, this.revertMoveNodes);
+            this.revertMap.set(Shared.LOGIC_ACTION.CONNECT, this.revertMakeConnection);
+            this.revertMap.set(Shared.LOGIC_ACTION.DISCONNECT, this.revertRemoveConnection);
+            this.revertMap.set(Shared.LOGIC_ACTION.CHANGE_INPUT, this.revertChangeInput);
         },
         getNewNodePos(){
             let vpBounds = this.nodeViewportEl.getBoundingClientRect();
@@ -496,7 +490,7 @@ export default {
                 let socketOver = this.currentSocketOver;
                 let connectionObj = this.draggingConnection;
                 let typeMatch = socketOver?.socketData.type == connectionObj.type;
-                let anyMatch = socketOver?.socketData.type == SOCKET_TYPE.ANY && !!connectionObj.type;
+                let anyMatch = socketOver?.socketData.type == Shared.SOCKET_TYPE.ANY && !!connectionObj.type;
                 let directionMatch = !!connectionObj.startSocketEl == !!socketOver?.isInput;
 
                 this.draggingConnection = null;
@@ -743,7 +737,7 @@ export default {
 
             if (makeCommit){
                 let data = {templateId, nodeRef: newNode};
-                this.undoStore.commit({action: LOGIC_ACTION.ADD_NODE, data});
+                this.undoStore.commit({action: Shared.LOGIC_ACTION.ADD_NODE, data});
             }
         },
         actionDeleteNodes({nodeRefList}, makeCommit = true){
@@ -770,7 +764,7 @@ export default {
 
             if (makeCommit){
                 let data = {nodeRefList: [...nodeRefList], connectionRefList: [...connectionRefList]};
-                this.undoStore.commit({action: LOGIC_ACTION.DELETE_NODES, data});
+                this.undoStore.commit({action: Shared.LOGIC_ACTION.DELETE_NODES, data});
             }
         },
         actionMoveNodes({nodeRefList, velocity}, makeCommit = true){
@@ -781,7 +775,7 @@ export default {
                     let totalVel = nodeRefList[0].pos.clone().subtract(startVec);
                     let data = {nodeRefList: [...nodeRefList], velocity: totalVel};
 
-                    this.undoStore.commit({action: LOGIC_ACTION.MOVE, data});
+                    this.undoStore.commit({action: Shared.LOGIC_ACTION.MOVE, data});
                     this.undoStore.cache.delete('move_start');
                 }
 
@@ -830,7 +824,7 @@ export default {
                 delete socketOverCopy.socketEl;
 
                 let data = {connectionObj, socketOver: socketOverCopy, prevSocket};
-                this.undoStore.commit({action: LOGIC_ACTION.CONNECT, data});
+                this.undoStore.commit({action: Shared.LOGIC_ACTION.CONNECT, data});
 
                 this.$nextTick(()=>{
                     connectionObj.updateComponent();
@@ -843,11 +837,11 @@ export default {
              makeCommit &= !!(connectionObj.startNode && connectionObj.endNode);
 
             if (makeCommit){
-                let data = {connectionObj: Object.assign(new Node_Connection(), connectionObj)};
+                let data = {connectionObj: Object.assign(new Shared.Node_Connection(), connectionObj)};
                 let prevSocket = this.undoStore.cache.get('prev_socket');
 
                 Object.assign(data.connectionObj, prevSocket);
-                this.undoStore.commit({action: LOGIC_ACTION.DISCONNECT, data});
+                this.undoStore.commit({action: Shared.LOGIC_ACTION.DISCONNECT, data});
             }
 
             this.selectedAsset.removeConnection(connectionObj.id);
@@ -857,7 +851,7 @@ export default {
 
             if (makeCommit){
                 let data = {socket, oldVal, newVal};
-                this.undoStore.commit({action: LOGIC_ACTION.CHANGE_INPUT, data});
+                this.undoStore.commit({action: Shared.LOGIC_ACTION.CHANGE_INPUT, data});
             }
         },
         revertAddNode({nodeRef}){

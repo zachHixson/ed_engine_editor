@@ -1,12 +1,4 @@
-import Victor from 'victor';
-import Asset from '@shared/data_classes/Asset';
-import {CATEGORY_ID} from '@shared/Enums';
-import Node from '@shared/data_classes/Node';
-import Node_Connection from '@shared/data_classes/Node_Connection';
-import {DEFAULT_EVENTS} from '@shared/nodes/Events';
-import {NODE_MAP} from '@shared/nodes/Node_Library';
-
-class Logic extends Asset{
+Shared.Logic = class extends Shared.Asset{
     constructor(){
         super();
         this.events = new Map();
@@ -26,12 +18,12 @@ class Logic extends Asset{
             delete this.navState;
         }
 
-        DEFAULT_EVENTS.forEach(event => {
+        Shared.DEFAULT_EVENTS.forEach(event => {
             this.events.set(event.id, null);
         });
     }
 
-    get category_ID(){return CATEGORY_ID.LOGIC}
+    get category_ID(){return Shared.CATEGORY_ID.LOGIC}
     get nextNodeId(){return this._nextNodeId++};
     get selectedEventId(){return this._selectedEventId}
     get selectedEvent(){return (this.selectedEventId) ? this.events.get(this.selectedEventId) : null}
@@ -91,10 +83,10 @@ class Logic extends Asset{
 
         for (let i = 0; i < data.events.length; i++){
             let eventData = data.events[i];
-            let entryTemplate = DEFAULT_EVENTS.get(eventData.entry.templateId);
-            let entry = new Node(entryTemplate, eventData.entry.id, Victor.fromObject(eventData.entry.pos));
-            let nodes = [entry, ...eventData.nodes.map(node => new Node(
-                NODE_MAP.get(node.templateId),
+            let entryTemplate = Shared.DEFAULT_EVENTS.get(eventData.entry.templateId);
+            let entry = new Shared.Node(entryTemplate, eventData.entry.id, Victor.fromObject(eventData.entry.pos));
+            let nodes = [entry, ...eventData.nodes.map(node => new Shared.Node(
+                Shared.NODE_MAP.get(node.templateId),
                 node.nodeId,
                 Victor.fromObject(node.pos)
             ).fromSaveData(node))];
@@ -107,7 +99,7 @@ class Logic extends Asset{
                 entry,
                 nodes,
                 connections: eventData.connections.map(
-                    connection => new Node_Connection(connection).fromSaveData(connection, nodeMap)
+                    connection => new Shared.Node_Connection(connection).fromSaveData(connection, nodeMap)
                 ),
                 navState: this.parseNavData(eventData.navState),
             });
@@ -119,8 +111,8 @@ class Logic extends Asset{
     }
 
     registerEvent(eventId, pos = new Victor()){
-        let eventTamplate = DEFAULT_EVENTS.get(eventId);
-        let newEvent = new Node(eventTamplate, this.nextNodeId, pos);
+        let eventTamplate = Shared.DEFAULT_EVENTS.get(eventId);
+        let newEvent = new Shared.Node(eventTamplate, this.nextNodeId, pos);
         newEvent.isEvent = true;
 
         if (window.EDITOR){
@@ -155,16 +147,13 @@ class Logic extends Asset{
 
     addNode(templateId, pos, nodeRef = null){
         if (window.EDITOR){
-            let nodeTemplate = NODE_MAP.get(templateId);
-            let newNode = nodeRef ?? new Node(nodeTemplate, this.nextNodeId, pos);
+            let nodeTemplate = Shared.NODE_MAP.get(templateId);
+            let newNode = nodeRef ?? new Shared.Node(nodeTemplate, this.nextNodeId, pos);
             let curEvent = this.events.get(this.selectedEventId);
 
             curEvent.nodes.push(newNode);
 
             return newNode;
-        }
-        else{
-            console.error('the editor method \"addNode()\" is being called from the engine runtime');
         }
 
         return null;
@@ -204,6 +193,4 @@ class Logic extends Asset{
             }
         }
     }
-}
-
-export default Logic;
+};

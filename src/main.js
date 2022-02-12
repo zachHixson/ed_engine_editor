@@ -2,6 +2,7 @@ import Vue from 'vue'
 import App from './App.vue'
 import store from './store'
 import i18n from './i18n'
+import {loadShared} from '@compiled/sharedLibrary'
 
 window.EDITOR = {};
 Vue.config.productionTip = false;
@@ -50,5 +51,11 @@ Vue.directive('input-active', {
 new Vue({
     store,
     i18n,
-    render: h => h(App)
-}).$mount('#app')
+    render: h => h(App),
+    beforeCreate: function(){
+        const newScript = document.createElement('script');
+        newScript.id = 'shared';
+        newScript.innerHTML = loadShared();
+        document.body.append(newScript);
+    }
+}).$mount('#app');

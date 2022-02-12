@@ -13,7 +13,6 @@
 
 <script>
 import EditorTab from './EditorTab';
-import {CATEGORY_ID, EDITOR_ID} from '@shared/Enums.js';
 
 export default {
     name: 'TopPanel',
@@ -24,22 +23,22 @@ export default {
         return {
             editorTabs: {
                 'room' : {
-                    id: EDITOR_ID.ROOM,
+                    id: Shared.EDITOR_ID.ROOM,
                     logoPath: 'assets/room_icon',
                     text: this.$t('editor_main.room_tab')
                 },
                 'art' : {
-                    id: EDITOR_ID.ART,
+                    id: Shared.EDITOR_ID.ART,
                     logoPath: 'assets/sprite_icon',
                     text: this.$t('editor_main.art_tab')
                 },
                 'object' : {
-                    id: EDITOR_ID.OBJECT,
+                    id: Shared.EDITOR_ID.OBJECT,
                     logoPath: 'assets/object_icon',
                     text: this.$t('editor_main.object_tab')
                 },
                 'logic' : {
-                    id: EDITOR_ID.LOGIC,
+                    id: Shared.EDITOR_ID.LOGIC,
                     logoPath: 'assets/logic',
                     text: this.$t('editor_main.logic_tab')
                 },
@@ -50,7 +49,7 @@ export default {
     mounted() {
         this.contextTabs = [this.editorTabs['room']];
         this.updateEditorTabs();
-        this.$store.dispatch('switchTab', EDITOR_ID.ROOM)
+        this.$store.dispatch('switchTab', Shared.EDITOR_ID.ROOM)
     },
     methods: {
         updateEditorTabs(){
@@ -63,29 +62,29 @@ export default {
                 let assetType = currentAsset.category_ID;
 
                 switch(assetType){
-                    case CATEGORY_ID.SPRITE:
+                    case Shared.CATEGORY_ID.SPRITE:
                         this.contextTabs.push(this.editorTabs['art']);
                         break;
-                    case CATEGORY_ID.OBJECT:
+                    case Shared.CATEGORY_ID.OBJECT:
                         this.contextTabs.push(this.editorTabs['object']);
                         break;
-                    case CATEGORY_ID.LOGIC:
+                    case Shared.CATEGORY_ID.LOGIC:
                         this.contextTabs.push(this.editorTabs['logic']);
                 }
 
                 //if user is in tab that no longer exists, transition them to appropriate tab
                 if (this.contextTabs.find(t => t.id == selectedTab) == undefined){
-                    let newTab = EDITOR_ID.ROOM;
+                    let newTab = Shared.EDITOR_ID.ROOM;
 
                     switch(assetType){
-                        case CATEGORY_ID.SPRITE:
-                            newTab = EDITOR_ID.ART;
+                        case Shared.CATEGORY_ID.SPRITE:
+                            newTab = Shared.EDITOR_ID.ART;
                             break;
-                        case CATEGORY_ID.OBJECT:
-                            newTab = EDITOR_ID.OBJECT;
+                        case Shared.CATEGORY_ID.OBJECT:
+                            newTab = Shared.EDITOR_ID.OBJECT;
                             break;
-                        case CATEGORY_ID.LOGIC:
-                            newTab = EDITOR_ID.LOGIC;
+                        case Shared.CATEGORY_ID.LOGIC:
+                            newTab = Shared.EDITOR_ID.LOGIC;
                             break;
                     }
 
@@ -93,7 +92,7 @@ export default {
                 }
             }
             else{
-                this.$store.dispatch('switchTab', EDITOR_ID.ROOM);
+                this.$store.dispatch('switchTab', Shared.EDITOR_ID.ROOM);
             }
         }
     }

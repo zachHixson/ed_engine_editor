@@ -42,7 +42,6 @@
 <script>
 import HotkeyMap from '@/components/common/HotkeyMap';
 import ColorPicker from '@/components/common/ColorPicker';
-import {ART_TOOL_SIZE, ART_TOOL_TYPE} from '@shared/Enums';
 import Tool from '@/components/common/Tool';
 
 export default {
@@ -56,64 +55,64 @@ export default {
             isOpen: this.$store.getters['ArtEditor/isToolPanelOpen'],
             brushSizes: [
                 {
-                    tool: ART_TOOL_SIZE.SMALL,
+                    tool: Shared.ART_TOOL_SIZE.SMALL,
                     name: this.$t('art_editor.small_brush'),
                     icon: 'assets/small_brush'
                 },
                 {
-                    tool: ART_TOOL_SIZE.MEDIUM,
+                    tool: Shared.ART_TOOL_SIZE.MEDIUM,
                     name: this.$t('art_editor.medium_brush'),
                     icon: 'assets/medium_brush'
                 },
                 {
-                    tool: ART_TOOL_SIZE.LARGE,
+                    tool: Shared.ART_TOOL_SIZE.LARGE,
                     name: this.$t('art_editor.large_brush'),
                     icon: 'assets/large_brush'
                 }
             ],
             brushes: [
                 {
-                    tool: ART_TOOL_TYPE.BRUSH,
+                    tool: Shared.ART_TOOL_TYPE.BRUSH,
                     name: this.$t('art_editor.brush_tool'),
                     icon: 'assets/brush'
                 },
                 {
-                    tool: ART_TOOL_TYPE.BUCKET,
+                    tool: Shared.ART_TOOL_TYPE.BUCKET,
                     name: this.$t('art_editor.bucket_tool'),
                     icon: 'assets/bucket'
                 },
                 {
-                    tool: ART_TOOL_TYPE.LINE,
+                    tool: Shared.ART_TOOL_TYPE.LINE,
                     name: this.$t('art_editor.line_tool'),
                     icon: 'assets/line'
                 },
                 {
-                    tool: ART_TOOL_TYPE.BOX,
+                    tool: Shared.ART_TOOL_TYPE.BOX,
                     name: this.$t('art_editor.box_stroke_tool'),
                     icon: 'assets/box'
                 },
                 {
-                    tool: ART_TOOL_TYPE.BOX_FILL,
+                    tool: Shared.ART_TOOL_TYPE.BOX_FILL,
                     name: this.$t('art_editor.box_fill_tool'),
                     icon: 'assets/box_filled'
                 },
                 {
-                    tool: ART_TOOL_TYPE.ELLIPSE,
+                    tool: Shared.ART_TOOL_TYPE.ELLIPSE,
                     name: this.$t('art_editor.circle_stroke_tool'),
                     icon: 'assets/circle'
                 },
                 {
-                    tool: ART_TOOL_TYPE.ELLIPSE_FILL,
+                    tool: Shared.ART_TOOL_TYPE.ELLIPSE_FILL,
                     name: this.$t('art_editor.circle_fill_tool'),
                     icon: 'assets/circle_filled'
                 },
                 {
-                    tool: ART_TOOL_TYPE.ERASER,
+                    tool: Shared.ART_TOOL_TYPE.ERASER,
                     name: this.$t('art_editor.eraser_tool'),
                     icon: 'assets/eraser'
                 },
                 {
-                    tool: ART_TOOL_TYPE.EYE_DROPPER,
+                    tool: Shared.ART_TOOL_TYPE.EYE_DROPPER,
                     name: this.$t('art_editor.eye_dropper_tool'),
                     icon: 'assets/eye_dropper'
                 }
@@ -179,20 +178,20 @@ export default {
             this.hotkeyMap.bindKey(['t'], this.toggleOpen);
 
             //size hotkeys
-            this.hotkeyMap.bindKey(['1'], this.sizeChanged, [ART_TOOL_SIZE.SMALL]);
-            this.hotkeyMap.bindKey(['2'], this.sizeChanged, [ART_TOOL_SIZE.MEDIUM]);
-            this.hotkeyMap.bindKey(['3'], this.sizeChanged, [ART_TOOL_SIZE.LARGE]);
+            this.hotkeyMap.bindKey(['1'], this.sizeChanged, [Shared.ART_TOOL_SIZE.SMALL]);
+            this.hotkeyMap.bindKey(['2'], this.sizeChanged, [Shared.ART_TOOL_SIZE.MEDIUM]);
+            this.hotkeyMap.bindKey(['3'], this.sizeChanged, [Shared.ART_TOOL_SIZE.LARGE]);
 
             //layout based hotkeys
-            this.hotkeyMap.bindKey(['b'], this.toolChanged, [ART_TOOL_TYPE.BRUSH]);
-            this.hotkeyMap.bindKey(['f'], this.toolChanged, [ART_TOOL_TYPE.BUCKET]);
-            this.hotkeyMap.bindKey(['x'], this.toolChanged, [ART_TOOL_TYPE.LINE]);
-            this.hotkeyMap.bindKey(['s'], this.toolChanged, [ART_TOOL_TYPE.BOX]);
-            this.hotkeyMap.bindKey(['alt', 's'], this.toolChanged, [ART_TOOL_TYPE.BOX_FILL]);
-            this.hotkeyMap.bindKey(['c'], this.toolChanged, [ART_TOOL_TYPE.ELLIPSE]);
-            this.hotkeyMap.bindKey(['alt', 'c'], this.toolChanged, [ART_TOOL_TYPE.ELLIPSE_FILL]);
-            this.hotkeyMap.bindKey(['e'], this.toolChanged, [ART_TOOL_TYPE.ERASER]);
-            this.hotkeyMap.bindKey(['d'], this.toolChanged, [ART_TOOL_TYPE.EYE_DROPPER]);
+            this.hotkeyMap.bindKey(['b'], this.toolChanged, [Shared.ART_TOOL_TYPE.BRUSH]);
+            this.hotkeyMap.bindKey(['f'], this.toolChanged, [Shared.ART_TOOL_TYPE.BUCKET]);
+            this.hotkeyMap.bindKey(['x'], this.toolChanged, [Shared.ART_TOOL_TYPE.LINE]);
+            this.hotkeyMap.bindKey(['s'], this.toolChanged, [Shared.ART_TOOL_TYPE.BOX]);
+            this.hotkeyMap.bindKey(['alt', 's'], this.toolChanged, [Shared.ART_TOOL_TYPE.BOX_FILL]);
+            this.hotkeyMap.bindKey(['c'], this.toolChanged, [Shared.ART_TOOL_TYPE.ELLIPSE]);
+            this.hotkeyMap.bindKey(['alt', 'c'], this.toolChanged, [Shared.ART_TOOL_TYPE.ELLIPSE_FILL]);
+            this.hotkeyMap.bindKey(['e'], this.toolChanged, [Shared.ART_TOOL_TYPE.ERASER]);
+            this.hotkeyMap.bindKey(['d'], this.toolChanged, [Shared.ART_TOOL_TYPE.EYE_DROPPER]);
         },
         toggleOpen(){
             this.isOpen = !this.isOpen;

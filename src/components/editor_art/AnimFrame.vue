@@ -38,8 +38,8 @@
 </template>
 
 <script>
-import {getSpriteDimensions} from '@shared/Util_2D';
-import {drawCheckerBG, drawPixelData} from '@shared/Draw_2D';
+// import {Shared.getSpriteDimensions} from '@shared/Util_2D';
+// import {Shared.drawCheckerBG, Shared.drawPixelData} from '@shared/Draw_2D';
 
 export default {
     name: 'AnimFrame',
@@ -62,7 +62,7 @@ export default {
         this.pixelBuff.width = this.getSprite().dimensions;
         this.pixelBuff.height = this.getSprite().dimensions;
 
-        drawCheckerBG(this.checkerBGBuff, 4, "#B5B5B5", '#CCCCCC');
+        Shared.drawCheckerBG(this.checkerBGBuff, 4, "#B5B5B5", '#CCCCCC');
 
         this.drawCanvas();
     },
@@ -97,9 +97,9 @@ export default {
             ctx.drawImage(this.checkerBGBuff, 0, 0, this.canvas.width, this.canvas.height);
 
             if (frame != null){
-                let scaleFac = this.canvas.width / getSpriteDimensions(frame);
+                let scaleFac = this.canvas.width / Shared.getSpriteDimensions(frame);
 
-                drawPixelData(this.pixelBuff, frame);
+                Shared.drawPixelData(this.pixelBuff, frame);
 
                 ctx.imageSmoothingEnabled = false;
                 ctx.webkitImageSmoothingEnabled = false;

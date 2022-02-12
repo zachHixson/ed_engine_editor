@@ -12,7 +12,7 @@
 
 <script>
 import {saveAs} from 'file-saver';
-import {EDITOR_ID} from '@shared/Enums';
+// import {EDITOR_ID} from '@shared/Enums';
 import HeaderPanel from './components/HeaderPanel';
 import TabPanel from './components/TabPanel';
 import AssetBrowser from './components/asset_browser/AssetBrowser';

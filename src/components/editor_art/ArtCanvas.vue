@@ -21,8 +21,6 @@
 import UndoPanel from "@/components/common/UndoPanel";
 import NavControlPanel from '@/components/common/NavControlPanel';
 import Art_Canvas_Renderer from './Art_Canvas_Renderer';
-import Victor from 'victor';
-import {getSpriteDimensions} from '@shared/Util_2D';
 
 const DEFAULT_CELL_SIZE = 20;
 
@@ -41,14 +39,13 @@ export default {
             navControl: null,
             maxZoom: 2,
             toolMap: new Map(),
-            enableDrawing: true,
             mouseCell: new Victor(),
             unitScale: 1
         }
     },
     computed: {
         GRID_DIV(){
-            return getSpriteDimensions(this.spriteFrame);
+            return Shared.getSpriteDimensions(this.spriteFrame);
         },
         CANVAS_WIDTH(){
             return this.GRID_DIV * DEFAULT_CELL_SIZE;
@@ -159,7 +156,6 @@ export default {
             this.$store.dispatch('ArtEditor/selectTool', null);
             this.$store.dispatch('ArtEditor/setSelectedNavTool', navTool);
             this.$emit('nav-selected');
-            this.tool.disableDrawing();
         },
         getZoomBounds(){
             let maxZoom = (Math.max(this.canvas.clientWidth, this.canvas.clientHeight) / this.CANVAS_WIDTH) * 2;

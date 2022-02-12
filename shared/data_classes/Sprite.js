@@ -1,7 +1,4 @@
-import Asset from '@shared/data_classes/Asset';
-import {CATEGORY_ID} from '@shared/Enums';
-
-class Sprite extends Asset{
+Shared.Sprite = class extends Shared.Asset{
     constructor(dimensions = 16){
         super();
         this.dimensions = dimensions;
@@ -12,7 +9,7 @@ class Sprite extends Asset{
         this.hashAllFrames();
     }
 
-    get category_ID(){return CATEGORY_ID.SPRITE}
+    get category_ID(){return Shared.CATEGORY_ID.SPRITE}
     get thumbnailData(){
         for (let i = 0; i < this.frames[0].length; i++){
             if (this.frames[0][i] != ''){
@@ -241,6 +238,4 @@ class Sprite extends Asset{
             }
         }
     }
-}
-
-export default Sprite;
+};

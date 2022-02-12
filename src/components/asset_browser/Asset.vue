@@ -20,9 +20,6 @@
 </template>
 
 <script>
-import {drawPixelData} from '@shared/Draw_2D';
-import {getSpriteDimensions} from '@shared/Util_2D';
-
 export default {
     name: 'Asset',
     props: ['asset', 'defaultIcon'],
@@ -98,10 +95,10 @@ export default {
             if (this.checkThumb()){
                 let canvas = this.$refs.thumbNail;
                 let ctx = canvas.getContext('2d');
-                let pixelDim = getSpriteDimensions(this.asset.thumbnailData);
+                let pixelDim = Shared.getSpriteDimensions(this.asset.thumbnailData);
                 let scaleFac = canvas.width / pixelDim;
 
-                drawPixelData(this.pixelBuff, this.asset.thumbnailData);
+                Shared.drawPixelData(this.pixelBuff, this.asset.thumbnailData);
 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 

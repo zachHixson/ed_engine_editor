@@ -1,6 +1,4 @@
 import Tool from './Tool';
-import {get2DIdx, isInBounds} from '@shared/Util_2D';
-import {clamp} from '@shared/Util';
 
 class Bucket extends Tool{
     constructor(){
@@ -9,9 +7,9 @@ class Bucket extends Tool{
     }
 
     mouseDown(event){
-        this.sampledColor = this.pixelBuff[get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)];
+        this.sampledColor = this.pixelBuff[Shared.get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)];
 
-        if (isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
+        if (Shared.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
             this.fill(this.mouseCell.x, this.mouseCell.y);
             this.commitResult();
         }
@@ -20,17 +18,17 @@ class Bucket extends Tool{
     updateCursorBuff(){
         this.clearPreviewBuff();
 
-        if (isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
-            this.sampledColor = this.pixelBuff[get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)];
+        if (Shared.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
+            this.sampledColor = this.pixelBuff[Shared.get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)];
             this.fill(this.mouseCell.x, this.mouseCell.y);
         }
     }
 
     fill(x, y){
-        x = clamp(x, 0, this.cellWidth - 1);
-        y = clamp(y, 0, this.cellWidth - 1);
+        x = Shared.clamp(x, 0, this.cellWidth - 1);
+        y = Shared.clamp(y, 0, this.cellWidth - 1);
 
-        let xyIdx = get2DIdx(x, y, this.cellWidth);
+        let xyIdx = Shared.get2DIdx(x, y, this.cellWidth);
         let spriteColor = this.pixelBuff[xyIdx];
         let previewColor = this.previewBuff[xyIdx];
 

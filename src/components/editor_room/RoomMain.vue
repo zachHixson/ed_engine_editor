@@ -60,16 +60,11 @@
 
 <script>
 import Vue from 'vue';
-import Victor from 'victor';
-import {ROOM_TOOL_TYPE, ROOM_ACTION, MOUSE_EVENT, CATEGORY_ID, ENTITY_TYPE} from '@shared/Enums';
 import Undo_Store, {UndoHelpers} from '@/components/common/Undo_Store';
-import {compareVector} from '@shared/Util_2D';
 import RoomEditWindow from './RoomEditWindow';
 import Properties from './Properties';
 import Tool from '@/components/common/Tool';
 import HotkeyMap from '@/components/common/HotkeyMap';
-import Instance from "@shared/data_classes/Instance";
-import Exit from "@shared/data_classes/Exit";
 
 export default {
     name: 'RoomEditor',
@@ -85,32 +80,32 @@ export default {
             editorSelection: null,
             tools: [
                 {
-                    tool: ROOM_TOOL_TYPE.SELECT_MOVE,
+                    tool: Shared.ROOM_TOOL_TYPE.SELECT_MOVE,
                     text: this.$t('room_editor.select_move'),
                     icon: 'assets/select_move'
                 },
                 {
-                    tool: ROOM_TOOL_TYPE.ADD_BRUSH,
+                    tool: Shared.ROOM_TOOL_TYPE.ADD_BRUSH,
                     text: this.$t('room_editor.add_brush'),
                     icon: 'assets/brush_add'
                 },
                 {
-                    tool: ROOM_TOOL_TYPE.ERASER,
+                    tool: Shared.ROOM_TOOL_TYPE.ERASER,
                     text: this.$t('room_editor.eraser'),
                     icon: 'assets/eraser'
                 },
                 {
-                    tool: ROOM_TOOL_TYPE.CAMERA,
+                    tool: Shared.ROOM_TOOL_TYPE.CAMERA,
                     text: this.$t('room_editor.camera'),
                     icon: 'assets/camera'
                 },
                 {
-                    tool: ROOM_TOOL_TYPE.EXIT,
+                    tool: Shared.ROOM_TOOL_TYPE.EXIT,
                     text: this.$t('room_editor.exit'),
                     icon: 'assets/exit'
                 },
                 {
-                    tool: ROOM_TOOL_TYPE.ROOM_PROPERTIES,
+                    tool: Shared.ROOM_TOOL_TYPE.ROOM_PROPERTIES,
                     text: this.$t('room_editor.room_props'),
                     icon: 'assets/gear'
                 }
@@ -191,59 +186,59 @@ export default {
             let deleteEntity = () => {
                 let type = this.editorSelection?.TYPE;
 
-                if (type == ENTITY_TYPE.INSTANCE){
+                if (type == Shared.ENTITY_TYPE.INSTANCE){
                     this.actionDelete(this.editorSelection);
                 }
-                else if (type == ENTITY_TYPE.EXIT){
+                else if (type == Shared.ENTITY_TYPE.EXIT){
                     this.actionExitDelete(this.editorSelection);
                 }
             }
 
-            this.hotkeyMap.bindKey(['s'], this.toolClicked, [ROOM_TOOL_TYPE.SELECT_MOVE]);
-            this.hotkeyMap.bindKey(['b'], this.toolClicked, [ROOM_TOOL_TYPE.ADD_BRUSH]);
-            this.hotkeyMap.bindKey(['e'], this.toolClicked, [ROOM_TOOL_TYPE.ERASER]);
-            this.hotkeyMap.bindKey(['c'], this.toolClicked, [ROOM_TOOL_TYPE.CAMERA]);
-            this.hotkeyMap.bindKey(['x'], this.toolClicked, [ROOM_TOOL_TYPE.EXIT]);
-            this.hotkeyMap.bindKey(['r'], this.toolClicked, [ROOM_TOOL_TYPE.ROOM_PROPERTIES]);
+            this.hotkeyMap.bindKey(['s'], this.toolClicked, [Shared.ROOM_TOOL_TYPE.SELECT_MOVE]);
+            this.hotkeyMap.bindKey(['b'], this.toolClicked, [Shared.ROOM_TOOL_TYPE.ADD_BRUSH]);
+            this.hotkeyMap.bindKey(['e'], this.toolClicked, [Shared.ROOM_TOOL_TYPE.ERASER]);
+            this.hotkeyMap.bindKey(['c'], this.toolClicked, [Shared.ROOM_TOOL_TYPE.CAMERA]);
+            this.hotkeyMap.bindKey(['x'], this.toolClicked, [Shared.ROOM_TOOL_TYPE.EXIT]);
+            this.hotkeyMap.bindKey(['r'], this.toolClicked, [Shared.ROOM_TOOL_TYPE.ROOM_PROPERTIES]);
             this.hotkeyMap.bindKey(['g'], ()=>{this.$store.dispatch('RoomEditor/setGridState', !this.viewGrid)});
             this.hotkeyMap.bindKey(['n'], ()=>{this.propertiesOpen = !this.propertiesOpen; this.resize()});
             this.hotkeyMap.bindKey(['delete'], deleteEntity);
             this.hotkeyMap.bindKey(['backspace'], deleteEntity);
         },
         bindTools(){
-            this.toolMap.set(ROOM_TOOL_TYPE.SELECT_MOVE, this.toolSelectMove);
-            this.toolMap.set(ROOM_TOOL_TYPE.ADD_BRUSH, this.toolAddBrush);
-            this.toolMap.set(ROOM_TOOL_TYPE.ERASER, this.toolEraser);
-            this.toolMap.set(ROOM_TOOL_TYPE.EXIT, this.toolExit);
-            this.toolMap.set(ROOM_TOOL_TYPE.CAMERA, this.toolCamera);
+            this.toolMap.set(Shared.ROOM_TOOL_TYPE.SELECT_MOVE, this.toolSelectMove);
+            this.toolMap.set(Shared.ROOM_TOOL_TYPE.ADD_BRUSH, this.toolAddBrush);
+            this.toolMap.set(Shared.ROOM_TOOL_TYPE.ERASER, this.toolEraser);
+            this.toolMap.set(Shared.ROOM_TOOL_TYPE.EXIT, this.toolExit);
+            this.toolMap.set(Shared.ROOM_TOOL_TYPE.CAMERA, this.toolCamera);
         },
         bindActions(){
-            this.actionMap.set(ROOM_ACTION.MOVE, this.actionMove);
-            this.actionMap.set(ROOM_ACTION.ADD, this.actionAdd);
-            this.actionMap.set(ROOM_ACTION.DELETE, this.actionDelete);
-            this.actionMap.set(ROOM_ACTION.INSTANCE_CHANGE, this.actionInstanceChange);
-            this.actionMap.set(ROOM_ACTION.INSTANCE_GROUP_CHANGE, this.actionInstanceGroupChange);
-            this.actionMap.set(ROOM_ACTION.INSTANCE_VAR_CHANGE, this.actionInstanceVarChange);
-            this.actionMap.set(ROOM_ACTION.EXIT_ADD, this.actionExitAdd);
-            this.actionMap.set(ROOM_ACTION.EXIT_CHANGE, this.actionExitChange);
-            this.actionMap.set(ROOM_ACTION.EXIT_DELETE, this.actionExitDelete);
-            this.actionMap.set(ROOM_ACTION.CAMERA_CHANGE, this.actionCameraChange);
-            this.actionMap.set(ROOM_ACTION.ROOM_PROP_CHANGE, this.actionRoomPropChange);
-            this.actionMap.set(ROOM_ACTION.ROOM_VAR_CHANGE, this.actionRoomVarChange);
+            this.actionMap.set(Shared.ROOM_ACTION.MOVE, this.actionMove);
+            this.actionMap.set(Shared.ROOM_ACTION.ADD, this.actionAdd);
+            this.actionMap.set(Shared.ROOM_ACTION.DELETE, this.actionDelete);
+            this.actionMap.set(Shared.ROOM_ACTION.INSTANCE_CHANGE, this.actionInstanceChange);
+            this.actionMap.set(Shared.ROOM_ACTION.INSTANCE_GROUP_CHANGE, this.actionInstanceGroupChange);
+            this.actionMap.set(Shared.ROOM_ACTION.INSTANCE_VAR_CHANGE, this.actionInstanceVarChange);
+            this.actionMap.set(Shared.ROOM_ACTION.EXIT_ADD, this.actionExitAdd);
+            this.actionMap.set(Shared.ROOM_ACTION.EXIT_CHANGE, this.actionExitChange);
+            this.actionMap.set(Shared.ROOM_ACTION.EXIT_DELETE, this.actionExitDelete);
+            this.actionMap.set(Shared.ROOM_ACTION.CAMERA_CHANGE, this.actionCameraChange);
+            this.actionMap.set(Shared.ROOM_ACTION.ROOM_PROP_CHANGE, this.actionRoomPropChange);
+            this.actionMap.set(Shared.ROOM_ACTION.ROOM_VAR_CHANGE, this.actionRoomVarChange);
         },
         bindReversions(){
-            this.revertMap.set(ROOM_ACTION.MOVE, this.revertMove);
-            this.revertMap.set(ROOM_ACTION.ADD, this.revertAdd);
-            this.revertMap.set(ROOM_ACTION.DELETE, this.revertDelete);
-            this.revertMap.set(ROOM_ACTION.INSTANCE_CHANGE, this.revertInstanceChange);
-            this.revertMap.set(ROOM_ACTION.INSTANCE_GROUP_CHANGE, this.revertInstanceGroupChange);
-            this.revertMap.set(ROOM_ACTION.INSTANCE_VAR_CHANGE, this.revertInstanceVarChange);
-            this.revertMap.set(ROOM_ACTION.EXIT_ADD, this.revertExitAdd);
-            this.revertMap.set(ROOM_ACTION.EXIT_CHANGE, this.revertExitChange);
-            this.revertMap.set(ROOM_ACTION.EXIT_DELETE, this.revertExitDelete);
-            this.revertMap.set(ROOM_ACTION.CAMERA_CHANGE, this.revertCameraChange);
-            this.revertMap.set(ROOM_ACTION.ROOM_PROP_CHANGE, this.revertRoomPropChange);
-            this.revertMap.set(ROOM_ACTION.ROOM_VAR_CHANGE, this.revertRoomVarChange);
+            this.revertMap.set(Shared.ROOM_ACTION.MOVE, this.revertMove);
+            this.revertMap.set(Shared.ROOM_ACTION.ADD, this.revertAdd);
+            this.revertMap.set(Shared.ROOM_ACTION.DELETE, this.revertDelete);
+            this.revertMap.set(Shared.ROOM_ACTION.INSTANCE_CHANGE, this.revertInstanceChange);
+            this.revertMap.set(Shared.ROOM_ACTION.INSTANCE_GROUP_CHANGE, this.revertInstanceGroupChange);
+            this.revertMap.set(Shared.ROOM_ACTION.INSTANCE_VAR_CHANGE, this.revertInstanceVarChange);
+            this.revertMap.set(Shared.ROOM_ACTION.EXIT_ADD, this.revertExitAdd);
+            this.revertMap.set(Shared.ROOM_ACTION.EXIT_CHANGE, this.revertExitChange);
+            this.revertMap.set(Shared.ROOM_ACTION.EXIT_DELETE, this.revertExitDelete);
+            this.revertMap.set(Shared.ROOM_ACTION.CAMERA_CHANGE, this.revertCameraChange);
+            this.revertMap.set(Shared.ROOM_ACTION.ROOM_PROP_CHANGE, this.revertRoomPropChange);
+            this.revertMap.set(Shared.ROOM_ACTION.ROOM_VAR_CHANGE, this.revertRoomVarChange);
         },
         resize() {
             this.$nextTick(()=>{
@@ -269,7 +264,7 @@ export default {
 
                 //get instances in same cell
                 for (let i = 0; i < nearbyInst.length; i++){
-                    if (compareVector(pos, nearbyInst[i].pos)){
+                    if (pos.isEqualTo(nearbyInst[i].pos)){
                         instInCell.push(nearbyInst[i]);
                     }
                 }
@@ -296,11 +291,11 @@ export default {
         mouseEvent(mEvent){
             let toolScript = this.toolMap.get(this.curToolSelection);
 
-            if (mEvent.type == MOUSE_EVENT.DOWN){
+            if (mEvent.type == Shared.MOUSE_EVENT.DOWN){
                 this.mouse.down = true;
                 this.mouse.wpLastDown.copy(mEvent.worldCell);
             }
-            else if (mEvent.type == MOUSE_EVENT.UP){
+            else if (mEvent.type == Shared.MOUSE_EVENT.UP){
                 this.mouse.down = false;
             }
             
@@ -310,28 +305,28 @@ export default {
         },
         toolSelectMove(mEvent){
             switch(mEvent.type){
-                case MOUSE_EVENT.DOWN:
+                case Shared.MOUSE_EVENT.DOWN:
                     if (this.editorSelection == null){
                         this.selectInstanceByPos(mEvent.worldCell);
                         this.mouse.newSelection = true;
                     }
-                    else if (compareVector(this.editorSelection.pos, mEvent.worldCell)){
+                    else if (this.editorSelection.pos.isEqualTo(mEvent.worldCell)){
                         this.mouse.downOnSelection = true;
                         this.mouse.cellCache.push(mEvent.worldCell.clone());
                     }
                     break;
-                case MOUSE_EVENT.MOVE:
+                case Shared.MOUSE_EVENT.MOVE:
                     if (
                         this.mouse.down &&
                         this.mouse.downOnSelection &&
-                        !compareVector(this.mouse.cellCache[0], mEvent.worldCell)
+                        !this.mouse.cellCache[0].isEqualTo(mEvent.worldCell)
                     ){
                         this.actionMove({instRef: this.editorSelection, newPos: mEvent.worldCell}, false);
                         this.mouse.cellCache[0].copy(mEvent.worldCell);
                     }
                     break;
-                case MOUSE_EVENT.UP:
-                    if (compareVector(mEvent.worldCell, this.mouse.wpLastDown) && !this.mouse.newSelection){
+                case Shared.MOUSE_EVENT.UP:
+                    if (mEvent.worldCell.isEqualTo(this.mouse.wpLastDown) && !this.mouse.newSelection){
                         this.selectInstanceByPos(mEvent.worldCell);
                     }
 
@@ -347,17 +342,17 @@ export default {
         },
         toolAddBrush(mEvent){
             switch(mEvent.type){
-                case MOUSE_EVENT.MOVE:
-                case MOUSE_EVENT.DOWN:
+                case Shared.MOUSE_EVENT.MOVE:
+                case Shared.MOUSE_EVENT.DOWN:
                     let hasVisited = false;
 
                     //check if cell has already been visited
                     for (let i = 0; i < this.mouse.cellCache.length; i++){
-                        hasVisited |= compareVector(this.mouse.cellCache[i], mEvent.worldCell);
+                        hasVisited |= this.mouse.cellCache[i].isEqualTo(mEvent.worldCell);
                     }
 
                     if (!hasVisited && this.mouse.down){
-                        if (this.mouse.down && this.selectedAsset?.category_ID == CATEGORY_ID.OBJECT){
+                        if (this.mouse.down && this.selectedAsset?.category_ID == Shared.CATEGORY_ID.OBJECT){
                             this.actionAdd({objId: this.selectedAsset.id, pos: mEvent.worldCell}, false);
                         }
                         
@@ -365,7 +360,7 @@ export default {
                     }
 
                     break;
-                case MOUSE_EVENT.UP:
+                case Shared.MOUSE_EVENT.UP:
                     this.actionAdd({}, true);
                     this.mouse.cellCache = [];
                     break;
@@ -373,17 +368,17 @@ export default {
         },
         toolEraser(mEvent){
             switch(mEvent.type){
-                case MOUSE_EVENT.MOVE:
-                case MOUSE_EVENT.DOWN:
+                case Shared.MOUSE_EVENT.MOVE:
+                case Shared.MOUSE_EVENT.DOWN:
                     let removedFromCell = false;
 
                     if (this.mouse.cellCache.length > 0){
-                        removedFromCell |= compareVector(this.mouse.cellCache[0], mEvent.worldCell);
+                        removedFromCell |= this.mouse.cellCache[0].isEqualTo(mEvent.worldCell);
                     }
 
                     if (!removedFromCell && this.mouse.down){
                         let instances = this.selectedRoom.getInstancesInRadius(mEvent.worldCell, 0);
-                        instances = instances.filter((i) => compareVector(i.pos, mEvent.worldCell));
+                        instances = instances.filter((i) => i.pos.isEqualTo(mEvent.worldCell));
                         instances.sort((a, b) => a.zDepth > b.zDepth);
 
                         if (instances.length > 0){
@@ -393,14 +388,14 @@ export default {
                         this.mouse.cellCache[0] = mEvent.worldCell;
                     }
                     break;
-                case MOUSE_EVENT.UP:
+                case Shared.MOUSE_EVENT.UP:
                     this.actionDelete({}, true);
             }
         },
         toolCamera(mEvent){
             switch(mEvent.type){
-                case MOUSE_EVENT.MOVE:
-                case MOUSE_EVENT.DOWN:
+                case Shared.MOUSE_EVENT.MOVE:
+                case Shared.MOUSE_EVENT.DOWN:
                     if (this.mouse.down){
                         this.actionCameraChange({newState: {pos: mEvent.worldCell}});
                     }
@@ -408,9 +403,9 @@ export default {
             }
         },
         toolExit(mEvent){
-            if (mEvent.type == MOUSE_EVENT.DOWN){
+            if (mEvent.type == Shared.MOUSE_EVENT.DOWN){
                 let exitAtCursor = this.selectedRoom.getExitsAtPosition(mEvent.worldCell)
-                    .find(e => compareVector(e.pos, mEvent.worldCell));
+                    .find(e => e.pos.isEqualTo(mEvent.worldCell));
 
                 if (exitAtCursor){
                     this.editorSelection = exitAtCursor;
@@ -424,7 +419,7 @@ export default {
             if (makeCommit){
                 let {instRef, oldPos} = this.undoStore.cache.get('move_start');
                 let data = {instId: instRef.id, instRef, newPos: instRef.pos.clone(), oldPos};
-                this.undoStore.commit({action: ROOM_ACTION.MOVE, data});
+                this.undoStore.commit({action: Shared.ROOM_ACTION.MOVE, data});
                 this.undoStore.cache.delete('move_start');
                 return;
             }
@@ -447,13 +442,13 @@ export default {
 
             if (makeCommit){
                 let data = {instRefList: cacheList};
-                this.undoStore.commit({action: ROOM_ACTION.ADD, data});
+                this.undoStore.commit({action: Shared.ROOM_ACTION.ADD, data});
                 this.undoStore.cache.delete('add_list');
                 return;
             }
 
             if (objId){
-                newInst = new Instance(this.selectedRoom.curInstId, pos, object);
+                newInst = new Shared.Instance(this.selectedRoom.curInstId, pos, object);
                 instRefList.push(newInst);
             }
 
@@ -476,7 +471,7 @@ export default {
 
             if (makeCommit){
                 let data = {instRefList: cacheList};
-                this.undoStore.commit({action: ROOM_ACTION.DELETE, data})
+                this.undoStore.commit({action: Shared.ROOM_ACTION.DELETE, data})
                 this.undoStore.cache.delete('delete_list');
                 return;
             }
@@ -512,7 +507,7 @@ export default {
 
             if (makeCommit){
                 let data = {newState, oldState, instRef: curInstance};
-                this.undoStore.commit({action: ROOM_ACTION.INSTANCE_CHANGE, data});
+                this.undoStore.commit({action: Shared.ROOM_ACTION.INSTANCE_CHANGE, data});
             }
         },
         actionInstanceGroupChange({add, groupName, newName, remove, oldIdx, instRef}, makeCommit = true){
@@ -539,7 +534,7 @@ export default {
 
             if (makeCommit){
                 let data = {add, groupName, newName, remove, oldIdx, instRef: this.editorSelection};
-                this.undoStore.commit({action: ROOM_ACTION.INSTANCE_GROUP_CHANGE, data});
+                this.undoStore.commit({action: Shared.ROOM_ACTION.INSTANCE_GROUP_CHANGE, data});
             }
         },
         actionInstanceVarChange({changeObj, instRef}, makeCommit = true){
@@ -549,7 +544,7 @@ export default {
 
             if (makeCommit){
                 let data = {changeObj, instRef: this.editorSelection};
-                this.undoStore.commit({action: ROOM_ACTION.INSTANCE_VAR_CHANGE, data});
+                this.undoStore.commit({action: Shared.ROOM_ACTION.INSTANCE_VAR_CHANGE, data});
             }
         },
         actionCameraChange({newState}, makeCommit = true){
@@ -560,11 +555,11 @@ export default {
 
             if (makeCommit){
                 let data = {newState, oldState};
-                this.undoStore.commit({action: ROOM_ACTION.CAMERA_CHANGE, data});
+                this.undoStore.commit({action: Shared.ROOM_ACTION.CAMERA_CHANGE, data});
             }
         },
         actionExitAdd({exitRef, pos}, makeCommit = true){
-            let newExit = exitRef ?? new Exit(this.selectedRoom.curExitId, pos);
+            let newExit = exitRef ?? new Shared.Exit(this.selectedRoom.curExitId, pos);
             let newExitName = this.$t('room_editor.new_exit_prefix') + newExit.id;
             this.selectedRoom.addExit(newExit);
 
@@ -573,7 +568,7 @@ export default {
 
             if (makeCommit){
                 let data = {exitRef: newExit, pos: pos.clone()};
-                this.undoStore.commit({action: ROOM_ACTION.EXIT_ADD, data});
+                this.undoStore.commit({action: Shared.ROOM_ACTION.EXIT_ADD, data});
             }
 
             return newExit;
@@ -586,7 +581,7 @@ export default {
 
             if (makeCommit){
                 let data = {newState, oldState, exitRef: this.editorSelection};
-                this.undoStore.commit({action: ROOM_ACTION.EXIT_CHANGE, data});
+                this.undoStore.commit({action: Shared.ROOM_ACTION.EXIT_CHANGE, data});
             }
         },
         actionExitDelete({exitId, pos}, makeCommit = true){
@@ -596,7 +591,7 @@ export default {
 
             if (makeCommit){
                 let data = {exitId, exitRef, pos};
-                this.undoStore.commit({action: ROOM_ACTION.EXIT_DELETE, data});
+                this.undoStore.commit({action: Shared.ROOM_ACTION.EXIT_DELETE, data});
             }
         },
         actionRoomPropChange({newState}, makeCommit = true){
@@ -610,7 +605,7 @@ export default {
 
             if (makeCommit){
                 let data = {newState, oldState};
-                this.undoStore.commit({action: ROOM_ACTION.ROOM_PROP_CHANGE, data});
+                this.undoStore.commit({action: Shared.ROOM_ACTION.ROOM_PROP_CHANGE, data});
             }
         },
         actionRoomVarChange({changeObj}, makeCommit = true){
@@ -619,7 +614,7 @@ export default {
 
             if (makeCommit){
                 let data = {changeObj};
-                this.undoStore.commit({action: ROOM_ACTION.ROOM_VAR_CHANGE, data});
+                this.undoStore.commit({action: Shared.ROOM_ACTION.ROOM_VAR_CHANGE, data});
             }
         },
         revertMove({instRef, oldPos}){

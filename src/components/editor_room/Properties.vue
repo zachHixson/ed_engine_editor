@@ -188,7 +188,6 @@
 </template>
 
 <script>
-import {ROOM_TOOL_TYPE, ENTITY_TYPE} from '@shared/Enums';
 import GroupList from '@/components/common/GroupList';
 import VarList from './VarList';
 import ColorPicker from '@/components/common/ColorPicker';
@@ -203,7 +202,7 @@ export default {
     },
     data(){
         return {
-            TOOL_ENUMS: ROOM_TOOL_TYPE,
+            TOOL_ENUMS: Shared.ROOM_TOOL_TYPE,
             objects: this.$store.getters['GameData/getAllObjects'],
             changeingBG: false,
         }
@@ -212,30 +211,30 @@ export default {
         showInstProps(){
             return (
                 this.selectedEntity &&
-                this.selectedEntity.TYPE == ENTITY_TYPE.INSTANCE &&
+                this.selectedEntity.TYPE == Shared.ENTITY_TYPE.INSTANCE &&
                 !this.showCameraProps &&
                 !this.showRoomProps
             );
         },
         showCameraProps(){
-            return (this.selectedTool == ROOM_TOOL_TYPE.CAMERA);
+            return (this.selectedTool == Shared.ROOM_TOOL_TYPE.CAMERA);
         },
         showExitProps(){
             return (
                 this.selectedEntity &&
-                this.selectedEntity.TYPE == ENTITY_TYPE.EXIT &&
+                this.selectedEntity.TYPE == Shared.ENTITY_TYPE.EXIT &&
                 !this.showCameraProps &&
                 !this.showRoomProps
             );
         },
         showRoomProps(){
-            return (this.selectedTool == ROOM_TOOL_TYPE.ROOM_PROPERTIES);
+            return (this.selectedTool == Shared.ROOM_TOOL_TYPE.ROOM_PROPERTIES);
         },
         showPlaceHolder(){
             return !(this.showInstProps || this.showCameraProps || this.showExitProps || this.showRoomProps);
         },
         destinationRoomExits(){
-            if (this.selectedEntity.TYPE == ENTITY_TYPE.EXIT){
+            if (this.selectedEntity.TYPE == Shared.ENTITY_TYPE.EXIT){
                 let allRooms = this.$store.getters['GameData/getAllRooms'];
                 let destRoom = allRooms.find(r => r.id == this.selectedEntity.destinationRoom);
                 if (destRoom){

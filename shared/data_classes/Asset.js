@@ -1,10 +1,6 @@
-import ID_Generator from '@shared/ID_Generator';
-import {CATEGORY_ID} from '@shared/Enums';
-import Victor from 'victor';
-
-class Asset{
+Shared.Asset = class {
     constructor(){
-        this.id = ID_Generator.newID();
+        this.id = Shared.ID_Generator.newID();
         this.name = this.id;
 
         if (window.EDITOR){
@@ -12,7 +8,7 @@ class Asset{
         }
     }
 
-    get category_ID(){return CATEGORY_ID.UNDEFINED}
+    get category_ID(){return Shared.CATEGORY_ID.UNDEFINED}
     get thumbnailData(){return null}
     get defaultNavState(){return {
         offset: new Victor(0, 0),
@@ -35,6 +31,4 @@ class Asset{
     }
 
     purgeMissingReferences(){}
-}
-
-export default Asset;
+};

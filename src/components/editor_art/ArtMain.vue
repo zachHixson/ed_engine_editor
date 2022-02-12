@@ -33,7 +33,6 @@
 
 <script>
 import Undo_Store from '@/components/common/Undo_Store';
-import {CATEGORY_ID, ART_TOOL_TYPE} from '@shared/Enums';
 import ToolPanel from './ToolPanel';
 import ArtCanvas from './ArtCanvas';
 import AnimationPanel from './AnimationPanel';
@@ -81,7 +80,7 @@ export default {
         selectedAsset(){
             this.undoStore.clear();
 
-            if (this.selectedAsset && this.selectedAsset.category_ID == CATEGORY_ID.SPRITE){
+            if (this.selectedAsset && this.selectedAsset.Shared.CATEGORY_ID == Shared.CATEGORY_ID.SPRITE){
                 let selectedFrame = this.$store.getters['ArtEditor/getSelectedFrame'];
 
                 this.updateFrameIDs()
@@ -105,15 +104,15 @@ export default {
         window.addEventListener('resize', this.resize);
         this.undoStore.setInitialState(this.packageUndoData());
 
-        this.toolMap.set(ART_TOOL_TYPE.BRUSH, (()=> new Brush()).bind(this));
-        this.toolMap.set(ART_TOOL_TYPE.BUCKET, (()=> new Bucket()).bind(this));
-        this.toolMap.set(ART_TOOL_TYPE.LINE, (()=> new Line_Brush()).bind(this));
-        this.toolMap.set(ART_TOOL_TYPE.BOX, (()=> new Box_Brush()).bind(this));
-        this.toolMap.set(ART_TOOL_TYPE.BOX_FILL, (()=> new Box_Brush(true)).bind(this));
-        this.toolMap.set(ART_TOOL_TYPE.ELLIPSE, (()=> new Ellipse_Brush()).bind(this));
-        this.toolMap.set(ART_TOOL_TYPE.ELLIPSE_FILL, (()=> new Ellipse_Brush(true)).bind(this));
-        this.toolMap.set(ART_TOOL_TYPE.ERASER, (()=> new Eraser()).bind(this));
-        this.toolMap.set(ART_TOOL_TYPE.EYE_DROPPER, (()=> new Eye_Dropper()).bind(this));
+        this.toolMap.set(Shared.ART_TOOL_TYPE.BRUSH, (()=> new Brush()).bind(this));
+        this.toolMap.set(Shared.ART_TOOL_TYPE.BUCKET, (()=> new Bucket()).bind(this));
+        this.toolMap.set(Shared.ART_TOOL_TYPE.LINE, (()=> new Line_Brush()).bind(this));
+        this.toolMap.set(Shared.ART_TOOL_TYPE.BOX, (()=> new Box_Brush()).bind(this));
+        this.toolMap.set(Shared.ART_TOOL_TYPE.BOX_FILL, (()=> new Box_Brush(true)).bind(this));
+        this.toolMap.set(Shared.ART_TOOL_TYPE.ELLIPSE, (()=> new Ellipse_Brush()).bind(this));
+        this.toolMap.set(Shared.ART_TOOL_TYPE.ELLIPSE_FILL, (()=> new Ellipse_Brush(true)).bind(this));
+        this.toolMap.set(Shared.ART_TOOL_TYPE.ERASER, (()=> new Eraser()).bind(this));
+        this.toolMap.set(Shared.ART_TOOL_TYPE.EYE_DROPPER, (()=> new Eye_Dropper()).bind(this));
 
         this.toolSelected(this.$store.getters['ArtEditor/getSelectedTool']);
     },

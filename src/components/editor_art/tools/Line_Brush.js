@@ -1,7 +1,4 @@
 import Tool from './Tool';
-import {ART_TOOL_SIZE} from '@shared/Enums';
-import Victor from 'victor';
-import {isInBounds, get2DIdx} from '@shared/Util_2D';
 
 class Line_Brush extends Tool{
     constructor(){
@@ -24,7 +21,7 @@ class Line_Brush extends Tool{
 
         if (
             this._mouseDown &&
-            isInBounds(this.startPos.x, this.startPos.y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)
+            Shared.isInBounds(this.startPos.x, this.startPos.y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)
         ){
             let dx = (this.mouseCell.x - this.startPos.x);
             let dy = (this.mouseCell.y - this.startPos.y);
@@ -54,16 +51,16 @@ class Line_Brush extends Tool{
 
         if (
             !this._mouseDown &&
-            isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
+            Shared.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
         ){
             switch(this.brushSize){
-                case ART_TOOL_SIZE.SMALL:
-                    this.previewBuff[get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = this.color;
+                case Shared.ART_TOOL_SIZE.SMALL:
+                    this.previewBuff[Shared.get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = this.color;
                     break;
-                case ART_TOOL_SIZE.MEDIUM:
+                case Shared.ART_TOOL_SIZE.MEDIUM:
                     this.fillRect(this.mouseCell.x, this.mouseCell.y, this.mouseCell.x + 1, this.mouseCell.y + 1);
                     break;
-                case ART_TOOL_SIZE.LARGE:
+                case Shared.ART_TOOL_SIZE.LARGE:
                     this.fillRect(this.mouseCell.x - 1, this.mouseCell.y - 1, this.mouseCell.x + 1, this.mouseCell.y + 1);
                     break;
             }
@@ -85,16 +82,16 @@ class Line_Brush extends Tool{
     }
 
     drawPixel(x, y){
-        if (isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
+        if (Shared.isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
             switch(this.brushSize){
-                case ART_TOOL_SIZE.SMALL:
-                    let xyIdx = get2DIdx(x, y, this.cellWidth);
+                case Shared.ART_TOOL_SIZE.SMALL:
+                    let xyIdx = Shared.get2DIdx(x, y, this.cellWidth);
                     this.previewBuff[xyIdx] = this.color;
                     break;
-                case ART_TOOL_SIZE.MEDIUM:
+                case Shared.ART_TOOL_SIZE.MEDIUM:
                     this.fillRect(x, y, x + 1, y + 1);
                     break;
-                case ART_TOOL_SIZE.LARGE:
+                case Shared.ART_TOOL_SIZE.LARGE:
                     this.fillRect(x - 1, y - 1, x + 1, y + 1);
                     break;
             }

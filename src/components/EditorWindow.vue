@@ -10,7 +10,6 @@
 
 <script>
 import {mapGetters} from 'vuex';
-import {EDITOR_ID} from '@shared/Enums';
 import RoomEditor from './editor_room/RoomMain';
 import ArtEditor from './editor_art/ArtMain';
 import ObjectEditor from './editor_object/ObjectMain';
@@ -25,13 +24,13 @@ export default {
         ...mapGetters(['selectedTab']),
         currentEditor(){
             switch(this.selectedTab){
-                case EDITOR_ID.ROOM:
+                case Shared.EDITOR_ID.ROOM:
                     return RoomEditor;
-                case EDITOR_ID.ART:
+                case Shared.EDITOR_ID.ART:
                     return ArtEditor;
-                case EDITOR_ID.OBJECT:
+                case Shared.EDITOR_ID.OBJECT:
                     return ObjectEditor;
-                case EDITOR_ID.LOGIC:
+                case Shared.EDITOR_ID.LOGIC:
                     return LogicEditor;
                 default:
                     return RoomEditor;

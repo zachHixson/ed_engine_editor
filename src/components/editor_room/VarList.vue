@@ -34,7 +34,7 @@
 </template>
 
 <script>
-import {getHighestEndingNumber, removeStroke} from '@shared/Util';
+// import {getHighestEndingNumber, removeStroke} from '@shared/Util';
 
 export default {
     name: 'VarList',
@@ -59,7 +59,7 @@ export default {
         },
         addVar(){
             let nameList = this.editList.map(v => v.name);
-            let nextNum = getHighestEndingNumber(nameList) + 1;
+            let nextNum = Shared.getHighestEndingNumber(nameList) + 1;
 
             this.$emit('var-changed', {
                 add: true,
@@ -70,8 +70,7 @@ export default {
                 let list = this.$refs.list;
                 list.scrollTop = list.scrollHeight - list.clientHeight;
             });
-        },
-        removeStroke
+        }
     }
 }
 </script>

@@ -36,8 +36,7 @@
 </template>
 
 <script>
-import {SOCKET_TYPE} from '@shared/nodes/Node_Enums';
-import Node_Connection from '@shared/data_classes/Node_Connection';
+// import Shared.Node_Connection from '@shared/data_classes/Shared.Node_Connection';
 
 export default {
     name: 'Socket',
@@ -49,7 +48,7 @@ export default {
     },
     computed: {
         SOCKET_TYPE(){
-            return SOCKET_TYPE;
+            return Shared.SOCKET_TYPE;
         },
         isTrigger(){
             return this.socket.type == undefined;
@@ -81,7 +80,7 @@ export default {
             });
         },
         mouseDown(event){
-            let connection = new Node_Connection();
+            let connection = new Shared.Node_Connection();
 
             event.stopPropagation();
 

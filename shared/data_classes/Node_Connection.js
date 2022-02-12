@@ -1,4 +1,4 @@
-class Node_Connection{
+Shared.Node_Connection = class {
     constructor(inpObj = {}){
         this.id = inpObj.id;
         this.type = inpObj.type;
@@ -36,6 +36,4 @@ class Node_Connection{
     updateComponent(){
         this.connectionComponent.update();
     }
-}
-
-export default Node_Connection;
+};

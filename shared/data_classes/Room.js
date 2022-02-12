@@ -1,17 +1,9 @@
-import Victor from 'victor';
-import Asset from '@shared/data_classes/Asset';
-import Camera from '@shared/data_classes/Camera';
-import {CATEGORY_ID} from '@shared/Enums';
-import Spacial_Collection from '@shared/data_classes/Spacial_Collection';
-import Instance from '@shared/data_classes/Instance';
-import Exit from '@shared/data_classes/Exit';
-
-class Room extends Asset{
+Shared.Room = class extends Shared.Asset{
     constructor(){
         super();
-        this.camera = new Camera();
-        this.instances = new Spacial_Collection(2000, 64);
-        this.exits = new Spacial_Collection(2000, 64);
+        this.camera = new Shared.Camera();
+        this.instances = new Shared.Spacial_Collection(2000, 64);
+        this.exits = new Shared.Spacial_Collection(2000, 64);
         this.bgColor = "#FFFFFF";
         this.persist = false;
         this.useGravity = false;
@@ -21,7 +13,7 @@ class Room extends Asset{
         this._curExitId = 0;
     }
     
-    get category_ID(){return CATEGORY_ID.ROOM}
+    get category_ID(){return Shared.CATEGORY_ID.ROOM}
     get zSortedList(){return this.instances.zSort}
     get exitsList(){return this.exits.zSort}
     get curInstId(){return this._curInstId++};
@@ -44,12 +36,12 @@ class Room extends Asset{
     fromSaveData(room, objectList){
         Object.assign(this, room);
         this.navState = this.parseNavData(room.navState);
-        this.camera = new Camera().fromSaveData(room.cameraProps);
+        this.camera = new Shared.Camera().fromSaveData(room.cameraProps);
 
         for (let i = 0; i < room.instancesSerial.length; i++){
             let curInstance = room.instancesSerial[i];
             let objRef = objectList.find(o => o.id == curInstance.objId);
-            let newInstance = new Instance(curInstance.id, Victor.fromObject(curInstance.pos), objRef);
+            let newInstance = new Shared.Instance(curInstance.id, Victor.fromObject(curInstance.pos), objRef);
             
             this.addInstance(newInstance)
             this._curInstId = Math.max(newInstance.id + 1, this._curInstId);
@@ -61,7 +53,7 @@ class Room extends Asset{
 
         for (let i = 0; i < room.exitsSerial.length; i++){
             let curExitData = room.exitsSerial[i];
-            let newExit = new Exit(curExitData.id).fromSaveData(curExitData);
+            let newExit = new Shared.Exit(curExitData.id).fromSaveData(curExitData);
             this._curExitId = Math.max(newExit.id + 1, this._curExitId);
             this.exits.add(newExit, newExit.pos);
         }
@@ -164,6 +156,4 @@ class Room extends Asset{
 
         return bounds;
     }
-}
-
-export default Room;
+};

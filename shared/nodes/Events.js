@@ -1,4 +1,7 @@
-import {SOCKET_TYPE} from '@shared/nodes/Node_Enums';
+waitForSharedDependencies(['SOCKET_TYPE'], ()=>{
+
+Shared.DEFAULT_EVENTS = new Map();
+const {SOCKET_TYPE} = Shared;
 
 const defaultEvents = [
     {
@@ -60,10 +63,11 @@ const defaultEvents = [
         ],
     },
 ];
-export const DEFAULT_EVENTS = new Map();
 
 defaultEvents.forEach(event => {
-    DEFAULT_EVENTS.set(event.id, event);
+    Shared.DEFAULT_EVENTS.set(event.id, event);
 });
 
-Object.freeze(DEFAULT_EVENTS);
+Object.freeze(Shared.DEFAULT_EVENTS);
+
+});

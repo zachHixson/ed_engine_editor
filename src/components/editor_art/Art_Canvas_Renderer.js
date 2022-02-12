@@ -1,7 +1,3 @@
-import Victor from 'victor';
-import {drawCheckerBG, drawPixelData} from '@shared/Draw_2D';
-import {getSpriteDimensions} from '@shared/Util_2D';
-
 export default class Art_Canvas_Renderer{
     constructor(element, spriteData, previewData, navState){
         this.canvas = element;
@@ -14,7 +10,7 @@ export default class Art_Canvas_Renderer{
         this.previewData = previewData;
         this.navState = navState;
 
-        this.GRID_DIV = getSpriteDimensions(spriteData);
+        this.GRID_DIV = Shared.getSpriteDimensions(spriteData);
         this.CANVAS_WIDTH = this.GRID_DIV * 20;
 
         Object.defineProperty(this, "GRID_DIV", {configurable: false, writable: false});
@@ -120,7 +116,7 @@ export default class Art_Canvas_Renderer{
     }
 
     drawCheckerBG(canvas = this.checkerBGBuff){
-        drawCheckerBG(canvas, 10, "#B5B5B5", "#CCCCCC");
+        Shared.drawCheckerBG(canvas, 10, "#B5B5B5", "#CCCCCC");
     }
 
     drawBGStencil(ctx = this.checkerStencilBuff.getContext('2d')){
@@ -146,7 +142,7 @@ export default class Art_Canvas_Renderer{
             let ctx = canvas.getContext('2d');
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawPixelData(canvas, pixelData);
+            Shared.drawPixelData(canvas, pixelData);
         }
     }
 

@@ -1,7 +1,3 @@
-import {ART_TOOL_SIZE} from '@shared/Enums';
-import {get2DIdx} from '@shared/Util_2D';
-import {clamp} from '@shared/Util';
-
 class Tool{
     constructor(){
         this.previewBuff = null;
@@ -11,18 +7,18 @@ class Tool{
         this.color = "#FFFFFF";
         this.size = null;
         this._mouseDown = false;
-        this.brushSize = ART_TOOL_SIZE.SMALL;
+        this.brushSize = Shared.ART_TOOL_SIZE.SMALL;
         this.canDraw = true;
         this.commitCallback;
     }
 
     get brushPxSize(){
         switch(this.brushSize){
-            case ART_TOOL_SIZE.SMALL:
+            case Shared.ART_TOOL_SIZE.SMALL:
                 return 0
-            case ART_TOOL_SIZE.MEDIUM:
+            case Shared.ART_TOOL_SIZE.MEDIUM:
                 return 1
-            case ART_TOOL_SIZE.LARGE:
+            case Shared.ART_TOOL_SIZE.LARGE:
                 return 2
             default:
                 return 0
@@ -115,14 +111,14 @@ class Tool{
     }
 
     fillRect(x1, y1, x2, y2, color = this.color){
-        let startX = clamp(x1, 0, this.cellWidth - 1);
-        let startY = clamp(y1, 0, this.cellWidth - 1);
-        let endX = clamp(x2, 0, this.cellWidth - 1);
-        let endY = clamp(y2, 0, this.cellWidth - 1);
+        let startX = Shared.clamp(x1, 0, this.cellWidth - 1);
+        let startY = Shared.clamp(y1, 0, this.cellWidth - 1);
+        let endX = Shared.clamp(x2, 0, this.cellWidth - 1);
+        let endY = Shared.clamp(y2, 0, this.cellWidth - 1);
 
         for (let x = startX; x <= endX; x++){
             for (let y = startY; y <= endY; y++){
-                this.previewBuff[get2DIdx(x, y, this.cellWidth)] = color;
+                this.previewBuff[Shared.get2DIdx(x, y, this.cellWidth)] = color;
             }
         }
     }

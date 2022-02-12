@@ -23,9 +23,6 @@
 </template>
 
 <script>
-import Victor from 'victor';
-import {HSVToRGB, RGBAToHex, hexToRGBA, RGBToHSV} from '@shared/Draw_2D';
-
 export default {
     name: 'ColorPicker',
     props: ['color', 'width'],
@@ -85,7 +82,7 @@ export default {
                 let hue = (Math.atan2(relPos.y, relPos.x) + Math.PI) * (180 / Math.PI);
                 let sat = relPos.length() * 1.15;
                 let val = 1;
-                let rgb = HSVToRGB(hue, sat, val);
+                let rgb = Shared.HSVToRGB(hue, sat, val);
 
                 colors[i + 0] = rgb.r;
                 colors[i + 1] = rgb.g;
@@ -165,8 +162,8 @@ export default {
                 imgData[baseIdx + 1],
                 imgData[baseIdx + 2],
             ];
-            let hexHS = RGBAToHex(...[...rgbArr, 255]);
-            let hexHSV = RGBAToHex(...[...rgbArr.map(c => Math.round(c * this.valuePos)), 255]);
+            let hexHS = Shared.RGBAToHex(...[...rgbArr, 255]);
+            let hexHSV = Shared.RGBAToHex(...[...rgbArr.map(c => Math.round(c * this.valuePos)), 255]);
 
             this.selectedHS = hexHS;
             this.selectedColor = hexHSV;
@@ -179,8 +176,8 @@ export default {
             let wheelPos = new Victor(wheelBounds.left, wheelBounds.top);
             let sliderX = this.slider.getBoundingClientRect().left;
             let halfCanvas = this.canvas.width / 2;
-            let rgb = hexToRGBA(hex);
-            let hsv = RGBToHSV(rgb.r, rgb.g, rgb.b);
+            let rgb = Shared.hexToRGBA(hex);
+            let hsv = Shared.RGBToHSV(rgb.r, rgb.g, rgb.b);
             let hueRad = hsv.hue * (Math.PI / 180)
             let pos = new Victor(-Math.cos(hueRad), -Math.sin(hueRad)).multiplyScalar(hsv.sat * halfCanvas);
 

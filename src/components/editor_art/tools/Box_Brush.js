@@ -1,7 +1,4 @@
 import Tool from './Tool';
-import {ART_TOOL_SIZE} from '@shared/Enums';
-import Victor from 'victor';
-import {isInBounds, get2DIdx} from '@shared/Util_2D';
 
 class Box_Brush extends Tool{
     constructor(isFilled = false){
@@ -25,23 +22,23 @@ class Box_Brush extends Tool{
 
         if (
             this._mouseDown &&
-            isInBounds(this.startPos.x, this.startPos.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
+            Shared.isInBounds(this.startPos.x, this.startPos.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
         ){
             this.drawBox(this.startPos, this.mouseCell, this.brushPxSize);
         }
 
         if (
             !this._mouseDown &&
-            isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
+            Shared.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
         ){
             switch(this.brushSize){
-                case ART_TOOL_SIZE.SMALL:
-                    this.previewBuff[get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = this.color;
+                case Shared.ART_TOOL_SIZE.SMALL:
+                    this.previewBuff[Shared.get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = this.color;
                     break;
-                case ART_TOOL_SIZE.MEDIUM:
+                case Shared.ART_TOOL_SIZE.MEDIUM:
                     this.fillRect(this.mouseCell.x, this.mouseCell.y, this.mouseCell.x + 1, this.mouseCell.y + 1);
                     break;
-                case ART_TOOL_SIZE.LARGE:
+                case Shared.ART_TOOL_SIZE.LARGE:
                     this.fillRect(this.mouseCell.x, this.mouseCell.y, this.mouseCell.x + 2, this.mouseCell.y + 2);
                     break;
             }
@@ -56,9 +53,9 @@ class Box_Brush extends Tool{
 
         for (let x = x1; x <= x2; x++){
             for (let y = y1; y <= y2; y++){
-                let xyIdx = get2DIdx(x, y, this.cellWidth);
+                let xyIdx = Shared.get2DIdx(x, y, this.cellWidth);
                 
-                if (isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
+                if (Shared.isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
                     if (this.isFilled){
                         this.previewBuff[xyIdx] = this.color;
                     }

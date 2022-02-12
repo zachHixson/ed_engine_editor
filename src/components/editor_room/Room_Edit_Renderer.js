@@ -1,7 +1,3 @@
-import Victor from 'victor';
-import {drawPixelData, hexToRGBA, RGBAToHex} from '@shared/Draw_2D';
-import {mod, clamp} from '@shared/Util';
-
 const NO_SPRITE_PADDING = 0.75;
 
 export default class Room_Edit_Renderer{
@@ -159,7 +155,7 @@ export default class Room_Edit_Renderer{
         let ctx = this.canvas.getContext('2d');
         let iconCtx = this.iconBuff.getContext('2d');
         let iconColorCtx = this.iconColor.getContext('2d');
-        let bgColor = hexToRGBA(this.roomRef?.bgColor ?? '#FFFFFF');
+        let bgColor = Shared.hexToRGBA(this.roomRef?.bgColor ?? '#FFFFFF');
         let luma = Math.max(Math.max(bgColor.r, bgColor.g), bgColor.b);
 
         //composite icon and iconColor buffs together
@@ -235,7 +231,7 @@ export default class Room_Edit_Renderer{
 
                 if (!spriteBuff){
                     spriteBuff = this.newSpriteBuff();
-                    drawPixelData(spriteBuff, inst.editorFrame);
+                    Shared.drawPixelData(spriteBuff, inst.editorFrame);
                     this.spriteCache.set(inst.editorFrameID, spriteBuff);
                 }
 
@@ -304,7 +300,7 @@ export default class Room_Edit_Renderer{
         let ctx = this.cursorBuff.getContext('2d');
         let selectionCtx = this.selectionBuff.getContext('2d');
         let screenCell = this.worldToScreenPos(this.getMouseWorldCell());
-        let bgColor = hexToRGBA(this.roomRef?.bgColor ?? '#FFFFFF');
+        let bgColor = Shared.hexToRGBA(this.roomRef?.bgColor ?? '#FFFFFF');
         let luma = Math.max(Math.max(bgColor.r, bgColor.g), bgColor.b);
         let shiftDir = (luma > 127) ? -CURSOR_SHIFT : CURSOR_SHIFT;
 
@@ -313,7 +309,7 @@ export default class Room_Edit_Renderer{
 
         //draw mouse cursor
         if (this.enableCursor){
-            ctx.fillStyle = RGBAToHex(bgColor.r + shiftDir, bgColor.g + shiftDir, bgColor.b + shiftDir, 120);
+            ctx.fillStyle = Shared.RGBAToHex(bgColor.r + shiftDir, bgColor.g + shiftDir, bgColor.b + shiftDir, 120);
             ctx.fillRect(screenCell.x, screenCell.y, this.scaledCellWidth, this.scaledCellWidth);
         }
 
@@ -335,12 +331,12 @@ export default class Room_Edit_Renderer{
         let maxDim = Math.max(this.gridBuff.width, this.gridBuff.height);
         let lineCount = Math.ceil(maxDim / this.scaledCellWidth);
         let origin = new Victor(0, 0);
-        let bgCol = hexToRGBA(this.roomRef?.bgColor ?? '#2aa4f5');
+        let bgCol = Shared.hexToRGBA(this.roomRef?.bgColor ?? '#2aa4f5');
         let luma = Math.max(Math.max(bgCol.r, bgCol.g), bgCol.b);
         let gridShiftAmt = (luma > 127) ? -GRID_SHIFT : GRID_SHIFT;
-        let gridCol = RGBAToHex(bgCol.r + gridShiftAmt, bgCol.g + gridShiftAmt, bgCol.b + gridShiftAmt);
-        let xAxisCol = RGBAToHex(bgCol.r + AXIS_SHIFT, bgCol.g - AXIS_SHIFT, bgCol.b - AXIS_SHIFT);
-        let yAxisCol = RGBAToHex(bgCol.r - AXIS_SHIFT, bgCol.g + AXIS_SHIFT, bgCol.b - AXIS_SHIFT);
+        let gridCol = Shared.RGBAToHex(bgCol.r + gridShiftAmt, bgCol.g + gridShiftAmt, bgCol.b + gridShiftAmt);
+        let xAxisCol = Shared.RGBAToHex(bgCol.r + AXIS_SHIFT, bgCol.g - AXIS_SHIFT, bgCol.b - AXIS_SHIFT);
+        let yAxisCol = Shared.RGBAToHex(bgCol.r - AXIS_SHIFT, bgCol.g + AXIS_SHIFT, bgCol.b - AXIS_SHIFT);
 
         lineCount += (lineCount % 2 == 0) ? 1 : 0;
         this.worldToScreenPos(origin);
@@ -359,8 +355,8 @@ export default class Room_Edit_Renderer{
                 this.worldToScreenPos(pos);
 
                 //wrap lines around canvas
-                pos.x = mod(pos.x, this.roundedCanvas.x);
-                pos.y = mod(pos.y, this.roundedCanvas.y);
+                pos.x = Shared.mod(pos.x, this.roundedCanvas.x);
+                pos.y = Shared.mod(pos.y, this.roundedCanvas.y);
 
                 //draw lines
                 pos.unfloat();

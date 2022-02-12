@@ -1,8 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import {version as EDITOR_VERSION} from '@/../package.json';
-import ID_Generator from '@shared/ID_Generator';
-import {CATEGORY_ID} from '@shared/Enums';
+// import {Shared.CATEGORY_ID} from '@shared/Enums';
 import MainWindow from './modules/MainWindow';
 import GameData from './modules/GameData';
 import ArtEditor from './modules/ArtEditor';
@@ -24,7 +23,7 @@ export default new Vuex.Store({
             let saveObj = {
                 projectName: state.projectName,
                 editor_version: EDITOR_VERSION,
-                newestID: ID_Generator.getCurrentID(),
+                newestID: Shared.ID_Generator.getCurrentID(),
                 selectedRoomId: AssetBrowser.state.selectedRoom.id,
                 startRoom: getters['GameData/getStartRoom'],
                 sprites: getters['GameData/getSpriteSaveData'],
@@ -45,7 +44,7 @@ export default new Vuex.Store({
             let newRoom = null;
 
             commit('newProject');
-            dispatch('GameData/addAsset', CATEGORY_ID.ROOM);
+            dispatch('GameData/addAsset', Shared.CATEGORY_ID.ROOM);
             newRoom = getters['GameData/getAllRooms'][0];
             dispatch('AssetBrowser/selectRoom', newRoom);
         },
@@ -74,14 +73,14 @@ export default new Vuex.Store({
             gameData.sprites = [];
             gameData.objects = [];
             gameData.rooms = [];
-            ID_Generator.reset();
+            Shared.ID_Generator.reset();
         },
         loadSaveData: (state, loadObj) => {
             let gameData = GameData.state;
             
             state.projectName = loadObj.projectName;
             gameData.editor_version = loadObj.editor_version;
-            ID_Generator.setID(loadObj.newestID);
+            Shared.ID_Generator.setID(loadObj.newestID);
         },
         setInputActive: (state, newState) => {
             state.inputActive = newState;

@@ -1,13 +1,9 @@
-import {ENTITY_TYPE} from '@shared/Enums';
-import Victor from 'victor';
+Shared.Exit = class {
+    static TRANSITION = {
+        NONE: 0,
+        FADE: 1
+    }
 
-const TRANSITION = {
-    NONE: 0,
-    FADE: 1
-}
-Object.freeze(TRANSITION)
-
-class Exit{
     constructor(id, pos = {x:0, y:0}){
         this.id = id;
         this.name = this.id.toString();
@@ -15,12 +11,12 @@ class Exit{
         this.isEnding = false;
         this.destinationRoom = null;
         this.destinationExit = null;
-        this.transition = TRANSITION.NONE;
+        this.transition = Shared.Exit.TRANSITION.NONE;
         this.endingDialog = "";
     }
 
-    get TYPE(){return ENTITY_TYPE.EXIT};
-    get TRANSITION_TYPES(){return TRANSITION};
+    get TYPE(){return Shared.ENTITY_TYPE.EXIT};
+    get TRANSITION_TYPES(){return Shared.Exit.TRANSITION};
 
     toSaveData(){
         let sanitized = {};
@@ -38,6 +34,4 @@ class Exit{
 
         return this;
     }
-}
-
-export default Exit;
+};

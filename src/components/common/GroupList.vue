@@ -31,7 +31,6 @@
 </template>
 
 <script>
-import {getHighestEndingNumber} from '@shared/Util';
 
 export default {
     name: 'GroupList',
@@ -53,8 +52,8 @@ export default {
         },
         addGroup(){
             let nextNum = Math.max(
-                getHighestEndingNumber(this.editList),
-                (this.readOnlyList) ? getHighestEndingNumber(this.readOnlyList) : []
+                Shared.getHighestEndingNumber(this.editList),
+                (this.readOnlyList) ? Shared.getHighestEndingNumber(this.readOnlyList) : []
             ) + 1;
 
             this.$emit('group-changed', {

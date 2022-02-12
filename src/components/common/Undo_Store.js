@@ -1,10 +1,8 @@
-import Linked_List from '@shared/Linked_List';
-
 class Undo_Store{
     constructor(stepLimit = 1, returnPrevStep = true){
         this.stepLimit = stepLimit;
-        this.undoStore = new Linked_List();
-        this.redoStore = new Linked_List();
+        this.undoStore = new Shared.Linked_List();
+        this.redoStore = new Shared.Linked_List();
         this.initialState = null;
         this.returnPrevStep = returnPrevStep;
         this.cache = new Map();

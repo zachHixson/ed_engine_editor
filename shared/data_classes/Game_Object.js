@@ -1,7 +1,4 @@
-import Asset from '@shared/data_classes/Asset';
-import {CATEGORY_ID} from '@shared/Enums';
-
-class Game_Object extends Asset{
+Shared.Game_Object = class extends Shared.Asset{
     constructor(){
         super();
         this.sprite = null;
@@ -58,7 +55,7 @@ class Game_Object extends Asset{
         }
     }
 
-    get category_ID(){return CATEGORY_ID.OBJECT}
+    get category_ID(){return Shared.CATEGORY_ID.OBJECT}
     get startFrame(){return this._startFrame}
     get editorFrame(){return this.thumbnailData;}
     get editorFrameID(){return this.sprite.frameIDs[this._startFrame]}
@@ -66,6 +63,4 @@ class Game_Object extends Asset{
     set startFrame(frame){
         this._startFrame = Math.max(Math.min(frame, this.sprite.frames.length - 1), 0);
     }
-}
-
-export default Game_Object;
+};

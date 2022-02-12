@@ -1,14 +1,24 @@
-import {ART_TOOL_SIZE, ART_TOOL_TYPE} from '@shared/Enums';
-
 const state = {
     selectedColor : "#FFFFFF",
-    selectedSize: ART_TOOL_SIZE.SMALL,
-    selectedTool: ART_TOOL_TYPE.BRUSH,
+    selectedSize: null,
+    selectedTool: null,
     selectedNavTool: null,
     selectedFrame: 0,
     toolPanelOpen: true,
     animPanelOpen: false
 }
+
+const init = ()=>{
+    if (!window.Shared){
+        setTimeout(init);
+        return;
+    }
+
+    state.selectedSize = Shared.ART_TOOL_SIZE.SMALL;
+    state.selectedTool = Shared.ART_TOOL_TYPE.BRUSH;
+}
+
+init();
 
 const getters = {
     getSelectedColor: state => state.selectedColor,

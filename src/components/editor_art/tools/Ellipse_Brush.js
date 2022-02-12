@@ -1,7 +1,4 @@
 import Tool from './Tool';
-import {ART_TOOL_SIZE} from '@shared/Enums';
-import Victor from 'victor';
-import {isInBounds, get2DIdx} from '@shared/Util_2D';
 
 class Ellipse_Brush extends Tool{
     constructor(isFilled = false){
@@ -25,16 +22,16 @@ class Ellipse_Brush extends Tool{
 
         if (
             this._mouseDown &&
-            isInBounds(this.startPos.x, this.startPos.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
+            Shared.isInBounds(this.startPos.x, this.startPos.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
         ){
             this.drawEllipse(this.startPos, this.mouseCell, this.brushPxSize);
         }
 
         if (
             !this._mouseDown &&
-            isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
+            Shared.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
         ){
-            this.previewBuff[get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = this.color;
+            this.previewBuff[Shared.get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = this.color;
         }
     }
 
@@ -51,8 +48,8 @@ class Ellipse_Brush extends Tool{
 
         for (let x = x1; x <= x2; x++){
             for (let y = y1; y <= y2; y++){
-                if (isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
-                    let xyIdx = get2DIdx(x, y, this.cellWidth);
+                if (Shared.isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
+                    let xyIdx = Shared.get2DIdx(x, y, this.cellWidth);
                     let curPoint = this.isPointInEllipse(new Victor(x, y), midPoint, a, b);
                     let innerA = a - thickness;
                     let innerB = b - thickness;

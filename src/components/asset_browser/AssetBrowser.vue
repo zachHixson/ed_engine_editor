@@ -49,7 +49,6 @@
 </template>
 
 <script>
-import {CATEGORY_ID} from '@shared/Enums';
 import Asset from './Asset';
 
 export default {
@@ -59,22 +58,22 @@ export default {
             selected_category: null,
             categories: [
                 {
-                    cat_ID: CATEGORY_ID.SPRITE,
+                    cat_ID: Shared.CATEGORY_ID.SPRITE,
                     text: this.$t("asset_browser.sprites"),
                     icon: 'assets/sprite_icon'
                 },
                 {
-                    cat_ID: CATEGORY_ID.OBJECT,
+                    cat_ID: Shared.CATEGORY_ID.OBJECT,
                     text: this.$t("asset_browser.objects"),
                     icon: 'assets/object_icon'
                 },
                 {
-                    cat_ID: CATEGORY_ID.LOGIC,
+                    cat_ID: Shared.CATEGORY_ID.LOGIC,
                     text: this.$t("asset_browser.logic"),
                     icon: 'assets/logic'
                 },
                 {
-                    cat_ID: CATEGORY_ID.ROOM,
+                    cat_ID: Shared.CATEGORY_ID.ROOM,
                     text: this.$t("asset_browser.rooms"),
                     icon: 'assets/room_icon'
                 }
@@ -87,13 +86,13 @@ export default {
     computed: {
         selectedList(){
             switch(this.selected_category.cat_ID){
-                case CATEGORY_ID.SPRITE:
+                case Shared.CATEGORY_ID.SPRITE:
                     return this.$store.getters['GameData/getAllSprites'];
-                case CATEGORY_ID.OBJECT:
+                case Shared.CATEGORY_ID.OBJECT:
                     return this.$store.getters['GameData/getAllObjects'];
-                case CATEGORY_ID.LOGIC:
+                case Shared.CATEGORY_ID.LOGIC:
                     return this.$store.getters['GameData/getAllLogic'];
-                case CATEGORY_ID.ROOM:
+                case Shared.CATEGORY_ID.ROOM:
                     return this.$store.getters['GameData/getAllRooms'];
             }
 
@@ -126,7 +125,7 @@ export default {
             let selectedAsset = null;
 
             //determine which type of asset has been deleted
-            if (asset.category_ID == CATEGORY_ID.ROOM){
+            if (asset.category_ID == Shared.CATEGORY_ID.ROOM){
                 selectedAsset = this.$store.getters['AssetBrowser/getSelectedRoom'];
             }
             else{
@@ -147,7 +146,7 @@ export default {
                 catId = asset.category_ID;
             }
 
-            if (catId == CATEGORY_ID.ROOM){
+            if (catId == Shared.CATEGORY_ID.ROOM){
                 this.$store.dispatch('AssetBrowser/selectRoom', asset);
             }
             else{

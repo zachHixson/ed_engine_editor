@@ -1,10 +1,4 @@
 import i18n from '@/i18n';
-import {CATEGORY_ID} from '@shared/Enums';
-import Sprite from '@shared/data_classes/Sprite';
-import Game_Object from '@shared/data_classes/Game_Object';
-import Logic from '@shared/data_classes/Logic';
-import Room from '@shared/data_classes/Room';
-import {getHighestEndingNumber} from '@shared/Util';
 
 const state = {
     startRoomId: null,
@@ -75,27 +69,27 @@ const mutations = {
     },
     addAsset: (state, category) => {
         switch (category){
-            case CATEGORY_ID.SPRITE:
+            case Shared.CATEGORY_ID.SPRITE:
                 let spriteName = i18n.tc(`asset_browser.sprite_prefix`) + getSuffixNum(state.sprites);
-                let newSprite = new Sprite();
+                let newSprite = new Shared.Sprite();
                 newSprite.name = spriteName;
                 state.sprites.push(newSprite);
                 break;
-            case CATEGORY_ID.OBJECT:
+            case Shared.CATEGORY_ID.OBJECT:
                 let objName = i18n.tc(`asset_browser.object_prefix`) + getSuffixNum(state.objects);
-                let newObject = new Game_Object();
+                let newObject = new Shared.Game_Object();
                 newObject.name = objName;
                 state.objects.push(newObject);
                 break;
-            case CATEGORY_ID.LOGIC:
+            case Shared.CATEGORY_ID.LOGIC:
                 let logicName = i18n.tc(`asset_browser.logic_prefix`) + getSuffixNum(state.logic);
-                let newLogic = new Logic();
+                let newLogic = new Shared.Logic();
                 newLogic.name = logicName;
                 state.logic.push(newLogic);
                 break;
-            case CATEGORY_ID.ROOM:
+            case Shared.CATEGORY_ID.ROOM:
                 let roomName = i18n.tc(`asset_browser.room_prefix`) + getSuffixNum(state.rooms);
-                let newRoom = new Room();
+                let newRoom = new Shared.Room();
                 newRoom.name = roomName;
                 state.rooms.push(newRoom);
                 break;
@@ -106,16 +100,16 @@ const mutations = {
         let hasFound = false;
 
         switch(category){
-            case CATEGORY_ID.SPRITE:
+            case Shared.CATEGORY_ID.SPRITE:
                 curList = state.sprites;
                 break;
-            case CATEGORY_ID.OBJECT:
+            case Shared.CATEGORY_ID.OBJECT:
                 curList = state.objects;
                 break;
-            case CATEGORY_ID.LOGIC:
+            case Shared.CATEGORY_ID.LOGIC:
                 curList = state.logic;
                 break;
-            case CATEGORY_ID.ROOM:
+            case Shared.CATEGORY_ID.ROOM:
                 curList = state.rooms;
                 break;
         }
@@ -129,10 +123,10 @@ const mutations = {
     },
     loadSaveData(state, loadObj){
         state.startRoomId = loadObj.startRoomId;
-        state.sprites = loadObj.sprites.map(s => new Sprite().fromSaveData(s));
-        state.objects = loadObj.objects.map(o => new Game_Object().fromSaveData(o, state.sprites));
-        state.rooms = loadObj.rooms.map(r => new Room().fromSaveData(r, state.objects));
-        state.logic = loadObj.logic.map(l => new Logic().fromSaveData(l));
+        state.sprites = loadObj.sprites.map(s => new Shared.Sprite().fromSaveData(s));
+        state.objects = loadObj.objects.map(o => new Shared.Game_Object().fromSaveData(o, state.sprites));
+        state.rooms = loadObj.rooms.map(r => new Shared.Room().fromSaveData(r, state.objects));
+        state.logic = loadObj.logic.map(l => new Shared.Logic().fromSaveData(l));
     },
     purgeMissingReferences(){
         state.objects.forEach(o => o.purgeMissingReferences(state.sprites));
@@ -144,7 +138,7 @@ function getSuffixNum(list){
     const PADDING = 2;
     let requiredDigits;
     let nameList = list.map(l => l.name);
-    let largest = getHighestEndingNumber(nameList);
+    let largest = Shared.getHighestEndingNumber(nameList);
     let output = "";
 
     largest++;
