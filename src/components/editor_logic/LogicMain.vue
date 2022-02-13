@@ -639,6 +639,8 @@ export default {
         },
         nodeDown(node){
             let alreadySelected = !!this.selectedNodes.find(n => n.nodeId == node.nodeId);
+            let navHotkeyActive = this.$refs.navControlPanel.hotkeyTool != null;
+            let navToolSelected = this.$store.getters['LogicEditor/getSelectedNavTool'] != null;
 
             if (!alreadySelected) {
                 if (!this.shiftDown){
@@ -648,7 +650,9 @@ export default {
                 this.selectedNodes.push(node);
             }
 
-            this.isDraggingNode = true;
+            if (!(navHotkeyActive || navToolSelected)){
+                this.isDraggingNode = true;
+            }
         },
         nodeMoveEnd(){
             this.actionMoveNodes({nodeRefList: this.selectedNodes}, true);
