@@ -40,7 +40,7 @@ Shared.Game_Object = class extends Shared.Asset{
     }
 
     fromSaveData(object, spriteList){
-        super.fromSaveData(object);
+        Object.assign(this, object);
         this.sprite = spriteList.find(s => s.id == this.sprite) ?? null;
         return this;
     }

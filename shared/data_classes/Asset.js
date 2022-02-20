@@ -26,7 +26,6 @@ Shared.Asset = class {
 
     fromSaveData(data){
         Object.assign(this, data);
-        this.navState = this.parseNavData(data.navState);
         return this;
     }
 

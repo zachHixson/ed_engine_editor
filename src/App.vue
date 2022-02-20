@@ -54,7 +54,7 @@ export default {
         },
         resetUI(){
             this.$store.dispatch('AssetBrowser/deselectAssets');
-            this.$store.dispatch('switchTab', EDITOR_ID.ROOM);
+            this.$store.dispatch('switchTab', Shared.EDITOR_ID.ROOM);
             this.updateEditorAsset();
         }
     }
