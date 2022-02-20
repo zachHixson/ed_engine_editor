@@ -428,12 +428,12 @@ export default {
                 instRef = this.selectedRoom.getInstanceById(instId);
             }
 
-            this.selectedRoom.setInstancePosition(instRef, newPos);
-            this.$refs.editWindow.instancesChanged();
-            
             if (!this.undoStore.cache.get('move_start')){
                 this.undoStore.cache.set('move_start', {instRef, oldPos: instRef.pos.clone()});
             }
+
+            this.selectedRoom.setInstancePosition(instRef, newPos);
+            this.$refs.editWindow.instancesChanged();
         },
         actionAdd({objId, instRefList = [], pos}, makeCommit = true){
             let object = this.$store.getters['GameData/getAllObjects'].find((o) => o.id == objId);
