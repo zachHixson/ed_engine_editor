@@ -42,3 +42,7 @@ Shared.Camera = class {
         return this;
     }
 };
+
+Object.freeze(Shared.Camera.MOVE_TYPES);
+Object.freeze(Shared.Camera.SCROLL_DIRS);
+Object.freeze(Shared.Camera.FOLLOW_TYPES);

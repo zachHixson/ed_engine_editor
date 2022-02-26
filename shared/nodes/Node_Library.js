@@ -1,5 +1,3 @@
-// import {SOCKET_TYPE} from '@shared/nodes/Node_Enums';
-
 waitForSharedDependencies(['SOCKET_TYPE'], ()=>{
 
 const {SOCKET_TYPE} = Shared;

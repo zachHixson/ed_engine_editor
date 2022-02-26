@@ -35,3 +35,5 @@ Shared.Exit = class {
         return this;
     }
 };
+
+Object.freeze(Shared.Exit.TRANSITION);

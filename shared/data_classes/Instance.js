@@ -34,3 +34,5 @@ Shared.Instance = class {
         return sanitized;
     }
 };
+
+Object.freeze(Shared.Instance.COLLISION_OVERRIDE);
