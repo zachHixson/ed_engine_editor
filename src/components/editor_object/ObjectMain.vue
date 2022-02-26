@@ -4,7 +4,8 @@
             <div class="options">
                 <div class="control">
                     <label for="drawing_select">{{$t('object_editor.sprite_selector')}}:</label>
-                    <select ref="spriteSelector" id="drawing_select" @change="setObjectSprite" :title="$t('object_editor.tt_sprite')">
+                    <select ref="spriteSelector" id="drawing_select" :value="selectedAsset.sprite.id" @change="setObjectSprite" :title="$t('object_editor.tt_sprite')">
+                        <option :value="null">{{$t('generic.no_option')}}</option>
                         <option
                             v-for="sprite in spriteChoices"
                             :key="sprite.id"
@@ -95,17 +96,7 @@ export default {
     },
     computed: {
         spriteChoices() {
-            let sprites = this.$store.getters['GameData/getAllSprites'];
-            let spriteChoices = [{id:-1, name:this.$t('generic.no_option')}];
-
-            for (let i = 0; i < sprites.length; i++){
-                spriteChoices.push({
-                    id: sprites[i].id,
-                    name: sprites[i].name
-                });
-            }
-
-            return spriteChoices;
+            return this.$store.getters['GameData/getAllSprites'];
         },
         startFrame: {
             get(){
