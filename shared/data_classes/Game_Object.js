@@ -1,3 +1,5 @@
+waitForSharedDependencies(['Asset'], ()=>{
+
 Shared.Game_Object = class extends Shared.Asset{
     constructor(){
         super();
@@ -64,3 +66,5 @@ Shared.Game_Object = class extends Shared.Asset{
         this._startFrame = Math.max(Math.min(frame, this.sprite.frames.length - 1), 0);
     }
 };
+
+});

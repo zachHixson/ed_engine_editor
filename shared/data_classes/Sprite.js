@@ -1,3 +1,5 @@
+waitForSharedDependencies(['Asset'], ()=>{
+
 Shared.Sprite = class extends Shared.Asset{
     constructor(dimensions = 16){
         super();
@@ -239,3 +241,5 @@ Shared.Sprite = class extends Shared.Asset{
         }
     }
 };
+
+});

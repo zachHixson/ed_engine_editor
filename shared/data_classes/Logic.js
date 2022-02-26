@@ -1,3 +1,5 @@
+waitForSharedDependencies(['Asset'], ()=>{
+
 Shared.Logic = class extends Shared.Asset{
     constructor(){
         super();
@@ -194,3 +196,5 @@ Shared.Logic = class extends Shared.Asset{
         }
     }
 };
+
+});

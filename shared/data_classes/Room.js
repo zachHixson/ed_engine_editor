@@ -1,3 +1,5 @@
+waitForSharedDependencies(['Asset'], ()=>{
+
 Shared.Room = class extends Shared.Asset{
     constructor(){
         super();
@@ -157,3 +159,5 @@ Shared.Room = class extends Shared.Asset{
         return bounds;
     }
 };
+
+});
