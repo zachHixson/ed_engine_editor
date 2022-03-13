@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import {version as EDITOR_VERSION} from '@/../package.json';
-// import {Shared.CATEGORY_ID} from '@shared/Enums';
 import MainWindow from './modules/MainWindow';
 import GameData from './modules/GameData';
 import ArtEditor from './modules/ArtEditor';
@@ -12,10 +11,18 @@ import i18n from '@/i18n';
 
 Vue.use(Vuex);
 
+const PLAY_STATES = {
+    PLAYING: Symbol('playing'),
+    DEBUGGING: Symbol('debugging'),
+    NOT_PLAYING: Symbol('not_playing'),
+}
+Object.freeze(PLAY_STATES);
+
 export default new Vuex.Store({
     state: {
         projectName: i18n.t('editor_main.default_name'),
         inputActive: false,
+        playState: PLAY_STATES.NOT_PLAYING,
     },
     getters: {
         getProjectName: state => state.projectName,
@@ -35,6 +42,8 @@ export default new Vuex.Store({
             return JSON.stringify(saveObj);
         },
         getInputActive: state => state.inputActive,
+        getPlayStates: ()=>{return PLAY_STATES},
+        getPlayState: state => state.playState,
     },
     actions: {
         setProjectName({commit}, newName){
@@ -61,7 +70,10 @@ export default new Vuex.Store({
         },
         setInputActive({commit}, newState){
             commit('setInputActive', newState);
-        }
+        },
+        setPlayState({commit}, newState){
+            commit('setPlayState', newState);
+        },
     },
     mutations: {
         setProjectName: (state, newName) => {
@@ -84,7 +96,10 @@ export default new Vuex.Store({
         },
         setInputActive: (state, newState) => {
             state.inputActive = newState;
-        }
+        },
+        setPlayState: (state, newState) => {
+            state.playState = newState;
+        },
     },
     modules: {
         MainWindow,

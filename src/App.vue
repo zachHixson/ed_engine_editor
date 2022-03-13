@@ -7,16 +7,19 @@
         <TabPanel class="TabPanel" ref="TabPanel"/>
         <AssetBrowser class="assetBrowser" ref="assetBrowser" @asset-selected="updateEditorAsset" @asset-deleted="updateAfterDeletion" />
         <EditorWindow class="editorWindow" ref="editorWindow" @asset-changed="updateAssetPreviews"/>
+        <transition name="playWindow">
+            <PlayWindow v-if="playState != PLAY_STATES.NOT_PLAYING" class="playWindow" />
+        </transition>
     </div>
 </template>
 
 <script>
 import {saveAs} from 'file-saver';
-// import {EDITOR_ID} from '@shared/Enums';
 import HeaderPanel from './components/HeaderPanel';
 import TabPanel from './components/TabPanel';
 import AssetBrowser from './components/asset_browser/AssetBrowser';
 import EditorWindow from './components/EditorWindow';
+import PlayWindow from './components/PlayWindow';
 
 export default {
     name: 'App',
@@ -24,7 +27,16 @@ export default {
         HeaderPanel,
         TabPanel,
         AssetBrowser,
-        EditorWindow
+        EditorWindow,
+        PlayWindow,
+    },
+    computed: {
+        PLAY_STATES(){
+            return this.$store.getters['getPlayStates'];
+        },
+        playState(){
+            return this.$store.getters['getPlayState'];
+        },
     },
     mounted(){
         this.$store.dispatch('newProject');
@@ -68,6 +80,7 @@ html, body{
     height: 100%;
     margin: 0px;
     padding: 0px;
+    overflow: hidden;
 }
 
 #app {
@@ -101,5 +114,17 @@ html, body{
 
 .editorWindow{
     grid-area: editorWindow;
+}
+
+.playWindow{
+    position: absolute;
+    top: 0%;
+    transition: top 0.3s ease-in-out;
+    z-index: 1000;
+}
+
+.playWindow-enter,
+.playWindow-leave-active{
+    top: 100%;
 }
 </style>
