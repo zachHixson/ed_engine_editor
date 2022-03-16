@@ -3,6 +3,7 @@ import App from './App.vue'
 import store from './store'
 import i18n from './i18n'
 import {loadShared} from '@compiled/sharedLibrary'
+import {loadEngine} from '@compiled/engine';
 
 window.EDITOR = {};
 Vue.config.productionTip = false;
@@ -53,9 +54,13 @@ new Vue({
     i18n,
     render: h => h(App),
     beforeCreate: function(){
-        const newScript = document.createElement('script');
-        newScript.id = 'shared';
-        newScript.innerHTML = loadShared();
-        document.body.append(newScript);
+        const sharedScript = document.createElement('script');
+        const engineScript = document.createElement('script');
+        sharedScript.id = 'shared';
+        engineScript.id = 'engine';
+        sharedScript.innerHTML = loadShared();
+        engineScript.innerHTML = loadEngine();
+        document.body.append(sharedScript);
+        document.body.append(engineScript);
     }
 }).$mount('#app');
