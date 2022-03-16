@@ -1,9 +1,12 @@
-Shared.Exit = class {
-    static TRANSITION = {
-        NONE: 0,
-        FADE: 1
-    }
+import {ENTITY_TYPE} from '../Enums';
 
+const TRANSITION = {
+    NONE: 0,
+    FADE: 1
+};
+Object.freeze(TRANSITION);
+
+export class Exit{
     constructor(id, pos = {x:0, y:0}){
         this.id = id;
         this.name = this.id.toString();
@@ -11,12 +14,12 @@ Shared.Exit = class {
         this.isEnding = false;
         this.destinationRoom = null;
         this.destinationExit = null;
-        this.transition = Shared.Exit.TRANSITION.NONE;
+        this.transition = TRANSITION.NONE;
         this.endingDialog = "";
     }
 
-    get TYPE(){return Shared.ENTITY_TYPE.EXIT};
-    get TRANSITION_TYPES(){return Shared.Exit.TRANSITION};
+    get TYPE(){return ENTITY_TYPE.EXIT};
+    static get TRANSITION_TYPES(){return TRANSITION};
 
     toSaveData(){
         let sanitized = {};
@@ -35,5 +38,3 @@ Shared.Exit = class {
         return this;
     }
 };
-
-Object.freeze(Shared.Exit.TRANSITION);

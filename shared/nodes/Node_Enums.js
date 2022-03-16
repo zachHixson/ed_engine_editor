@@ -1,4 +1,4 @@
-Shared.SOCKET_TYPE = {
+export const SOCKET_TYPE = {
     ANY: 'ANY',
     NUMBER: 'NUMBER',
     STRING: 'STRING',

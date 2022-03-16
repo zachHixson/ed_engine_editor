@@ -4,7 +4,7 @@
             <div class="options">
                 <div class="control">
                     <label for="drawing_select">{{$t('object_editor.sprite_selector')}}:</label>
-                    <select ref="spriteSelector" id="drawing_select" :value="selectedAsset.sprite.id" @change="setObjectSprite" :title="$t('object_editor.tt_sprite')">
+                    <select ref="spriteSelector" id="drawing_select" :value="selectedAsset.sprite ? selectedAsset.sprite.id : null" @change="setObjectSprite" :title="$t('object_editor.tt_sprite')">
                         <option :value="null">{{$t('generic.no_option')}}</option>
                         <option
                             v-for="sprite in spriteChoices"

@@ -1,4 +1,4 @@
-Shared.getHighestEndingNumber = (list) => {
+export function getHighestEndingNumber(list){
     let highest = -1;
     let pattern = /\\d+$/; //double backslashes are required since this library gets converted to a string
 
@@ -13,7 +13,7 @@ Shared.getHighestEndingNumber = (list) => {
     return highest;
 }
 
-Shared.removeStroke = (svg) => {
+export function removeStroke(svg){
     let paths = svg.childNodes;
 
     for (let i = 0; i < paths.length; i++){
@@ -25,14 +25,14 @@ Shared.removeStroke = (svg) => {
     return svg;
 }
 
-Shared.mod = (n, m) => {
+export function mod(n, m){
     return ((n%m)+m)%m;
 }
 
-Shared.clamp = (x, min, max) => {
+export function clamp(x, min, max){
     return Math.max(Math.min(x, max), min);
 }
 
-Shared.lerp = (a, b, t) => {
+export function lerp(a, b, t){
     return t * (b - a) + a;
 }

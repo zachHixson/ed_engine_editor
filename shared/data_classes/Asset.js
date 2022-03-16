@@ -1,6 +1,9 @@
-Shared.Asset = class {
+import {CATEGORY_ID} from '../Enums';
+import {ID_Generator} from '../ID_Generator';
+
+export class Asset{
     constructor(){
-        this.id = Shared.ID_Generator.newID();
+        this.id = ID_Generator.newID();
         this.name = this.id;
 
         if (window.EDITOR){
@@ -8,7 +11,7 @@ Shared.Asset = class {
         }
     }
 
-    get category_ID(){return Shared.CATEGORY_ID.UNDEFINED}
+    get category_ID(){return CATEGORY_ID.UNDEFINED}
     get thumbnailData(){return null}
     get defaultNavState(){return {
         offset: new Victor(0, 0),

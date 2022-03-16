@@ -1,6 +1,7 @@
-waitForSharedDependencies(['Asset'], ()=>{
+import {Asset} from './Asset';
+import {CATEGORY_ID} from '../Enums';
 
-Shared.Room = class extends Shared.Asset{
+export class Room extends Asset{
     constructor(){
         super();
         this.camera = new Shared.Camera();
@@ -15,7 +16,7 @@ Shared.Room = class extends Shared.Asset{
         this._curExitId = 0;
     }
     
-    get category_ID(){return Shared.CATEGORY_ID.ROOM}
+    get category_ID(){return CATEGORY_ID.ROOM}
     get zSortedList(){return this.instances.zSort}
     get exitsList(){return this.exits.zSort}
     get curInstId(){return this._curInstId++};
@@ -159,5 +160,3 @@ Shared.Room = class extends Shared.Asset{
         return bounds;
     }
 };
-
-});

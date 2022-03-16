@@ -1,8 +1,6 @@
-waitForSharedDependencies(['SOCKET_TYPE'], ()=>{
+import {SOCKET_TYPE} from './Node_Enums';
 
-const {SOCKET_TYPE} = Shared;
-
-Shared.NODE_LIST = [
+export const NODE_LIST = [
     {
         id: 'trigger_in',
         category: 'testing',
@@ -70,10 +68,8 @@ Shared.NODE_LIST = [
     },
 ];
 
-Shared.NODE_MAP = new Map();
+export const NODE_MAP = new Map();
 
-Shared.NODE_LIST.forEach(node => {
-    Shared.NODE_MAP.set(node.id, node);
-});
-
+NODE_LIST.forEach(node => {
+    NODE_MAP.set(node.id, node);
 });

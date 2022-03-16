@@ -1,6 +1,7 @@
-waitForSharedDependencies(['Asset'], ()=>{
+import {Asset} from './Asset';
+import {CATEGORY_ID} from '../Enums';
 
-Shared.Game_Object = class extends Shared.Asset{
+export class Game_Object extends Asset{
     constructor(){
         super();
         this.sprite = null;
@@ -57,7 +58,7 @@ Shared.Game_Object = class extends Shared.Asset{
         }
     }
 
-    get category_ID(){return Shared.CATEGORY_ID.OBJECT}
+    get category_ID(){return CATEGORY_ID.OBJECT}
     get startFrame(){return this._startFrame}
     get editorFrame(){return this.thumbnailData;}
     get editorFrameID(){return this.sprite.frameIDs[this._startFrame]}
@@ -66,5 +67,3 @@ Shared.Game_Object = class extends Shared.Asset{
         this._startFrame = Math.max(Math.min(frame, this.sprite.frames.length - 1), 0);
     }
 };
-
-});

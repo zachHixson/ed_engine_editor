@@ -1,56 +1,29 @@
 const uglify = require('uglify-js');
 const fs = require('fs');
-const glob = require('glob');
-
-const sharedPath = './shared';
-const outputPath = './compiled/';
+const {execSync} = require('child_process');
+const rollupConfig = require('../shared/rollup.config.js');
 const victorPath = require.resolve('victor');
 
-//gather file contents
-let victorFile = fs.readFileSync(victorPath, {encoding:'utf8', flag:'r'});
-victorFile = victorFile.replace('exports = module.exports = Victor;', '');
+execSync('npx rollup --config ./shared/rollup.config.js');
+
+//shrink victor
+let victorFile = fs.readFileSync(victorPath, {encoding: 'utf-8', flag: 'r'});
+victorFile = victorFile.replace('exports', '//');
 victorFile = uglify.minify(victorFile).code;
 
-const sharedPaths = glob.sync(sharedPath + '/**/*.js');
-let sharedContents = victorFile;
-
-sharedContents += `
-window.Shared = {};
-
-function waitForSharedDependencies(depsList, callback){
-    let timeout = 50;
-
-    const check = ()=>{
-        let passed = true;
-        depsList.forEach(d => passed &= Shared.hasOwnProperty(d));
-
-        if (timeout <= 0){
-            console.error('Timeout: Could not find all deps of ' + depsList);
-            return;
-        }
-
-        if (passed){
-            callback();
-        }
-        else{
-            setTimeout(check);
-            timeout--;
-        }
-    };
-
-    check();
-};
-`;
-
-sharedPaths.forEach(path => {
-    const fileContents = fs.readFileSync(path, {encoding:'utf8', flag:'r'});
-    sharedContents += fileContents;
-});
-
 const debug = process.argv.includes('--debug');
-const sharedMinified = debug ? sharedContents : uglify.minify(sharedContents, {output: {quote_style: 2}}).code;
+const tempFilePath = rollupConfig[0].output.file;
+const outputPath = './compiled/';
+const rolledShared = fs.readFileSync(tempFilePath, {encoding: 'utf-8'});
+const minifiedShared = debug ? rolledShared : uglify.minify(rolledShared, {output: {quote_style: 2}}).code;
+const combined = (victorFile + minifiedShared)
 const formatted = `
-let sharedLibraryFile = \`${sharedMinified}\`;
+let sharedLibraryFile = \`${
+    combined.replace(/\\/g, "\\\\")
+    .replace(/\$/g, "\\$")
+    .replace(/'/g, "\\'")
+    .replace(/"/g, "\\\"")
+}\`;
 
 export function loadShared(){
     const shared = sharedLibraryFile;
@@ -63,4 +36,5 @@ if (!fs.existsSync(outputPath)){
     fs.mkdirSync(outputPath);
 }
 
-fs.writeFileSync(outputPath + 'sharedLibrary.js', formatted);
+fs.unlinkSync(tempFilePath);
+fs.writeFileSync(outputPath + 'shared.js', formatted);

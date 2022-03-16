@@ -1,6 +1,7 @@
-waitForSharedDependencies(['Asset'], ()=>{
+import {Asset} from './Asset';
+import {CATEGORY_ID} from '../Enums';
 
-Shared.Sprite = class extends Shared.Asset{
+export class Sprite extends Asset{
     constructor(dimensions = 16){
         super();
         this.dimensions = dimensions;
@@ -11,7 +12,7 @@ Shared.Sprite = class extends Shared.Asset{
         this.hashAllFrames();
     }
 
-    get category_ID(){return Shared.CATEGORY_ID.SPRITE}
+    get category_ID(){return CATEGORY_ID.SPRITE}
     get thumbnailData(){
         for (let i = 0; i < this.frames[0].length; i++){
             if (this.frames[0][i] != ''){
@@ -241,5 +242,3 @@ Shared.Sprite = class extends Shared.Asset{
         }
     }
 };
-
-});

@@ -1,4 +1,4 @@
-Shared.Node_Connection = class {
+export class Node_Connection{
     constructor(inpObj = {}){
         this.id = inpObj.id;
         this.type = inpObj.type;

@@ -1,4 +1,7 @@
-Shared.drawCheckerBG = (canvas, checkerSize, lightCol = '#AAA', darkCol = '#CCC') => {
+import {getSpriteDimensions, get2DIdx} from './Util_2D';
+import {clamp} from './Util';
+
+export function drawCheckerBG(canvas, checkerSize, lightCol = '#AAA', darkCol = '#CCC'){
     let ctx = canvas.getContext('2d');
     let xCount = Math.ceil(canvas.width / checkerSize);
     let yCount = Math.ceil(canvas.height / checkerSize);
@@ -9,7 +12,7 @@ Shared.drawCheckerBG = (canvas, checkerSize, lightCol = '#AAA', darkCol = '#CCC'
 
     for (let x = 0; x < xCount; x++){
         for (let y = 0; y < yCount; y++){
-            let curIdx = Shared.get2DIdx(x, y, xCount);
+            let curIdx = get2DIdx(x, y, xCount);
 
             ctx.fillStyle = (curIdx % 2) ? lightCol : darkCol;
             ctx.fillRect(
@@ -22,15 +25,15 @@ Shared.drawCheckerBG = (canvas, checkerSize, lightCol = '#AAA', darkCol = '#CCC'
     }
 };
 
-Shared.drawPixelData = (canvas, spriteArray) => {
-    const SPRITE_DIM = Shared.getSpriteDimensions(spriteArray);
+export function drawPixelData(canvas, spriteArray){
+    const SPRITE_DIM = getSpriteDimensions(spriteArray);
 
     let ctx = canvas.getContext('2d');
     let imgData = ctx.createImageData(SPRITE_DIM, SPRITE_DIM);
     
     for (let i = 0; i < spriteArray.length; i++){
         let curIdx = i * 4;
-        let rgb = Shared.hexToRGBA(spriteArray[i]);
+        let rgb = hexToRGBA(spriteArray[i]);
 
         switch (spriteArray[i].length){
             case 0:
@@ -51,7 +54,7 @@ Shared.drawPixelData = (canvas, spriteArray) => {
     ctx.putImageData(imgData, 0, 0);
 };
 
-Shared.hexToRGBA = (hexStr) => {
+export function hexToRGBA(hexStr){
     let offset = 0;
 
     if (hexStr.charAt(0) == '#'){
@@ -66,11 +69,11 @@ Shared.hexToRGBA = (hexStr) => {
     }
 };
 
-Shared.RGBAToHex = (r = 0, g = 0, b = 0, a = 255) => {
-    r = Shared.clamp(r, 0, 255);
-    g = Shared.clamp(g, 0, 255);
-    b = Shared.clamp(b, 0, 255);
-    a = Shared.clamp(a, 0, 255);
+export function RGBAToHex(r = 0, g = 0, b = 0, a = 255){
+    r = clamp(r, 0, 255);
+    g = clamp(g, 0, 255);
+    b = clamp(b, 0, 255);
+    a = clamp(a, 0, 255);
     
     let hexR = r.toString(16).padStart(2, '0');
     let hexG = g.toString(16).padStart(2, '0');
@@ -80,7 +83,7 @@ Shared.RGBAToHex = (r = 0, g = 0, b = 0, a = 255) => {
     return '#' + hexR + hexG + hexB + hexA;
 };
 
-Shared.HSVToRGB = (h, s, v) => {
+export function HSVToRGB(h, s, v){
     let c = v * s;
     let x = c * (1 - Math.abs(((h / 60) % 2) - 1));
     let m = v - c;
@@ -119,7 +122,7 @@ Shared.HSVToRGB = (h, s, v) => {
     }
 };
 
-Shared.RGBToHSV = (r, g, b) => {
+export function RGBToHSV(r, g, b){
     let rp = r / 255;
     let gp = g / 255;
     let bp = b / 255;

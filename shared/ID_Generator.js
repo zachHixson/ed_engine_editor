@@ -1,4 +1,4 @@
-Shared.ID_Generator = {
+export const ID_Generator = {
     curStep: 0,
 
     newID(){

@@ -1,4 +1,4 @@
-Shared.Node = class {
+export class Node{
     constructor(template, id, pos = new Victor()){
         this.templateId = template.id;
         this.nodeId = id;

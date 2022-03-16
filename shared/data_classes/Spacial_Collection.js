@@ -9,16 +9,19 @@
     ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠
 */
 
-Shared.Spacial_Collection = class {
+import {mod} from '../Util';
+import {Linked_List} from '../Linked_List';
+
+export class Spacial_Collection{
     constructor(area, cellSize){
         this.area = area;
         this.cellSize = cellSize;
         this.cellCount = this.area / this.cellSize;
-        this.zSort = new Shared.Linked_List();
+        this.zSort = new Linked_List();
         this.spacialGrid = new Array(Math.ceil(this.cellCount * this.cellCount));
         
         for (let i = 0; i < this.spacialGrid.length; i++){
-            this.spacialGrid[i] = new Shared.Linked_List();
+            this.spacialGrid[i] = new Linked_List();
         }
     }
 
@@ -84,7 +87,7 @@ Shared.Spacial_Collection = class {
         let cellX = Math.floor(offsetX / this.cellSize);
         let cellY = Math.floor(offsetY / this.cellSize);
         let cellIdx = (cellY * this.cellCount) + cellX;
-        return Math.floor(Shared.mod(cellIdx, this.spacialGrid.length));
+        return Math.floor(mod(cellIdx, this.spacialGrid.length));
     }
 
     getById(instId){

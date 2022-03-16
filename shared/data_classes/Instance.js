@@ -1,23 +1,26 @@
-Shared.Instance = class {
-    static COLLISION_OVERRIDE = {
-        KEEP: 0,
-        FORCE: 1,
-        IGNORE: 2
-    }
+import {ENTITY_TYPE} from '../Enums';
 
+const COLLISION_OVERRIDE = {
+    KEEP: 0,
+    FORCE: 1,
+    IGNORE: 2
+};
+Object.freeze(COLLISION_OVERRIDE);
+
+export class Instance{
     constructor(id, pos, objRef){
         this.id = id;
         this.objRef = objRef;
         this.pos = new Victor.fromObject(pos);
         this.name = this.objRef.name + '_' + this.id;
         this.zDepthOverride = null;
-        this.collisionOverride = Shared.Instance.COLLISION_OVERRIDE.KEEP;
+        this.collisionOverride = COLLISION_OVERRIDE.KEEP;
         this.groups = [];
         this.customVars = [];
     }
 
-    get TYPE(){return Shared.ENTITY_TYPE.INSTANCE}
-    get COLLISION_OVERRIDES(){return Shared.Instance.COLLISION_OVERRIDE};
+    get TYPE(){return ENTITY_TYPE.INSTANCE}
+    get COLLISION_OVERRIDES(){return COLLISION_OVERRIDE};
 
     get zDepth(){return (this.zDepthOverride) ? this.zDepthOverride : this.objRef.zDepth}
     get editorFrame(){return this.objRef.editorFrame};
@@ -34,5 +37,3 @@ Shared.Instance = class {
         return sanitized;
     }
 };
-
-Object.freeze(Shared.Instance.COLLISION_OVERRIDE);

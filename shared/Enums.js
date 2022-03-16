@@ -5,7 +5,7 @@ function createEnum(list){
     return outObj;
 };
 
-Shared.CATEGORY_ID = createEnum([
+export const CATEGORY_ID = createEnum([
     'UNDEFINED',
     'SPRITE',
     'OBJECT',
@@ -13,20 +13,20 @@ Shared.CATEGORY_ID = createEnum([
     'ROOM',
 ]);
 
-Shared.EDITOR_ID = createEnum([
+export const EDITOR_ID = createEnum([
     'ROOM',
     'ART',
     'OBJECT',
     'LOGIC',
 ]);
 
-Shared.ART_TOOL_SIZE = createEnum([
+export const ART_TOOL_SIZE = createEnum([
     'SMALL',
     'MEDIUM',
     'LARGE',
 ]);
 
-Shared.ART_TOOL_TYPE = createEnum([
+export const ART_TOOL_TYPE = createEnum([
     'BRUSH',
     'BUCKET',
     'LINE',
@@ -38,7 +38,7 @@ Shared.ART_TOOL_TYPE = createEnum([
     'EYE_DROPPER',
 ]);
 
-Shared.ROOM_TOOL_TYPE = createEnum([
+export const ROOM_TOOL_TYPE = createEnum([
     'SELECT_MOVE',
     'ADD_BRUSH',
     'ERASER',
@@ -48,7 +48,7 @@ Shared.ROOM_TOOL_TYPE = createEnum([
     'TOGGLE_GRID',
 ]);
 
-Shared.ROOM_ACTION = createEnum([
+export const ROOM_ACTION = createEnum([
     'MOVE',
     'ADD',
     'DELETE',
@@ -63,7 +63,7 @@ Shared.ROOM_ACTION = createEnum([
     'ROOM_VAR_CHANGE',
 ]);
 
-Shared.MOUSE_EVENT = createEnum([
+export const MOUSE_EVENT = createEnum([
     'CLICK',
     'DOWN',
     'UP',
@@ -72,12 +72,12 @@ Shared.MOUSE_EVENT = createEnum([
     'ENTER',
 ]);
 
-Shared.ENTITY_TYPE = createEnum([
+export const ENTITY_TYPE = createEnum([
     'INSTANCE',
     'EXIT',
 ]);
 
-Shared.LOGIC_ACTION = createEnum([
+export const LOGIC_ACTION = createEnum([
     'ADD_NODE',
     'DELETE_NODES',
     'MOVE',

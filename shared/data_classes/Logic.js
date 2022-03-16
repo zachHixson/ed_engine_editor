@@ -1,6 +1,9 @@
-waitForSharedDependencies(['Asset'], ()=>{
+import {Asset} from './Asset';
+import {CATEGORY_ID} from '../Enums';
+import {DEFAULT_EVENTS} from '../nodes/Events';
+import {Node} from './Node';
 
-Shared.Logic = class extends Shared.Asset{
+export class Logic extends Asset{
     constructor(){
         super();
         this.events = new Map();
@@ -20,12 +23,12 @@ Shared.Logic = class extends Shared.Asset{
             delete this.navState;
         }
 
-        Shared.DEFAULT_EVENTS.forEach(event => {
+        DEFAULT_EVENTS.forEach(event => {
             this.events.set(event.id, null);
         });
     }
 
-    get category_ID(){return Shared.CATEGORY_ID.LOGIC}
+    get category_ID(){return CATEGORY_ID.LOGIC}
     get nextNodeId(){return this._nextNodeId++};
     get selectedEventId(){return this._selectedEventId}
     get selectedEvent(){return (this.selectedEventId) ? this.events.get(this.selectedEventId) : null}
@@ -85,10 +88,10 @@ Shared.Logic = class extends Shared.Asset{
 
         for (let i = 0; i < data.events.length; i++){
             let eventData = data.events[i];
-            let entryTemplate = Shared.DEFAULT_EVENTS.get(eventData.entry.templateId);
-            let entry = new Shared.Node(entryTemplate, eventData.entry.id, Victor.fromObject(eventData.entry.pos));
-            let nodes = [entry, ...eventData.nodes.map(node => new Shared.Node(
-                Shared.NODE_MAP.get(node.templateId),
+            let entryTemplate = DEFAULT_EVENTS.get(eventData.entry.templateId);
+            let entry = new Node(entryTemplate, eventData.entry.id, Victor.fromObject(eventData.entry.pos));
+            let nodes = [entry, ...eventData.nodes.map(node => new Node(
+                NODE_MAP.get(node.templateId),
                 node.nodeId,
                 Victor.fromObject(node.pos)
             ).fromSaveData(node))];
@@ -196,5 +199,3 @@ Shared.Logic = class extends Shared.Asset{
         }
     }
 };
-
-});

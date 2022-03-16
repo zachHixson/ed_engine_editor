@@ -1,4 +1,4 @@
-Shared.Linked_List = class {
+export class Linked_List{
     constructor(){
         this.start = null;
         this.end = null;
