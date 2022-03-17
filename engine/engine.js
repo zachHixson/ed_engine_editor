@@ -1,5 +1,3 @@
-import { testLib } from "./testLib";
-
 const DEFAULT_CALLBACKS = {
     log: msg => console.log(msg),
     warning: warning => console.warn(warning),
@@ -9,33 +7,46 @@ Object.freeze(DEFAULT_CALLBACKS);
 
 class Engine{
     constructor({canvas, gameData, callbacks = {}}){
-        this.canvas = canvas;
-        this.gameData = gameData;
-        this.callbacks = {};
+        this._canvas = canvas;
+        this._gameData = gameData;
+        this._callbacks = Object.assign({}, Engine.DEFAULT_CALLBACKS);
+        this._timeStart = Date.now();
+        this._isRunning = false;
 
-        //only pull in external callbacks that have been registered as default
-        for (let callback in Engine.defaultCallbacks){
-            this.callbacks[callback] = callbacks[callback] || Engine.defaultCallbacks[callback];
+        //map callbacks to engine
+        for (let callback in callbacks){
+            this._callbacks[callback] = callbacks[callback];
         }
     }
 
     static get DEFAULT_CALLBACKS(){return DEFAULT_CALLBACKS}
 
-    start(){
-        console.log('started');
+    get time(){return Date.now() - this._timeStart}
+
+    start = ()=> {
+        this._isRunning = true;
+
+        //load game data
+        //load room
+        //bind input and document events
 
         this._updateLoop();
     }
 
-    _updateLoop(){
-        const ctx = this.canvas.getContext('2d');
-
-        ctx.fillStyle = "black";
-        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    stop = ()=> {
+        this._isRunning = false;
+        //unbind input and document events
     }
 
-    callTest(){
-        testLib();
+    _updateLoop = ()=> {
+        const ctx = this._canvas.getContext('2d');
+
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, this._canvas.width, this._canvas.height);
+
+        if (this._isRunning){
+            requestAnimationFrame(this._updateLoop);
+        }
     }
 }
 

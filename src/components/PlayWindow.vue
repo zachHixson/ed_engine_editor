@@ -4,7 +4,7 @@
             <div class="headerText">
                 {{playState == PLAY_STATES.PLAYING ? $t('editor_main.run') : $t('editor_main.debug')}}
             </div>
-            <button class="closeBtn" @click="playState = PLAY_STATES.NOT_PLAYING">
+            <button class="closeBtn" @click="close">
                 X
             </button>
         </div>
@@ -17,6 +17,11 @@
 <script>
 export default {
     name: 'PlayWindow',
+    data(){
+        return{
+            engine: null,
+        };
+    },
     computed: {
         PLAY_STATES(){
             return this.$store.getters['getPlayStates'];
@@ -31,20 +36,27 @@ export default {
         },
     },
     mounted(){
-        console.log("Mount Engine")
         let canvas = this.$refs.canvas;
-        let ctx = canvas.getContext('2d');
         let wrapper = this.$refs.canvasWrapper;
-        let width = Math.min(wrapper.clientWidth, wrapper.clientHeight);
+        let minDim = Math.min(wrapper.clientWidth, wrapper.clientHeight);
 
-        canvas.width = width;
-        canvas.height = width;
+        canvas.width = minDim;
+        canvas.height = minDim;
 
-        ctx.fillStyle = 'black';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        this.engine = new Engine({
+            canvas: this.$refs.canvas,
+            gameData: this.$store.getters['getSaveData'],
+        });
+        this.engine.start();
     },
     destroyed(){
-        console.log("Unmount Engine");
+        this.engine = null;
+    },
+    methods: {
+        close(){
+            this.playState = this.PLAY_STATES.NOT_PLAYING;
+            this.engine.stop();
+        },
     },
 }
 </script>
