@@ -1,10 +1,12 @@
 import {Asset} from './Asset';
 import {CATEGORY_ID} from '../Enums';
+import {hexToRGBA} from '../Draw_2D';
 
 export class Sprite extends Asset{
-    constructor(dimensions = 16){
+    static get DIMENSIONS(){return 16}
+
+    constructor(){
         super();
-        this.dimensions = dimensions;
         this.frames = [];
         this.frameIDs = [];
 
@@ -13,14 +15,8 @@ export class Sprite extends Asset{
     }
 
     get category_ID(){return CATEGORY_ID.SPRITE}
-    get thumbnailData(){
-        for (let i = 0; i < this.frames[0].length; i++){
-            if (this.frames[0][i] != ''){
-                return this.frames[0];
-            }
-        }
-
-        return null;
+    get thumbnail(){
+        return this.frameIsEmpty(0) ? null : this.drawToCanvas(0);
     }
     
     toSaveData(){
@@ -46,7 +42,7 @@ export class Sprite extends Asset{
     }
 
     addFrame(){
-        let pixNum = Math.pow(this.dimensions, 2);
+        let pixNum = Math.pow(Sprite.DIMENSIONS, 2);
         let newFrame = [];
 
         for (let i = 0; i < pixNum; i++){
@@ -117,6 +113,16 @@ export class Sprite extends Asset{
         this.addFrame();
     }
 
+    frameIsEmpty(idx = 0){
+        for (let i = 0; i < this.frames[idx].length; i++){
+            if (this.frames[idx][i] != ''){
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     hashAllFrames(){
         this.frameIDs = new Array(this.frames.length);
 
@@ -140,6 +146,43 @@ export class Sprite extends Asset{
         }
 
         return frameHash;
+    }
+
+    static drawToCanvas(hexArr, canvas){
+        let ctx = canvas.getContext('2d');
+        let colors = new Uint8ClampedArray(Math.pow(Sprite.DIMENSIONS, 2) * 4);
+        let imgData;
+
+        canvas.width = Sprite.DIMENSIONS;
+        canvas.height = Sprite.DIMENSIONS;
+
+        for (let i = 0; i < colors.length; i += 4){
+            let idx = i / 4;
+            let hex = hexArr[idx];
+            let rgba = hexToRGBA(hex);
+
+            rgba.a = hex.length > 0 ? 255 : 0;
+
+            colors[i + 0] = rgba.r;
+            colors[i + 1] = rgba.g;
+            colors[i + 2] = rgba.b;
+            colors[i + 3] = rgba.a;
+        }
+
+        imgData = new ImageData(colors, canvas.width);
+        ctx.putImageData(imgData, 0, 0);
+
+        return canvas;
+    }
+
+    drawToCanvas(frameIdx = 0, canvas = document.createElement('canvas')){
+        let frame = this.frames[frameIdx];
+
+        if (!frame){
+            return;
+        }
+
+        return Sprite.drawToCanvas(frame, canvas);
     }
 
     compressFrames(frames){

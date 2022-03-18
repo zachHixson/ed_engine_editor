@@ -49,8 +49,8 @@ export default {
 
         Shared.drawCheckerBG(this.checkerBGBuff, 4, "#B5B5B5", '#CCCCCC');
         if (this.sprite){
-            this.pixelBuff.width = this.sprite.dimensions;
-            this.pixelBuff.height = this.sprite.dimensions;
+            this.pixelBuff.width = Shared.Sprite.DIMENSIONS;
+            this.pixelBuff.height = Shared.Sprite.DIMENSIONS;
         }
 
         this.$parent.$on('frameDeleted', this.onFrameDelete);
@@ -65,9 +65,9 @@ export default {
 
             if (this.sprite && this.sprite.frames[this.curFrameIdx] != null){
                 let frame = this.sprite.frames[this.curFrameIdx];
-                let scaleFac = this.canvas.width / Shared.getSpriteDimensions(frame);
+                let scaleFac = this.canvas.width / Shared.Sprite.DIMENSIONS;
 
-                Shared.drawPixelData(this.pixelBuff, frame);
+                this.sprite.drawToCanvas(this.curFrameIdx, this.pixelBuff);
 
                 ctx.imageSmoothingEnabled = false;
                 ctx.webkitImageSmoothingEnabled = false;
@@ -120,8 +120,8 @@ export default {
         },
         newSpriteSelection(){
             if (this.sprite){
-                this.pixelBuff.width = this.sprite.dimensions;
-                this.pixelBuff.height = this.sprite.dimensions;
+                this.pixelBuff.width = Shared.Sprite.DIMENSIONS;
+                this.pixelBuff.height = Shared.Sprite.DIMENSIONS;
             }
 
             this.curFrameIdx = this.startFrame;

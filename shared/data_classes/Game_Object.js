@@ -20,20 +20,14 @@ export class Game_Object extends Asset{
         delete this.navState;
     }
 
-    get thumbnailData(){
-        let thumbnail = this.sprite?.frames[this._startFrame];
+    get thumbnail(){
+        let thumbFrame = this.sprite?.frames[this._startFrame];
 
-        if (!thumbnail){
+        if (!thumbFrame){
             return null;
         }
-        
-        for (let i = 0; i < thumbnail.length; i++){
-            if (thumbnail[i] != ''){
-                return thumbnail;
-            }
-        }
 
-        return null;
+        return this.sprite.frameIsEmpty(this._startFrame) ? null : this.sprite.drawToCanvas(this._startFrame);
     }
 
     toSaveData(){
@@ -60,7 +54,8 @@ export class Game_Object extends Asset{
 
     get category_ID(){return CATEGORY_ID.OBJECT}
     get startFrame(){return this._startFrame}
-    get editorFrame(){return this.thumbnailData;}
+    get hasEditorFrame(){return this.sprite ? !this.sprite.frameIsEmpty(this._startFrame) : false}
+    get editorFrame(){return this.thumbnail}
     get editorFrameID(){return this.sprite.frameIDs[this._startFrame]}
 
     set startFrame(frame){

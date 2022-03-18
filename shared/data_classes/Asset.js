@@ -12,7 +12,7 @@ export class Asset{
     }
 
     get category_ID(){return CATEGORY_ID.UNDEFINED}
-    get thumbnailData(){return null}
+    get thumbnail(){return null}
     get defaultNavState(){return {
         offset: new Victor(0, 0),
         zoomFac: 1,

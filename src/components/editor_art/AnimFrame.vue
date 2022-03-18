@@ -38,9 +38,6 @@
 </template>
 
 <script>
-// import {Shared.getSpriteDimensions} from '@shared/Util_2D';
-// import {Shared.drawCheckerBG, Shared.drawPixelData} from '@shared/Draw_2D';
-
 export default {
     name: 'AnimFrame',
     props: ['sprite', 'index'],
@@ -59,8 +56,8 @@ export default {
         this.canvas.height = this.$refs.wrapper.clientWidth;
         this.checkerBGBuff.width = this.canvas.width;
         this.checkerBGBuff.height = this.canvas.height;
-        this.pixelBuff.width = this.getSprite().dimensions;
-        this.pixelBuff.height = this.getSprite().dimensions;
+        this.pixelBuff.width = Shared.Sprite.DIMENSIONS;
+        this.pixelBuff.height = Shared.Sprite.DIMENSIONS;
 
         Shared.drawCheckerBG(this.checkerBGBuff, 4, "#B5B5B5", '#CCCCCC');
 
@@ -87,19 +84,18 @@ export default {
         getSprite(){
             return this.$store.getters['AssetBrowser/getSelectedAsset'];
         },
-        getFrame(){
-            return this.sprite.frames[this.index];
-        },
+        // getFrame(){
+        //     return this.sprite.frames[this.index];
+        // },
         drawCanvas(){
-            let frame = this.getFrame();
             let ctx = this.canvas.getContext('2d');
             
             ctx.drawImage(this.checkerBGBuff, 0, 0, this.canvas.width, this.canvas.height);
 
-            if (frame != null){
-                let scaleFac = this.canvas.width / Shared.getSpriteDimensions(frame);
+            if (this.sprite.frames[this.index]){
+                let scaleFac = this.canvas.width / Shared.Sprite.DIMENSIONS;
 
-                Shared.drawPixelData(this.pixelBuff, frame);
+                this.sprite.drawToCanvas(this.index, this.pixelBuff);
 
                 ctx.imageSmoothingEnabled = false;
                 ctx.webkitImageSmoothingEnabled = false;

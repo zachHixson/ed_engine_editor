@@ -225,13 +225,12 @@ export default class Room_Edit_Renderer{
             let scaleFac;
             let ctx = this.objBuff.getContext('2d');
 
-            if (inst.objRef.sprite && inst.objRef.editorFrame){
+            if (inst.hasEditorFrame){
                 //cache sprites after they are parsed once
                 spriteBuff = this.spriteCache.get(inst.editorFrameID);
 
                 if (!spriteBuff){
-                    spriteBuff = this.newSpriteBuff();
-                    Shared.drawPixelData(spriteBuff, inst.editorFrame);
+                    spriteBuff = inst.editorFrame;
                     this.spriteCache.set(inst.editorFrameID, spriteBuff);
                 }
 

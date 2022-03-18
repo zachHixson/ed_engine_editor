@@ -85,7 +85,7 @@ export default {
         selectedAsset(){
             this.undoStore.clear();
 
-            if (this.selectedAsset && this.selectedAsset.Shared.CATEGORY_ID == Shared.CATEGORY_ID.SPRITE){
+            if (this.selectedAsset && this.selectedAsset.category_ID == Shared.CATEGORY_ID.SPRITE){
                 let selectedFrame = this.$store.getters['ArtEditor/getSelectedFrame'];
 
                 this.updateFrameIDs()

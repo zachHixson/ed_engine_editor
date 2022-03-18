@@ -1,8 +1,8 @@
 <template>
     <div ref="asset" class="asset" :class="{selected : isSelected}" @click="selectAsset">
         <div class="leftFloat" v-click-outside="stopRenaming">
-            <canvas v-show="hasThumb" class="thumbnail" ref="thumbNail" width="20" height="20">Error</canvas>
-            <img v-if="!hasThumb" class="thumbnail assetIcon" :src="require(`@/${defaultIcon}.svg`)"/>
+            <canvas v-show="thumbnail" class="thumbnail" ref="thumbNail" width="20" height="20">Error</canvas>
+            <img v-if="!thumbnail" class="thumbnail assetIcon" :src="require(`@/${defaultIcon}.svg`)"/>
             <div v-show="isRenaming">
                 <input class="nameBox" ref="renameText" v-model="asset.name" type="text" v-input-active/>
             </div>
@@ -27,9 +27,7 @@ export default {
         return {
             isRenaming: false,
             oldName: null,
-            hasThumb: false,
-            thumbLoading: false,
-            pixelBuff: document.createElement('canvas')
+            thumbnail: null,
         }
     },
     computed: {
@@ -46,10 +44,6 @@ export default {
     },
     mounted(){
         this.$refs.asset.addEventListener('dblclick', this.rename);
-
-        this.pixelBuff.width = 16;
-        this.pixelBuff.height = 16;
-
         this.drawThumbnail();
     },
     beforeDestroy(){
@@ -86,28 +80,21 @@ export default {
                 this.stopRenaming();
             }
         },
-        checkThumb(){
-            let result = this.asset.thumbnailData && !this.thumbLoading;
-            this.hasThumb = result;
-            return result;
-        },
         drawThumbnail(){
-            if (this.checkThumb()){
+            this.thumbnail = this.asset.thumbnail;
+
+            if (this.thumbnail){
                 let canvas = this.$refs.thumbNail;
                 let ctx = canvas.getContext('2d');
-                let pixelDim = Shared.getSpriteDimensions(this.asset.thumbnailData);
-                let scaleFac = canvas.width / pixelDim;
+                let scaleFac = canvas.width / this.thumbnail.width;
 
-                Shared.drawPixelData(this.pixelBuff, this.asset.thumbnailData);
+                ctx.imageSmoothingEnabled = false;
+                ctx.webkitImageSmoothingEnabled = false;
 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                this.thumbLoading = true;
                 ctx.scale(scaleFac, scaleFac);
-                ctx.drawImage(this.pixelBuff, 0, 0, this.pixelBuff.width, this.pixelBuff.height);
+                ctx.drawImage(this.thumbnail, 0, 0, this.thumbnail.width, this.thumbnail.height);
                 ctx.resetTransform();
-                this.thumbLoading = false;
-                this.checkThumb();
             }
         }
     }

@@ -10,7 +10,7 @@ export default class Art_Canvas_Renderer{
         this.previewData = previewData;
         this.navState = navState;
 
-        this.GRID_DIV = Shared.getSpriteDimensions(spriteData);
+        this.GRID_DIV = Shared.Sprite.DIMENSIONS;
         this.CANVAS_WIDTH = this.GRID_DIV * 20;
 
         Object.defineProperty(this, "GRID_DIV", {configurable: false, writable: false});
@@ -142,7 +142,7 @@ export default class Art_Canvas_Renderer{
             let ctx = canvas.getContext('2d');
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            Shared.drawPixelData(canvas, pixelData);
+            Shared.Sprite.drawToCanvas(pixelData, canvas);
         }
     }
 
