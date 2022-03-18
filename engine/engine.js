@@ -6,11 +6,14 @@ const DEFAULT_CALLBACKS = {
 Object.freeze(DEFAULT_CALLBACKS);
 
 class Engine{
+    static get VERSION(){return '0.1.0'}
+    static get DEFAULT_CALLBACKS(){return DEFAULT_CALLBACKS}
+
     constructor({canvas, gameData, callbacks = {}}){
         this._canvas = canvas;
-        this._gameData = gameData;
+        this._gameData = this._parseGameData(gameData);
         this._callbacks = Object.assign({}, Engine.DEFAULT_CALLBACKS);
-        this._timeStart = Date.now();
+        this._timeStart = null;
         this._isRunning = false;
 
         //map callbacks to engine
@@ -19,16 +22,14 @@ class Engine{
         }
     }
 
-    static get DEFAULT_CALLBACKS(){return DEFAULT_CALLBACKS}
-
     get time(){return Date.now() - this._timeStart}
 
     start = ()=> {
         this._isRunning = true;
+        this._timeStart = Date.now();
 
-        //load game data
-        //load room
         //bind input and document events
+        //load first room
 
         this._updateLoop();
     }
@@ -47,6 +48,31 @@ class Engine{
         if (this._isRunning){
             requestAnimationFrame(this._updateLoop);
         }
+    }
+
+    _parseGameData(gameData){
+        if (typeof gameData == 'object'){
+            return gameData;
+        }
+
+        let parsedJson;
+        let loadedData = {};
+
+        try {
+            parsedJson = JSON.parse(gameData);
+        }
+        catch (e) {
+            console.error("ERROR: Engine could not parse provided JSON", e);
+            return;
+        }
+
+        loadedData.startRoom = parsedJson.startRoom;
+        loadedData.sprites = parsedJson.sprites.map(s => new Shared.Sprite().fromSaveData(s));
+        loadedData.objects = parsedJson.objects.map(o => new Shared.Game_Object().fromSaveData(o, loadedData.sprites));
+        loadedData.rooms = parsedJson.rooms.map(r => new Shared.Room().fromSaveData(r, loadedData.objects));
+        loadedData.logic = parsedJson.logic.map(l => new Shared.Logic().fromSaveData(l));
+
+        return loadedData;
     }
 }
 

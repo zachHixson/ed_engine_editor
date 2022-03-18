@@ -26,6 +26,19 @@ export default new Vuex.Store({
     },
     getters: {
         getProjectName: state => state.projectName,
+        getProjectData: (state, getters) => {
+            return {
+                projectName: state.projectName,
+                editor_version: EDITOR_VERSION,
+                newestID: Shared.ID_Generator.getCurrentID(),
+                selectedRoomId: AssetBrowser.state.selectedRoom.id,
+                startRoom: getters['GameData/getStartRoom'],
+                sprites: getters['GameData/getAllSprites'],
+                objects: getters['GameData/getAllObjects'],
+                rooms: getters['GameData/getAllRooms'],
+                logic: getters['GameData/getAllLogic'],
+            };
+        },
         getSaveData: (state, getters) => {
             let saveObj = {
                 projectName: state.projectName,

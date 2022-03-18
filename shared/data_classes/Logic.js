@@ -1,6 +1,7 @@
 import {Asset} from './Asset';
 import {CATEGORY_ID} from '../Enums';
 import {DEFAULT_EVENTS} from '../nodes/Events';
+import {NODE_MAP} from '../nodes/Node_Library';
 import {Node} from './Node';
 
 export class Logic extends Asset{
