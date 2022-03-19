@@ -13,7 +13,7 @@ victorFile = uglify.minify(victorFile).code;
 
 const debug = process.argv.includes('--debug');
 const tempFilePath = rollupConfig[0].output.file;
-const outputPath = './compiled/';
+const outputPath = './_compiled/';
 const rolledShared = fs.readFileSync(tempFilePath, {encoding: 'utf-8'});
 const minifiedShared = debug ? rolledShared : uglify.minify(rolledShared, {output: {quote_style: 2}}).code;
 const combined = (victorFile + minifiedShared)

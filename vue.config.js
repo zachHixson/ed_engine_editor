@@ -13,7 +13,7 @@ module.exports = {
     resolve: {
       alias: {
         '@shared': path.resolve(__dirname, './shared'),
-        '@compiled': path.resolve(__dirname, './compiled'),
+        '@compiled': path.resolve(__dirname, './_compiled'),
       }
     }
   },

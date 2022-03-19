@@ -24,4 +24,4 @@ export function loadEngine(){
 };`;
 
 fs.unlinkSync(tempFilePath);
-fs.writeFileSync('./compiled/engine.js', formatted);
+fs.writeFileSync('./_compiled/engine.js', formatted);
