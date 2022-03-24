@@ -25,7 +25,7 @@ export class Room extends Asset{
     get curExitId(){return this._curExitId++};
 
     clone(){
-        let clone = new Room();
+        let clone = Object.assign(new Room(), this);
         clone.camera = this.camera.clone();
         clone.instances = this.instances.clone(true);
         clone.exits = this.exits.clone(true);
