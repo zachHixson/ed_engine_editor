@@ -1,3 +1,5 @@
+import Renderer from './Renderer.js';
+
 const DEFAULT_CALLBACKS = {
     log: msg => console.log(msg),
     warning: warning => console.warn(warning),
@@ -15,6 +17,8 @@ class Engine{
         this._callbacks = Object.assign({}, Engine.DEFAULT_CALLBACKS);
         this._timeStart = null;
         this._isRunning = false;
+        this._loadedRoom = null;
+        this._renderer = new Renderer(this._canvas);
 
         //map callbacks to engine
         for (let callback in callbacks){
@@ -29,7 +33,16 @@ class Engine{
         this._timeStart = Date.now();
 
         //bind input and document events
+
         //load first room
+        if (this._gameData.rooms.length <= 0){
+            this._callbacks.error('No rooms found in game data');
+            return;
+        }
+        else{
+            const startRoomId = this._gameData.startRoom ?? this._gameData.rooms[0].id;
+            this.loadRoom(startRoomId);
+        }
 
         this._updateLoop();
     }
@@ -39,11 +52,16 @@ class Engine{
         //unbind input and document events
     }
 
+    loadRoom(roomId){
+        const room = this._gameData.rooms.find(r => r.id == roomId);
+        this._loadedRoom = room.persist ? room : room.clone();
+        this._renderer.setRoom(this._loadedRoom);
+    }
+
     _updateLoop = ()=> {
         const ctx = this._canvas.getContext('2d');
 
-        ctx.fillStyle = "black";
-        ctx.fillRect(0, 0, this._canvas.width, this._canvas.height);
+        this._renderer.render();
 
         if (this._isRunning){
             requestAnimationFrame(this._updateLoop);

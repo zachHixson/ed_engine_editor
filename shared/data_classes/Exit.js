@@ -21,6 +21,13 @@ export class Exit{
     get TYPE(){return ENTITY_TYPE.EXIT};
     static get TRANSITION_TYPES(){return TRANSITION};
 
+    clone(){
+        const clone = new Exit(this.id, this.pos);
+        Object.assign(clone, this);
+        clone.pos = this.pos.clone();
+        return clone;
+    }
+
     toSaveData(){
         let sanitized = {};
 

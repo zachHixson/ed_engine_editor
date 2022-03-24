@@ -404,12 +404,4 @@ export default class Room_Edit_Renderer{
 
         return pt;
     }
-
-    newSpriteBuff(){
-        let newBuff = document.createElement('canvas');
-        newBuff.width = 16;
-        newBuff.height = 16;
-
-        return newBuff;
-    }
 }

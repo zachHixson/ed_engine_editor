@@ -9,8 +9,8 @@ const debug = process.argv.includes('--debug');
 const tempFilePath = rollupConfig[0].output.file;
 const rolledEngine = fs.readFileSync(tempFilePath, {encoding: 'utf-8'});
 const minifiedEngine = debug ? rolledEngine : uglify.minify(rolledEngine, {output: {quote_style: 2}}).code;
-const formatted = `
-let engineCode = \`${
+const formatted =
+`let engineCode = \`${
     minifiedEngine.replace(/\\/g, "\\\\")
     .replace(/\$/g, "\\$")
     .replace(/'/g, "\\'")
@@ -24,4 +24,4 @@ export function loadEngine(){
 };`;
 
 fs.unlinkSync(tempFilePath);
-fs.writeFileSync('./_compiled/engine.js', formatted);
+fs.writeFileSync('./_compiled/Engine.js', formatted);

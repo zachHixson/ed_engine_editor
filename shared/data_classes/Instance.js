@@ -17,6 +17,7 @@ export class Instance{
         this.collisionOverride = COLLISION_OVERRIDE.KEEP;
         this.groups = [];
         this.customVars = [];
+        this.animFrame = 0;
     }
 
     get TYPE(){return ENTITY_TYPE.INSTANCE}
@@ -26,6 +27,14 @@ export class Instance{
     get hasEditorFrame(){return this.objRef.hasEditorFrame};
     get editorFrame(){return this.objRef.editorFrame};
     get editorFrameID(){return this.objRef.editorFrameID};
+    get sprite(){return this.objRef?.sprite};
+
+    clone(){
+        const clone = new Instance(this.id, this.pos, this.objRef);
+        Object.assign(clone, this);
+        this.pos.clone();
+        return clone;
+    }
 
     toSaveData(){
         let sanitized = Object.assign({}, this);

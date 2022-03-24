@@ -38,6 +38,12 @@ export class Camera{
 
     set size(newSize){this._size = Math.max(newSize, 1)}
 
+    clone(){
+        const clone = Object.assign(new Camera(), this);
+        clone.pos = this.pos.clone();
+        return clone;
+    }
+
     fromSaveData(camera){
         Object.assign(this, camera);
         this.pos = Victor.fromObject(camera.pos);

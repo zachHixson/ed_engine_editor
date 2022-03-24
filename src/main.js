@@ -2,8 +2,8 @@ import Vue from 'vue'
 import App from './App.vue'
 import store from './store'
 import i18n from './i18n'
-import {loadShared} from '@compiled/shared';
-import {loadEngine} from '@compiled/engine';
+import {loadShared} from '@compiled/Shared';
+import {loadEngine} from '@compiled/Engine';
 
 window.EDITOR = {};
 Vue.config.productionTip = false;

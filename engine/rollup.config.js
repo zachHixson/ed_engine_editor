@@ -1,5 +1,5 @@
 module.exports = [{
-    input: './engine/engine.js',
+    input: './engine/Engine.js',
     output: {
         file: './_compiled/engine_temp.js',
         format: 'iife',

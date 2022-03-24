@@ -1,12 +1,14 @@
 import {Asset} from './Asset';
+import {Camera} from './Camera';
+import {Spacial_Collection} from './Spacial_Collection';
 import {CATEGORY_ID} from '../Enums';
 
 export class Room extends Asset{
     constructor(){
         super();
-        this.camera = new Shared.Camera();
-        this.instances = new Shared.Spacial_Collection(2000, 64);
-        this.exits = new Shared.Spacial_Collection(2000, 64);
+        this.camera = new Camera();
+        this.instances = new Spacial_Collection(2000, 64);
+        this.exits = new Spacial_Collection(2000, 64);
         this.bgColor = "#FFFFFF";
         this.persist = false;
         this.useGravity = false;
@@ -21,6 +23,14 @@ export class Room extends Asset{
     get exitsList(){return this.exits.zSort}
     get curInstId(){return this._curInstId++};
     get curExitId(){return this._curExitId++};
+
+    clone(){
+        let clone = new Room();
+        clone.camera = this.camera.clone();
+        clone.instances = this.instances.clone(true);
+        clone.exits = this.exits.clone(true);
+        return clone;
+    }
 
     toSaveData(){
         let sanitized = Object.assign({}, this);

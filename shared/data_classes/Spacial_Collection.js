@@ -25,6 +25,15 @@ export class Spacial_Collection{
         }
     }
 
+    clone(recursive = false){
+        const clone = new Spacial_Collection(this.area, this.cellSize);
+        this.zSort.forEach(item => {
+            const newItem = recursive ? item.clone() : item;
+            clone.add(newItem, newItem.pos)
+        });
+        return clone;
+    }
+
     toSaveData(){
         let rawInstances = this.zSort.toArray();
         let sanitizedInstances = [];

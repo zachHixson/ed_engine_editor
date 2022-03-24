@@ -17,8 +17,8 @@ const outputPath = './_compiled/';
 const rolledShared = fs.readFileSync(tempFilePath, {encoding: 'utf-8'});
 const minifiedShared = debug ? rolledShared : uglify.minify(rolledShared, {output: {quote_style: 2}}).code;
 const combined = (victorFile + minifiedShared)
-const formatted = `
-let sharedLibraryFile = \`${
+const formatted =
+`let sharedLibraryFile = \`${
     combined.replace(/\\/g, "\\\\")
     .replace(/\$/g, "\\$")
     .replace(/'/g, "\\'")
@@ -37,4 +37,4 @@ if (!fs.existsSync(outputPath)){
 }
 
 fs.unlinkSync(tempFilePath);
-fs.writeFileSync(outputPath + 'shared.js', formatted);
+fs.writeFileSync(outputPath + 'Shared.js', formatted);

@@ -185,6 +185,16 @@ export class Sprite extends Asset{
         return Sprite.drawToCanvas(frame, canvas);
     }
 
+    drawAllFrames(){
+        const frameArr = new Array(this.frames.length);
+
+        for (let i = 0; i < frameArr.length; i++){
+            frameArr[i] = this.drawToCanvas(i);
+        }
+
+        return frameArr;
+    }
+
     compressFrames(frames){
         let compressed = this._compTemporal(frames);
         compressed = this._compFrame(compressed);
