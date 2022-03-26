@@ -3,6 +3,7 @@ export default class Renderer{
         this.canvas = canvas;
         this.room = null;
         this._spriteCache = {};
+        this._scaleFac = null;
     }
 
     setRoom = (room)=>{
@@ -18,6 +19,8 @@ export default class Renderer{
 
         const ctx = this.canvas.getContext('2d');
 
+        this._scaleFac = this.canvas.width / 256;
+
         //draw background
         ctx.fillStyle = this.room.bgColor;
         ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -28,16 +31,17 @@ export default class Renderer{
     _drawInstances = ()=>{
         const ctx = this.canvas.getContext('2d');
         const {camera, instances} = this.room;
+        const scale = camera.size * this._scaleFac;
 
         ctx.imageSmoothingEnabled = false;
         ctx.webkitImageSmoothingEnabled = false;
 
-        //move to camera
+        //camera transform
         ctx.translate(
-            (this.canvas.width / 2) + (camera.pos.x * camera.size),
-            (this.canvas.height / 2) + (camera.pos.y * camera.size)
+            (this.canvas.width / 2) + (camera.pos.x * scale),
+            (this.canvas.height / 2) + (camera.pos.y * scale)
         );
-        ctx.scale(camera.size, camera.size);
+        ctx.scale(scale, scale);
 
         instances.zSort.forEach((instance)=>{
             if (instance.sprite){

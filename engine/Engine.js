@@ -76,8 +76,9 @@ class Engine{
     }
 
     _processDebugNav = ()=>{
+        const camera = this._loadedRoom.camera;
         const controlVelocity = new Victor(0, 0);
-        const speed = 2;
+        const speed = 2 * camera.size;
         const zoomSpeed = 0.1;
         let zoom = 0;
 
@@ -105,8 +106,8 @@ class Engine{
             zoom -= zoomSpeed;
         }
 
-        this._loadedRoom.camera.velocity.copy(controlVelocity);
-        this._loadedRoom.camera.size += zoom;
+        camera.velocity.copy(controlVelocity);
+        camera.size += zoom;
     }
 
     _parseGameData = (gameData)=>{

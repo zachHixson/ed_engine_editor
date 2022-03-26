@@ -37,7 +37,7 @@ export class Camera{
 
     get size(){return this._size};
 
-    set size(newSize){this._size = Math.max(newSize, 1)}
+    set size(newSize){this._size = Math.max(newSize, 0.5)}
 
     clone(){
         const clone = Object.assign(new Camera(), this);
