@@ -111,7 +111,9 @@ export class Logic extends Asset{
             });
         }
 
-        this.refreshEditorEventList();
+        if (window.editor){
+            this.refreshEditorEventList();
+        }
 
         return this;
     }

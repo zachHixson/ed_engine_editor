@@ -20,6 +20,7 @@
             </div>
         </div>
         <div class="controls">
+            <button class="iconBtn" :title="$t('editor_main.package')" @click="packageGame"><img class="icon" src="@/assets/package.svg"/></button>
             <button class="iconBtn" :title="$t('editor_main.debug')" @click="playState = PLAY_STATES.DEBUGGING"><img class="icon" src="@/assets/debug.svg"/></button>
             <button class="iconBtn" :title="$t('editor_main.run')" @click="playState = PLAY_STATES.PLAYING"><img class="icon" src="@/assets/play.svg"/></button>
         </div>
@@ -55,7 +56,7 @@ export default {
                 {
                     id: enumID++,
                     text: this.$t('file_menu.export'),
-                    method: () => {console.log("Export Game")}
+                    method: this.packageGame
                 },
                 {
                     id: enumID++,
@@ -133,6 +134,9 @@ export default {
                 }
                 reader.readAsText(input.files[0]);
             }
+        },
+        packageGame(){
+            this.$emit('package-game');
         }
     }
 }

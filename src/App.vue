@@ -3,7 +3,8 @@
         <HeaderPanel class="headerPanel"
             @new-project="newProject"
             @open-project="openProject"
-            @save-project="saveProject" />
+            @save-project="saveProject"
+            @package-game="packageGame" />
         <TabPanel class="TabPanel" ref="TabPanel"/>
         <AssetBrowser class="assetBrowser" ref="assetBrowser" @asset-selected="updateEditorAsset" @asset-deleted="updateAfterDeletion" />
         <EditorWindow class="editorWindow" ref="editorWindow" @asset-changed="updateAssetPreviews"/>
@@ -14,6 +15,7 @@
 </template>
 
 <script>
+import {template} from '@compiled/Engine';
 import {saveAs} from 'file-saver';
 import HeaderPanel from './components/HeaderPanel';
 import TabPanel from './components/TabPanel';
@@ -63,6 +65,18 @@ export default {
         saveProject(){
             let blob = new Blob([this.$store.getters['getSaveData']]);
             saveAs(blob, "MyFile.edproj");
+        },
+        packageGame(){
+            let projectName = this.$store.getters['getProjectName'];
+            let shared = document.getElementById('shared').innerHTML;
+            let engine = document.getElementById('engine').innerHTML;
+            let gameData = this.$store.getters['getSaveData'];
+            let compiled = template.replace('[title]', projectName)
+                .replace('[shared]', shared)
+                .replace('[engine]', engine)
+                .replace('[gameData]', gameData);
+            let blob = new Blob([compiled]);
+            saveAs(blob, `${projectName}.html`);
         },
         resetUI(){
             this.$store.dispatch('AssetBrowser/deselectAssets');

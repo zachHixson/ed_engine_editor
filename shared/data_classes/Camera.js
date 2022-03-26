@@ -48,6 +48,7 @@ export class Camera{
     fromSaveData(camera){
         Object.assign(this, camera);
         this.pos = Victor.fromObject(camera.pos);
+        this.velocity = Victor.fromObject(camera.velocity);
 
         return this;
     }

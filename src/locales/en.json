@@ -11,7 +11,8 @@
         "object_tab" : "Object",
         "logic_tab" : "Logic",
         "run" : "Play",
-        "debug" : "Debug"
+        "debug" : "Debug",
+        "package": "Export"
     },
     "file_menu":{
         "new": "New",

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[title]</title>
+    <script id="shared">[shared]</script>
+    <script id="engine">[engine]</script>
+    <script id="gameData" type="text/gameData">[gameData]</script>
+    <script>
+        window.onload = ()=>{
+            //init engine
+            const canvas = document.getElementById('canvas');
+            const gameData = document.getElementById('gameData').innerHTML;
+            const engine = new Engine({canvas, gameData});
+            engine.start();
+
+            //set loop to resize canvas
+            setInterval(()=>{
+                const dim = Math.min(document.body.clientWidth, document.body.clientHeight);
+                canvas.width = dim;
+                canvas.height = dim;
+            }, 20);
+        }
+    </script>
+    <style>
+        html, body{
+            padding: 0;
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #CCCCCC;
+        }
+
+        body{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas">
+        //Error. This game requires HTML5 canvas. If you see this message update your browser
+    </canvas>
+</body>
+</html>
