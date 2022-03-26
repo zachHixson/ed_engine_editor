@@ -22,6 +22,7 @@ Object.freeze(MOVE_TYPES);
 export class Camera{
     constructor() {
         this.pos = new Victor(0, -16);
+        this.velocity = new Victor(0, 0);
         this._size = 1;
         this.moveType = MOVE_TYPES.LOCKED;
         this.scrollDir = SCROLL_DIRS.RIGHT;
@@ -49,5 +50,9 @@ export class Camera{
         this.pos = Victor.fromObject(camera.pos);
 
         return this;
+    }
+
+    update(){
+        this.pos.add(this.velocity);
     }
 };

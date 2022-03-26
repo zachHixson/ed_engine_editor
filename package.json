@@ -5,8 +5,8 @@
   "scripts": {
     "serve": "npm run build-deps:dev && concurrently npm:serve:*",
     "serve:editor": "vue-cli-service serve",
-    "serve:engine": "watch \"npm run build-engine:dev\" ./engine",
-    "serve:shared": "watch \"npm run build-shared:dev\" ./shared",
+    "serve:engine": "watch \"npm run build-engine:dev\" ./engine --interval=0.01",
+    "serve:shared": "watch \"npm run build-shared:dev\" ./shared --interval=0.01",
     "build": "npm run build-deps && vue-cli-service build",
     "build-portable": "npm run build-deps && vue-cli-service build --mode portable",
     "build-engine": "node ./scripts/build_engine.js",

@@ -16,9 +16,11 @@ class Engine{
         this._gameData = this._parseGameData(gameData);
         this._callbacks = Object.assign({}, Engine.DEFAULT_CALLBACKS);
         this._timeStart = null;
+        this._lastLoopTimestamp = null;
         this._isRunning = false;
         this._loadedRoom = null;
         this._renderer = new Renderer(this._canvas);
+        this._keymap = {};
 
         //map callbacks to engine
         for (let callback in callbacks){
@@ -28,11 +30,12 @@ class Engine{
 
     get time(){return Date.now() - this._timeStart}
 
-    start = ()=> {
+    start = ()=>{
         this._isRunning = true;
         this._timeStart = Date.now();
+        this._lastLoopTimestamp = this.time;
 
-        //bind input and document events
+        this._bindInputEvents();
 
         //load first room
         if (this._gameData.rooms.length <= 0){
@@ -47,28 +50,66 @@ class Engine{
         this._updateLoop();
     }
 
-    stop = ()=> {
+    stop = ()=>{
         this._isRunning = false;
-        //unbind input and document events
+        this._unbindInputEvents();
     }
 
-    loadRoom(roomId){
+    loadRoom = (roomId)=>{
         const room = this._gameData.rooms.find(r => r.id == roomId);
         this._loadedRoom = room.persist ? room : room.clone();
         this._renderer.setRoom(this._loadedRoom);
     }
 
-    _updateLoop = ()=> {
+    _updateLoop = ()=>{
         const ctx = this._canvas.getContext('2d');
+        const deltaTime = this.time - this._lastLoopTimestamp;
 
+        this._loadedRoom.camera.update(deltaTime);
+        this._processDebugNav();
         this._renderer.render();
 
         if (this._isRunning){
+            this._lastLoopTimestamp = this.time;
             requestAnimationFrame(this._updateLoop);
         }
     }
 
-    _parseGameData(gameData){
+    _processDebugNav = ()=>{
+        const controlVelocity = new Victor(0, 0);
+        const speed = 2;
+        const zoomSpeed = 0.1;
+        let zoom = 0;
+
+        if (this._keymap['i']){
+            controlVelocity.y += speed;
+        }
+
+        if (this._keymap['k']){
+            controlVelocity.y -= speed;
+        }
+
+        if (this._keymap['j']){
+            controlVelocity.x += speed;
+        }
+
+        if (this._keymap['l']){
+            controlVelocity.x -= speed;
+        }
+
+        if (this._keymap['o']){
+            zoom += zoomSpeed;
+        }
+
+        if (this._keymap['u']){
+            zoom -= zoomSpeed;
+        }
+
+        this._loadedRoom.camera.velocity.copy(controlVelocity);
+        this._loadedRoom.camera.size += zoom;
+    }
+
+    _parseGameData = (gameData)=>{
         if (typeof gameData == 'object'){
             return gameData;
         }
@@ -91,6 +132,24 @@ class Engine{
         loadedData.logic = parsedJson.logic.map(l => new Shared.Logic().fromSaveData(l));
 
         return loadedData;
+    }
+
+    _bindInputEvents = ()=>{
+        document.addEventListener("keydown", this._keyDown);
+        document.addEventListener("keyup", this._keyUp);
+    }
+
+    _keyDown = (e)=>{
+        this._keymap[e.key.toLowerCase()] = true;
+    }
+
+    _keyUp = (e)=>{
+        this._keymap[e.key.toLowerCase()] = false;
+    }
+
+    _unbindInputEvents = ()=>{
+        document.removeEventListener("keydown", this._keyDown);
+        document.removeEventListener("keyup", this._keyUp);
     }
 }
 

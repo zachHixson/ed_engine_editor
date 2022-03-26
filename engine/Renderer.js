@@ -5,12 +5,12 @@ export default class Renderer{
         this._spriteCache = {};
     }
 
-    setRoom(room){
+    setRoom = (room)=>{
         this.room = room;
         this._spriteCache = {};
     }
 
-    render(){
+    render = ()=>{
         if (!this.room){
             console.error('Cannot render scene without room being set');
             return;
@@ -25,15 +25,19 @@ export default class Renderer{
         this._drawInstances();
     }
 
-    _drawInstances(){
+    _drawInstances = ()=>{
         const ctx = this.canvas.getContext('2d');
         const {camera, instances} = this.room;
 
+        ctx.imageSmoothingEnabled = false;
+        ctx.webkitImageSmoothingEnabled = false;
+
         //move to camera
         ctx.translate(
-            (this.canvas.width / 2) + camera.pos.x,
-            (this.canvas.height / 2) + camera.pos.y
+            (this.canvas.width / 2) + (camera.pos.x * camera.size),
+            (this.canvas.height / 2) + (camera.pos.y * camera.size)
         );
+        ctx.scale(camera.size, camera.size);
 
         instances.zSort.forEach((instance)=>{
             if (instance.sprite){
