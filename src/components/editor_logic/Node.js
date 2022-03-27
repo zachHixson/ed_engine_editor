@@ -43,13 +43,17 @@ export default class Node{
 
     toSaveData(){
         let inputs = [];
+        let roundedPos = new Victor(
+            Math.floor(this.pos.x * 100) / 100,
+            Math.floor(this.pos.y * 100) / 100
+        );
 
         this.inputs.forEach(({id, value}) => inputs.push({id, value}));
 
         return {
             templateId: this.templateId,
             nodeId: this.nodeId,
-            pos: this.pos.toObject(),
+            pos: roundedPos.toObject(),
             inputs,
         }
     }
