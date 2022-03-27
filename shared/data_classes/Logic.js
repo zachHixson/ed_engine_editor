@@ -8,21 +8,18 @@ export class Logic extends Asset{
     constructor(){
         super();
         this.events = new Map();
+        this._selectedEventId = null;
+        this._nextNodeId = 0;
+        this._nextConnectionId = 0;
 
-        if (window.EDITOR){
-            this._selectedEventId = null;
-            this._nextNodeId = 0;
-            this._nextConnectionId = 0;
-
-            //the following 3 properties act as pointers to the data in the respective Map().
-            //Vue does not observe Map() changes, but it can watch a pointer to the same data.
-            this.eventsList = [];
-            this.eventNodeList = [];
-            this.eventConnectionsList = [];
-            this.selectedNodes = [];
-            
-            delete this.navState;
-        }
+        //the following 3 properties act as pointers to the data in the respective Map().
+        //Vue does not observe Map() changes, but it can watch a pointer to the same data.
+        this.eventsList = [];
+        this.eventNodeList = [];
+        this.eventConnectionsList = [];
+        this.selectedNodes = [];
+        
+        delete this.navState;
 
         DEFAULT_EVENTS.forEach(event => {
             this.events.set(event.id, null);
@@ -110,10 +107,8 @@ export class Logic extends Asset{
                 navState: this.parseNavData(eventData.navState),
             });
         }
-
-        if (window.editor){
-            this.refreshEditorEventList();
-        }
+        
+        this.refreshEditorEventList();
 
         return this;
     }
@@ -123,24 +118,20 @@ export class Logic extends Asset{
         let newEvent = new Shared.Node(eventTamplate, this.nextNodeId, pos);
         newEvent.isEvent = true;
 
-        if (window.EDITOR){
-            this.events.set(eventId, {
-                entry: newEvent,
-                nodes: [newEvent],
-                connections: [],
-                navState: this.defaultNavState,
-            });
+        this.events.set(eventId, {
+            entry: newEvent,
+            nodes: [newEvent],
+            connections: [],
+            navState: this.defaultNavState,
+        });
 
-            this.refreshEditorEventList();
-        }
+        this.refreshEditorEventList();
     }
 
     unregisterEvent(eventId){
         this.events.set(eventId, null);
 
-        if (window.EDITOR){
-            this.refreshEditorEventList();
-        }
+        this.refreshEditorEventList();
     }
 
     refreshEditorEventList(){
@@ -154,17 +145,13 @@ export class Logic extends Asset{
     }
 
     addNode(templateId, pos, nodeRef = null){
-        if (window.EDITOR){
-            let nodeTemplate = Shared.NODE_MAP.get(templateId);
-            let newNode = nodeRef ?? new Shared.Node(nodeTemplate, this.nextNodeId, pos);
-            let curEvent = this.events.get(this.selectedEventId);
+        let nodeTemplate = Shared.NODE_MAP.get(templateId);
+        let newNode = nodeRef ?? new Shared.Node(nodeTemplate, this.nextNodeId, pos);
+        let curEvent = this.events.get(this.selectedEventId);
 
-            curEvent.nodes.push(newNode);
+        curEvent.nodes.push(newNode);
 
-            return newNode;
-        }
-
-        return null;
+        return newNode;
     }
 
     deleteNode(nodeRef){

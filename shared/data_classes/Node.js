@@ -7,13 +7,9 @@ export class Node{
         this.outTriggers = new Map();
         this.inputs = new Map();
         this.outputs = new Map();
-        this.methods = new Map();
-
-        if (window.EDITOR){
-            this.domRef = null;
-            this.pos = pos.clone();
-            this.updateConnectionsCallback = null;
-        }
+        this.domRef = null;
+        this.pos = pos.clone();
+        this.updateConnectionsCallback = null;
 
         template.inTriggers?.forEach(trigger => {
             this.inTriggers.set(trigger.id, {
@@ -41,13 +37,8 @@ export class Node{
             this.outputs.set(output.id, {
                 id: output.id,
                 type: output.type,
-                get: output.get,
             });
         });
-
-        for (let method in template.methods){
-            this.methods.set(method, template.methods[method]);
-        }
     }
 
     toSaveData(){

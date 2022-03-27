@@ -1,4 +1,5 @@
 import Renderer from './Renderer.js';
+import Logic from './Logic';
 
 const DEFAULT_CALLBACKS = {
     log: msg => console.log(msg),
@@ -130,7 +131,7 @@ class Engine{
         loadedData.sprites = parsedJson.sprites.map(s => new Shared.Sprite().fromSaveData(s));
         loadedData.objects = parsedJson.objects.map(o => new Shared.Game_Object().fromSaveData(o, loadedData.sprites));
         loadedData.rooms = parsedJson.rooms.map(r => new Shared.Room().fromSaveData(r, loadedData.objects));
-        loadedData.logic = parsedJson.logic.map(l => new Shared.Logic().fromSaveData(l));
+        loadedData.logic = parsedJson.logic.map(l => new Logic(l));
 
         return loadedData;
     }
