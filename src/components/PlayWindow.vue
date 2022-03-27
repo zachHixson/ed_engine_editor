@@ -45,7 +45,7 @@ export default {
 
         this.engine = new Engine({
             canvas: this.$refs.canvas,
-            gameData: this.$store.getters['getSaveData'],
+            gameData: this.$store.getters['getProjectData'],
         });
         this.engine.start();
     },

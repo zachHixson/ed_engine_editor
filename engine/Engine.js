@@ -113,6 +113,8 @@ class Engine{
 
     _parseGameData = (gameData)=>{
         if (typeof gameData == 'object'){
+            gameData.logic = gameData.logic.map(l => l.toSaveData());
+            gameData.logic = gameData.logic.map(l => new Logic(l));
             return gameData;
         }
 
