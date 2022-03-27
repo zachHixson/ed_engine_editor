@@ -39,7 +39,5 @@ export default class Logic{
 
             this.events[event.entry.templateId] = eventNode;
         });
-
-        console.log(this.events);
     }
 }

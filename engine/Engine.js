@@ -113,9 +113,10 @@ class Engine{
 
     _parseGameData = (gameData)=>{
         if (typeof gameData == 'object'){
-            gameData.logic = gameData.logic.map(l => l.toSaveData());
-            gameData.logic = gameData.logic.map(l => new Logic(l));
-            return gameData;
+            const newLogic = Object.assign({}, gameData);
+            newLogic.logic = newLogic.logic.map(l => l.toSaveData());
+            newLogic.logic = newLogic.logic.map(l => new Logic(l));
+            return newLogic;
         }
 
         let parsedJson;
