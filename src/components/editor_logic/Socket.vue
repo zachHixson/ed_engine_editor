@@ -36,7 +36,7 @@
 </template>
 
 <script>
-// import Shared.Node_Connection from '@shared/data_classes/Shared.Node_Connection';
+import Node_Connection from '@/components/editor_logic/Node_Connection';
 
 export default {
     name: 'Socket',
@@ -80,7 +80,7 @@ export default {
             });
         },
         mouseDown(event){
-            let connection = new Shared.Node_Connection();
+            let connection = new Node_Connection();
 
             event.stopPropagation();
 

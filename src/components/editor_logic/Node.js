@@ -1,4 +1,4 @@
-export class Node{
+export default class Node{
     constructor(template, id, pos = new Victor()){
         this.templateId = template.id;
         this.nodeId = id;

@@ -1,12 +1,10 @@
-import {Asset} from './Asset';
-import {CATEGORY_ID} from '../Enums';
-import {DEFAULT_EVENTS} from '../nodes/Events';
-import {NODE_MAP} from '../nodes/Node_Library';
-import {Node} from './Node';
+import Node from './Node';
+import Node_Connection from './Node_Connection';
 
-export class Logic extends Asset{
+export default class Logic{
     constructor(){
-        super();
+        this.id = Shared.ID_Generator.newID();
+        this.name = this.id;
         this.events = new Map();
         this._selectedEventId = null;
         this._nextNodeId = 0;
@@ -18,19 +16,21 @@ export class Logic extends Asset{
         this.eventNodeList = [];
         this.eventConnectionsList = [];
         this.selectedNodes = [];
-        
-        delete this.navState;
 
-        DEFAULT_EVENTS.forEach(event => {
+        Shared.DEFAULT_EVENTS.forEach(event => {
             this.events.set(event.id, null);
         });
     }
 
-    get category_ID(){return CATEGORY_ID.LOGIC}
+    get category_ID(){return Shared.CATEGORY_ID.LOGIC}
     get nextNodeId(){return this._nextNodeId++};
     get selectedEventId(){return this._selectedEventId}
     get selectedEvent(){return (this.selectedEventId) ? this.events.get(this.selectedEventId) : null}
     get navState(){return (this.selectedEventId) ? this.selectedEvent.navState : this.defaultNavState}
+    get defaultNavState(){return {
+        offset: new Victor(0, 0),
+        zoomFac: 1,
+    }}
 
     set selectedEventId(newId){
         let currentTree = this.events.get(newId);
@@ -86,10 +86,10 @@ export class Logic extends Asset{
 
         for (let i = 0; i < data.events.length; i++){
             let eventData = data.events[i];
-            let entryTemplate = DEFAULT_EVENTS.get(eventData.entry.templateId);
+            let entryTemplate = Shared.DEFAULT_EVENTS.get(eventData.entry.templateId);
             let entry = new Node(entryTemplate, eventData.entry.id, Victor.fromObject(eventData.entry.pos));
             let nodes = [entry, ...eventData.nodes.map(node => new Node(
-                NODE_MAP.get(node.templateId),
+                Shared.NODE_MAP.get(node.templateId),
                 node.nodeId,
                 Victor.fromObject(node.pos)
             ).fromSaveData(node))];
@@ -102,9 +102,12 @@ export class Logic extends Asset{
                 entry,
                 nodes,
                 connections: eventData.connections.map(
-                    connection => new Shared.Node_Connection(connection).fromSaveData(connection, nodeMap)
+                    connection => new Node_Connection(connection).fromSaveData(connection, nodeMap)
                 ),
-                navState: this.parseNavData(eventData.navState),
+                navState: {
+                    offset: new Victor.fromObject(eventData.navState.offset),
+                    zoomFac: eventData.navState.zoomFac
+                }
             });
         }
         
@@ -115,7 +118,7 @@ export class Logic extends Asset{
 
     registerEvent(eventId, pos = new Victor()){
         let eventTamplate = Shared.DEFAULT_EVENTS.get(eventId);
-        let newEvent = new Shared.Node(eventTamplate, this.nextNodeId, pos);
+        let newEvent = new Node(eventTamplate, this.nextNodeId, pos);
         newEvent.isEvent = true;
 
         this.events.set(eventId, {
@@ -146,7 +149,7 @@ export class Logic extends Asset{
 
     addNode(templateId, pos, nodeRef = null){
         let nodeTemplate = Shared.NODE_MAP.get(templateId);
-        let newNode = nodeRef ?? new Shared.Node(nodeTemplate, this.nextNodeId, pos);
+        let newNode = nodeRef ?? new Node(nodeTemplate, this.nextNodeId, pos);
         let curEvent = this.events.get(this.selectedEventId);
 
         curEvent.nodes.push(newNode);
@@ -173,9 +176,7 @@ export class Logic extends Asset{
             connectionObj.id = this._nextConnectionId++;
         }
 
-        if (window.EDITOR){
-            this.eventConnectionsList.push(connectionObj);
-        }
+        this.eventConnectionsList.push(connectionObj);
     }
 
     removeConnection(id){

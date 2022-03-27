@@ -1,4 +1,4 @@
-export class Node_Connection{
+export default class Node_Connection{
     constructor(inpObj = {}){
         this.id = inpObj.id;
         this.type = inpObj.type;

@@ -1,4 +1,5 @@
 import i18n from '@/i18n';
+import Logic from '@/components/editor_logic/Logic';
 
 const state = {
     startRoomId: null,
@@ -10,31 +11,6 @@ const state = {
 
 const getters = {
     getStartRoom: state => state.startRoomId,
-    getRandomSprite: () => {
-        let tempData = [];
-
-        for (let i = 0; i < 16 * 16; i++) {
-            let hexAlph = "0123456789ABCDEF";
-            let curHex = '#';
-            for (let i = 0; i < 6; i++) {
-                curHex += (hexAlph.charAt(Math.floor(Math.random() * hexAlph.length)));
-            }
-
-            if (Math.random() > 0.5){
-                tempData.push(curHex);
-            }
-            else{
-                tempData.push('');
-            }
-        }
-
-        tempData[0] = "#FF0000";
-        tempData[1] = "#00FF00";
-        tempData[2] = "#0000FF";
-
-        return tempData;
-    },
-    getEmptySprite: () => new Array(16 * 16).fill(''),
     getAllSprites: state => state.sprites,
     getAllObjects: state => state.objects,
     getAllLogic: state => state.logic,
@@ -83,7 +59,7 @@ const mutations = {
                 break;
             case Shared.CATEGORY_ID.LOGIC:
                 let logicName = i18n.tc(`asset_browser.logic_prefix`) + getSuffixNum(state.logic);
-                let newLogic = new Shared.Logic();
+                let newLogic = new Logic();
                 newLogic.name = logicName;
                 state.logic.push(newLogic);
                 break;
@@ -126,7 +102,7 @@ const mutations = {
         state.sprites = loadObj.sprites.map(s => new Shared.Sprite().fromSaveData(s));
         state.objects = loadObj.objects.map(o => new Shared.Game_Object().fromSaveData(o, state.sprites));
         state.rooms = loadObj.rooms.map(r => new Shared.Room().fromSaveData(r, state.objects));
-        state.logic = loadObj.logic.map(l => new Shared.Logic().fromSaveData(l));
+        state.logic = loadObj.logic.map(l => new Logic().fromSaveData(l));
     },
     purgeMissingReferences(){
         state.objects.forEach(o => o.purgeMissingReferences(state.sprites));
