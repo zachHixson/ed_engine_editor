@@ -193,7 +193,7 @@
 <script>
 import UndoPanel from '@/components/common/UndoPanel';
 import NavControlPanel from '@/components/common/NavControlPanel';
-import Node from '@/components/editor_logic/Node';
+import Node from '@/components/editor_logic/Node.vue';
 import Connection from '@/components/editor_logic/Connection';
 import HotkeyMap from '@/components/common/HotkeyMap';
 import Undo_Store, {UndoHelpers} from '@/components/common/Undo_Store';
