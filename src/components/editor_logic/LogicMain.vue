@@ -194,6 +194,7 @@
 import UndoPanel from '@/components/common/UndoPanel';
 import NavControlPanel from '@/components/common/NavControlPanel';
 import Node from '@/components/editor_logic/Node.vue';
+import Node_Connection from '@/components/editor_logic/Node_Connection';
 import Connection from '@/components/editor_logic/Connection';
 import HotkeyMap from '@/components/common/HotkeyMap';
 import Undo_Store, {UndoHelpers} from '@/components/common/Undo_Store';
@@ -841,7 +842,7 @@ export default {
              makeCommit &= !!(connectionObj.startNode && connectionObj.endNode);
 
             if (makeCommit){
-                let data = {connectionObj: Object.assign(new Shared.Node_Connection(), connectionObj)};
+                let data = {connectionObj: Object.assign(new Node_Connection(), connectionObj)};
                 let prevSocket = this.undoStore.cache.get('prev_socket');
 
                 Object.assign(data.connectionObj, prevSocket);

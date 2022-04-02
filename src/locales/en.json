@@ -179,6 +179,9 @@
         "self": "Self"
     },
     "node":{
+        "default": "",
+        "true": "True",
+        "false": "False",
         "e_create": "Create",
         "e_create_trigger_default": "",
         "e_update": "Update",
@@ -242,6 +245,8 @@
         "all_types_oAny": "oAny",
         "all_types_oObject": "oObject",
         "all_types_oString": "oString",
-        "all_types_oBool": "oBool"
+        "all_types_oBool": "oBool",
+        "branch": "Branch",
+        "condition": "Condition"
     }
 }

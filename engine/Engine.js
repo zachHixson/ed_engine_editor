@@ -15,17 +15,18 @@ class Engine{
     constructor({canvas, gameData, callbacks = {}}){
         this._canvas = canvas;
         this._gameData = this._parseGameData(gameData);
-        this._callbacks = Object.assign({}, Engine.DEFAULT_CALLBACKS);
         this._timeStart = null;
         this._lastLoopTimestamp = null;
         this._isRunning = false;
         this._loadedRoom = null;
         this._renderer = new Renderer(this._canvas);
-        this._keymap = {};
+
+        this.callbacks = Object.assign({}, Engine.DEFAULT_CALLBACKS);
+        this.keymap = {};
 
         //map callbacks to engine
         for (let callback in callbacks){
-            this._callbacks[callback] = callbacks[callback];
+            this.callbacks[callback] = callbacks[callback];
         }
     }
 
@@ -40,7 +41,7 @@ class Engine{
 
         //load first room
         if (this._gameData.rooms.length <= 0){
-            this._callbacks.error('No rooms found in game data');
+            this.callbacks.error('No rooms found in game data');
             return;
         }
         else{
@@ -83,27 +84,27 @@ class Engine{
         const zoomSpeed = 0.1;
         let zoom = 0;
 
-        if (this._keymap['i']){
+        if (this.keymap['i']){
             controlVelocity.y += speed;
         }
 
-        if (this._keymap['k']){
+        if (this.keymap['k']){
             controlVelocity.y -= speed;
         }
 
-        if (this._keymap['j']){
+        if (this.keymap['j']){
             controlVelocity.x += speed;
         }
 
-        if (this._keymap['l']){
+        if (this.keymap['l']){
             controlVelocity.x -= speed;
         }
 
-        if (this._keymap['o']){
+        if (this.keymap['o']){
             zoom += zoomSpeed;
         }
 
-        if (this._keymap['u']){
+        if (this.keymap['u']){
             zoom -= zoomSpeed;
         }
 
@@ -145,11 +146,11 @@ class Engine{
     }
 
     _keyDown = (e)=>{
-        this._keymap[e.key.toLowerCase()] = true;
+        this.keymap[e.key.toLowerCase()] = true;
     }
 
     _keyUp = (e)=>{
-        this._keymap[e.key.toLowerCase()] = false;
+        this.keymap[e.key.toLowerCase()] = false;
     }
 
     _unbindInputEvents = ()=>{
