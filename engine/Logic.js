@@ -1,13 +1,13 @@
 import Node from './Node';
 
 export default class Logic{
-    constructor(logicData){
+    constructor(logicData, api){
         this.id = logicData.id;
         this.events = {};
         
         logicData.events.forEach(event => {
             const eventTemplate = Shared.DEFAULT_EVENTS.get(event.entry.templateId);
-            const eventNode = new Node(eventTemplate, event.id);
+            const eventNode = new Node(eventTemplate, event.id, api);
             const nodeMap = {};
 
             //load all nodes into nodeMap
@@ -15,7 +15,7 @@ export default class Logic{
 
             event.nodes.forEach(node => {
                 const nodeTemplate = Shared.NODE_MAP.get(node.templateId);
-                const nodeObj = new Node(nodeTemplate, node.nodeId);
+                const nodeObj = new Node(nodeTemplate, node.nodeId, api);
 
                 //set nodes input values from src
                 node.inputs.forEach(srcInput => {

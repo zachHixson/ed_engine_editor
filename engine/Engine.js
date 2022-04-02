@@ -1,18 +1,12 @@
 import Renderer from './Renderer.js';
 import Logic from './Logic';
-
-const DEFAULT_CALLBACKS = {
-    log: msg => console.log(msg),
-    warning: warning => console.warn(warning),
-    error: error => console.error(error),
-};
-Object.freeze(DEFAULT_CALLBACKS);
+import API from './API';
 
 class Engine{
     static get VERSION(){return '0.1.0'}
-    static get DEFAULT_CALLBACKS(){return DEFAULT_CALLBACKS}
+    static get DEFAULT_ENV_CALLBACKS(){return API.DEFAULT_ENV_CALLBACKS}
 
-    constructor({canvas, gameData, callbacks = {}}){
+    constructor({canvas, gameData, callbacks}){
         this._canvas = canvas;
         this._gameData = this._parseGameData(gameData);
         this._timeStart = null;
@@ -20,14 +14,12 @@ class Engine{
         this._isRunning = false;
         this._loadedRoom = null;
         this._renderer = new Renderer(this._canvas);
-
-        this.callbacks = Object.assign({}, Engine.DEFAULT_CALLBACKS);
-        this.keymap = {};
-
-        //map callbacks to engine
-        for (let callback in callbacks){
-            this.callbacks[callback] = callbacks[callback];
-        }
+        this._keymap = {};
+        this._api = new API({
+            keymap: this._keymap,
+            getLoadedRoom: ()=>this._loadedRoom,
+            envCallbacks: callbacks,
+        });
     }
 
     get time(){return Date.now() - this._timeStart}
@@ -41,7 +33,7 @@ class Engine{
 
         //load first room
         if (this._gameData.rooms.length <= 0){
-            this.callbacks.error('No rooms found in game data');
+            this._api.error('No rooms found in game data');
             return;
         }
         else{
@@ -84,29 +76,9 @@ class Engine{
         const zoomSpeed = 0.1;
         let zoom = 0;
 
-        if (this.keymap['i']){
-            controlVelocity.y += speed;
-        }
-
-        if (this.keymap['k']){
-            controlVelocity.y -= speed;
-        }
-
-        if (this.keymap['j']){
-            controlVelocity.x += speed;
-        }
-
-        if (this.keymap['l']){
-            controlVelocity.x -= speed;
-        }
-
-        if (this.keymap['o']){
-            zoom += zoomSpeed;
-        }
-
-        if (this.keymap['u']){
-            zoom -= zoomSpeed;
-        }
+        controlVelocity.y = (!!this._keymap['i'] * speed) - (!!this._keymap['k'] * speed);
+        controlVelocity.x = (!!this._keymap['j'] * speed) - (!!this._keymap['l'] * speed);
+        zoom = (!!this._keymap['o'] * zoomSpeed) - (!!this._keymap['u'] * zoomSpeed);
 
         camera.velocity.copy(controlVelocity);
         camera.size += zoom;
@@ -135,7 +107,7 @@ class Engine{
         loadedData.sprites = parsedJson.sprites.map(s => new Shared.Sprite().fromSaveData(s));
         loadedData.objects = parsedJson.objects.map(o => new Shared.Game_Object().fromSaveData(o, loadedData.sprites));
         loadedData.rooms = parsedJson.rooms.map(r => new Shared.Room().fromSaveData(r, loadedData.objects));
-        loadedData.logic = parsedJson.logic.map(l => new Logic(l));
+        loadedData.logic = parsedJson.logic.map(l => new Logic(l, this._api));
 
         return loadedData;
     }
@@ -146,11 +118,11 @@ class Engine{
     }
 
     _keyDown = (e)=>{
-        this.keymap[e.key.toLowerCase()] = true;
+        this._keymap[e.key.toLowerCase()] = true;
     }
 
     _keyUp = (e)=>{
-        this.keymap[e.key.toLowerCase()] = false;
+        this._keymap[e.key.toLowerCase()] = false;
     }
 
     _unbindInputEvents = ()=>{

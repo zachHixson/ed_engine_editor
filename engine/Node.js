@@ -1,7 +1,8 @@
 export default class Node{
-    constructor(template, id){
+    constructor(template, id, api){
         this.templateId = template.id;
         this.nodeId = id;
+        this.api = api;
         this.inTriggers = {};
         this.outTriggers = {};
         this.inputs = {};
@@ -32,7 +33,7 @@ export default class Node{
         })
 
         for (let method in template.methods){
-            this.methods[method] = template.methods[method];
+            this.methods[method] = template.methods[method].bind(this);
         }
     }
 }

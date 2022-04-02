@@ -95,7 +95,7 @@ export const NODE_LIST = [
         widget: {
             id: 'compare_function',
             type: 'enum',
-            options: ['equal', 'gt', 'lt', 'gte', 'lte'],
+            options: ['equal_sym', 'gt', 'lt', 'gte', 'lte'],
         },
         outputs: [
             {id: 'equal', type: SOCKET_TYPE.BOOL, execute: 'compare'},
@@ -124,15 +124,15 @@ export const NODE_LIST = [
     {
         id: 'logic',
         category: 'actual',
-        inputs: [
-            {id: '_inp1', type: SOCKET_TYPE.BOOL, default: false},
-            {id: '_inp2', type: SOCKET_TYPE.BOOL, default: false},
-        ],
         widget: {
             id: 'logic_function',
             type: 'enum',
             options: ['and', 'or', 'xor'],
         },
+        inputs: [
+            {id: '_inp1', type: SOCKET_TYPE.BOOL, default: false},
+            {id: '_inp2', type: SOCKET_TYPE.BOOL, default: false},
+        ],
         outputs: [
             {id: '_result', type: SOCKET_TYPE.BOOL, execute: 'result'},
         ],
@@ -178,18 +178,17 @@ export const NODE_LIST = [
         ],
         methods: {
             log(){
-                const callbacks = this.getContext().callbacks;
                 const label = this.getInput('label');
                 const data = this.getInput('_data');
 
                 if (label.length > 0 && data){
-                    callbacks.log(label, data);
+                    this.api.log(label, data);
                 }
                 else if (data){
-                    callbacks.log(data);
+                    this.api.log(data);
                 }
                 else{
-                    callbacks.log(label);
+                    this.api.log(label);
                 }
             }
         },
@@ -201,11 +200,47 @@ export const NODE_LIST = [
         outputs: [{id: 'is_down', type: SOCKET_TYPE.BOOL, execute: 'isDown'}],
         methods: {
             isDown(){
-                const keymap = this.getContext().keymap;
+                const keymap = this.api.keymap;
                 const input = this.getInput('key').toLowerCase();
                 return !!keymap[input];
             }
         }
+    },
+    {
+        id: 'math',
+        category: 'actual',
+        widget: {
+            id: 'math_function',
+            type: 'enum',
+            options: ['add_sym', 'subtract_sym', 'multiply_sym', 'divide_sym'],
+        },
+        inputs: [
+            {id: '_num1', type: SOCKET_TYPE.NUMBER, default: 0},
+            {id: '_num2', type: SOCKET_TYPE.NUMBER, default: 0},
+        ],
+        outputs: [{id: '_out', type: SOCKET_TYPE.NUMBER, execute: 'compute'}],
+        methods: {
+            compute(){
+                const mathFunc = this.getWidgetData();
+                const num1 = this.getInput('_num1');
+                const num2 = this.getInput('_num2');
+
+                switch(mathFunc){
+                    case 'add_sym':
+                        return num1 + num2;
+                    case 'subtract_sym':
+                        return num1 - num2;
+                    case 'multiply_sym':
+                        return num1 * num2;
+                    case 'divide_sym':
+                        if (num2 == 0){
+                            this.api.nodeExeption(this, 'Cannot divide by 0');
+                            return;
+                        }
+                        return num1 / num2;
+                }
+            },
+        },
     },
 ];
 
