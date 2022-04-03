@@ -17,6 +17,8 @@ export default class Logic{
                 const nodeTemplate = Shared.NODE_MAP.get(node.templateId);
                 const nodeObj = new Node(nodeTemplate, node.nodeId, api);
 
+                nodeObj.widgetData = JSON.parse(node.widgetData);
+
                 //set nodes input values from src
                 node.inputs.forEach(srcInput => {
                     nodeObj.inputs[srcInput.id].value = srcInput.value;

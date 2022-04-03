@@ -164,7 +164,6 @@ export default {
             this.isDragging = false;
         },
         setWidgetData(data){
-            console.log("Set", data)
             this.nodeObj.widgetData = data;
         },
         socketDown(connection){

@@ -68,7 +68,6 @@ export default class Node{
     }
 
     fromSaveData(data){
-        console.log(data.wi)
         this.widgetData = JSON.parse(data.widgetData);
 
         data.inputs.forEach(input => {

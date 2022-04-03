@@ -3,6 +3,7 @@ export default class Node{
         this.templateId = template.id;
         this.nodeId = id;
         this.api = api;
+        this.widgetData;
         this.inTriggers = {};
         this.outTriggers = {};
         this.inputs = {};
@@ -29,7 +30,11 @@ export default class Node{
         });
 
         template.outputs?.forEach(output => {
-            this.outputs[output.id] = {connection: null};
+            const {execute} = output;
+            this.outputs[output.id] = {
+                connection: null,
+                execute,
+            };
         })
 
         for (let method in template.methods){
