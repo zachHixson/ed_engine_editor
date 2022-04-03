@@ -1,4 +1,4 @@
-import {SOCKET_TYPE} from './Node_Enums';
+import {SOCKET_TYPE, WIDGET} from './Node_Enums';
 
 export const NODE_LIST = [
     // {
@@ -20,23 +20,23 @@ export const NODE_LIST = [
     //         {id: 'trigger_io_input_string', type: SOCKET_TYPE.STRING, default: 'Test'},
     //     ],
     // },
-    // {
-    //     id: 'trigger_2io',
-    //     category: 'testing',
-    //     inTriggers: [
-    //         {id: 'trigger_2io_inTrigger_01', execute: 'do_thing'},
-    //         {id: 'trigger_2io_inTrigger_02', execute: 'do_thing'},
-    //     ],
-    //     outTriggers: ['trigger_2io_outTrigger_01', 'trigger_2io_outTrigger_02'],
-    //     inputs: [
-    //         {id: 'trigger_2io_iNum1', type: SOCKET_TYPE.NUMBER, default: 1},
-    //         {id: 'trigger_2io_iNum2', type: SOCKET_TYPE.NUMBER, default: 2},
-    //     ],
-    //     outputs: [
-    //         {id: 'trigger_2io_oNum1', type: SOCKET_TYPE.NUMBER, execute: 'do_thing'},
-    //         {id: 'trigger_2io_oNum2', type: SOCKET_TYPE.NUMBER, execute: 'do_thing'},
-    //     ],
-    // },
+    {
+        id: 'trigger_2io',
+        category: 'testing',
+        inTriggers: [
+            {id: 'trigger_2io_inTrigger_01', execute: 'do_thing'},
+            {id: 'trigger_2io_inTrigger_02', execute: 'do_thing'},
+        ],
+        outTriggers: ['trigger_2io_outTrigger_01', 'trigger_2io_outTrigger_02'],
+        inputs: [
+            {id: 'trigger_2io_iNum1', type: SOCKET_TYPE.NUMBER, default: 1},
+            {id: 'trigger_2io_iNum2', type: SOCKET_TYPE.NUMBER, default: 2},
+        ],
+        outputs: [
+            {id: 'trigger_2io_oNum1', type: SOCKET_TYPE.NUMBER, execute: 'do_thing'},
+            {id: 'trigger_2io_oNum2', type: SOCKET_TYPE.NUMBER, execute: 'do_thing'},
+        ],
+    },
     // {
     //     id: 'some_math',
     //     category: 'testing',
@@ -48,30 +48,30 @@ export const NODE_LIST = [
     //         {id: 'some_math_output', type: SOCKET_TYPE.NUMBER, execute: 'do_thing'},
     //     ],
     // },
-    // {
-    //     id: 'all_types',
-    //     category: 'testing',
-    //     inputs: [
-    //         {id: 'all_types_iNumber', type: SOCKET_TYPE.NUMBER, default: 88},
-    //         {id: 'all_types_iAny', type: SOCKET_TYPE.ANY, default: null},
-    //         {id: 'all_types_iObject', type: SOCKET_TYPE.OBJECT, default: null},
-    //         {id: 'all_types_iString', type: SOCKET_TYPE.STRING, default: 'Default'},
-    //         {id: 'all_types_iBool', type: SOCKET_TYPE.BOOL, defualt: false},
-    //     ],
-    //     outputs: [
-    //         {id: 'all_types_oNumber', type: SOCKET_TYPE.NUMBER, execute: 'do_thing'},
-    //         {id: 'all_types_oAny', type: SOCKET_TYPE.ANY, execute: 'do_thing'},
-    //         {id: 'all_types_oObject', type: SOCKET_TYPE.OBJECT, execute: 'do_thing'},
-    //         {id: 'all_types_oString', type: SOCKET_TYPE.STRING, execute: 'do_thing'},
-    //         {id: 'all_types_oBool', type: SOCKET_TYPE.BOOL, execute: 'do_thing'},
-    //     ],
-    // },
+    {
+        id: 'all_types',
+        category: 'testing',
+        inputs: [
+            {id: 'all_types_iNumber', type: SOCKET_TYPE.NUMBER, default: 88},
+            {id: 'all_types_iAny', type: SOCKET_TYPE.ANY, default: null},
+            {id: 'all_types_iObject', type: SOCKET_TYPE.OBJECT, default: null},
+            {id: 'all_types_iString', type: SOCKET_TYPE.STRING, default: 'Default'},
+            {id: 'all_types_iBool', type: SOCKET_TYPE.BOOL, defualt: false},
+        ],
+        outputs: [
+            {id: 'all_types_oNumber', type: SOCKET_TYPE.NUMBER, execute: 'do_thing'},
+            {id: 'all_types_oAny', type: SOCKET_TYPE.ANY, execute: 'do_thing'},
+            {id: 'all_types_oObject', type: SOCKET_TYPE.OBJECT, execute: 'do_thing'},
+            {id: 'all_types_oString', type: SOCKET_TYPE.STRING, execute: 'do_thing'},
+            {id: 'all_types_oBool', type: SOCKET_TYPE.BOOL, execute: 'do_thing'},
+        ],
+    },
     ///////////// actual nodes
     {
         id: 'branch',
         category: 'actual',
         inTriggers: [
-            {id: 'default', execute: 'checkCondition'}
+            {id: '_default', execute: 'checkCondition'}
         ],
         inputs: [
             {id: 'condition', type: SOCKET_TYPE.BOOL, default: false}
@@ -94,7 +94,7 @@ export const NODE_LIST = [
         ],
         widget: {
             id: 'compare_function',
-            type: 'enum',
+            type: WIDGET.ENUM,
             options: ['equal_sym', 'gt', 'lt', 'gte', 'lte'],
         },
         outputs: [
@@ -107,16 +107,11 @@ export const NODE_LIST = [
                 const inp2 = this.getInput('_inp2');
 
                 switch(compareFunc){
-                    case 'equal':
-                        return inp1 == inp2;
-                    case 'gt':
-                        return inp1 > inp2;
-                    case 'lt':
-                        return inp1 < inp2;
-                    case 'gte':
-                        return inp1 >= inp2;
-                    case 'lte':
-                        return inp1 <= inp2;
+                    case 'equal': return inp1 == inp2;
+                    case 'gt': return inp1 > inp2;
+                    case 'lt': return inp1 < inp2;
+                    case 'gte': return inp1 >= inp2;
+                    case 'lte': return inp1 <= inp2;
                 }
             },
         },
@@ -126,7 +121,7 @@ export const NODE_LIST = [
         category: 'actual',
         widget: {
             id: 'logic_function',
-            type: 'enum',
+            type: WIDGET.ENUM,
             options: ['and', 'or', 'xor'],
         },
         inputs: [
@@ -143,12 +138,9 @@ export const NODE_LIST = [
                 const inp2 = this.getInput('_inp2');
 
                 switch(logicFunc){
-                    case 'and':
-                        return inp1 && inp2;
-                    case 'or':
-                        return inp1 || inp2;
-                    case 'xor':
-                        return !!(inp1 ^ inp2);
+                    case 'and': return inp1 && inp2;
+                    case 'or': return inp1 || inp2;
+                    case 'xor': return !!(inp1 ^ inp2);
                 }
             },
         },
@@ -190,35 +182,41 @@ export const NODE_LIST = [
                 else{
                     this.api.log(label);
                 }
-            }
+            },
         },
     },
     {
         id: 'key_down',
         category: 'actual',
-        inputs: [{id: 'key', type: SOCKET_TYPE.STRING, default: ''}],
-        outputs: [{id: 'is_down', type: SOCKET_TYPE.BOOL, execute: 'isDown'}],
+        inputs: [
+            {id: 'key', type: SOCKET_TYPE.STRING, default: ''}
+        ],
+        outputs: [
+            {id: 'is_down', type: SOCKET_TYPE.BOOL, execute: 'isDown'}
+        ],
         methods: {
             isDown(){
                 const keymap = this.api.keymap;
                 const input = this.getInput('key').toLowerCase();
                 return !!keymap[input];
-            }
-        }
+            },
+        },
     },
     {
         id: 'math',
         category: 'actual',
         widget: {
             id: 'math_function',
-            type: 'enum',
-            options: ['add_sym', 'subtract_sym', 'multiply_sym', 'divide_sym'],
+            type: WIDGET.ENUM,
+            options: ['add_sym', 'subtract_sym', 'multiply_sym', 'divide_sym', 'power'],
         },
         inputs: [
             {id: '_num1', type: SOCKET_TYPE.NUMBER, default: 0},
             {id: '_num2', type: SOCKET_TYPE.NUMBER, default: 0},
         ],
-        outputs: [{id: '_out', type: SOCKET_TYPE.NUMBER, execute: 'compute'}],
+        outputs: [
+            {id: '_out', type: SOCKET_TYPE.NUMBER, execute: 'compute'}
+        ],
         methods: {
             compute(){
                 const mathFunc = this.getWidgetData();
@@ -226,18 +224,16 @@ export const NODE_LIST = [
                 const num2 = this.getInput('_num2');
 
                 switch(mathFunc){
-                    case 'add_sym':
-                        return num1 + num2;
-                    case 'subtract_sym':
-                        return num1 - num2;
-                    case 'multiply_sym':
-                        return num1 * num2;
+                    case 'add_sym': return num1 + num2;
+                    case 'subtract_sym': return num1 - num2;
+                    case 'multiply_sym': return num1 * num2;
                     case 'divide_sym':
                         if (num2 == 0){
                             this.api.nodeExeption(this, 'Cannot divide by 0');
                             return;
                         }
                         return num1 / num2;
+                    case 'power': return Math.pow(num1, num2);
                 }
             },
         },

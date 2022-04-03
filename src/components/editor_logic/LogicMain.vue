@@ -1184,6 +1184,7 @@ function _checkLoop(connection, connectionMap, checkedNodes){
     justify-content: center;
     width: 100%;
     padding-bottom: 5px;
+    pointer-events: none;
     transition: transform 0.1s ease-in-out;
 }
 
@@ -1204,6 +1205,7 @@ function _checkLoop(connection, connectionMap, checkedNodes){
     background: var(--button-norm);
     border: 3px solid var(--border);
     border-radius: var(--corner-radius);
+    pointer-events: all;
 }
 
 .trash-button:hover{

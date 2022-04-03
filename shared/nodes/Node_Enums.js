@@ -6,6 +6,6 @@ export const SOCKET_TYPE = {
     BOOL: Symbol('BOOL'),
 };
 
-export const WIDGETS = {
+export const WIDGET = {
     ENUM: Symbol('ENUM'),
 }

@@ -1,6 +1,6 @@
 <template>
     <div class="dataSocket" :class="isInput ? 'isInput' : ''">
-        <div class="socket_name">{{$t('node.' + socket.id)}}</div>
+        <div v-if="showLabel" class="socket_name">{{$t('node.' + socket.id)}}</div>
         <div v-if="isInput && !isConnected" class="inputBox">
             <input v-if="socket.type == SOCKET_TYPE.NUMBER" ref="input" type="number" :value="socket.value" @change="valueChanged" v-input-active/>
             <input v-if="socket.type == SOCKET_TYPE.STRING" ref="input" type="text" :value="socket.value"  @change="valueChanged" v-input-active/>
@@ -47,6 +47,9 @@ export default {
         }
     },
     computed: {
+        showLabel(){
+            return this.socket.id.charAt(0) != '_';
+        },
         SOCKET_TYPE(){
             return Shared.SOCKET_TYPE;
         },
@@ -157,5 +160,9 @@ export default {
     filter: brightness(0.7);
     border-radius: 4px;
     text-align: center;
+}
+
+input[type="checkbox"]{
+    width: 20px;
 }
 </style>

@@ -3,6 +3,8 @@ export default class Node{
         this.templateId = template.id;
         this.nodeId = id;
         this.isEvent = false;
+        this.widget = template.widget;
+        this.widgetData;
         this.inTriggers = new Map();
         this.outTriggers = new Map();
         this.inputs = new Map();
@@ -47,18 +49,28 @@ export default class Node{
             Math.floor(this.pos.x * 100) / 100,
             Math.floor(this.pos.y * 100) / 100
         );
+        let outObj;
 
         this.inputs.forEach(({id, value}) => inputs.push({id, value}));
 
-        return {
+        outObj = {
             templateId: this.templateId,
             nodeId: this.nodeId,
             pos: roundedPos.toObject(),
             inputs,
         }
+
+        if (this.widget){
+            outObj.widgetData = JSON.stringify(this.widgetData);
+        }
+
+        return outObj;
     }
 
     fromSaveData(data){
+        console.log(data.wi)
+        this.widgetData = JSON.parse(data.widgetData);
+
         data.inputs.forEach(input => {
             this.inputs.get(input.id).value = input.value;
         });

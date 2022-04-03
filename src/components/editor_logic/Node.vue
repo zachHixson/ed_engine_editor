@@ -6,6 +6,12 @@
             <div v-if="nodeObj.isEvent" class="node-icon"><img src="@/assets/event.svg"/></div>
             <div>{{$t('node.' + nodeObj.templateId)}}</div>
         </div>
+        <div v-if="!!nodeObj.widget" class="widgetWrapper">
+            <Widget
+                :widget="nodeObj.widget"
+                :widgetData="widgetData"
+                :setWidgetData="setWidgetData"/>
+        </div>
         <div v-if="showTriggers" class="io">
             <div class="socket-column" style="align-items: flex-start">
                 <Socket
@@ -66,6 +72,7 @@
 <script>
 import Victor from 'victor';
 import Socket from './Socket';
+import Widget from './Widget.vue';
 
 export default {
     name: 'Node',
@@ -80,6 +87,7 @@ export default {
     },
     components: {
         Socket,
+        Widget,
     },
     computed: {
         inTriggers(){
@@ -87,6 +95,9 @@ export default {
         },
         outTriggers(){
             return Array.from(this.nodeObj.outTriggers, ([id, trigger]) => trigger);
+        },
+        widgetData(){
+            return this.nodeObj.widgetData;
         },
         inputs(){
             return Array.from(this.nodeObj.inputs, ([id, input]) => input);
@@ -151,6 +162,10 @@ export default {
             }
 
             this.isDragging = false;
+        },
+        setWidgetData(data){
+            console.log("Set", data)
+            this.nodeObj.widgetData = data;
         },
         socketDown(connection){
             let isInput = !connection.startSocketEl;

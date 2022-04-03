@@ -247,6 +247,11 @@
         "all_types_oString": "oString",
         "all_types_oBool": "oBool",
         "branch": "Branch",
-        "condition": "Condition"
+        "condition": "Condition",
+        "add_sym": "+",
+        "subtract_sym": "-",
+        "multiply_sym": "×",
+        "divide_sym": "÷",
+        "power": "pow"
     }
 }

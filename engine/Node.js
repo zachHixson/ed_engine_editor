@@ -33,7 +33,7 @@ export default class Node{
         })
 
         for (let method in template.methods){
-            this.methods[method] = template.methods[method].bind(this);
+            this.methods[method] = template.methods[method];
         }
     }
 }
