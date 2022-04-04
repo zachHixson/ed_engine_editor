@@ -28,6 +28,7 @@ export class Instance{
     get editorFrame(){return this.objRef.editorFrame};
     get editorFrameID(){return this.objRef.editorFrameID};
     get sprite(){return this.objRef?.sprite};
+    get logic(){return this.objRef.logicScript};
 
     clone(){
         const clone = new Instance(this.id, this.pos, this.objRef);
@@ -45,5 +46,9 @@ export class Instance{
         delete sanitized.objRef;
 
         return sanitized;
+    }
+
+    executeNodeEvent(eventName, data){
+        this.logic.executeEvent(eventName, this, data);
     }
 };

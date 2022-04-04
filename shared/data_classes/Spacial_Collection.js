@@ -25,6 +25,8 @@ export class Spacial_Collection{
         }
     }
 
+    get list(){return this.zSort};
+
     clone(recursive = false){
         const clone = new Spacial_Collection(this.area, this.cellSize);
         this.zSort.forEach(item => {

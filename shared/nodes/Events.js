@@ -5,7 +5,7 @@ export const DEFAULT_EVENTS = new Map();
 const defaultEvents = [
     {
         id: 'e_create',
-        outTriggers: ['e_create_trigger_default'],
+        outTriggers: ['_default'],
     },
     {
         id: 'e_update',

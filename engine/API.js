@@ -1,8 +1,8 @@
 const DEFAULT_ENV_CALLBACKS = {
-    log: msg => console.log(msg),
-    warning: warning => console.warn(warning),
-    error: error => console.error(error),
-    nodeException: (node, error) => console.error(error),
+    log: function(){console.log(...arguments)},
+    warning: function(){console.warn(warning)},
+    error: function(){console.error(error)},
+    nodeException: function(){console.error(error)},
 };
 Object.freeze(DEFAULT_ENV_CALLBACKS);
 
@@ -16,6 +16,7 @@ export default class API {
     }){
         this.keymap = keymap;
         this._getLoadedRoom = getLoadedRoom;
+        this._nodeEventMap = {};
 
         //integrate callbacks
         Object.assign(this, DEFAULT_ENV_CALLBACKS);
@@ -23,4 +24,26 @@ export default class API {
     }
 
     get room(){return this._getLoadedRoom()}
+
+    clearNodeEvents = ()=>{
+        this._nodeEventMap = {};
+    }
+
+    registerNodeEvent = (eventName, instance)=>{
+        if (!this._nodeEventMap[eventName]){
+            this._nodeEventMap[eventName] = {};
+        }
+
+        this._nodeEventMap[eventName][instance.id] = instance;
+    }
+
+    dispatchNodeEvent = (eventName, data)=>{
+        const nodeEvent = this._nodeEventMap[eventName];
+
+        if (!nodeEvent) return;
+
+        for (const instance in nodeEvent){
+            nodeEvent[instance].executeNodeEvent(eventName, data);
+        }
+    }
 }

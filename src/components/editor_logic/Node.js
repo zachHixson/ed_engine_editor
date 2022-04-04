@@ -68,7 +68,9 @@ export default class Node{
     }
 
     fromSaveData(data){
-        this.widgetData = JSON.parse(data.widgetData);
+        if (data.widgetData){
+            this.widgetData = JSON.parse(data.widgetData);
+        }
 
         data.inputs.forEach(input => {
             this.inputs.get(input.id).value = input.value;

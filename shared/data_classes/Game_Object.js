@@ -30,6 +30,12 @@ export class Game_Object extends Asset{
         return this.sprite.frameIsEmpty(this._startFrame) ? null : this.sprite.drawToCanvas(this._startFrame);
     }
 
+    clone(){
+        const clone = new Game_Object();
+        Object.assign(clone, this);
+        return clone;
+    }
+
     toSaveData(){
         let sanitized = Object.assign({}, this);
         sanitized.sprite = this.sprite?.id ?? null;

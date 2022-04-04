@@ -4,11 +4,14 @@ export default class Logic{
     constructor(logicData, api){
         this.id = logicData.id;
         this.events = {};
+        this._instance = null;
         
         logicData.events.forEach(event => {
             const eventTemplate = Shared.DEFAULT_EVENTS.get(event.entry.templateId);
             const eventNode = new Node(eventTemplate, event.id, api);
             const nodeMap = {};
+
+            eventNode.isEvent = true;
 
             //load all nodes into nodeMap
             nodeMap[event.entry.id] = eventNode;
@@ -17,7 +20,11 @@ export default class Logic{
                 const nodeTemplate = Shared.NODE_MAP.get(node.templateId);
                 const nodeObj = new Node(nodeTemplate, node.nodeId, api);
 
-                nodeObj.widgetData = JSON.parse(node.widgetData);
+                nodeObj.setInstanceCallback(()=>this._instance);
+
+                if (node.widgetData){
+                    nodeObj.widgetData = JSON.parse(node.widgetData);
+                }
 
                 //set nodes input values from src
                 node.inputs.forEach(srcInput => {
@@ -41,5 +48,11 @@ export default class Logic{
 
             this.events[event.entry.templateId] = eventNode;
         });
+    }
+
+    executeEvent = (eventName, instance, data)=>{
+        this._instance = instance;
+        this.events[eventName].executeEvent(instance, data);
+        this._instance = null;
     }
 }

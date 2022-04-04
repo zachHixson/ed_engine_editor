@@ -8,7 +8,6 @@ class Engine{
 
     constructor({canvas, gameData, callbacks}){
         this._canvas = canvas;
-        this._gameData = this._parseGameData(gameData);
         this._timeStart = null;
         this._lastLoopTimestamp = null;
         this._isRunning = false;
@@ -20,9 +19,13 @@ class Engine{
             getLoadedRoom: ()=>this._loadedRoom,
             envCallbacks: callbacks,
         });
+        this._gameData = this._parseGameData(gameData);
+
+        this._linkLogic();
     }
 
     get time(){return Date.now() - this._timeStart}
+    get api(){return this._api};
 
     start = ()=>{
         this._isRunning = true;
@@ -33,7 +36,7 @@ class Engine{
 
         //load first room
         if (this._gameData.rooms.length <= 0){
-            this._api.error('No rooms found in game data');
+            this.api.error('No rooms found in game data');
             return;
         }
         else{
@@ -51,8 +54,21 @@ class Engine{
 
     loadRoom = (roomId)=>{
         const room = this._gameData.rooms.find(r => r.id == roomId);
+        this.api.dispatchNodeEvent('e_before_destroy');
         this._loadedRoom = room.persist ? room : room.clone();
         this._renderer.setRoom(this._loadedRoom);
+        this.api.clearNodeEvents();
+
+        //register instance node events
+        this._loadedRoom.instances.list.forEach(instance => {
+            const logicEvents = instance.logic?.events;
+
+            for (const event in logicEvents){
+                this.api.registerNodeEvent(event, instance);
+            }
+        });
+
+        this.api.dispatchNodeEvent('e_create');
     }
 
     _updateLoop = ()=>{
@@ -85,13 +101,6 @@ class Engine{
     }
 
     _parseGameData = (gameData)=>{
-        if (typeof gameData == 'object'){
-            const newLogic = Object.assign({}, gameData);
-            newLogic.logic = newLogic.logic.map(l => l.toSaveData());
-            newLogic.logic = newLogic.logic.map(l => new Logic(l));
-            return newLogic;
-        }
-
         let parsedJson;
         let loadedData = {};
 
@@ -110,6 +119,16 @@ class Engine{
         loadedData.logic = parsedJson.logic.map(l => new Logic(l, this._api));
 
         return loadedData;
+    }
+
+    _linkLogic = ()=>{
+        const objects = this._gameData.objects;
+        const logicScripts = this._gameData.logic;
+
+        for (let i = 0; i < objects.length; i++){
+            const curObj = objects[i];
+            curObj.logicScript = logicScripts.find(l => l.id == curObj.logicScript);
+        }
     }
 
     _bindInputEvents = ()=>{
