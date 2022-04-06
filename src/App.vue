@@ -64,7 +64,7 @@ export default {
         },
         saveProject(){
             let blob = new Blob([this.$store.getters['getSaveData']]);
-            saveAs(blob, "MyFile.edproj");
+            saveAs(blob, `${this.$store.getters['getProjectName']}.edproj`);
         },
         packageGame(){
             let projectName = this.$store.getters['getProjectName'];

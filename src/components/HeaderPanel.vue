@@ -24,7 +24,7 @@
             <button class="iconBtn" :title="$t('editor_main.debug')" @click="playState = PLAY_STATES.DEBUGGING"><img class="icon" src="@/assets/debug.svg"/></button>
             <button class="iconBtn" :title="$t('editor_main.run')" @click="playState = PLAY_STATES.PLAYING"><img class="icon" src="@/assets/play.svg"/></button>
         </div>
-        <input type="file" ref="fileOpen" style="display: none" @change="loadProjectFile"/>
+        <input type="file" ref="fileOpen" style="display: none" accept=".html, .edproj" @change="loadProjectFile"/>
     </div>
 </template>
 
