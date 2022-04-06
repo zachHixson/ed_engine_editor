@@ -13,6 +13,7 @@ class Engine{
         this._isRunning = false;
         this._loadedRoom = null;
         this._renderer = new Renderer(this._canvas);
+        this._nextAnimationFrame = null;
         this._keymap = {};
         this._api = new API({
             keymap: this._keymap,
@@ -47,7 +48,7 @@ class Engine{
     }
 
     stop = ()=>{
-        this._isRunning = false;
+        cancelAnimationFrame(this._nextAnimationFrame);
         this._unbindInputEvents();
     }
 
@@ -78,10 +79,8 @@ class Engine{
         this._processDebugNav();
         this._renderer.render();
 
-        if (this._isRunning){
-            this._lastLoopTimestamp = time;
-            requestAnimationFrame(this._updateLoop);
-        }
+        this._lastLoopTimestamp = time;
+        this._nextAnimationFrame = requestAnimationFrame(this._updateLoop);
     }
 
     _processDebugNav = ()=>{
