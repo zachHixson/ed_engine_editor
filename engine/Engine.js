@@ -24,13 +24,12 @@ class Engine{
         this._linkLogic();
     }
 
-    get time(){return Date.now() - this._timeStart}
     get api(){return this._api};
 
     start = ()=>{
         this._isRunning = true;
-        this._timeStart = Date.now();
-        this._lastLoopTimestamp = this.time;
+        this._timeStart = performance.now();
+        this._lastLoopTimestamp = this._timeStart;
 
         this._bindInputEvents();
 
@@ -44,7 +43,7 @@ class Engine{
             this.loadRoom(startRoomId);
         }
 
-        this._updateLoop();
+        requestAnimationFrame(this._updateLoop);
     }
 
     stop = ()=>{
@@ -71,16 +70,16 @@ class Engine{
         this.api.dispatchNodeEvent('e_create');
     }
 
-    _updateLoop = ()=>{
+    _updateLoop = (time)=>{
         const ctx = this._canvas.getContext('2d');
-        const deltaTime = this.time - this._lastLoopTimestamp;
+        const deltaTime = time - this._lastLoopTimestamp;
 
         this._loadedRoom.camera.update(deltaTime);
         this._processDebugNav();
         this._renderer.render();
 
         if (this._isRunning){
-            this._lastLoopTimestamp = this.time;
+            this._lastLoopTimestamp = time;
             requestAnimationFrame(this._updateLoop);
         }
     }
