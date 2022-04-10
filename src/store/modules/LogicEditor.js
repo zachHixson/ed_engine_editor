@@ -1,32 +1,32 @@
 const state = {
     selectedNavTool: null,
-    eventPanelOpen: true,
     libraryPanelOpen: true,
+    graphPanelOpen: false,
 }
 
 const getters = {
     test: state => state,
     getSelectedNavTool: state => state.selectedNavTool,
-    isEventPanelOpen: state => state.eventPanelOpen,
     isLibraryPanelOpen: state => state.libraryPanelOpen,
+    isGraphPanelOpen: state => state.graphPanelOpen,
 };
 
 const actions = {
     selectNavTool({commit}, newTool){
         commit('selectNavTool', newTool);
     },
-    setEventPanelState({commit}, newState){
-        commit('setEventPanelState', newState);
-    },
     setLibraryPanelState({commit}, newState){
         commit('setLibraryPanelState', newState);
+    },
+    setGraphPanelState({commit}, newState){
+        commit('setGraphPanelState', newState);
     },
 };
 
 const mutations = {
     selectNavTool: (state, newTool) => state.selectedNavTool = newTool,
-    setEventPanelState: (state, newState) => state.eventPanelOpen = newState,
     setLibraryPanelState: (state, newState) => state.libraryPanelOpen = newState,
+    setGraphPanelState: (state, newState) => state.graphPanelOpen = newState,
 };
 
 export default {

@@ -1,33 +1,62 @@
 <template>
     <div class="logicMain">
-        <div class="event-panel-wrapper">
-            <div v-show="showEvents" class="side-panel event-panel">
+        <div class="node-panel-wrapper">
+            <div v-show="showLibrary" class="side-panel node-panel">
                 <div class="side-panel-heading">
-                    <div>{{$t('logic_editor.event_panel_heading')}}</div>
-                    <button class="open-close-btn" @click="showAddEventModal = true">
-                        <img src="@/assets/plus.svg" />
-                    </button>
+                    <div class="fade-out" :style="isSearching ? 'opacity: 0;':''">{{$t('logic_editor.node_panel_heading')}}</div>
+                    <div class="search-btn-wrapper" :class="isSearching ? 'search-btn-wrapper-searching':''">
+                        <button v-if="isSearching" class="cancel-search-btn" @click="isSearching = false">
+                            &lt;
+                        </button>
+                        <button
+                            class="search-btn"
+                            :class="!isSearching ? 'search-btn-active':''"
+                            @click="isSearching = true; searchQuery=''">
+                            <img style="width: 20px; height: 20px;" src="@/assets/navigation_magglass.svg" />
+                        </button>
+                        <transition name="grow">
+                            <input
+                                v-if="isSearching"
+                                class="search-box"
+                                :class="isSearching ? 'search-box-show':''"
+                                v-model="searchQuery"
+                                type="text"
+                                v-input-active/>
+                        </transition>
+                    </div>
                 </div>
-                <div class="events-wrapper">
-                    <div
-                        v-for="event in addedEvents"
-                        :key="event"
-                        class="list-item"
-                        :style="event == selectedAsset.selectedEventId ? 'background: var(--button-norm)' : ''"
-                        @click="selectEvent(event)">
-                        <div class="name">{{$t('node.' + event)}}</div>
-                        <div class="buttons">
-                            <button class="eventBtn" @click="removeEvent($event, event)">
-                                <img class="icon" src="@/assets/trash.svg" />
-                            </button>
+                <div v-if="!selectedAsset.selectedEventId && false">{{$t('logic_editor.node_panel_empty_warning')}}</div>
+                <div
+                    v-if="selectedAsset.selectedEventId || true"
+                    class="slide-wrapper"
+                    :class="selectedCategory || isSearching ? 'slide-wrapper-trans' : ''">
+                    <div class="library-column node-category-contents">
+                        <div v-if="!isSearching" class="list-item category-back-btn" @click="selectedCategory = null">
+                            <img v-show="showLibrary" src="@/assets/arrow_01.svg" />
+                        </div>
+                        <div
+                            v-for="node in filteredNodes"
+                            :key="node.id"
+                            class="list-item"
+                            @click="actionAddNode({templateId: node.id})">
+                            {{node.id}}
+                        </div>
+                    </div>
+                    <div class="library-column node-category-list">
+                        <div
+                            v-for="(category, idx) in nodeCategories"
+                            :key="idx"
+                            class="node-category"
+                            @click="selectedCategory = category">
+                            {{category}}
                         </div>
                     </div>
                 </div>
             </div>
             <div class="resizeBtn-right-wrapper">
-                <button class="resizeBtn resizeBtn-right" @click="showEvents = !showEvents" :style="showEvents ? 'transform: translateX(-2px);' : ''">
-                    <img v-show="showEvents" src="@/assets/arrow_01.svg" style="transform: rotate(-90deg)"/>
-                    <img v-show="!showEvents" src="@/assets/event.svg"/>
+                <button class="resizeBtn resizeBtn-right" @click="showLibrary = !showLibrary" :style="showLibrary ? 'transform: translateX(-2px);' : ''">
+                    <img v-show="showLibrary" src="@/assets/arrow_01.svg" style="transform: rotate(-90deg)"/>
+                    <img v-show="!showLibrary" src="@/assets/event.svg"/>
                 </button>
             </div>
             <div class="undo-panel-wrapper">
@@ -37,27 +66,6 @@
                     :redoLength="undoStore.redoLength"
                     @undo="stepBackward"
                     @redo="stepForward"/>
-            </div>
-        </div>
-        <div v-if="showAddEventModal" class="modal-wrapper">
-            <div class="modal-bg"></div>
-            <div class="modal">
-                <div class="heading">
-                    <div>Add Event</div>
-                    <button class="open-close-btn" @click="showAddEventModal = false">
-                        <img src="@/assets/plus.svg" style="transform: rotate(45deg);"/>
-                    </button>
-                </div>
-                <div class="add-event-list">
-                    <button
-                        class="add-event"
-                        :class="isAddedEvent(event) ? 'add-grayed' : ''"
-                        v-for="event in addableEvents"
-                        :key="event"
-                        @click="addEvent(event)">
-                        {{$t('node.' + event)}}
-                    </button>
-                </div>
             </div>
         </div>
         <div
@@ -115,63 +123,14 @@
                 <img src="@/assets/trash.svg" />
             </button>
         </div>
-        <div class="node-library-wrapper">
-            <div v-show="showLibrary" class="side-panel node-library">
-                <div class="side-panel-heading">
-                    <div class="fade-out" :style="isSearching ? 'opacity: 0;':''">{{$t('logic_editor.node_panel_heading')}}</div>
-                    <div class="search-btn-wrapper" :class="isSearching ? 'search-btn-wrapper-searching':''">
-                        <button v-if="isSearching" class="cancel-search-btn" @click="isSearching = false">
-                            &lt;
-                        </button>
-                        <button
-                            class="search-btn"
-                            :class="!isSearching ? 'search-btn-active':''"
-                            @click="isSearching = true; searchQuery=''">
-                            <img style="width: 20px; height: 20px;" src="@/assets/navigation_magglass.svg" />
-                        </button>
-                        <transition name="grow">
-                            <input
-                                v-if="isSearching"
-                                class="search-box"
-                                :class="isSearching ? 'search-box-show':''"
-                                v-model="searchQuery"
-                                type="text"
-                                v-input-active/>
-                        </transition>
-                    </div>
-                </div>
-                <div v-if="!selectedAsset.selectedEventId">{{$t('logic_editor.node_panel_empty_warning')}}</div>
-                <div
-                    v-if="selectedAsset.selectedEventId"
-                    class="slide-wrapper"
-                    :class="selectedCategory || isSearching ? 'slide-wrapper-trans' : ''">
-                    <div class="library-column node-category-list">
-                        <div
-                            v-for="(category, idx) in nodeCategories"
-                            :key="idx"
-                            class="node-category"
-                            @click="selectedCategory = category">
-                            {{category}}
-                        </div>
-                    </div>
-                    <div class="library-column node-category-contents">
-                        <div v-if="!isSearching" class="list-item category-back-btn" @click="selectedCategory = null">
-                            <img v-show="showLibrary" src="@/assets/arrow_01.svg" />
-                        </div>
-                        <div
-                            v-for="node in filteredNodes"
-                            :key="node.id"
-                            class="list-item"
-                            @click="actionAddNode({templateId: node.id})">
-                            {{node.id}}
-                        </div>
-                    </div>
-                </div>
+        <div class="graph-list-wrapper">
+            <div v-show="showGraphs" class="side-panel graph-list-library">
+                //
             </div>
             <div class="resizeBtn-left-wrapper">
-                <button class="resizeBtn resizeBtn-left" @click="showLibrary = !showLibrary" :style="showLibrary ? 'transform: translateX(2px);' : ''">
-                    <img v-show="showLibrary" src="@/assets/arrow_01.svg" style="transform: rotate(90deg)"/>
-                    <img v-show="!showLibrary" src="@/assets/hamburger.svg"/>
+                <button class="resizeBtn resizeBtn-left" @click="showGraphs = !showGraphs" :style="showGraphs ? 'transform: translateX(2px);' : ''">
+                    <img v-show="showGraphs" src="@/assets/arrow_01.svg" style="transform: rotate(90deg)"/>
+                    <img v-show="!showGraphs" src="@/assets/hamburger.svg"/>
                 </button>
             </div>
             <div class="nav-control-wrapper">
@@ -250,14 +209,6 @@ export default {
         selectedNavTool(){
             return this.$store.getters['LogicEditor/getSelectedNavTool'];
         },
-        showEvents: {
-            get(){
-                return this.$store.getters['LogicEditor/isEventPanelOpen'];
-            },
-            set(newState){
-                this.$store.dispatch('LogicEditor/setEventPanelState', newState);
-            },
-        },
         showLibrary: {
             get(){
                 return this.$store.getters['LogicEditor/isLibraryPanelOpen'];
@@ -266,17 +217,13 @@ export default {
                 this.$store.dispatch('LogicEditor/setLibraryPanelState', newState);
             },
         },
-        addableEvents(){
-            let eventList = [];
-
-            Shared.DEFAULT_EVENTS.forEach(event => {
-                eventList.push(event.id);
-            });
-
-            return eventList;
-        },
-        addedEvents(){
-            return this.selectedAsset.eventsList;
+        showGraphs: {
+            get(){
+                return this.$store.getters['LogicEditor/isGraphPanelOpen'];
+            },
+            set(newState){
+                this.$store.dispatch('LogicEditor/setGraphPanelState', newState);
+            },
         },
         nodeCategories(){
             let categories = [];
@@ -321,8 +268,6 @@ export default {
         this.hotkeyUpHandler = this.hotkeyMap.keyUp.bind(this.hotkeyMap);
     },
     mounted(){
-        let curSelectedEvent = this.selectedAsset.selectedEventId;
-
         this.nodeViewportEl = this.$refs.nodeVP;
         this.nodeNavEl = this.$refs.nodeNav;
 
@@ -334,10 +279,6 @@ export default {
         this.nodeViewportEl.addEventListener ('mouseleave', this.mouseLeave);
         window.addEventListener('resize', this.resize);
         this.resize();
-
-        if (curSelectedEvent){
-            this.selectEvent(curSelectedEvent ? curSelectedEvent : this.selectedAsset.eventsList[0].id);
-        }
 
         this.bindHotkeys();
         this.bindActions();
@@ -397,49 +338,6 @@ export default {
             }
             
             return navPos;
-        },
-        addEvent(eventId){
-            if (!this.isAddedEvent(eventId)){
-                let navSize = new Victor(this.nodeNavEl.offsetWidth, this.nodeNavEl.offsetHeight);
-                let navCenter = navSize.clone().divideScalar(2);
-
-                this.selectedAsset.registerEvent(eventId, navCenter);
-                this.showAddEventModal = false;
-                this.selectEvent(eventId);
-            }
-        },
-        removeEvent(jsEvent, eventId){
-            jsEvent.stopPropagation();
-
-            const curSelection = this.selectedAsset.selectedEventId;
-            const curEventIdx = this.addedEvents.indexOf(eventId);
-
-            this.selectedAsset.unregisterEvent(eventId);
-
-            this.$nextTick(()=>{
-                if (curSelection == eventId){
-                    let newIdx = Math.min(curEventIdx, this.addedEvents.length - 1);
-                    let newSelection = this.addedEvents[newIdx];
-                    this.selectEvent(newSelection ?? null);
-                }
-            })
-        },
-        isAddedEvent(eventId){
-            let isActive = false;
-
-            for (let i = 0; !isActive && i < this.selectedAsset.eventsList.length; i++){
-                isActive |= this.selectedAsset.eventsList[i] == eventId;
-            }
-
-            return isActive;
-        },
-        selectEvent(eventId){
-            this.selectedAsset.selectedEventId = eventId;
-            this.navChange(this.selectedAsset.navState);
-
-            this.$nextTick(()=>{
-                this.relinkConnections();
-            })
         },
         mouseClick(jsEvent){
             let mouseUpPos = new Victor(jsEvent.clientX, jsEvent.clientY);
@@ -941,7 +839,7 @@ function _checkLoop(connection, connectionMap, checkedNodes){
     overflow: hidden;
 }
 
-.event-panel-wrapper{
+.node-panel-wrapper{
     position: absolute;
     top: 0;
     display: flex;
@@ -970,16 +868,75 @@ function _checkLoop(connection, connectionMap, checkedNodes){
     border-bottom: 2px solid var(--border);
 }
 
-.event-panel{
+.node-panel{
     min-width: 200px;
     border-left: none;
     border-radius: 0px var(--corner-radius) var(--corner-radius) 0px;
 }
 
-.events-wrapper{
+.node-wrapper{
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+}
+
+.slide-wrapper{
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    width: 200%;
+    right: 100%;
+    transition-property: right;
+    transition-duration: 100ms;
+    transition-timing-function: ease-out;
+}
+
+.slide-wrapper-trans{
+    right: 0%;
+    transition-property: right;
+    transition-duration: 100ms;
+    transition-timing-function: ease-out;
+}
+
+.library-column{
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    height: 100%;
+}
+
+.node-category{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    height: 40px;
+    padding-right: 10px;
+    margin-right: 10px;
+    background: var(--tool-panel-bg);
+    border-bottom: 2px solid var(--border);
+    border-right: 2px solid var(--border);
+}
+
+.node-category:last-child{
+    border-radius: 0px 0px var(--corner-radius) 0px;
+}
+
+.category-back-btn{
+    display: flex;
+    flex-direction: row;
+    align-self: flex-end;
+    width: min-content;
+    background: var(--heading) !important;
+}
+
+.category-back-btn > img{
+    width: 20px;
+    transform: rotate(90deg);
+}
+
+.node-category:hover{
+    filter: brightness(1.1);
 }
 
 .open-close-btn{
@@ -1027,14 +984,85 @@ function _checkLoop(connection, connectionMap, checkedNodes){
     white-space: nowrap;
 }
 
-.eventBtn{
-    background: none;
-    border: none;
+.search-btn-wrapper{
+    position: absolute;
+    left: 100%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    transform: translateX(-130%);
+    transition: all 0.3s ease-out;
 }
 
-.eventBtn > .icon{
-    width: 20px;
-    height: 20px;
+.search-btn-wrapper-searching{
+    transform: translateX(0);
+    left: 5px;
+}
+
+.search-btn{
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 2em;
+    height: 2em;
+    border: none;
+    background: var(--tool-panel-bg);
+    border-radius: var(--corner-radius);
+    overflow: hidden;
+}
+
+.search-btn-active:hover{
+    filter: brightness(1.2);
+}
+
+.search-btn-active:active{
+    filter: brightness(0.8);
+}
+
+.cancel-search-btn{
+    height: 2em;
+    margin-left: 5px;
+    background: var(--button-dark-norm);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+}
+
+.cancel-search-btn:hover{
+    background: var(--button-dark-hover);
+}
+
+.cancel-search-btn:active{
+    background: var(--button-dark-down);
+}
+
+.search-box{
+    margin-left: 5px;
+    width: 0%;
+    flex-grow: 0;
+}
+
+.search-box-show{
+    flex-grow: 1;
+}
+
+.grow-enter-active, .grow-leave-active{
+    transition: all 0.1s ease-out;
+}
+
+.graph-list-wrapper{
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+}
+
+.graph-list-library{
+    min-width: 200px;
+    border-right: none;
+    border-radius: var(--corner-radius) 0px 0px var(--corner-radius);
 }
 
 .resizeBtn-right-wrapper{
@@ -1072,82 +1100,6 @@ function _checkLoop(connection, connectionMap, checkedNodes){
 .resizeBtn > img{
     width: 100%;
     height: 100%;
-}
-
-.modal-wrapper{
-    position: absolute;
-    left: 0;
-    top: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-    z-index: 10;
-    z-index: 2000;
-}
-
-.modal-bg{
-    position: absolute;
-    background: black;
-    width: 100%;
-    height: 100%;
-    opacity: 50%;
-    z-index: inherit
-}
-
-.modal{
-    background: var(--main-bg);
-    border: 2px solid var(--border);
-    border-radius: var(--corner-radius);
-    overflow: hidden;
-    max-height: 95%;
-    overflow-y: auto;
-    z-index: inherit;
-}
-
-.modal > .heading{
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--corner-radius);
-    background: var(--heading);
-}
-
-.add-event-list{
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    width: 100%;
-    height: 100%;
-}
-
-.add-event{
-    display: flex;
-    justify-content: center;
-    background: var(--tool-panel-bg);
-    padding: 20px;
-    margin: 10px;
-    border: none;
-    border-radius: var(--corner-radius);
-}
-
-.add-event:not(:first-child){
-    margin-top: 0;
-}
-
-.add-event:hover:not(.add-grayed){
-    background: var(--button-norm);
-}
-
-.add-event:active:not(.add-grayed){
-    background: var(--button-down);
-}
-
-.add-grayed{
-    opacity: 50%;
 }
 
 .node-viewport{
@@ -1229,144 +1181,6 @@ function _checkLoop(connection, connectionMap, checkedNodes){
 .fade-out{
     opacity: 1;
     transition: opacity 0.2s ease-out;
-}
-
-.search-btn-wrapper{
-    position: absolute;
-    left: 100%;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    transform: translateX(-130%);
-    transition: all 0.3s ease-out;
-}
-
-.search-btn-wrapper-searching{
-    transform: translateX(0);
-    left: 5px;
-}
-
-.search-btn{
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    width: 2em;
-    height: 2em;
-    border: none;
-    background: var(--tool-panel-bg);
-    border-radius: var(--corner-radius);
-    overflow: hidden;
-}
-
-.search-btn-active:hover{
-    filter: brightness(1.2);
-}
-
-.search-btn-active:active{
-    filter: brightness(0.8);
-}
-
-.cancel-search-btn{
-    height: 2em;
-    margin-left: 5px;
-    background: var(--button-dark-norm);
-    border: 2px solid var(--border);
-    border-radius: 8px;
-}
-
-.cancel-search-btn:hover{
-    background: var(--button-dark-hover);
-}
-
-.cancel-search-btn:active{
-    background: var(--button-dark-down);
-}
-
-.search-box{
-    margin-left: 5px;
-    width: 0%;
-    flex-grow: 0;
-}
-
-.search-box-show{
-    flex-grow: 1;
-}
-
-.grow-enter-active, .grow-leave-active{
-    transition: all 0.1s ease-out;
-}
-
-.node-library-wrapper{
-    position: absolute;
-    top: 0;
-    right: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    height: 100%;
-}
-
-.node-library{
-    min-width: 200px;
-    border-right: none;
-    border-radius: var(--corner-radius) 0px 0px var(--corner-radius);
-}
-
-.slide-wrapper{
-    position: relative;
-    display: flex;
-    flex-direction: row;
-    width: 200%;
-    left: 0;
-    transition-property: left;
-    transition-duration: 100ms;
-    transition-timing-function: ease-out;
-}
-
-.slide-wrapper-trans{
-    left: -100%;
-    transition-property: left;
-    transition-duration: 100ms;
-    transition-timing-function: ease-out;
-}
-
-.library-column{
-    display: flex;
-    flex-direction: column;
-    width: 50%;
-    height: 100%;
-}
-
-.node-category{
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    height: 40px;
-    padding-left: 10px;
-    margin-left: 10px;
-    background: var(--tool-panel-bg);
-    border-bottom: 2px solid var(--border);
-    border-left: 2px solid var(--border);
-}
-
-.node-category:last-child{
-    border-radius: 0px 0px 0px var(--corner-radius);
-}
-
-.category-back-btn{
-    display: flex;
-    flex-direction: row;
-    width: min-content;
-    background: var(--heading);
-}
-
-.category-back-btn > img{
-    width: 20px;
-    transform: rotate(-90deg);
-}
-
-.node-category:hover{
-    filter: brightness(1.1);
 }
 
 .undo-panel-wrapper{

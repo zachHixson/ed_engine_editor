@@ -175,7 +175,7 @@
     "logic_editor":{
         "event_panel_heading": "Events",
         "node_panel_heading": "Add Nodes",
-        "node_panel_empty_warning": "Add an event in order to add nodes",
+        "node_panel_empty_warning": "Add a graph to start adding nodes",
         "self": "Self"
     },
     "node":{
