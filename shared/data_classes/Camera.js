@@ -53,7 +53,7 @@ export class Camera{
         return this;
     }
 
-    update(){
-        this.pos.add(this.velocity);
+    update(deltaTime){
+        this.pos.add(this.velocity.clone().multiplyScalar(deltaTime));
     }
 };

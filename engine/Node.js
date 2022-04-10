@@ -59,7 +59,10 @@ export default class Node{
     }
 
     executeEvent = (data)=>{
-        if (!this.isEvent) return;
+        if (!this.isEvent) {
+            console.error('Error: Cannot call \"executeEvent()\" from non-event node');
+            return
+        };
 
         this._dataCache = data;
 

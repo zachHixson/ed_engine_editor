@@ -73,10 +73,10 @@ export const NODE_LIST = [
         inTriggers: [
             {id: '_default', execute: 'checkCondition'}
         ],
+        outTriggers: ['true', 'false'],
         inputs: [
             {id: 'condition', type: SOCKET_TYPE.BOOL, default: false}
         ],
-        outTriggers: ['true', 'false'],
         methods: {
             checkCondition(){
                 const conditionVal = this.getInput('condition');
@@ -149,13 +149,13 @@ export const NODE_LIST = [
         id: 'not',
         category: 'actual',
         inputs: [
-            {id: '_inp', type: SOCKET_TYPE.BOOL, default: false}
+            {id: '_inp', type: SOCKET_TYPE.BOOL, default: false},
         ],
         outputs: [
-            {id: '_out', type: SOCKET_TYPE.BOOL, execute: 'not'}
+            {id: '_out', type: SOCKET_TYPE.BOOL, execute: 'not'},
         ],
         methods: {
-            not(){return !this.getInput('_inp')}
+            not(){return !this.getInput('_inp')},
         },
     },
     {
@@ -164,6 +164,7 @@ export const NODE_LIST = [
         inTriggers: [
             {id: '_default', execute: 'log'}
         ],
+        outTriggers: ['_default'],
         inputs: [
             {id: 'label', type: SOCKET_TYPE.STRING, default: ''},
             {id: '_data', type: SOCKET_TYPE.ANY, default: null},
@@ -189,10 +190,10 @@ export const NODE_LIST = [
         id: 'key_down',
         category: 'actual',
         inputs: [
-            {id: 'key', type: SOCKET_TYPE.STRING, default: ''}
+            {id: 'key', type: SOCKET_TYPE.STRING, default: ''},
         ],
         outputs: [
-            {id: 'is_down', type: SOCKET_TYPE.BOOL, execute: 'isDown'}
+            {id: 'is_down', type: SOCKET_TYPE.BOOL, execute: 'isDown'},
         ],
         methods: {
             isDown(){
@@ -215,7 +216,7 @@ export const NODE_LIST = [
             {id: '_num2', type: SOCKET_TYPE.NUMBER, default: 0},
         ],
         outputs: [
-            {id: '_out', type: SOCKET_TYPE.NUMBER, execute: 'compute'}
+            {id: '_out', type: SOCKET_TYPE.NUMBER, execute: 'compute'},
         ],
         methods: {
             compute(){
@@ -237,6 +238,54 @@ export const NODE_LIST = [
                 }
             },
         },
+    },
+    {
+        id: 'set_position',
+        category: 'movement',
+        inTriggers: [
+            {id: '_default', execute: 'setPosition'},
+        ],
+        outTriggers: ['_default'],
+        inputs: [
+            {id: 'x', type: SOCKET_TYPE.NUMBER, default: 0},
+            {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0},
+            {id: 'relative', type: SOCKET_TYPE.BOOL, default: false},
+        ],
+        methods: {
+            setPosition(){
+                const relative = this.getInput('relative');
+                const newPos = new Victor(
+                    Math.round(this.getInput('x')),
+                    Math.round(this.getInput('y'))
+                );
+
+                if (relative){
+                    newPos.add(this.api.getInstancePosition(this.instance));
+                }
+
+                this.api.setInstancePosition(this.instance, newPos);
+            },
+        },
+    },
+    {
+        id: 'set_variable',
+        category: 'variables',
+        inTriggers: [
+            {id: '_default', execute: 'setVar'},
+        ],
+        outTriggers: ['_default'],
+        inputs: [
+            {id: 'name', type: SOCKET_TYPE.STRING, default: ''},
+            {id: 'data', type: SOCKET_TYPE.ANY, default: null},
+            {id: 'global', type: SOCKET_TYPE.BOOL, default: false},
+        ],
+        methods: {
+            setVar(){
+                const varName = this.getInput('name');
+                const data = this.getInput('data');
+                this.api.setInstanceVariable(this.instance, varName, data);
+            }
+        }
     },
 ];
 

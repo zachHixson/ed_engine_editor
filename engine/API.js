@@ -11,10 +11,12 @@ export default class API {
 
     constructor({
         keymap,
+        getDeltaTime,
         getLoadedRoom,
         envCallbacks
     }){
         this.keymap = keymap;
+        this._getDeltaTime = getDeltaTime;
         this._getLoadedRoom = getLoadedRoom;
         this._nodeEventMap = {};
 
@@ -24,6 +26,7 @@ export default class API {
     }
 
     get room(){return this._getLoadedRoom()}
+    get deltaTime(){return this._getDeltaTime()}
 
     clearNodeEvents = ()=>{
         this._nodeEventMap = {};

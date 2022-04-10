@@ -9,6 +9,7 @@ class Engine{
     constructor({canvas, gameData, callbacks}){
         this._canvas = canvas;
         this._timeStart = null;
+        this._deltaTime = null;
         this._lastLoopTimestamp = null;
         this._isRunning = false;
         this._loadedRoom = null;
@@ -17,6 +18,7 @@ class Engine{
         this._keymap = {};
         this._api = new API({
             keymap: this._keymap,
+            getDeltaTime: ()=>this._deltaTime,
             getLoadedRoom: ()=>this._loadedRoom,
             envCallbacks: callbacks,
         });
@@ -73,9 +75,9 @@ class Engine{
 
     _updateLoop = (time)=>{
         const ctx = this._canvas.getContext('2d');
-        const deltaTime = time - this._lastLoopTimestamp;
+        this._deltaTime = (time - this._lastLoopTimestamp) / 1000;
 
-        this._loadedRoom.camera.update(deltaTime);
+        this._loadedRoom.camera.update(this._deltaTime);
         this._processDebugNav();
         this._renderer.render();
 

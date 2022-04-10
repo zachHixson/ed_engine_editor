@@ -88,9 +88,6 @@ export default {
                 let ctx = canvas.getContext('2d');
                 let scaleFac = canvas.width / this.thumbnail.width;
 
-                ctx.imageSmoothingEnabled = false;
-                ctx.webkitImageSmoothingEnabled = false;
-
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.scale(scaleFac, scaleFac);
                 ctx.drawImage(this.thumbnail, 0, 0, this.thumbnail.width, this.thumbnail.height);
