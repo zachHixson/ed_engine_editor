@@ -57,6 +57,7 @@ export default class Node{
         outObj = {
             templateId: this.templateId,
             nodeId: this.nodeId,
+            graphId: this.graphId,
             pos: roundedPos.toObject(),
             inputs,
         }

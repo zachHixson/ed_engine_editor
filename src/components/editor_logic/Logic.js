@@ -49,75 +49,47 @@ export default class Logic{
         let logic = {
             id: this.id,
             name: this.name,
-            selectedEventId: this._selectedEventId,
-            nextNodeId: this._nextNodeId,
-            nextConnectionId: this._nextConnectionId,
-            events: new Array(this.eventsList.length),
-        }
-
-        for (let i = 0; i < this.eventsList.length; i++){
-            let eventId = this.eventsList[i];
-            let eventObj = this.events.get(this.eventsList[i]);
-
-            logic.events[i] = {
-                entry: {
-                    templateId: eventId,
-                    id: eventObj.entry.nodeId,
-                    pos: eventObj.entry.pos.toObject(),
-                },
-                nodes: eventObj.nodes.map(node => node.toSaveData()),
-                connections: eventObj.connections.map(connection => connection.toSaveData()),
-                navState: eventObj.navState,
-            };
-
-            //remove first node since it's always the event node which we need to recreate anyways
-            logic.events[i].nodes.splice(0, 1);
+            selectedGraphId: this.selectedGraphId,
+            graphs: this.graphs,
+            nodes: this.nodes.map(n => n.toSaveData()),
+            connections: this.connections.map(c => c.toSaveData())
         }
 
         return logic;
     }
 
     fromSaveData(data){
-        this.id = data.id;
-        this.name = data.name;
-        this._selectedEventId = data.selectedEventId;
-        this._nextNodeId = data.nextNodeId;
-        this._nextConnectionId = data.nextConnectionId;
+        let nodeMap = {};
 
-        for (let i = 0; i < data.events.length; i++){
-            let eventData = data.events[i];
-            let entryTemplate = Shared.DEFAULT_EVENTS.get(eventData.entry.templateId);
-            let entry = new Node(entryTemplate, eventData.entry.id, Victor.fromObject(eventData.entry.pos));
-            let nodes = [entry, ...eventData.nodes.map(node => new Node(
-                Shared.NODE_MAP.get(node.templateId),
+        Object.assign(this, data);
+
+        this.graphs = this.graphs.map(graph => {
+            this._nextGraphId = Math.max(this._nextGraphId, graph.id + 1);
+            graph.navState.offset = Victor.fromObject(this.navState.offset);
+            return graph;
+        });
+        this.nodes = this.nodes.map(node => {
+            this._nextNodeId = Math.max(this._nextNodeId, node.nodeId + 1);
+            return new Node(
+                Shared.NODE_MAP[node.templateId],
                 node.nodeId,
-                Victor.fromObject(node.pos)
-            ).fromSaveData(node))];
-            let nodeMap = new Map();
+                Victor.fromObject(node.pos),
+                node.graphId
+            ).fromSaveData(node);
+        });
 
-            entry.isEvent = true;
-            nodes.forEach(node => nodeMap.set(node.nodeId, node));
+        this.nodes.forEach(node => nodeMap[node.nodeId] = node);
 
-            this.events.set(eventData.entry.templateId, {
-                entry,
-                nodes,
-                connections: eventData.connections.map(
-                    connection => new Node_Connection(connection).fromSaveData(connection, nodeMap)
-                ),
-                navState: {
-                    offset: new Victor.fromObject(eventData.navState.offset),
-                    zoomFac: eventData.navState.zoomFac
-                }
-            });
-        }
-        
-        this.refreshEditorEventList();
+        this.connections = this.connections.map(connection => {
+            this._nextConnectionId = Math.max(this._nextConnectionId, connection.id + 1);
+            return new Node_Connection(connection).fromSaveData(connection, nodeMap);
+        });
 
         return this;
     }
 
     addNode(templateId, pos, nodeRef = null){
-        let nodeTemplate = Shared.NODE_MAP.get(templateId);
+        let nodeTemplate = Shared.NODE_MAP[templateId];
         let newNode = nodeRef ?? new Node(nodeTemplate, this.nextNodeId, pos, this.selectedGraphId);
 
         this.nodes.push(newNode);

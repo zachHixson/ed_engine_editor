@@ -20,16 +20,16 @@ export default class Node_Connection{
     }
 
     toSaveData(){
-        let {id, type, startNode, startSocketId, endNode, endSocketId} = this;
+        let {id, type, graphId, startNode, startSocketId, endNode, endSocketId} = this;
         let startNodeId = startNode.nodeId;
         let endNodeId = endNode.nodeId;
 
-        return {id, type, startNodeId, startSocketId, endNodeId, endSocketId};
+        return {id, type, graphId, startNodeId, startSocketId, endNodeId, endSocketId};
     }
 
     fromSaveData(data, nodeMap){
-        this.startNode = nodeMap.get(data.startNodeId);
-        this.endNode = nodeMap.get(data.endNodeId);
+        this.startNode = nodeMap[data.startNodeId];
+        this.endNode = nodeMap[data.endNodeId];
 
         return this;
     }

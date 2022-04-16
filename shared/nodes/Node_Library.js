@@ -265,8 +265,8 @@ export const NODE_LIST = [
     },
 ];
 
-export const NODE_MAP = new Map();
+export const NODE_MAP = {};
 
 NODE_LIST.forEach(node => {
-    NODE_MAP.set(node.id, node);
+    NODE_MAP[node.id] = node;
 });
