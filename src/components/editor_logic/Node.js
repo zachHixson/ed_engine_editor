@@ -1,14 +1,15 @@
 export default class Node{
-    constructor(template, id, pos = new Victor()){
+    constructor(template, id, pos = new Victor(), graphId){
         this.templateId = template.id;
         this.nodeId = id;
-        this.isEvent = false;
+        this.isEvent = template.isEvent;
         this.widget = template.widget;
         this.widgetData;
         this.inTriggers = new Map();
         this.outTriggers = new Map();
         this.inputs = new Map();
         this.outputs = new Map();
+        this.graphId = graphId;
         this.domRef = null;
         this.pos = pos.clone();
         this.updateConnectionsCallback = null;

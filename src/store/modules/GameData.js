@@ -61,6 +61,7 @@ const mutations = {
                 let logicName = i18n.tc(`asset_browser.logic_prefix`) + getSuffixNum(state.logic);
                 let newLogic = new Logic();
                 newLogic.name = logicName;
+                newLogic.addGraph();
                 state.logic.push(newLogic);
                 break;
             case Shared.CATEGORY_ID.ROOM:

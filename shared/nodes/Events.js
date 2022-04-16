@@ -1,14 +1,16 @@
 import {SOCKET_TYPE} from './Node_Enums';
 
-export const DEFAULT_EVENTS = new Map();
-
-const defaultEvents = [
+export const EVENTS = [
     {
         id: 'e_create',
+        isEvent: true,
+        category: 'events',
         outTriggers: ['_default'],
     },
     {
         id: 'e_update',
+        isEvent: true,
+        category: 'events',
         outTriggers: ['e_update_trigger_default'],
         outputs: [
             {id: 'e_update_out_delta_time', type: SOCKET_TYPE.NUMBER},
@@ -16,6 +18,8 @@ const defaultEvents = [
     },
     {
         id: 'e_mouse_button',
+        isEvent: true,
+        category: 'events',
         outTriggers: ['e_mouse_button_trigger_down', 'e_mouse_button_trigger_up', 'e_mouse_button_trigger_click'],
         outputs: [
             {id: 'e_mouse_button_out_which', type: SOCKET_TYPE.STRING},
@@ -26,6 +30,8 @@ const defaultEvents = [
     },
     {
         id: 'e_mouse_move',
+        isEvent: true,
+        category: 'events',
         outTriggers: ['e_mouse_move_trigger_default'],
         outputs: [
             {id: 'e_mouse_move_out_x', type: SOCKET_TYPE.NUMBER},
@@ -34,6 +40,8 @@ const defaultEvents = [
     },
     {
         id: 'e_keyboard',
+        isEvent: true,
+        category: 'events',
         outTriggers: ['e_keyboard_trigger_down', 'e_keyboard_trigger_up', 'e_keyboard_trigger_tap'],
         outputs: [
             {id: 'e_keyboard_out_which', type: SOCKET_TYPE.STRING},
@@ -41,6 +49,8 @@ const defaultEvents = [
     },
     {
         id: 'e_collision',
+        isEvent: true,
+        category: 'events',
         outTriggers: ['e_collision_trigger_start', 'e_collision_trigger_stop'],
         outputs: [
             {id: 'e_collision_out_object', type: SOCKET_TYPE.OBJECT},
@@ -48,6 +58,8 @@ const defaultEvents = [
     },
     {
         id: 'e_alarm',
+        isEvent: true,
+        category: 'events',
         outTriggers: ['e_alarm_default'],
         outputs: [
             {id: 'e_alarm_out_name', type: SOCKET_TYPE.STRING},
@@ -55,6 +67,8 @@ const defaultEvents = [
     },
     {
         id: 'e_message',
+        isEvent: true,
+        category: 'events',
         outTriggers: ['e_message_default'],
         outputs: [
             {id: 'e_message_out_name', type: SOCKET_TYPE.STRING},
@@ -62,9 +76,3 @@ const defaultEvents = [
         ],
     },
 ];
-
-defaultEvents.forEach(event => {
-    DEFAULT_EVENTS.set(event.id, event);
-});
-
-Object.freeze(DEFAULT_EVENTS);

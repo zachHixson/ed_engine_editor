@@ -5,43 +5,43 @@ export default class Logic{
     constructor(){
         this.id = Shared.ID_Generator.newID();
         this.name = this.id;
-        this.events = new Map();
-        this._selectedEventId = null;
+        this.graphs = [];
+        this.nodes = [];
+        this.connections = [];
+        this.selectedGraphId = null;
+        this.selectedNodes = [];
+        this._nextGraphId = 0;
         this._nextNodeId = 0;
         this._nextConnectionId = 0;
-
-        //the following 3 properties act as pointers to the data in the respective Map().
-        //Vue does not observe Map() changes, but it can watch a pointer to the same data.
-        this.eventsList = [];
-        this.eventNodeList = [];
-        this.eventConnectionsList = [];
-        this.selectedNodes = [];
-
-        Shared.DEFAULT_EVENTS.forEach(event => {
-            this.events.set(event.id, null);
-        });
     }
 
     get category_ID(){return Shared.CATEGORY_ID.LOGIC}
-    get nextNodeId(){return this._nextNodeId++};
-    get selectedEventId(){return this._selectedEventId}
-    get selectedEvent(){return (this.selectedEventId) ? this.events.get(this.selectedEventId) : null}
-    get navState(){return (this.selectedEventId) ? this.selectedEvent.navState : this.defaultNavState}
+    get nextGraphId(){return this._nextGraphId++}
+    get nextNodeId(){return this._nextNodeId++}
+    get navState(){return (this.selectedGraphId) ? this.graphs[this.selectedGraphId].navState : this.defaultNavState}
     get defaultNavState(){return {
         offset: new Victor(0, 0),
         zoomFac: 1,
     }}
 
-    set selectedEventId(newId){
-        let currentTree = this.events.get(newId);
-
-        this._selectedEventId = newId;
-        this.eventNodeList = (newId) ? currentTree.nodes : [];
-        this.eventConnectionsList = (newId) ? currentTree.connections : [];
-    }
     set navState(newState){
         if (this.selectedEventId){
             this.selectedEventId.navState = newState;
+        }
+    }
+
+    addGraph(){
+        const id = this.nextGraphId;
+        const newGraph = {
+            id,
+            name: 'prefix_' + id,
+            navState: this.defaultNavState
+        };
+
+        this.graphs.push(newGraph);
+
+        if (this.selectedGraphId == null){
+            this.selectedGraphId = newGraph.id;
         }
     }
 
@@ -116,43 +116,11 @@ export default class Logic{
         return this;
     }
 
-    registerEvent(eventId, pos = new Victor()){
-        let eventTamplate = Shared.DEFAULT_EVENTS.get(eventId);
-        let newEvent = new Node(eventTamplate, this.nextNodeId, pos);
-        newEvent.isEvent = true;
-
-        this.events.set(eventId, {
-            entry: newEvent,
-            nodes: [newEvent],
-            connections: [],
-            navState: this.defaultNavState,
-        });
-
-        this.refreshEditorEventList();
-    }
-
-    unregisterEvent(eventId){
-        this.events.set(eventId, null);
-
-        this.refreshEditorEventList();
-    }
-
-    refreshEditorEventList(){
-        this.eventsList.splice(0);
-
-        this.events.forEach((event, id) => {
-            if (event){
-                this.eventsList.push(id);
-            }
-        })
-    }
-
     addNode(templateId, pos, nodeRef = null){
         let nodeTemplate = Shared.NODE_MAP.get(templateId);
-        let newNode = nodeRef ?? new Node(nodeTemplate, this.nextNodeId, pos);
-        let curEvent = this.events.get(this.selectedEventId);
+        let newNode = nodeRef ?? new Node(nodeTemplate, this.nextNodeId, pos, this.selectedGraphId);
 
-        curEvent.nodes.push(newNode);
+        this.nodes.push(newNode);
 
         return newNode;
     }
@@ -160,15 +128,15 @@ export default class Logic{
     deleteNode(nodeRef){
         let nodeIdx = -1;
 
-        for (let i = 0; nodeIdx < 0 && i < this.selectedEvent.nodes.length; i++){
-            let node = this.selectedEvent.nodes[i];
+        for (let i = 0; nodeIdx < 0 && i < this.nodes.length; i++){
+            let node = this.nodes[i];
 
             if (node.nodeId == nodeRef.nodeId){
                 nodeIdx = i;
             }
         }
         
-        this.selectedEvent.nodes.splice(nodeIdx, 1);
+        this.nodes.splice(nodeIdx, 1);
     }
 
     addConnection(connectionObj){
@@ -176,15 +144,15 @@ export default class Logic{
             connectionObj.id = this._nextConnectionId++;
         }
 
-        this.eventConnectionsList.push(connectionObj);
+        this.connections.push(connectionObj);
     }
 
     removeConnection(id){
-        for (let i = 0; i < this.eventConnectionsList.length; i++){
-            let connection = this.eventConnectionsList[i];
+        for (let i = 0; i < this.connections.length; i++){
+            let connection = this.connections[i];
 
             if (connection.id == id){
-                this.eventConnectionsList.splice(i, 1);
+                this.connections.splice(i, 1);
                 return;
             }
         }

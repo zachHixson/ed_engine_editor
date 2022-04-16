@@ -98,6 +98,7 @@ export default {
 
             connection.type = this.socket.type;
             connection.canConnect = this.canConnect;
+            connection.graphId = this.$store.getters['AssetBrowser/getSelectedAsset'].selectedGraphId;
 
             this.$emit('mouse-down', connection);
         },

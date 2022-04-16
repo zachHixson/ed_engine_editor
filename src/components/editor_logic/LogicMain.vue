@@ -69,7 +69,7 @@
             </div>
         </div>
         <div
-            :style="(selectedAsset.selectedEventId) ? '' : 'background: white'"
+            :style="(selectedAsset.selectedGraphId != null) ? '' : 'background: white'"
             ref="nodeVP"
             class="node-viewport"
             @click="mouseClick"
@@ -77,24 +77,24 @@
             @mousemove="mouseMove">
             <div ref="nodeNav" class="node-nav-wrapper">
                 <Connection
-                    v-for="connection in selectedAsset.eventConnectionsList"
-                    :key="`connection,${selectedAsset.id},${selectedAsset.selectedEventId},${connection.id}`"
+                    v-for="connection in visibleConnections"
+                    :key="`connection,${selectedAsset.id},${selectedAsset.selectedGraphId},${connection.id}`"
                     ref="connectionEls"
                     :connectionObj="connection"
                     :clientToNavSpace="convertClientToNavPos"
                     :navWrapper="$refs.nodeNav"
-                    :allConnections="selectedAsset.eventConnectionsList"
+                    :allConnections="selectedAsset.connections"
                     :draggingConnection="draggingConnection"
                     @drag-start="dragConnection"/>
                 <Node
-                    v-for="node in selectedAsset.eventNodeList"
-                    :key="`node,${selectedAsset.id},${selectedAsset.selectedEventId},${node.nodeId}`"
+                    v-for="node in visibleNodes"
+                    :key="`node,${selectedAsset.id},${selectedAsset.selectedGraphId},${node.nodeId}`"
                     ref="nodeEls"
                     :nodeObj="node"
                     :clientToNavSpace="convertClientToNavPos"
                     :canDrag="nodeDraggingEnabled"
                     :selectedNodes="selectedNodes"
-                    :allConnections="selectedAsset.eventConnectionsList"
+                    :allConnections="selectedAsset.connections"
                     class="node"
                     @node-clicked="nodeClick"
                     @node-down="nodeDown"
@@ -125,7 +125,13 @@
         </div>
         <div class="graph-list-wrapper">
             <div v-show="showGraphs" class="side-panel graph-list-library">
-                //
+                <div
+                    v-for="graph in selectedAsset.graphs"
+                    :key="graph.id">N
+                        <div
+                            v-for="node in graph.nodes"
+                            :key="node">{{node}}</div>
+                    </div>
             </div>
             <div class="resizeBtn-left-wrapper">
                 <button class="resizeBtn resizeBtn-left" @click="showGraphs = !showGraphs" :style="showGraphs ? 'transform: translateX(2px);' : ''">
@@ -255,6 +261,12 @@ export default {
         curNavState(){
             return this.selectedAsset.navState;
         },
+        visibleNodes(){
+            return this.selectedAsset.nodes.filter(n => n.graphId == this.selectedAsset.selectedGraphId);
+        },
+        visibleConnections(){
+            return this.selectedAsset.connections.filter(n => n.graphId == this.selectedAsset.selectedGraphId);
+        },
         selectedNodes(){
             return this.selectedAsset.selectedNodes;
         },
@@ -326,8 +338,8 @@ export default {
             let midpoint = vpUl.clone().add(vpBr).divideScalar(2);
             let navPos = this.convertClientToNavPos(midpoint);
 
-            for (let i = 0; i < this.selectedAsset.eventNodeList.length; i++){
-                let curNode = this.selectedAsset.eventNodeList[i];
+            for (let i = 0; i < this.selectedAsset.nodes.length; i++){
+                let curNode = this.selectedAsset.nodes[i];
 
                 if (curNode.pos.isEqualTo(navPos)){
                     let size = 50;
@@ -427,6 +439,7 @@ export default {
             if (this.isDraggingNode){
                 jsEvent.stopPropagation()
                 this.deleteSelectedNodes();
+                this.isDraggingNode = false;
             }
         },
         mouseMove(jsEvent){
@@ -558,7 +571,7 @@ export default {
             this.updateNodeBounds();
         },
         selectNodesInBox(){
-            this.selectedAsset.eventNodeList.forEach(node => {
+            this.selectedAsset.nodes.forEach(node => {
                 let selectionBounds = this.$refs.selectionBox.getBoundingClientRect();
                 let nodeBounds = node.domRef.getBoundingClientRect();
                 let overlapX = selectionBounds.right >= nodeBounds.left && nodeBounds.right >= selectionBounds.left;
@@ -571,7 +584,7 @@ export default {
             });
         },
         updateNodeBounds(){
-            let nodes = this.selectedAsset.eventNodeList;
+            let nodes = this.selectedAsset.nodes;
 
             if (nodes.length == 0){
                 this.contentsBounds = [0, 0, 0, 0];
@@ -610,7 +623,7 @@ export default {
         },
         selectAllNodes(){
             this.selectedNodes.splice(0);
-            this.selectedNodes.push(...this.selectedAsset.eventNodeList);
+            this.selectedNodes.push(...this.selectedAsset.nodes);
         },
         deselectAllNodes(){
             this.selectedNodes.splice(0);
@@ -622,7 +635,7 @@ export default {
         checkLoop(leftNode, rightNode){
             let connectionMap = new Map();
             let checkedNodes = new Map();
-            let connections = this.selectedAsset.eventConnectionsList;
+            let connections = this.selectedAsset.connections;
 
             for (let i = 0; i < connections.length - 1; i++){
                 let connection = connections[i];
@@ -647,22 +660,20 @@ export default {
             let connectionRefList = [];
 
             nodeRefList.forEach(node => {
-                if (!node.isEvent){
-                    //find and delete connections attached to the node
-                    this.selectedAsset.eventConnectionsList.forEach(connection => {
-                        let startNodeId = connection.startNode.nodeId;
-                        let endNodeId = connection.endNode.nodeId;
+                //find and delete connections attached to the node
+                this.selectedAsset.connections.forEach(connection => {
+                    let startNodeId = connection.startNode.nodeId;
+                    let endNodeId = connection.endNode.nodeId;
 
-                        if (startNodeId == node.nodeId || endNodeId == node.nodeId){
-                            connectionRefList.push(connection);
-                        }
-                    });
+                    if (startNodeId == node.nodeId || endNodeId == node.nodeId){
+                        connectionRefList.push(connection);
+                    }
+                });
 
-                    connectionRefList.forEach(c => this.selectedAsset.removeConnection(c.id));
+                connectionRefList.forEach(c => this.selectedAsset.removeConnection(c.id));
 
-                    //delete node
-                    this.selectedAsset.deleteNode(node);
-                }
+                //delete node
+                this.selectedAsset.deleteNode(node);
             });
 
             if (makeCommit){

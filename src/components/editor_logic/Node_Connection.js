@@ -2,6 +2,7 @@ export default class Node_Connection{
     constructor(inpObj = {}){
         this.id = inpObj.id;
         this.type = inpObj.type;
+        this.graphId = inpObj.graphId;
         this.canConnect = inpObj.canConnect;
         this.connectionComponent = inpObj.connectionComponent ?? null;
         this.startNode = inpObj.startNode ?? null;

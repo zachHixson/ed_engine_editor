@@ -1,25 +1,8 @@
 import {SOCKET_TYPE, WIDGET} from './Node_Enums';
+import {EVENTS} from './Events';
 
 export const NODE_LIST = [
-    // {
-    //     id: 'trigger_in',
-    //     category: 'testing',
-    //     inTriggers: [
-    //         {id: 'trigger_in_iTrigger_default', execute: 'do_thing'},
-    //     ],
-    // },
-    // {
-    //     id: 'trigger_io',
-    //     category: 'testing',
-    //     inTriggers: [
-    //         {id: 'trigger_io_inTrigger_default', execute: 'do_thing'},
-    //     ],
-    //     outTriggers: ['trigger_io_outTrigger_default'],
-    //     inputs: [
-    //         {id: 'trigger_io_input_number', type: SOCKET_TYPE.NUMBER, default: 0},
-    //         {id: 'trigger_io_input_string', type: SOCKET_TYPE.STRING, default: 'Test'},
-    //     ],
-    // },
+    ...EVENTS,
     {
         id: 'trigger_2io',
         category: 'testing',
@@ -37,17 +20,6 @@ export const NODE_LIST = [
             {id: 'trigger_2io_oNum2', type: SOCKET_TYPE.NUMBER, execute: 'do_thing'},
         ],
     },
-    // {
-    //     id: 'some_math',
-    //     category: 'testing',
-    //     inputs: [
-    //         {id: 'some_math_num1', type: SOCKET_TYPE.NUMBER, default: 24},
-    //         {id: 'some_math_num2', type: SOCKET_TYPE.NUMBER, default: 27},
-    //     ],
-    //     outputs: [
-    //         {id: 'some_math_output', type: SOCKET_TYPE.NUMBER, execute: 'do_thing'},
-    //     ],
-    // },
     {
         id: 'all_types',
         category: 'testing',
@@ -71,7 +43,7 @@ export const NODE_LIST = [
         id: 'branch',
         category: 'actual',
         inTriggers: [
-            {id: '_default', execute: 'checkCondition'}
+            {id: '_i', execute: 'checkCondition'}
         ],
         outTriggers: ['true', 'false'],
         inputs: [
@@ -162,9 +134,9 @@ export const NODE_LIST = [
         id: 'debug_log',
         category: 'actual',
         inTriggers: [
-            {id: '_default', execute: 'log'}
+            {id: '_i', execute: 'log'}
         ],
-        outTriggers: ['_default'],
+        outTriggers: ['_o'],
         inputs: [
             {id: 'label', type: SOCKET_TYPE.STRING, default: ''},
             {id: '_data', type: SOCKET_TYPE.ANY, default: null},
@@ -183,6 +155,8 @@ export const NODE_LIST = [
                 else{
                     this.api.log(label);
                 }
+
+                this.triggerOutput('_o');
             },
         },
     },
@@ -243,9 +217,9 @@ export const NODE_LIST = [
         id: 'set_position',
         category: 'movement',
         inTriggers: [
-            {id: '_default', execute: 'setPosition'},
+            {id: '_i', execute: 'setPosition'},
         ],
-        outTriggers: ['_default'],
+        outTriggers: ['_o'],
         inputs: [
             {id: 'x', type: SOCKET_TYPE.NUMBER, default: 0},
             {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0},
@@ -264,6 +238,7 @@ export const NODE_LIST = [
                 }
 
                 this.api.setInstancePosition(this.instance, newPos);
+                this.triggerOutput('_o');
             },
         },
     },
@@ -271,9 +246,9 @@ export const NODE_LIST = [
         id: 'set_variable',
         category: 'variables',
         inTriggers: [
-            {id: '_default', execute: 'setVar'},
+            {id: '_i', execute: 'setVar'},
         ],
-        outTriggers: ['_default'],
+        outTriggers: ['_o'],
         inputs: [
             {id: 'name', type: SOCKET_TYPE.STRING, default: ''},
             {id: 'data', type: SOCKET_TYPE.ANY, default: null},
@@ -284,6 +259,7 @@ export const NODE_LIST = [
                 const varName = this.getInput('name');
                 const data = this.getInput('data');
                 this.api.setInstanceVariable(this.instance, varName, data);
+                this.triggerOutput('_o');
             }
         }
     },
