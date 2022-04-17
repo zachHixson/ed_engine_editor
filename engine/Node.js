@@ -3,7 +3,7 @@ export default class Node{
         this.templateId = template.id;
         this.nodeId = id;
         this.api = api;
-        this.isEvent = false;
+        this.isEvent = template.isEvent;
         this.widgetData;
         this.defaultTriggerId = null;
         this.inTriggers = {};
@@ -97,5 +97,9 @@ export default class Node{
         }
         
         return input.value;
+    }
+
+    triggerOutput = (output)=>{
+        //
     }
 }

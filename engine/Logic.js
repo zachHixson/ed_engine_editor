@@ -5,54 +5,50 @@ export default class Logic{
         this.id = logicData.id;
         this.events = {};
         this._instance = null;
-        
-        logicData.events.forEach(event => {
-            const eventTemplate = Shared.DEFAULT_EVENTS.get(event.entry.templateId);
-            const eventNode = new Node(eventTemplate, event.id, api);
-            const nodeMap = {};
 
-            eventNode.isEvent = true;
+        const nodes = {};
 
-            //load all nodes into nodeMap
-            nodeMap[event.entry.id] = eventNode;
+        //create all nodes
+        logicData.nodes.forEach(node => {
+            const template = Shared.NODE_MAP[node.templateId];
+            const newNode = new Node(template, node.nodeId, api);
+            nodes[node.nodeId] = newNode;
 
-            event.nodes.forEach(node => {
-                const nodeTemplate = Shared.NODE_MAP.get(node.templateId);
-                const nodeObj = new Node(nodeTemplate, node.nodeId, api);
-
-                nodeObj.setInstanceCallback(()=>this._instance);
-
-                if (node.widgetData){
-                    nodeObj.widgetData = JSON.parse(node.widgetData);
+            if (template.isEvent){
+                if (!this.events[node.templateId]){
+                    this.events[node.templateId] = [];
                 }
 
-                //set nodes input values from src
-                node.inputs.forEach(srcInput => {
-                    nodeObj.inputs[srcInput.id].value = srcInput.value;
-                });
+                this.events[node.templateId].push(newNode);
+            }
 
-                nodeMap[node.nodeId] = nodeObj;
-            });
+            if (node.widgetData){
+                newNode.widgetData = JSON.parse(node.widgetData);
+            }
 
-            //loop through connection list and connect nodes
-            event.connections.forEach(connection => {
-                const {startNodeId, endNodeId, startSocketId, endSocketId} = connection;
-                const startNode = nodeMap[startNodeId];
-                const endNode = nodeMap[endNodeId];
-                const allStartSockets = {...startNode.outTriggers, ...startNode.outputs};
-                const allEndSockets = {...endNode.inTriggers, ...endNode.inputs};
+            newNode.setInstanceCallback(()=>this._instance);
 
-                allStartSockets[startSocketId].connection = allEndSockets[endSocketId];
-                allEndSockets[endSocketId].connection = allStartSockets[startSocketId];
-            });
+            node.inputs.forEach(srcInput => {
+                newNode.inputs[srcInput.id].value = srcInput.value;
+            })
+        });
 
-            this.events[event.entry.templateId] = eventNode;
+        //create and link connections
+        logicData.connections.forEach(connection => {
+            const {startNodeId, endNodeId, startSocketId, endSocketId} = connection;
+            const startNode = nodes[startNodeId];
+            const endNode = nodes[endNodeId];
+            const allStartSockets = {...startNode.outTriggers, ...startNode.outputs};
+            const allEndSockets = {...endNode.inTriggers, ...endNode.inputs};
+
+            allStartSockets[startSocketId].connection = allEndSockets[endSocketId];
+            allEndSockets[endSocketId].connection = allStartSockets[startSocketId];
         });
     }
 
     executeEvent = (eventName, instance, data)=>{
         this._instance = instance;
-        this.events[eventName].executeEvent(instance, data);
+        this.events[eventName].forEach(event => event.executeEvent(instance, data));
         this._instance = null;
     }
 }
