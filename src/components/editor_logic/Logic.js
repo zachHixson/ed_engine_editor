@@ -1,3 +1,4 @@
+import i18n from '@/i18n';
 import Node from './Node';
 import Node_Connection from './Node_Connection';
 
@@ -18,7 +19,10 @@ export default class Logic{
     get category_ID(){return Shared.CATEGORY_ID.LOGIC}
     get nextGraphId(){return this._nextGraphId++}
     get nextNodeId(){return this._nextNodeId++}
-    get navState(){return (this.selectedGraphId) ? this.graphs[this.selectedGraphId].navState : this.defaultNavState}
+    get navState(){
+        const graphNavstate = this.graphs.length > 0 ? this.graphs.find(graph => graph.id == this.selectedGraphId).navState : null;
+        return (this.selectedGraphId) ? graphNavstate : this.defaultNavState
+    }
     get defaultNavState(){return {
         offset: new Victor(0, 0),
         zoomFac: 1,
@@ -27,21 +31,6 @@ export default class Logic{
     set navState(newState){
         if (this.selectedEventId){
             this.selectedEventId.navState = newState;
-        }
-    }
-
-    addGraph(){
-        const id = this.nextGraphId;
-        const newGraph = {
-            id,
-            name: 'prefix_' + id,
-            navState: this.defaultNavState
-        };
-
-        this.graphs.push(newGraph);
-
-        if (this.selectedGraphId == null){
-            this.selectedGraphId = newGraph.id;
         }
     }
 
@@ -86,6 +75,46 @@ export default class Logic{
         });
 
         return this;
+    }
+
+    addGraph(){
+        const id = this.nextGraphId;
+        const newGraph = {
+            id,
+            name: i18n.t('logic_editor.graph_prefix') + id,
+            navState: this.defaultNavState
+        };
+
+        this.graphs.push(newGraph);
+
+        if (this.selectedGraphId == null){
+            this.selectedGraphId = newGraph.id;
+        }
+    }
+
+    deleteGraph(id){
+        let idx = null;
+
+        for (let i = 0; idx == null && i < this.graphs.length; i++){
+            if (this.graphs[i].id == id){
+                idx = i;
+            }
+        }
+
+        //delete graph and relevant nodes
+        this.nodes.forEach(node => {
+            if (node.graphId == id){
+                this.deleteNode(node);
+            }
+        });
+        
+        this.graphs.splice(idx, 1);
+
+        //select next graph
+        if (id == this.selectedGraphId){
+            const nextIdx = Math.min(this.graphs.length - 1, idx);
+            this.selectedGraphId = (this.graphs.length > 0) ? this.graphs[nextIdx].id : null;
+        }
     }
 
     addNode(templateId, pos, nodeRef = null){

@@ -25,9 +25,9 @@
                         </transition>
                     </div>
                 </div>
-                <div v-if="!selectedAsset.selectedEventId && false">{{$t('logic_editor.node_panel_empty_warning')}}</div>
+                <div v-if="selectedAsset.selectedGraphId == null">{{$t('logic_editor.node_panel_empty_warning')}}</div>
                 <div
-                    v-if="selectedAsset.selectedEventId || true"
+                    v-if="selectedAsset.selectedGraphId != null"
                     class="slide-wrapper"
                     :class="selectedCategory || isSearching ? 'slide-wrapper-trans' : ''">
                     <div class="library-column node-category-contents">
@@ -125,13 +125,44 @@
         </div>
         <div class="graph-list-wrapper">
             <div v-show="showGraphs" class="side-panel graph-list-library">
-                <div
-                    v-for="graph in selectedAsset.graphs"
-                    :key="graph.id">N
-                        <div
-                            v-for="node in graph.nodes"
-                            :key="node">{{node}}</div>
+                <div class="side-panel-heading">
+                    <div>{{$t('logic_editor.graph_panel_heading')}}</div>
+                    <button class="add-graph-btn" @click="selectedAsset.addGraph()">
+                        <img src="@/assets/plus.svg" />
+                    </button>
+                </div>
+                <div class="graph-list">
+                    <div
+                        v-for="graph in selectedAsset.graphs"
+                        :key="graph.id"
+                        class="graph"
+                        :class="selectedAsset.selectedGraphId == graph.id ? 'graph-selected' : ''"
+                        @click="selectedAsset.selectedGraphId = graph.id"
+                        v-click-outside="stopRenamingGraph">
+                        <div class="graph-name">
+                            <div
+                                v-show="renamingGraph != graph.id"
+                                @dblclick="startRenamingGraph(graph.id)">
+                                    {{graph.name}}
+                                </div>
+                            <div v-show="renamingGraph == graph.id">
+                                <input
+                                    :ref="`rename_${graph.id}`"
+                                    style="width: 90%" type="text"
+                                    v-model="graph.name" v-input-active
+                                    @keyup.enter="stopRenamingGraph"/>
+                            </div>
+                        </div>
+                        <div class="graph-controls">
+                            <button class="graph-control-btn" @click="startRenamingGraph(graph.id)">
+                                <img class="graph-icon" src="@/assets/rename.svg" />
+                            </button>
+                            <button class="graph-control-btn" @click="deleteGraph($event, graph.id)">
+                                <img class="graph-icon" src="@/assets/trash.svg" />
+                            </button>
+                        </div>
                     </div>
+                </div>
             </div>
             <div class="resizeBtn-left-wrapper">
                 <button class="resizeBtn resizeBtn-left" @click="showGraphs = !showGraphs" :style="showGraphs ? 'transform: translateX(2px);' : ''">
@@ -192,6 +223,7 @@ export default {
             shiftDown: false,
             isSearching: false,
             searchQuery: '',
+            renamingGraph: null,
         }
     },
     components: {
@@ -259,6 +291,9 @@ export default {
             return this.selectedNavTool == null;
         },
         curNavState(){
+            this.$nextTick(()=>{
+                this.navChange(this.selectedAsset.navState);
+            });
             return this.selectedAsset.navState;
         },
         visibleNodes(){
@@ -494,6 +529,21 @@ export default {
         },
         navToolSelected(newTool){
             this.$store.dispatch('LogicEditor/selectNavTool', newTool);
+        },
+        startRenamingGraph(id){
+            this.renamingGraph = id;
+            this.$nextTick(()=>{
+                const box = this.$refs[`rename_${id}`][0];
+                box.focus();
+                box.select();
+            });
+        },
+        stopRenamingGraph(){
+            this.renamingGraph = null;
+        },
+        deleteGraph(jsEvent, graphId){
+            jsEvent.stopPropagation();
+            this.selectedAsset.deleteGraph(graphId);
         },
         clientToNavPos(pos){
             /*
@@ -1220,5 +1270,70 @@ function _checkLoop(connection, connectionMap, checkedNodes){
     left: -100%;
     pointer-events: auto;
     z-index: 1000;
+}
+
+.add-graph-btn{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--button-dark-norm);
+    width: 25px;
+    height: 25px;
+    border: 2px solid var(--border);
+    border-radius: 5px;
+}
+
+.add-graph-btn:hover{
+    background: var(--button-dark-hover);
+}
+
+.add-graph-btn:active{
+    background: var(--button-dark-down);
+}
+
+.graph-list{
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: 5px;
+    padding-top: 5px;
+    overflow-y: auto;
+}
+
+.graph{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    border: 2px solid gray;
+    margin: 5px;
+    margin-top: 0;
+    margin-bottom: 0;
+    box-sizing: border-box;
+    border: 2px solid var(--border);
+    border-radius: var(--corner-radius);
+}
+
+.graph-selected{
+    background: var(--selection);
+}
+
+.graph-name{
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+    margin-left: 5px;
+}
+
+.graph-controls{
+    display: flex;
+    flex-direction: row;
+}
+
+.graph-control-btn{
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
 }
 </style>
