@@ -68,13 +68,7 @@ export default class Node{
 
         //execute first node
         const triggerId = data?.trigger ?? this.defaultTriggerId;
-        const trigger = this.outTriggers[triggerId];
-
-        if (trigger.connection){
-            const node = trigger.connection.node;
-            const method = trigger.connection.execute;
-            node.method(method);
-        }
+        this.triggerOutput(triggerId);
 
         this._dataCache = null;
     }
@@ -99,7 +93,13 @@ export default class Node{
         return input.value;
     }
 
-    triggerOutput = (output)=>{
-        //
+    triggerOutput = (outputId)=>{
+        const trigger = this.outTriggers[outputId];
+
+        if (trigger.connection){
+            const node = trigger.connection.node;
+            const method = trigger.connection.execute;
+            node.method(method);
+        }
     }
 }
