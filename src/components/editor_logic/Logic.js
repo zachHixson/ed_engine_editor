@@ -21,7 +21,7 @@ export default class Logic{
     get nextNodeId(){return this._nextNodeId++}
     get navState(){
         const graphNavstate = this.graphs.length > 0 ? this.graphs.find(graph => graph.id == this.selectedGraphId).navState : null;
-        return (this.selectedGraphId) ? graphNavstate : this.defaultNavState
+        return (this.selectedGraphId != null) ? graphNavstate : this.defaultNavState
     }
     get defaultNavState(){return {
         offset: new Victor(0, 0),
