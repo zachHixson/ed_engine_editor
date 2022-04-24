@@ -150,7 +150,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .animFrame{
     position: relative;
     width: 100px;

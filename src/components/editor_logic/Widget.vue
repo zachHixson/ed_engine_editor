@@ -10,19 +10,19 @@
 
 <script>
 import Enum from './widgets/Enum.vue';
+import Key from './widgets/Key.vue';
 
 export default {
     name: 'Widget',
     props: ['widget', 'widgetData', 'setWidgetData'],
-    data(){
-        return {
-            widgetMap: {}
-        }
-    },
     computed: {
         currentWidget(){
+            const WIDGET = Shared.WIDGET;
+
             switch(this.widget.type){
-                case Shared.WIDGET.ENUM: return Enum;
+                case WIDGET.ENUM: return Enum;
+                case WIDGET.KEY: return Key;
+                case WIDGET.MOUSE_BTN: return Mouse_Btn;
             }
         }
     },

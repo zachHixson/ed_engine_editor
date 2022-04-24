@@ -8,4 +8,6 @@ export const SOCKET_TYPE = {
 
 export const WIDGET = {
     ENUM: Symbol('ENUM'),
+    KEY: Symbol('KEY'),
+    MOUSE_BTN: Symbol('MOUSE_BTN'),
 }

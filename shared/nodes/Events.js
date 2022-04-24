@@ -1,4 +1,4 @@
-import {SOCKET_TYPE} from './Node_Enums';
+import {SOCKET_TYPE, WIDGET} from './Node_Enums';
 
 export const EVENTS = [
     {
@@ -20,6 +20,10 @@ export const EVENTS = [
         id: 'e_mouse_button',
         isEvent: true,
         category: 'events',
+        widget: {
+            id: 'mouse_btn',
+            type: WIDGET.MOUSE_BTN,
+        },
         outTriggers: ['e_mouse_button_trigger_down', 'e_mouse_button_trigger_up', 'e_mouse_button_trigger_click'],
         outputs: [
             {id: 'e_mouse_button_out_which', type: SOCKET_TYPE.STRING},
@@ -42,6 +46,10 @@ export const EVENTS = [
         id: 'e_keyboard',
         isEvent: true,
         category: 'events',
+        widget: {
+            id: 'key_selector',
+            type: WIDGET.KEY,
+        },
         outTriggers: ['e_keyboard_trigger_down', 'e_keyboard_trigger_up', 'e_keyboard_trigger_tap'],
         outputs: [
             {id: 'e_keyboard_out_which', type: SOCKET_TYPE.STRING},
