@@ -137,11 +137,23 @@ class Engine{
     }
 
     _keyDown = (e)=>{
-        this._keymap[e.key.toLowerCase()] = true;
+        if (!this._keymap[e.code]){
+            this._keymap[e.code] = true;
+            this.api.dispatchNodeEvent('e_keyboard', {
+                which_key: e.key.toUpperCase(),
+                code: e.code,
+                type: 'down',
+            });
+        }
     }
 
     _keyUp = (e)=>{
-        this._keymap[e.key.toLowerCase()] = false;
+        this._keymap[e.code] = false;
+        this.api.dispatchNodeEvent('e_keyboard', {
+            which_key: e.key.toUpperCase(),
+            code: e.code,
+            type: 'up',
+        });
     }
 
     _unbindInputEvents = ()=>{

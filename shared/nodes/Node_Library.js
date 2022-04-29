@@ -163,9 +163,10 @@ export const NODE_LIST = [
     {
         id: 'key_down',
         category: 'actual',
-        inputs: [
-            {id: 'key', type: SOCKET_TYPE.STRING, default: ''},
-        ],
+        widget: {
+            id: 'key_selector',
+            type: WIDGET.KEY,
+        },
         outputs: [
             {id: 'is_down', type: SOCKET_TYPE.BOOL, execute: 'isDown'},
         ],

@@ -50,10 +50,22 @@ export const EVENTS = [
             id: 'key_selector',
             type: WIDGET.KEY,
         },
-        outTriggers: ['e_keyboard_trigger_down', 'e_keyboard_trigger_up', 'e_keyboard_trigger_tap'],
+        outTriggers: ['key_down', 'key_up'],
         outputs: [
-            {id: 'e_keyboard_out_which', type: SOCKET_TYPE.STRING},
+            {id: 'which_key', type: SOCKET_TYPE.STRING},
         ],
+        execute(){
+            const {code} = this.getWidgetData();
+
+            if (this.data.code == code){
+                if (this.data.type == 'down'){
+                    this.triggerOutput('key_down');
+                }
+                else{
+                    this.triggerOutput('key_up');
+                }
+            }
+        },
     },
     {
         id: 'e_collision',

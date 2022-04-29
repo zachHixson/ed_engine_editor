@@ -48,7 +48,7 @@ export default class Logic{
 
     executeEvent = (eventName, instance, data)=>{
         this._instance = instance;
-        this.events[eventName].forEach(event => event.executeEvent(instance, data));
+        this.events[eventName].forEach(event => event.executeEvent(data));
         this._instance = null;
     }
 }

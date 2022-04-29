@@ -1,6 +1,6 @@
 export default class Node{
     constructor(template, id, api){
-        this.templateId = template.id;
+        this.template = template;
         this.nodeId = id;
         this.api = api;
         this.isEvent = template.isEvent;
@@ -35,8 +35,9 @@ export default class Node{
         });
 
         template.outputs?.forEach(output => {
-            const {execute} = output;
+            const {id, execute} = output;
             this.outputs[output.id] = {
+                id,
                 connection: null,
                 node: this,
                 execute,
@@ -47,12 +48,17 @@ export default class Node{
             this.defaultTriggerId = template.outTriggers[0];
         }
 
+        if (this.isEvent && template.execute){
+            this.execute = template.execute;
+        }
+
         for (let method in template.methods){
             this.methods[method] = template.methods[method];
         }
     }
 
     get instance(){return this._getInstanceCallback()}
+    get data(){return this._dataCache};
 
     setInstanceCallback = (callback)=>{
         this._getInstanceCallback = callback;
@@ -67,8 +73,13 @@ export default class Node{
         this._dataCache = data;
 
         //execute first node
-        const triggerId = data?.trigger ?? this.defaultTriggerId;
-        this.triggerOutput(triggerId);
+        if (this.execute){
+            this.execute.call(this);
+        }
+        else{
+            const triggerId = data?.trigger ?? this.defaultTriggerId;
+            this.triggerOutput(triggerId);
+        }
 
         this._dataCache = null;
     }
@@ -86,8 +97,15 @@ export default class Node{
 
         if (input.connection){
             const node = input.connection.node;
-            const method = input.connection.execute;
-            return node.method(method);
+
+            if (node.isEvent){
+                const inputId = input.connection.id;
+                return node.data[inputId];
+            }
+            else{
+                const method = input.connection.execute;
+                return node.method(method);
+            }
         }
         
         return input.value;
