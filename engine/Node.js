@@ -100,7 +100,8 @@ export default class Node{
 
             if (node.isEvent){
                 const inputId = input.connection.id;
-                return node.data[inputId];
+                return node.data[inputId] ??
+                    console.error('No event data found for \"' +inputId + '\" on node \"' + node.template.id + '\"');
             }
             else{
                 const method = input.connection.execute;
