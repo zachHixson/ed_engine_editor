@@ -92,9 +92,9 @@ class Engine{
         const zoomSpeed = 0.1;
         let zoom = 0;
 
-        controlVelocity.y = (!!this._keymap['i'] * speed) - (!!this._keymap['k'] * speed);
-        controlVelocity.x = (!!this._keymap['j'] * speed) - (!!this._keymap['l'] * speed);
-        zoom = (!!this._keymap['o'] * zoomSpeed) - (!!this._keymap['u'] * zoomSpeed);
+        controlVelocity.y = (!!this._keymap['KeyI'] * speed) - (!!this._keymap['KeyK'] * speed);
+        controlVelocity.x = (!!this._keymap['KeyJ'] * speed) - (!!this._keymap['KeyL'] * speed);
+        zoom = (!!this._keymap['KeyO'] * zoomSpeed) - (!!this._keymap['KeyU'] * zoomSpeed);
 
         camera.velocity.copy(controlVelocity);
         camera.size += zoom;
