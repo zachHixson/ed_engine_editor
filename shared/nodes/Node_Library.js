@@ -225,20 +225,30 @@ export const NODE_LIST = [
             {id: 'x', type: SOCKET_TYPE.NUMBER, default: 0},
             {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0},
             {id: 'relative', type: SOCKET_TYPE.BOOL, default: false},
+            {id: 'avoid_collision', type: SOCKET_TYPE.BOOL, default: false},
         ],
         methods: {
             setPosition(){
                 const relative = this.getInput('relative');
+                const collision = this.getInput('avoid_collision');
                 const newPos = new Victor(
                     Math.round(this.getInput('x')),
-                    Math.round(this.getInput('y'))
+                    -Math.round(this.getInput('y'))
                 );
+                let instancesInSpace;
+                let spaceEmpty;
 
                 if (relative){
-                    newPos.add(this.api.getInstancePosition(this.instance));
+                    newPos.add(this.instance.pos);
                 }
 
-                this.api.setInstancePosition(this.instance, newPos);
+                instancesInSpace = this.api.getInstancesAtPosition(newPos);
+                spaceEmpty = instancesInSpace.length > 0 ? instancesInSpace.filter(i => i.isSolid) <= 0 : true;
+
+                if (spaceEmpty || !collision){
+                    this.api.setInstancePosition(this.instance, newPos);
+                }
+                
                 this.triggerOutput('_o');
             },
         },

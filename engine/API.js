@@ -49,4 +49,22 @@ export default class API {
             nodeEvent[instance].executeNodeEvent(eventName, data);
         }
     }
+
+    getInstancesAtPosition = (pos)=>{
+        const broadCheck = this.room.instances.getByRadius(pos, 32);
+        return broadCheck.filter(instance => 
+            Shared.isInBounds(
+                pos.x,
+                pos.y,
+                instance.pos.x,
+                instance.pos.y,
+                instance.pos.x + 15,
+                instance.pos.y + 15
+            )
+        );
+    }
+
+    setInstancePosition = (instance, pos)=>{
+        this.room.instances.setPositionByRef(instance, pos);
+    }
 }

@@ -29,6 +29,13 @@ export class Instance{
     get editorFrameID(){return this.objRef.editorFrameID};
     get sprite(){return this.objRef?.sprite};
     get logic(){return this.objRef.logicScript};
+    get isSolid(){
+        switch(this.collisionOverride){
+            case COLLISION_OVERRIDE.KEEP: return this.objRef.isSolid;
+            case COLLISION_OVERRIDE.FORCE: return true;
+            case COLLISION_OVERRIDE.IGNORE: return false;
+        }
+    }
 
     clone(){
         const clone = new Instance(this.id, this.pos, this.objRef);
