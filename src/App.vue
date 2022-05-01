@@ -15,7 +15,6 @@
 </template>
 
 <script>
-import {template} from '@compiled/Engine';
 import {saveAs} from 'file-saver';
 import HeaderPanel from './components/HeaderPanel';
 import TabPanel from './components/TabPanel';
@@ -70,8 +69,10 @@ export default {
             let projectName = this.$store.getters['getProjectName'];
             let shared = document.getElementById('shared').innerHTML;
             let engine = document.getElementById('engine').innerHTML;
+            let template = document.getElementById('engine_template').innerHTML;
+            let templateText = new DOMParser().parseFromString(template, "text/html").documentElement.textContent;
             let gameData = this.$store.getters['getSaveData'];
-            let compiled = template.replace('[title]', projectName)
+            let compiled = templateText.replace('[title]', projectName)
                 .replace('[shared]', shared)
                 .replace('[engine]', engine)
                 .replace('[gameData]', gameData);

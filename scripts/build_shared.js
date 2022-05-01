@@ -16,25 +16,11 @@ const tempFilePath = rollupConfig[0].output.file;
 const outputPath = './_compiled/';
 const rolledShared = fs.readFileSync(tempFilePath, {encoding: 'utf-8'});
 const minifiedShared = debug ? rolledShared : uglify.minify(rolledShared, {output: {quote_style: 2}}).code;
-const combined = (victorFile + minifiedShared)
-const formatted =
-`let sharedLibraryFile = \`${
-    combined.replace(/\\/g, "\\\\")
-    .replace(/\$/g, "\\$")
-    .replace(/'/g, "\\'")
-    .replace(/"/g, "\\\"")
-}\`;
-
-export function loadShared(){
-    const shared = sharedLibraryFile;
-    sharedLibraryFile = "";
-    return shared;
-};
-`;
+const combined = victorFile + minifiedShared;
 
 if (!fs.existsSync(outputPath)){
     fs.mkdirSync(outputPath);
 }
 
 fs.unlinkSync(tempFilePath);
-fs.writeFileSync(outputPath + 'Shared.js', formatted);
+fs.writeFileSync(outputPath + 'Shared.js', combined);
