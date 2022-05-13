@@ -1,9 +1,22 @@
+// import {ROOM_TOOL_TYPE} from '@shared/Enums';
+
 const state = {
-    selectedTool: Shared.ROOM_TOOL_TYPE.SELECT_MOVE,
+    selectedTool: null,
     selectedNavTool: null,
     propertiesOpen: false,
     viewGrid: true
 }
+
+const init = ()=>{
+    if (!window.Shared){
+        setTimeout(init);
+        return;
+    }
+
+    state.selectedTool = Shared.ROOM_TOOL_TYPE.SELECT_MOVE;
+}
+
+init();
 
 const getters = {
     getSelectedTool: state => state.selectedTool,
