@@ -242,7 +242,7 @@ export const NODE_LIST = [
                     newPos.add(this.instance.pos);
                 }
 
-                instancesInSpace = this.api.getInstancesAtPosition(newPos);
+                instancesInSpace = this.api.getInstancesOverlapping(newPos);
                 spaceEmpty = instancesInSpace.length > 0 ? instancesInSpace.filter(i => i.isSolid) <= 0 : true;
 
                 if (spaceEmpty || !collision){
