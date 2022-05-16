@@ -11,3 +11,9 @@ export const WIDGET = {
     KEY: Symbol('KEY'),
     MOUSE_BTN: Symbol('MOUSE_BTN'),
 }
+
+export const COLLISION_EVENT = {
+    START: Symbol('START'),
+    REPEAT: Symbol('REPEAT'),
+    STOP: Symbol('STOP'),
+}

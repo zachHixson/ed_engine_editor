@@ -9,6 +9,7 @@ class Engine{
     constructor({canvas, gameData, callbacks}){
         this._canvas = canvas;
         this._timeStart = null;
+        this._curTime = null;
         this._deltaTime = null;
         this._lastLoopTimestamp = null;
         this._isRunning = false;
@@ -16,6 +17,7 @@ class Engine{
         this._renderer = new Renderer(this._canvas);
         this._nextAnimationFrame = null;
         this._keymap = {};
+        this._collisionMap = {};
         this._api = new API({
             keymap: this._keymap,
             getDeltaTime: ()=>this._deltaTime,
@@ -32,6 +34,7 @@ class Engine{
     start = ()=>{
         this._isRunning = true;
         this._timeStart = performance.now();
+        this._curTime = this._timeStart;
         this._lastLoopTimestamp = this._timeStart;
 
         this._bindInputEvents();
@@ -74,11 +77,12 @@ class Engine{
     }
 
     _updateLoop = (time)=>{
-        const ctx = this._canvas.getContext('2d');
+        this._curTime = time;
         this._deltaTime = (time - this._lastLoopTimestamp) / 1000;
 
         this._loadedRoom.camera.update(this._deltaTime);
         this._processDebugNav();
+        this._processCollisions();
         this._renderer.render();
 
         this._lastLoopTimestamp = time;
@@ -98,6 +102,93 @@ class Engine{
 
         camera.velocity.copy(controlVelocity);
         camera.size += zoom;
+    }
+
+    _processCollisions = ()=>{
+        this._mapInstanceOverlaps();
+        this._dispatchCollisionEvents();
+    }
+
+    _mapInstanceOverlaps = ()=>{
+        this._loadedRoom.instances.list.forEach(instance => {
+            let hasCollisionEvent = false;
+            let overlappingInstances;
+            let collisionMapRef;
+
+            for (const eventKey in instance.logic?.events){
+                hasCollisionEvent |= eventKey == 'e_collision';
+            }
+
+            if (!hasCollisionEvent){
+                return;
+            }
+
+            overlappingInstances = this.api.getInstancesOverlapping(instance);
+
+            if (overlappingInstances.length <= 0){
+                return;
+            }
+
+            //create entry for instance it none exist
+            if (!this._collisionMap[instance.id]){
+                this._collisionMap[instance.id] = {
+                    instance,
+                    collisions: {}
+                };
+            }
+
+            collisionMapRef = this._collisionMap[instance.id];
+
+            //iterate over overlapped instances and make sub-entries
+            for (let i = 0; i < overlappingInstances.length; i++){
+                const collisionInstance = overlappingInstances[i];
+
+                if (!collisionMapRef.collisions[collisionInstance.id]){
+                    collisionMapRef.collisions[collisionInstance.id] = {
+                        instance: collisionInstance,
+                        startCollision: this._curTime,
+                        lastChecked: this._curTime,
+                        active: true
+                    }
+                }
+                else{
+                    const ref = collisionMapRef.collisions[collisionInstance.id];
+                    ref.startCollision = ref.active ? ref.startCollision : this._curTime;
+                    ref.lastChecked = this._curTime;
+                    ref.active = true;
+                }
+            }
+        });
+    }
+
+    _dispatchCollisionEvents = ()=>{
+        for (const instanceKey in this._collisionMap){
+            const instanceEntry = this._collisionMap[instanceKey];
+            const instance = instanceEntry.instance;
+
+            for (const collisionKey in instanceEntry.collisions){
+                const collision = instanceEntry.collisions[collisionKey];
+
+                if (collision.active){
+                    let eventType;
+
+                    if (collision.startCollision == this._curTime){
+                        eventType = Shared.COLLISION_EVENT.START;
+                    }
+                    else if (collision.lastChecked != this._curTime){
+                        eventType = Shared.COLLISION_EVENT.START;
+                        collision.active = false;
+                    }
+                    else{
+                        eventType = Shared.COLLISION_EVENT.REPEAT;
+                    }
+
+                    instance.logic.executeEvent('e_collision', instance, {
+                        type: eventType
+                    });
+                }
+            }
+        }
     }
 
     _parseGameData = (gameData)=>{

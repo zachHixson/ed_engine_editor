@@ -64,13 +64,14 @@ export default class API {
         );
     }
 
-    getInstancesOverlapping = (pos)=>{
+    getInstancesOverlapping = ({id, pos})=>{
         const broadCheck = this.room.instances.getByRadius(pos, 32);
         return broadCheck.filter(checkInstance => (
             checkInstance.pos.x + 16 > pos.x &&
             checkInstance.pos.x < pos.x + 16 &&
             checkInstance.pos.y + 16 > pos.y &&
-            checkInstance.pos.y < pos.y + 16
+            checkInstance.pos.y < pos.y + 16 &&
+            checkInstance.id != id
         ));
     }
 

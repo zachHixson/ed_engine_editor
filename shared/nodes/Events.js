@@ -1,4 +1,4 @@
-import {SOCKET_TYPE, WIDGET} from './Node_Enums';
+import {SOCKET_TYPE, WIDGET, COLLISION_EVENT} from './Node_Enums';
 
 export const EVENTS = [
     {
@@ -71,10 +71,23 @@ export const EVENTS = [
         id: 'e_collision',
         isEvent: true,
         category: 'events',
-        outTriggers: ['e_collision_trigger_start', 'e_collision_trigger_stop'],
+        outTriggers: ['start', 'repeat', 'stop'],
         outputs: [
-            {id: 'e_collision_out_object', type: SOCKET_TYPE.OBJECT},
+            {id: 'object', type: SOCKET_TYPE.OBJECT},
         ],
+        execute(){
+            switch (this.data.type){
+                case COLLISION_EVENT.START:
+                    this.triggerOutput('start');
+                    break;
+                case COLLISION_EVENT.REPEAT:
+                    this.triggerOutput('repeat');
+                    break;
+                case COLLISION_EVENT.STOP:
+                    this.triggerOutput('stop');
+                    break;
+            }
+        },
     },
     {
         id: 'e_alarm',
