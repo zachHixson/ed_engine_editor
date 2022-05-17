@@ -270,11 +270,83 @@ export const NODE_LIST = [
         ],
         methods: {
             setVar(){
-                const varName = this.getInput('name');
+                const varName = this.getInput('name').toLowerCase();
                 const data = this.getInput('data');
-                this.api.setInstanceVariable(this.instance, varName, data);
+                const global = this.getInput('global');
+
+                if (global){
+                    this.api.setGlobalVariable(varName, data);
+                }
+                else{
+                    this.api.setInstanceVariable(this.instance, varName, data);
+                }
+
                 this.triggerOutput('_o');
-            }
+            },
+        },
+    },
+    {
+        id: 'get_variable',
+        category: 'variables',
+        inputs: [
+            {id: 'name', type: SOCKET_TYPE.STRING, default: ''},
+            {id: 'global', type: SOCKET_TYPE.BOOL, default: false},
+        ],
+        outputs: [
+            {id: 'data', type: SOCKET_TYPE.ANY, execute: 'getVar'},
+        ],
+        methods: {
+            getVar(){
+                const name = this.getInput('name');
+                const global = this.getInput('global');
+
+                return global ? this.api.getGlobalVariable(name) : this.api.getInstanceVariable(this.instance, name);
+            },
+        },
+    },
+    {
+        id: 'number',
+        category: 'variables',
+        inputs: [
+            {id: '_number', type: SOCKET_TYPE.NUMBER, default: 0},
+        ],
+        outputs: [
+            {id: '_out', type: SOCKET_TYPE.NUMBER, execute: 'value'},
+        ],
+        methods: {
+            value(){
+                return this.getInput('_number');
+            },
+        }
+    },
+    {
+        id: 'string',
+        category: 'variables',
+        inputs: [
+            {id: '_string', type: SOCKET_TYPE.STRING, default: ''},
+        ],
+        outputs: [
+            {id: '_out', type: SOCKET_TYPE.STRING, execute: 'value'},
+        ],
+        methods: {
+            value(){
+                return this.getInput('_boolean');
+            },
+        }
+    },
+    {
+        id: 'boolean',
+        category: 'variables',
+        inputs: [
+            {id: '_boolean', type: SOCKET_TYPE.BOOL, default: false},
+        ],
+        outputs: [
+            {id: '_out', type: SOCKET_TYPE.BOOL, execute: 'value'},
+        ],
+        methods: {
+            value(){
+                return this.getInput('_boolean');
+            },
         }
     },
 ];

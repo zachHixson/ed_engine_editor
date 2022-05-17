@@ -436,7 +436,7 @@ export default {
                 let socketOver = this.currentSocketOver;
                 let connectionObj = this.draggingConnection;
                 let typeMatch = socketOver?.socketData.type == connectionObj.type;
-                let anyMatch = socketOver?.socketData.type == Shared.SOCKET_TYPE.ANY && !!connectionObj.type;
+                let anyMatch = socketOver?.socketData.type == Shared.SOCKET_TYPE.ANY || connectionObj.type == Shared.SOCKET_TYPE.ANY;
                 let directionMatch = !!connectionObj.startSocketEl == !!socketOver?.isInput;
 
                 this.draggingConnection = null;

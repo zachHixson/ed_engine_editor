@@ -18,8 +18,10 @@ class Engine{
         this._nextAnimationFrame = null;
         this._keymap = {};
         this._collisionMap = {};
+        this._globalVariables = {};
         this._api = new API({
             keymap: this._keymap,
+            globalVariables: this._globalVariables,
             getDeltaTime: ()=>this._deltaTime,
             getLoadedRoom: ()=>this._loadedRoom,
             envCallbacks: callbacks,
@@ -176,7 +178,7 @@ class Engine{
                         eventType = Shared.COLLISION_EVENT.START;
                     }
                     else if (collision.lastChecked != this._curTime){
-                        eventType = Shared.COLLISION_EVENT.START;
+                        eventType = Shared.COLLISION_EVENT.STOP;
                         collision.active = false;
                     }
                     else{

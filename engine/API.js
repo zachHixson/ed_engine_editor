@@ -11,11 +11,13 @@ export default class API {
 
     constructor({
         keymap,
+        globalVariables,
         getDeltaTime,
         getLoadedRoom,
         envCallbacks
     }){
         this.keymap = keymap;
+        this.globalVariables = globalVariables;
         this._getDeltaTime = getDeltaTime;
         this._getLoadedRoom = getLoadedRoom;
         this._nodeEventMap = {};
@@ -77,5 +79,13 @@ export default class API {
 
     setInstancePosition = (instance, pos)=>{
         this.room.instances.setPositionByRef(instance, pos);
+    }
+
+    setGlobalVariable = (name, data)=>{
+        this.globalVariables[name] = data;
+    }
+
+    getGlobalVariable = (name)=>{
+        return this.globalVariables[name];
     }
 }
