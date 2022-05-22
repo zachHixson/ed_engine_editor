@@ -81,6 +81,10 @@ export default class API {
         this.room.instances.setPositionByRef(instance, pos);
     }
 
+    removeInstance = (instance)=>{
+        this.room.removeInstance(instance.id, instance.pos);
+    }
+
     setGlobalVariable = (name, data)=>{
         this.globalVariables[name] = data;
     }

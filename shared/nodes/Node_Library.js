@@ -216,6 +216,23 @@ export const NODE_LIST = [
         },
     },
     {
+        id: 'remove_instance',
+        category: 'actual',
+        inTriggers: [
+            {id: '_i', execute: 'removeInstance'},
+        ],
+        outTriggers: ['_o'],
+        inputs: [
+            {id: 'instance', type: SOCKET_TYPE.OBJECT, default: null},
+        ],
+        methods: {
+            removeInstance(){
+                const instance = this.getInput('instance') || this.instance;
+                this.api.removeInstance(instance);
+            }
+        }
+    },
+    {
         id: 'set_position',
         category: 'movement',
         inTriggers: [

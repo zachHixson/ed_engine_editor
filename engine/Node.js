@@ -108,7 +108,7 @@ export default class Node{
                 inputVal = node.data[inputId];
                 
                 if (!inputVal){
-                    console.error('No event data found for \"' +inputId + '\" on node \"' + node.template.id + '\"');
+                    console.error('No event data found for \"' + inputId + '\" on node \"' + node.template.id + '\"');
                     return;
                 }
             }
