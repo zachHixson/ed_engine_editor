@@ -145,11 +145,12 @@ export const NODE_LIST = [
             log(){
                 const label = this.getInput('label');
                 const data = this.getInput('_data');
+                const hasData = data || typeof data == 'boolean';
 
-                if (label.length > 0 && data){
+                if (label.length > 0 && hasData){
                     this.api.log(label, data);
                 }
-                else if (data){
+                else if (hasData){
                     this.api.log(data);
                 }
                 else{
@@ -297,10 +298,17 @@ export const NODE_LIST = [
         ],
         methods: {
             getVar(){
-                const name = this.getInput('name');
+                const name = this.getInput('name').toLowerCase();
                 const global = this.getInput('global');
+                const value = global ? this.api.getGlobalVariable(name)
+                    : this.api.getInstanceVariable(this.instance, name);
 
-                return global ? this.api.getGlobalVariable(name) : this.api.getInstanceVariable(this.instance, name);
+                if (value == undefined){
+                    this.api.nodeExeption('variable_not_found', this._stackTrace);
+                    throw 'variable not found';
+                }
+                
+                return value;
             },
         },
     },

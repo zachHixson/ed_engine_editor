@@ -1,8 +1,8 @@
 const DEFAULT_ENV_CALLBACKS = {
     log: function(){console.log(...arguments)},
-    warning: function(){console.warn(warning)},
-    error: function(){console.error(error)},
-    nodeException: function(){console.error(error)},
+    warning: function(){console.warn(...arguments)},
+    error: function(){console.error(...arguments)},
+    nodeException: function(error, treeData){console.error(error)},
 };
 Object.freeze(DEFAULT_ENV_CALLBACKS);
 

@@ -1,5 +1,5 @@
 export default class Node{
-    constructor(template, id, api){
+    constructor(template, id, logicId, api){
         this.template = template;
         this.nodeId = id;
         this.api = api;
@@ -13,6 +13,7 @@ export default class Node{
         this.methods = {};
         this._dataCache = null;
         this._getInstanceCallback;
+        this._stackTrace = {logic: logicId, nodeId: id};
 
         template.inTriggers?.forEach(trigger => {
             const {execute} = trigger;
@@ -28,18 +29,21 @@ export default class Node{
         });
 
         template.inputs?.forEach(input => {
-            this.inputs[input.id] = {
-                value: input.value,
+            const {id, value, type} = input;
+            this.inputs[id] = {
+                value,
+                type,
                 connection: null,
             };
         });
 
         template.outputs?.forEach(output => {
-            const {id, execute} = output;
+            const {id, type, execute} = output;
             this.outputs[output.id] = {
                 id,
                 connection: null,
                 node: this,
+                type,
                 execute,
             };
         })
@@ -94,22 +98,75 @@ export default class Node{
 
     getInput = (inputName)=>{
         const input = this.inputs[inputName];
+        let inputVal;
 
         if (input.connection){
             const node = input.connection.node;
 
             if (node.isEvent){
                 const inputId = input.connection.id;
-                return node.data[inputId] ??
+                inputVal = node.data[inputId];
+                
+                if (!inputVal){
                     console.error('No event data found for \"' +inputId + '\" on node \"' + node.template.id + '\"');
+                    return;
+                }
             }
             else{
                 const method = input.connection.execute;
-                return node.method(method);
+                inputVal = node.method(method);
+            }
+
+            if (input.connection.type == Shared.SOCKET_TYPE.ANY){
+                inputVal = this.castAnyToType(inputVal, input.type);
             }
         }
+        else{
+            inputVal = input.value;
+        }
         
-        return input.value;
+        return inputVal;
+    }
+
+    castAnyToType = (data, toType)=>{
+        const {ANY, NUMBER, STRING, OBJECT, BOOL} = Shared.SOCKET_TYPE;
+
+        switch(toType){
+            case ANY:
+                return data;
+            case NUMBER:
+                const float = parseFloat(data);
+
+                if (float == NaN){
+                    switch (typeof data){
+                        case 'string':
+                            this.api.nodeException('cannot_convert_string_to_num', this._stackTrace);
+                            throw 'cannot convert string to number';
+                        case 'object':
+                            this.api.nodeException('cannot_convert_object_to_num', this._stackTrace);
+                            throw 'cannot convert object to number';
+                        case 'boolean':
+                            return data + 0;
+                    }
+                }
+
+                return float;
+            case STRING:
+                if (data.type){
+                    return data.name;
+                }
+
+                return data.toString();
+            case OBJECT:
+                if (!data.TYPE){
+                    this.api.nodeException('data_not_object', this._stackTrace);
+                    throw 'incorrect data type';
+                }
+
+                return data;
+            case BOOL:
+                return !!data;
+        }
     }
 
     triggerOutput = (outputId)=>{

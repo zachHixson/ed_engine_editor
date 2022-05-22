@@ -11,7 +11,7 @@ export default class Logic{
         //create all nodes
         logicData.nodes.forEach(node => {
             const template = Shared.NODE_MAP[node.templateId];
-            const newNode = new Node(template, node.nodeId, api);
+            const newNode = new Node(template, node.nodeId, this.id, api);
             nodes[node.nodeId] = newNode;
 
             if (template.isEvent){

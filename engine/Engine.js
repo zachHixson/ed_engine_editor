@@ -44,11 +44,20 @@ class Engine{
         //load first room
         if (this._gameData.rooms.length <= 0){
             this.api.error('No rooms found in game data');
+            this.stop();
             return;
         }
         else{
             const startRoomId = this._gameData.startRoom ?? this._gameData.rooms[0].id;
-            this.loadRoom(startRoomId);
+
+            try{
+                this.loadRoom(startRoomId);
+            }
+            catch (e){
+                console.error(e);
+                this.stop();
+                return;
+            }
         }
 
         requestAnimationFrame(this._updateLoop);
@@ -82,9 +91,17 @@ class Engine{
         this._curTime = time;
         this._deltaTime = (time - this._lastLoopTimestamp) / 1000;
 
-        this._loadedRoom.camera.update(this._deltaTime);
-        this._processDebugNav();
-        this._processCollisions();
+        try{
+            this._loadedRoom.camera.update(this._deltaTime);
+            this._processDebugNav();
+            this._processCollisions();
+        }
+        catch(e){
+            console.error(e);
+            this.stop();
+            return;
+        }
+
         this._renderer.render();
 
         this._lastLoopTimestamp = time;
