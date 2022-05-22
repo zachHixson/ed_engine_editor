@@ -64,11 +64,11 @@ export default class Node{
     get instance(){return this._getInstanceCallback()}
     get data(){return this._dataCache};
 
-    setInstanceCallback = (callback)=>{
+    setInstanceCallback(callback){
         this._getInstanceCallback = callback;
     }
 
-    executeEvent = (data)=>{
+    executeEvent(data){
         if (!this.isEvent) {
             console.error('Error: Cannot call \"executeEvent()\" from non-event node');
             return
@@ -88,15 +88,15 @@ export default class Node{
         this._dataCache = null;
     }
 
-    method = (methodName, data)=>{
+    method(methodName, data){
         return this.methods[methodName].call(this, data);
     }
 
-    getWidgetData = ()=>{
+    getWidgetData(){
         return this.widgetData;
     }
 
-    getInput = (inputName)=>{
+    getInput(inputName){
         const input = this.inputs[inputName];
         let inputVal;
 
@@ -128,7 +128,7 @@ export default class Node{
         return inputVal;
     }
 
-    castAnyToType = (data, toType)=>{
+    castAnyToType(data, toType){
         const {ANY, NUMBER, STRING, OBJECT, BOOL} = Shared.SOCKET_TYPE;
 
         switch(toType){
@@ -169,7 +169,7 @@ export default class Node{
         }
     }
 
-    triggerOutput = (outputId)=>{
+    triggerOutput(outputId){
         const trigger = this.outTriggers[outputId];
 
         if (trigger.connection){
