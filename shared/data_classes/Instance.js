@@ -36,6 +36,15 @@ export class Instance{
             case COLLISION_OVERRIDE.IGNORE: return false;
         }
     }
+    get hasCollisionEvent(){
+        let hasCollisionEvent = false;
+
+        for (const eventKey in this.logic?.events){
+            hasCollisionEvent |= eventKey == 'e_collision';
+        }
+
+        return !!hasCollisionEvent;
+    }
 
     clone(){
         const clone = new Instance(this.id, this.pos, this.objRef);

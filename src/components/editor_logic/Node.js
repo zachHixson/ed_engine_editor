@@ -75,7 +75,9 @@ export default class Node{
         }
 
         data.inputs.forEach(input => {
-            this.inputs.get(input.id).value = input.value;
+            const nodeInput = this.inputs.get(input.id);
+            if (!nodeInput) return;
+            nodeInput.value = input.value;
         });
 
         return this;

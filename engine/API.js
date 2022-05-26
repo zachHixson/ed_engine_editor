@@ -12,14 +12,18 @@ export default class API {
     constructor({
         keymap,
         globalVariables,
+        getCurrentTime,
         getDeltaTime,
         getLoadedRoom,
+        getCollisionMap,
         envCallbacks
     }){
         this.keymap = keymap;
         this.globalVariables = globalVariables;
+        this._getCurrentTime = getCurrentTime;
         this._getDeltaTime = getDeltaTime;
         this._getLoadedRoom = getLoadedRoom;
+        this._getCollisionMap = getCollisionMap;
         this._nodeEventMap = {};
 
         //integrate callbacks
@@ -28,7 +32,9 @@ export default class API {
     }
 
     get room(){return this._getLoadedRoom()}
+    get currentTime(){return this._getCurrentTime()}
     get deltaTime(){return this._getDeltaTime()}
+    get collisionMap(){return this._getCollisionMap()}
 
     clearNodeEvents = ()=>{
         this._nodeEventMap = {};
@@ -75,6 +81,38 @@ export default class API {
             checkInstance.pos.y < pos.y + 16 &&
             checkInstance.id != id
         ));
+    }
+
+    registerCollision = (sourceInstance, collisionInstance, force = false)=>{
+        let sourceInstanceEntry;
+
+        //create entry for source instance if it does not already exist
+        if (!this.collisionMap[sourceInstance.id]){
+            this.collisionMap[sourceInstance.id] = {
+                sourceInstance,
+                collisions: {}
+            };
+        }
+
+        sourceInstanceEntry = this.collisionMap[sourceInstance.id];
+
+        //Register collision to map
+        if (sourceInstanceEntry.collisions[collisionInstance.id]){
+            const ref = sourceInstanceEntry.collisions[collisionInstance.id];
+            ref.startCollision = ref.active ? ref.startCollision : this.currentTime;
+            ref.lastChecked = this.currentTime;
+            ref.active = true;
+            ref.force = force;
+        }
+        else{
+            sourceInstanceEntry.collisions[collisionInstance.id] = {
+                instance: collisionInstance,
+                startCollision: this.currentTime,
+                lastChecked: this.currentTime,
+                active: true,
+                force,
+            }
+        }
     }
 
     setInstancePosition = (instance, pos)=>{

@@ -229,6 +229,7 @@ export const NODE_LIST = [
             removeInstance(){
                 const instance = this.getInput('instance') || this.instance;
                 this.api.removeInstance(instance);
+                this.triggerOutput('_o');
             }
         }
     },
@@ -243,22 +244,42 @@ export const NODE_LIST = [
             {id: 'x', type: SOCKET_TYPE.NUMBER, default: 0},
             {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0},
             {id: 'relative', type: SOCKET_TYPE.BOOL, default: false},
-            {id: 'avoid_collision', type: SOCKET_TYPE.BOOL, default: false},
         ],
         methods: {
             setPosition(){
                 const relative = this.getInput('relative');
-                const collision = this.getInput('avoid_collision');
                 const newPos = new Victor(
                     Math.round(this.getInput('x')),
                     -Math.round(this.getInput('y'))
                 );
-                let instancesInSpace;
-                let spaceEmpty;
 
                 if (relative){
                     newPos.add(this.instance.pos);
                 }
+                
+                this.triggerOutput('_o');
+            },
+        },
+    },
+    {
+        id: 'move_tiled',
+        category: 'movement',
+        inTriggers: [
+            {id: '_i', execute: 'moveTiled'},
+        ],
+        outTriggers: ['_o'],
+        inputs: [
+            {id: 'x', type: SOCKET_TYPE.NUMBER, default: 0},
+            {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0},
+        ],
+        methods: {
+            moveTiled(){
+                const newPos = new Victor(
+                    Math.round(this.getInput('x')),
+                    -Math.round(this.getInput('y'))
+                ).add(this.instance.pos);
+                let instancesInSpace;
+                let spaceEmpty;
 
                 instancesInSpace = this.api.getInstancesOverlapping({
                     id: this.instance.id,
@@ -266,8 +287,25 @@ export const NODE_LIST = [
                 });
                 spaceEmpty = instancesInSpace.length > 0 ? instancesInSpace.filter(i => i.isSolid) <= 0 : true;
 
-                if (spaceEmpty || !collision){
+                if (spaceEmpty || !this.instance.isSolid){
                     this.api.setInstancePosition(this.instance, newPos);
+                }
+                else{
+                    //register collisions with current instance
+                    if (this.instance.hasCollisionEvent){
+                        for (let i = 0; i < instancesInSpace.length; i++){
+                            this.api.registerCollision(this.instance, instancesInSpace[i], true);
+                        }
+                    }
+
+                    //register collisions with collided instance
+                    for (let i = 0; i < instancesInSpace.length; i++){
+                        const curInstanceInSpace = instancesInSpace[i];
+
+                        if (curInstanceInSpace.hasCollisionEvent){
+                            this.api.registerCollision(curInstanceInSpace, this.instance, true);
+                        }
+                    }
                 }
                 
                 this.triggerOutput('_o');

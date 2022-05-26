@@ -22,8 +22,10 @@ class Engine{
         this._api = new API({
             keymap: this._keymap,
             globalVariables: this._globalVariables,
+            getCurrentTime: ()=>this._curTime,
             getDeltaTime: ()=>this._deltaTime,
             getLoadedRoom: ()=>this._loadedRoom,
+            getCollisionMap: ()=>this._collisionMap,
             envCallbacks: callbacks,
         });
         this._gameData = this._parseGameData(gameData);
@@ -130,15 +132,9 @@ class Engine{
 
     _mapInstanceOverlaps = ()=>{
         this._loadedRoom.instances.list.forEach(instance => {
-            let hasCollisionEvent = false;
             let overlappingInstances;
-            let collisionMapRef;
 
-            for (const eventKey in instance.logic?.events){
-                hasCollisionEvent |= eventKey == 'e_collision';
-            }
-
-            if (!hasCollisionEvent){
+            if (!instance.hasCollisionEvent){
                 return;
             }
 
@@ -148,34 +144,10 @@ class Engine{
                 return;
             }
 
-            //create entry for instance it none exist
-            if (!this._collisionMap[instance.id]){
-                this._collisionMap[instance.id] = {
-                    instance,
-                    collisions: {}
-                };
-            }
-
-            collisionMapRef = this._collisionMap[instance.id];
-
-            //iterate over overlapped instances and make sub-entries
+            //iterate over overlapped instances and make collision entries
             for (let i = 0; i < overlappingInstances.length; i++){
                 const collisionInstance = overlappingInstances[i];
-
-                if (!collisionMapRef.collisions[collisionInstance.id]){
-                    collisionMapRef.collisions[collisionInstance.id] = {
-                        instance: collisionInstance,
-                        startCollision: this._curTime,
-                        lastChecked: this._curTime,
-                        active: true
-                    }
-                }
-                else{
-                    const ref = collisionMapRef.collisions[collisionInstance.id];
-                    ref.startCollision = ref.active ? ref.startCollision : this._curTime;
-                    ref.lastChecked = this._curTime;
-                    ref.active = true;
-                }
+                this.api.registerCollision(instance, collisionInstance);
             }
         });
     }
@@ -183,7 +155,7 @@ class Engine{
     _dispatchCollisionEvents = ()=>{
         for (const instanceKey in this._collisionMap){
             const instanceEntry = this._collisionMap[instanceKey];
-            const instance = instanceEntry.instance;
+            const sourceInstance = instanceEntry.sourceInstance;
 
             for (const collisionKey in instanceEntry.collisions){
                 const collision = instanceEntry.collisions[collisionKey];
@@ -191,7 +163,7 @@ class Engine{
                 if (collision.active){
                     let eventType;
 
-                    if (collision.startCollision == this._curTime){
+                    if (collision.startCollision == this._curTime || collision.force){
                         eventType = Shared.COLLISION_EVENT.START;
                     }
                     else if (collision.lastChecked != this._curTime){
@@ -202,7 +174,9 @@ class Engine{
                         eventType = Shared.COLLISION_EVENT.REPEAT;
                     }
 
-                    instance.logic.executeEvent('e_collision', instance, {
+                    collision.force = false;
+
+                    sourceInstance.logic.executeEvent('e_collision', sourceInstance, {
                         type: eventType
                     });
                 }
