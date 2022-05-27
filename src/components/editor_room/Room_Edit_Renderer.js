@@ -173,7 +173,9 @@ export default class Room_Edit_Renderer{
 
         ctx.drawImage(this.objBuff, 0, 0, this.objBuff.width, this.objBuff.height);
         ctx.drawImage(this.iconBuff,0, 0, this.iconBuff.width, this.iconBuff.height);
+        ctx.globalAlpha = 0.3;
         ctx.drawImage(this.gridBuff, 0, 0, this.gridBuff.width, this.gridBuff.height);
+        ctx.globalAlpha = 1.0;
         ctx.drawImage(this.cursorBuff, 0, 0, this.cursorBuff.width, this.cursorBuff.height);
 
         //composite selection buff
@@ -324,7 +326,7 @@ export default class Room_Edit_Renderer{
 
     _drawGrid(){
         const GRID_SHIFT = 30;
-        const AXIS_SHIFT = 100;
+        const AXIS_SHIFT = 200;
 
         let ctx = this.gridBuff.getContext('2d');
         let maxDim = Math.max(this.gridBuff.width, this.gridBuff.height);
