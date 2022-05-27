@@ -397,7 +397,7 @@ export default {
                 case Shared.MOUSE_EVENT.MOVE:
                 case Shared.MOUSE_EVENT.DOWN:
                     if (this.mouse.down){
-                        this.actionCameraChange({newState: {pos: mEvent.worldCell}});
+                        this.actionCameraChange({newState: {pos: mEvent.worldCell.addScalar(8)}});
                     }
                     break;
             }

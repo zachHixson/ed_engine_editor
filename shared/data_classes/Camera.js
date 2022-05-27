@@ -21,7 +21,7 @@ Object.freeze(MOVE_TYPES);
 
 export class Camera{
     constructor() {
-        this.pos = new Victor(0, -16);
+        this.pos = new Victor(8, -8);
         this.velocity = new Victor(0, 0);
         this._size = 1;
         this.moveType = MOVE_TYPES.LOCKED;

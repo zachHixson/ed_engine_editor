@@ -38,8 +38,8 @@ export default class Renderer{
 
         //camera transform
         ctx.translate(
-            (this.canvas.width / 2) + (camera.pos.x * scale),
-            (this.canvas.height / 2) + (camera.pos.y * scale)
+            (this.canvas.width / 2) + (-camera.pos.x * scale),
+            (this.canvas.height / 2) + (-camera.pos.y * scale)
         );
         ctx.scale(scale, scale);
 

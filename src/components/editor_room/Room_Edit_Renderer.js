@@ -284,7 +284,7 @@ export default class Room_Edit_Renderer{
 
         if (this.roomRef?.camera){
             let scaleFac = this.scaledCellWidth / this.cameraIcon.width;
-            let screenPos = this.roomRef.camera.pos.clone();
+            let screenPos = this.roomRef.camera.pos.clone().subtractScalar(8);
             screenPos = this.worldToScreenPos(screenPos);
             ctx.translate(screenPos.x, screenPos.y);
             ctx.scale(scaleFac, scaleFac);
