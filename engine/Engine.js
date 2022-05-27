@@ -27,6 +27,7 @@ class Engine{
             getLoadedRoom: ()=>this._loadedRoom,
             getCollisionMap: ()=>this._collisionMap,
             envCallbacks: callbacks,
+            registerCollision: this._registerCollision
         });
         this._gameData = this._parseGameData(gameData);
 
@@ -147,9 +148,41 @@ class Engine{
             //iterate over overlapped instances and make collision entries
             for (let i = 0; i < overlappingInstances.length; i++){
                 const collisionInstance = overlappingInstances[i];
-                this.api.registerCollision(instance, collisionInstance);
+                this._registerCollision(instance, collisionInstance);
             }
         });
+    }
+
+    _registerCollision = (sourceInstance, collisionInstance, force = false)=>{
+        let sourceInstanceEntry;
+
+        //create entry for source instance if it does not already exist
+        if (!this._collisionMap[sourceInstance.id]){
+            this._collisionMap[sourceInstance.id] = {
+                sourceInstance,
+                collisions: {}
+            };
+        }
+
+        sourceInstanceEntry = this._collisionMap[sourceInstance.id];
+
+        //Register collision to map
+        if (sourceInstanceEntry.collisions[collisionInstance.id]){
+            const ref = sourceInstanceEntry.collisions[collisionInstance.id];
+            ref.startCollision = ref.active ? ref.startCollision : this._curTime;
+            ref.lastChecked = this._curTime;
+            ref.active = true;
+            ref.force = force;
+        }
+        else{
+            sourceInstanceEntry.collisions[collisionInstance.id] = {
+                instance: collisionInstance,
+                startCollision: this._curTime,
+                lastChecked: this._curTime,
+                active: true,
+                force,
+            }
+        }
     }
 
     _dispatchCollisionEvents = ()=>{
