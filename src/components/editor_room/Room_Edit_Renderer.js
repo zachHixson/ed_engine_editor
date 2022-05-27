@@ -285,13 +285,26 @@ export default class Room_Edit_Renderer{
         let ctx = this.iconBuff.getContext('2d');
 
         if (this.roomRef?.camera){
+            let cameraPos = this.roomRef.camera.pos;
+            let cameraSize = this.roomRef.camera.size;
+
+            //draw camera icon
             let scaleFac = this.scaledCellWidth / this.cameraIcon.width;
-            let screenPos = this.roomRef.camera.pos.clone().subtractScalar(8);
+            let screenPos = cameraPos.clone().subtractScalar(8);
             screenPos = this.worldToScreenPos(screenPos);
             ctx.translate(screenPos.x, screenPos.y);
             ctx.scale(scaleFac, scaleFac);
             ctx.drawImage(this.cameraIcon, 0, 0);
             ctx.resetTransform();
+
+            //draw camera bounds
+            let ul = cameraPos.clone().subtractScalar(120 * cameraSize);
+            let br = cameraPos.clone().addScalar(120 * cameraSize);
+            ul = this.worldToScreenPos(ul);
+            br = this.worldToScreenPos(br);
+            ctx.strokeStyle = "#00000088";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(ul.x, ul.y, br.x - ul.x, br.y - ul.y);
         }
     }
 

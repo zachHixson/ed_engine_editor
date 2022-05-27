@@ -31,7 +31,7 @@ export default class Renderer{
     _drawInstances = ()=>{
         const ctx = this.canvas.getContext('2d');
         const {camera, instances} = this.room;
-        const scale = camera.size * this._scaleFac;
+        const scale = (1 / camera.size) * this._scaleFac;
 
         ctx.imageSmoothingEnabled = false;
         ctx.webkitImageSmoothingEnabled = false;
