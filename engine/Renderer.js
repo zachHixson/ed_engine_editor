@@ -19,7 +19,7 @@ export default class Renderer{
 
         const ctx = this.canvas.getContext('2d');
 
-        this._scaleFac = this.canvas.width / 256;
+        this._scaleFac = this.canvas.width / 240;
 
         //draw background
         ctx.fillStyle = this.room.bgColor;
