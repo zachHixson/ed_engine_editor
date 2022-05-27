@@ -95,9 +95,9 @@ class Engine{
         this._deltaTime = (time - this._lastLoopTimestamp) / 1000;
 
         try{
-            this._loadedRoom.camera.update(this._deltaTime);
             this._processDebugNav();
             this._processCollisions();
+            this._updateCamera();
         }
         catch(e){
             console.error(e);
@@ -124,6 +124,42 @@ class Engine{
 
         camera.velocity.copy(controlVelocity);
         camera.size += zoom;
+    }
+
+    _updateCamera(){
+        const camera = this._loadedRoom.camera;
+        const {MOVE_TYPES, SCROLL_DIRS, FOLLOW_TYPES} = Shared.Camera;
+
+        camera.pos.add(camera.velocity.clone().multiplyScalar(this._deltaTime));
+
+        switch(camera.moveType){
+            case MOVE_TYPES.LOCKED:
+                camera.velocity.x = 0;
+                camera.velocity.y = 0;
+                break;
+
+            case MOVE_TYPES.FOLLOW:
+                const target = this._loadedRoom.instances.list.find(
+                    camera.followObjId,
+                    instance => instance.id
+                );
+                const targetPos = target.pos.clone().addScalar(8);
+
+                switch(camera.followType){
+                    case FOLLOW_TYPES.SMOOTH:
+                        camera.pos.copy(targetPos);
+                        break;
+                    case FOLLOW_TYPES.TILED:
+                        const ul = camera.pos.clone().subtractScalar(120 * camera.size);
+                        const br = camera.pos.clone().addScalar(120 * camera.size);
+                        
+                        if (targetPos.x < ul.x){
+                            //camera.pos.x -= 
+                        }
+                }
+
+                break;
+        }
     }
 
     _processCollisions = ()=>{

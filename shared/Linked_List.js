@@ -53,7 +53,7 @@ export class Linked_List{
     }
 
     find(val, accessFunc = (a) => a){
-        return this.findRef(val, accessFunc).val;
+        return this.findRef(val, accessFunc)?.val;
     }
 
     findRef(val, accessFunc = (a) => a){

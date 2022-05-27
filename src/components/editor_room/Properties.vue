@@ -70,23 +70,17 @@
                     @change="setCamProp({scrollSpeed: parseFloat($event.target.value)})" v-input-active/>
             </div>
             <div v-show="camera.moveType == Shared.Camera.MOVE_TYPES.FOLLOW" class="control">
-                <label for="camFollowObj">{{$t('room_editor.follow_obj')}}: </label>
-                <select id="camFollowObj" :value="camera.followObjId" :title="$t('room_editor.tt_camera_follow_obj')"
-                    @change="setCamProp({followObjId: nanToNull(parseInt($event.target.value))})">
-                    <option :value="null">{{$t('generic.no_option')}}</option>
-                    <option
-                        v-for="object in objects"
-                        :key="object.id"
-                        :value="object.id">{{object.name}}</option>
-                </select>
-            </div>
-            <div v-show="camera.moveType == Shared.Camera.MOVE_TYPES.FOLLOW" class="control">
                 <label for="camFollowType">{{$t('room_editor.follow_type')}}: </label>
                 <select id="camFollowType" :value="camera.followType" :title="$t('room_editor.tt_camera_follow_type')"
                     @change="setCamProp({followType: parseInt($event.target.value)})">
                     <option :value="Shared.Camera.FOLLOW_TYPES.SMOOTH">{{$t('room_editor.smooth')}}</option>
                     <option :value="Shared.Camera.FOLLOW_TYPES.TILED">{{$t('room_editor.tiled')}}</option>
                 </select>
+            </div>
+            <div v-show="camera.moveType == Shared.Camera.MOVE_TYPES.FOLLOW" class="control">
+                <label for="camFollowObj">{{$t('room_editor.follow_obj')}}: </label>
+                <input id="camFollowObj" type="button" value="Set" :title="$t('room_editor.tt_camera_follow_obj')"
+                    @click="setFollowObj()" />
             </div>
         </div>
         <div v-if="showExitProps" class="propContents">
@@ -283,6 +277,11 @@ export default {
         setRoomProp(propObj){
             this.$emit('room-prop-set', propObj);
         },
+        setFollowObj(){
+            if (this.selectedEntity.TYPE == Shared.ENTITY_TYPE.INSTANCE){
+                this.camera.followObjId = this.selectedEntity.id;
+            }
+        },
         setRoomBgColor(color){
             this.$refs.bgColorBtn.style.background = color;
             this.setRoomProp({bgColor: color});
@@ -346,13 +345,15 @@ export default {
 .control{
     display: flex;
     flex-direction: row;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
     width: 100%;
 }
 
 .control > label{
     text-align: right;
+    flex-shrink: 1;
+    width: max-content;
 }
 
 .control > input, .control > select, .control > button{

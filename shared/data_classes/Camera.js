@@ -11,13 +11,13 @@ const SCROLL_DIRS = {
     RIGHT: 2,
     LEFT: 3
 };
-Object.freeze(MOVE_TYPES);
+Object.freeze(SCROLL_DIRS);
 
 const FOLLOW_TYPES = {
     SMOOTH: 0,
     TILED: 1
 };
-Object.freeze(MOVE_TYPES);
+Object.freeze(FOLLOW_TYPES);
 
 export class Camera{
     constructor() {
@@ -51,9 +51,5 @@ export class Camera{
         this.velocity = Victor.fromObject(camera.velocity);
 
         return this;
-    }
-
-    update(deltaTime){
-        this.pos.add(this.velocity.clone().multiplyScalar(deltaTime));
     }
 };
