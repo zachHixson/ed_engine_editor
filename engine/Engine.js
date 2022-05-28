@@ -163,6 +163,24 @@ class Engine{
                 }
 
                 break;
+            
+            case MOVE_TYPES.SCROLL:
+                const speed = camera.scrollSpeed * this._deltaTime;
+
+                switch(camera.scrollDir){
+                    case SCROLL_DIRS.UP:
+                        camera.pos.y -= speed;
+                        break;
+                    case SCROLL_DIRS.DOWN:
+                        camera.pos.y += speed;
+                        break;
+                    case SCROLL_DIRS.RIGHT:
+                        camera.pos.x += speed;
+                        break;
+                    case SCROLL_DIRS.LEFT:
+                        camera.pos.x -= speed;
+                        break;
+                }
         }
     }
 
