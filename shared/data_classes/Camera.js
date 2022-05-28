@@ -29,6 +29,7 @@ export class Camera{
         this.scrollSpeed = 10;
         this.followObjId = null;
         this.followType = FOLLOW_TYPES.SMOOTH;
+        this.tiledOrigin = null;
     }
 
     static get MOVE_TYPES() {return MOVE_TYPES};

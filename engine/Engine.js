@@ -150,12 +150,16 @@ class Engine{
                         camera.pos.copy(targetPos);
                         break;
                     case FOLLOW_TYPES.TILED:
-                        const ul = camera.pos.clone().subtractScalar(120 * camera.size);
-                        const br = camera.pos.clone().addScalar(120 * camera.size);
+                        const width = 240 * camera.size;
                         
-                        if (targetPos.x < ul.x){
-                            //camera.pos.x -= 
+                        if (!camera.tiledOrigin){
+                            camera.tiledOrigin = camera.pos.clone();
                         }
+
+                        camera.pos.x = Math.floor((targetPos.x - camera.tiledOrigin.x + (width / 2)) / width) * width;
+                        camera.pos.y = Math.floor((targetPos.y - camera.tiledOrigin.y + (width / 2)) / width) * width;
+                        camera.pos.x += camera.tiledOrigin.x;
+                        camera.pos.y += camera.tiledOrigin.y;
                 }
 
                 break;
