@@ -45,6 +45,9 @@ export class Instance{
 
         return !!hasCollisionEvent;
     }
+    get triggerExits(){
+        return this.objRef.triggerExits;
+    }
 
     clone(){
         const clone = new Instance(this.id, this.pos, this.objRef);

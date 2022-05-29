@@ -359,8 +359,7 @@ export const NODE_LIST = [
                     : this.api.getInstanceVariable(this.instance, name);
 
                 if (value == undefined){
-                    this.api.nodeExeption('variable_not_found', this._stackTrace);
-                    throw 'variable not found';
+                    return null;
                 }
                 
                 return value;

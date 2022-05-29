@@ -15,7 +15,6 @@ export default class API {
         getCurrentTime,
         getDeltaTime,
         getLoadedRoom,
-        getCollisionMap,
         envCallbacks,
         registerCollision
     }){
@@ -73,14 +72,22 @@ export default class API {
         );
     }
 
-    getInstancesOverlapping = ({id, pos})=>{
-        const broadCheck = this.room.instances.getByRadius(pos, 32);
-        return broadCheck.filter(checkInstance => (
-            checkInstance.pos.x + 16 > pos.x &&
-            checkInstance.pos.x < pos.x + 16 &&
-            checkInstance.pos.y + 16 > pos.y &&
-            checkInstance.pos.y < pos.y + 16 &&
-            checkInstance.id != id
+    getInstancesOverlapping = (instance)=>{
+        return this._filterOverlapping(this.room.instances, instance);
+    }
+
+    getExitsOverlapping = (instance)=>{
+        return this._filterOverlapping(this.room.exits, instance);
+    }
+
+    _filterOverlapping = (entityList, {id, pos, TYPE})=>{
+        const broadCheck = entityList.getByRadius(pos, 32);
+        return broadCheck.filter(checkEntity => (
+                checkEntity.pos.x + 16 > pos.x &&
+                checkEntity.pos.x < pos.x + 16 &&
+                checkEntity.pos.y + 16 > pos.y &&
+                checkEntity.pos.y < pos.y + 16 &&
+                (checkEntity.id != id || checkEntity.TYPE != TYPE)
         ));
     }
 

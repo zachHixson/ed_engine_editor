@@ -190,25 +190,32 @@ class Engine{
     }
 
     _mapInstanceOverlaps = ()=>{
+        let overlappedExit;
+
         this._loadedRoom.instances.list.forEach(instance => {
-            let overlappingInstances;
-
-            if (!instance.hasCollisionEvent){
-                return;
-            }
-
-            overlappingInstances = this.api.getInstancesOverlapping(instance);
-
-            if (overlappingInstances.length <= 0){
-                return;
-            }
+            const overlappingInstances = instance.hasCollisionEvent ? this.api.getInstancesOverlapping(instance) : [];
+            const overlappingExits = instance.triggerExits ? this.api.getExitsOverlapping(instance) : [];
 
             //iterate over overlapped instances and make collision entries
             for (let i = 0; i < overlappingInstances.length; i++){
                 const collisionInstance = overlappingInstances[i];
                 this._registerCollision(instance, collisionInstance);
             }
+
+            //pick first exit that was overlapped
+            if (overlappingExits.length > 0 && !overlappedExit){
+                overlappedExit = overlappingExits[0];
+            }
         });
+
+        if (overlappedExit){
+            if (overlappedExit.isEnding){
+                this._triggerEnding(overlappedExit.endingDialog);
+            }
+            else{
+                this._triggerExit(overlappedExit);
+            }
+        }
     }
 
     _registerCollision = (sourceInstance, collisionInstance, force = false)=>{
@@ -273,6 +280,14 @@ class Engine{
                 }
             }
         }
+    }
+
+    _triggerEnding(endingText){
+        console.log(endingText);
+    }
+
+    _triggerExit(exit){
+        console.log(exit.name);
     }
 
     _parseGameData = (gameData)=>{
