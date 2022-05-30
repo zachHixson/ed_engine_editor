@@ -112,18 +112,13 @@ export default class Room_Edit_Renderer{
     }
 
     resize(){
-        this.objBuff.width = this.canvas.width;
-        this.objBuff.height = this.canvas.height;
-        this.iconBuff.width = this.canvas.width;
-        this.iconBuff.height = this.canvas.height;
-        this.iconColor.width = this.canvas.width;
-        this.iconColor.height = this.canvas.height;
-        this.cursorBuff.width = this.canvas.width;
-        this.cursorBuff.height = this.canvas.height;
-        this.gridBuff.width = this.canvas.width;
-        this.gridBuff.height = this.canvas.height;
-        this.selectionBuff.width = this.canvas.width;
-        this.selectionBuff.height = this.canvas.height;
+        let {width, height} = this.canvas;
+        Shared.resizeCanvas(this.objBuff, width, height);
+        Shared.resizeCanvas(this.iconBuff, width, height);
+        Shared.resizeCanvas(this.iconColor, width, height);
+        Shared.resizeCanvas(this.cursorBuff, width, height);
+        Shared.resizeCanvas(this.gridBuff, width, height);
+        Shared.resizeCanvas(this.selectionBuff, width, height);
         this.recalcRoundedCanvas();
         this.recalcHalfCanvas();
         this.fullRedraw();

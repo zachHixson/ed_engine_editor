@@ -45,19 +45,18 @@ export default {
         return {
             hover: false,
             canvas: null,
-            checkerBGBuff: document.createElement('canvas'),
-            pixelBuff: document.createElement('canvas')
+            checkerBGBuff: null,
+            pixelBuff: null
         }
     },
     mounted(){
-        this.canvas = this.$refs.canvas;
+        let spriteDim = Shared.Sprite.DIMENSIONS;
 
+        this.canvas = this.$refs.canvas;
         this.canvas.width = this.$refs.wrapper.clientWidth;
         this.canvas.height = this.$refs.wrapper.clientWidth;
-        this.checkerBGBuff.width = this.canvas.width;
-        this.checkerBGBuff.height = this.canvas.height;
-        this.pixelBuff.width = Shared.Sprite.DIMENSIONS;
-        this.pixelBuff.height = Shared.Sprite.DIMENSIONS;
+        this.checkerBGBuff = Shared.createCanvas(this.canvas.width, this.canvas.height);
+        this.pixelBuff = Shared.createCanvas(spriteDim, spriteDim);
 
         Shared.drawCheckerBG(this.checkerBGBuff, 4, "#B5B5B5", '#CCCCCC');
 

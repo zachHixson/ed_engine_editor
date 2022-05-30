@@ -23,8 +23,8 @@ export default {
         return {
             curFrameIdx: 0,
             canvas: null,
-            checkerBGBuff: document.createElement('canvas'),
-            pixelBuff: document.createElement('canvas'),
+            checkerBGBuff: null,
+            pixelBuff: null,
             animationLoop: null
         }
     },
@@ -43,18 +43,13 @@ export default {
         },
     },
     mounted(){
+        let spriteDim = Shared.Sprite.DIMENSIONS;
         this.canvas = this.$refs.canvas;
-        this.checkerBGBuff.width = this.canvas.width;
-        this.checkerBGBuff.height = this.canvas.height;
+        this.checkerBGBuff = Shared.createCanvas(this.canvas.width, this.canvas.height);
+        this.pixelBuff = Shared.createCanvas(spriteDim, spriteDim);
 
         Shared.drawCheckerBG(this.checkerBGBuff, 4, "#B5B5B5", '#CCCCCC');
-        if (this.sprite){
-            this.pixelBuff.width = Shared.Sprite.DIMENSIONS;
-            this.pixelBuff.height = Shared.Sprite.DIMENSIONS;
-        }
-
         this.$parent.$on('frameDeleted', this.onFrameDelete);
-
         this.newSpriteSelection();
     },
     methods: {

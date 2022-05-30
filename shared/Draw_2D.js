@@ -155,7 +155,11 @@ export function RGBToHSV(r, g, b){
 
 export function createCanvas(width, height){
     const canvas = document.createElement('canvas');
+    resizeCanvas(canvas, width, height);
+    return canvas;
+}
+
+export function resizeCanvas(canvas, width, height){
     canvas.width = width;
     canvas.height = height;
-    return canvas;
 }

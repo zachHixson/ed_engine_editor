@@ -9,11 +9,9 @@ function getCharacterObject(charList, canvas, charWidth, charHeight){
         const x = (i % rows) * charWidth;
         const y = Math.floor(i / rows) * charHeight;
         const char = ctx.getImageData(x, y, charWidth, charHeight);
-        const newCanvas = document.createElement('canvas');
+        const newCanvas = Shared.createCanvas(charWidth, charHeight)
         const newCtx = newCanvas.getContext('2d');
 
-        newCanvas.width = charWidth;
-        newCanvas.height = charHeight;
         newCtx.putImageData(char, 0, 0);
         charObj[charList[i]] = newCanvas;
     }

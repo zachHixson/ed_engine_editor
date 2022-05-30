@@ -1,27 +1,19 @@
 export default class Art_Canvas_Renderer{
     constructor(element, spriteData, previewData, navState){
+        this.GRID_DIV = Shared.Sprite.DIMENSIONS;
+        this.CANVAS_WIDTH = this.GRID_DIV * 20;
+
         this.canvas = element;
-        this.checkerBGBuff = document.createElement("canvas");
-        this.checkerStencilBuff = document.createElement("canvas");
-        this.pixelBuff = document.createElement("canvas");
-        this.gridBuff = document.createElement("canvas");
-        this.previewBuff = document.createElement("canvas");
+        this.checkerBGBuff = Shared.createCanvas(this.canvas.width, this.canvas.height);
+        this.checkerStencilBuff = Shared.createCanvas(this.canvas.width, this.canvas.height);
+        this.pixelBuff = Shared.createCanvas(this.GRID_DIV, this.GRID_DIV);
+        this.gridBuff = Shared.createCanvas(this.canvas.width, this.canvas.height);
+        this.previewBuff = Shared.createCanvas(this.GRID_DIV, this.GRID_DIV);
         this.spriteData = spriteData;
         this.previewData = previewData;
         this.navState = navState;
 
-        this.GRID_DIV = Shared.Sprite.DIMENSIONS;
-        this.CANVAS_WIDTH = this.GRID_DIV * 20;
-
-        Object.defineProperty(this, "GRID_DIV", {configurable: false, writable: false});
-        Object.defineProperty(this, "CANVAS_WIDTH", {configurable: false, writable: false});
-
-        this.pixelBuff.width = this.GRID_DIV;
-        this.pixelBuff.height = this.GRID_DIV;
-        this.previewBuff.width = this.GRID_DIV;
-        this.previewBuff.height = this.GRID_DIV;
-
-        this.resize();
+        this.fullRedraw();
     }
 
     getTranslate(){
@@ -71,12 +63,9 @@ export default class Art_Canvas_Renderer{
     }
 
     resize(width = this.canvas.width, height = this.canvas.height){
-        this.checkerBGBuff.width = width;
-        this.checkerBGBuff.height = height;
-        this.checkerStencilBuff.width = width;
-        this.checkerStencilBuff.height = height;
-        this.gridBuff.width = width;
-        this.gridBuff.height = height;
+        Shared.resizeCanvas(this.checkerBGBuff, width, height);
+        Shared.resizeCanvas(this.checkerStencilBuff, width, height);
+        Shared.resizeCanvas(this.gridBuff, width, height);
 
         this.fullRedraw();
     }

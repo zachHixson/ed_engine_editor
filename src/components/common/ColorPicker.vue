@@ -30,9 +30,9 @@ export default {
         return {
             canvas: null,
             slider: null,
-            wheelBuffer: document.createElement('canvas'),
-            valueBuffer: document.createElement('canvas'),
-            circleBuffer: document.createElement('canvas'),
+            wheelBuffer: null,
+            valueBuffer: null,
+            circleBuffer: null,
             cursorPos: new Victor(0, 0),
             valuePos: 1,
             selectedHS: this.color ?? '#FFFFFF',
@@ -54,10 +54,10 @@ export default {
         this.canvas = this.$refs.canvas;
         this.slider = this.$refs.slider;
 
-        let canvasDim = {width: this.canvas.width, height: this.canvas.height};
-        Object.assign(this.wheelBuffer, canvasDim);
-        Object.assign(this.valueBuffer, canvasDim);
-        Object.assign(this.circleBuffer, canvasDim);
+        let canvasDim = this.width;
+        this.wheelBuffer = Shared.createCanvas(canvasDim, canvasDim);
+        this.valueBuffer = Shared.createCanvas(canvasDim, canvasDim);
+        this.circleBuffer = Shared.createCanvas(canvasDim, canvasDim);
 
         this.drawWheel();
         this.drawCircleBuff();
