@@ -2,12 +2,15 @@ const uglify = require('uglify-js');
 const fs = require('fs');
 const {execSync} = require('child_process');
 const rollupConfig = require('../engine/rollup.config.js');
+const outputPath = './_compiled/';
+const fileName = 'Engine.js';
 
 function escapeQuotes(text){
     return text.replace(/\\/g, "\\\\")
             .replace(/\$/g, "\\$")
             .replace(/'/g, "\\'")
-            .replace(/"/g, "\\\"");
+            .replace(/"/g, "\\\"")
+            .replace(/`/g, "\\\`");
 }
 
 execSync('npx rollup --config ./engine/rollup.config.js');
@@ -28,5 +31,9 @@ export function loadEngine(){
     return engine;
 };`;
 
+if (!fs.existsSync(outputPath)){
+    fs.mkdirSync(outputPath);
+}
+
 fs.unlinkSync(tempFilePath);
-fs.writeFileSync('./_compiled/Engine.js', formatted);
+fs.writeFileSync(outputPath + fileName, formatted);
