@@ -34,8 +34,9 @@ class Engine{
 
         ///////////////
         // debug code
-        this.fontRenderer = new Font_Renderer(this._canvas, new Victor(0, 0), 50, 500);
+        this.fontRenderer = new Font_Renderer(this._canvas, new Victor(100, 20), 600, 500);
         this.fontRenderer.text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
+        this.fontRenderer.fontSize = 3;
 
         this._linkLogic();
     }

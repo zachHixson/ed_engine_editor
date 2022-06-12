@@ -1,4 +1,4 @@
-import font from './font';
+import font from './Font';
 
 export default class Font_Renderer{
     constructor(canvas, pos, width, height){
@@ -12,11 +12,13 @@ export default class Font_Renderer{
         this.reveal = 0;
     }
 
+    get text(){return this._text};
     set text(text){
         this._text = text;
         this._breakText();
     }
 
+    get fontSize(){return this._fontSize};
     set fontSize(size){
         this._fontSize = size;
         this._breakText();
@@ -52,13 +54,12 @@ export default class Font_Renderer{
             }
 
             if (pushWord){
-                output.push(word);
+                output.push(word, ' ');
                 cursor += wordWidth + charWidth;
-                output.push(' ');
             }
         }
 
-        this._text = output.join('');
+        this._brokenText = output.join('');
     }
 
     setSizeFromLineCount(lineCount){
@@ -68,16 +69,18 @@ export default class Font_Renderer{
     render(){
         const ctx = this._canvas.getContext('2d');
         const charHeight = font['0'].height;
+        const drawCount = Math.min(this._brokenText.length, this.reveal);
         let cursor = 0;
         let linePos = 0;
 
         ctx.fillStyle = "black";
         ctx.fillRect(0, 0, this._canvas.width, this._canvas.height);
 
+        ctx.translate(this.pos.x, this.pos.y);
         ctx.scale(this._fontSize, this._fontSize);
 
-        for (let i = 0; i < this._text.length; i++){
-            const curChar = this._text[i];
+        for (let i = 0; i < drawCount; i++){
+            const curChar = this._brokenText[i];
 
             if (curChar != '\n'){
                 const curStamp = font[curChar];
@@ -93,6 +96,6 @@ export default class Font_Renderer{
         ctx.resetTransform();
 
         ctx.strokeStyle = "white";
-        ctx.strokeRect(0, 0, this._width, this._height);
+        ctx.strokeRect(this.pos.x, this.pos.y, this._width, this._height);
     }
 }
