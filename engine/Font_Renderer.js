@@ -70,14 +70,15 @@ export default class Font_Renderer{
         const ctx = this._canvas.getContext('2d');
         const charHeight = font['0'].height;
         const drawCount = Math.min(this._brokenText.length, this.reveal);
+        const scaleFac = this._canvas.width / 800;
         let cursor = 0;
         let linePos = 0;
 
         ctx.fillStyle = "black";
         ctx.fillRect(0, 0, this._canvas.width, this._canvas.height);
 
-        ctx.translate(this.pos.x, this.pos.y);
-        ctx.scale(this._fontSize, this._fontSize);
+        ctx.translate(this.pos.x * scaleFac, this.pos.y * scaleFac);
+        ctx.scale(this._fontSize * scaleFac, this._fontSize * scaleFac);
 
         for (let i = 0; i < drawCount; i++){
             const curChar = this._brokenText[i];
@@ -96,6 +97,6 @@ export default class Font_Renderer{
         ctx.resetTransform();
 
         ctx.strokeStyle = "white";
-        ctx.strokeRect(this.pos.x, this.pos.y, this._width, this._height);
+        ctx.strokeRect(this.pos.x * scaleFac, this.pos.y * scaleFac, this._width * scaleFac, this._height * scaleFac);
     }
 }
