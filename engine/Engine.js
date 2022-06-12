@@ -2,6 +2,7 @@ import Renderer from './Renderer.js';
 import Logic from './Logic';
 import API from './API';
 import Font_Renderer from './Font_Renderer.js';
+import Dialog_Box from './Dialog_Box.js';
 
 class Engine{
     static get VERSION(){return '0.1.0'}
@@ -16,6 +17,7 @@ class Engine{
         this._isRunning = false;
         this._loadedRoom = null;
         this._renderer = new Renderer(this._canvas);
+        this._dialogBox = new Dialog_Box(this._canvas);
         this._nextAnimationFrame = null;
         this._keymap = {};
         this._collisionMap = {};
@@ -34,9 +36,8 @@ class Engine{
 
         ///////////////
         // debug code
-        this.fontRenderer = new Font_Renderer(this._canvas, new Victor(0,0), 800, 500);
-        this.fontRenderer.text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
-        this.fontRenderer.fontSize = 3;
+        this._dialogBox.text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
+        //this.fontRenderer.fontSize = 3;
 
         this._linkLogic();
     }
@@ -113,7 +114,7 @@ class Engine{
         }
 
         this._renderer.render();
-        this.fontRenderer.render();
+        this._dialogBox.render();
 
         this._lastLoopTimestamp = time;
         this._nextAnimationFrame = requestAnimationFrame(this._updateLoop);

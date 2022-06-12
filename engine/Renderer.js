@@ -1,4 +1,6 @@
 export default class Renderer{
+    static get SCREEN_RES(){return 240}
+
     constructor(canvas){
         this.canvas = canvas;
         this.room = null;
@@ -19,7 +21,7 @@ export default class Renderer{
 
         const ctx = this.canvas.getContext('2d');
 
-        this._scaleFac = this.canvas.width / 240;
+        this._scaleFac = this.canvas.width / Renderer.SCREEN_RES;
 
         //draw background
         ctx.fillStyle = this.room.bgColor;

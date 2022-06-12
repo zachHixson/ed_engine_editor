@@ -1,3 +1,4 @@
+import Renderer from './Renderer';
 import font from './Font';
 
 export default class Font_Renderer{
@@ -6,8 +7,8 @@ export default class Font_Renderer{
         this._brokenText = this._text;
         this._fontSize = 1;
         this._canvas = canvas;
-        this._width = width ?? this.canvas.width;
-        this._height = height ?? this.canvas.height;
+        this._width = width ?? Renderer.SCREEN_RES;
+        this._height = height ?? Renderer.SCREEN_RES;
         this.pos = pos?.clone() ?? new Victor(0, 0);
         this.reveal = 0;
     }
@@ -22,6 +23,17 @@ export default class Font_Renderer{
     set fontSize(size){
         this._fontSize = size;
         this._breakText();
+    }
+
+    get width(){return this._width};
+    get height(){return this._height};
+    
+    get fontDim(){
+        const {width, height} = font['0'];
+        return new Victor(
+            width * this._fontSize,
+            height * this._fontSize
+        );
     }
 
     _breakText(){
@@ -62,20 +74,23 @@ export default class Font_Renderer{
         this._brokenText = output.join('');
     }
 
-    setSizeFromLineCount(lineCount){
-        //
+    setDimensions(width, height){
+        this._width = width;
+        this._height = height;
+        this._breakText();
+    }
+
+    setHeightFromLineCount(lineCount){
+        this._height = font['0'].height * lineCount;
     }
 
     render(){
         const ctx = this._canvas.getContext('2d');
         const charHeight = font['0'].height;
-        const drawCount = Math.min(this._brokenText.length, this.reveal);
-        const scaleFac = this._canvas.width / 800;
+        const drawCount = this._brokenText.length; //Math.min(this._brokenText.length, this.reveal);
+        const scaleFac = this._canvas.width / Renderer.SCREEN_RES;
         let cursor = 0;
         let linePos = 0;
-
-        ctx.fillStyle = "black";
-        ctx.fillRect(0, 0, this._canvas.width, this._canvas.height);
 
         ctx.translate(this.pos.x * scaleFac, this.pos.y * scaleFac);
         ctx.scale(this._fontSize * scaleFac, this._fontSize * scaleFac);
@@ -96,7 +111,8 @@ export default class Font_Renderer{
 
         ctx.resetTransform();
 
-        ctx.strokeStyle = "white";
+        ctx.strokeStyle = "#00FFFF";
+        ctx.lineWidth = 1;
         ctx.strokeRect(this.pos.x * scaleFac, this.pos.y * scaleFac, this._width * scaleFac, this._height * scaleFac);
     }
 }
