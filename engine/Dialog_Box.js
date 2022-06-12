@@ -13,7 +13,7 @@ Object.freeze(ALIGN);
 export default class Dialog_Box{
     static get ALIGN(){return ALIGN}
 
-    constructor(canvas, text = '', align = Dialog_Box.ALIGN.TOP){
+    constructor(canvas, text = '', align = Dialog_Box.ALIGN.BOTTOM){
         const textMargin = MARGIN + 2;
         const backMargin = Renderer.SCREEN_RES - MARGIN * 2 - 4;
 
@@ -42,12 +42,13 @@ export default class Dialog_Box{
         if (this.align == Dialog_Box.ALIGN.TOP){
             this.fontRenderer.pos.y = MARGIN + 2;
             p1.y = scaleFac * MARGIN;
-            p2.y = scaleFac * this.fontRenderer.height + p1.y;
+            p2.y = scaleFac * this.fontRenderer.height + lineWidth;
         }
         else{
-            this.fontRenderer.pos.y = Renderer.SCREEN_RES - 4 * 7 - lineWidth;
-            p2.y = this._canvas.height - scaleFac * MARGIN * 2 - lineWidth * 2;
-            p1.y = p2.y - scaleFac * this.fontRenderer.height;
+            const bottom = this._canvas.height - lineWidth - scaleFac * MARGIN;
+            this.fontRenderer.pos.y = Renderer.SCREEN_RES - 4 * 9 - lineWidth;
+            p1.y = bottom - scaleFac * this.fontRenderer.height;
+            p2.y = scaleFac * this.fontRenderer.height + lineWidth;
         }
 
         ctx.fillStyle = "black";
@@ -57,6 +58,7 @@ export default class Dialog_Box{
         ctx.lineWidth = lineWidth + 1;
         ctx.strokeRect(p1.x, p1.y, p2.x, p2.y);
         ctx.strokeStyle = "white";
+        ctx.lineWidth = lineWidth;
         ctx.strokeRect(p1.x, p1.y, p2.x, p2.y);
 
         this.fontRenderer.render();
