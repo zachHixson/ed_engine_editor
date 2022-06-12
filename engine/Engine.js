@@ -1,6 +1,7 @@
 import Renderer from './Renderer.js';
 import Logic from './Logic';
 import API from './API';
+import Font_Renderer from './Font_Renderer.js';
 
 class Engine{
     static get VERSION(){return '0.1.0'}
@@ -30,6 +31,11 @@ class Engine{
             registerCollision: this._registerCollision
         });
         this._gameData = this._parseGameData(gameData);
+
+        ///////////////
+        // debug code
+        this.fontRenderer = new Font_Renderer(this._canvas, new Victor(0, 0), 50, 500);
+        this.fontRenderer.text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
 
         this._linkLogic();
     }
@@ -106,6 +112,7 @@ class Engine{
         }
 
         this._renderer.render();
+        this.fontRenderer.render();
 
         this._lastLoopTimestamp = time;
         this._nextAnimationFrame = requestAnimationFrame(this._updateLoop);

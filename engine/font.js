@@ -19,7 +19,7 @@ function getCharacterObject(charList, canvas, charWidth, charHeight){
     return charObj;
 }
 
-function renderFont(){
+function renderCharacters(){
     const fontData = loadFontData();
     const canvas = Shared.createCanvas(fontData.width, fontData.height);
     const tokenized = tokenizeData(fontData.data);
@@ -30,5 +30,5 @@ function renderFont(){
     return characters;
 }
 
-const font = renderFont();
+const font = renderCharacters();
 export default font;
