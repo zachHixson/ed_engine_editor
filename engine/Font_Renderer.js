@@ -31,19 +31,17 @@ export default class Font_Renderer{
         for (let i = 0; i < words.length; i++){
             const word = words[i];
             const wordWidth = charWidth * word.length;
+            const needsLine = cursor + wordWidth > this._width;
+            const needsBreak = wordWidth > this._width;
+            const pushWord = !(needsLine && needsBreak);
 
-            if (cursor + wordWidth < this._width){
-                output.push(word);
-                cursor += wordWidth + charWidth;
-                output.push(' ');
-            }
-            else{
+            if (needsLine){
                 if (cursor > 0){
                     output.push('\n');
                     cursor = 0;
                 }
 
-                if (wordWidth > this._width){
+                if (needsBreak){
                     const availableSpace = Math.floor(this._width / charWidth);
                     const beginning = word.substring(0, availableSpace);
                     const end = word.substring(availableSpace);
@@ -51,11 +49,12 @@ export default class Font_Renderer{
                     words.splice(i + 1, 0, end);
                     cursor = 0;
                 }
-                else{
-                    output.push(word);
-                    cursor = wordWidth + charWidth;
-                    output.push(' ');
-                }
+            }
+
+            if (pushWord){
+                output.push(word);
+                cursor += wordWidth + charWidth;
+                output.push(' ');
             }
         }
 
