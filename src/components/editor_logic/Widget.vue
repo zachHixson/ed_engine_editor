@@ -11,6 +11,7 @@
 <script>
 import Enum from './widgets/Enum.vue';
 import Key from './widgets/Key.vue';
+import TextArea from './widgets/TextArea.vue';
 
 export default {
     name: 'Widget',
@@ -22,7 +23,7 @@ export default {
             switch(this.widget.type){
                 case WIDGET.ENUM: return Enum;
                 case WIDGET.KEY: return Key;
-                case WIDGET.MOUSE_BTN: return Mouse_Btn;
+                case WIDGET.TEXT_AREA: return TextArea;
             }
         }
     },

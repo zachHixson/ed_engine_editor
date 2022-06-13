@@ -27,7 +27,7 @@ export default class Dialog_Box{
             backMargin
         );
         this._progress = 0;
-        this.active = true;
+        this.active = false;
 
         this.fontRenderer.setHeightFromLineCount(LINES);
     }

@@ -234,6 +234,26 @@ export const NODE_LIST = [
         }
     },
     {
+        id: 'dialog_box',
+        category: 'actual',
+        widget: {
+            id: 'text',
+            type: WIDGET.TEXT_AREA
+        },
+        inTriggers: [
+            {id: '_i', execute: 'startDialog'}
+        ],
+        outTriggers: ['immediate', 'closed'],
+        inputs: [
+            {id: 'text', type: SOCKET_TYPE.STRING, default: ''}
+        ],
+        methods: {
+            startDialog(){
+                console.log(this.getWidgetData());
+            }
+        }
+    },
+    {
         id: 'set_position',
         category: 'movement',
         inTriggers: [
