@@ -13,24 +13,23 @@ Object.freeze(ALIGN);
 export default class Dialog_Box{
     static get ALIGN(){return ALIGN}
 
-    constructor(canvas, text = '', align = Dialog_Box.ALIGN.BOTTOM){
+    constructor(canvas){
         const textMargin = MARGIN + 2;
         const backMargin = Renderer.SCREEN_RES - MARGIN * 2 - 4;
 
         this._canvas = canvas;
-        this.align = align;
+        this.align = Dialog_Box.ALIGN.TOP;
         this.fontRenderer = new Font_Renderer(
             this._canvas,
             new Victor(textMargin, textMargin),
             backMargin
         );
-        this.page = 0;
 
         this.fontRenderer.setHeightFromLineCount(LINES);
     }
 
-    get text(){return this.fontRenderer.text};
-    set text(txt){return this.fontRenderer.text = txt};
+    get text(){return this.fontRenderer.text}
+    set text(txt){this.fontRenderer.text = txt}
 
     render(){
         const ctx = this._canvas.getContext('2d');

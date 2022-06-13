@@ -5,29 +5,39 @@ export default class Font_Renderer{
     constructor(canvas, pos, width, height){
         this._text = '';
         this._brokenText = this._text;
+        this._pages;
+        this._page = 0;
         this._fontSize = 1;
         this._canvas = canvas;
         this._width = width ?? Renderer.SCREEN_RES;
         this._height = height ?? Renderer.SCREEN_RES;
         this.pos = pos?.clone() ?? new Victor(0, 0);
         this.reveal = 0;
+        this.splitPages = true;
     }
 
-    get text(){return this._text};
+    get text(){return this._text}
     set text(text){
         this._text = text;
         this._breakText();
     }
 
-    get fontSize(){return this._fontSize};
+    get page(){return this._page}
+    set page(val){
+        this._page = Math.max(Math.min(this._pages.length, val), 0);
+    }
+
+    get brokenText(){return this._brokenText}
+
+    get fontSize(){return this._fontSize}
     set fontSize(size){
         this._fontSize = size;
         this._breakText();
     }
 
-    get width(){return this._width};
-    get height(){return this._height};
-    
+    get width(){return this._width}
+    get height(){return this._height}
+
     get fontDim(){
         const {width, height} = font['0'];
         return new Victor(
@@ -72,6 +82,20 @@ export default class Font_Renderer{
         }
 
         this._brokenText = output.join('');
+
+        if (this.splitPages){
+            const lines = this._brokenText.split('\n');
+            const charHeight = this.fontSize * font['0'].height;
+            const linesPerPage = Math.floor(this.height / charHeight);
+            const pages = new Array(Math.floor(lines.length / linesPerPage)).fill('');
+            
+            for (let i = 0; i < lines.length; i++){
+                const idx = Math.floor(i / linesPerPage);
+                pages[idx] += lines[i] + '\n';
+            }
+
+            this.pages = pages;
+        }
     }
 
     setDimensions(width, height){
@@ -86,8 +110,9 @@ export default class Font_Renderer{
 
     render(){
         const ctx = this._canvas.getContext('2d');
+        const drawText = this.splitPages ? this.pages[this.page] : this._brokenText;
         const charHeight = font['0'].height;
-        const drawCount = this._brokenText.length; //Math.min(this._brokenText.length, this.reveal);
+        const drawCount = drawText.length; //Math.min(drawText.length, this.reveal);
         const scaleFac = this._canvas.width / Renderer.SCREEN_RES;
         let cursor = 0;
         let linePos = 0;
@@ -96,7 +121,7 @@ export default class Font_Renderer{
         ctx.scale(this._fontSize * scaleFac, this._fontSize * scaleFac);
 
         for (let i = 0; i < drawCount; i++){
-            const curChar = this._brokenText[i];
+            const curChar = drawText[i];
 
             if (curChar != '\n'){
                 const curStamp = font[curChar];
