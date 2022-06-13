@@ -30,7 +30,7 @@
                     v-if="selectedAsset.selectedGraphId != null"
                     class="slide-wrapper"
                     :class="selectedCategory || isSearching ? 'slide-wrapper-trans' : ''">
-                    <div class="library-column node-category-contents">
+                    <div class="library-column">
                         <div v-if="!isSearching" class="list-item category-back-btn" @click="selectedCategory = null">
                             <img v-show="showLibrary" src="@/assets/arrow_01.svg" />
                         </div>
@@ -42,7 +42,7 @@
                             {{node.id}}
                         </div>
                     </div>
-                    <div class="library-column node-category-list">
+                    <div class="library-column">
                         <div
                             v-for="(category, idx) in nodeCategories"
                             :key="idx"
@@ -946,10 +946,12 @@ function _checkLoop(connection, connectionMap, checkedNodes){
     display: flex;
     flex-direction: row;
     width: 200%;
+    height: 100%;
     right: 100%;
     transition-property: right;
     transition-duration: 100ms;
     transition-timing-function: ease-out;
+    overflow: hidden;
 }
 
 .slide-wrapper-trans{
@@ -964,6 +966,7 @@ function _checkLoop(connection, connectionMap, checkedNodes){
     flex-direction: column;
     width: 50%;
     height: 100%;
+    overflow-y: auto;
 }
 
 .node-category{
