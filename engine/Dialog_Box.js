@@ -44,14 +44,24 @@ export default class Dialog_Box{
         this.fontRenderer.reveal = Math.floor(this._progress);
     }
 
+    activate(text){
+        this.text = text;
+        this.active = true;
+    }
+
     nextPage(){
         const pageLength = this.fontRenderer.pageText.length;
         const pageFinished = this._progress >= pageLength;
         const lastPage = this.fontRenderer.isLastPage;
 
-        if (pageFinished && !lastPage){
-            this._setProgress(0);
-            this.fontRenderer.page++;
+        if (pageFinished){
+            if (lastPage){
+                this.active = false;
+            }
+            else{
+                this._setProgress(0);
+                this.fontRenderer.page++;
+            }
         }
         else{
             this._setProgress(pageLength);
