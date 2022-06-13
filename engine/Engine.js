@@ -336,18 +336,16 @@ class Engine{
     }
 
     _keyDown = (e)=>{
-        if (this._dialogBox.active && e.code == Engine.ACTION_KEY){
-            this._dialogBox.nextPage();
-            return;
-        }
-
-        if (!this._keymap[e.code]){
+        if (!this._keymap[e.code] && !this._dialogBox.active){
             this._keymap[e.code] = true;
             this.api.dispatchNodeEvent('e_keyboard', {
                 which_key: e.key.toUpperCase(),
                 code: e.code,
                 type: 'down',
             });
+        }
+        else if (e.code == Engine.ACTION_KEY){
+            this._dialogBox.nextPage();
         }
     }
 
