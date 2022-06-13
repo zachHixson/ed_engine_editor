@@ -7,6 +7,7 @@ import Dialog_Box from './Dialog_Box.js';
 class Engine{
     static get VERSION(){return '0.1.0'}
     static get DEFAULT_ENV_CALLBACKS(){return API.DEFAULT_ENV_CALLBACKS}
+    static get ACTION_KEY(){return 'Space'}
 
     constructor({canvas, gameData, callbacks}){
         this._canvas = canvas;
@@ -113,7 +114,7 @@ class Engine{
         }
 
         this._renderer.render();
-        this._dialogBox.render();
+        this._dialogBox.render(this._deltaTime);
 
         this._lastLoopTimestamp = time;
         this._nextAnimationFrame = requestAnimationFrame(this._updateLoop);
@@ -335,6 +336,11 @@ class Engine{
     }
 
     _keyDown = (e)=>{
+        if (this._dialogBox.active && e.code == Engine.ACTION_KEY){
+            this._dialogBox.nextPage();
+            return;
+        }
+
         if (!this._keymap[e.code]){
             this._keymap[e.code] = true;
             this.api.dispatchNodeEvent('e_keyboard', {

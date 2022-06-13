@@ -19,15 +19,18 @@ export default class Font_Renderer{
     get text(){return this._text}
     set text(text){
         this._text = text;
+        this._page = 0;
         this._breakText();
     }
 
     get page(){return this._page}
     set page(val){
-        this._page = Math.max(Math.min(this._pages.length, val), 0);
+        this._page = Math.max(Math.min(this._pages.length - 1, val), 0);
     }
 
     get brokenText(){return this._brokenText}
+    get pageText(){return this._pages ? this._pages[this._page] : ''}
+    get isLastPage(){return this._page == this._pages.length - 1}
 
     get fontSize(){return this._fontSize}
     set fontSize(size){
@@ -94,7 +97,7 @@ export default class Font_Renderer{
                 pages[idx] += lines[i] + '\n';
             }
 
-            this.pages = pages;
+            this._pages = pages;
         }
     }
 
@@ -110,9 +113,9 @@ export default class Font_Renderer{
 
     render(){
         const ctx = this._canvas.getContext('2d');
-        const drawText = this.splitPages ? this.pages[this.page] : this._brokenText;
+        const drawText = this.splitPages ? this._pages[this._page] : this._brokenText;
         const charHeight = font['0'].height;
-        const drawCount = drawText.length; //Math.min(drawText.length, this.reveal);
+        const drawCount = Math.min(drawText.length, this.reveal);
         const scaleFac = this._canvas.width / Renderer.SCREEN_RES;
         let cursor = 0;
         let linePos = 0;
@@ -136,8 +139,8 @@ export default class Font_Renderer{
 
         ctx.resetTransform();
 
-        ctx.strokeStyle = "#00FFFF";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(this.pos.x * scaleFac, this.pos.y * scaleFac, this._width * scaleFac, this._height * scaleFac);
+        // ctx.strokeStyle = "#00FFFF";
+        // ctx.lineWidth = 1;
+        // ctx.strokeRect(this.pos.x * scaleFac, this.pos.y * scaleFac, this._width * scaleFac, this._height * scaleFac);
     }
 }
