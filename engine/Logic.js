@@ -1,7 +1,7 @@
 import Node from './Node';
 
 export default class Logic{
-    constructor(logicData, api){
+    constructor(logicData, engine){
         this.id = logicData.id;
         this.events = {};
         this._instance = null;
@@ -11,7 +11,7 @@ export default class Logic{
         //create all nodes
         logicData.nodes.forEach(node => {
             const template = Shared.NODE_MAP[node.templateId];
-            const newNode = new Node(template, node.nodeId, this.id, api);
+            const newNode = new Node(template, node.nodeId, this.id, engine);
             nodes[node.nodeId] = newNode;
 
             if (template.isEvent){

@@ -1,8 +1,8 @@
 export default class Node{
-    constructor(template, id, logicId, api){
+    constructor(template, id, logicId, engine){
         this.template = template;
         this.nodeId = id;
-        this.api = api;
+        this.engine = engine;
         this.isEvent = template.isEvent;
         this.widgetData;
         this.defaultTriggerId = null;
@@ -140,10 +140,10 @@ export default class Node{
                 if (float == NaN){
                     switch (typeof data){
                         case 'string':
-                            this.api.nodeException('cannot_convert_string_to_num', this._stackTrace);
+                            this.engine.nodeException('cannot_convert_string_to_num', this._stackTrace);
                             throw 'cannot convert string to number';
                         case 'object':
-                            this.api.nodeException('cannot_convert_object_to_num', this._stackTrace);
+                            this.engine.nodeException('cannot_convert_object_to_num', this._stackTrace);
                             throw 'cannot convert object to number';
                         case 'boolean':
                             return data + 0;
@@ -159,7 +159,7 @@ export default class Node{
                 return data.toString();
             case OBJECT:
                 if (!data.TYPE){
-                    this.api.nodeException('data_not_object', this._stackTrace);
+                    this.engine.nodeException('data_not_object', this._stackTrace);
                     throw 'incorrect data type';
                 }
 

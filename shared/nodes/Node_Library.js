@@ -148,13 +148,13 @@ export const NODE_LIST = [
                 const hasData = data || typeof data == 'boolean';
 
                 if (label.length > 0 && hasData){
-                    this.api.log(label, data);
+                    this.engine.log(label, data);
                 }
                 else if (hasData){
-                    this.api.log(data);
+                    this.engine.log(data);
                 }
                 else{
-                    this.api.log(label);
+                    this.engine.log(label);
                 }
 
                 this.triggerOutput('_o');
@@ -173,7 +173,7 @@ export const NODE_LIST = [
         ],
         methods: {
             isDown(){
-                const keymap = this.api.keymap;
+                const keymap = this.engine.keymap;
                 const input = this.getInput('key').toLowerCase();
                 return !!keymap[input];
             },
@@ -206,7 +206,7 @@ export const NODE_LIST = [
                     case 'multiply_sym': return num1 * num2;
                     case 'divide_sym':
                         if (num2 == 0){
-                            this.api.nodeExeption(this, 'Cannot divide by 0');
+                            this.engine.nodeExeption(this, 'Cannot divide by 0');
                             return;
                         }
                         return num1 / num2;
@@ -228,7 +228,7 @@ export const NODE_LIST = [
         methods: {
             removeInstance(){
                 const instance = this.getInput('instance') || this.instance;
-                this.api.removeInstance(instance);
+                this.engine.removeInstance(instance);
                 this.triggerOutput('_o');
             }
         }
@@ -243,7 +243,7 @@ export const NODE_LIST = [
         inTriggers: [
             {id: '_i', execute: 'startDialog'}
         ],
-        outTriggers: ['immediate', 'closed'],
+        outTriggers: ['immediate', 'dialog_closed'],
         inputs: [
             {id: 'text', type: SOCKET_TYPE.STRING, default: ''}
         ],
@@ -301,20 +301,20 @@ export const NODE_LIST = [
                 let instancesInSpace;
                 let spaceEmpty;
 
-                instancesInSpace = this.api.getInstancesOverlapping({
+                instancesInSpace = this.engine.getInstancesOverlapping({
                     id: this.instance.id,
                     pos: newPos
                 });
                 spaceEmpty = instancesInSpace.length > 0 ? instancesInSpace.filter(i => i.isSolid) <= 0 : true;
 
                 if (spaceEmpty || !this.instance.isSolid){
-                    this.api.setInstancePosition(this.instance, newPos);
+                    this.engine.setInstancePosition(this.instance, newPos);
                 }
                 else{
                     //register collisions with current instance
                     if (this.instance.hasCollisionEvent){
                         for (let i = 0; i < instancesInSpace.length; i++){
-                            this.api.registerCollision(this.instance, instancesInSpace[i], true);
+                            this.engine.registerCollision(this.instance, instancesInSpace[i], true);
                         }
                     }
 
@@ -323,7 +323,7 @@ export const NODE_LIST = [
                         const curInstanceInSpace = instancesInSpace[i];
 
                         if (curInstanceInSpace.hasCollisionEvent){
-                            this.api.registerCollision(curInstanceInSpace, this.instance, true);
+                            this.engine.registerCollision(curInstanceInSpace, this.instance, true);
                         }
                     }
                 }
@@ -351,10 +351,10 @@ export const NODE_LIST = [
                 const global = this.getInput('global');
 
                 if (global){
-                    this.api.setGlobalVariable(varName, data);
+                    this.engine.setGlobalVariable(varName, data);
                 }
                 else{
-                    this.api.setInstanceVariable(this.instance, varName, data);
+                    this.engine.setInstanceVariable(this.instance, varName, data);
                 }
 
                 this.triggerOutput('_o');
@@ -375,8 +375,8 @@ export const NODE_LIST = [
             getVar(){
                 const name = this.getInput('name').toLowerCase();
                 const global = this.getInput('global');
-                const value = global ? this.api.getGlobalVariable(name)
-                    : this.api.getInstanceVariable(this.instance, name);
+                const value = global ? this.engine.getGlobalVariable(name)
+                    : this.engine.getInstanceVariable(this.instance, name);
 
                 if (value == undefined){
                     return null;

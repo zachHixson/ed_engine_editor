@@ -1,12 +1,17 @@
 import Renderer from './Renderer.js';
 import Logic from './Logic';
-import API from './API';
-import Font_Renderer from './Font_Renderer.js';
 import Dialog_Box from './Dialog_Box.js';
+
+const DEFAULT_ENV_CALLBACKS = {
+    log: function(){console.log(...arguments)},
+    warning: function(){console.warn(...arguments)},
+    error: function(){console.error(...arguments)},
+    nodeException: function(error, treeData){console.error(error)},
+};
+Object.freeze(DEFAULT_ENV_CALLBACKS);
 
 class Engine{
     static get VERSION(){return '0.1.0'}
-    static get DEFAULT_ENV_CALLBACKS(){return API.DEFAULT_ENV_CALLBACKS}
     static get ACTION_KEY(){return 'Space'}
 
     constructor({canvas, gameData, callbacks}){
@@ -21,77 +26,39 @@ class Engine{
         this._dialogBox = new Dialog_Box(this._canvas);
         this._nextAnimationFrame = null;
         this._keymap = {};
+        this._nodeEventMap = {};
         this._collisionMap = {};
         this._globalVariables = {};
-        this._api = new API({
-            keymap: this._keymap,
-            globalVariables: this._globalVariables,
-            getCurrentTime: ()=>this._curTime,
-            getDeltaTime: ()=>this._deltaTime,
-            getLoadedRoom: ()=>this._loadedRoom,
-            getCollisionMap: ()=>this._collisionMap,
-            envCallbacks: callbacks,
-            registerCollision: this._registerCollision
-        });
         this._gameData = this._parseGameData(gameData);
+
+        //integrate callbacks
+        Object.assign(this, DEFAULT_ENV_CALLBACKS);
+        Object.assign(this, callbacks);
 
         this._linkLogic();
     }
 
-    get api(){return this._api};
+    get room(){return this._loadedRoom}
+    get currentTime(){return this._curTime}
+    get deltaTime(){return this._deltaTime}
 
-    start = ()=>{
-        this._isRunning = true;
-        this._timeStart = performance.now();
-        this._curTime = this._timeStart;
-        this._lastLoopTimestamp = this._timeStart;
-
-        this._bindInputEvents();
-
-        //load first room
-        if (this._gameData.rooms.length <= 0){
-            this.api.error('No rooms found in game data');
-            this.stop();
-            return;
-        }
-        else{
-            const startRoomId = this._gameData.startRoom ?? this._gameData.rooms[0].id;
-
-            try{
-                this.loadRoom(startRoomId);
-            }
-            catch (e){
-                console.error(e);
-                this.stop();
-                return;
-            }
-        }
-
-        requestAnimationFrame(this._updateLoop);
-    }
-
-    stop = ()=>{
-        cancelAnimationFrame(this._nextAnimationFrame);
-        this._unbindInputEvents();
-    }
-
-    loadRoom = (roomId)=>{
+    _loadRoom = (roomId)=>{
         const room = this._gameData.rooms.find(r => r.id == roomId);
-        this.api.dispatchNodeEvent('e_before_destroy');
+        this.dispatchNodeEvent('e_before_destroy');
         this._loadedRoom = room.persist ? room : room.clone();
         this._renderer.setRoom(this._loadedRoom);
-        this.api.clearNodeEvents();
+        this.clearNodeEvents();
 
         //register instance node events
         this._loadedRoom.instances.list.forEach(instance => {
             const logicEvents = instance.logic?.events;
 
             for (const event in logicEvents){
-                this.api.registerNodeEvent(event, instance);
+                this.registerNodeEvent(event, instance);
             }
         });
 
-        this.api.dispatchNodeEvent('e_create');
+        this.dispatchNodeEvent('e_create');
     }
 
     _updateLoop = (time)=>{
@@ -198,13 +165,13 @@ class Engine{
         let overlappedExit;
 
         this._loadedRoom.instances.list.forEach(instance => {
-            const overlappingInstances = instance.hasCollisionEvent ? this.api.getInstancesOverlapping(instance) : [];
-            const overlappingExits = instance.triggerExits ? this.api.getExitsOverlapping(instance) : [];
+            const overlappingInstances = instance.hasCollisionEvent ? this.getInstancesOverlapping(instance) : [];
+            const overlappingExits = instance.triggerExits ? this.getExitsOverlapping(instance) : [];
 
             //iterate over overlapped instances and make collision entries
             for (let i = 0; i < overlappingInstances.length; i++){
                 const collisionInstance = overlappingInstances[i];
-                this._registerCollision(instance, collisionInstance);
+                this.registerCollision(instance, collisionInstance);
             }
 
             //pick first exit that was overlapped
@@ -219,38 +186,6 @@ class Engine{
             }
             else{
                 this._triggerExit(overlappedExit);
-            }
-        }
-    }
-
-    _registerCollision = (sourceInstance, collisionInstance, force = false)=>{
-        let sourceInstanceEntry;
-
-        //create entry for source instance if it does not already exist
-        if (!this._collisionMap[sourceInstance.id]){
-            this._collisionMap[sourceInstance.id] = {
-                sourceInstance,
-                collisions: {}
-            };
-        }
-
-        sourceInstanceEntry = this._collisionMap[sourceInstance.id];
-
-        //Register collision to map
-        if (sourceInstanceEntry.collisions[collisionInstance.id]){
-            const ref = sourceInstanceEntry.collisions[collisionInstance.id];
-            ref.startCollision = ref.active ? ref.startCollision : this._curTime;
-            ref.lastChecked = this._curTime;
-            ref.active = true;
-            ref.force = force;
-        }
-        else{
-            sourceInstanceEntry.collisions[collisionInstance.id] = {
-                instance: collisionInstance,
-                startCollision: this._curTime,
-                lastChecked: this._curTime,
-                active: true,
-                force,
             }
         }
     }
@@ -311,7 +246,7 @@ class Engine{
         loadedData.sprites = parsedJson.sprites.map(s => new Shared.Sprite().fromSaveData(s));
         loadedData.objects = parsedJson.objects.map(o => new Shared.Game_Object().fromSaveData(o, loadedData.sprites));
         loadedData.rooms = parsedJson.rooms.map(r => new Shared.Room().fromSaveData(r, loadedData.objects));
-        loadedData.logic = parsedJson.logic.map(l => new Logic(l, this._api));
+        loadedData.logic = parsedJson.logic.map(l => new Logic(l, this));
 
         return loadedData;
     }
@@ -334,7 +269,7 @@ class Engine{
     _keyDown = (e)=>{
         if (!this._keymap[e.code] && !this._dialogBox.active){
             this._keymap[e.code] = true;
-            this.api.dispatchNodeEvent('e_keyboard', {
+            this.dispatchNodeEvent('e_keyboard', {
                 which_key: e.key.toUpperCase(),
                 code: e.code,
                 type: 'down',
@@ -347,7 +282,7 @@ class Engine{
 
     _keyUp = (e)=>{
         this._keymap[e.code] = false;
-        this.api.dispatchNodeEvent('e_keyboard', {
+        this.dispatchNodeEvent('e_keyboard', {
             which_key: e.key.toUpperCase(),
             code: e.code,
             type: 'up',
@@ -357,6 +292,144 @@ class Engine{
     _unbindInputEvents = ()=>{
         document.removeEventListener("keydown", this._keyDown);
         document.removeEventListener("keyup", this._keyUp);
+    }
+
+    _filterOverlapping = (entityList, {id, pos, TYPE})=>{
+        const broadCheck = entityList.getByRadius(pos, 32);
+        return broadCheck.filter(checkEntity => (
+                checkEntity.pos.x + 16 > pos.x &&
+                checkEntity.pos.x < pos.x + 16 &&
+                checkEntity.pos.y + 16 > pos.y &&
+                checkEntity.pos.y < pos.y + 16 &&
+                (checkEntity.id != id || checkEntity.TYPE != TYPE)
+        ));
+    }
+
+    start = ()=>{
+        this._isRunning = true;
+        this._timeStart = performance.now();
+        this._curTime = this._timeStart;
+        this._lastLoopTimestamp = this._timeStart;
+
+        this._bindInputEvents();
+
+        //load first room
+        if (this._gameData.rooms.length <= 0){
+            this.error('No rooms found in game data');
+            this.stop();
+            return;
+        }
+        else{
+            const startRoomId = this._gameData.startRoom ?? this._gameData.rooms[0].id;
+
+            try{
+                this._loadRoom(startRoomId);
+            }
+            catch (e){
+                console.error(e);
+                this.stop();
+                return;
+            }
+        }
+
+        requestAnimationFrame(this._updateLoop);
+    }
+
+    stop = ()=>{
+        cancelAnimationFrame(this._nextAnimationFrame);
+        this._unbindInputEvents();
+    }
+
+    clearNodeEvents = ()=>{
+        this._nodeEventMap = {};
+    }
+
+    registerNodeEvent = (eventName, instance)=>{
+        if (!this._nodeEventMap[eventName]){
+            this._nodeEventMap[eventName] = {};
+        }
+
+        this._nodeEventMap[eventName][instance.id] = instance;
+    }
+
+    registerCollision = (sourceInstance, collisionInstance, force = false)=>{
+        let sourceInstanceEntry;
+
+        //create entry for source instance if it does not already exist
+        if (!this._collisionMap[sourceInstance.id]){
+            this._collisionMap[sourceInstance.id] = {
+                sourceInstance,
+                collisions: {}
+            };
+        }
+
+        sourceInstanceEntry = this._collisionMap[sourceInstance.id];
+
+        //Register collision to map
+        if (sourceInstanceEntry.collisions[collisionInstance.id]){
+            const ref = sourceInstanceEntry.collisions[collisionInstance.id];
+            ref.startCollision = ref.active ? ref.startCollision : this._curTime;
+            ref.lastChecked = this._curTime;
+            ref.active = true;
+            ref.force = force;
+        }
+        else{
+            sourceInstanceEntry.collisions[collisionInstance.id] = {
+                instance: collisionInstance,
+                startCollision: this._curTime,
+                lastChecked: this._curTime,
+                active: true,
+                force,
+            }
+        }
+    }
+
+    dispatchNodeEvent = (eventName, data)=>{
+        const nodeEvent = this._nodeEventMap[eventName];
+
+        if (!nodeEvent) return;
+
+        for (const instance in nodeEvent){
+            nodeEvent[instance].executeNodeEvent(eventName, data);
+        }
+    }
+
+    getInstancesAtPosition = (pos)=>{
+        const broadCheck = this.room.instances.getByRadius(pos, 32);
+        return broadCheck.filter(instance => 
+            Shared.isInBounds(
+                pos.x,
+                pos.y,
+                instance.pos.x,
+                instance.pos.y,
+                instance.pos.x + 15,
+                instance.pos.y + 15
+            )
+        );
+    }
+
+    getInstancesOverlapping = (instance)=>{
+        return this._filterOverlapping(this.room.instances, instance);
+    }
+
+    getExitsOverlapping = (instance)=>{
+        return this._filterOverlapping(this.room.exits, instance);
+    }
+
+    setInstancePosition = (instance, pos)=>{
+        this.room.instances.setPositionByRef(instance, pos);
+    }
+
+    removeInstance = (instance)=>{
+        this.room.removeInstance(instance.id, instance.pos);
+    }
+
+    setGlobalVariable = (name, data)=>{
+        this._globalVariables[name] = data;
+    }
+
+    getGlobalVariable = (name)=>{
+        return this._globalVariables[name];
     }
 }
 
