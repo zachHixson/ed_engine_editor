@@ -75,18 +75,14 @@ export default class Node{
             return
         };
 
-        this._dataCache = data;
-
         //execute first node
         if (this.execute){
-            this.execute.call(this);
+            this.execute.call(this, data);
         }
         else{
             const triggerId = data?.trigger ?? this.defaultTriggerId;
             this.triggerOutput(triggerId);
         }
-
-        this._dataCache = null;
     }
 
     method(methodName, data){
@@ -103,20 +99,9 @@ export default class Node{
 
         if (input.connection){
             const node = input.connection.node;
+            const method = input.connection.execute;
 
-            if (node.isEvent){
-                const inputId = input.connection.id;
-                inputVal = node.data[inputId];
-                
-                if (!inputVal){
-                    console.error('No event data found for \"' + inputId + '\" on node \"' + node.template.id + '\"');
-                    return;
-                }
-            }
-            else{
-                const method = input.connection.execute;
-                inputVal = node.method(method);
-            }
+            inputVal = node.method(method);
 
             if (input.connection.type == Shared.SOCKET_TYPE.ANY){
                 inputVal = this.castAnyToType(inputVal, input.type);

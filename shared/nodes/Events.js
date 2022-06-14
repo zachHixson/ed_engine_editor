@@ -5,16 +5,21 @@ export const EVENTS = [
         id: 'e_create',
         isEvent: true,
         category: 'events',
-        outTriggers: ['_default'],
+        outTriggers: ['_o'],
     },
     {
         id: 'e_update',
         isEvent: true,
         category: 'events',
-        outTriggers: ['e_update_trigger_default'],
+        outTriggers: ['_o'],
         outputs: [
-            {id: 'e_update_out_delta_time', type: SOCKET_TYPE.NUMBER},
+            {id: 'delta_time', type: SOCKET_TYPE.NUMBER, execute: 'getDelta'},
         ],
+        methods: {
+            getDelta(){
+                return this.engine.deltaTime;
+            },
+        },
     },
     {
         id: 'e_mouse_button',
@@ -24,23 +29,52 @@ export const EVENTS = [
             id: 'mouse_btn',
             type: WIDGET.MOUSE_BTN,
         },
-        outTriggers: ['e_mouse_button_trigger_down', 'e_mouse_button_trigger_up', 'e_mouse_button_trigger_click'],
+        outTriggers: ['button_down', 'button_up', 'button_click'],
         outputs: [
-            {id: 'e_mouse_button_out_which', type: SOCKET_TYPE.STRING},
-            {id: 'e_mouse_button_out_x', type: SOCKET_TYPE.NUMBER},
-            {id: 'e_mouse_button_out_y', type: SOCKET_TYPE.NUMBER},
-            {id: 'e_mouse_button_out_object', type: SOCKET_TYPE.OBJECT},
-        ]
+            {id: 'which_button', type: SOCKET_TYPE.STRING, execute: 'which'},
+            {id: 'x', type: SOCKET_TYPE.NUMBER, execute: 'x'},
+            {id: 'y', type: SOCKET_TYPE.NUMBER, execute: 'y'},
+            {id: 'object', type: SOCKET_TYPE.OBJECT, execute: 'object'},
+        ],
+        execute(data){
+            this.engine.cacheNodeEventData('mouse_button', data);
+        },
+        methods: {
+            which(){
+                const eventData = this.engine.getCachedNodeEventData('mouse_button');
+                return eventData.which;
+            },
+            x(){
+                const eventData = this.engine.getCachedNodeEventData('mouse_button');
+                return eventData.x;
+            },
+            y(){
+                const eventData = this.engine.getCachedNodeEventData('mouse_button');
+                return eventData.y;
+            },
+            object(){
+                const eventData = this.engine.getCachedNodeEventData('mouse_button');
+                return eventData.object;
+            },
+        },
     },
     {
         id: 'e_mouse_move',
         isEvent: true,
         category: 'events',
-        outTriggers: ['e_mouse_move_trigger_default'],
+        outTriggers: ['_o'],
         outputs: [
-            {id: 'e_mouse_move_out_x', type: SOCKET_TYPE.NUMBER},
-            {id: 'e_mouse_move_out_y', type: SOCKET_TYPE.NUMBER},
+            {id: 'e_mouse_move_out_x', type: SOCKET_TYPE.NUMBER, execute: 'x'},
+            {id: 'e_mouse_move_out_y', type: SOCKET_TYPE.NUMBER, execute: 'y'},
         ],
+        methods: {
+            x(){
+                return this.engine.mouse.x;
+            },
+            y(){
+                return this.engine.mouse.y;
+            },
+        },
     },
     {
         id: 'e_keyboard',
@@ -52,19 +86,27 @@ export const EVENTS = [
         },
         outTriggers: ['key_down', 'key_up'],
         outputs: [
-            {id: 'which_key', type: SOCKET_TYPE.STRING},
+            {id: 'which_key', type: SOCKET_TYPE.STRING, execute: 'which'},
         ],
-        execute(){
+        execute(data){
             const {code} = this.getWidgetData();
 
-            if (this.data.code == code){
-                if (this.data.type == 'down'){
+            this.engine.cacheNodeEventData('keyboard', data);
+
+            if (data.code == code){
+                if (data.type == 'down'){
                     this.triggerOutput('key_down');
                 }
                 else{
                     this.triggerOutput('key_up');
                 }
             }
+        },
+        methods: {
+            which(){
+                const data = this.engine.getCachedNodeEventData('keyboard');
+                return data.which;
+            },
         },
     },
     {
@@ -73,10 +115,14 @@ export const EVENTS = [
         category: 'events',
         outTriggers: ['start', 'repeat', 'stop'],
         outputs: [
-            {id: 'object', type: SOCKET_TYPE.OBJECT},
+            {id: 'object', type: SOCKET_TYPE.OBJECT, execute: 'object'},
         ],
-        execute(){
-            switch (this.data.type){
+        execute(data){
+            const cacheKey = this.method('getCacheKey');
+
+            this.engine.cacheNodeEventData(cacheKey, data);
+
+            switch (data.type){
                 case COLLISION_EVENT.START:
                     this.triggerOutput('start');
                     break;
@@ -88,24 +134,57 @@ export const EVENTS = [
                     break;
             }
         },
+        methods: {
+            getCacheKey(){
+                return `${this.nodeId}/${this.instance.id.toString()}`;
+            },
+            object(){
+                const cacheKey = this.method('getCacheKey');
+                const cacheData = this.engine.getCachedNodeEventData(cacheKey);
+                console.log(this.engine._nodeEventCache[cacheKey], cacheKey, cacheData)
+                return cacheData.instance;
+            },
+        },
     },
     {
-        id: 'e_alarm',
+        id: 'e_timer',
         isEvent: true,
         category: 'events',
-        outTriggers: ['e_alarm_default'],
+        outTriggers: ['_o'],
         outputs: [
-            {id: 'e_alarm_out_name', type: SOCKET_TYPE.STRING},
+            {id: 'name', type: SOCKET_TYPE.STRING, execute: 'name'},
         ],
+        execute(data){
+            this.engine.cacheNodeEventData('timer', data);
+        },
+        methods: {
+            name(){
+                const data = this.engine.getCachedNodeEventData('timer', data);
+                return data.name;
+            }
+        },
     },
     {
         id: 'e_message',
         isEvent: true,
         category: 'events',
-        outTriggers: ['e_message_default'],
+        outTriggers: ['_o'],
         outputs: [
-            {id: 'e_message_out_name', type: SOCKET_TYPE.STRING},
-            {id: 'e_message_out_data', type: SOCKET_TYPE.ANY},
+            {id: 'name', type: SOCKET_TYPE.STRING, execute: 'name'},
+            {id: 'data', type: SOCKET_TYPE.ANY, execute: 'data'},
         ],
+        execute(){
+            this.engine.cacheNodeEventData('message', data);
+        },
+        methods: {
+            name(){
+                const data = this.engine.getCachedNodeEventData('message', data);
+                return data.name;
+            },
+            data(){
+                const data = this.engine.getCachedNodeEventData('message', data);
+                return data.data;
+            },
+        },
     },
 ];

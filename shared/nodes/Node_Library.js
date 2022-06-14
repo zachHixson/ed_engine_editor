@@ -148,10 +148,10 @@ export const NODE_LIST = [
                 const hasData = data || typeof data == 'boolean';
 
                 if (label.length > 0 && hasData){
-                    this.engine.log(label, data);
+                    this.engine.log(label, dataOut);
                 }
                 else if (hasData){
-                    this.engine.log(data);
+                    this.engine.log(dataOut);
                 }
                 else{
                     this.engine.log(label);

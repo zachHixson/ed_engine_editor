@@ -28,6 +28,7 @@ class Engine{
         this._keymap = {};
         this._nodeEventMap = {};
         this._nodeAsyncEventMap = {};
+        this._nodeEventCache = {};
         this._collisionMap = {};
         this._globalVariables = {};
         this._gameData = this._parseGameData(gameData);
@@ -217,7 +218,8 @@ class Engine{
                     collision.force = false;
 
                     sourceInstance.logic.executeEvent('e_collision', sourceInstance, {
-                        type: eventType
+                        type: eventType,
+                        instance: sourceInstance
                     });
                 }
             }
@@ -336,6 +338,7 @@ class Engine{
 
     _clearNodeEvents = ()=>{
         this._nodeEventMap = {};
+        this._nodeEventCache = {};
     }
 
     _filterOverlapping = (entityList, {id, pos, TYPE})=>{
@@ -473,6 +476,14 @@ class Engine{
     openDialogBox = (text, node, methodName)=>{
         const asyncTag = node ? this._registerAsyncNodeEvent(node, methodName) : null;
         this._dialogBox.open(text, asyncTag);
+    }
+
+    cacheNodeEventData = (tag, data)=>{
+        this._nodeEventCache[tag] = data;
+    }
+
+    getCachedNodeEventData = (tag)=>{
+        return this._nodeEventCache[tag];
     }
 }
 
