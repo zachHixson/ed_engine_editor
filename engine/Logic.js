@@ -11,7 +11,7 @@ export default class Logic{
         //create all nodes
         logicData.nodes.forEach(node => {
             const template = Shared.NODE_MAP[node.templateId];
-            const newNode = new Node(template, node.nodeId, this.id, engine);
+            const newNode = new Node(template, node.nodeId, this, engine);
             nodes[node.nodeId] = newNode;
 
             if (template.isEvent){
@@ -50,5 +50,12 @@ export default class Logic{
         this._instance = instance;
         this.events[eventName].forEach(event => event.executeEvent(data));
         this._instance = null;
+    }
+
+    executeAsyncNodeMethod(instance, node, methodName){
+        const oldInstance = this._instance;
+        this._instance = instance;
+        node.method(methodName);
+        this._instance = oldInstance;
     }
 }

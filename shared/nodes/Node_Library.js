@@ -249,7 +249,14 @@ export const NODE_LIST = [
         ],
         methods: {
             startDialog(){
-                console.log(this.getWidgetData());
+                const textArea = this.getWidgetData();
+                const textBox = this.getInput('text');
+                const text = textBox ? textBox : textArea;
+                this.engine.openDialogBox(text, this, 'dialogClosed');
+                this.triggerOutput('immediate');
+            },
+            dialogClosed(){
+                this.triggerOutput('dialog_closed');
             }
         }
     },

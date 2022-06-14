@@ -90,7 +90,7 @@ export default class Font_Renderer{
             const lines = this._brokenText.split('\n');
             const charHeight = this.fontSize * font['0'].height;
             const linesPerPage = Math.floor(this.height / charHeight);
-            const pages = new Array(Math.floor(lines.length / linesPerPage)).fill('');
+            const pages = new Array(Math.ceil(lines.length / linesPerPage)).fill('');
             
             for (let i = 0; i < lines.length; i++){
                 const idx = Math.floor(i / linesPerPage);

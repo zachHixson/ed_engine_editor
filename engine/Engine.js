@@ -27,6 +27,7 @@ class Engine{
         this._nextAnimationFrame = null;
         this._keymap = {};
         this._nodeEventMap = {};
+        this._nodeAsyncEventMap = {};
         this._collisionMap = {};
         this._globalVariables = {};
         this._gameData = this._parseGameData(gameData);
@@ -36,6 +37,7 @@ class Engine{
         Object.assign(this, callbacks);
 
         this._linkLogic();
+        this._dialogBox.onCloseCallback = this._onDialogBoxClose.bind(this);
     }
 
     get room(){return this._loadedRoom}
@@ -44,21 +46,21 @@ class Engine{
 
     _loadRoom = (roomId)=>{
         const room = this._gameData.rooms.find(r => r.id == roomId);
-        this.dispatchNodeEvent('e_before_destroy');
+        this._dispatchNodeEvent('e_before_destroy');
         this._loadedRoom = room.persist ? room : room.clone();
         this._renderer.setRoom(this._loadedRoom);
-        this.clearNodeEvents();
+        this._clearNodeEvents();
 
         //register instance node events
         this._loadedRoom.instances.list.forEach(instance => {
             const logicEvents = instance.logic?.events;
 
             for (const event in logicEvents){
-                this.registerNodeEvent(event, instance);
+                this._registerNodeEvent(event, instance);
             }
         });
 
-        this.dispatchNodeEvent('e_create');
+        this._dispatchNodeEvent('e_create');
     }
 
     _updateLoop = (time)=>{
@@ -269,7 +271,7 @@ class Engine{
     _keyDown = (e)=>{
         if (!this._keymap[e.code] && !this._dialogBox.active){
             this._keymap[e.code] = true;
-            this.dispatchNodeEvent('e_keyboard', {
+            this._dispatchNodeEvent('e_keyboard', {
                 which_key: e.key.toUpperCase(),
                 code: e.code,
                 type: 'down',
@@ -282,7 +284,7 @@ class Engine{
 
     _keyUp = (e)=>{
         this._keymap[e.code] = false;
-        this.dispatchNodeEvent('e_keyboard', {
+        this._dispatchNodeEvent('e_keyboard', {
             which_key: e.key.toUpperCase(),
             code: e.code,
             type: 'up',
@@ -294,6 +296,48 @@ class Engine{
         document.removeEventListener("keyup", this._keyUp);
     }
 
+    _registerNodeEvent = (eventName, instance)=>{
+        if (!this._nodeEventMap[eventName]){
+            this._nodeEventMap[eventName] = {};
+        }
+
+        this._nodeEventMap[eventName][instance.id] = instance;
+    }
+
+    _registerAsyncNodeEvent = (node, methodName)=>{
+        const tag = this._newAsyncTag();
+        this._nodeAsyncEventMap[tag] = {
+            instance: node.instance,
+            node,
+            methodName
+        };
+
+        return tag;
+    }
+
+    _dispatchNodeEvent = (eventName, data)=>{
+        const nodeEvent = this._nodeEventMap[eventName];
+
+        if (!nodeEvent) return;
+
+        for (const instance in nodeEvent){
+            nodeEvent[instance].executeNodeEvent(eventName, data);
+        }
+    }
+
+    _dispatchAsyncNodeEvent = (tag, clearEvent = false)=>{
+        const {instance, node, methodName} = this._nodeAsyncEventMap[tag];
+        node.logic.executeAsyncNodeMethod(instance, node, methodName);
+
+        if (clearEvent){
+            this._nodeAsyncEventMap[tag] = null;
+        }
+    }
+
+    _clearNodeEvents = ()=>{
+        this._nodeEventMap = {};
+    }
+
     _filterOverlapping = (entityList, {id, pos, TYPE})=>{
         const broadCheck = entityList.getByRadius(pos, 32);
         return broadCheck.filter(checkEntity => (
@@ -303,6 +347,22 @@ class Engine{
                 checkEntity.pos.y < pos.y + 16 &&
                 (checkEntity.id != id || checkEntity.TYPE != TYPE)
         ));
+    }
+
+    _newAsyncTag = ()=>{
+        const LENGTH = 10;
+        let tag = '';
+
+        for (let i = 0; i < LENGTH; i++){
+            const num = Math.floor(Math.random() * 16).toString(16);
+            tag += num;
+        }
+
+        return tag;
+    }
+
+    _onDialogBoxClose = (tag)=>{
+        this._dispatchAsyncNodeEvent(tag, true);
     }
 
     start = ()=>{
@@ -340,18 +400,6 @@ class Engine{
         this._unbindInputEvents();
     }
 
-    clearNodeEvents = ()=>{
-        this._nodeEventMap = {};
-    }
-
-    registerNodeEvent = (eventName, instance)=>{
-        if (!this._nodeEventMap[eventName]){
-            this._nodeEventMap[eventName] = {};
-        }
-
-        this._nodeEventMap[eventName][instance.id] = instance;
-    }
-
     registerCollision = (sourceInstance, collisionInstance, force = false)=>{
         let sourceInstanceEntry;
 
@@ -381,16 +429,6 @@ class Engine{
                 active: true,
                 force,
             }
-        }
-    }
-
-    dispatchNodeEvent = (eventName, data)=>{
-        const nodeEvent = this._nodeEventMap[eventName];
-
-        if (!nodeEvent) return;
-
-        for (const instance in nodeEvent){
-            nodeEvent[instance].executeNodeEvent(eventName, data);
         }
     }
 
@@ -430,6 +468,11 @@ class Engine{
 
     getGlobalVariable = (name)=>{
         return this._globalVariables[name];
+    }
+
+    openDialogBox = (text, node, methodName)=>{
+        const asyncTag = node ? this._registerAsyncNodeEvent(node, methodName) : null;
+        this._dialogBox.open(text, asyncTag);
     }
 }
 

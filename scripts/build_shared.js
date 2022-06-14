@@ -23,6 +23,7 @@ const formatted =
     .replace(/\$/g, "\\$")
     .replace(/'/g, "\\'")
     .replace(/"/g, "\\\"")
+    .replace(/`/g, "\\\`")
 }\`;
 
 export function loadShared(){

@@ -20,13 +20,15 @@ export default class Dialog_Box{
         const backMargin = Renderer.SCREEN_RES - MARGIN * 2 - 4;
 
         this._canvas = canvas;
+        this._progress = 0;
+        this._asyncTag = null;
         this.align = Dialog_Box.ALIGN.TOP;
         this.fontRenderer = new Font_Renderer(
             this._canvas,
             new Victor(textMargin, textMargin),
             backMargin
         );
-        this._progress = 0;
+        this.onCloseCallback = ()=>{};
         this.active = false;
 
         this.fontRenderer.setHeightFromLineCount(LINES);
@@ -44,9 +46,19 @@ export default class Dialog_Box{
         this.fontRenderer.reveal = Math.floor(this._progress);
     }
 
-    activate(text){
+    open(text, asyncTag){
+        if (this.active){
+            this.close();
+        }
+
         this.text = text;
+        this._asyncTag = asyncTag;
         this.active = true;
+    }
+
+    close(){
+        this.active = false;
+        this.onCloseCallback(this._asyncTag);
     }
 
     nextPage(){
@@ -56,7 +68,7 @@ export default class Dialog_Box{
 
         if (pageFinished){
             if (lastPage){
-                this.active = false;
+                this.close();
             }
             else{
                 this._setProgress(0);
