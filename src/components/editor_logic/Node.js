@@ -28,12 +28,29 @@ export default class Node{
         });
 
         template.inputs?.forEach(input => {
+            let value = input.default;
+
+            if (value === undefined){
+                switch(input.type){
+                    case Shared.SOCKET_TYPE.NUMBER:
+                        value = 0;
+                        break;
+                    case Shared.SOCKET_TYPE.STRING:
+                        value = '';
+                        break;
+                    case Shared.SOCKET_TYPE.BOOL:
+                        value = false;
+                        break;
+                }
+            }
+
             this.inputs.set(input.id, {
                 id: input.id,
                 type: input.type,
-                value: input.default ?? 0,
+                value,
                 connection: null,
-                required: input.required
+                required: input.required,
+                triple: input.triple,
             });
         });
 

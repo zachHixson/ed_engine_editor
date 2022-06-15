@@ -5,7 +5,7 @@
             <input v-if="socket.type == SOCKET_TYPE.NUMBER" type="number" :value="socket.value" @change="valueChanged($event.target)" v-input-active/>
             <input v-if="socket.type == SOCKET_TYPE.STRING" type="text" :value="socket.value"  @change="valueChanged($event.target)" v-input-active/>
             <div v-if="socket.type == SOCKET_TYPE.OBJECT" class="selfBox">{{$t('logic_editor.self')}}</div>
-            <input v-if="socket.type == SOCKET_TYPE.BOOL" type="checkbox" :checked="socket.value"  @change="valueChanged($event.target.checked)"/>
+            <input v-if="socket.type == SOCKET_TYPE.BOOL" type="checkbox" :checked="socket.value"  @change="boolValueChanged($event.target)" ref="boolCheckbox"/>
         </div>
         <svg
             v-if="!isTrigger"
@@ -72,6 +72,10 @@ export default {
     mounted(){
         this.$nextTick(()=>{
             this.hasSize = true;
+
+            if (this.socket.type == Shared.SOCKET_TYPE.BOOL){
+                this.$refs.boolCheckbox.indeterminate = this.socket.value == null;
+            }
         })
     },
     methods: {
@@ -86,12 +90,31 @@ export default {
             }
 
             validated = inputValNum ?? rawInputVal;
-
             target.value = validated;
+
             this.$emit('value-changed', {
                 socket: this.socket,
                 oldVal: this.socket.value,
                 newVal: validated,
+            });
+        },
+        boolValueChanged(target){
+            let value = target.checked;
+
+            if (this.socket.triple && this.socket.value){
+                value = null;
+                target.indeterminate = true;
+            }
+
+            if (this.socket.value == null){
+                target.checked = false;
+                value = false;
+            }
+
+            this.$emit('value-changed', {
+                socket: this.socket,
+                oldVal: this.socket.value,
+                newVal: value,
             });
         },
         mouseDown(event){
