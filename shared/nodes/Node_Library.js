@@ -28,7 +28,7 @@ export const NODE_LIST = [
             {id: 'all_types_iAny', type: SOCKET_TYPE.ANY, default: null},
             {id: 'all_types_iObject', type: SOCKET_TYPE.OBJECT, default: null},
             {id: 'all_types_iString', type: SOCKET_TYPE.STRING, default: 'Default'},
-            {id: 'all_types_iBool', type: SOCKET_TYPE.BOOL, defualt: false},
+            {id: 'all_types_iBool', type: SOCKET_TYPE.BOOL, default: false},
         ],
         outputs: [
             {id: 'all_types_oNumber', type: SOCKET_TYPE.NUMBER, execute: 'do_thing'},
@@ -257,6 +257,33 @@ export const NODE_LIST = [
             },
             dialogClosed(){
                 this.triggerOutput('dialog_closed');
+            }
+        }
+    },
+    {
+        id: 'set_animation_playback',
+        category: 'drawing',
+        inTriggers: [
+            {id: '_i', execute: 'set_settings'},
+        ],
+        outTriggers: ['_o'],
+        inputs: [
+            {id: 'frame', type: SOCKET_TYPE.NUMBER, default: ''},
+            {id: 'fps', type: SOCKET_TYPE.NUMBER, default: ''},
+            {id: 'loop', type: SOCKET_TYPE.BOOL, default: null, triple: true},
+            {id: 'playing', type: SOCKET_TYPE.BOOL, default: null, triple: true},
+        ],
+        methods: {
+            set_settings(){
+                const frame = parseInt(this.getInput('frame'));
+                const fps = parseInt(this.getInput('fps'));
+                const loop = this.getInput('loop');
+                const playing = this.getInput('playing');
+
+                this.instance.animFrame = isNaN(frame) ? this.instance.animFrame : frame;
+                this.instance.fps = isNaN(fps) ? this.instance.fps : fps;
+                this.instance.animLoop = loop ?? this.instance.animLoop;
+                this.instance.animPlaying = playing ?? this.instance.animPlaying;
             }
         }
     },
