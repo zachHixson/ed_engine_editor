@@ -13,7 +13,7 @@ export default class Renderer{
         this._spriteCache = {};
     }
 
-    render = ()=>{
+    render = (deltaTime)=>{
         if (!this.room){
             console.error('Cannot render scene without room being set');
             return;
@@ -27,10 +27,10 @@ export default class Renderer{
         ctx.fillStyle = this.room.bgColor;
         ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        this._drawInstances();
+        this._drawInstances(deltaTime);
     }
 
-    _drawInstances = ()=>{
+    _drawInstances = (deltaTime)=>{
         const ctx = this.canvas.getContext('2d');
         const {camera, instances} = this.room;
         const scale = (1 / camera.size) * this._scaleFac;
@@ -58,6 +58,7 @@ export default class Renderer{
 
                 curFrame = sprite[instance.animFrame];
                 ctx.drawImage(curFrame, instance.pos.x, instance.pos.y);
+                instance.advanceAnimation(deltaTime);
             }
         });
 

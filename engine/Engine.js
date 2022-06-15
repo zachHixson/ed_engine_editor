@@ -52,13 +52,15 @@ class Engine{
         this._renderer.setRoom(this._loadedRoom);
         this._clearNodeEvents();
 
-        //register instance node events
+        //setup instances
         this._loadedRoom.instances.list.forEach(instance => {
             const logicEvents = instance.logic?.events;
 
             for (const event in logicEvents){
                 this._registerNodeEvent(event, instance);
             }
+
+            instance.initAnimProps();
         });
 
         this._dispatchNodeEvent('e_create');
@@ -66,8 +68,15 @@ class Engine{
 
     _updateLoop = (time)=>{
         this._curTime = time;
-        this._deltaTime = (time - this._lastLoopTimestamp) / 1000;
+        this._deltaTime = Math.max((time - this._lastLoopTimestamp) / 1000, 0);
 
+        this._update();
+
+        this._lastLoopTimestamp = time;
+        this._nextAnimationFrame = requestAnimationFrame(this._updateLoop);
+    }
+
+    _update = ()=>{
         try{
             this._processDebugNav();
             this._processCollisions();
@@ -79,11 +88,8 @@ class Engine{
             return;
         }
 
-        this._renderer.render();
-        this._dialogBox.render(this._deltaTime);
-
-        this._lastLoopTimestamp = time;
-        this._nextAnimationFrame = requestAnimationFrame(this._updateLoop);
+        this._renderer.render(this.deltaTime);
+        this._dialogBox.render(this.deltaTime);
     }
 
     _processDebugNav = ()=>{
@@ -395,6 +401,7 @@ class Engine{
             }
         }
 
+        this._update();
         requestAnimationFrame(this._updateLoop);
     }
 

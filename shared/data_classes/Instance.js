@@ -17,7 +17,13 @@ export class Instance{
         this.collisionOverride = COLLISION_OVERRIDE.KEEP;
         this.groups = [];
         this.customVars = [];
-        this.animFrame = 0;
+
+        //engine props
+        this._animProgress = 0;
+        this.startFrame = 0;
+        this.fps = 0;
+        this.animLoop = false;
+        this.animPlaying = false;
     }
 
     get TYPE(){return ENTITY_TYPE.INSTANCE}
@@ -49,10 +55,24 @@ export class Instance{
         return this.objRef.triggerExits;
     }
 
+    get animFrame(){
+        const frame = Math.floor(this._animProgress * this.objRef.fps);
+
+        if (this.animLoop){
+            return frame % this.sprite.frames.length;
+        }
+        else{
+            return Math.min(frame, this.sprite.frames.length - 1);
+        }
+    }
+    set animFrame(val){
+        this._animProgress = val;
+    }
+
     clone(){
         const clone = new Instance(this.id, this.pos, this.objRef);
         Object.assign(clone, this);
-        this.pos.clone();
+        this.pos = this.pos.clone();
         return clone;
     }
 
@@ -69,5 +89,19 @@ export class Instance{
 
     executeNodeEvent(eventName, data){
         this.logic.executeEvent(eventName, this, data);
+    }
+
+    initAnimProps(){
+        this.startFrame = this.objRef.startFrame;
+        this.fps = this.objRef.fps;
+        this.animLoop = this.objRef.animLoop;
+        this.animPlaying = this.objRef.animPlaying;
+        this.animFrame = this.objRef.startFrame;
+    }
+
+    advanceAnimation(deltaTime){
+        if (this.animPlaying){
+            this._animProgress += deltaTime;
+        }
     }
 };

@@ -26,6 +26,10 @@
                     <label for="loop">{{$t('object_editor.loop')}}:</label>
                     <input type="checkbox" id="loop" checked="true" v-model="selectedAsset.animLoop" :title="$t('object_editor.tt_loop')"/>
                 </div>
+                <div v-if="selectedAsset.sprite" class="control">
+                    <label for="isPlaying">{{$t('object_editor.is_playing')}}:</label>
+                    <input type="checkbox" id="isPlaying" checked="false" v-model="selectedAsset.animPlaying" :title="$t('object_editor.tt_is_playing')"/>
+                </div>
             </div>
             <AnimationPlayer ref="animPlayer" :sprite="selectedAsset.sprite" :fps="selectedAsset.fps" :startFrame="startFrame" :loop="selectedAsset.animLoop"/>
         </CategoryWrapper>

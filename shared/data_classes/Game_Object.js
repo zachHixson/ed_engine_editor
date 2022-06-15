@@ -8,6 +8,7 @@ export class Game_Object extends Asset{
         this._startFrame = 0;
         this.fps = 6;
         this.animLoop = true;
+        this.animPlaying = false;
         this.zDepth = 0;
         this.isSolid = false;
         this.applyGravity = false;
