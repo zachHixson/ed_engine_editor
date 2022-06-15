@@ -33,6 +33,7 @@ export default class Node{
                 type: input.type,
                 value: input.default ?? 0,
                 connection: null,
+                required: input.required
             });
         });
 

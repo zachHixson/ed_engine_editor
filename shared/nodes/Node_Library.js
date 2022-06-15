@@ -188,8 +188,8 @@ export const NODE_LIST = [
             options: ['add_sym', 'subtract_sym', 'multiply_sym', 'divide_sym', 'power'],
         },
         inputs: [
-            {id: '_num1', type: SOCKET_TYPE.NUMBER, default: 0},
-            {id: '_num2', type: SOCKET_TYPE.NUMBER, default: 0},
+            {id: '_num1', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
+            {id: '_num2', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
         ],
         outputs: [
             {id: '_out', type: SOCKET_TYPE.NUMBER, execute: 'compute'},
@@ -268,8 +268,8 @@ export const NODE_LIST = [
         ],
         outTriggers: ['_o'],
         inputs: [
-            {id: 'x', type: SOCKET_TYPE.NUMBER, default: 0},
-            {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0},
+            {id: 'x', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
+            {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
             {id: 'relative', type: SOCKET_TYPE.BOOL, default: false},
         ],
         methods: {
@@ -296,8 +296,8 @@ export const NODE_LIST = [
         ],
         outTriggers: ['_o'],
         inputs: [
-            {id: 'x', type: SOCKET_TYPE.NUMBER, default: 0},
-            {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0},
+            {id: 'x', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
+            {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
         ],
         methods: {
             moveTiled(){
@@ -397,7 +397,7 @@ export const NODE_LIST = [
         id: 'number',
         category: 'variables',
         inputs: [
-            {id: '_number', type: SOCKET_TYPE.NUMBER, default: 0},
+            {id: '_number', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
         ],
         outputs: [
             {id: '_out', type: SOCKET_TYPE.NUMBER, execute: 'value'},

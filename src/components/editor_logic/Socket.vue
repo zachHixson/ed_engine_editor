@@ -2,8 +2,8 @@
     <div class="dataSocket" :class="isInput ? 'isInput' : ''">
         <div v-if="showLabel" class="socket_name">{{$t('node.' + socket.id)}}</div>
         <div v-if="isInput && !isConnected" class="inputBox">
-            <input v-if="socket.type == SOCKET_TYPE.NUMBER" type="number" :value="socket.value" @change="valueChanged($event.target.value)" v-input-active/>
-            <input v-if="socket.type == SOCKET_TYPE.STRING" type="text" :value="socket.value"  @change="valueChanged($event.target.value)" v-input-active/>
+            <input v-if="socket.type == SOCKET_TYPE.NUMBER" type="number" :value="socket.value" @change="valueChanged($event.target)" v-input-active/>
+            <input v-if="socket.type == SOCKET_TYPE.STRING" type="text" :value="socket.value"  @change="valueChanged($event.target)" v-input-active/>
             <div v-if="socket.type == SOCKET_TYPE.OBJECT" class="selfBox">{{$t('logic_editor.self')}}</div>
             <input v-if="socket.type == SOCKET_TYPE.BOOL" type="checkbox" :checked="socket.value"  @change="valueChanged($event.target.checked)"/>
         </div>
@@ -65,6 +65,9 @@ export default {
         canConnect(){
             return !(this.isConnected && (this.isTrigger ^ this.isInput));
         },
+        required(){
+            return !!this.socket.required;
+        },
     },
     mounted(){
         this.$nextTick(()=>{
@@ -72,13 +75,23 @@ export default {
         })
     },
     methods: {
-        valueChanged(rawInputVal){
+        valueChanged(target){
+            let rawInputVal = target.value;
             let inputValNum = parseFloat(rawInputVal);
+            let isNumSocket = this.socket.type == Shared.SOCKET_TYPE.NUMBER;
+            let validated;
 
+            if (isNumSocket && isNaN(inputValNum) && this.socket.required){
+                inputValNum = this.socket.value;
+            }
+
+            validated = inputValNum ?? rawInputVal;
+
+            target.value = validated;
             this.$emit('value-changed', {
                 socket: this.socket,
                 oldVal: this.socket.value,
-                newVal: inputValNum || rawInputVal,
+                newVal: validated,
             });
         },
         mouseDown(event){
