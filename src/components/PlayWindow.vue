@@ -36,23 +36,30 @@ export default {
         },
     },
     mounted(){
-        let canvas = this.$refs.canvas;
-        let wrapper = this.$refs.canvasWrapper;
-        let minDim = Math.min(wrapper.clientWidth, wrapper.clientHeight);
-
-        canvas.width = minDim;
-        canvas.height = minDim;
-
-        this.engine = new Engine({
-            canvas: this.$refs.canvas,
-            gameData: this.$store.getters['getSaveData'],
-        });
-        this.engine.start();
+        this.start();
     },
     destroyed(){
         this.engine = null;
     },
     methods: {
+        start(){
+            let canvas = this.$refs.canvas;
+            let wrapper = this.$refs.canvasWrapper;
+            let minDim = Math.min(wrapper.clientWidth, wrapper.clientHeight);
+            let restart = ()=>{
+                this.start();
+            };
+
+            canvas.width = minDim;
+            canvas.height = minDim;
+
+            this.engine = new Engine({
+                canvas: this.$refs.canvas,
+                gameData: this.$store.getters['getSaveData'],
+                callbacks: {restart}
+            });
+            this.engine.start();
+        },
         close(){
             this.playState = this.PLAY_STATES.NOT_PLAYING;
             this.engine.stop();

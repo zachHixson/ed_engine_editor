@@ -1,0 +1,56 @@
+import Renderer from "./Renderer";
+import Font_Renderer from "./Font_Renderer";
+import Dialog_Box from "./Dialog_Box";
+
+const MARGIN = 5;
+const LETTERS_PER_SEC = 20;
+
+export default class Dialog_Fullscreen extends Dialog_Box{
+    constructor(canvas){
+        const backMargin = Renderer.SCREEN_RES - MARGIN * 2;
+
+        super(canvas);
+
+        this.fontRenderer = new Font_Renderer(
+            this._canvas,
+            new Victor(MARGIN, MARGIN),
+            backMargin, backMargin
+        );
+    }
+
+    close(){
+        this.onCloseCallback(this._asyncTag, !this._asyncTag);
+    }
+
+    render(delta){
+        if (!this.active){
+            return;
+        }
+
+        const ctx = this._canvas.getContext('2d');
+        const scaleFac = this._canvas.width / Renderer.SCREEN_RES;
+        const arrowX = Math.floor((Renderer.SCREEN_RES / 2) - (this._arrowBuff.width / 2));
+
+        //draw bg
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, this._canvas.width, this._canvas.height);
+
+        this.fontRenderer.render(delta);
+
+        //draw arrow
+        if (!this.fontRenderer.isLastPage){
+            const yMod = Math.sin(this._arrowAnim * 5);
+
+            ctx.scale(scaleFac, scaleFac)
+            ctx.drawImage(
+                this._arrowBuff,
+                arrowX,
+                Math.floor(Renderer.SCREEN_RES + yMod) - 8
+            );
+            ctx.resetTransform();
+        }
+
+        this._setProgress(this._progress + (delta * LETTERS_PER_SEC));
+        this._arrowAnim += delta;
+    }
+}

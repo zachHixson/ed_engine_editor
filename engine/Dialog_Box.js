@@ -12,15 +12,46 @@ const ALIGN = {
 };
 Object.freeze(ALIGN);
 
+const ARROW_CANVAS = (()=>{
+    const canvas = Shared.createCanvas(8, 8);
+    const ctx = canvas.getContext('2d');
+    const imgData = ctx.createImageData(canvas.width, canvas.height);
+    const bitmap = [
+        -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, 1, 1, 1, 1, 1, 1, -1,
+        0, -1, 1, 1, 1, 1, -1, 0,
+        0, 0, -1, 1, 1, -1, 0, 0,
+        0, 0, 0, -1, -1, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0
+    ];
+
+    for (let i = 0; i < bitmap.length; i++){
+        const idx = i * 4;
+        const white = bitmap[i] > 0;
+        const filled = bitmap[i] != 0;
+        imgData.data[idx + 0] = white * 255;
+        imgData.data[idx + 1] = white * 255;
+        imgData.data[idx + 2] = white * 255;
+        imgData.data[idx + 3] = filled * 255;
+    }
+
+    ctx.putImageData(imgData, 0, 0);
+
+    return canvas;
+})();
+
 export default class Dialog_Box{
     static get ALIGN(){return ALIGN}
+    static get DIALOG_ARROW_CANVAS(){return ARROW_CANVAS}
 
     constructor(canvas){
         const textMargin = MARGIN + 2;
         const backMargin = Renderer.SCREEN_RES - MARGIN * 2 - 4;
 
         this._canvas = canvas;
-        this._arrowBuff = Shared.createCanvas(8, 8);
+        this._arrowBuff = Dialog_Box.DIALOG_ARROW_CANVAS;
         this._progress = 0;
         this._arrowAnim = 0;
         this._asyncTag = null;
@@ -34,7 +65,6 @@ export default class Dialog_Box{
         this.active = false;
 
         this.fontRenderer.setHeightFromLineCount(LINES);
-        this._drawArrow();
     }
 
     get text(){return this.fontRenderer.text}
@@ -47,33 +77,6 @@ export default class Dialog_Box{
         const pageLength = this.fontRenderer.pageText.length;
         this._progress = Math.max(Math.min(val, pageLength), 0);
         this.fontRenderer.reveal = Math.floor(this._progress);
-    }
-
-    _drawArrow(){
-        const ctx = this._arrowBuff.getContext('2d');
-        const imgData = ctx.createImageData(this._arrowBuff.width, this._arrowBuff.height);
-        const bitmap = [
-            -1, -1, -1, -1, -1, -1, -1, -1,
-            -1, 1, 1, 1, 1, 1, 1, -1,
-            0, -1, 1, 1, 1, 1, -1, 0,
-            0, 0, -1, 1, 1, -1, 0, 0,
-            0, 0, 0, -1, -1, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0
-        ];
-
-        for (let i = 0; i < bitmap.length; i++){
-            const idx = i * 4;
-            const white = bitmap[i] > 0;
-            const filled = bitmap[i] != 0;
-            imgData.data[idx + 0] = white * 255;
-            imgData.data[idx + 1] = white * 255;
-            imgData.data[idx + 2] = white * 255;
-            imgData.data[idx + 3] = filled * 255;
-        }
-
-        ctx.putImageData(imgData, 0, 0);
     }
 
     open(text, asyncTag){
@@ -92,6 +95,10 @@ export default class Dialog_Box{
     }
 
     nextPage(){
+        if (!this.fontRenderer.pageText){
+            return;
+        }
+
         const pageLength = this.fontRenderer.pageText.length;
         const pageFinished = this._progress >= pageLength;
         const lastPage = this.fontRenderer.isLastPage;

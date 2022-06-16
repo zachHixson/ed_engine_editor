@@ -140,9 +140,5 @@ export default class Font_Renderer{
         }
 
         ctx.resetTransform();
-
-        // ctx.strokeStyle = "#00FFFF";
-        // ctx.lineWidth = 1;
-        // ctx.strokeRect(this.pos.x * scaleFac, this.pos.y * scaleFac, this._width * scaleFac, this._height * scaleFac);
     }
 }

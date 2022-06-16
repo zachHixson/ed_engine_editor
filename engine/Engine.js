@@ -1,12 +1,14 @@
 import Renderer from './Renderer.js';
 import Logic from './Logic';
 import Dialog_Box from './Dialog_Box.js';
+import Dialog_Fullscreen from './Dialog_Fullscreen.js';
 
 const DEFAULT_ENV_CALLBACKS = {
     log: function(){console.log(...arguments)},
     warning: function(){console.warn(...arguments)},
     error: function(){console.error(...arguments)},
     nodeException: function(error, treeData){console.error(error)},
+    restart: function(){location.reload()}
 };
 Object.freeze(DEFAULT_ENV_CALLBACKS);
 
@@ -24,6 +26,7 @@ class Engine{
         this._loadedRoom = null;
         this._renderer = new Renderer(this._canvas);
         this._dialogBox = new Dialog_Box(this._canvas);
+        this._dialogFullscreen = new Dialog_Fullscreen(this._canvas);
         this._nextAnimationFrame = null;
         this._keymap = {};
         this._nodeEventMap = {};
@@ -38,7 +41,8 @@ class Engine{
         Object.assign(this, callbacks);
 
         this._linkLogic();
-        this._dialogBox.onCloseCallback = this._onDialogBoxClose.bind(this);
+        this._dialogBox.onCloseCallback = this._onDialogBoxClose;
+        this._dialogFullscreen.onCloseCallback = this._onFullScreenClose;
     }
 
     get room(){return this._loadedRoom}
@@ -83,13 +87,14 @@ class Engine{
             this._updateCamera();
         }
         catch(e){
-            console.error(e);
+            this.error(e);
             this.stop();
             return;
         }
 
         this._renderer.render(this.deltaTime);
         this._dialogBox.render(this.deltaTime);
+        this._dialogFullscreen.render(this.deltaTime);
     }
 
     _processDebugNav = ()=>{
@@ -233,7 +238,9 @@ class Engine{
     }
 
     _triggerEnding(endingText){
-        console.log(endingText);
+        if (!this._dialogFullscreen.active){
+            this._dialogFullscreen.open(endingText);
+        }
     }
 
     _triggerExit(exit){
@@ -277,7 +284,7 @@ class Engine{
     }
 
     _keyDown = (e)=>{
-        if (!this._keymap[e.code] && !this._dialogBox.active){
+        if (!this._keymap[e.code] && !this._dialogBox.active && !this._dialogFullscreen.active){
             this._keymap[e.code] = true;
             this._dispatchNodeEvent('e_keyboard', {
                 which_key: e.key.toUpperCase(),
@@ -287,6 +294,7 @@ class Engine{
         }
         else if (e.code == Engine.ACTION_KEY){
             this._dialogBox.nextPage();
+            this._dialogFullscreen.nextPage();
         }
     }
 
@@ -374,6 +382,16 @@ class Engine{
         this._dispatchAsyncNodeEvent(tag, true);
     }
 
+    _onFullScreenClose = (tag, restart)=>{
+        if (restart){
+            this.stop();
+            this.restart();
+        }
+        else{
+            this._dispatchAsyncNodeEvent(tag, true);
+        }
+    }
+
     start = ()=>{
         this._isRunning = true;
         this._timeStart = performance.now();
@@ -408,6 +426,12 @@ class Engine{
     stop = ()=>{
         cancelAnimationFrame(this._nextAnimationFrame);
         this._unbindInputEvents();
+        this._keymap = {};
+        this._nodeEventMap = {};
+        this._nodeAsyncEventMap = {};
+        this._nodeEventCache = {};
+        this._collisionMap = {};
+        this._globalVariables = {};
     }
 
     registerCollision = (sourceInstance, collisionInstance, force = false)=>{
