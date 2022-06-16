@@ -73,7 +73,7 @@ export default {
         this.$nextTick(()=>{
             this.hasSize = true;
 
-            if (this.socket.type == Shared.SOCKET_TYPE.BOOL){
+            if (this.socket.type == Shared.SOCKET_TYPE.BOOL && this.$refs.boolCheckbox){
                 this.$refs.boolCheckbox.indeterminate = this.socket.value == null;
             }
         })
