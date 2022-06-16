@@ -76,7 +76,11 @@ export class Instance{
         
         const frame = Math.min(Math.max(val, 0), this.sprite.frames.length - 1);
         const animDur = Math.floor(this.sprite.frames.length * this.fps) * 1000;
-        this._animProgress = Math.floor(frame / (this.sprite.frames.length - 1) * animDur);
+        this._animProgress = Math.floor(frame / this.sprite.frames.length * animDur);
+
+        if (isNaN(this._animProgress)){
+            console.log(frame, (this.sprite.frames.length - 1), animDur)
+        }
     }
 
     clone(){
