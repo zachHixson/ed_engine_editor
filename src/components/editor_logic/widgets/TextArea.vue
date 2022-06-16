@@ -2,8 +2,8 @@
     <div>
         <textarea
             rows="4"
-            cols="20"
-            style="resize: none;"
+            cols="31"
+            style="resize: none; margin-top: 5px"
             @change="setWidgetData($event.target.value)" :value="text" v-input-active></textarea>
     </div>
 </template>

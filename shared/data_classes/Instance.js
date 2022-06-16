@@ -58,6 +58,10 @@ export class Instance{
     get animFrame(){
         const frame = Math.floor(this._animProgress * this.fps);
 
+        if (!this.sprite){
+            return 0;
+        }
+
         if (this.animLoop){
             return frame % this.sprite.frames.length;
         }
@@ -66,6 +70,10 @@ export class Instance{
         }
     }
     set animFrame(val){
+        if (!this.sprite){
+            return;
+        }
+        
         const frame = Math.min(Math.max(val, 0), this.sprite.frames.length - 1);
         const animDur = Math.floor(this.sprite.frames.length * this.fps) * 1000;
         this._animProgress = Math.floor(frame / (this.sprite.frames.length - 1) * animDur);

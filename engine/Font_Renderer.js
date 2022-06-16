@@ -49,6 +49,8 @@ export default class Font_Renderer{
         );
     }
 
+    get isLastPage(){return this._page >= this._pages.length - 1};
+
     _breakText(){
         const charWidth = this._fontSize * font['0'].width;
         const words = this._text.split(' ');

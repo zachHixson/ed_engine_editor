@@ -20,7 +20,9 @@ export default class Dialog_Box{
         const backMargin = Renderer.SCREEN_RES - MARGIN * 2 - 4;
 
         this._canvas = canvas;
+        this._arrowBuff = Shared.createCanvas(8, 8);
         this._progress = 0;
+        this._arrowAnim = 0;
         this._asyncTag = null;
         this.align = Dialog_Box.ALIGN.TOP;
         this.fontRenderer = new Font_Renderer(
@@ -32,6 +34,7 @@ export default class Dialog_Box{
         this.active = false;
 
         this.fontRenderer.setHeightFromLineCount(LINES);
+        this._drawArrow();
     }
 
     get text(){return this.fontRenderer.text}
@@ -44,6 +47,33 @@ export default class Dialog_Box{
         const pageLength = this.fontRenderer.pageText.length;
         this._progress = Math.max(Math.min(val, pageLength), 0);
         this.fontRenderer.reveal = Math.floor(this._progress);
+    }
+
+    _drawArrow(){
+        const ctx = this._arrowBuff.getContext('2d');
+        const imgData = ctx.createImageData(this._arrowBuff.width, this._arrowBuff.height);
+        const bitmap = [
+            -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, 1, 1, 1, 1, 1, 1, -1,
+            0, -1, 1, 1, 1, 1, -1, 0,
+            0, 0, -1, 1, 1, -1, 0, 0,
+            0, 0, 0, -1, -1, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0
+        ];
+
+        for (let i = 0; i < bitmap.length; i++){
+            const idx = i * 4;
+            const white = bitmap[i] > 0;
+            const filled = bitmap[i] != 0;
+            imgData.data[idx + 0] = white * 255;
+            imgData.data[idx + 1] = white * 255;
+            imgData.data[idx + 2] = white * 255;
+            imgData.data[idx + 3] = filled * 255;
+        }
+
+        ctx.putImageData(imgData, 0, 0);
     }
 
     open(text, asyncTag){
@@ -88,21 +118,23 @@ export default class Dialog_Box{
         const ctx = this._canvas.getContext('2d');
         const scaleFac = this._canvas.width / Renderer.SCREEN_RES;
         const lineWidth = scaleFac * BORDER_WIDTH;
-        const pageLength = this.fontRenderer.pageText.length;
+        const arrowX = Math.floor((Renderer.SCREEN_RES / 2) - (this._arrowBuff.width / 2));
+        const bottomEdge = this.fontRenderer.height + lineWidth * 2;
         const p1 = new Victor(scaleFac * MARGIN, 0);
-        const p2 = new Victor(scaleFac * (Renderer.SCREEN_RES - MARGIN * 2), 0);
+        const p2 = new Victor(scaleFac * (Renderer.SCREEN_RES - MARGIN * 2), scaleFac * bottomEdge);
 
         if (this.align == Dialog_Box.ALIGN.TOP){
             this.fontRenderer.pos.y = MARGIN + 2;
             p1.y = scaleFac * MARGIN;
-            p2.y = scaleFac * this.fontRenderer.height + lineWidth * 2;
         }
         else{
             const bottom = this._canvas.height - lineWidth - scaleFac * MARGIN;
             this.fontRenderer.pos.y = Renderer.SCREEN_RES - 4 * 9 - lineWidth;
             p1.y = bottom - scaleFac * this.fontRenderer.height;
-            p2.y = scaleFac * this.fontRenderer.height + lineWidth;
         }
+
+        ctx.imageSmoothingEnabled = false;
+        ctx.webkitImageSmoothingEnabled = false;
 
         ctx.fillStyle = "black";
         ctx.fillRect(p1.x, p1.y, p2.x, p2.y);
@@ -115,6 +147,21 @@ export default class Dialog_Box{
         ctx.strokeRect(p1.x, p1.y, p2.x, p2.y);
 
         this.fontRenderer.render();
+
+        //draw arrow
+        if (!this.fontRenderer.isLastPage){
+            const yMod = Math.sin(this._arrowAnim * 5);
+
+            ctx.scale(scaleFac, scaleFac)
+            ctx.drawImage(
+                this._arrowBuff,
+                arrowX,
+                Math.floor(bottomEdge + yMod) + 2
+            );
+            ctx.resetTransform();
+        }
+
         this._setProgress(this._progress + (delta * LETTERS_PER_SEC));
+        this._arrowAnim += delta;
     }
 }
