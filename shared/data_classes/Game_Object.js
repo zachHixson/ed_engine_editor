@@ -1,7 +1,16 @@
 import {Asset} from './Asset';
 import {CATEGORY_ID} from '../Enums';
 
+const EXIT_TYPES = {
+    TO_DESTINATION: 0,
+    KEEP_POSIION: 1,
+    TRANSITION_ONLY: 2,
+}
+Object.freeze(EXIT_TYPES);
+
 export class Game_Object extends Asset{
+    static get EXIT_TYPES(){return EXIT_TYPES}
+
     constructor(){
         super();
         this.sprite = null;
@@ -13,6 +22,7 @@ export class Game_Object extends Asset{
         this.isSolid = false;
         this.applyGravity = false;
         this.triggerExits = false;
+        this.exitBehavior = EXIT_TYPES.TO_DESTINATION;
         this.customLogic = false;
         this.logicPreset = null;
         this.logicScript = null;

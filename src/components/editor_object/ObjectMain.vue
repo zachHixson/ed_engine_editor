@@ -51,6 +51,15 @@
                     <label for="trigger_exits">{{$t('object_editor.trigger_exits')}}:</label>
                     <input type="checkbox" id="trigger_exits" checked="false" v-model="selectedAsset.triggerExits" :title="$t('object_editor.tt_trigger_exits')" />
                 </div>
+                <div v-if="selectedAsset.triggerExits" class="control">
+                    <label for="exit_behavior">{{$t('object_editor.exit_behavior')}}:</label>
+                    <select id="exit_behavior" v-model="selectedAsset.exitBehavior" :title="$t('object_editor.tt_exit_behavior')">
+                        <option :value="Shared.Game_Object.EXIT_TYPES.TO_DESTINATION">{{$t('object_editor.to_destination')}}</option>
+                        <option :value="Shared.Game_Object.EXIT_TYPES.KEEP_POSITION">{{$t('object_editor.keep_position')}}</option>
+                        <option :value="Shared.Game_Object.EXIT_TYPES.TRANSITION_ONLY">{{$t('object_editor.transition_only')}}</option>
+                    </select>
+                </div>
+                <div v-if="selectedAsset.triggerExits" class="spacer"></div>
                 <div class="control">
                     <label for="logic_type_select">{{$t('object_editor.logic_type')}}:</label>
                     <select id="logic_type_select" v-model="selectedAsset.customLogic" :title="$t('object_editor.tt_logic_type')">
@@ -99,6 +108,9 @@ export default {
         CategoryWrapper
     },
     computed: {
+        Shared(){
+            return Shared;
+        },
         spriteChoices() {
             return this.$store.getters['GameData/getAllSprites'];
         },
@@ -111,7 +123,7 @@ export default {
                 this.selectedAsset.startFrame = newFrame;
                 this.$emit('asset-changed', this.selectedAsset.id);
             }
-        }
+        },
     },
     watch: {
         selectedAsset(){
@@ -196,5 +208,10 @@ export default {
 
 .control > *:last-child{
     margin-left: 5px;
+}
+
+.spacer{
+    display: block;
+    height: 10px;
 }
 </style>
