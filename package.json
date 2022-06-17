@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "npm run build-deps:dev && concurrently npm:serve:*",
+    "serve": "npm run build-font && concurrently npm:serve:*",
     "serve:editor": "vue-cli-service serve",
     "serve:engine": "watch \"npm run build-engine:dev\" ./engine --interval=0.01",
     "serve:shared": "watch \"npm run build-shared:dev\" ./shared --interval=0.01",
