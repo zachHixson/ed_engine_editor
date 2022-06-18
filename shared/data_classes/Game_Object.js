@@ -24,6 +24,7 @@ export class Game_Object extends Asset{
         this.applyGravity = false;
         this.triggerExits = false;
         this.exitBehavior = EXIT_TYPES.TO_DESTINATION;
+        this.keepCameraSettings = true;
         this.customLogic = false;
         this.logicPreset = null;
         this.logicScript = null;

@@ -55,10 +55,14 @@
                     <label for="exit_behavior">{{$t('object_editor.exit_behavior')}}:</label>
                     <select id="exit_behavior" v-model="selectedAsset.exitBehavior" :title="$t('object_editor.tt_exit_behavior')">
                         <option :value="Shared.Game_Object.EXIT_TYPES.TO_DESTINATION">{{$t('object_editor.to_destination')}}</option>
-                        <option :value="Shared.Game_Object.EXIT_TYPES.THROUGH_DESTINATION">{{$t('object_editor.THROUGH_DESTINATION')}}</option>
+                        <option :value="Shared.Game_Object.EXIT_TYPES.THROUGH_DESTINATION">{{$t('object_editor.through_destination')}}</option>
                         <option :value="Shared.Game_Object.EXIT_TYPES.KEEP_POSITION">{{$t('object_editor.keep_position')}}</option>
                         <option :value="Shared.Game_Object.EXIT_TYPES.TRANSITION_ONLY">{{$t('object_editor.transition_only')}}</option>
                     </select>
+                </div>
+                <div v-if="selectedAsset.triggerExits" class="control">
+                    <label for="keep_camera_settings">{{$t('object_editor.keep_camera_settings')}}:</label>
+                    <input type="checkbox" id="keep_camera_settings" checked="false" v-model="selectedAsset.keepCameraSettings" :title="$t('object_editor.tt_keep_camera_settings')" />
                 </div>
                 <div v-if="selectedAsset.triggerExits" class="spacer"></div>
                 <div class="control">

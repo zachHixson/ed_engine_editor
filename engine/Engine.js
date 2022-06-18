@@ -261,6 +261,8 @@ class Engine{
                 TRANSITION_ONLY,
             } = Shared.Game_Object.EXIT_TYPES;
             const exitBehavior = instance.objRef.exitBehavior;
+            const prevRoom = this.room;
+            const prevInstId = instance.id;
 
             this._loadRoom(exit.destinationRoom);
 
@@ -307,6 +309,14 @@ class Engine{
             if (exitBehavior != TRANSITION_ONLY){
                 this._registerInstanceEvents(instance);
                 instance.id = this.room.curInstId;
+            }
+
+            if (instance.objRef.keepCameraSettings){
+                Object.assign(this.room.camera, prevRoom.camera.clone());
+
+                if (prevRoom.camera.followObjId == prevInstId){
+                    this.room.camera.followObjId = instance.id;
+                }
             }
         }
         else{
