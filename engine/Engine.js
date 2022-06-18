@@ -55,6 +55,7 @@ class Engine{
         const room = this._gameData.rooms.find(r => r.id == roomId);
         this._dispatchNodeEvent('e_before_destroy');
         this._loadedRoom = room.persist ? room : room.clone();
+        this._collisionMap = {};
         this._renderer.setRoom(this._loadedRoom);
         this._clearNodeEvents();
 
