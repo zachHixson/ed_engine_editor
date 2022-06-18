@@ -280,7 +280,6 @@ class Engine{
                         destPos.add(normDir);
                         instance.pos.copy(destPos);
                         this.room.addInstance(instance);
-                        console.log(velocity)
                         break
                     case KEEP_POSIION:
                         this.room.addInstance(instance);
@@ -306,6 +305,7 @@ class Engine{
 
             if (exitBehavior != TRANSITION_ONLY){
                 this._registerInstanceEvents(instance);
+                instance.id = this.room.curInstId;
             }
         }
         else{

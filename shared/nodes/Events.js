@@ -141,7 +141,6 @@ export const EVENTS = [
             object(){
                 const cacheKey = this.method('getCacheKey');
                 const cacheData = this.engine.getCachedNodeEventData(cacheKey);
-                console.log(this.engine._nodeEventCache[cacheKey], cacheKey, cacheData)
                 return cacheData.instance;
             },
         },
