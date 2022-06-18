@@ -5,7 +5,7 @@ import Dialog_Fullscreen from './Dialog_Fullscreen.js';
 
 const DEFAULT_ENV_CALLBACKS = {
     log: function(){console.log(...arguments)},
-    warning: function(){console.warn(...arguments)},
+    warn: function(){console.warn(...arguments)},
     error: function(){console.error(...arguments)},
     nodeException: function(error, treeData){console.error(error)},
     restart: function(){location.reload()}
@@ -35,6 +35,7 @@ class Engine{
         this._collisionMap = {};
         this._globalVariables = {};
         this._gameData = this._parseGameData(gameData);
+        this._previousTransition = {exit: null, instance: null};
 
         //integrate callbacks
         Object.assign(this, DEFAULT_ENV_CALLBACKS);
@@ -58,13 +59,7 @@ class Engine{
 
         //setup instances
         this._loadedRoom.instances.list.forEach(instance => {
-            const logicEvents = instance.logic?.events;
-
-            for (const event in logicEvents){
-                this._registerNodeEvent(event, instance);
-            }
-
-            instance.initAnimProps();
+            this._registerInstanceEvents(instance);
         });
 
         this._dispatchNodeEvent('e_create');
@@ -175,7 +170,11 @@ class Engine{
     }
 
     _mapInstanceOverlaps = ()=>{
+        const prevExit = this._previousTransition.exit;
+        const prevInst = this._previousTransition.instance;
         let overlappedExit;
+        let triggeredInstance;
+        let doubleTriggerExit;
 
         this._loadedRoom.instances.list.forEach(instance => {
             const overlappingInstances = instance.hasCollisionEvent ? this.getInstancesOverlapping(instance) : [];
@@ -190,16 +189,25 @@ class Engine{
             //pick first exit that was overlapped
             if (overlappingExits.length > 0 && !overlappedExit){
                 overlappedExit = overlappingExits[0];
+                triggeredInstance = instance;
             }
         });
 
+        doubleTriggerExit = prevExit == overlappedExit && prevInst == triggeredInstance;
+
         if (overlappedExit){
-            if (overlappedExit.isEnding){
-                this._triggerEnding(overlappedExit.endingDialog);
+            if (!doubleTriggerExit){
+                if (overlappedExit.isEnding){
+                    this._triggerEnding(overlappedExit.endingDialog);
+                }
+                else{
+                    this._triggerExit(overlappedExit, triggeredInstance);
+                }
             }
-            else{
-                this._triggerExit(overlappedExit);
-            }
+        }
+        else{
+            this._previousTransition.exit = null;
+            this._previousTransition.instance = null;
         }
     }
 
@@ -242,8 +250,58 @@ class Engine{
         }
     }
 
-    _triggerExit(exit){
-        console.log(exit.name);
+    _triggerExit(exit, instance){
+        if (exit.destinationRoom){
+            const {
+                TO_DESTINATION,
+                THROUGH_DESTINATION,
+                KEEP_POSIION,
+                TRANSITION_ONLY,
+            } = Shared.Game_Object.EXIT_TYPES;
+            const exitBehavior = instance.objRef.exitBehavior;
+
+            this._loadRoom(exit.destinationRoom);
+
+            if (exit.destinationExit != null){
+                const destExit = this.room.exits.list.find(e => e.id == exit.destinationExit);
+
+                switch(exitBehavior){
+                    case TO_DESTINATION:
+                        instance.pos.copy(destExit.pos);
+                        this.room.addInstance(instance);
+                        break;
+                    case THROUGH_DESTINATION:
+                        //through destination
+                        break;
+                    case KEEP_POSIION:
+                        this.room.addInstance(instance);
+                        break;
+                    case TRANSITION_ONLY:
+                        break;
+                }
+
+                this._previousTransition.exit = destExit;
+                this._previousTransition.instance = instance;
+            }
+            else{
+                switch(exitBehavior){
+                    case TO_DESTINATION:
+                    case THROUGH_DESTINATION:
+                    case KEEP_POSIION:
+                        this.room.addInstance(instance);
+                        break;
+                    case TRANSITION_ONLY:
+                        break;
+                }
+            }
+
+            if (exitBehavior != TRANSITION_ONLY){
+                this._registerInstanceEvents(instance);
+            }
+        }
+        else{
+            this.warn('no_destination_specified');
+        }
     }
 
     _parseGameData = (gameData)=>{
@@ -309,6 +367,16 @@ class Engine{
     _unbindInputEvents = ()=>{
         document.removeEventListener("keydown", this._keyDown);
         document.removeEventListener("keyup", this._keyUp);
+    }
+
+    _registerInstanceEvents = (instance)=>{
+        const logicEvents = instance.logic?.events;
+
+        for (const event in logicEvents){
+            this._registerNodeEvent(event, instance);
+        }
+
+        instance.initAnimProps();
     }
 
     _registerNodeEvent = (eventName, instance)=>{

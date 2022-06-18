@@ -3,8 +3,9 @@ import {CATEGORY_ID} from '../Enums';
 
 const EXIT_TYPES = {
     TO_DESTINATION: 0,
-    KEEP_POSIION: 1,
-    TRANSITION_ONLY: 2,
+    THROUGH_DESTINATION: 1,
+    KEEP_POSIION: 2,
+    TRANSITION_ONLY: 3,
 }
 Object.freeze(EXIT_TYPES);
 
