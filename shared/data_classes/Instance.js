@@ -24,6 +24,7 @@ export class Instance{
         this.fps = 0;
         this.animLoop = false;
         this.animPlaying = false;
+        this.lastPos = this.pos.clone();
     }
 
     get TYPE(){return ENTITY_TYPE.INSTANCE}
@@ -86,7 +87,8 @@ export class Instance{
     clone(){
         const clone = new Instance(this.id, this.pos, this.objRef);
         Object.assign(clone, this);
-        this.pos = this.pos.clone();
+        clone.pos = this.pos.clone();
+        clone.lastPos = this.lastPos.clone();
         return clone;
     }
 
@@ -97,6 +99,12 @@ export class Instance{
         sanitized.pos = this.pos.toObject();
 
         delete sanitized.objRef;
+        delete sanitized._animProgress;
+        delete sanitized.startFrame;
+        delete sanitized.fps;
+        delete sanitized.animLoop;
+        delete sanitized.animPlaying;
+        delete sanitized.lastPos;
 
         return sanitized;
     }

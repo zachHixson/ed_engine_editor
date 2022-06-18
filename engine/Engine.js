@@ -34,6 +34,7 @@ class Engine{
         this._nodeEventCache = {};
         this._collisionMap = {};
         this._globalVariables = {};
+        this._errorLogs = {};
         this._gameData = this._parseGameData(gameData);
         this._previousTransition = {exit: null, instance: null};
 
@@ -251,7 +252,7 @@ class Engine{
     }
 
     _triggerExit(exit, instance){
-        if (exit.destinationRoom){
+        if (exit.destinationRoom != null){
             const {
                 TO_DESTINATION,
                 THROUGH_DESTINATION,
@@ -271,8 +272,16 @@ class Engine{
                         this.room.addInstance(instance);
                         break;
                     case THROUGH_DESTINATION:
-                        //through destination
-                        break;
+                        const velocity = instance.pos.clone().subtract(instance.lastPos);
+                        const destPos = destExit.pos.clone();
+                        const normDir = velocity.clone();
+                        normDir.x = (Math.abs(normDir.x) > 0) * Math.sign(normDir.x) * 16;
+                        normDir.y = (Math.abs(normDir.y) > 0) * Math.sign(normDir.y) * 16;
+                        destPos.add(normDir);
+                        instance.pos.copy(destPos);
+                        this.room.addInstance(instance);
+                        console.log(velocity)
+                        break
                     case KEEP_POSIION:
                         this.room.addInstance(instance);
                         break;
@@ -300,7 +309,10 @@ class Engine{
             }
         }
         else{
-            this.warn('no_destination_specified');
+            if (!this._errorLogs['exit_' + exit.id]){
+                this.warn('no_destination_specified');
+                this._errorLogs['exit_' + exit.id] = true;
+            }
         }
     }
 
@@ -556,6 +568,7 @@ class Engine{
     }
 
     setInstancePosition = (instance, pos)=>{
+        instance.lastPos.copy(instance.pos);
         this.room.instances.setPositionByRef(instance, pos);
     }
 

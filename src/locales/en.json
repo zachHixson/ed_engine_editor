@@ -75,6 +75,7 @@
         "trigger_exits": "Trigger Exits",
         "exit_behavior": "Exit Behavior",
         "to_destination": "To Destination",
+        "through_destination": "Through Destination",
         "keep_position": "Keep Position",
         "transition_only": "Transition Only",
         "logic_type": "Logic Type",
