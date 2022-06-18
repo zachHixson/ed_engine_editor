@@ -67,16 +67,16 @@ export class Spacial_Collection{
         if (pos){
             spacialIdx = this.getSpacialCellIdx(pos);
             cellList = this.spacialGrid[spacialIdx];
-            instRef = cellList.findRef(id, (i) => i.val.id);
+            instRef = cellList.findRef((i) => i.val.id == id);
             
             cellList.removeByNodeRef(instRef);
             this.zSort.removeByNodeRef(instRef.val);
         }
         else{
-            instRef = this.zSort.findRef(id, (i) => i.id);
+            instRef = this.zSort.findRef((i) => i.id == id);
             spacialIdx = this.getSpacialCellIdx(instRef.val.pos);
             cellList = this.spacialGrid[spacialIdx];
-            cellRef = cellList.findRef(id, (i) => i.val.id);
+            cellRef = cellList.findRef((i) => i.val.id == id);
 
             this.zSort.removeByNodeRef(instRef);
             cellList.removeByNodeRef(cellRef);
@@ -103,7 +103,7 @@ export class Spacial_Collection{
 
     getById(instId){
         if (this.zSort.getFirst().hasOwnProperty(id)){
-            return this.zSort.find(instId, (i) => i.id);
+            return this.zSort.find((i) => i.id == instId);
         }
         else{
             return null;
@@ -138,7 +138,7 @@ export class Spacial_Collection{
         if (startSpacialIdx != newSpacialIdx){
             let startSpacialCell = this.spacialGrid[startSpacialIdx];
             let newSpacialCell = this.spacialGrid[newSpacialIdx];
-            let spacialRef = startSpacialCell.findRef(instRef.id, (i) => i.val.id);
+            let spacialRef = startSpacialCell.findRef((i) => i.val.id == instRef.id);
 
             startSpacialCell.removeByNodeRef(spacialRef);
             newSpacialCell.push(spacialRef.val);

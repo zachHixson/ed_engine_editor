@@ -126,8 +126,7 @@ class Engine{
 
             case MOVE_TYPES.FOLLOW:
                 const target = this._loadedRoom.instances.list.find(
-                    camera.followObjId,
-                    instance => instance.id
+                    instance => instance.id == camera.followObjId
                 );
                 const targetPos = target.pos.clone().addScalar(8);
 

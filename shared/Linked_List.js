@@ -52,15 +52,15 @@ export class Linked_List{
         return this.lastInserted;
     }
 
-    find(val, accessFunc = (a) => a){
-        return this.findRef(val, accessFunc)?.val;
+    find(searchFunc = a => a == a){
+        return this.findRef(searchFunc)?.val;
     }
 
-    findRef(val, accessFunc = (a) => a){
+    findRef(searchFunc = a => a == a){
         let current = this.start;
 
         while (current){
-            if (accessFunc(current.val) == val){
+            if (searchFunc(current.val)){
                 return current;
             }
 
