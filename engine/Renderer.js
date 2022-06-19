@@ -1,3 +1,5 @@
+import Transition from "./Transition";
+
 export default class Renderer{
     static get SCREEN_RES(){return 240}
 
@@ -6,11 +8,18 @@ export default class Renderer{
         this.room = null;
         this._spriteCache = {};
         this._scaleFac = null;
+        this._transition = new Transition(this.canvas);
     }
+
+    get isTransitioning(){return this._transition.active}
 
     setRoom = (room)=>{
         this.room = room;
         this._spriteCache = {};
+    }
+
+    startTransition = (type, duration, switchCallback = null, completeCallback = null)=>{
+        this._transition.start(type, duration, switchCallback, completeCallback);
     }
 
     render = (deltaTime)=>{
@@ -28,6 +37,7 @@ export default class Renderer{
         ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         this._drawInstances(deltaTime);
+        this._transition.render(deltaTime);
     }
 
     _drawInstances = (deltaTime)=>{

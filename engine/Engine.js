@@ -246,83 +246,100 @@ class Engine{
         }
     }
 
-    _triggerEnding(endingText){
+    _triggerEnding = (endingText)=>{
         if (!this._dialogFullscreen.active){
             this._dialogFullscreen.open(endingText);
         }
     }
 
-    _triggerExit(exit, instance){
+    _triggerExit = (exit, instance)=>{
+        if (this._renderer.isTransitioning){
+            return;
+        }
+
         if (exit.destinationRoom != null){
-            const {
-                TO_DESTINATION,
-                THROUGH_DESTINATION,
-                KEEP_POSIION,
-                TRANSITION_ONLY,
-            } = Shared.Game_Object.EXIT_TYPES;
-            const exitBehavior = instance.objRef.exitBehavior;
-            const prevRoom = this.room;
-            const prevInstId = instance.id;
-
-            this._loadRoom(exit.destinationRoom);
-
-            if (exit.destinationExit != null){
-                const destExit = this.room.exits.list.find(e => e.id == exit.destinationExit);
-
-                switch(exitBehavior){
-                    case TO_DESTINATION:
-                        instance.pos.copy(destExit.pos);
-                        this.room.addInstance(instance);
-                        break;
-                    case THROUGH_DESTINATION:
-                        const velocity = instance.pos.clone().subtract(instance.lastPos);
-                        const destPos = destExit.pos.clone();
-                        const normDir = velocity.clone();
-                        normDir.x = (Math.abs(normDir.x) > 0) * Math.sign(normDir.x) * 16;
-                        normDir.y = (Math.abs(normDir.y) > 0) * Math.sign(normDir.y) * 16;
-                        destPos.add(normDir);
-                        instance.pos.copy(destPos);
-                        this.room.addInstance(instance);
-                        break
-                    case KEEP_POSIION:
-                        this.room.addInstance(instance);
-                        break;
-                    case TRANSITION_ONLY:
-                        break;
-                }
-
-                this._previousTransition.exit = destExit;
-                this._previousTransition.instance = instance;
+            if (exit.transition){
+                this._renderer.startTransition(
+                    exit.transition,
+                    1,
+                    ()=>{this._transitionRoom(exit, instance)}
+                );
             }
             else{
-                switch(exitBehavior){
-                    case TO_DESTINATION:
-                    case THROUGH_DESTINATION:
-                    case KEEP_POSIION:
-                        this.room.addInstance(instance);
-                        break;
-                    case TRANSITION_ONLY:
-                        break;
-                }
-            }
-
-            if (exitBehavior != TRANSITION_ONLY){
-                this._registerInstanceEvents(instance);
-                instance.id = this.room.curInstId;
-            }
-
-            if (instance.objRef.keepCameraSettings){
-                Object.assign(this.room.camera, prevRoom.camera.clone());
-
-                if (prevRoom.camera.followObjId == prevInstId){
-                    this.room.camera.followObjId = instance.id;
-                }
+                this._transitionRoom(exit, instance);
             }
         }
         else{
             if (!this._errorLogs['exit_' + exit.id]){
                 this.warn('no_destination_specified');
                 this._errorLogs['exit_' + exit.id] = true;
+            }
+        }
+    }
+
+    _transitionRoom = (exit, instance)=>{
+        const {
+            TO_DESTINATION,
+            THROUGH_DESTINATION,
+            KEEP_POSIION,
+            TRANSITION_ONLY,
+        } = Shared.Game_Object.EXIT_TYPES;
+        const exitBehavior = instance.objRef.exitBehavior;
+        const prevRoom = this.room;
+        const prevInstId = instance.id;
+
+        this._loadRoom(exit.destinationRoom);
+
+        if (exit.destinationExit != null){
+            const destExit = this.room.exits.list.find(e => e.id == exit.destinationExit);
+
+            switch(exitBehavior){
+                case TO_DESTINATION:
+                    instance.pos.copy(destExit.pos);
+                    this.room.addInstance(instance);
+                    break;
+                case THROUGH_DESTINATION:
+                    const velocity = instance.pos.clone().subtract(instance.lastPos);
+                    const destPos = destExit.pos.clone();
+                    const normDir = velocity.clone();
+                    normDir.x = (Math.abs(normDir.x) > 0) * Math.sign(normDir.x) * 16;
+                    normDir.y = (Math.abs(normDir.y) > 0) * Math.sign(normDir.y) * 16;
+                    destPos.add(normDir);
+                    instance.pos.copy(destPos);
+                    this.room.addInstance(instance);
+                    break
+                case KEEP_POSIION:
+                    this.room.addInstance(instance);
+                    break;
+                case TRANSITION_ONLY:
+                    break;
+            }
+
+            this._previousTransition.exit = destExit;
+            this._previousTransition.instance = instance;
+        }
+        else{
+            switch(exitBehavior){
+                case TO_DESTINATION:
+                case THROUGH_DESTINATION:
+                case KEEP_POSIION:
+                    this.room.addInstance(instance);
+                    break;
+                case TRANSITION_ONLY:
+                    break;
+            }
+        }
+
+        if (exitBehavior != TRANSITION_ONLY){
+            this._registerInstanceEvents(instance);
+            instance.id = this.room.curInstId;
+        }
+
+        if (instance.objRef.keepCameraSettings){
+            Object.assign(this.room.camera, prevRoom.camera.clone());
+
+            if (prevRoom.camera.followObjId == prevInstId){
+                this.room.camera.followObjId = instance.id;
             }
         }
     }
@@ -364,6 +381,10 @@ class Engine{
     }
 
     _keyDown = (e)=>{
+        if (this._renderer.isTransitioning){
+            return;
+        }
+
         if (!this._keymap[e.code] && !this._dialogBox.active && !this._dialogFullscreen.active){
             this._keymap[e.code] = true;
             this._dispatchNodeEvent('e_keyboard', {
