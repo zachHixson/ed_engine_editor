@@ -1,9 +1,9 @@
 import {ENTITY_TYPE} from '../Enums';
 
 const COLLISION_OVERRIDE = {
-    KEEP: 0,
-    FORCE: 1,
-    IGNORE: 2
+    KEEP: 'K',
+    FORCE: 'F',
+    IGNORE: 'I',
 };
 Object.freeze(COLLISION_OVERRIDE);
 

@@ -1,8 +1,8 @@
 import {ENTITY_TYPE} from '../Enums';
 
 const TRANSITION = {
-    NONE: 0,
-    FADE: 1
+    NONE: 'N',
+    FADE: 'F',
 };
 Object.freeze(TRANSITION);
 

@@ -1,21 +1,21 @@
 const MOVE_TYPES = {
-    LOCKED: 0,
-    FOLLOW: 1,
-    SCROLL: 2
+    LOCKED: 'L',
+    FOLLOW: 'F',
+    SCROLL: 'S',
 };
 Object.freeze(MOVE_TYPES);
 
 const SCROLL_DIRS = {
-    UP: 0,
-    DOWN: 1,
-    RIGHT: 2,
-    LEFT: 3
+    UP: 'U',
+    DOWN: 'D',
+    RIGHT: 'R',
+    LEFT: 'L',
 };
 Object.freeze(SCROLL_DIRS);
 
 const FOLLOW_TYPES = {
-    SMOOTH: 0,
-    TILED: 1
+    SMOOTH: 'S',
+    TILED: 'T',
 };
 Object.freeze(FOLLOW_TYPES);
 

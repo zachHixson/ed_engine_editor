@@ -18,7 +18,7 @@
             <div class="control">
                 <label for="instCollisionOvrr">{{$t('room_editor.collision')}}:</label>
                 <select id="instCollisionOvrr" :value="selectedEntity.collisionOverride" :title="$t('room_editor.tt_coll_ovr')"
-                    @change="setInstProp({collisionOverride: parseInt($event.target.value)})">
+                    @change="setInstProp({collisionOverride: $event.target.value})">
                     <option :value="selectedEntity.COLLISION_OVERRIDES.KEEP">{{$t('room_editor.keep')}}</option>
                     <option :value="selectedEntity.COLLISION_OVERRIDES.FORCE">{{$t('room_editor.on')}}</option>
                     <option :value="selectedEntity.COLLISION_OVERRIDES.IGNORE">{{$t('room_editor.off')}}</option>
@@ -48,7 +48,7 @@
             <div class="control">
                 <label for="camMoveType">{{$t('room_editor.camera_move_type')}}:</label>
                 <select id="camMoveType" :value="camera.moveType" :title="$t('room_editor.tt_camera_move')"
-                    @change="setCamProp({moveType: parseInt($event.target.value)})">
+                    @change="setCamProp({moveType: $event.target.value})">
                     <option :value="Shared.Camera.MOVE_TYPES.LOCKED">{{$t('room_editor.locked')}}</option>
                     <option :value="Shared.Camera.MOVE_TYPES.FOLLOW">{{$t('room_editor.follow')}}</option>
                     <option :value="Shared.Camera.MOVE_TYPES.SCROLL">{{$t('room_editor.scroll')}}</option>
@@ -57,7 +57,7 @@
             <div v-show="camera.moveType == Shared.Camera.MOVE_TYPES.SCROLL" class="control">
                 <label for="camScrollDir">{{$t('room_editor.scroll_dir')}}: </label>
                 <select id="camScrollDir" :value="camera.scrollDir" :title="$t('room_editor.tt_camera_scroll_dir')"
-                    @change="setCamProp({scrollDir: parseInt($event.target.value)})">
+                    @change="setCamProp({scrollDir: $event.target.value})">
                     <option :value="Shared.Camera.SCROLL_DIRS.UP">{{$t('room_editor.up')}}</option>
                     <option :value="Shared.Camera.SCROLL_DIRS.DOWN">{{$t('room_editor.down')}}</option>
                     <option :value="Shared.Camera.SCROLL_DIRS.LEFT">{{$t('room_editor.left')}}</option>
@@ -72,7 +72,7 @@
             <div v-show="camera.moveType == Shared.Camera.MOVE_TYPES.FOLLOW" class="control">
                 <label for="camFollowType">{{$t('room_editor.follow_type')}}: </label>
                 <select id="camFollowType" :value="camera.followType" :title="$t('room_editor.tt_camera_follow_type')"
-                    @change="setCamProp({followType: parseInt($event.target.value)})">
+                    @change="setCamProp({followType: $event.target.value})">
                     <option :value="Shared.Camera.FOLLOW_TYPES.SMOOTH">{{$t('room_editor.smooth')}}</option>
                     <option :value="Shared.Camera.FOLLOW_TYPES.TILED">{{$t('room_editor.tiled')}}</option>
                 </select>

@@ -2,8 +2,6 @@ import {Asset} from './Asset';
 import {CATEGORY_ID} from '../Enums';
 import {createCanvas, hexToRGBA, RGBAToHex} from '../Draw_2D';
 
-window.counter = 0;
-
 export class Sprite extends Asset{
     static get DIMENSIONS(){return 16}
 

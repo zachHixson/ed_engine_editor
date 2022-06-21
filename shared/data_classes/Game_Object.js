@@ -2,10 +2,10 @@ import {Asset} from './Asset';
 import {CATEGORY_ID} from '../Enums';
 
 const EXIT_TYPES = {
-    TO_DESTINATION: 0,
-    THROUGH_DESTINATION: 1,
-    KEEP_POSIION: 2,
-    TRANSITION_ONLY: 3,
+    TO_DESTINATION: 'TD',
+    THROUGH_DESTINATION: 'TH',
+    KEEP_POSIION: 'KP',
+    TRANSITION_ONLY: 'TO',
 }
 Object.freeze(EXIT_TYPES);
 
