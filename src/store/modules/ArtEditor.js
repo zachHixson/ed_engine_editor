@@ -1,24 +1,14 @@
+import awaitShared from "@/components/common/awaitShared";
+
 const state = {
-    selectedColor : "#FFFFFF",
-    selectedSize: null,
-    selectedTool: null,
+    selectedColor : awaitShared().then(() => state.selectedColor = new Shared.Color(255, 255, 255, 255)),
+    selectedSize: awaitShared().then(() => state.selectedSize = Shared.ART_TOOL_SIZE.SMALL),
+    selectedTool: awaitShared().then(() => state.selectedTool = Shared.ART_TOOL_TYPE.BRUSH),
     selectedNavTool: null,
     selectedFrame: 0,
     toolPanelOpen: true,
     animPanelOpen: false
 }
-
-const init = ()=>{
-    if (!window.Shared){
-        setTimeout(init);
-        return;
-    }
-
-    state.selectedSize = Shared.ART_TOOL_SIZE.SMALL;
-    state.selectedTool = Shared.ART_TOOL_TYPE.BRUSH;
-}
-
-init();
 
 const getters = {
     getSelectedColor: state => state.selectedColor,

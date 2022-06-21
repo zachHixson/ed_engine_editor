@@ -128,10 +128,7 @@ export default class Art_Canvas_Renderer{
 
     drawPixelData(canvas, pixelData){
         if (pixelData){
-            let ctx = canvas.getContext('2d');
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            Shared.Sprite.drawToCanvas(pixelData, canvas);
+            canvas.getContext('2d').putImageData(pixelData, 0, 0);
         }
     }
 

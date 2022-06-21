@@ -18,7 +18,7 @@ class Brush extends Tool{
         if (Shared.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
             switch(this.brushSize){
                 case Shared.ART_TOOL_SIZE.SMALL:
-                    this.previewBuff[Shared.get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = this.color;
+                    this.drawPixel(this.mouseCell.x, this.mouseCell.y, this.color);
                     break;
                 case Shared.ART_TOOL_SIZE.MEDIUM:
                     this.fillRect(this.mouseCell.x - 1, this.mouseCell.y - 1, this.mouseCell.x, this.mouseCell.y);

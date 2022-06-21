@@ -4,7 +4,7 @@ class Tool{
         this.pixelBuff = null;
         this.cellWidth = 16;
         this.mouseCell = null;
-        this.color = "#FFFFFF";
+        this.color = new Shared.Color(255, 255, 255, 255);
         this.size = null;
         this._mouseDown = false;
         this.brushSize = Shared.ART_TOOL_SIZE.SMALL;
@@ -23,6 +23,16 @@ class Tool{
             default:
                 return 0
         }
+    }
+
+    _sampleColor(buffer, x, y){
+        const idx = (y * buffer.width + x) * 4;
+        return new Shared.Color(
+            buffer.data[idx + 0],
+            buffer.data[idx + 1],
+            buffer.data[idx + 2],
+            buffer.data[idx + 3],
+        );
     }
 
     mouseDown(){
@@ -86,19 +96,30 @@ class Tool{
     beforeDestroy(){}
 
     clearPreviewBuff(){
-        for (let i = 0; i < this.previewBuff.length; i++){
-            this.previewBuff[i] = '';
+        for (let i = 0; i < this.previewBuff.data.length; i++){
+            this.previewBuff.data[i] = 0;
         }
     }
 
     updateCursorBuff(){}
 
+    drawPixel(x, y, color){
+        const idx = ((y * this.cellWidth) + x) * 4;
+        this.previewBuff.data[idx + 0] = color.r;
+        this.previewBuff.data[idx + 1] = color.g;
+        this.previewBuff.data[idx + 2] = color.b;
+        this.previewBuff.data[idx + 3] = color.a;
+    }
+
     commitResult(){
         let canCommit = false;
 
-        for (let i = 0; i < this.previewBuff.length; i++){
-            if (this.previewBuff[i].length > 0){
-                this.pixelBuff[i] = this.previewBuff[i];
+        for (let i = 0; i < this.previewBuff.data.length; i += 4){
+            if (this.previewBuff.data[i + 3] > 0){
+                this.pixelBuff.data[i + 0] = this.previewBuff.data[i + 0];
+                this.pixelBuff.data[i + 1] = this.previewBuff.data[i + 1];
+                this.pixelBuff.data[i + 2] = this.previewBuff.data[i + 2];
+                this.pixelBuff.data[i + 3] = this.previewBuff.data[i + 3];
                 canCommit = true;
             }
         }
@@ -118,7 +139,7 @@ class Tool{
 
         for (let x = startX; x <= endX; x++){
             for (let y = startY; y <= endY; y++){
-                this.previewBuff[Shared.get2DIdx(x, y, this.cellWidth)] = color;
+                this.drawPixel(x, y, color);
             }
         }
     }

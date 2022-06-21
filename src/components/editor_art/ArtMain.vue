@@ -9,6 +9,7 @@
             :tool="tool"
             :navState="selectedAsset.navState"
             :spriteFrame="selectedAsset.frames[selectedFrameIdx]"
+            :debugSprite="selectedAsset"
             :undoLength="undoStore.undoLength"
             :redoLength="undoStore.redoLength"
             @mouse-down="mouseDown"
@@ -109,15 +110,15 @@ export default {
         window.addEventListener('resize', this.resize);
         this.undoStore.setInitialState(this.packageUndoData());
 
-        this.toolMap.set(Shared.ART_TOOL_TYPE.BRUSH, (()=> new Brush()).bind(this));
-        this.toolMap.set(Shared.ART_TOOL_TYPE.BUCKET, (()=> new Bucket()).bind(this));
-        this.toolMap.set(Shared.ART_TOOL_TYPE.LINE, (()=> new Line_Brush()).bind(this));
-        this.toolMap.set(Shared.ART_TOOL_TYPE.BOX, (()=> new Box_Brush()).bind(this));
-        this.toolMap.set(Shared.ART_TOOL_TYPE.BOX_FILL, (()=> new Box_Brush(true)).bind(this));
-        this.toolMap.set(Shared.ART_TOOL_TYPE.ELLIPSE, (()=> new Ellipse_Brush()).bind(this));
-        this.toolMap.set(Shared.ART_TOOL_TYPE.ELLIPSE_FILL, (()=> new Ellipse_Brush(true)).bind(this));
-        this.toolMap.set(Shared.ART_TOOL_TYPE.ERASER, (()=> new Eraser()).bind(this));
-        this.toolMap.set(Shared.ART_TOOL_TYPE.EYE_DROPPER, (()=> new Eye_Dropper()).bind(this));
+        this.toolMap.set(Shared.ART_TOOL_TYPE.BRUSH, ()=> new Brush());
+        this.toolMap.set(Shared.ART_TOOL_TYPE.BUCKET, ()=> new Bucket());
+        this.toolMap.set(Shared.ART_TOOL_TYPE.LINE, ()=> new Line_Brush());
+        this.toolMap.set(Shared.ART_TOOL_TYPE.BOX, ()=> new Box_Brush());
+        this.toolMap.set(Shared.ART_TOOL_TYPE.BOX_FILL, ()=> new Box_Brush(true));
+        this.toolMap.set(Shared.ART_TOOL_TYPE.ELLIPSE, ()=> new Ellipse_Brush());
+        this.toolMap.set(Shared.ART_TOOL_TYPE.ELLIPSE_FILL, ()=> new Ellipse_Brush(true));
+        this.toolMap.set(Shared.ART_TOOL_TYPE.ERASER, ()=> new Eraser());
+        this.toolMap.set(Shared.ART_TOOL_TYPE.EYE_DROPPER, ()=> new Eye_Dropper());
 
         this.toolSelected(this.$store.getters['ArtEditor/getSelectedTool']);
     },
@@ -223,7 +224,7 @@ export default {
         },
         packageUndoData(){
             return {
-                spriteData: [...this.selectedAsset.getFramesCopy()]
+                spriteData: this.selectedAsset.getFramesCopy()
             }
         },
         updateFrameIDs(){

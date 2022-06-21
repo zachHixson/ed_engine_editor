@@ -31,7 +31,7 @@ class Ellipse_Brush extends Tool{
             !this._mouseDown &&
             Shared.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
         ){
-            this.previewBuff[Shared.get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = this.color;
+            this.drawPixel(this.mouseCell.x, this.mouseCell.y, this.color);
         }
     }
 
@@ -49,7 +49,6 @@ class Ellipse_Brush extends Tool{
         for (let x = x1; x <= x2; x++){
             for (let y = y1; y <= y2; y++){
                 if (Shared.isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
-                    let xyIdx = Shared.get2DIdx(x, y, this.cellWidth);
                     let curPoint = this.isPointInEllipse(new Victor(x, y), midPoint, a, b);
                     let innerA = a - thickness;
                     let innerB = b - thickness;
@@ -58,10 +57,10 @@ class Ellipse_Brush extends Tool{
                     innerCheck = (innerA > 1 && innerB > 1) ? innerCheck : 2;
 
                     if (curPoint <= 1 && this.isFilled){
-                        this.previewBuff[xyIdx] = this.color;
+                        this.drawPixel(x, y, this.color);
                     }
                     else if (curPoint <= 1 && innerCheck > 1){
-                        this.previewBuff[xyIdx] = this.color;
+                        this.drawPixel(x, y, this.color);
                     }
                 }
             }

@@ -31,15 +31,17 @@ class Box_Brush extends Tool{
             !this._mouseDown &&
             Shared.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
         ){
+            const {x, y} = this.mouseCell;
+
             switch(this.brushSize){
                 case Shared.ART_TOOL_SIZE.SMALL:
-                    this.previewBuff[Shared.get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = this.color;
+                    this.drawPixel(x, y, this.color);
                     break;
                 case Shared.ART_TOOL_SIZE.MEDIUM:
-                    this.fillRect(this.mouseCell.x, this.mouseCell.y, this.mouseCell.x + 1, this.mouseCell.y + 1);
+                    this.fillRect(x, y, x + 1, y + 1);
                     break;
                 case Shared.ART_TOOL_SIZE.LARGE:
-                    this.fillRect(this.mouseCell.x, this.mouseCell.y, this.mouseCell.x + 2, this.mouseCell.y + 2);
+                    this.fillRect(x, y, x + 2, y + 2);
                     break;
             }
         }
@@ -53,11 +55,9 @@ class Box_Brush extends Tool{
 
         for (let x = x1; x <= x2; x++){
             for (let y = y1; y <= y2; y++){
-                let xyIdx = Shared.get2DIdx(x, y, this.cellWidth);
-                
                 if (Shared.isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
                     if (this.isFilled){
-                        this.previewBuff[xyIdx] = this.color;
+                        this.drawPixel(x, y, this.color);
                     }
                     else if (
                         (x <= x1 + thickness) ||
@@ -65,7 +65,7 @@ class Box_Brush extends Tool{
                         (y <= y1 + thickness) ||
                         (y >= y2 - thickness)
                     ){
-                        this.previewBuff[xyIdx] = this.color;
+                        this.drawPixel(x, y, this.color);
                     }
                 }
             }

@@ -35,7 +35,7 @@ export default {
         return {
             canvas: null,
             renderer: null,
-            previewData: new Array(this.spriteFrame.length).fill(''),
+            previewData: new ImageData(Shared.Sprite.DIMENSIONS, Shared.Sprite.DIMENSIONS),
             navControl: null,
             maxZoom: 2,
             toolMap: new Map(),
@@ -45,7 +45,7 @@ export default {
     },
     computed: {
         GRID_DIV(){
-            return Shared.getSpriteDimensions(this.spriteFrame);
+            return Shared.Sprite.DIMENSIONS;
         },
         CANVAS_WIDTH(){
             return this.GRID_DIV * DEFAULT_CELL_SIZE;
@@ -84,7 +84,7 @@ export default {
         spriteFrame(){
             this.renderer.setSprite(this.spriteFrame, this.navState);
             this.tool.setPixelBuff(this.spriteFrame);
-            this.previewData.fill('');
+            this.previewData.data.fill(0);
         }
     },
     mounted(){

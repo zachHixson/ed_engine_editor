@@ -53,15 +53,17 @@ class Line_Brush extends Tool{
             !this._mouseDown &&
             Shared.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
         ){
+            const {x, y} = this.mouseCell;
+
             switch(this.brushSize){
                 case Shared.ART_TOOL_SIZE.SMALL:
-                    this.previewBuff[Shared.get2DIdx(this.mouseCell.x, this.mouseCell.y, this.cellWidth)] = this.color;
+                    this.drawPixel(x, y, this.color);
                     break;
                 case Shared.ART_TOOL_SIZE.MEDIUM:
-                    this.fillRect(this.mouseCell.x, this.mouseCell.y, this.mouseCell.x + 1, this.mouseCell.y + 1);
+                    this.fillRect(x, y, x + 1, y + 1);
                     break;
                 case Shared.ART_TOOL_SIZE.LARGE:
-                    this.fillRect(this.mouseCell.x - 1, this.mouseCell.y - 1, this.mouseCell.x + 1, this.mouseCell.y + 1);
+                    this.fillRect(x - 1, y - 1, x + 1, y + 1);
                     break;
             }
         }
@@ -76,17 +78,16 @@ class Line_Brush extends Tool{
             let intOffset = Math.round(offset);
             let pOrder = pOrderFunc(intOffset, p);
 
-            this.drawPixel(pOrder.x, pOrder.y);
+            this.drawPoint(pOrder.x, pOrder.y);
             offset = offsetFunc(offset);
         }
     }
 
-    drawPixel(x, y){
+    drawPoint(x, y){
         if (Shared.isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
             switch(this.brushSize){
                 case Shared.ART_TOOL_SIZE.SMALL:
-                    let xyIdx = Shared.get2DIdx(x, y, this.cellWidth);
-                    this.previewBuff[xyIdx] = this.color;
+                    this.drawPixel(x, y, this.color);
                     break;
                 case Shared.ART_TOOL_SIZE.MEDIUM:
                     this.fillRect(x, y, x + 1, y + 1);

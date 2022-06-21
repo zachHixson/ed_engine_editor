@@ -35,8 +35,8 @@ export default {
             circleBuffer: null,
             cursorPos: new Victor(0, 0),
             valuePos: 1,
-            selectedHS: this.color ?? '#FFFFFF',
-            selectedColor: this.color ?? '#FFFFFF',
+            selectedHS: this.color ?? new Shared.Color(255, 255, 255, 255),
+            selectedColor: this.color ?? new Shared.Color(255, 255, 255, 255),
         }
     },
     watch: {
@@ -162,22 +162,20 @@ export default {
                 imgData[baseIdx + 1],
                 imgData[baseIdx + 2],
             ];
-            let hexHS = Shared.RGBAToHex(...[...rgbArr, 255]);
-            let hexHSV = Shared.RGBAToHex(...[...rgbArr.map(c => Math.round(c * this.valuePos)), 255]);
-
-            this.selectedHS = hexHS;
-            this.selectedColor = hexHSV;
-            this.$refs.cursor.style.background = this.selectedColor;
-            this.$refs.valueCursorBG.style.background = this.selectedColor;
-            this.slider.style.backgroundImage = `linear-gradient(to right, black, ${hexHS})`;
+            let hs = new Shared.Color().fromArray([...rgbArr, 255]);
+            let hsv = new Shared.Color().fromArray([...rgbArr.map(i => Math.round(i * this.valuePos)), 255]);
+            
+            this.selectedColor = hsv;
+            this.$refs.cursor.style.background = this.selectedColor.css;
+            this.$refs.valueCursorBG.style.background = this.selectedColor.css;
+            this.slider.style.backgroundImage = `linear-gradient(to right, black, ${hs.css})`;
         },
-        moveCursorToColor(hex){
+        moveCursorToColor(rgba){
             let wheelBounds = this.canvas.getBoundingClientRect();
             let wheelPos = new Victor(wheelBounds.left, wheelBounds.top);
             let sliderX = this.slider.getBoundingClientRect().left;
             let halfCanvas = this.canvas.width / 2;
-            let rgb = Shared.hexToRGBA(hex);
-            let hsv = Shared.RGBToHSV(rgb.r, rgb.g, rgb.b);
+            let hsv = Shared.RGBToHSV(rgba.r, rgba.g, rgba.b);
             let hueRad = hsv.hue * (Math.PI / 180)
             let pos = new Victor(-Math.cos(hueRad), -Math.sin(hueRad)).multiplyScalar(hsv.sat * halfCanvas);
 

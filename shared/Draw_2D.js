@@ -61,6 +61,10 @@ export function hexToRGBA(hexStr){
         offset = 1;
     }
 
+    if (hexStr.length < 8){
+        hexStr += 'ff';
+    }
+
     return {
         r: parseInt(hexStr.substring(0 + offset, 2 + offset), 16),
         g: parseInt(hexStr.substring(2 + offset, 4 + offset), 16),
@@ -162,4 +166,30 @@ export function createCanvas(width, height){
 export function resizeCanvas(canvas, width, height){
     canvas.width = width;
     canvas.height = height;
+}
+
+export class Color{
+    constructor(r = 0, g = 0, b = 0, a = 0){
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        this.a = a;
+    }
+
+    get css(){return `rgba(${this.r}, ${this.g}, ${this.b}, ${this.a})`}
+
+    fromArray(arr){
+        const [r, g, b, a] = arr;
+        Object.assign(this, {r, g, b, a});
+        return this;
+    }
+    
+    compare(col){
+        return (
+            this.r == col.r &&
+            this.g == col.g &&
+            this.b == col.b &&
+            this.a == col.a
+        )
+    }
 }

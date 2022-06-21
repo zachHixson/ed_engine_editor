@@ -35,7 +35,6 @@ export default class Renderer{
         //draw background
         ctx.fillStyle = this.room.bgColor;
         ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
         this._drawInstances(deltaTime);
         this._transition.render(deltaTime);
     }
