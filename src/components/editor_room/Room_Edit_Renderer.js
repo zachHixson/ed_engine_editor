@@ -231,7 +231,7 @@ export default class Room_Edit_Renderer{
                     this.spriteCache.set(inst.editorFrameID, spriteBuff);
                 }
 
-                scaleFac = this.scaledCellWidth / spriteBuff.width;
+                scaleFac = this.scaledCellWidth * devicePixelRatio / spriteBuff.width;
             }
             else if (this.noSpriteSVG){
                 ctx = this.iconBuff.getContext('2d');
@@ -398,6 +398,7 @@ export default class Room_Edit_Renderer{
     }
 
     screenToWorldPos(pt){
+        pt.multiplyScalar(devicePixelRatio)
         pt.subtract(this.halfCanvas);
         pt.divideScalar(this.navState.zoomFac);
         pt.subtract(this.navState.offset);

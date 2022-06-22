@@ -222,6 +222,7 @@ export default {
     height: 95%;
     top: 50%;
     transform: translateY(-50%);
+    overflow: hidden;
     z-index: 10;
 }
 

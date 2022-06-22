@@ -154,7 +154,7 @@ export default {
             let downPos = new Victor(0,0).copy(this.mouse.lastPosition);
             let difference = curMouse.subtract(downPos);
 
-            difference.divide(new Victor(this.navState.zoomFac, this.navState.zoomFac));
+            difference.divideScalar(this.navState.zoomFac).multiplyScalar(devicePixelRatio);
             this.navState.offset.add(difference);
 
             this.navState.offset.multiplyScalar(PRECISION);

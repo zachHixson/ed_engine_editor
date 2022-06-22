@@ -140,9 +140,10 @@ export default {
         },
         resize(){
             let wrapper = this.$refs.editWindow;
-            
-            this.canvasEl.width = Math.max(wrapper.clientWidth, 1);
-            this.canvasEl.height = Math.max(wrapper.clientHeight, 1);
+            let width = Math.max(wrapper.clientWidth, 1);
+            let height = Math.max(wrapper.clientHeight, 1);
+
+            Shared.resizeCanvas(this.canvasEl, width, height);
 
             this.$refs.navControlPanel.setContainerDimensions(wrapper.clientWidth, wrapper.clientHeight);
 

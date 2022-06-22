@@ -25,7 +25,8 @@ export default {
             canvas: null,
             checkerBGBuff: null,
             pixelBuff: null,
-            animationLoop: null
+            animationLoop: null,
+            dimensions: 150,
         }
     },
     computed: {
@@ -55,11 +56,12 @@ export default {
     methods: {
         drawFrame(){
             let ctx = this.canvas.getContext('2d');
+
+            Shared.resizeCanvas(this.canvas, this.dimensions, this.dimensions);
             
             ctx.drawImage(this.checkerBGBuff, 0, 0, this.canvas.width, this.canvas.height);
 
             if (this.sprite && this.sprite.frames[this.curFrameIdx] != null){
-                let frame = this.sprite.frames[this.curFrameIdx];
                 let scaleFac = this.canvas.width / Shared.Sprite.DIMENSIONS;
 
                 this.sprite.drawToCanvas(this.curFrameIdx, this.pixelBuff);

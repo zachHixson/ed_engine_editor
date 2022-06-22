@@ -62,7 +62,7 @@ export default class Art_Canvas_Renderer{
         ctx.drawImage(this.checkerStencilBuff, 0, 0, this.checkerStencilBuff.width, this.checkerStencilBuff.height);
     }
 
-    resize(width = this.canvas.width, height = this.canvas.height){
+    resize(width = this.canvas.clientWidth, height = this.canvas.clientWidth){
         Shared.resizeCanvas(this.checkerBGBuff, width, height);
         Shared.resizeCanvas(this.checkerStencilBuff, width, height);
         Shared.resizeCanvas(this.gridBuff, width, height);
@@ -113,7 +113,7 @@ export default class Art_Canvas_Renderer{
         const HALF_WIDTH = -FULL_WIDTH / 2;
 
         let translate = this.getTranslate();
-        
+
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, this.checkerStencilBuff.width, this.checkerStencilBuff.height);
         ctx.translate(translate.x, translate.y);

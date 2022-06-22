@@ -10,6 +10,8 @@ export function drawCheckerBG(canvas, checkerSize, lightCol = '#AAA', darkCol = 
         xCount += 1;
     }
 
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+
     for (let x = 0; x < xCount; x++){
         for (let y = 0; y < yCount; y++){
             let curIdx = get2DIdx(x, y, xCount);
@@ -23,35 +25,8 @@ export function drawCheckerBG(canvas, checkerSize, lightCol = '#AAA', darkCol = 
             );
         }
     }
-};
 
-export function drawPixelData(canvas, spriteArray){
-    const SPRITE_DIM = getSpriteDimensions(spriteArray);
-
-    let ctx = canvas.getContext('2d');
-    let imgData = ctx.createImageData(SPRITE_DIM, SPRITE_DIM);
-    
-    for (let i = 0; i < spriteArray.length; i++){
-        let curIdx = i * 4;
-        let rgb = hexToRGBA(spriteArray[i]);
-
-        switch (spriteArray[i].length){
-            case 0:
-                rgb.a = 0;
-                break;
-            case 6:
-            case 7:
-                rgb.a = 255;
-                break;
-        }
-
-        imgData.data[curIdx + 0] = rgb.r;
-        imgData.data[curIdx + 1] = rgb.g;
-        imgData.data[curIdx + 2] = rgb.b;
-        imgData.data[curIdx + 3] = rgb.a;
-    }
-
-    ctx.putImageData(imgData, 0, 0);
+    ctx.resetTransform();
 };
 
 export function hexToRGBA(hexStr){
@@ -164,8 +139,10 @@ export function createCanvas(width, height){
 }
 
 export function resizeCanvas(canvas, width, height){
-    canvas.width = width;
-    canvas.height = height;
+    canvas.width = width * devicePixelRatio;
+    canvas.height = height * devicePixelRatio;
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
 }
 
 export class Color{

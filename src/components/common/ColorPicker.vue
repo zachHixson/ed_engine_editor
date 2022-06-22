@@ -3,8 +3,7 @@
         <div class="wheelWrapper">
             <canvas
                 ref="canvas"
-                :width="width"
-                :height="width"
+                class="canvas"
                 @mousedown="wheelDown">
                 //Error loading canvas
             </canvas>
@@ -23,6 +22,10 @@
 </template>
 
 <script>
+import Victor from 'victor';
+
+const EXPAND = 1.15;
+
 export default {
     name: 'ColorPicker',
     props: ['color', 'width'],
@@ -55,6 +58,7 @@ export default {
         this.slider = this.$refs.slider;
 
         let canvasDim = this.width;
+        Shared.resizeCanvas(this.canvas, this.width, this.width);
         this.wheelBuffer = Shared.createCanvas(canvasDim, canvasDim);
         this.valueBuffer = Shared.createCanvas(canvasDim, canvasDim);
         this.circleBuffer = Shared.createCanvas(canvasDim, canvasDim);
@@ -80,7 +84,7 @@ export default {
                 let pos = new Victor(posIdx % this.canvas.width, Math.floor(posIdx / this.canvas.width));
                 let relPos = new Victor(pos.x / this.canvas.width, pos.y / this.canvas.height).subtractScalar(0.5).multiplyScalar(2);
                 let hue = (Math.atan2(relPos.y, relPos.x) + Math.PI) * (180 / Math.PI);
-                let sat = relPos.length() * 1.15;
+                let sat = relPos.length() * EXPAND;
                 let val = 1;
                 let rgb = Shared.HSVToRGB(hue, sat, val);
 
@@ -119,11 +123,11 @@ export default {
         },
         updateCursorPos(x, y){
             let canvas = this.$refs.canvas;
-            let halfCanvas = canvas.width / 2;
+            let halfCanvas = canvas.clientWidth / 2;
             let canvasBounds = canvas.getBoundingClientRect();
             let cursorClientPos = new Victor(x, y);
-            let wheelClintPos = new Victor(canvasBounds.left, canvasBounds.top);
-            let cursorPos = cursorClientPos.subtract(wheelClintPos);
+            let wheelClientPos = new Victor(canvasBounds.left, canvasBounds.top);
+            let cursorPos = cursorClientPos.subtract(wheelClientPos);
             let lengthBounds = halfCanvas - this.$refs.cursor.clientWidth / 2 - 3;
 
             this.cursorPos.copy(cursorPos);
@@ -156,7 +160,8 @@ export default {
         },
         updateCursorColors(){
             let imgData = this.wheelBuffer.getContext('2d').getImageData(0, 0, this.canvas.width, this.canvas.height).data;
-            let baseIdx = Math.round(this.cursorPos.y * this.canvas.width * 4 + this.cursorPos.x * 4);
+            let dpiCorrectCursor = this.cursorPos.clone().multiplyScalar(devicePixelRatio).unfloat();
+            let baseIdx = Math.round(dpiCorrectCursor.y * this.canvas.width * 4 + dpiCorrectCursor.x * 4);
             let rgbArr = [
                 imgData[baseIdx + 0],
                 imgData[baseIdx + 1],
@@ -174,10 +179,10 @@ export default {
             let wheelBounds = this.canvas.getBoundingClientRect();
             let wheelPos = new Victor(wheelBounds.left, wheelBounds.top);
             let sliderX = this.slider.getBoundingClientRect().left;
-            let halfCanvas = this.canvas.width / 2;
+            let halfCanvas = this.canvas.clientWidth / 2;
             let hsv = Shared.RGBToHSV(rgba.r, rgba.g, rgba.b);
-            let hueRad = hsv.hue * (Math.PI / 180)
-            let pos = new Victor(-Math.cos(hueRad), -Math.sin(hueRad)).multiplyScalar(hsv.sat * halfCanvas);
+            let hueRad = hsv.hue * (Math.PI / 180);
+            let pos = new Victor(-Math.cos(hueRad), -Math.sin(hueRad)).multiplyScalar(hsv.sat * halfCanvas / EXPAND);
 
             pos.addScalar(halfCanvas);
             pos.add(wheelPos);

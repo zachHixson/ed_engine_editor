@@ -19,8 +19,7 @@
             //set loop to resize canvas
             setInterval(()=>{
                 const dim = Math.min(document.body.clientWidth, document.body.clientHeight);
-                canvas.width = dim;
-                canvas.height = dim;
+                Shared.resizeCanvas(canvas, dim, dim);
             }, 20);
         }
     </script>

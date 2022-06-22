@@ -51,10 +51,10 @@ export default {
     },
     mounted(){
         let spriteDim = Shared.Sprite.DIMENSIONS;
+        let {clientWidth, clientHeight} = this.$refs.wrapper;
 
         this.canvas = this.$refs.canvas;
-        this.canvas.width = this.$refs.wrapper.clientWidth;
-        this.canvas.height = this.$refs.wrapper.clientWidth;
+        Shared.resizeCanvas(this.canvas, clientWidth, clientHeight);
         this.checkerBGBuff = Shared.createCanvas(this.canvas.width, this.canvas.height);
         this.pixelBuff = Shared.createCanvas(spriteDim, spriteDim);
 
@@ -83,9 +83,6 @@ export default {
         getSprite(){
             return this.$store.getters['AssetBrowser/getSelectedAsset'];
         },
-        // getFrame(){
-        //     return this.sprite.frames[this.index];
-        // },
         drawCanvas(){
             let ctx = this.canvas.getContext('2d');
             

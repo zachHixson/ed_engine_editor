@@ -9,7 +9,7 @@
             </button>
         </div>
         <div ref="canvasWrapper" class="canvasWrapper">
-            <canvas ref="canvas">//Error loading canvas</canvas>
+            <canvas ref="canvas" class="canvas">//Error loading canvas</canvas>
         </div>
     </div>
 </template>
@@ -20,6 +20,7 @@ export default {
     data(){
         return{
             engine: null,
+            resizeInterval: null,
         };
     },
     computed: {
@@ -44,14 +45,16 @@ export default {
     methods: {
         start(){
             let canvas = this.$refs.canvas;
-            let wrapper = this.$refs.canvasWrapper;
-            let minDim = Math.min(wrapper.clientWidth, wrapper.clientHeight);
             let restart = ()=>{
                 this.start();
             };
 
-            canvas.width = minDim;
-            canvas.height = minDim;
+            this.resizeInterval = setInterval(()=>{
+                let wrapper = this.$refs.canvasWrapper;
+                let minDim = Math.min(wrapper.clientWidth, wrapper.clientHeight);
+
+                Shared.resizeCanvas(canvas, minDim, minDim);
+            }, 20);
 
             this.engine = new Engine({
                 canvas: this.$refs.canvas,
@@ -62,6 +65,7 @@ export default {
         },
         close(){
             this.playState = this.PLAY_STATES.NOT_PLAYING;
+            clearInterval(this.resizeInterval);
             this.engine.stop();
         },
     },
@@ -112,8 +116,13 @@ export default {
 }
 
 .canvasWrapper{
+    position: relative;
     display: flex;
     justify-content: center;
     flex-grow: 1;
+}
+
+.canvas{
+    position: absolute;
 }
 </style>
