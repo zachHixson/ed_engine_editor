@@ -1,6 +1,6 @@
 export function getHighestEndingNumber(list){
     let highest = -1;
-    let pattern = /\\d+$/; //double backslashes are required since this library gets converted to a string
+    let pattern = /\d+$/;
 
     for (let i = 0; i < list.length; i++){
         let number = parseInt(list[i].match(pattern));
