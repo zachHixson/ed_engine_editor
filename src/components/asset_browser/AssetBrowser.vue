@@ -34,7 +34,7 @@
                         <Asset
                             ref="assets"
                             v-for="asset in selectedList"
-                            :key="asset.id"
+                            :key="asset.id + Math.floor(Math.random() * 1000)"
                             :asset="asset"
                             :defaultIcon="selected_category.icon"
                             @deleteAsset="deleteAsset"
