@@ -142,11 +142,11 @@ export default {
     },
     methods: {
         setObjectSprite() {
-            let selectedSpriteId = this.$refs.spriteSelector.value;
+            const selectedSpriteId = this.$refs.spriteSelector.value;
 
             if (selectedSpriteId >= 0){
-                let allSprites = this.$store.getters['GameData/getAllSprites'];
-                let selectedSprite = allSprites.find(s => s.id == selectedSpriteId);
+                const allSprites = this.$store.getters['GameData/getAllSprites'];
+                const selectedSprite = allSprites.find(s => s.id == selectedSpriteId);
                 this.selectedAsset.sprite = selectedSprite;
             }
             else{
@@ -155,6 +155,11 @@ export default {
 
             this.$nextTick(()=>{
                 this.$refs.animPlayer.newSpriteSelection();
+
+                if (this.selectedAsset.sprite){
+                    //triggers the frame count validation
+                    this.selectedAsset.startFrame = this.selectedAsset.startFrame;
+                }
             });
 
             this.$emit('asset-changed', this.selectedAsset.id);
