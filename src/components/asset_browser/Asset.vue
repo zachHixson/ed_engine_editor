@@ -22,12 +22,14 @@
 <script>
 export default {
     name: 'Asset',
-    props: ['asset', 'defaultIcon'],
+    props: ['asset', 'defaultIcon', 'visibilityObserver'],
     data(){
         return {
             isRenaming: false,
             oldName: null,
             thumbnail: null,
+            observer: null,
+            isVisible: false,
         }
     },
     computed: {
@@ -43,6 +45,17 @@ export default {
         }
     },
     mounted(){
+        const observableOptions = {
+            root: this.$parent.$el,
+            rootMargin: '0px',
+            threshold: 1.0
+        };
+
+        this.observer = new IntersectionObserver((entry)=>{
+            this.isVisible = entry[0].isIntersecting;
+            this.drawThumbnail();
+        }, observableOptions);
+        this.observer.observe(this.$el);
         this.$refs.asset.addEventListener('dblclick', this.rename);
         this.drawThumbnail();
     },
@@ -83,7 +96,7 @@ export default {
         drawThumbnail(){
             this.thumbnail = this.asset.thumbnail;
 
-            if (this.thumbnail){
+            if (this.thumbnail && this.isVisible){
                 let canvas = this.$refs.thumbNail;
                 let ctx = canvas.getContext('2d');
                 let scaleFac = canvas.width / this.thumbnail.width;
