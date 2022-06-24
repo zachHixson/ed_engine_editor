@@ -185,12 +185,14 @@ export default {
         bindHotkeys(){
             let deleteEntity = () => {
                 let type = this.editorSelection?.TYPE;
+                let id = this.editorSelection?.id;
+                let pos = this.editorSelection?.pos;
 
                 if (type == Shared.ENTITY_TYPE.INSTANCE){
-                    this.actionDelete(this.editorSelection);
+                    this.actionDelete({instId: id, pos});
                 }
                 else if (type == Shared.ENTITY_TYPE.EXIT){
-                    this.actionExitDelete(this.editorSelection);
+                    this.actionExitDelete({exitId: id, pos});
                 }
             }
 
@@ -468,8 +470,9 @@ export default {
         actionDelete({instId, instRefList = [], pos}, makeCommit = true){
             let cacheList = this.undoStore.cache.get('delete_list');
             let instRef;
+            let singleInstance = !cacheList && makeCommit;
 
-            if (makeCommit){
+            if (makeCommit && !singleInstance){
                 let data = {instRefList: cacheList};
                 this.undoStore.commit({action: Shared.ROOM_ACTION.DELETE, data})
                 this.undoStore.cache.delete('delete_list');
@@ -496,6 +499,10 @@ export default {
             }
             else if (instRef){
                 this.undoStore.cache.set('delete_list', [instRef]);
+            }
+
+            if (singleInstance){
+                this.actionDelete({}, true);
             }
         },
         actionInstanceChange({newState, instRef}, makeCommit = true){
