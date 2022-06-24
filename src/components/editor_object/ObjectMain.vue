@@ -65,20 +65,13 @@
                     <input type="checkbox" id="keep_camera_settings" checked="false" v-model="selectedAsset.keepCameraSettings" :title="$t('object_editor.tt_keep_camera_settings')" />
                 </div>
                 <div v-if="selectedAsset.triggerExits" class="spacer"></div>
-                <div class="control">
-                    <label for="logic_type_select">{{$t('object_editor.logic_type')}}:</label>
-                    <select id="logic_type_select" v-model="selectedAsset.customLogic" :title="$t('object_editor.tt_logic_type')">
-                        <option :value="false">{{$t('object_editor.preset')}}</option>
-                        <option :value="true">{{$t('object_editor.custom')}}</option>
-                    </select>
-                </div>
                 <div v-if="!selectedAsset.customLogic" class="control">
                     <label for="logic_preset_select">{{$t('object_editor.logic_preset')}}:</label>
                     <select id="logic_preset_select" :title="$t('object_editor.tt_logic_preset')">
                         <option :value="null">{{$t('generic.no_option')}}</option>
                     </select>
                 </div>
-                <div v-if="selectedAsset.customLogic" class="control">
+                <div class="control">
                     <label for="logic_script_select">{{$t('object_editor.logic_script')}}:</label>
                     <select id="logic_script_select" v-model="selectedAsset.logicScript" :title="$t('object_editor.tt_logic_script')">
                         <option :value="null">{{$t('generic.no_option')}}</option>
