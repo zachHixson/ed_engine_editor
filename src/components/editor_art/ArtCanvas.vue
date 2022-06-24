@@ -39,7 +39,7 @@ export default {
             navControl: null,
             maxZoom: 2,
             toolMap: new Map(),
-            mouseCell: new Victor(),
+            mouseCell: new Victor(-20, -20),
             unitScale: 1
         }
     },
