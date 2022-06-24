@@ -188,6 +188,13 @@ export default {
         },
         commitFullState(){
             this.undoStore.commit(this.packageUndoData());
+
+            //force vuex to update
+            this.$set(
+                this.selectedAsset.frames,
+                this.selectedFrameIdx,
+                this.selectedAsset.frames[this.selectedFrameIdx]
+            );
         },
         undo(){
             let prevStep = this.undoStore.stepBack();
