@@ -150,7 +150,7 @@ export default class Room_Edit_Renderer{
         let ctx = this.canvas.getContext('2d');
         let iconCtx = this.iconBuff.getContext('2d');
         let iconColorCtx = this.iconColor.getContext('2d');
-        let bgColor = Shared.hexToRGBA(this.roomRef?.bgColor ?? '#FFFFFF');
+        let bgColor = this.roomRef?.bgColor ?? new Shared.Color(255, 255, 255);
         let luma = Math.max(Math.max(bgColor.r, bgColor.g), bgColor.b);
 
         //composite icon and iconColor buffs together
@@ -163,14 +163,12 @@ export default class Room_Edit_Renderer{
         //composite normal buffers to main canvas
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        ctx.fillStyle = this.roomRef?.bgColor ?? 'white';
+        ctx.fillStyle = this.roomRef?.bgColor.toHex() ?? 'white';
         ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         ctx.drawImage(this.objBuff, 0, 0, this.objBuff.width, this.objBuff.height);
         ctx.drawImage(this.iconBuff,0, 0, this.iconBuff.width, this.iconBuff.height);
-        ctx.globalAlpha = 0.3;
         ctx.drawImage(this.gridBuff, 0, 0, this.gridBuff.width, this.gridBuff.height);
-        ctx.globalAlpha = 1.0;
         ctx.drawImage(this.cursorBuff, 0, 0, this.cursorBuff.width, this.cursorBuff.height);
 
         //composite selection buff
@@ -309,7 +307,7 @@ export default class Room_Edit_Renderer{
         let ctx = this.cursorBuff.getContext('2d');
         let selectionCtx = this.selectionBuff.getContext('2d');
         let screenCell = this.worldToScreenPos(this.getMouseWorldCell());
-        let bgColor = Shared.hexToRGBA(this.roomRef?.bgColor ?? '#FFFFFF');
+        let bgColor = this.roomRef?.bgColor ?? new Shared.Color(255, 255, 255);
         let luma = Math.max(Math.max(bgColor.r, bgColor.g), bgColor.b);
         let shiftDir = (luma > 127) ? -CURSOR_SHIFT : CURSOR_SHIFT;
 
@@ -334,15 +332,15 @@ export default class Room_Edit_Renderer{
 
     _drawGrid(){
         const GRID_SHIFT = 30;
-        const AXIS_SHIFT = 200;
+        const AXIS_SHIFT = 100;
 
         let ctx = this.gridBuff.getContext('2d');
         let maxDim = Math.max(this.gridBuff.width, this.gridBuff.height);
         let lineCount = Math.ceil(maxDim / this.scaledCellWidth);
         let origin = new Victor(0, 0);
-        let bgCol = Shared.hexToRGBA(this.roomRef?.bgColor ?? '#2aa4f5');
-        let luma = Math.max(Math.max(bgCol.r, bgCol.g), bgCol.b);
-        let gridShiftAmt = (luma > 127) ? -GRID_SHIFT : GRID_SHIFT;
+        let bgCol = this.roomRef?.bgColor ?? new Shared.Color(6, 95, 233);
+        let luma = Math.max(bgCol.r, bgCol.g, bgCol.b);
+        let gridShiftAmt = (luma > 127) ? -GRID_SHIFT * 0.4 : GRID_SHIFT;
         let gridCol = Shared.RGBAToHex(bgCol.r + gridShiftAmt, bgCol.g + gridShiftAmt, bgCol.b + gridShiftAmt);
         let xAxisCol = Shared.RGBAToHex(bgCol.r + AXIS_SHIFT, bgCol.g - AXIS_SHIFT, bgCol.b - AXIS_SHIFT);
         let yAxisCol = Shared.RGBAToHex(bgCol.r - AXIS_SHIFT, bgCol.g + AXIS_SHIFT, bgCol.b - AXIS_SHIFT);

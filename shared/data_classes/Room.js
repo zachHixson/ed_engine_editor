@@ -2,6 +2,7 @@ import {Asset} from './Asset';
 import {Camera} from './Camera';
 import {Spacial_Collection} from './Spacial_Collection';
 import {CATEGORY_ID} from '../Enums';
+import { Color } from '../Draw_2D';
 
 export class Room extends Asset{
     constructor(){
@@ -9,7 +10,7 @@ export class Room extends Asset{
         this.camera = new Camera();
         this.instances = new Spacial_Collection(2000, 64);
         this.exits = new Spacial_Collection(2000, 64);
-        this.bgColor = "#FFFFFF";
+        this.bgColor = new Color(255, 255, 255);
         this.persist = false;
         this.useGravity = false;
         this.gravity = 9.81;

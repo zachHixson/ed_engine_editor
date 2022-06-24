@@ -146,7 +146,7 @@ export function resizeCanvas(canvas, width, height){
 }
 
 export class Color{
-    constructor(r = 0, g = 0, b = 0, a = 0){
+    constructor(r = 0, g = 0, b = 0, a = 255){
         this.r = r;
         this.g = g;
         this.b = b;
@@ -154,6 +154,11 @@ export class Color{
     }
 
     get css(){return `rgba(${this.r}, ${this.g}, ${this.b}, ${this.a})`}
+
+    toHex(){
+        const {r, g, b, a} = this;
+        return RGBAToHex(r, g, b, a);
+    }
 
     fromArray(arr){
         const [r, g, b, a] = arr;

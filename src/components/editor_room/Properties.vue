@@ -243,7 +243,7 @@ export default {
         }
     },
     mounted(){
-        this.$refs.bgColorBtn.style.background = this.room.bgColor;
+        this.$refs.bgColorBtn.style.background = this.room.bgColor.toHex();
     },
     methods: {
         checkNameCollisions(name, list){
@@ -283,7 +283,7 @@ export default {
             }
         },
         setRoomBgColor(color){
-            this.$refs.bgColorBtn.style.background = color;
+            this.$refs.bgColorBtn.style.background = color.toHex();
             this.setRoomProp({bgColor: color});
         },
         setInstanceName(newName){

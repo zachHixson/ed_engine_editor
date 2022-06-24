@@ -194,6 +194,7 @@ export default {
             document.addEventListener('mousemove', this.wheelMove);
             document.addEventListener('mouseup', this.mouseUp);
             this.$emit('change-start');
+            this.$emit('change', this.selectedColor);
         },
         valueDown(event){
             this.updateValuePos(event.clientX);
