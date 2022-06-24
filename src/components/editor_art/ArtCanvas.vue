@@ -201,7 +201,6 @@ export default {
     height: 100%;
     margin: none;
     padding: none;
-    background: blue;
     overflow: hidden;
     max-width: 100vw;
 }

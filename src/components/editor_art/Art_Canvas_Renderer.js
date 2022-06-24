@@ -62,7 +62,7 @@ export default class Art_Canvas_Renderer{
         ctx.drawImage(this.checkerStencilBuff, 0, 0, this.checkerStencilBuff.width, this.checkerStencilBuff.height);
     }
 
-    resize(width = this.canvas.clientWidth, height = this.canvas.clientWidth){
+    resize(width = this.canvas.clientWidth, height = this.canvas.clientHeight){
         Shared.resizeCanvas(this.checkerBGBuff, width, height);
         Shared.resizeCanvas(this.checkerStencilBuff, width, height);
         Shared.resizeCanvas(this.gridBuff, width, height);
