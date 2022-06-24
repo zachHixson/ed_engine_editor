@@ -18,6 +18,7 @@ export default {
 <style>
 .categoryWrapper{
     display: flex;
+    flex-direction: row;
     justify-content: space-between;
     align-items: flex-start;
     flex-wrap: wrap;
@@ -49,5 +50,7 @@ export default {
 
 .contents{
     display: flex;
+    justify-content: flex-end;
+    flex-grow: 1;
 }
 </style>
