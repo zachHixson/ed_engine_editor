@@ -137,7 +137,7 @@
                         :key="graph.id"
                         class="graph"
                         :class="selectedAsset.selectedGraphId == graph.id ? 'graph-selected' : ''"
-                        @click="selectedAsset.selectedGraphId = graph.id"
+                        @click="switchGraph(graph.id)"
                         v-click-outside="stopRenamingGraph">
                         <div class="graph-name">
                             <div
@@ -529,6 +529,15 @@ export default {
         },
         navToolSelected(newTool){
             this.$store.dispatch('LogicEditor/selectNavTool', newTool);
+        },
+        switchGraph(id){
+            this.selectedAsset.selectedGraphId = id;
+            this.navChange(this.selectedAsset.navState);
+
+            this.$nextTick(()=>{
+                this.deselectAllNodes();
+                this.relinkConnections();
+            });
         },
         startRenamingGraph(id){
             this.renamingGraph = id;
