@@ -1,7 +1,8 @@
 {
     "generic":{
         "no_option": "-- None --",
-        "delete": "Delete"
+        "delete": "Delete",
+        "new": "-- New --"
     },
     "editor_main":{
         "project_name": "Project Name:",

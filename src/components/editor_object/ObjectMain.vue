@@ -73,14 +73,15 @@
                 </div>
                 <div class="control">
                     <label for="logic_script_select">{{$t('object_editor.logic_script')}}:</label>
-                    <select id="logic_script_select" v-model="selectedAsset.logicScript" :title="$t('object_editor.tt_logic_script')">
+                    <select id="logic_script_select" :value="selectedLogic" @change="logicScriptChanged" :title="$t('object_editor.tt_logic_script')">
                         <option :value="null">{{$t('generic.no_option')}}</option>
                         <option
-                            v-for="script in $store.getters['GameData/getAllLogic']"
+                            v-for="script in logicScripts"
                             :key="script.id"
                             :value="script.id">
                             {{script.name}}
                         </option>
+                        <option :value="'new'">{{$t('generic.new')}}</option>
                     </select>
                 </div>
                 <GroupList
@@ -111,6 +112,12 @@ export default {
         },
         spriteChoices() {
             return this.$store.getters['GameData/getAllSprites'];
+        },
+        logicScripts() {
+            return this.$store.getters['GameData/getAllLogic'];
+        },
+        selectedLogic(){
+            return this.selectedAsset.logicScript;
         },
         startFrame: {
             get(){
@@ -175,7 +182,28 @@ export default {
                 let groupIdx = this.selectedAsset.groups.indexOf(groupName);
                 this.selectedAsset.groups.splice(groupIdx, 1);
             }
-        }
+        },
+        logicScriptChanged(event){
+            const value = event.target.value;
+            let scriptId;
+
+            if (value == 'new'){
+                let newScript;
+
+                this.$store.dispatch('GameData/addAsset', Shared.CATEGORY_ID.LOGIC);
+                newScript = this.logicScripts[this.logicScripts.length - 1];
+                scriptId = newScript.id;
+            }
+            else{
+                scriptId = value;
+            }
+
+            this.selectedAsset.logicScript = scriptId;
+
+            this.$nextTick(()=>{
+                event.target.value = this.selectedAsset.logicScript;
+            })
+        },
     }
 }
 </script>
