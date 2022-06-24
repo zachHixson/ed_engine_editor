@@ -2,13 +2,9 @@
     <div class="properties">
         <div v-if="showInstProps" class="propContents">
             <div class="heading">{{$t('room_editor.object_properties_heading')}}</div>
-            <div class="info" style="margin-top: var(--margin);">
+            <div class="info" style="margin: var(--margin); margin-left: 0px;">
                 <div>{{$t('room_editor.object_type')}}:</div>
                 <div>{{selectedEntity.objRef.name}}</div>
-            </div>
-            <div class="info" style="margin-bottom: var(--margin);">
-                <div>{{$t('room_editor.instance_id')}}:</div>
-                <div>{{selectedEntity.id}}</div>
             </div>
             <div class="control">
                 <label for="instName">{{$t('room_editor.instance_name')}}:</label>

@@ -115,7 +115,6 @@
         "exit_properties_heading": "Exit Properties",
         "room_properties_heading": "Room Properties",
         "object_type": "Object Type",
-        "instance_id": "Instance ID",
         "instance_name": "Instance Name",
         "collision": "Collision",
         "keep": "Keep",
