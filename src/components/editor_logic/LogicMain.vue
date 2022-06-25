@@ -142,6 +142,7 @@
                         <div class="graph-name">
                             <div
                                 v-show="renamingGraph != graph.id"
+                                class="graph-display-name"
                                 @dblclick="startRenamingGraph(graph.id)">
                                     {{graph.name}}
                                 </div>
@@ -1335,6 +1336,14 @@ function _checkLoop(connection, connectionMap, checkedNodes){
     flex-direction: row;
     flex-grow: 1;
     margin-left: 5px;
+}
+
+.graph-display-name{
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    height: 1em;
+    width: 7em;
 }
 
 .graph-controls{
