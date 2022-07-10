@@ -195,6 +195,11 @@ export default {
                 this.selectedFrameIdx,
                 this.selectedAsset.frames[this.selectedFrameIdx]
             );
+            this.$set(
+                this.selectedAsset.frameIDs,
+                this.selectedFrameIdx,
+                this.selectedAsset.frameIDs[this.selectedFrameIdx]
+            )
         },
         undo(){
             let prevStep = this.undoStore.stepBack();

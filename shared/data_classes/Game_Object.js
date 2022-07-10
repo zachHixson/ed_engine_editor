@@ -72,11 +72,11 @@ export class Game_Object extends Asset{
     }
 
     get category_ID(){return CATEGORY_ID.OBJECT}
-    get startFrame(){return this._startFrame}
     get hasEditorFrame(){return this.sprite ? !this.sprite.frameIsEmpty(this._startFrame) : false}
     get editorFrame(){return this.thumbnail}
     get editorFrameID(){return this.sprite.frameIDs[this._startFrame]}
 
+    get startFrame(){return this._startFrame}
     set startFrame(frame){
         this._startFrame = Math.max(Math.min(frame, this.sprite.frames.length - 1), 0);
     }

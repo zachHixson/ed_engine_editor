@@ -49,18 +49,21 @@ const mutations = {
                 let spriteName = i18n.tc(`asset_browser.sprite_prefix`) + getSuffixNum(state.sprites);
                 let newSprite = new Shared.Sprite();
                 newSprite.name = spriteName;
+                newSprite.sortOrder = state.sprites.length;
                 state.sprites.push(newSprite);
                 break;
             case Shared.CATEGORY_ID.OBJECT:
                 let objName = i18n.tc(`asset_browser.object_prefix`) + getSuffixNum(state.objects);
                 let newObject = new Shared.Game_Object();
                 newObject.name = objName;
+                newObject.sortOrder = state.objects.length;
                 state.objects.push(newObject);
                 break;
             case Shared.CATEGORY_ID.LOGIC:
                 let logicName = i18n.tc(`asset_browser.logic_prefix`) + getSuffixNum(state.logic);
                 let newLogic = new Logic();
                 newLogic.name = logicName;
+                newLogic.sortOrder = state.logic.length;
                 newLogic.addGraph();
                 state.logic.push(newLogic);
                 break;
@@ -68,6 +71,7 @@ const mutations = {
                 let roomName = i18n.tc(`asset_browser.room_prefix`) + getSuffixNum(state.rooms);
                 let newRoom = new Shared.Room();
                 newRoom.name = roomName;
+                newRoom.sortOrder = state.rooms.length;
                 state.rooms.push(newRoom);
                 break;
         }

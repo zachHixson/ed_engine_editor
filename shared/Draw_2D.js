@@ -160,6 +160,12 @@ export class Color{
         return RGBAToHex(r, g, b, a);
     }
 
+    fromHex(hexStr){
+        const RGBA = hexToRGBA(hexStr);
+        Object.assign(this, RGBA);
+        return this;
+    }
+
     fromArray(arr){
         const [r, g, b, a] = arr;
         Object.assign(this, {r, g, b, a});

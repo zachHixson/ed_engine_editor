@@ -30,6 +30,7 @@ export class Room extends Asset{
         clone.camera = this.camera.clone();
         clone.instances = this.instances.clone(true);
         clone.exits = this.exits.clone(true);
+        clone.bgColor = Object.assign(new Color(), this.bgColor);
         return clone;
     }
 
@@ -39,6 +40,7 @@ export class Room extends Asset{
         sanitized.cameraProps = Object.assign({}, this.camera);
         sanitized.instancesSerial = this.instances.toSaveData();
         sanitized.exitsSerial = this.exits.toSaveData();
+        sanitized.bgColor = this.bgColor.toHex().replace('#', '');
 
         delete sanitized.camera;
         delete sanitized.instances;
@@ -51,6 +53,7 @@ export class Room extends Asset{
         Object.assign(this, room);
         this.navState = this.parseNavData(room.navState);
         this.camera = new Shared.Camera().fromSaveData(room.cameraProps);
+        this.bgColor = new Color().fromHex(room.bgColor);
 
         for (let i = 0; i < room.instancesSerial.length; i++){
             let curInstance = room.instancesSerial[i];

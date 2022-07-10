@@ -10,23 +10,25 @@
             <div class="animPlayerWrapper">
                 <AnimationPlayer ref="animPlayer" :sprite="sprite" fps="12" startFrame="0" :loop="true"/>
             </div>
-            <div class="scrollWrapper">
-                <div v-if="isOpen" class="frames">
-                    <AnimFrame 
-                        v-for="(id, idx) in frameIDs"
-                        :key="id"
-                        :index="idx"
-                        :sprite="sprite"
-                        ref="animFrame"
-                        class="animFrame"
-                        @selectedFrameChanged="selectedFrameChanged"
-                        @frameDeleted="deleteFrame"
-                        @frameCopied="frameCopied"
-                        @frameMoved="frameMoved"/>
-                    <button class="addFrame" :title="$t('art_editor.add_frame')" @click="addFrame()">
-                        <img class="icon" src="@/assets/plus.svg"/>
-                    </button>
-                </div>
+            <div v-if="isOpen" ref="frameList" class="scrollWrapper">
+                <DragList
+                    :items="animFrames"
+                    :keylist="animFrameKeys"
+                    @order-changed="frameOrderChanged">
+                    <template #item="{index}">
+                        <AnimFrame
+                            class="animFrame"
+                            :index="index"
+                            :sprite="sprite"
+                            @selectedFrameChanged="selectedFrameChanged"
+                            @frameDeleted="deleteFrame"
+                            @frameCopied="frameCopied"
+                            @frameMoved="frameMoved"/>
+                    </template>
+                </DragList>
+                <button class="addFrame" :title="$t('art_editor.add_frame')" @click="addFrame()">
+                    <img class="icon" src="@/assets/plus.svg"/>
+                </button>
             </div>
         </div>
     </div>
@@ -36,12 +38,14 @@
 import AnimFrame from './AnimFrame';
 import AnimationPlayer from '@/components/common/AnimationPlayer';
 import HotkeyMap from '@/components/common/HotkeyMap';
+import DragList from '@/components/common/DragList';
 
 export default {
     name: 'AnimationPanel',
     components: {
         AnimFrame,
-        AnimationPlayer
+        AnimationPlayer,
+        DragList,
     },
     props: ['sprite', 'frameIDs'],
     data(){
@@ -69,6 +73,12 @@ export default {
         inputActive(){
             return this.$store.getters['getInputActive'];
         },
+        animFrames(){
+            return this.sprite.frames;
+        },
+        animFrameKeys(){
+            return this.sprite.frameIDs;
+        }
     },
     mounted(){
         this.hotkeyDown = this.hotkeyMap.keyDown.bind(this.hotkeyMap);
@@ -130,7 +140,7 @@ export default {
                 }
 
                 for (let i = range[0]; i <= range[1]; i++){
-                    this.$refs.animFrame[i].updateCanvas();
+                    this.sprite.updateFrame(i);
                 }
             }
         },
@@ -138,6 +148,14 @@ export default {
             let newFrameIdx = this.sprite.addFrame();
             this.$store.dispatch('ArtEditor/selectFrame', newFrameIdx);
             this.$emit('frameAdded');
+
+            this.$nextTick(()=>{
+                const frameList = this.$refs.frameList;
+
+                if (frameList){
+                    frameList.scrollTop = frameList.scrollHeight - frameList.clientHeight;
+                }
+            });
         },
         deleteFrame(idx){
             this.sprite.deleteFrame(idx);
@@ -160,11 +178,40 @@ export default {
             
             this.$emit('frameMoved');
         },
-        frameCopied(idx){
+        frameCopied(){
             this.$emit('frameCopied');
         },
-        selectedFrameChanged(idx){
+        selectedFrameChanged(){
             this.$emit('selectedFrameChanged');
+        },
+        frameOrderChanged(event){
+            const {itemIdx, newIdx} = event;
+            const movedFrame = this.sprite.frames[itemIdx];
+            const shiftForward = itemIdx > newIdx;
+            const compFunc = shiftForward ? i => i > newIdx : i => i < newIdx;
+            const dir = shiftForward ? -1 : 1;
+
+            for (let i = itemIdx; compFunc(i); i += dir){
+                this.sprite.frames[i] = this.sprite.frames[i + dir];
+                this.sprite.updateFrame(i);
+
+                if (this.selectedFrameIdx == i && i != itemIdx){
+                    this.selectedFrameIdx -= dir;
+                }
+            }
+
+            this.$set(
+                this.sprite.frames,
+                newIdx,
+                movedFrame
+            );
+            this.sprite.updateFrame(newIdx);
+
+            if (itemIdx == this.selectedFrameIdx){
+                this.$nextTick(()=>{
+                    this.selectedFrameIdx = newIdx;
+                });
+            }
         }
     }
 }
@@ -202,15 +249,13 @@ export default {
 }
 
 .scrollWrapper{
-    overflow: auto;
-}
-
-.frames{
     display: flex;
     flex-direction: column;
     align-items: flex-end;
     width: auto;
     padding: 5px;
+    overflow-y: auto;
+    overflow-anchor: none;
 }
 
 .animFrame{
@@ -220,6 +265,7 @@ export default {
 .addFrame{
     width: 50px;
     height: 50px;
+    flex-shrink: 0;
     margin-top: 5px;
     background: var(--button-norm);
     border: 2px solid var(--border);

@@ -113,6 +113,6 @@ export default class HotkeyMap{
             }
         }
 
-        return keysActive;
+        return !!keysActive;
     }
 }

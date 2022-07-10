@@ -5,6 +5,7 @@ export class Asset{
     constructor(){
         this.id = ID_Generator.newID();
         this.name = this.id;
+        this.sortOrder = 0;
 
         if (window.EDITOR){
             this.navState = this.defaultNavState;

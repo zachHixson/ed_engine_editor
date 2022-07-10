@@ -1,8 +1,8 @@
 <template>
     <div ref="asset" class="asset" :class="{selected : isSelected}" @click="selectAsset">
         <div class="leftFloat" v-click-outside="stopRenaming">
-            <canvas v-show="thumbnail" class="thumbnail" ref="thumbNail" width="20" height="20">Error</canvas>
-            <img v-if="!thumbnail" class="thumbnail assetIcon" :src="require(`@/${defaultIcon}.svg`)"/>
+            <canvas v-show="thumbnail" class="thumbnail" ref="thumbNail" width="20" height="20" draggable="false">Error</canvas>
+            <img v-if="!thumbnail" class="thumbnail assetIcon" :src="require(`@/${defaultIcon}.svg`)" draggable="false"/>
             <div v-show="isRenaming">
                 <input class="nameBox" ref="renameText" v-model="asset.name" type="text" v-input-active/>
             </div>
@@ -10,10 +10,10 @@
         </div>
         <div class="rightFloat">
             <button class="rightButton" @click="(event)=>{event.stopPropagation(); this.isRenaming ? this.stopRenaming() : this.rename();}">
-                <img class="rightIcon" style="width:30px; height:30px;" src="@/assets/rename.svg"/>
+                <img class="rightIcon" style="width:30px; height:30px;" src="@/assets/rename.svg" draggable="false"/>
             </button>
             <button class="rightButton" @click="deleteAsset">
-                <img class="rightIcon" src="@/assets/trash.svg"/>
+                <img class="rightIcon" src="@/assets/trash.svg" draggable="false"/>
             </button>
         </div>
     </div>
@@ -41,7 +41,7 @@ export default {
             isSelected |= (selectedAsset) ? selectedAsset.id == this.asset.id : false;
             isSelected |= (selectedRoom) ? selectedRoom.id == this.asset.id : false;
 
-            return isSelected;
+            return !!isSelected;
         }
     },
     mounted(){
@@ -119,6 +119,7 @@ export default {
     width: 100%;
     padding: 5px;
     border-radius: var(--corner-radius);
+    background: var(--main-bg)
 }
 
 .nameBox{

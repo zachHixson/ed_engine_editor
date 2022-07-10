@@ -31,16 +31,21 @@
                         </div>
                     </div>
                     <div ref="assetList" class="assetList">
-                        <Asset
-                            ref="assets"
-                            v-for="asset in selectedList"
-                            :key="asset.id + Math.floor(Math.random() * 1000)"
-                            :asset="asset"
-                            :defaultIcon="selected_category.icon"
-                            @deleteAsset="deleteAsset"
-                            @selectAsset="selectAsset"
-                            @renamed="assetRenamed" />
-                            <div v-if="selectedList.length <= 0">{{$t('asset_browser.no_assets')}}</div>
+                        <DragList
+                            :items="selectedList"
+                            :keylist="keylist"
+                            @order-changed="orderChanged">
+                            <template #item="{item}">
+                                <Asset
+                                    ref="assets"
+                                    :asset="item"
+                                    :defaultIcon="selected_category.icon"
+                                    @deleteAsset="deleteAsset"
+                                    @selectAsset="selectAsset"
+                                    @renamed="assetRenamed" />
+                            </template>
+                        </DragList>
+                        <div v-if="selectedList.length <= 0">{{$t('asset_browser.no_assets')}}</div>
                     </div>
                 </div>
             </div>
@@ -50,6 +55,7 @@
 
 <script>
 import Asset from './Asset';
+import DragList from '@/components/common/DragList';
 
 export default {
     name: 'AssetBrowser',
@@ -81,23 +87,55 @@ export default {
         }
     },
     components: {
-        Asset
+        Asset,
+        DragList
     },
     computed: {
         selectedList(){
+            const list = [];
+
             switch(this.selected_category.cat_ID){
                 case Shared.CATEGORY_ID.SPRITE:
-                    return this.$store.getters['GameData/getAllSprites'];
+                    list.push(...this.$store.getters['GameData/getAllSprites']);
+                    break;
                 case Shared.CATEGORY_ID.OBJECT:
-                    return this.$store.getters['GameData/getAllObjects'];
+                    list.push(...this.$store.getters['GameData/getAllObjects']);
+                    break;
                 case Shared.CATEGORY_ID.LOGIC:
-                    return this.$store.getters['GameData/getAllLogic'];
+                    list.push(...this.$store.getters['GameData/getAllLogic']);
+                    break;
                 case Shared.CATEGORY_ID.ROOM:
-                    return this.$store.getters['GameData/getAllRooms'];
+                    list.push(...this.$store.getters['GameData/getAllRooms']);
+                    break;
             }
 
-            return null;
-        }
+            list.sort((a, b) => {
+                const ao = a.sortOrder;
+                const bo = b.sortOrder;
+
+                if (ao < bo){
+                    return -1;
+                }
+                if (ao == bo){
+                    return 0;
+                }
+                if (ao > bo){
+                    return 1;
+                }
+            });
+
+            return list;
+        },
+        keylist(){
+            switch(this.selected_category.cat_ID){
+                case Shared.CATEGORY_ID.SPRITE:
+                    return this.selectedList.map((s) => s.frameIDs[0]);
+                case Shared.CATEGORY_ID.OBJECT:
+                    return this.selectedList.map((o) => o.sprite?.frameIDs[o.startFrame] ?? o.id);
+                default:
+                    return null;
+            }
+        },
     },
     beforeMount(){
         this.selected_category = this.categories[0];
@@ -191,7 +229,20 @@ export default {
             if (duplicateName){
                 asset.name += '_' + this.$t('room_editor.duplicate_name_suffix');
             }
-        }
+        },
+        orderChanged(event){
+            const selectedList = [...this.selectedList];
+            const movedAsset = this.selectedList[event.itemIdx];
+            const startIdx = Math.min(event.itemIdx, event.newIdx);
+            const endIdx = Math.max(event.itemIdx, event.newIdx);
+            const shiftDir = event.itemIdx > event.newIdx ? 1 : -1;
+            
+            for (let i = startIdx; i <= endIdx; i++){
+                selectedList[i].sortOrder += shiftDir;
+            }
+
+            movedAsset.sortOrder = event.newIdx;
+        },
     }
 }
 </script>
@@ -216,6 +267,7 @@ export default {
     transition: right 100ms;
     transition-timing-function: ease-out;
     padding-top: 10px;
+    box-sizing: border-box;
 }
 
 .columns{
@@ -353,6 +405,7 @@ export default {
     box-sizing: border-box;
     height: 100%;
     overflow-y: auto;
+    overflow-anchor: none;
     padding: 10px;
 }
 </style>
