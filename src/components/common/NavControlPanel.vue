@@ -29,7 +29,7 @@ Object.freeze(NAV_TOOL);
 
 export default {
     name: 'NavControlPanel',
-    props: ['navState', 'selectedNavTool', 'maxZoom', 'contentsBounds', 'unitScale'],
+    props: ['navState', 'selectedNavTool', 'maxZoom', 'contentsBounds', 'unitScale', 'dpiScale'],
     components: {
         NavControl
     },
@@ -172,6 +172,8 @@ export default {
             this.$emit('navChanged', this.navState);
         },
         centerView(){
+            const dpiScale = this.dpiScale ?? 1;
+
             let cornerUL = new Victor(
                 this.contentsBounds[0],
                 this.contentsBounds[1]
@@ -197,7 +199,7 @@ export default {
             minContainerDim /= this.unitScale;
             midPoint.multiplyScalar(this.unitScale);
 
-            this.setZoom(minContainerDim / maxContentsDim);
+            this.setZoom((minContainerDim / maxContentsDim) * dpiScale);
             this.navState.offset.copy(midPoint);
             this.$emit('navChanged', this.navState);
         }

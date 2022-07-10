@@ -12,6 +12,7 @@
             :maxZoom="maxZoom"
             :contentsBounds="contentsBounds"
             :unitScale="UNIT_WIDTH"
+            :dpiScale="devicePixelRatio"
             @navChanged="renderer.navChanged()"
             @tool-selected="enableNav"/>
     </div>
@@ -62,6 +63,9 @@ export default {
         },
         toolSize(){
             return this.$store.getters['ArtEditor/getSelectedSize'];
+        },
+        devicePixelRatio(){
+            return devicePixelRatio;
         }
     },
     watch: {

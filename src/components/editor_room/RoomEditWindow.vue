@@ -13,6 +13,7 @@
             :selectedNavTool="selectedNavTool"
             :contentsBounds="contentsBounds"
             :unitScale="unitWidth"
+            :dpiScale="devicePixelRatio"
             maxZoom="2"
             @navChanged="renderer.navChange()"
             @tool-selected="navToolSelected"/>
@@ -57,11 +58,14 @@ export default {
             return this.$store.getters["RoomEditor/getGridState"];
         },
         checkAssetDeletion(){
-            //if eather of the following values change, it will trigger an update for the watcher of this prop
+            //if either of the following values change, it will trigger an update for the watcher of this prop
             return this.$store.getters['GameData/getAllObjects'].length + this.$store.getters['GameData/getAllSprites'].length;
         },
         selectedNavTool(){
             return this.$store.getters['RoomEditor/getSelectedNavTool'];
+        },
+        devicePixelRatio(){
+            return devicePixelRatio;
         }
     },
     watch: {
