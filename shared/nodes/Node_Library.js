@@ -376,7 +376,7 @@ export const NODE_LIST = [
         inputs: [
             {id: 'name', type: SOCKET_TYPE.STRING, default: ''},
             {id: 'data', type: SOCKET_TYPE.ANY, default: null},
-            {id: 'global', type: SOCKET_TYPE.BOOL, default: false},
+            {id: 'global', type: SOCKET_TYPE.BOOL, default: false, hideSocket: true},
         ],
         methods: {
             setVar(){
@@ -400,7 +400,7 @@ export const NODE_LIST = [
         category: 'variables',
         inputs: [
             {id: 'name', type: SOCKET_TYPE.STRING, default: ''},
-            {id: 'global', type: SOCKET_TYPE.BOOL, default: false},
+            {id: 'global', type: SOCKET_TYPE.BOOL, default: false, hideSocket: true},
         ],
         outputs: [
             {id: 'data', type: SOCKET_TYPE.ANY, execute: 'getVar'},

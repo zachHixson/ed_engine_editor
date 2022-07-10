@@ -8,7 +8,7 @@
             <input v-if="socket.type == SOCKET_TYPE.BOOL" type="checkbox" :checked="socket.value"  @change="boolValueChanged($event.target)" ref="boolCheckbox"/>
         </div>
         <svg
-            v-if="!isTrigger"
+            v-if="!(isTrigger || hideSocket)"
             ref="socketConnection"
             width="20" height="20"
             class="socket_icon"
@@ -52,6 +52,9 @@ export default {
         },
         SOCKET_TYPE(){
             return Shared.SOCKET_TYPE;
+        },
+        hideSocket(){
+            return this.socket.hideSocket;
         },
         isTrigger(){
             return this.socket.type == undefined;

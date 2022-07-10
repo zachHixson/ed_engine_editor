@@ -44,21 +44,14 @@ export default class Node{
                 }
             }
 
-            this.inputs.set(input.id, {
-                id: input.id,
-                type: input.type,
+            this.inputs.set(input.id, Object.assign({
                 value,
                 connection: null,
-                required: input.required,
-                triple: input.triple,
-            });
+            }, input));
         });
 
         template.outputs?.forEach(output => {
-            this.outputs.set(output.id, {
-                id: output.id,
-                type: output.type,
-            });
+            this.outputs.set(output.id, Object.assign({}, output));
         });
     }
 
