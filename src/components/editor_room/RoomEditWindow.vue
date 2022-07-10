@@ -141,6 +141,7 @@ export default {
         },
         roomChange(){
             this.renderer.setRoomRef(this.selectedRoom);
+            this.contentsBounds = this.selectedRoom.getContentsBounds();
         },
         resize(){
             let wrapper = this.$refs.editWindow;

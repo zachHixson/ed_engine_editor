@@ -245,6 +245,7 @@ export default {
             this.$nextTick(()=>{
                 this.relinkConnections();
                 this.navChange(this.curNavState);
+                this.updateNodeBounds();
             })
         },
         inputActive(newState){
@@ -346,6 +347,7 @@ export default {
         this.bindReversions();
         this.navChange(this.selectedAsset.navState);
         this.relinkConnections();
+        this.updateNodeBounds();
     },
     beforeDestroy(){
         window.removeEventListener('keydown', this.keyDown);
