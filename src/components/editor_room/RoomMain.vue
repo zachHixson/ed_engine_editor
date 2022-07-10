@@ -157,7 +157,7 @@ export default {
             return this.mouse.inWindow;
         },
         cssBG(){
-            let color =  this.selectedRoom?.bgColor ?? '#FFFFFF'
+            let color =  this.selectedRoom?.bgColor.toHex() ?? '#FFFFFF'
             return 'background:' + color;
         },
     },
