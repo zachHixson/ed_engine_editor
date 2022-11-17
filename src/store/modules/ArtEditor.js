@@ -1,9 +1,9 @@
 import awaitShared from "@/components/common/awaitShared";
 
 const state = {
-    selectedColor : awaitShared().then(() => state.selectedColor = new Shared.Color(255, 255, 255, 255)),
-    selectedSize: awaitShared().then(() => state.selectedSize = Shared.ART_TOOL_SIZE.SMALL),
-    selectedTool: awaitShared().then(() => state.selectedTool = Shared.ART_TOOL_TYPE.BRUSH),
+    selectedColor: awaitShared(() => state.selectedColor = new Shared.Color(255, 255, 255, 255)),
+    selectedSize: awaitShared(() => state.selectedSize = Shared.ART_TOOL_SIZE.SMALL),
+    selectedTool: awaitShared(() => state.selectedTool = Shared.ART_TOOL_TYPE.BRUSH),
     selectedNavTool: null,
     selectedFrame: 0,
     toolPanelOpen: true,

@@ -1,7 +1,7 @@
 import awaitShared from "@/components/common/awaitShared";
 
 const state = {
-    selectedTool: awaitShared().then(()=>state.selectedTool = Shared.ROOM_TOOL_TYPE.SELECT_MOVE),
+    selectedTool: awaitShared(() => state.selectedTool = Shared.ROOM_TOOL_TYPE.SELECT_MOVE),
     selectedNavTool: null,
     propertiesOpen: false,
     viewGrid: true
