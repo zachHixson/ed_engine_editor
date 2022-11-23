@@ -147,17 +147,41 @@ export function resizeCanvas(canvas, width, height){
 
 export class Color{
     constructor(r = 0, g = 0, b = 0, a = 255){
-        this.r = r;
-        this.g = g;
-        this.b = b;
-        this.a = a;
+        this._r = r;
+        this._g = g;
+        this._b = b;
+        this._a = a;
+        this._needsUpdate = true;
+
+        this._hexCache = null;
     }
 
-    get css(){return `rgba(${this.r}, ${this.g}, ${this.b}, ${this.a})`}
+    get r(){return this._r};
+    get g(){return this._g};
+    get b(){return this._b};
+    get a(){return this._a};
+
+    set r(val){this._r = val; this._needsUpdate = true};
+    set g(val){this._g = val; this._needsUpdate = true};
+    set b(val){this._b = val; this._needsUpdate = true};
+    set a(val){this._a = val; this._needsUpdate = true};
+
+    set(r = 0, g = 0, b = 0, a = 255){
+        Object.assign(this, {r, g, b, a});
+    }
+
+    toCSS(){
+        return `rgba(${this._r}, ${this._g}, ${this._b}, ${this._a})`;
+    }
 
     toHex(){
-        const {r, g, b, a} = this;
-        return RGBAToHex(r, g, b, a);
+        if (this._needsUpdate){
+            const {r, g, b, a} = this;
+            this._hexCache = RGBAToHex(r, g, b, a);
+            this._needsUpdate = false;
+        }
+
+        return this._hexCache;
     }
 
     fromHex(hexStr){

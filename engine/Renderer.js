@@ -33,8 +33,9 @@ export default class Renderer{
         this._scaleFac = this.canvas.width / Renderer.SCREEN_RES;
 
         //draw background
-        ctx.fillStyle = this.room.bgColor;
+        ctx.fillStyle = this.room.bgColor.toHex();
         ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
         this._drawInstances(deltaTime);
         this._transition.render(deltaTime);
     }

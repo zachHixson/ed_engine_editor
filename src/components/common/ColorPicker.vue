@@ -171,9 +171,9 @@ export default {
             let hsv = new Shared.Color().fromArray([...rgbArr.map(i => Math.round(i * this.valuePos)), 255]);
             
             this.selectedColor = hsv;
-            this.$refs.cursor.style.background = this.selectedColor.css;
-            this.$refs.valueCursorBG.style.background = this.selectedColor.css;
-            this.slider.style.backgroundImage = `linear-gradient(to right, black, ${hs.css})`;
+            this.$refs.cursor.style.background = this.selectedColor.toCSS();
+            this.$refs.valueCursorBG.style.background = this.selectedColor.toCSS();
+            this.slider.style.backgroundImage = `linear-gradient(to right, black, ${hs.toCSS()})`;
         },
         moveCursorToColor(rgba){
             let wheelBounds = this.canvas.getBoundingClientRect();
