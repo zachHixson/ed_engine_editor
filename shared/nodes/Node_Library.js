@@ -1,5 +1,6 @@
 import {SOCKET_TYPE, WIDGET} from './Node_Enums';
 import {EVENTS} from './Events';
+import Library_Variables from './Library_Variables';
 
 export const NODE_LIST = [
     ...EVENTS,
@@ -39,7 +40,7 @@ export const NODE_LIST = [
         ],
     },
     ///////////// actual nodes
-    {
+    {// Branch
         id: 'branch',
         category: 'actual',
         inTriggers: [
@@ -57,12 +58,12 @@ export const NODE_LIST = [
             },
         },
     },
-    {
+    {// Compare
         id: 'compare',
         category: 'actual',
         inputs: [
-            {id: '_inp', type: SOCKET_TYPE.ANY, default: null},
-            {id: '_inp2', type: SOCKET_TYPE.ANY, default: null},
+            {id: '_inp', type: SOCKET_TYPE.NUMBER, default: null},
+            {id: '_inp2', type: SOCKET_TYPE.NUMBER, default: null},
         ],
         widget: {
             id: 'compare_function',
@@ -88,7 +89,7 @@ export const NODE_LIST = [
             },
         },
     },
-    {
+    {// Logic
         id: 'logic',
         category: 'actual',
         widget: {
@@ -117,7 +118,7 @@ export const NODE_LIST = [
             },
         },
     },
-    {
+    {// Not
         id: 'not',
         category: 'actual',
         inputs: [
@@ -130,7 +131,7 @@ export const NODE_LIST = [
             not(){return !this.getInput('_inp')},
         },
     },
-    {
+    {// Debug Log
         id: 'debug_log',
         category: 'actual',
         inTriggers: [
@@ -148,10 +149,10 @@ export const NODE_LIST = [
                 const hasData = data || typeof data == 'boolean';
 
                 if (label.length > 0 && hasData){
-                    this.engine.log(label, dataOut);
+                    this.engine.log(label, data);
                 }
                 else if (hasData){
-                    this.engine.log(dataOut);
+                    this.engine.log(data);
                 }
                 else{
                     this.engine.log(label);
@@ -161,7 +162,7 @@ export const NODE_LIST = [
             },
         },
     },
-    {
+    {// Key Down
         id: 'key_down',
         category: 'actual',
         widget: {
@@ -179,7 +180,7 @@ export const NODE_LIST = [
             },
         },
     },
-    {
+    {// Math
         id: 'math',
         category: 'actual',
         widget: {
@@ -215,7 +216,7 @@ export const NODE_LIST = [
             },
         },
     },
-    {
+    {// Remove Instance
         id: 'remove_instance',
         category: 'actual',
         inTriggers: [
@@ -233,7 +234,7 @@ export const NODE_LIST = [
             }
         }
     },
-    {
+    {// Dialog Box
         id: 'dialog_box',
         category: 'actual',
         widget: {
@@ -260,7 +261,7 @@ export const NODE_LIST = [
             }
         }
     },
-    {
+    {// Set Animation Playback
         id: 'set_animation_playback',
         category: 'drawing',
         inTriggers: [
@@ -287,7 +288,7 @@ export const NODE_LIST = [
             }
         }
     },
-    {
+    {// Set Position
         id: 'set_position',
         category: 'movement',
         inTriggers: [
@@ -315,7 +316,7 @@ export const NODE_LIST = [
             },
         },
     },
-    {
+    {// Move Tiled
         id: 'move_tiled',
         category: 'movement',
         inTriggers: [
@@ -366,105 +367,7 @@ export const NODE_LIST = [
             },
         },
     },
-    {
-        id: 'set_variable',
-        category: 'variables',
-        inTriggers: [
-            {id: '_i', execute: 'setVar'},
-        ],
-        outTriggers: ['_o'],
-        inputs: [
-            {id: 'name', type: SOCKET_TYPE.STRING, default: ''},
-            {id: 'data', type: SOCKET_TYPE.ANY, default: null},
-            {id: 'global', type: SOCKET_TYPE.BOOL, default: false, hideSocket: true},
-        ],
-        methods: {
-            setVar(){
-                const varName = this.getInput('name').toLowerCase();
-                const data = this.getInput('data');
-                const global = this.getInput('global');
-
-                if (global){
-                    this.engine.setGlobalVariable(varName, data);
-                }
-                else{
-                    this.engine.setInstanceVariable(this.instance, varName, data);
-                }
-
-                this.triggerOutput('_o');
-            },
-        },
-    },
-    {
-        id: 'get_variable',
-        category: 'variables',
-        inputs: [
-            {id: 'name', type: SOCKET_TYPE.STRING, default: ''},
-            {id: 'global', type: SOCKET_TYPE.BOOL, default: false, hideSocket: true},
-        ],
-        outputs: [
-            {id: 'data', type: SOCKET_TYPE.ANY, execute: 'getVar'},
-        ],
-        methods: {
-            getVar(){
-                const name = this.getInput('name').toLowerCase();
-                const global = this.getInput('global');
-                const value = global ? this.engine.getGlobalVariable(name)
-                    : this.engine.getInstanceVariable(this.instance, name);
-
-                if (value == undefined){
-                    return null;
-                }
-                
-                return value;
-            },
-        },
-    },
-    {
-        id: 'number',
-        category: 'variables',
-        inputs: [
-            {id: '_number', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
-        ],
-        outputs: [
-            {id: '_out', type: SOCKET_TYPE.NUMBER, execute: 'value'},
-        ],
-        methods: {
-            value(){
-                return this.getInput('_number');
-            },
-        }
-    },
-    {
-        id: 'string',
-        category: 'variables',
-        inputs: [
-            {id: '_string', type: SOCKET_TYPE.STRING, default: ''},
-        ],
-        outputs: [
-            {id: '_out', type: SOCKET_TYPE.STRING, execute: 'value'},
-        ],
-        methods: {
-            value(){
-                return this.getInput('_boolean');
-            },
-        }
-    },
-    {
-        id: 'boolean',
-        category: 'variables',
-        inputs: [
-            {id: '_boolean', type: SOCKET_TYPE.BOOL, default: false},
-        ],
-        outputs: [
-            {id: '_out', type: SOCKET_TYPE.BOOL, execute: 'value'},
-        ],
-        methods: {
-            value(){
-                return this.getInput('_boolean');
-            },
-        }
-    },
+    ...Library_Variables,
 ];
 
 export const NODE_MAP = {};

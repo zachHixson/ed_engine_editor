@@ -10,6 +10,7 @@ export * from './data_classes/Sprite';
 export * from './nodes/Events';
 export * from './nodes/Node_Enums';
 export * from './nodes/Node_Library';
+export * from './nodes/Socket_Conversions';
 
 export * from './Draw_2D';
 export * from './Enums';

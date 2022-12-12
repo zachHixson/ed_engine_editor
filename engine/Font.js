@@ -1,4 +1,4 @@
-import loadFontData, {tokenizeData, rleDecode, bitmapToCanvas} from "../_compiled/FontData";
+import loadFontData, {decode, bitmapToCanvas} from "../_compiled/FontData";
 
 function getCharacterObject(charList, canvas, charWidth, charHeight){
     const ctx = canvas.getContext('2d');
@@ -9,7 +9,7 @@ function getCharacterObject(charList, canvas, charWidth, charHeight){
         const x = (i % rows) * charWidth;
         const y = Math.floor(i / rows) * charHeight;
         const char = ctx.getImageData(x, y, charWidth, charHeight);
-        const newCanvas = Shared.createCanvas(charWidth, charHeight)
+        const newCanvas = Shared.createCanvas(charWidth, charHeight);
         const newCtx = newCanvas.getContext('2d');
 
         newCtx.putImageData(char, 0, 0);
@@ -22,13 +22,11 @@ function getCharacterObject(charList, canvas, charWidth, charHeight){
 function renderCharacters(){
     const fontData = loadFontData();
     const canvas = Shared.createCanvas(fontData.width, fontData.height);
-    const tokenized = tokenizeData(fontData.data);
-    const decoded = rleDecode(tokenized);
+    const decoded = decode(fontData);
     const bitmapCanvas = bitmapToCanvas(decoded, canvas);
     const characters = getCharacterObject(fontData.charKey, bitmapCanvas, fontData.charWidth, fontData.charHeight);
 
     return characters;
 }
 
-const font = renderCharacters();
-export default font;
+export default renderCharacters();

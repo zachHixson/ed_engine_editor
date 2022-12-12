@@ -4,10 +4,10 @@ export default class Art_Canvas_Renderer{
         this.CANVAS_WIDTH = this.GRID_DIV * 20;
 
         this.canvas = element;
-        this.checkerBGBuff = Shared.createCanvas(this.canvas.width, this.canvas.height);
-        this.checkerStencilBuff = Shared.createCanvas(this.canvas.width, this.canvas.height);
+        this.checkerBGBuff = Shared.createHDPICanvas(this.canvas.width, this.canvas.height);
+        this.checkerStencilBuff = Shared.createHDPICanvas(this.canvas.width, this.canvas.height);
         this.pixelBuff = Shared.createCanvas(this.GRID_DIV, this.GRID_DIV);
-        this.gridBuff = Shared.createCanvas(this.canvas.width, this.canvas.height);
+        this.gridBuff = Shared.createHDPICanvas(this.canvas.width, this.canvas.height);
         this.previewBuff = Shared.createCanvas(this.GRID_DIV, this.GRID_DIV);
         this.spriteData = spriteData;
         this.previewData = previewData;
@@ -63,9 +63,9 @@ export default class Art_Canvas_Renderer{
     }
 
     resize(width = this.canvas.clientWidth, height = this.canvas.clientHeight){
-        Shared.resizeCanvas(this.checkerBGBuff, width, height);
-        Shared.resizeCanvas(this.checkerStencilBuff, width, height);
-        Shared.resizeCanvas(this.gridBuff, width, height);
+        Shared.resizeHDPICanvas(this.checkerBGBuff, width, height);
+        Shared.resizeHDPICanvas(this.checkerStencilBuff, width, height);
+        Shared.resizeHDPICanvas(this.gridBuff, width, height);
 
         this.fullRedraw();
     }

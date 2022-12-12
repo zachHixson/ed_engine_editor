@@ -22,8 +22,6 @@
 </template>
 
 <script>
-import Victor from 'victor';
-
 const EXPAND = 1.15;
 
 export default {
@@ -58,10 +56,10 @@ export default {
         this.slider = this.$refs.slider;
 
         let canvasDim = this.width;
-        Shared.resizeCanvas(this.canvas, this.width, this.width);
-        this.wheelBuffer = Shared.createCanvas(canvasDim, canvasDim);
-        this.valueBuffer = Shared.createCanvas(canvasDim, canvasDim);
-        this.circleBuffer = Shared.createCanvas(canvasDim, canvasDim);
+        Shared.resizeHDPICanvas(this.canvas, this.width, this.width);
+        this.wheelBuffer = Shared.createHDPICanvas(canvasDim, canvasDim);
+        this.valueBuffer = Shared.createHDPICanvas(canvasDim, canvasDim);
+        this.circleBuffer = Shared.createHDPICanvas(canvasDim, canvasDim);
 
         this.drawWheel();
         this.drawCircleBuff();

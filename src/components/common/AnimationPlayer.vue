@@ -46,7 +46,7 @@ export default {
     mounted(){
         let spriteDim = Shared.Sprite.DIMENSIONS;
         this.canvas = this.$refs.canvas;
-        this.checkerBGBuff = Shared.createCanvas(this.canvas.width, this.canvas.height);
+        this.checkerBGBuff = Shared.createHDPICanvas(this.canvas.width, this.canvas.height);
         this.pixelBuff = Shared.createCanvas(spriteDim, spriteDim);
 
         Shared.drawCheckerBG(this.checkerBGBuff, 4, "#B5B5B5", '#CCCCCC');
@@ -57,7 +57,7 @@ export default {
         drawFrame(){
             let ctx = this.canvas.getContext('2d');
 
-            Shared.resizeCanvas(this.canvas, this.dimensions, this.dimensions);
+            Shared.resizeHDPICanvas(this.canvas, this.dimensions, this.dimensions);
             
             ctx.drawImage(this.checkerBGBuff, 0, 0, this.canvas.width, this.canvas.height);
 

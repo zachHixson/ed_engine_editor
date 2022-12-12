@@ -5,6 +5,7 @@ export default class Logic{
         this.id = logicData.id;
         this.events = {};
         this._instance = null;
+        this._localVariableDefaults = {};
 
         const nodes = {};
 
@@ -44,6 +45,12 @@ export default class Logic{
             allStartSockets[startSocketId].connection = allEndSockets[endSocketId];
             allEndSockets[endSocketId].connection = allStartSockets[startSocketId];
         });
+
+        //setup local variable defaults
+        for (const v in logicData.localVariables){
+            const type = Symbol.for(logicData.localVariables[v]);
+            this._localVariableDefaults[v] = Shared.SOCKET_DEFAULT.get(type);
+        }
     }
 
     executeEvent(eventName, instance, data){

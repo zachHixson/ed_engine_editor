@@ -100,59 +100,15 @@ export default class Node{
         if (input.connection){
             const node = input.connection.node;
             const method = input.connection.execute;
+            const val = node.method(method)
 
-            inputVal = node.method(method);
-
-            if (input.connection.type == Shared.SOCKET_TYPE.ANY){
-                inputVal = this.castAnyToType(inputVal, input.type);
-            }
+            inputVal = Shared.convertSocketType(input.connection.type, input.type, val);
         }
         else{
             inputVal = input.value;
         }
         
         return inputVal;
-    }
-
-    castAnyToType(data, toType){
-        const {ANY, NUMBER, STRING, OBJECT, BOOL} = Shared.SOCKET_TYPE;
-
-        switch(toType){
-            case ANY:
-                return data;
-            case NUMBER:
-                const float = parseFloat(data);
-
-                if (float == NaN){
-                    switch (typeof data){
-                        case 'string':
-                            this.engine.nodeException('cannot_convert_string_to_num', this._stackTrace);
-                            throw 'cannot convert string to number';
-                        case 'object':
-                            this.engine.nodeException('cannot_convert_object_to_num', this._stackTrace);
-                            throw 'cannot convert object to number';
-                        case 'boolean':
-                            return data + 0;
-                    }
-                }
-
-                return float;
-            case STRING:
-                if (data.type){
-                    return data.name;
-                }
-
-                return data.toString();
-            case OBJECT:
-                if (!data.TYPE){
-                    this.engine.nodeException('data_not_object', this._stackTrace);
-                    throw 'incorrect data type';
-                }
-
-                return data;
-            case BOOL:
-                return !!data;
-        }
     }
 
     triggerOutput(outputId){

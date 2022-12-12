@@ -1,11 +1,11 @@
 <template>
     <div class="dataSocket" :class="isInput ? 'isInput' : ''">
         <div v-if="showLabel" class="socket_name">{{$t('node.' + socket.id)}}</div>
-        <div v-if="isInput && !isConnected" class="inputBox">
-            <input v-if="socket.type == SOCKET_TYPE.NUMBER" type="number" :value="socket.value" @change="numValueChanged($event.target)" v-input-active/>
-            <input v-if="socket.type == SOCKET_TYPE.STRING" type="text" :value="socket.value"  @change="valueChanged($event.target)" v-input-active/>
+        <div v-if="isInput && !isConnected && !hideInput" class="inputBox">
+            <input v-if="socket.type == SOCKET_TYPE.NUMBER" type="number" :value="getValue()" @change="numValueChanged($event.target)" v-input-active/>
+            <input v-if="socket.type == SOCKET_TYPE.STRING" type="text" :value="getValue()"  @change="valueChanged($event.target)" v-input-active/>
             <div v-if="socket.type == SOCKET_TYPE.OBJECT" class="selfBox">{{$t('logic_editor.self')}}</div>
-            <input v-if="socket.type == SOCKET_TYPE.BOOL" type="checkbox" :checked="socket.value"  @change="boolValueChanged($event.target)" ref="boolCheckbox"/>
+            <input v-if="socket.type == SOCKET_TYPE.BOOL" type="checkbox" :checked="getValue()"  @change="boolValueChanged($event.target)" ref="boolCheckbox"/>
         </div>
         <svg
             v-if="!(isTrigger || hideSocket)"
@@ -21,6 +21,7 @@
             <rect v-if="socket.type == SOCKET_TYPE.OBJECT" x="4" y="4" width="12" height="12" style="fill: #FF85AE" />
             <polygon v-if="socket.type == SOCKET_TYPE.BOOL" points="3,10 7,4 13,4 17,10 13,16 7,16" style="fill: #FF5555" />
         </svg>
+        <div v-if="hideSocket" class="hidden-socket"></div>
         <svg
             v-if="isTrigger"
             ref="socketConnection"
@@ -37,8 +38,10 @@
 
 <script>
 import Node_Connection from '@/components/editor_logic/Node_Connection';
+import DragList from '../common/DragList.vue';
 
 export default {
+    components: { DragList },
     name: 'Socket',
     props: ['socket', 'isInput', 'parentConnections', 'parentId'],
     data(){
@@ -55,6 +58,9 @@ export default {
         },
         hideSocket(){
             return this.socket.hideSocket;
+        },
+        hideInput(){
+            return this.socket.hideInput;
         },
         isTrigger(){
             return this.socket.type == undefined;
@@ -149,6 +155,9 @@ export default {
         mouseLeave(event){
             this.$emit('socket-over', null);
         },
+        getValue(){
+            return this.socket.value;
+        }
     },
 }
 </script>
@@ -164,6 +173,11 @@ export default {
 .isInput{
     justify-content: flex-start;
     flex-direction: row-reverse;
+}
+
+.hidden-socket{
+    width: 20px;
+    height: 20px;
 }
 
 .trigger_icon{
@@ -200,6 +214,8 @@ export default {
 }
 
 input[type="checkbox"]{
-    width: 20px;
+    width: min-content;
+    padding: 0px;
+    margin: 0px;
 }
 </style>

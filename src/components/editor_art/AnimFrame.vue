@@ -54,8 +54,8 @@ export default {
         let {clientWidth, clientHeight} = this.$refs.wrapper;
 
         this.canvas = this.$refs.canvas;
-        Shared.resizeCanvas(this.canvas, clientWidth, clientHeight);
-        this.checkerBGBuff = Shared.createCanvas(this.canvas.width, this.canvas.height);
+        Shared.resizeHDPICanvas(this.canvas, clientWidth, clientHeight);
+        this.checkerBGBuff = Shared.createHDPICanvas(this.canvas.width, this.canvas.height);
         this.pixelBuff = Shared.createCanvas(spriteDim, spriteDim);
 
         Shared.drawCheckerBG(this.checkerBGBuff, 4, "#B5B5B5", '#CCCCCC');

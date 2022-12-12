@@ -12,7 +12,6 @@
 </template>
 
 <script>
-import Victor from 'victor';
 import NavControl from './NavControl';
 import HotkeyMap from '@/components/common/HotkeyMap';
 

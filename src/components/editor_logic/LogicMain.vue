@@ -201,6 +201,7 @@ import Node_Connection from '@/components/editor_logic/Node_Connection';
 import Connection from '@/components/editor_logic/Connection';
 import HotkeyMap from '@/components/common/HotkeyMap';
 import Undo_Store, {UndoHelpers} from '@/components/common/Undo_Store';
+import getNodeEventAPI from '@/components/editor_logic/getNodeEventAPI';
 
 export default {
     name: 'LogicEditor',
@@ -231,6 +232,7 @@ export default {
             isSearching: false,
             searchQuery: '',
             renamingGraph: null,
+            nodeEventAPI: getNodeEventAPI(this),
         }
     },
     components: {
@@ -246,6 +248,7 @@ export default {
                 this.relinkConnections();
                 this.navChange(this.curNavState);
                 this.updateNodeBounds();
+                this.undoStore.clear();
             })
         },
         inputActive(newState){
@@ -323,11 +326,17 @@ export default {
         graphKeys(){
             return this.selectedAsset.graphs.map(graph => graph.id);
         },
+        globalVariableMap(){
+            return this.$store.getters['LogicEditor/getGlobalVariableMap'];
+        },
     },
     created(){
         this.convertClientToNavPos = this.clientToNavPos.bind(this);
         this.hotkeyDownHandler = this.hotkeyMap.keyDown.bind(this.hotkeyMap);
         this.hotkeyUpHandler = this.hotkeyMap.keyUp.bind(this.hotkeyMap);
+    },
+    beforeMount(){
+        this.assignNodeAPI();
     },
     mounted(){
         this.nodeViewportEl = this.$refs.nodeVP;
@@ -372,6 +381,7 @@ export default {
             this.actionMap.set(Shared.LOGIC_ACTION.MOVE, this.actionMoveNodes);
             this.actionMap.set(Shared.LOGIC_ACTION.CONNECT, this.actionMakeConnection);
             this.actionMap.set(Shared.LOGIC_ACTION.DISCONNECT, this.actionRemoveConnection);
+            this.actionMap.set(Shared.LOGIC_ACTION.DISCONNECT_INCOMPATABLE, this.actionDisconnectIncompatable);
             this.actionMap.set(Shared.LOGIC_ACTION.CHANGE_INPUT, this.actionChangeInput);
         },
         bindReversions(){
@@ -380,7 +390,19 @@ export default {
             this.revertMap.set(Shared.LOGIC_ACTION.MOVE, this.revertMoveNodes);
             this.revertMap.set(Shared.LOGIC_ACTION.CONNECT, this.revertMakeConnection);
             this.revertMap.set(Shared.LOGIC_ACTION.DISCONNECT, this.revertRemoveConnection);
+            this.revertMap.set(Shared.LOGIC_ACTION.DISCONNECT_INCOMPATABLE, this.revertDisconnectIncompatable);
             this.revertMap.set(Shared.LOGIC_ACTION.CHANGE_INPUT, this.revertChangeInput);
+        },
+        assignNodeAPI(){
+            const allLogic = this.$store.getters['GameData/getAllLogic'];
+
+            for (let l = 0; l < allLogic.length; l++){
+                const logic = allLogic[l];
+
+                for (let n = 0; n < logic.nodes.length; n++){
+                    logic.nodes[n].setEditorAPI(this.nodeEventAPI);
+                }
+            }
         },
         getNewNodePos(){
             let vpBounds = this.nodeViewportEl.getBoundingClientRect();
@@ -449,17 +471,19 @@ export default {
             this.selectNodesInBox();
 
             if (this.draggingConnection){
-                let socketOver = this.currentSocketOver;
-                let connectionObj = this.draggingConnection;
-                let typeMatch = socketOver?.socketData.type == connectionObj.type;
-                let anyMatch = socketOver?.socketData.type == Shared.SOCKET_TYPE.ANY || connectionObj.type == Shared.SOCKET_TYPE.ANY;
-                let directionMatch = !!connectionObj.startSocketEl == !!socketOver?.isInput;
+                const socketOver = this.currentSocketOver;
+                const connectionObj = this.draggingConnection;
+                const startType = !!connectionObj.startSocketEl ? connectionObj.type : socketOver?.socketData.type;
+                const endType = !!connectionObj.startSocketEl ? socketOver?.socketData.type : connectionObj.type;
+                const isTrigger = startType == endType && startType == null;
+                const typeMatch = isTrigger || Shared.canConvertSocket(startType, endType);
+                const directionMatch = !!connectionObj.startSocketEl == !!socketOver?.isInput;
 
                 this.draggingConnection = null;
 
                 if (
                     socketOver &&
-                    (typeMatch || anyMatch) &&
+                    typeMatch &&
                     directionMatch &&
                     connectionObj.canConnect &&
                     socketOver.canConnect
@@ -754,6 +778,9 @@ export default {
             let pos = this.getNewNodePos();
             let newNode = this.selectedAsset.addNode(templateId, pos, nodeRef);
 
+            newNode.setEditorAPI(this.nodeEventAPI);
+            newNode.onCreate();
+
             if (makeCommit){
                 let data = {templateId, nodeRef: newNode};
                 this.undoStore.commit({action: Shared.LOGIC_ACTION.ADD_NODE, data});
@@ -773,9 +800,14 @@ export default {
                     }
                 });
 
-                connectionRefList.forEach(c => this.selectedAsset.removeConnection(c.id));
+                connectionRefList.forEach(c => {
+                    c.startNode?.onRemoveConnection(c);
+                    c.endNode?.onRemoveConnection(c);
+                    this.selectedAsset.removeConnection(c.id)
+                });
 
                 //delete node
+                node.onBeforeDelete();
                 this.selectedAsset.deleteNode(node);
             });
 
@@ -822,6 +854,9 @@ export default {
                 connectionObj.startSocketEl = socketOver.socketEl;
             }
 
+            connectionObj.startNode.onNewConnection(connectionObj);
+            connectionObj.endNode.onNewConnection(connectionObj);
+
             //if connection was removed entirely by a previous undo, we need to recreate
             if (!connectionObj.connectionComponent){
                 this.selectedAsset.addConnection(connectionObj);
@@ -851,7 +886,10 @@ export default {
             this.undoStore.cache.delete('prev_socket');
         },
         actionRemoveConnection({connectionObj}, makeCommit = true){
-             makeCommit &= !!(connectionObj.startNode && connectionObj.endNode);
+            makeCommit &= !!(connectionObj.startNode && connectionObj.endNode);
+
+            connectionObj.startNode?.onRemoveConnection(connectionObj);
+            connectionObj.endNode?.onRemoveConnection(connectionObj);
 
             if (makeCommit){
                 let data = {connectionObj: Object.assign(new Node_Connection(), connectionObj)};
@@ -863,15 +901,55 @@ export default {
 
             this.selectedAsset.removeConnection(connectionObj.id);
         },
-        actionChangeInput({socket, oldVal, newVal}, makeCommit = true){
-            socket.value = newVal;
+        actionDisconnectIncompatable({newConnection, breakConnectionList, isGlobal}, makeCommit = true){
+            // const assetConnectionMap = new Map();
+
+            // if (isGlobal){
+            //     const allLogic = this.$store.getters['GameData/getAllLogic'];
+
+            //     for (let i = 0; i < allLogic.length; i++){
+            //         for (let j = 0; j < breakConnectionList.length; j++){
+            //             const connection = breakConnectionList[j];
+
+            //             if (allLogic[i].removeConnection(null, connection)){
+            //                 assetConnectionMap.set(connection, allLogic[i]);
+            //             }
+            //         }
+            //     }
+            // }
+            // else{
+            //     for (let i = 0; i < breakConnectionList.length; i++){
+            //         const connection = breakConnectionList[i];
+            //         this.selectedAsset.removeConnection(null, connection.id);
+            //         assetConnectionMap.set(connection, this.selectedAsset);
+            //     }
+            // }
+
+            // if (!this.selectedAsset.connections.find(c => c == newConnection)){
+            //     this.selectedAsset.addConnection(newConnection);
+            // }
 
             if (makeCommit){
-                let data = {socket, oldVal, newVal};
+                //const data = {newConnection, breakConnectionList, isGlobal, assetConnectionMap};
+                //this.undoStore.commit({action: Shared.LOGIC_ACTION.DISCONNECT_INCOMPATABLE, data});
+            }
+
+            this.$nextTick(()=>{
+                this.relinkConnections();
+            });
+        },
+        actionChangeInput({socket, oldVal, newVal, node}, makeCommit = true){
+            socket.value = newVal;
+
+            node.onValueChange(socket.id, oldVal, newVal);
+
+            if (makeCommit){
+                let data = {socket, oldVal, newVal, node};
                 this.undoStore.commit({action: Shared.LOGIC_ACTION.CHANGE_INPUT, data});
             }
         },
         revertAddNode({nodeRef}){
+            nodeRef.onBeforeDelete();
             this.selectedAsset.deleteNode(nodeRef);
         },
         revertDeleteNodes({nodeRefList, connectionRefList}){
@@ -881,11 +959,13 @@ export default {
 
             connectionRefList.forEach(connection => {
                 this.selectedAsset.addConnection(connection);
+                connection.startNode.onNewConnection(connection);
+                connection.endNode.onNewConnection(connection);
             });
 
             this.$nextTick(()=>{
                 this.relinkConnections();
-            })
+            });
         },
         revertMoveNodes({nodeRefList, velocity}){
             for (let i = 0; i < nodeRefList.length; i++){
@@ -911,8 +991,20 @@ export default {
                 this.relinkConnections();
             })
         },
-        revertChangeInput({socket, oldVal}){
+        revertDisconnectIncompatable({newConnection, assetConnectionMap}){
+            for (let [connection, logic] of assetConnectionMap){
+                logic.addConnection(connection);
+            }
+
+            this.selectedAsset.removeConnection(newConnection.id);
+
+            this.$nextTick(()=>{
+                this.relinkConnections();
+            });
+        },
+        revertChangeInput({socket, oldVal, newVal, node}){
             socket.value = oldVal;
+            node.onValueChange(socket.id, newVal, oldVal);
         },
     }
 }

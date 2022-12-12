@@ -148,7 +148,7 @@ export default {
             let width = Math.max(wrapper.clientWidth, 1);
             let height = Math.max(wrapper.clientHeight, 1);
 
-            Shared.resizeCanvas(this.canvasEl, width, height);
+            Shared.resizeHDPICanvas(this.canvasEl, width, height);
 
             this.$refs.navControlPanel.setContainerDimensions(wrapper.clientWidth, wrapper.clientHeight);
 

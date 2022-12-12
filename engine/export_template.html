@@ -19,7 +19,7 @@
             //set loop to resize canvas
             setInterval(()=>{
                 const dim = Math.min(document.body.clientWidth, document.body.clientHeight);
-                Shared.resizeCanvas(canvas, dim, dim);
+                Shared.resizeHDPICanvas(canvas, dim, dim);
             }, 20);
         }
     </script>

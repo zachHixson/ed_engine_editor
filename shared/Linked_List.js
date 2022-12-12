@@ -302,12 +302,12 @@ export class Linked_List{
             curNode = curNode.next;
         }
     }
-
-    Node = class {
-        constructor(val, next = null, prev = null){
-            this.val = val;
-            this.next = next;
-            this.prev = prev;
-        }
-    }
 };
+
+Linked_List.prototype.Node = class {
+    constructor(val, next = null, prev = null){
+        this.val = val;
+        this.next = next;
+        this.prev = prev;
+    }
+}

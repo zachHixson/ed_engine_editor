@@ -83,5 +83,6 @@ export const LOGIC_ACTION = createEnum([
     'MOVE',
     'CONNECT',
     'DISCONNECT',
+    'DISCONNECT_INCOMPATABLE',
     'CHANGE_INPUT',
 ]);

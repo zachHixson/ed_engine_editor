@@ -51,7 +51,7 @@
                     :parentId="nodeObj.nodeId"
                     @mouse-down="socketDown"
                     @socket-over="socketOver"
-                    @value-changed="$emit('socket-value-changed', $event)"/>
+                    @value-changed="socketValueChanged"/>
             </div>
             <div class="socket-column" style="align-items: flex-end">
                 <Socket
@@ -70,7 +70,6 @@
 </template>
 
 <script>
-import Victor from 'victor';
 import Socket from './Socket';
 import Widget from './Widget.vue';
 
@@ -100,10 +99,14 @@ export default {
             return this.nodeObj.widgetData;
         },
         inputs(){
-            return Array.from(this.nodeObj.inputs, ([id, input]) => input);
+            return Array.from(this.nodeObj.inputs, ([id, input]) => {
+                return this.convertAnySocket(input);
+            });
         },
         outputs(){
-            return Array.from(this.nodeObj.outputs, ([id, input]) => input);
+            return Array.from(this.nodeObj.outputs, ([id, output]) => {
+                return this.convertAnySocket(output);
+            });
         },
         showTriggers(){
             return this.inTriggers.length > 0 || this.outTriggers.length > 0;
@@ -130,6 +133,7 @@ export default {
     mounted(){
         this.nodeObj.setDomRef(this.$el);
         this.nodeObj.updateConnectionsCallback = this.updateConnections.bind(this);
+        this.nodeObj.onVisible();
         this.mouseUpEvent = this.mouseUp.bind(this);
 
         window.addEventListener('mouseup', this.mouseUpEvent);
@@ -185,6 +189,10 @@ export default {
             
             this.$emit('socket-over', event);
         },
+        socketValueChanged(event){
+            event.node = this.nodeObj;
+            this.$emit('socket-value-changed', event)
+        },
         updateConnections(){
             for (let i = 0; i < this.connections.length; i++){
                 this.connections[i].connectionComponent.update();
@@ -206,6 +214,16 @@ export default {
                 id: this.nodeObj.nodeId,
                 el: this,
                 sockets: socketElMap,
+            }
+        },
+        convertAnySocket(socket){
+            if (this.nodeObj.anyType && socket.type == Shared.SOCKET_TYPE.ANY){
+                const modifiedType = Object.assign({}, socket);
+                modifiedType.type = this.nodeObj.anyType;
+                return modifiedType;
+            }
+            else{
+                return socket;
             }
         },
     }

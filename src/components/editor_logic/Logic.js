@@ -11,6 +11,7 @@ export default class Logic{
         this.connections = [];
         this.selectedGraphId = null;
         this.selectedNodes = [];
+        this.localVariables = new Map();
         this._nextGraphId = 0;
         this._nextNodeId = 0;
         this._nextConnectionId = 0;
@@ -35,20 +36,29 @@ export default class Logic{
     }
 
     toSaveData(){
-        let logic = {
+        const logic = {
             id: this.id,
             name: this.name,
             selectedGraphId: this.selectedGraphId,
             graphs: this.graphs,
             nodes: this.nodes.map(n => n.toSaveData()),
-            connections: this.connections.map(c => c.toSaveData())
+            connections: this.connections.map(c => c.toSaveData()),
+            localVariables: (()=>{
+                const newMap = {};
+
+                this.localVariables.forEach((val, key)=>{
+                    newMap[key] = val.description;
+                });
+
+                return newMap;
+            })()
         }
 
         return logic;
     }
 
     fromSaveData(data){
-        let nodeMap = {};
+        const nodeMap = {};
 
         Object.assign(this, data);
 
@@ -67,12 +77,21 @@ export default class Logic{
             ).fromSaveData(node);
         });
 
-        this.nodes.forEach(node => nodeMap[node.nodeId] = node);
+        this.nodes.forEach(node => {
+            nodeMap[node.nodeId] = node;
+            node.onCreate();
+            node.onLoadFinished();
+        });
 
         this.connections = this.connections.map(connection => {
             this._nextConnectionId = Math.max(this._nextConnectionId, connection.id + 1);
             return new Node_Connection(connection).fromSaveData(connection, nodeMap);
         });
+
+        this.localVariables = new Map();
+        for (const v in data.localVariables){
+            this.localVariables.set(v, Symbol.for(data.localVariables[v]));
+        }
 
         return this;
     }
@@ -122,6 +141,7 @@ export default class Logic{
         let newNode = nodeRef ?? new Node(nodeTemplate, this.nextNodeId, pos, this.selectedGraphId);
 
         this.nodes.push(newNode);
+        newNode.onCreate();
 
         return newNode;
     }
@@ -148,14 +168,16 @@ export default class Logic{
         this.connections.push(connectionObj);
     }
 
-    removeConnection(id){
+    removeConnection(id, connectionobj){
         for (let i = 0; i < this.connections.length; i++){
             let connection = this.connections[i];
 
-            if (connection.id == id){
+            if (connection.id == id || (connectionobj == connection)){
                 this.connections.splice(i, 1);
-                return;
+                return true;
             }
         }
+
+        return false;
     }
 };

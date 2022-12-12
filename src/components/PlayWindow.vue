@@ -53,7 +53,7 @@ export default {
                 let wrapper = this.$refs.canvasWrapper;
                 let minDim = Math.min(wrapper.clientWidth, wrapper.clientHeight);
 
-                Shared.resizeCanvas(canvas, minDim, minDim);
+                Shared.resizeHDPICanvas(canvas, minDim, minDim);
             }, 20);
 
             this.engine = new Engine({

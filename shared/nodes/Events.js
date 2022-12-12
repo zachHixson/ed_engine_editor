@@ -1,13 +1,13 @@
 import {SOCKET_TYPE, WIDGET, COLLISION_EVENT} from './Node_Enums';
 
 export const EVENTS = [
-    {
+    {// Create
         id: 'e_create',
         isEvent: true,
         category: 'events',
         outTriggers: ['_o'],
     },
-    {
+    {// Update
         id: 'e_update',
         isEvent: true,
         category: 'events',
@@ -21,7 +21,7 @@ export const EVENTS = [
             },
         },
     },
-    {
+    {// Mouse Button
         id: 'e_mouse_button',
         isEvent: true,
         category: 'events',
@@ -58,7 +58,7 @@ export const EVENTS = [
             },
         },
     },
-    {
+    {// Mouse Move
         id: 'e_mouse_move',
         isEvent: true,
         category: 'events',
@@ -76,7 +76,7 @@ export const EVENTS = [
             },
         },
     },
-    {
+    {// Keyboard
         id: 'e_keyboard',
         isEvent: true,
         category: 'events',
@@ -109,7 +109,7 @@ export const EVENTS = [
             },
         },
     },
-    {
+    {// Collision
         id: 'e_collision',
         isEvent: true,
         category: 'events',
@@ -145,7 +145,7 @@ export const EVENTS = [
             },
         },
     },
-    {
+    {// Timer
         id: 'e_timer',
         isEvent: true,
         category: 'events',
@@ -163,7 +163,7 @@ export const EVENTS = [
             }
         },
     },
-    {
+    {// Message
         id: 'e_message',
         isEvent: true,
         category: 'events',

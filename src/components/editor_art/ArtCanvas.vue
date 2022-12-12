@@ -146,7 +146,7 @@ export default {
             let wrapper = this.$refs.artCanvas;
             let canvas = this.$refs.canvas;
 
-            Shared.resizeCanvas(
+            Shared.resizeHDPICanvas(
                 canvas,
                 Math.max(wrapper.clientWidth, 1),
                 Math.max(wrapper.clientHeight, 1)

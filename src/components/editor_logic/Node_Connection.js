@@ -13,6 +13,14 @@ export default class Node_Connection{
         this.endSocketEl = inpObj.endSocketEl ?? null;
     }
 
+    get startSocket(){
+        return this.startNode?.outputs.get(this.startSocketId);
+    }
+
+    get endSocket(){
+        return this.endNode?.inputs.get(this.endSocketId);
+    }
+
     componentDestructor(){
         this.connectionComponent = null;
         this.startSocketEl = null;

@@ -113,12 +113,12 @@ export default class Room_Edit_Renderer{
 
     resize(){
         let {clientWidth, clientHeight} = this.canvas;
-        Shared.resizeCanvas(this.objBuff, clientWidth, clientHeight);
-        Shared.resizeCanvas(this.iconBuff, clientWidth, clientHeight);
-        Shared.resizeCanvas(this.iconColor, clientWidth, clientHeight);
-        Shared.resizeCanvas(this.cursorBuff, clientWidth, clientHeight);
-        Shared.resizeCanvas(this.gridBuff, clientWidth, clientHeight);
-        Shared.resizeCanvas(this.selectionBuff, clientWidth, clientHeight);
+        Shared.resizeHDPICanvas(this.objBuff, clientWidth, clientHeight);
+        Shared.resizeHDPICanvas(this.iconBuff, clientWidth, clientHeight);
+        Shared.resizeHDPICanvas(this.iconColor, clientWidth, clientHeight);
+        Shared.resizeHDPICanvas(this.cursorBuff, clientWidth, clientHeight);
+        Shared.resizeHDPICanvas(this.gridBuff, clientWidth, clientHeight);
+        Shared.resizeHDPICanvas(this.selectionBuff, clientWidth, clientHeight);
         this.recalcRoundedCanvas();
         this.recalcHalfCanvas();
         this.fullRedraw();
@@ -229,7 +229,7 @@ export default class Room_Edit_Renderer{
                     this.spriteCache.set(inst.editorFrameID, spriteBuff);
                 }
 
-                scaleFac = this.scaledCellWidth * devicePixelRatio / spriteBuff.width;
+                scaleFac = this.scaledCellWidth / spriteBuff.width;
             }
             else if (this.noSpriteSVG){
                 ctx = this.iconBuff.getContext('2d');

@@ -38,8 +38,6 @@
 </template>
 
 <script>
-import Victor from 'victor';
-
 const PADDING = 20;
 const HANDLE_WIDTH = 100;
 const GRAB_DIST = 70;

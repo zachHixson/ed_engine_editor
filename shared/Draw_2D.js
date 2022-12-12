@@ -139,6 +139,16 @@ export function createCanvas(width, height){
 }
 
 export function resizeCanvas(canvas, width, height){
+    Object.assign(canvas, {width, height});
+}
+
+export function createHDPICanvas(width, height){
+    const canvas = document.createElement('canvas');
+    resizeHDPICanvas(canvas, width, height);
+    return canvas;
+}
+
+export function resizeHDPICanvas(canvas, width, height){
     canvas.width = width * devicePixelRatio;
     canvas.height = height * devicePixelRatio;
     canvas.style.width = width + 'px';

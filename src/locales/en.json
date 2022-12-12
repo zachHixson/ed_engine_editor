@@ -183,7 +183,8 @@
         "node_panel_empty_warning": "Add a graph to start adding nodes",
         "graph_panel_heading": "Graphs",
         "graph_prefix": "Graph_",
-        "self": "Self"
+        "self": "Self",
+        "confirm_break_connections": "Warning: The following variable \"{var}\" is already in use and is connected to sockets incompatable with type \"{type}\". <br><br> Break incompatable connections?"
     },
     "node":{
         "default": "",

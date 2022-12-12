@@ -26,31 +26,28 @@ export default new Vuex.Store({
     },
     getters: {
         getProjectName: state => state.projectName,
-        getProjectData: (state, getters) => {
-            return {
-                projectName: state.projectName,
-                editor_version: EDITOR_VERSION,
-                newestID: Shared.ID_Generator.getCurrentID(),
-                selectedRoomId: AssetBrowser.state.selectedRoom.id,
-                startRoom: getters['GameData/getStartRoom'],
-                sprites: getters['GameData/getAllSprites'],
-                objects: getters['GameData/getAllObjects'],
-                rooms: getters['GameData/getAllRooms'],
-                logic: getters['GameData/getAllLogic'],
-            };
-        },
         getSaveData: (state, getters) => {
-            let saveObj = {
+            const saveObj = {
                 projectName: state.projectName,
                 editor_version: EDITOR_VERSION,
                 newestID: Shared.ID_Generator.getCurrentID(),
                 selectedRoomId: AssetBrowser.state.selectedRoom.id,
+                globalVariableMap: (()=>{
+                    const map = getters['LogicEditor/getGlobalVariableMap'];
+                    const newMap = {};
+    
+                    map.forEach((val, key) => {
+                        newMap[key] = val.description;
+                    });
+    
+                    return newMap;
+                })(),
                 startRoom: getters['GameData/getStartRoom'],
                 sprites: getters['GameData/getSpriteSaveData'],
                 objects: getters['GameData/getObjectSaveData'],
                 rooms: getters['GameData/getRoomSaveData'],
                 logic: getters['GameData/getLogicSaveData'],
-            }
+            };
     
             return JSON.stringify(saveObj);
         },
@@ -75,6 +72,7 @@ export default new Vuex.Store({
 
             commit('loadSaveData', loadObj);
             dispatch('GameData/loadSaveData', loadObj);
+            dispatch('LogicEditor/setGlobalVariableMap', loadObj.globalVariableMap);
 
             if (loadObj.selectedRoomId != undefined){
                 let room = getters['GameData/getAllRooms'].find(r => r.id == loadObj.selectedRoomId);

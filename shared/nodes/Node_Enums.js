@@ -1,10 +1,18 @@
 export const SOCKET_TYPE = {
-    ANY: Symbol('ANY'),
-    NUMBER: Symbol('NUMBER'),
-    STRING: Symbol('STRING'),
-    OBJECT: Symbol('OBJECT'),
-    BOOL: Symbol('BOOL'),
+    ANY: Symbol.for('ANY'),
+    NUMBER: Symbol.for('NUMBER'),
+    STRING: Symbol.for('STRING'),
+    OBJECT: Symbol.for('OBJECT'),
+    BOOL: Symbol.for('BOOL'),
 };
+
+export const SOCKET_DEFAULT = new Map([
+    [SOCKET_TYPE.ANY, null],
+    [SOCKET_TYPE.NUMBER, 0],
+    [SOCKET_TYPE.STRING, ''],
+    [SOCKET_TYPE.OBJECT, null],
+    [SOCKET_TYPE.BOOL, false],
+]);
 
 export const WIDGET = {
     ENUM: Symbol('ENUM'),

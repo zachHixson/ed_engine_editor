@@ -57,6 +57,10 @@ class Undo_Store{
         this.undoStore.clear();
         this.redoStore.clear();
     }
+
+    popLast(){
+        return this.undoStore.pop();
+    }
 }
 
 const UndoHelpers = {

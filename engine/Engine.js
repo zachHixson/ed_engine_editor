@@ -362,6 +362,12 @@ class Engine{
         loadedData.rooms = parsedJson.rooms.map(r => new Shared.Room().fromSaveData(r, loadedData.objects));
         loadedData.logic = parsedJson.logic.map(l => new Logic(l, this));
 
+        //set up global variable defaults
+        for (const v in parsedJson.globalVariableMap){
+            const type = Symbol.for(parsedJson.globalVariableMap[v]);
+            this._globalVariables[v] = Shared.SOCKET_DEFAULT.get(type);
+        }
+
         return loadedData;
     }
 
