@@ -1,3 +1,5 @@
+import { mixinEventListener } from "../common/Event_Listener";
+
 export default class Node{
     constructor(template, id, pos = new Victor(), graphId){
         this._template = template;
@@ -14,19 +16,6 @@ export default class Node{
         this.domRef = null;
         this._anyType = null;
         this.pos = pos.clone();
-        this.updateConnectionsCallback = null;
-
-        //editor events
-        this.onEditorSave = template.editor_onSave;
-        this.onEditorLoad = template.editor_onLoad;
-        this.onEditorLoadFinished = template.editor_onLoadFinished;
-        this.onEditorCreate = template.editor_onCreate;
-        this.onEditorVisible = template.editor_onVisible;
-        this.onEditorConnection = template.editor_onConnection;
-        this.onEditorDisconnect = template.editor_onDisconnect;
-        this.onEditorValueChange = template.editor_onValueChange;
-        this.onEditorBeforeDelete = template.editor_onBeforeDelete;
-        this.onEditorSetAnyType = template.editor_onSetAnyType;
 
         //map template to node
         let inputAnys = 0;
@@ -62,6 +51,16 @@ export default class Node{
             this.outputs.set(output.id, output);
         });
 
+        //bind template events
+        for (let prop in template){
+            const value = template[prop];
+
+            if (prop[0] == '$' && typeof value == 'function'){
+                const eventName = prop.substring(1).toLowerCase();
+                this.addEventListener(eventName, value.bind(this));
+            }
+        }
+
         //error out if there are too many any sockets
         if (inputAnys > 1){
             console.error(`Error in node template '${this.templateId}'. Nodes can currently only have 1 'ANY' input socket at a time.`);
@@ -73,15 +72,19 @@ export default class Node{
     get anyType(){return this._anyType}
 
     set anyType(value){
+        const oldType = this._anyType;
+
         if (value == this._anyType){
             return;
         }
         
         this._anyType = value;
-        this.onEditorSetAnyType && this.onEditorSetAnyType.call(this, this.anyType);
+        this.dispatchEvent(new CustomEvent("anytype_updated", {detail: {oldType, newType: value}}));
     }
 
     toSaveData(){
+        this.dispatchEvent(new CustomEvent("beforeSave"));
+
         const roundedPos = new Victor(
             Math.floor(this.pos.x * 100) / 100,
             Math.floor(this.pos.y * 100) / 100
@@ -100,12 +103,14 @@ export default class Node{
             outObj.widgetData = JSON.stringify(this.widgetData);
         }
 
-        this.onEditorSave && this.onEditorSave.call(this, outObj);
+        this.dispatchEvent(new CustomEvent("afterSave", {detail: {data: outObj}}));
 
         return outObj;
     }
 
     fromSaveData(data){
+        this.dispatchEvent(new CustomEvent("beforeLoad", {detail: {data}}));
+
         if (data.widgetData){
             this.widgetData = JSON.parse(data.widgetData);
         }
@@ -116,7 +121,7 @@ export default class Node{
             nodeInput.value = input.value;
         });
 
-        this.onEditorLoad && this.onEditorLoad.call(this, data);
+        this.dispatchEvent(new CustomEvent("afterLoad"));
 
         return this;
     }
@@ -135,7 +140,7 @@ export default class Node{
         this.pos.copy(newPos);
         this.domRef.style.left = this.pos.x + 'px';
         this.domRef.style.top = this.pos.y + 'px';
-        this.updateConnectionsCallback();
+        this.dispatchEvent(new CustomEvent("onMove", {detail: newPos}));
     }
 
     method(methodName, data = []){
@@ -163,32 +168,6 @@ export default class Node{
 
         return input.value;
     }
-
-    onCreate(){
-        this.onEditorCreate && this.onEditorCreate.call(this);
-    }
-
-    onLoadFinished(){
-        this.onEditorLoadFinished && this.onEditorLoadFinished.call(this);
-    }
-
-    onVisible(){
-        this.onEditorVisible && this.onEditorVisible.call(this);
-    }
-
-    onNewConnection(connection){
-        this.onEditorConnection && this.onEditorConnection.call(this, connection);
-    }
-
-    onRemoveConnection(connection){
-        this.onEditorDisconnect && this.onEditorDisconnect.call(this, connection);
-    }
-
-    onValueChange(socketName, oldVal, newVal){
-        this.onEditorValueChange && this.onEditorValueChange(socketName, oldVal, newVal);
-    }
-
-    onBeforeDelete(){
-        this.onEditorBeforeDelete && this.onEditorBeforeDelete();
-    }
 };
+
+mixinEventListener(Node);

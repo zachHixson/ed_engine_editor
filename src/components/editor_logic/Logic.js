@@ -79,8 +79,7 @@ export default class Logic{
 
         this.nodes.forEach(node => {
             nodeMap[node.nodeId] = node;
-            node.onCreate();
-            node.onLoadFinished();
+            node.dispatchEvent("init");
         });
 
         this.connections = this.connections.map(connection => {
@@ -141,7 +140,6 @@ export default class Logic{
         let newNode = nodeRef ?? new Node(nodeTemplate, this.nextNodeId, pos, this.selectedGraphId);
 
         this.nodes.push(newNode);
-        newNode.onCreate();
 
         return newNode;
     }

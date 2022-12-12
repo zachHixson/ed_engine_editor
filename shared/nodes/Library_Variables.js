@@ -4,6 +4,9 @@ export default [
     {// Create Variable
         id: 'create_variable',
         category: 'variables',
+        $onCreate(event){
+            //
+        }
     },
     {// Set Variable
         id: 'set_variable',

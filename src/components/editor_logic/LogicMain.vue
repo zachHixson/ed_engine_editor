@@ -779,7 +779,7 @@ export default {
             let newNode = this.selectedAsset.addNode(templateId, pos, nodeRef);
 
             newNode.setEditorAPI(this.nodeEventAPI);
-            newNode.onCreate();
+            newNode.dispatchEvent(new CustomEvent("onCreate"));
 
             if (makeCommit){
                 let data = {templateId, nodeRef: newNode};
@@ -800,14 +800,16 @@ export default {
                     }
                 });
 
-                connectionRefList.forEach(c => {
-                    c.startNode?.onRemoveConnection(c);
-                    c.endNode?.onRemoveConnection(c);
-                    this.selectedAsset.removeConnection(c.id)
+                connectionRefList.forEach(connection => {
+                    const eventObj = new CustomEvent("onRemoveConnection", {detail: {connection}});
+
+                    connection.startNode?.dispatchEvent(eventObj);
+                    connection.endNode?.dispatchEvent(eventObj);
+                    this.selectedAsset.removeConnection(connection.id)
                 });
 
                 //delete node
-                node.onBeforeDelete();
+                node.dispatchEvent(new CustomEvent("onBeforeDelete"));
                 this.selectedAsset.deleteNode(node);
             });
 
@@ -843,6 +845,8 @@ export default {
             }
         },
         actionMakeConnection({connectionObj, socketOver}, makeCommit = true){
+            const eventObj = new CustomEvent("onNewConnection", {detail: {connection: connectionObj}});
+
             if (socketOver.isInput){
                 connectionObj.endNode = socketOver.node;
                 connectionObj.endSocketId = socketOver.socketData.id;
@@ -854,8 +858,8 @@ export default {
                 connectionObj.startSocketEl = socketOver.socketEl;
             }
 
-            connectionObj.startNode.onNewConnection(connectionObj);
-            connectionObj.endNode.onNewConnection(connectionObj);
+            connectionObj.startNode.dispatchEvent(eventObj);
+            connectionObj.endNode.dispatchEvent(eventObj);
 
             //if connection was removed entirely by a previous undo, we need to recreate
             if (!connectionObj.connectionComponent){
@@ -886,10 +890,12 @@ export default {
             this.undoStore.cache.delete('prev_socket');
         },
         actionRemoveConnection({connectionObj}, makeCommit = true){
+            const eventObj = new CustomEvent("onRemoveConnection", {detail: {connection: connectionObj}});
+
             makeCommit &= !!(connectionObj.startNode && connectionObj.endNode);
 
-            connectionObj.startNode?.onRemoveConnection(connectionObj);
-            connectionObj.endNode?.onRemoveConnection(connectionObj);
+            connectionObj.startNode?.dispatchEvent(eventObj);
+            connectionObj.endNode?.dispatchEvent(eventObj);
 
             if (makeCommit){
                 let data = {connectionObj: Object.assign(new Node_Connection(), connectionObj)};
@@ -941,7 +947,11 @@ export default {
         actionChangeInput({socket, oldVal, newVal, node}, makeCommit = true){
             socket.value = newVal;
 
-            node.onValueChange(socket.id, oldVal, newVal);
+            node.dispatchEvent(new CustomEvent("onValueChange", {detail: {
+                socketId: socket.id,
+                oldVal,
+                newVal
+            }}));
 
             if (makeCommit){
                 let data = {socket, oldVal, newVal, node};
@@ -949,7 +959,7 @@ export default {
             }
         },
         revertAddNode({nodeRef}){
-            nodeRef.onBeforeDelete();
+            nodeRef.dispatchEvent(new CustomEvent("onBeforeDelete"));
             this.selectedAsset.deleteNode(nodeRef);
         },
         revertDeleteNodes({nodeRefList, connectionRefList}){
@@ -958,9 +968,11 @@ export default {
             });
 
             connectionRefList.forEach(connection => {
+                const eventObj = new CustomEvent("onNewConnection", {detail: {connection}});
+
                 this.selectedAsset.addConnection(connection);
-                connection.startNode.onNewConnection(connection);
-                connection.endNode.onNewConnection(connection);
+                connection.startNode.dispatchEvent(eventObj);
+                connection.endNode.dispatchEvent(eventObj);
             });
 
             this.$nextTick(()=>{
@@ -1004,7 +1016,11 @@ export default {
         },
         revertChangeInput({socket, oldVal, newVal, node}){
             socket.value = oldVal;
-            node.onValueChange(socket.id, newVal, oldVal);
+            node.dispatchEvent(new CustomEvent("onValueChange", {detail: {
+                socketId: socket.id,
+                newVal,
+                oldVal
+            }}));
         },
     }
 }

@@ -132,10 +132,10 @@ export default {
     },
     mounted(){
         this.nodeObj.setDomRef(this.$el);
-        this.nodeObj.updateConnectionsCallback = this.updateConnections.bind(this);
-        this.nodeObj.onVisible();
+        this.nodeObj.dispatchEvent(new CustomEvent("onVisible"));
         this.mouseUpEvent = this.mouseUp.bind(this);
 
+        this.nodeObj.addEventListener("onMove", this.updateConnections.bind(this));
         window.addEventListener('mouseup', this.mouseUpEvent);
 
         this.$nextTick(()=>{
