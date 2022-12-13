@@ -15,7 +15,7 @@
         <div v-if="showTriggers" class="io">
             <div class="socket-column" style="align-items: flex-start">
                 <Socket
-                    v-for="inTrigger in inTriggers"
+                    v-for="inTrigger in inTriggerList"
                     :key="inTrigger.id"
                     ref="inTriggers"
                     :socket="inTrigger"
@@ -27,7 +27,7 @@
             </div>
             <div class="socket-column" style="align-items: flex-end">
                 <Socket
-                    v-for="outTrigger in outTriggers"
+                    v-for="outTrigger in outTriggerList"
                     :key="outTrigger.id"
                     ref="outTriggers"
                     :socket="outTrigger"
@@ -42,7 +42,7 @@
         <div v-if="showDataSockets" class="io">
             <div class="socket-column"  style="align-items: flex-start">
                 <Socket
-                    v-for="input in inputs"
+                    v-for="input in inputList"
                     :key="input.id"
                     ref="inData"
                     :socket="input"
@@ -55,7 +55,7 @@
             </div>
             <div class="socket-column" style="align-items: flex-end">
                 <Socket
-                    v-for="output in outputs"
+                    v-for="output in outputList"
                     :key="output.id"
                     ref="outData"
                     :socket="output"
@@ -82,6 +82,10 @@ export default {
             dragOffset: new Victor(0, 0),
             mouseUpEvent: null,
             mouseMoveEvent: null,
+            inTriggerList: [],
+            outTriggerList: [],
+            inputList: [],
+            outputList: [],
         }
     },
     components: {
@@ -89,30 +93,14 @@ export default {
         Widget,
     },
     computed: {
-        inTriggers(){
-            return Array.from(this.nodeObj.inTriggers, ([id, trigger]) => trigger);
-        },
-        outTriggers(){
-            return Array.from(this.nodeObj.outTriggers, ([id, trigger]) => trigger);
-        },
         widgetData(){
             return this.nodeObj.widgetData;
         },
-        inputs(){
-            return Array.from(this.nodeObj.inputs, ([id, input]) => {
-                return this.convertAnySocket(input);
-            });
-        },
-        outputs(){
-            return Array.from(this.nodeObj.outputs, ([id, output]) => {
-                return this.convertAnySocket(output);
-            });
-        },
         showTriggers(){
-            return this.inTriggers.length > 0 || this.outTriggers.length > 0;
+            return this.inTriggerList.length > 0 || this.outTriggerList.length > 0;
         },
         showDataSockets(){
-            return this.inputs.length > 0 || this.outputs.length > 0;
+            return this.inputList.length > 0 || this.outputList.length > 0;
         },
         isSelected(){
             return this.selectedNodes.find(nodeObj => nodeObj.nodeId == this.nodeObj.nodeId) != undefined;
@@ -132,10 +120,17 @@ export default {
     },
     mounted(){
         this.nodeObj.setDomRef(this.$el);
-        this.nodeObj.dispatchEvent(new CustomEvent("onVisible"));
         this.mouseUpEvent = this.mouseUp.bind(this);
+        this.updateConnections = this.updateConnections.bind(this);
 
-        this.nodeObj.addEventListener("onMove", this.updateConnections.bind(this));
+        this.updateInTriggerList();
+        this.updateOutTriggerList();
+        this.updateInputlist();
+        this.updateOutputList();
+        this.nodeObj.dispatchEvent(new CustomEvent("onVisible"));
+
+        this.nodeObj.addEventListener('onMove', this.updateConnections);
+        //this.nodeObj.addEventListener('socketsChanged', )
         window.addEventListener('mouseup', this.mouseUpEvent);
 
         this.$nextTick(()=>{
@@ -145,8 +140,25 @@ export default {
     beforeDestroy(){
         window.removeEventListener('mouseup', this.mouseUpEvent);
         window.removeEventListener('mousemove', this.mouseMoveEvent);
+        this.nodeObj.removeEventListener('onMove', this.updateConnections);
     },
     methods: {
+        updateInTriggerList(){
+            this.inTriggerList = Array.from(this.nodeObj.inTriggers, ([id, trigger]) => trigger);
+        },
+        updateOutTriggerList(){
+            this.outTriggerList = Array.from(this.nodeObj.outTriggers, ([id, trigger]) => trigger);
+        },
+        updateInputlist(){
+            this.inputList = Array.from(this.nodeObj.inputs, ([id, input]) => {
+                return this.convertAnySocket(input);
+            });
+        },
+        updateOutputList(){
+            this.outputList = Array.from(this.nodeObj.outputs, ([id, output]) => {
+                return this.convertAnySocket(output);
+            });
+        },
         mouseDown(event){
             if (event.which == 1){
             this.$emit("node-down", this.nodeObj);

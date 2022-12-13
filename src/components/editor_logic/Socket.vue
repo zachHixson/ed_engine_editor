@@ -7,7 +7,7 @@
             <div v-if="socket.type == SOCKET_TYPE.OBJECT" class="selfBox">{{$t('logic_editor.self')}}</div>
             <input v-if="socket.type == SOCKET_TYPE.BOOL" type="checkbox" :checked="getValue()"  @change="boolValueChanged($event.target)" ref="boolCheckbox"/>
         </div>
-        <svg
+        <div
             v-if="!(isTrigger || hideSocket)"
             ref="socketConnection"
             width="20" height="20"
@@ -15,12 +15,8 @@
             @mousedown="mouseDown"
             @mouseenter="mouseEnter"
             @mouseleave="mouseLeave">
-            <circle v-if="socket.type == SOCKET_TYPE.ANY" cx="10" cy="10" r="6" style="fill: #222222" />
-            <polygon v-if="socket.type == SOCKET_TYPE.NUMBER" points="10,3 17,10 10,17 3,10" style="fill: #FFCE52" />
-            <rect v-if="socket.type == SOCKET_TYPE.STRING" x="4" y="8" width="12" height="6" style="fill: #5280FF" />
-            <rect v-if="socket.type == SOCKET_TYPE.OBJECT" x="4" y="4" width="12" height="12" style="fill: #FF85AE" />
-            <polygon v-if="socket.type == SOCKET_TYPE.BOOL" points="3,10 7,4 13,4 17,10 13,16 7,16" style="fill: #FF5555" />
-        </svg>
+            <img :src="require(`@/${iconMap.get(socket.type)}.svg`)" draggable="false"/>
+    </div>
         <div v-if="hideSocket" class="hidden-socket"></div>
         <svg
             v-if="isTrigger"
@@ -77,6 +73,15 @@ export default {
         required(){
             return !!this.socket.required;
         },
+        iconMap(){
+            return new Map([
+                [Shared.SOCKET_TYPE.ANY, 'assets/socket_any'],
+                [Shared.SOCKET_TYPE.NUMBER, 'assets/socket_number'],
+                [Shared.SOCKET_TYPE.STRING, 'assets/socket_string'],
+                [Shared.SOCKET_TYPE.OBJECT, 'assets/socket_object'],
+                [Shared.SOCKET_TYPE.BOOL, 'assets/socket_bool'],
+            ]);
+        },
     },
     mounted(){
         this.$nextTick(()=>{
@@ -85,7 +90,7 @@ export default {
             if (this.socket.type == Shared.SOCKET_TYPE.BOOL && this.$refs.boolCheckbox){
                 this.$refs.boolCheckbox.indeterminate = this.socket.value == null;
             }
-        })
+        });
     },
     methods: {
         valueChanged(target){
@@ -192,8 +197,16 @@ export default {
 }
 
 .socket_icon{
-    stroke: var(--border);
-    stroke-width: 2px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.socket_icon > img {
+    width: 20px;
+    height: auto;
+    padding: 2px;
 }
 
 .socket_icon:hover{

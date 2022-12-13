@@ -1,16 +1,26 @@
-import {SOCKET_TYPE} from './Node_Enums';
+import {SOCKET_TYPE, SOCKET_DEFAULT} from './Node_Enums';
 
 export default [
     {// Create Variable
         id: 'create_variable',
         category: 'variables',
         inputs: [
-            {id: 'initialValue', type: SOCKET_TYPE.NUMBER, default: 0, hideSocket: true}
+            {id: 'varName', type: SOCKET_TYPE.INFO, hideSocket: true},
+            {id: 'initialValue', type: SOCKET_TYPE.NUMBER, default: 0, hideSocket: true},
         ],
-        $onCreate(event){
-            this.editorAPI.newVariablePrompt(returnedInfo => {
-                //
+        $onCreate(){
+            this.editorAPI.dialogNewVariable(({name, type, global, isList}) => {
+                const socket = this.inputs.get('initialValue');
+
+                socket.value = name;
+                socket.type = type;
+                socket.value = SOCKET_DEFAULT.get(type);
+                this.dispatchEvent(new CustomEvent('socketsChanged'));
+                this.editorAPI.setVariableType(name, type, global);
             });
+        },
+        $onBeforeDelete(){
+            //
         }
     },
     {// Set Variable

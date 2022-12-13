@@ -2,7 +2,8 @@
     "generic":{
         "no_option": "-- None --",
         "delete": "Delete",
-        "new": "-- New --"
+        "new": "-- New --",
+        "cancel": "Cancel"
     },
     "editor_main":{
         "project_name": "Project Name:",
@@ -184,6 +185,16 @@
         "graph_panel_heading": "Graphs",
         "graph_prefix": "Graph_",
         "self": "Self",
+        "number": "Number",
+        "string": "String",
+        "boolean": "Boolean",
+        "object": "Object",
+        "new_variable": "New Variable",
+        "name": "Name",
+        "type": "Type",
+        "is_global": "Make Global",
+        "is_list": "Is List",
+        "create": "Create",
         "confirm_break_connections": "Warning: The following variable \"{var}\" is already in use and is connected to sockets incompatable with type \"{type}\". <br><br> Break incompatable connections?"
     },
     "node":{

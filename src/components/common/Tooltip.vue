@@ -52,6 +52,10 @@ export default {
         siblingEntered(){
             const timeLimit = HOVER_TIME * 1000;
 
+            if (!this.text.length){
+                return;
+            }
+
             this.timeout = setTimeout(()=>{
                 this.showTooltip = true;
                 this.recalculateOffset();

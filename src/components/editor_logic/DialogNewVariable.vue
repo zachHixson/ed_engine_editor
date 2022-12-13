@@ -2,7 +2,7 @@
     <div class="DialogNewVariable">
         <div class="dialog">
             <div class="heading">
-                New Variable:
+                {{$t('logic_editor.new_variable')}}:
             </div>
             <div class="controlsWrapper">
                 <div class="control">
@@ -12,23 +12,26 @@
                     <Decorator v-show="warning" ref="warning" style="width: 25px" :src="require(`@/assets/warning_decorator.svg`)" />
                 </div>
                 <div class="control">
-                    <label for="type">Type: </label>
-                    <select style="background: white">
-                        <option>Test</option>
+                    <label for="type">{{$t('logic_editor.type')}}: </label>
+                    <select style="background: white" v-model="type">
+                        <option :value="Shared.SOCKET_TYPE.NUMBER">{{$t('logic_editor.number')}}</option>
+                        <option :value="Shared.SOCKET_TYPE.STRING">{{$t('logic_editor.string')}}</option>
+                        <option :value="Shared.SOCKET_TYPE.BOOL">{{$t('logic_editor.boolean')}}</option>
+                        <option :value="Shared.SOCKET_TYPE.OBJECT">{{$t('logic_editor.object')}}</option>
                     </select>
                 </div>
                 <div class="control">
-                    <label for="isGlobal">Make Global: </label>
+                    <label for="isGlobal">{{$t('logic_editor.is_global')}}: </label>
                     <input id="isGlobal" type="checkbox" v-model="isGlobal" />
                 </div>
                 <div class="control">
-                    <label for="isList">Is List: </label>
-                    <input id="isList" type="checkbox" />
+                    <label for="isList">{{$t('logic_editor.is_list')}}: </label>
+                    <input id="isList" type="checkbox" v-model="isList" />
                 </div>
             </div>
             <div class="buttonWrapper">
-                <button class="button">Cancel</button>
-                <button class="button" :disabled="!isValid">Create</button>
+                <button class="button">{{$t('generic.cancel')}}</button>
+                <button class="button" @click="createVariable()" :disabled="!isValid">{{$t('logic_editor.create')}}</button>
             </div>
         </div>
     </div>
@@ -46,30 +49,56 @@ export default {
     data(){
         return {
             varName: '',
+            type: Shared.SOCKET_TYPE.NUMBER,
             isGlobal: false,
+            isList: false,
         }
     },
-    mounted(){
-        this.selectedAsset.localVariables.set('m', true);
-    },
     computed: {
+        Shared(){
+            return Shared;
+        },
         globalVariableMap(){
             return this.$store.getters['LogicEditor/getGlobalVariableMap'];
         },
         error(){
             const varMap = this.isGlobal ? this.globalVariableMap : this.selectedAsset.localVariables;
-            const isError = !!varMap.get(this.varName.toLowerCase());
+            const isError = !!varMap.get(this.varName.trim().toLowerCase());
 
-            isError && this.$refs.error.setTooltipText("Error, variable already exists please try again and a whole bunch of text");
+            isError && this.$refs.error.setTooltipText(this.$t('logic_editor.variable_name_collision'));
 
             return isError;
         },
         warning(){
-            return false && !this.error;
+            const varName = this.varName.trim().toLowerCase();
+            let shouldWarn = false;
+
+            if (!this.isGlobal && this.globalVariableMap.get(varName)){
+                shouldWarn = true;
+                this.$refs.warning.setTooltipText(this.$t('logic_editor.local_global_name_warning'));
+            }
+
+            return shouldWarn && !this.error;
         },
         isValid(){
             return !this.error && !!this.varName.length;
         },
+    },
+    methods: {
+        createVariable(){
+            const {varName, type, isGlobal, isList} = this;
+
+            this.callback({
+                name: varName,
+                type,
+                global: isGlobal,
+                isList,
+            });
+            this.close();
+        },
+        close(){
+            this.$emit('close');
+        }
     }
 }
 </script>

@@ -1,10 +1,10 @@
 <template>
     <div class="logicMain">
         <DialogNewVariable
-            v-show="true"
+            v-show="showNewVariableWindow"
             :selectedAsset="selectedAsset"
             :callback="newVariableCallback" 
-            @closed="showNewVariableWindow = false"/>
+            @close="showNewVariableWindow = false"/>
         <div class="node-panel-wrapper">
             <div v-show="showLibrary" class="side-panel node-panel">
                 <div class="side-panel-heading">
@@ -783,8 +783,9 @@ export default {
 
             return _checkLoop({endNode: leftNode}, connectionMap, checkedNodes);
         },
-        dialogNewVariable(){
-            //
+        dialogNewVariable(callback){
+            this.newVariableCallback = callback;
+            this.showNewVariableWindow = true;
         },
         actionAddNode({templateId, nodeRef}, makeCommit = true){
             let pos = this.getNewNodePos();
