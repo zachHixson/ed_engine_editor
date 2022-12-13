@@ -1,5 +1,10 @@
 <template>
     <div class="logicMain">
+        <DialogNewVariable
+            v-show="true"
+            :selectedAsset="selectedAsset"
+            :callback="newVariableCallback" 
+            @closed="showNewVariableWindow = false"/>
         <div class="node-panel-wrapper">
             <div v-show="showLibrary" class="side-panel node-panel">
                 <div class="side-panel-heading">
@@ -202,6 +207,7 @@ import Connection from '@/components/editor_logic/Connection';
 import HotkeyMap from '@/components/common/HotkeyMap';
 import Undo_Store, {UndoHelpers} from '@/components/common/Undo_Store';
 import getNodeEventAPI from '@/components/editor_logic/getNodeEventAPI';
+import DialogNewVariable from './DialogNewVariable';
 
 export default {
     name: 'LogicEditor',
@@ -233,6 +239,8 @@ export default {
             searchQuery: '',
             renamingGraph: null,
             nodeEventAPI: getNodeEventAPI(this),
+            showNewVariableWindow: false,
+            newVariableCallback: ()=>{}
         }
     },
     components: {
@@ -241,6 +249,7 @@ export default {
         DragList,
         Node,
         Connection,
+        DialogNewVariable,
     },
     watch: {
         selectedAsset(){
@@ -773,6 +782,9 @@ export default {
             checkedNodes.set(rightNode.nodeId, true);
 
             return _checkLoop({endNode: leftNode}, connectionMap, checkedNodes);
+        },
+        dialogNewVariable(){
+            //
         },
         actionAddNode({templateId, nodeRef}, makeCommit = true){
             let pos = this.getNewNodePos();

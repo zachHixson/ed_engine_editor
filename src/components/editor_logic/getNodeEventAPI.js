@@ -139,6 +139,9 @@ const API = {
     dialogConfirm(textInfo, callback){
         this.$emit('dialog-confirm', {textInfo, callback});
     },
+    dialogNewVariable(callback){
+        this.dialogNewVariable(callback);
+    }
 };
 
 export default function(context){

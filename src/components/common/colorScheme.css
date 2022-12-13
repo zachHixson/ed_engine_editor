@@ -9,6 +9,7 @@
     --button-norm: #FA8814;
     --button-hover: #ffd3d0;
     --button-down: #0085AD;
+    --button-disabled: #FFFFFF;
     --button-dark-norm: #6D94A1;
     --button-dark-hover: #99CEE0;
     --button-dark-down: #53717A;
@@ -17,6 +18,7 @@
     --tab-active: #ffffff;
     --tab-inactive: var(--heading);
     --border: #39535c;
+    --modal-bg: #00000055;
 
     /* Settings */
     --corner-radius: 10px;

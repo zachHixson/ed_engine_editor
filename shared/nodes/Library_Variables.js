@@ -4,8 +4,13 @@ export default [
     {// Create Variable
         id: 'create_variable',
         category: 'variables',
+        inputs: [
+            {id: 'initialValue', type: SOCKET_TYPE.NUMBER, default: 0, hideSocket: true}
+        ],
         $onCreate(event){
-            //
+            this.editorAPI.newVariablePrompt(returnedInfo => {
+                //
+            });
         }
     },
     {// Set Variable

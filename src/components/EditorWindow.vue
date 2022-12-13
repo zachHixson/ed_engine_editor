@@ -101,7 +101,7 @@ export default {
     align-items: center;
     width: 100%;
     height: 100%;
-    background: #00000088;
+    background: var(--modal-bg);
     z-index: 2000;
 }
 

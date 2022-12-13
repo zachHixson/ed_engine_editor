@@ -56,7 +56,7 @@ export default class Node{
             const value = template[prop];
 
             if (prop[0] == '$' && typeof value == 'function'){
-                const eventName = prop.substring(1).toLowerCase();
+                const eventName = prop.substring(1);
                 this.addEventListener(eventName, value.bind(this));
             }
         }

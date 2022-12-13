@@ -1,9 +1,10 @@
 function addEventListener(name, callback, options){
-    let callbackList = this._events.get(name);
+    const lName = name.toLowerCase();
+    let callbackList = this._events.get(lName);
 
     if (!callbackList){
         callbackList = new Map();
-        this._events.set(name, callbackList);
+        this._events.set(lName, callbackList);
     }
 
     callbackList.set(callback, {
@@ -13,12 +14,12 @@ function addEventListener(name, callback, options){
 }
 
 function removeEventListener(name, callback){
-    const callbackList = this._events.get(name);
+    const callbackList = this._events.get(name.toLowerCase());
     callbackList.delete(callback);
 }
 
 function dispatchEvent(event){
-    const callbackList = this._events.get(event.type);
+    const callbackList = this._events.get(event.type.toLowerCase());
 
     callbackList?.forEach(({callback, options}) => {
         callback(event);
