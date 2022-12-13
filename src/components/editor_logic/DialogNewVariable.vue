@@ -30,7 +30,7 @@
                 </div>
             </div>
             <div class="buttonWrapper">
-                <button class="button" @click="close">{{$t('generic.cancel')}}</button>
+                <button class="button" @click="cancel">{{$t('generic.cancel')}}</button>
                 <button class="button" @click="createVariable" :disabled="!isValid">{{$t('logic_editor.create')}}</button>
             </div>
         </div>
@@ -63,9 +63,13 @@ export default {
         },
         error(){
             const varMap = this.isGlobal ? this.globalVariableMap : this.selectedAsset.localVariables;
-            const isError = !!varMap.get(this.varName.trim().toLowerCase());
+            const varName = this.varName.trim().toLowerCase();
+            const nameCollision = !!varMap.get(varName);
+            const containsSpace = /\s/.test(varName)
+            const isError = nameCollision || containsSpace;
 
-            isError && this.$refs.error.setTooltipText(this.$t('logic_editor.variable_name_collision'));
+            nameCollision && this.$refs.error.setTooltipText(this.$t('logic_editor.variable_name_collision'));
+            containsSpace && this.$refs.error.setTooltipText(this.$t('logic_editor.variable_name_spaces'));
 
             return isError;
         },
@@ -88,12 +92,16 @@ export default {
         createVariable(){
             const {varName, type, isGlobal, isList} = this;
 
-            this.callback({
+            this.callback(true, {
                 name: varName,
                 type,
                 global: isGlobal,
                 isList,
             });
+            this.close();
+        },
+        cancel(){
+            this.callback(false, {});
             this.close();
         },
         close(){

@@ -255,7 +255,7 @@ export default {
     background: var(--tool-panel-bg);
     border: 2px solid var(--border);
     border-radius: var(--corner-radius);
-    overflow: hidden;
+    /* overflow: hidden; */
     user-select: none;
     pointer-events: all;
 }
@@ -267,6 +267,7 @@ export default {
     gap: 5px;
     padding-bottom: 5px;
     padding: 5px;
+    border-radius:  8px 8px 0 0;
 }
 
 .node-icon{

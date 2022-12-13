@@ -136,6 +136,9 @@ const API = {
             }
         }
     },
+    deleteNode(node){
+        this.actionDeleteNodes({nodeRefList: [node]}, false);
+    },
     dialogConfirm(textInfo, callback){
         this.$emit('dialog-confirm', {textInfo, callback});
     },

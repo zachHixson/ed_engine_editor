@@ -5,18 +5,36 @@ export default [
         id: 'create_variable',
         category: 'variables',
         inputs: [
-            {id: 'varName', type: SOCKET_TYPE.INFO, hideSocket: true},
-            {id: 'initialValue', type: SOCKET_TYPE.NUMBER, default: 0, hideSocket: true},
+            {id: '_varName', type: SOCKET_TYPE.INFO, hideSocket: true},
+            {id: '_varType', type: SOCKET_TYPE.INFO, hideSocket: true},
+            {id: 'initial_value', type: SOCKET_TYPE.NUMBER, default: 0, hideSocket: true},
         ],
         $onCreate(){
-            this.editorAPI.dialogNewVariable(({name, type, global, isList}) => {
-                const socket = this.inputs.get('initialValue');
+            this.editorAPI.dialogNewVariable((positive, varInfo) => {
+                if (positive){
+                    const {name, type, global, isList} = varInfo;
+                    const nameSocket = this.inputs.get('_varName');
+                    const typeSocket = this.inputs.get('_varType');
+                    const valSocket = this.inputs.get('initial_value');
 
-                socket.value = name;
-                socket.type = type;
-                socket.value = SOCKET_DEFAULT.get(type);
-                this.dispatchEvent(new CustomEvent('socketsChanged'));
-                this.editorAPI.setVariableType(name, type, global);
+                    nameSocket.value = {titleId: 'create_var_display_name', data: name, translate: false};
+
+                    if (global){
+                        nameSocket.decorator = 'global_variable';
+                        nameSocket.decoratorText = 'global_variable';
+                    }
+
+                    typeSocket.value = {titleId: 'create_var_display_type', data: `node.${type.description}`, translate: true}
+                    typeSocket.decorator = `socket_${type.description.toLowerCase()}`;
+                    
+                    valSocket.type = type;
+                    valSocket.value = SOCKET_DEFAULT.get(type);
+                    this.dispatchEvent(new CustomEvent('socketsChanged'));
+                    this.editorAPI.setVariableType(name, type, global);
+                }
+                else{
+                    this.editorAPI.deleteNode(this);
+                }
             });
         },
         $onBeforeDelete(){

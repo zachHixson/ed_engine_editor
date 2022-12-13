@@ -7,6 +7,15 @@
             <div v-if="socket.type == SOCKET_TYPE.OBJECT" class="selfBox">{{$t('logic_editor.self')}}</div>
             <input v-if="socket.type == SOCKET_TYPE.BOOL" type="checkbox" :checked="getValue()"  @change="boolValueChanged($event.target)" ref="boolCheckbox"/>
         </div>
+        <div v-if="socket.type == SOCKET_TYPE.INFO && socket.value" class="infoBox">
+            <div v-html="$t(`node.${socket.value.titleId}`)" class="infoTitle"></div>
+            <div>{{$te(socket.value.data) && socket.value.translate ? $t(socket.value.data) : socket.value.data}}</div>
+            <Decorator
+                v-if="socket.decorator"
+                class="decorator"
+                :src="require(`@/assets/${socket.decorator}.svg`)"
+                :tooltipText="$te(`node.${socket.decoratorText}`) ? $t(`node.${socket.decoratorText}`) : ''"/>
+        </div>
         <div
             v-if="!(isTrigger || hideSocket)"
             ref="socketConnection"
@@ -16,7 +25,7 @@
             @mouseenter="mouseEnter"
             @mouseleave="mouseLeave">
             <img :src="require(`@/${iconMap.get(socket.type)}.svg`)" draggable="false"/>
-    </div>
+        </div>
         <div v-if="hideSocket" class="hidden-socket"></div>
         <svg
             v-if="isTrigger"
@@ -35,11 +44,15 @@
 <script>
 import Node_Connection from '@/components/editor_logic/Node_Connection';
 import DragList from '../common/DragList.vue';
+import Decorator from '@/components/common/Decorator';
 
 export default {
     components: { DragList },
     name: 'Socket',
     props: ['socket', 'isInput', 'parentConnections', 'parentId'],
+    components: {
+        Decorator,
+    },
     data(){
         return {
             hasSize: null,
@@ -219,6 +232,20 @@ export default {
     box-sizing: border-box;
 }
 
+.infoBox {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+}
+
+.infoBox > * {
+    margin-right: 10px;
+}
+
+.infoTitle{
+    font-weight: bold;
+}
+
 .selfBox{
     background: var(--tool-panel-bg);
     filter: brightness(0.7);
@@ -230,5 +257,11 @@ input[type="checkbox"]{
     width: min-content;
     padding: 0px;
     margin: 0px;
+}
+
+.decorator{
+    width: 25px;
+    height: auto;
+    transform: translateX(5px);
 }
 </style>

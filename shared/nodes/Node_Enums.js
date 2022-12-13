@@ -4,8 +4,8 @@ export const SOCKET_TYPE = {
     STRING: Symbol.for('STRING'),
     OBJECT: Symbol.for('OBJECT'),
     BOOL: Symbol.for('BOOL'),
-    INFO: Symbol.for('INFO'),
-    ICON: Symbol.for('ICON'),
+    INFO: Symbol.for('NODE_INFO'),
+    BUTTON: Symbol.for('NODE_BUTTON'),
 };
 
 export const SOCKET_DEFAULT = new Map([
