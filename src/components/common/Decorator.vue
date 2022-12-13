@@ -1,7 +1,7 @@
 <template>
     <div class="decorator">
         <div class="wrapper">
-            <img id="decorator" class="img" :src="src" />
+            <img id="decorator" class="img" :src="src" draggable="false" />
             <Tooltip for="decorator" :text="text"/>
         </div>
     </div>

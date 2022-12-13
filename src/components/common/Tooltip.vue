@@ -2,8 +2,7 @@
     <div v-show="showTooltip" ref="tooltip" class="tooltip">
         <div ref="positionWrapper"
             class="position-wrapper">
-            <div ref="messageText" class="message-text" :style="`left: ${hOffset}px`">
-                {{text}}
+            <div v-html="text" ref="messageText" class="message-text" :style="`left: ${hOffset}px`">
             </div>
             <svg width="20" height="15" class="arrow">
                 <path d="M0 0 L10 15 L20 0"/>
@@ -102,7 +101,6 @@ export default {
 .message-text{
     position: relative;
     height: max-content;
-    max-height: 2em;
     width: max-content;
     max-width: 300px;
     padding: 10px;

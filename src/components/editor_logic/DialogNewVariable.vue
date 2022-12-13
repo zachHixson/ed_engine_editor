@@ -7,7 +7,7 @@
             <div class="controlsWrapper">
                 <div class="control">
                     <label for="name">Name: </label>
-                    <input id="name" type="text" v-model="varName" autocomplete="off"/>
+                    <input id="name" type="text" v-model="varName" :maxlength="CHAR_LIMIT" autocomplete="off"/>
                     <Decorator v-show="error" ref="error" style="width: 25px" :src="require(`@/assets/error_decorator.svg`)" />
                     <Decorator v-show="warning" ref="warning" style="width: 25px" :src="require(`@/assets/warning_decorator.svg`)" />
                 </div>
@@ -52,6 +52,7 @@ export default {
             type: Shared.SOCKET_TYPE.NUMBER,
             isGlobal: false,
             isList: false,
+            CHAR_LIMIT: 50,
         }
     },
     computed: {
@@ -80,6 +81,11 @@ export default {
             if (!this.isGlobal && this.globalVariableMap.get(varName)){
                 shouldWarn = true;
                 this.$refs.warning.setTooltipText(this.$t('logic_editor.local_global_name_warning'));
+            }
+
+            if (varName.length == this.CHAR_LIMIT){
+                shouldWarn = true;
+                this.$refs.warning.setTooltipText(this.$t('logic_editor.variable_length_warning', {limit: this.CHAR_LIMIT}));
             }
 
             return shouldWarn && !this.error;

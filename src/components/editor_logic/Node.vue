@@ -78,7 +78,6 @@ export default {
     props: ['nodeObj', 'clientToNavSpace', 'canDrag', 'selectedNodes', 'allConnections'],
     data(){
         return {
-            idDragging: false,
             dragOffset: new Victor(0, 0),
             mouseUpEvent: null,
             mouseMoveEvent: null,
@@ -122,6 +121,7 @@ export default {
         this.nodeObj.setDomRef(this.$el);
         this.mouseUpEvent = this.mouseUp.bind(this);
         this.updateConnections = this.updateConnections.bind(this);
+        this.socketsChanged = this.socketsChanged.bind(this);
 
         this.updateInTriggerList();
         this.updateOutTriggerList();
@@ -130,17 +130,16 @@ export default {
         this.nodeObj.dispatchEvent(new CustomEvent("onVisible"));
 
         this.nodeObj.addEventListener('onMove', this.updateConnections);
-        //this.nodeObj.addEventListener('socketsChanged', )
+        this.nodeObj.addEventListener('socketsChanged', this.socketsChanged);
         window.addEventListener('mouseup', this.mouseUpEvent);
 
-        this.$nextTick(()=>{
-            this.$el.style.width = this.$el.offsetWidth + 'px';
-        });
+        this.updateNodeSize();
     },
     beforeDestroy(){
         window.removeEventListener('mouseup', this.mouseUpEvent);
         window.removeEventListener('mousemove', this.mouseMoveEvent);
         this.nodeObj.removeEventListener('onMove', this.updateConnections);
+        this.nodeObj.removeEventListener('socketsChanged', this.socketsChanged);
     },
     methods: {
         updateInTriggerList(){
@@ -157,6 +156,13 @@ export default {
         updateOutputList(){
             this.outputList = Array.from(this.nodeObj.outputs, ([id, output]) => {
                 return this.convertAnySocket(output);
+            });
+        },
+        updateNodeSize(){
+            this.$el.style.width = 'max-content';
+
+            this.$nextTick(()=>{
+                this.$el.style.width = this.$el.offsetWidth + 'px';
             });
         },
         mouseDown(event){
@@ -204,6 +210,9 @@ export default {
         socketValueChanged(event){
             event.node = this.nodeObj;
             this.$emit('socket-value-changed', event)
+        },
+        socketsChanged(){
+            this.updateNodeSize();
         },
         updateConnections(){
             for (let i = 0; i < this.connections.length; i++){
@@ -255,7 +264,6 @@ export default {
     background: var(--tool-panel-bg);
     border: 2px solid var(--border);
     border-radius: var(--corner-radius);
-    /* overflow: hidden; */
     user-select: none;
     pointer-events: all;
 }

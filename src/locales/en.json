@@ -195,6 +195,8 @@
         "is_global": "Make Global",
         "is_list": "Is List",
         "create": "Create",
+        "local_global_name_warning": "A global variable exists with the same name.<br><br>When calling from the same Logic script, the local variable will be used instead.",
+        "variable_length_warning": "Character limit reached.<br><br>Max length of a variable is {limit} characters.",
         "confirm_break_connections": "Warning: The following variable \"{var}\" is already in use and is connected to sockets incompatable with type \"{type}\". <br><br> Break incompatable connections?"
     },
     "node":{
