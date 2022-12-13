@@ -30,8 +30,8 @@
                 </div>
             </div>
             <div class="buttonWrapper">
-                <button class="button">{{$t('generic.cancel')}}</button>
-                <button class="button" @click="createVariable()" :disabled="!isValid">{{$t('logic_editor.create')}}</button>
+                <button class="button" @click="close">{{$t('generic.cancel')}}</button>
+                <button class="button" @click="createVariable" :disabled="!isValid">{{$t('logic_editor.create')}}</button>
             </div>
         </div>
     </div>
@@ -97,6 +97,10 @@ export default {
             this.close();
         },
         close(){
+            this.varName = '';
+            this.type = Shared.SOCKET_TYPE.NUMBER;
+            this.isGlobal = false;
+            this.isList = false;
             this.$emit('close');
         }
     }
