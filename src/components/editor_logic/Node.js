@@ -1,7 +1,8 @@
-import { mixinEventListener } from "../common/Event_Listener";
+import { EventListenerMixin } from "../common/Event_Listener";
 
-export default class Node{
+export default class Node extends EventListenerMixin() {
     constructor(template, id, pos = new Victor(), graphId){
+        super(...arguments);
         this._template = template;
         this.nodeId = id;
         this.isEvent = template.isEvent;
@@ -29,7 +30,6 @@ export default class Node{
         template.outTriggers?.forEach(trigger => {
             this.outTriggers.set(trigger, {
                 id: trigger,
-                connection: null,
             });
         });
 
@@ -48,7 +48,7 @@ export default class Node{
         });
 
         template.outputs?.forEach(output => {
-            this.outputs.set(output.id, output);
+            this.outputs.set(output.id, Object.assign({}, output));
         });
 
         //bind template events
@@ -169,5 +169,3 @@ export default class Node{
         return input.value;
     }
 };
-
-mixinEventListener(Node);
