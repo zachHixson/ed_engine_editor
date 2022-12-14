@@ -12,8 +12,11 @@ export default [
         $onCreate(){
             this.editorAPI.dialogNewVariable((positive, varInfo) => {
                 if (positive){
+                    const valSocket = this.inputs.get('initial_value');
+
                     this.dataCache.set('varInfo', varInfo);
                     this.method('initVarNode');
+                    valSocket.value = SOCKET_DEFAULT.get(varInfo.type);
                 }
                 else{
                     this.editorAPI.deleteNode(this);
