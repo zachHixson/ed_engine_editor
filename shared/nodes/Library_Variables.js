@@ -56,12 +56,11 @@ export default [
         $onInput(event){
             this.method('validate', [event.detail.target]);
         },
-        $onNewConnection(connection){
-            //Convert name input into text display until disconnect
-        },
+        $onNewConnection,
+        $onRemoveConnection,
         methods: {
             setVar(){
-                const varName = this.getInput('name');
+                const varName = this.getInput('name').trim().toLowerCase();
                 const data = this.getInput('data');
                 const global = this.getInput('global');
 
@@ -74,32 +73,7 @@ export default [
 
                 this.triggerOutput('_o');
             },
-            validate(textbox){
-                const socket = this.inputs.get('name');
-                const varName = textbox.value.trim().toLowerCase();
-                const globalGet = this.editorAPI.getVariableType(varName, true);
-                const localGet = this.editorAPI.getVariableType(varName, false);
-                const isValid = !!globalGet || !!localGet;
-
-                socket.decoratorIcon = null;
-
-                if (isValid){
-                    const dataSocket = this.inputs.get('data');
-
-                    if (!!globalGet && !!localGet){
-                        socket.decorator = 'warning_decorator';
-                        socket.decoratorText = 'logic_editor.local_global_name_warning';
-                    }
-
-                    dataSocket.disabled = false;
-                }
-                else if (varName.length){
-                    socket.decoratorIcon = 'error_decorator';
-                    socket.decoratorText = 'node.error_var_not_found';
-                }
-
-                this.dispatchEvent(new CustomEvent('socketsChanged'));
-            }
+            validate,
         },
     },
     {// Get Variable
@@ -111,7 +85,26 @@ export default [
         outputs: [
             {id: 'data', type: SOCKET_TYPE.ANY, execute: 'getVar'},
         ],
-        methods: {},
+        $onInput(event){
+            this.method('validate', [event.detail.target]);
+        },
+        $onNewConnection,
+        $onRemoveConnection,
+        methods: {
+            getVar(){
+                const name = this.getInput('name').trim().toLowerCase();
+                const global = this.getInput('global');
+                const value = global ? this.engine.getGlobalVariable(name)
+                    : this.engine.getInstanceVariable(this.instance, name);
+                
+                if (value == undefined){
+                    return null;
+                }
+
+                return value;
+            },
+            validate,
+        },
     },
     {// Number
         id: 'number',
@@ -159,3 +152,44 @@ export default [
         }
     },
 ];
+
+function $onNewConnection(){
+    const nameSocket = this.inputs.get('name');
+    nameSocket.disabled = true;
+}
+
+function $onRemoveConnection(){
+    const nameSocket = this.inputs.get('name');
+    nameSocket.disabled = false;
+}
+
+function validate(textbox){
+    const nameSocket = this.inputs.get('name');
+    const dataSocket = this.inputs.get('data') || this.outputs.get('data');
+    const varName = textbox.value.trim().toLowerCase();
+    const globalGet = this.editorAPI.getVariableType(varName, true);
+    const localGet = this.editorAPI.getVariableType(varName, false);
+    const isValid = !!globalGet || !!localGet;
+
+    nameSocket.decoratorIcon = null;
+
+    if (isValid){
+        const type = localGet ?? globalGet;
+
+        if (!!globalGet && !!localGet){
+            nameSocket.decorator = 'warning_decorator';
+            nameSocket.decoratorText = 'logic_editor.local_global_name_warning';
+        }
+
+        dataSocket.disabled = false;
+        dataSocket.type = type;
+    }
+    else if (varName.length){
+        dataSocket.disabled = true;
+        dataSocket.type = SOCKET_TYPE.ANY;
+        nameSocket.decoratorIcon = 'error_decorator';
+        nameSocket.decoratorText = 'node.error_var_not_found';
+    }
+
+    this.dispatchEvent(new CustomEvent('socketsChanged'));
+}

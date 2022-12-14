@@ -211,7 +211,7 @@
         "STRING": "String",
         "BOOLEAN": "Boolean",
         "OBJECT": "Object",
-        "error_var_not_found": "Error: No variable found with name that name.",
+        "error_var_not_found": "Error: No variable found with that name.",
         "e_create": "Create",
         "e_create_trigger_default": "",
         "e_update": "Update",

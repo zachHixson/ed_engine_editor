@@ -32,7 +32,7 @@ export default {
         for (let i = 0; i < parentEl.childNodes.length; i++){
             const child = parentEl.childNodes[i];
 
-            if (child.id == this.for){
+            if (child.name == this.for){
                 child.addEventListener('mouseenter', this.siblingEntered);
                 child.addEventListener('mouseleave', this.siblingLeft);
             }

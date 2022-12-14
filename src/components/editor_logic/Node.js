@@ -15,7 +15,6 @@ export default class Node extends EventListenerMixin() {
         this.graphId = graphId;
         this.editorAPI = null;
         this.domRef = null;
-        this._anyType = null;
         this.pos = pos.clone();
 
         //map template to node
@@ -72,18 +71,6 @@ export default class Node extends EventListenerMixin() {
 
     get template(){return this._template}
     get templateId(){return this._template.id}
-    get anyType(){return this._anyType}
-
-    set anyType(value){
-        const oldType = this._anyType;
-
-        if (value == this._anyType){
-            return;
-        }
-        
-        this._anyType = value;
-        this.dispatchEvent(new CustomEvent("anytype_updated", {detail: {oldType, newType: value}}));
-    }
 
     toSaveData(){
         this.dispatchEvent(new CustomEvent("beforeSave"));

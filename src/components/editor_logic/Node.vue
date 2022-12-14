@@ -153,14 +153,10 @@ export default {
             this.outTriggerList = Array.from(this.nodeObj.outTriggers, ([id, trigger]) => trigger);
         },
         updateInputlist(){
-            this.inputList = Array.from(this.nodeObj.inputs, ([id, input]) => {
-                return this.convertAnySocket(input);
-            });
+            this.inputList = Array.from(this.nodeObj.inputs, ([id, input]) => input);
         },
         updateOutputList(){
-            this.outputList = Array.from(this.nodeObj.outputs, ([id, output]) => {
-                return this.convertAnySocket(output);
-            });
+            this.outputList = Array.from(this.nodeObj.outputs, ([id, output]) => output);
         },
         updateNodeSize(){
             this.$el.style.width = 'max-content';
@@ -239,16 +235,6 @@ export default {
                 id: this.nodeObj.nodeId,
                 el: this,
                 sockets: socketElMap,
-            }
-        },
-        convertAnySocket(socket){
-            if (this.nodeObj.anyType && socket.type == Shared.SOCKET_TYPE.ANY){
-                const modifiedType = Object.assign({}, socket);
-                modifiedType.type = this.nodeObj.anyType;
-                return modifiedType;
-            }
-            else{
-                return socket;
             }
         },
     }

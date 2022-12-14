@@ -84,36 +84,11 @@ const API = {
             return;
         }
 
-        const startType = connection.startNode.anyType ?? connection.startSocket.type;
-        const endType = connection.endNode.anyType ?? connection.endSocket.type;
+        const startType = connection.startSocket.type;
+        const endType = connection.endSocket.type;
 
         if (!Shared.canConvertSocket(startType, endType)){
             this.selectedAsset.removeConnection(connection.id);
-        }
-    },
-    updateVisibleVariableTypes(varName){
-        const nodes = this.selectedAsset.nodes;
-
-        varName = varName.toLowerCase();
-
-        if (!varName.trim().length){
-            return;
-        }
-
-        for (let i = 0; i < nodes.length; i++){
-            const node = nodes[i];
-            const {templateId} = node;
-            const isVarNode = templateId == 'set_variable' || templateId == 'get_variable';
-            const isVarName = node.inputs.get('name')?.value == varName;
-
-            if (isVarNode && isVarName){
-                if (node.getInput('global')){
-                    node.anyType = this.globalVariableMap.get(varName) ?? null;
-                }
-                else{
-                    node.anyType = this.selectedAsset.localVariables.get(varName) ?? null;
-                }
-            }
         }
     },
     forEachNode(callback, isGlobal){

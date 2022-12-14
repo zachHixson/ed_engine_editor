@@ -1,7 +1,7 @@
 <template>
     <div class="dataSocket" :class="isInput ? 'isInput' : ''">
         <div class="decorator-placeholder"></div>
-        <div v-if="showLabel" class="socket_name">
+        <div v-if="showLabel" class="socket_name" :class="socket.hideLabel ? 'invisible':''">
             <div>{{$t('node.' + socket.id)}}</div>
             <Decorator
                 v-if="socket.decoratorIcon"
@@ -10,10 +10,34 @@
                 :tooltipText="$te(socket.decoratorText) ? $t(socket.decoratorText, socket.decoratorTextVars || {}): ''"/>
         </div>
         <div v-if="isInput && !isConnected && !hideInput" class="inputBox">
-            <input v-if="socket.type == SOCKET_TYPE.NUMBER" type="number" :value="getValue()" @change="numValueChanged($event.target)" @input="onInput($event)" v-input-active/>
-            <input v-if="socket.type == SOCKET_TYPE.STRING" type="text" :value="getValue()"  @change="valueChanged($event.target)" @input="onInput($event)" v-input-active/>
-            <div v-if="socket.type == SOCKET_TYPE.OBJECT" class="selfBox">{{$t('logic_editor.self')}}</div>
-            <input v-if="socket.type == SOCKET_TYPE.BOOL" type="checkbox" :checked="getValue()"  @change="boolValueChanged($event.target)" @input="onInput($event)" ref="boolCheckbox"/>
+            <input
+                v-if="socket.type == SOCKET_TYPE.NUMBER"
+                type="number" :value="getValue()"
+                @change="numValueChanged($event.target)"
+                @input="onInput($event)"
+                :disabled="socket.disabled"
+                v-input-active/>
+            <input
+                v-if="socket.type == SOCKET_TYPE.STRING"
+                name="textInput"
+                type="text" :value="getValue()"
+                @change="valueChanged($event.target)"
+                @input="onInput($event)"
+                @blur="onTextBlur"
+                :disabled="socket.disabled"
+                v-input-active/>
+                <Tooltip for="textInput" :text="socket.disabled ? socket.value : ''"/>
+            <div
+                v-if="socket.type == SOCKET_TYPE.OBJECT"
+                class="selfBox">{{$t('logic_editor.self')}}</div>
+            <input
+                v-if="socket.type == SOCKET_TYPE.BOOL"
+                type="checkbox"
+                :checked="getValue()"
+                @change="boolValueChanged($event.target)"
+                @input="onInput($event)"
+                :disabled="socket.disabled"
+                ref="boolCheckbox"/>
         </div>
         <div v-if="socket.type == SOCKET_TYPE.INFO && socket.value" class="infoBox">
             <div v-html="$t(socket.value.titleId)" class="infoTitle"></div>
@@ -54,6 +78,7 @@
 import Node_Connection from '@/components/editor_logic/Node_Connection';
 import DragList from '../common/DragList.vue';
 import Decorator from '@/components/common/Decorator';
+import Tooltip from '@/components/common/Tooltip';
 
 export default {
     components: { DragList },
@@ -61,6 +86,7 @@ export default {
     props: ['socket', 'isInput', 'parentConnections', 'parentId'],
     components: {
         Decorator,
+        Tooltip,
     },
     data(){
         return {
@@ -190,6 +216,9 @@ export default {
         mouseLeave(event){
             this.$emit('socket-over', null);
         },
+        onTextBlur(event){
+            event.target.selectionStart = event.target.selectionEnd = 0;
+        },
         getValue(){
             return this.socket.value;
         },
@@ -230,6 +259,10 @@ export default {
     opacity: 50%;
 }
 
+.invisible{
+    opacity: 0%;
+}
+
 .socket_name{
     position: relative;
     display: flex;
@@ -254,10 +287,22 @@ export default {
     filter: brightness(2);
 }
 
+.inputBox{
+    position: relative;
+}
+
 .inputBox > *{
-    width: 4rem;
+    width: 6rem;
     margin-right: 3px;
     box-sizing: border-box;
+}
+
+.inputBox > *:disabled{
+    color: black;
+    font-weight: bold;
+    background: none;
+    border: none;
+    text-overflow: ellipsis;
 }
 
 .infoBox {
@@ -295,6 +340,6 @@ input[type="checkbox"]{
 
 .decorator-placeholder{
     display: block;
-    width: 25px;
+    width: 12px;
 }
 </style>
