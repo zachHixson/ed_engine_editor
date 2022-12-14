@@ -51,6 +51,7 @@
                     :parentId="nodeObj.nodeId"
                     @mouse-down="socketDown"
                     @socket-over="socketOver"
+                    @on-input="onInput"
                     @value-changed="socketValueChanged"/>
             </div>
             <div class="socket-column" style="align-items: flex-end">
@@ -121,16 +122,13 @@ export default {
         this.nodeObj.setDomRef(this.$el);
         this.mouseUpEvent = this.mouseUp.bind(this);
         this.updateConnections = this.updateConnections.bind(this);
-        this.socketsChanged = this.socketsChanged.bind(this);
+        this.updateNodeSize = this.updateNodeSize.bind(this);
 
-        this.updateInTriggerList();
-        this.updateOutTriggerList();
-        this.updateInputlist();
-        this.updateOutputList();
+        this.updateAllSockets();
         this.nodeObj.dispatchEvent(new CustomEvent("onVisible"));
 
         this.nodeObj.addEventListener('onMove', this.updateConnections);
-        this.nodeObj.addEventListener('socketsChanged', this.socketsChanged);
+        this.nodeObj.addEventListener('recalcWidth', this.updateNodeSize);
         window.addEventListener('mouseup', this.mouseUpEvent);
 
         this.updateNodeSize();
@@ -139,9 +137,14 @@ export default {
         window.removeEventListener('mouseup', this.mouseUpEvent);
         window.removeEventListener('mousemove', this.mouseMoveEvent);
         this.nodeObj.removeEventListener('onMove', this.updateConnections);
-        this.nodeObj.removeEventListener('socketsChanged', this.socketsChanged);
     },
     methods: {
+        updateAllSockets(){
+            this.updateInTriggerList();
+            this.updateOutTriggerList();
+            this.updateInputlist();
+            this.updateOutputList();
+        },
         updateInTriggerList(){
             this.inTriggerList = Array.from(this.nodeObj.inTriggers, ([id, trigger]) => trigger);
         },
@@ -211,8 +214,8 @@ export default {
             event.node = this.nodeObj;
             this.$emit('socket-value-changed', event)
         },
-        socketsChanged(){
-            this.updateNodeSize();
+        onInput(event){
+            this.nodeObj.dispatchEvent(new CustomEvent('onInput', {detail: event}));
         },
         updateConnections(){
             for (let i = 0; i < this.connections.length; i++){

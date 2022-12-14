@@ -4,7 +4,7 @@
             v-show="showNewVariableWindow"
             :selectedAsset="selectedAsset"
             :callback="newVariableCallback" 
-            @close="showNewVariableWindow = false"/>
+            @close="dialogNewVariableClose"/>
         <div class="node-panel-wrapper">
             <div v-show="showLibrary" class="side-panel node-panel">
                 <div class="side-panel-heading">
@@ -495,7 +495,8 @@ export default {
                     typeMatch &&
                     directionMatch &&
                     connectionObj.canConnect &&
-                    socketOver.canConnect
+                    socketOver.canConnect &&
+                    !socketOver.socketData.disabled
                 ){
                     let leftNode = (socketOver.isInput) ? socketOver.node : connectionObj.endNode;
                     let rightNode = !(socketOver.isInput) ? socketOver.node : connectionObj.startNode;
@@ -786,6 +787,10 @@ export default {
         dialogNewVariable(callback){
             this.newVariableCallback = callback;
             this.showNewVariableWindow = true;
+        },
+        dialogNewVariableClose(){
+            this.newVariableCallback = ()=>{};
+            this.showNewVariableWindow = false;
         },
         actionAddNode({templateId, nodeRef}, makeCommit = true){
             let pos = this.getNewNodePos();

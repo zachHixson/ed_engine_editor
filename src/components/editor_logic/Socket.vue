@@ -1,26 +1,35 @@
 <template>
     <div class="dataSocket" :class="isInput ? 'isInput' : ''">
-        <div v-if="showLabel" class="socket_name">{{$t('node.' + socket.id)}}</div>
+        <div class="decorator-placeholder"></div>
+        <div v-if="showLabel" class="socket_name">
+            <div>{{$t('node.' + socket.id)}}</div>
+            <Decorator
+                v-if="socket.decoratorIcon"
+                class="decorator"
+                :src="require(`@/assets/${socket.decoratorIcon}.svg`)"
+                :tooltipText="$te(socket.decoratorText) ? $t(socket.decoratorText, socket.decoratorTextVars || {}): ''"/>
+        </div>
         <div v-if="isInput && !isConnected && !hideInput" class="inputBox">
-            <input v-if="socket.type == SOCKET_TYPE.NUMBER" type="number" :value="getValue()" @change="numValueChanged($event.target)" v-input-active/>
-            <input v-if="socket.type == SOCKET_TYPE.STRING" type="text" :value="getValue()"  @change="valueChanged($event.target)" v-input-active/>
+            <input v-if="socket.type == SOCKET_TYPE.NUMBER" type="number" :value="getValue()" @change="numValueChanged($event.target)" @input="onInput($event)" v-input-active/>
+            <input v-if="socket.type == SOCKET_TYPE.STRING" type="text" :value="getValue()"  @change="valueChanged($event.target)" @input="onInput($event)" v-input-active/>
             <div v-if="socket.type == SOCKET_TYPE.OBJECT" class="selfBox">{{$t('logic_editor.self')}}</div>
-            <input v-if="socket.type == SOCKET_TYPE.BOOL" type="checkbox" :checked="getValue()"  @change="boolValueChanged($event.target)" ref="boolCheckbox"/>
+            <input v-if="socket.type == SOCKET_TYPE.BOOL" type="checkbox" :checked="getValue()"  @change="boolValueChanged($event.target)" @input="onInput($event)" ref="boolCheckbox"/>
         </div>
         <div v-if="socket.type == SOCKET_TYPE.INFO && socket.value" class="infoBox">
-            <div v-html="$t(`node.${socket.value.titleId}`)" class="infoTitle"></div>
+            <div v-html="$t(socket.value.titleId)" class="infoTitle"></div>
             <div>{{$te(socket.value.data) && socket.value.translate ? $t(socket.value.data) : socket.value.data}}</div>
             <Decorator
-                v-if="socket.decorator"
+                v-if="socket.decoratorIcon"
                 class="decorator"
-                :src="require(`@/assets/${socket.decorator}.svg`)"
-                :tooltipText="$te(`node.${socket.decoratorText}`) ? $t(`node.${socket.decoratorText}`) : ''"/>
+                :src="require(`@/assets/${socket.decoratorIcon}.svg`)"
+                :tooltipText="$te(socket.decoratorText) ? $t(socket.decoratorText, socket.decoratorTextVars || {}): ''"/>
         </div>
         <div
             v-if="!(isTrigger || hideSocket)"
             ref="socketConnection"
             width="20" height="20"
             class="socket_icon"
+            :class="socket.disabled ? 'disabled' :''"
             @mousedown="mouseDown"
             @mouseenter="mouseEnter"
             @mouseleave="mouseLeave">
@@ -106,6 +115,10 @@ export default {
         });
     },
     methods: {
+        onInput(event){
+            this.socket.value = event.target.value;
+            this.$emit('on-input', event);
+        },
         valueChanged(target){
             this.emitValueChanged(target.value);
         },
@@ -147,6 +160,10 @@ export default {
 
             event.stopPropagation();
 
+            if (this.socket.disabled){
+                return;
+            }
+
             if (this.isInput){
                 connection.endSocketId = this.socket.id;
                 connection.endSocketEl = this.$refs.socketConnection;
@@ -175,7 +192,7 @@ export default {
         },
         getValue(){
             return this.socket.value;
-        }
+        },
     },
 }
 </script>
@@ -205,8 +222,19 @@ export default {
     stroke-linejoin: round;
 }
 
-.trigger_icon:hover{
+.trigger_icon:hover:not(.disabled){
     filter: brightness(2);
+}
+
+.disabled{
+    opacity: 50%;
+}
+
+.socket_name{
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
 }
 
 .socket_icon{
@@ -222,7 +250,7 @@ export default {
     padding: 2px;
 }
 
-.socket_icon:hover{
+.socket_icon:hover:not(.disabled){
     filter: brightness(2);
 }
 
@@ -263,5 +291,10 @@ input[type="checkbox"]{
     width: 25px;
     height: auto;
     transform: translateX(5px);
+}
+
+.decorator-placeholder{
+    display: block;
+    width: 25px;
 }
 </style>

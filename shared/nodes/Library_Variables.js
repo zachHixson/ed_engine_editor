@@ -17,19 +17,20 @@ export default [
                     const typeSocket = this.inputs.get('_varType');
                     const valSocket = this.inputs.get('initial_value');
 
-                    nameSocket.value = {titleId: 'create_var_display_name', data: name, translate: false};
+                    nameSocket.value = {titleId: 'node.create_var_display_name', data: name, translate: false};
 
                     if (global){
-                        nameSocket.decorator = 'global_variable';
-                        nameSocket.decoratorText = 'global_variable';
+                        nameSocket.decoratorIcon = 'global_variable';
+                        nameSocket.decoratorText = 'node.global_variable';
                     }
 
-                    typeSocket.value = {titleId: 'create_var_display_type', data: `node.${type.description}`, translate: true}
-                    typeSocket.decorator = `socket_${type.description.toLowerCase()}`;
+                    typeSocket.value = {titleId: 'node.create_var_display_type', data: `node.${type.description}`, translate: true}
+                    typeSocket.decoratorIcon = `socket_${type.description.toLowerCase()}`;
                     
                     valSocket.type = type;
                     valSocket.value = SOCKET_DEFAULT.get(type);
                     this.dispatchEvent(new CustomEvent('socketsChanged'));
+                    this.dispatchEvent(new CustomEvent('recalcWidth'));
                     this.editorAPI.setVariableType(name, type, global);
                 }
                 else{
@@ -50,9 +51,56 @@ export default [
         outTriggers: ['_o'],
         inputs: [
             {id: 'name', type: SOCKET_TYPE.STRING, default: '', hideSocket: true},
-            {id: 'data', type: SOCKET_TYPE.ANY, default: null, hideInput: true},
+            {id: 'data', type: SOCKET_TYPE.ANY, default: null, disabled: true, hideInput: true},
         ],
-        methods: {},
+        $onInput(event){
+            this.method('validate', [event.detail.target]);
+        },
+        $onNewConnection(connection){
+            //Convert name input into text display until disconnect
+        },
+        methods: {
+            setVar(){
+                const varName = this.getInput('name');
+                const data = this.getInput('data');
+                const global = this.getInput('global');
+
+                if (global){
+                    this.engine.setGlobalVariable(varName, data);
+                }
+                else{
+                    this.engine.setInstanceVariable(this.instance, varName, data);
+                }
+
+                this.triggerOutput('_o');
+            },
+            validate(textbox){
+                const socket = this.inputs.get('name');
+                const varName = textbox.value.trim().toLowerCase();
+                const globalGet = this.editorAPI.getVariableType(varName, true);
+                const localGet = this.editorAPI.getVariableType(varName, false);
+                const isValid = !!globalGet || !!localGet;
+
+                socket.decoratorIcon = null;
+
+                if (isValid){
+                    const dataSocket = this.inputs.get('data');
+
+                    if (!!globalGet && !!localGet){
+                        socket.decorator = 'warning_decorator';
+                        socket.decoratorText = 'logic_editor.local_global_name_warning';
+                    }
+
+                    dataSocket.disabled = false;
+                }
+                else if (varName.length){
+                    socket.decoratorIcon = 'error_decorator';
+                    socket.decoratorText = 'node.error_var_not_found';
+                }
+
+                this.dispatchEvent(new CustomEvent('socketsChanged'));
+            }
+        },
     },
     {// Get Variable
         id: 'get_variable',

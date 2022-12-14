@@ -24,12 +24,14 @@ export default class Node extends EventListenerMixin() {
         template.inTriggers?.forEach(trigger => {
             this.inTriggers.set(trigger.id, {
                 id: trigger.id,
+                node: this,
             });
         });
 
         template.outTriggers?.forEach(trigger => {
             this.outTriggers.set(trigger, {
                 id: trigger,
+                node: this,
             });
         });
 
@@ -44,11 +46,12 @@ export default class Node extends EventListenerMixin() {
 
             this.inputs.set(input.id, Object.assign({
                 value,
+                node: this,
             }, input));
         });
 
         template.outputs?.forEach(output => {
-            this.outputs.set(output.id, Object.assign({}, output));
+            this.outputs.set(output.id, Object.assign({node: this}, output));
         });
 
         //bind template events
