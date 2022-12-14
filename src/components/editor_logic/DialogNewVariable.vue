@@ -99,7 +99,7 @@ export default {
             const {varName, type, isGlobal, isList} = this;
 
             this.callback(true, {
-                name: varName,
+                varName,
                 type,
                 isGlobal,
                 isList,

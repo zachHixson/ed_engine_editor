@@ -37,6 +37,8 @@ export default [
             this.dataCache.set('varInfo', varInfo);
         },
         $onMount(){
+            if (!this.dataCache.get('varInfo')) return;
+
             this.method('initVarNode');
         },
         $onBeforeDelete(){
