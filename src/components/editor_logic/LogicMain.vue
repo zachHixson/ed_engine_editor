@@ -206,7 +206,6 @@ import Node_Connection from '@/components/editor_logic/Node_Connection';
 import Connection from '@/components/editor_logic/Connection';
 import HotkeyMap from '@/components/common/HotkeyMap';
 import Undo_Store, {UndoHelpers} from '@/components/common/Undo_Store';
-import getNodeEventAPI from '@/components/editor_logic/getNodeEventAPI';
 import DialogNewVariable from './DialogNewVariable';
 
 export default {
@@ -238,7 +237,6 @@ export default {
             isSearching: false,
             searchQuery: '',
             renamingGraph: null,
-            nodeEventAPI: getNodeEventAPI(this),
             showNewVariableWindow: false,
             newVariableCallback: ()=>{}
         }
@@ -339,15 +337,17 @@ export default {
             return this.$store.getters['LogicEditor/getGlobalVariableMap'];
         },
     },
+    beforeCreate(){
+        this.$store.getters['getNodeAPI'].setNodeEditorContext(this);
+    },
     created(){
         this.convertClientToNavPos = this.clientToNavPos.bind(this);
         this.hotkeyDownHandler = this.hotkeyMap.keyDown.bind(this.hotkeyMap);
         this.hotkeyUpHandler = this.hotkeyMap.keyUp.bind(this.hotkeyMap);
     },
-    beforeMount(){
-        this.assignNodeAPI();
-    },
     mounted(){
+        const allMountedEventObj = new CustomEvent("allNodesMounted");
+
         this.nodeViewportEl = this.$refs.nodeVP;
         this.nodeNavEl = this.$refs.nodeNav;
 
@@ -366,6 +366,8 @@ export default {
         this.navChange(this.selectedAsset.navState);
         this.relinkConnections();
         this.updateNodeBounds();
+
+        this.selectedAsset.nodes.forEach(node => node.dispatchEvent(allMountedEventObj));
     },
     beforeDestroy(){
         window.removeEventListener('keydown', this.keyDown);
@@ -401,17 +403,6 @@ export default {
             this.revertMap.set(Shared.LOGIC_ACTION.DISCONNECT, this.revertRemoveConnection);
             this.revertMap.set(Shared.LOGIC_ACTION.DISCONNECT_INCOMPATABLE, this.revertDisconnectIncompatable);
             this.revertMap.set(Shared.LOGIC_ACTION.CHANGE_INPUT, this.revertChangeInput);
-        },
-        assignNodeAPI(){
-            const allLogic = this.$store.getters['GameData/getAllLogic'];
-
-            for (let l = 0; l < allLogic.length; l++){
-                const logic = allLogic[l];
-
-                for (let n = 0; n < logic.nodes.length; n++){
-                    logic.nodes[n].setEditorAPI(this.nodeEventAPI);
-                }
-            }
         },
         getNewNodePos(){
             let vpBounds = this.nodeViewportEl.getBoundingClientRect();
@@ -793,10 +784,10 @@ export default {
             this.showNewVariableWindow = false;
         },
         actionAddNode({templateId, nodeRef}, makeCommit = true){
-            let pos = this.getNewNodePos();
-            let newNode = this.selectedAsset.addNode(templateId, pos, nodeRef);
+            const nodeAPI = this.$store.getters['getNodeAPI'];
+            const pos = this.getNewNodePos();
+            const newNode = this.selectedAsset.addNode(templateId, pos, nodeRef, nodeAPI);
 
-            newNode.setEditorAPI(this.nodeEventAPI);
             newNode.dispatchEvent(new CustomEvent("onCreate"));
 
             if (makeCommit){
@@ -981,8 +972,10 @@ export default {
             this.selectedAsset.deleteNode(nodeRef);
         },
         revertDeleteNodes({nodeRefList, connectionRefList}){
+            const nodeAPI = this.$store.getters['getNodeAPI'];
+
             nodeRefList.forEach(node => {
-                this.selectedAsset.addNode(node.templateId, null, node);
+                this.selectedAsset.addNode(node.templateId, null, node, nodeAPI);
             });
 
             connectionRefList.forEach(connection => {

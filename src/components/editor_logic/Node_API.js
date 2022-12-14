@@ -1,24 +1,43 @@
-const API = {
+export default class Node_API {
+    constructor(){
+        this._editor;
+        this._store;
+    }
+
+    get editor(){return this._editor};
+    get store(){return this._store};
+
+    setNodeEditorContext(editorContext){
+        this._editor = editorContext;
+    }
+
+    setGlobalStore(store){
+        this._store = store;
+    }
+
     getVariableType(name, isGlobal){
-        const varMap = isGlobal ? this.globalVariableMap : this.selectedAsset.localVariables;
+        const varMap = isGlobal ? this.editor.globalVariableMap : this.editor.selectedAsset.localVariables;
         return varMap.get(name.toLowerCase());
-    },
+    }
+
     setVariableType(name, type, isGlobal){
-        const varMap = isGlobal ? this.globalVariableMap : this.selectedAsset.localVariables;
+        const varMap = isGlobal ? this.editor.globalVariableMap : this.editor.selectedAsset.localVariables;
         varMap.set(name, type);
-    },
+    }
+
     deleteVariableType(name, isGlobal){
-        const varMap = isGlobal ? this.globalVariableMap : this.selectedAsset.localVariables;
+        const varMap = isGlobal ? this.editor.globalVariableMap : this.editor.selectedAsset.localVariables;
         varMap.delete(name);
-    },
+    }
+
     getVariableUsage(name, nodeType, isGlobal){
         const usage = [];
         name = name.toLowerCase();
 
-        this.nodeEventAPI.forEachNode(node=>{
+        this.forEachNode(node=>{
             const isVar = node.inputs.get('name')?.value == name;
             const isSetVar = (node.templateId == nodeType) || !nodeType;
-            const isDataCon = !!this.nodeEventAPI.getConnection(node, 'data');
+            const isDataCon = !!this.getConnection(node, 'data');
             const isConnected = isSetVar && isDataCon;
             const globalMatch = node.inputs.get('global')?.value == isGlobal;
 
@@ -28,9 +47,10 @@ const API = {
         }, isGlobal);
 
         return usage;
-    },
+    }
+
     getConnection(node, socketId){
-        const allLogic = this.$store.getters['GameData/getAllLogic'];
+        const allLogic = this.store.getters['GameData/getAllLogic'];
         let logic;
 
         //find correct logic script
@@ -59,16 +79,19 @@ const API = {
         }
 
         return null;
-    },
+    }
+
     cancelConnection(connection){
         this.revertMakeConnection({connectionObj: connection});
-        this.undoStore.popLast();
-    },
+        this.editor.undoStore.popLast();
+    }
+
     batchRemoveConnections(newConnection, breakConnectionList, isGlobal, commit){
         this.actionDisconnectIncompatable({newConnection, breakConnectionList, isGlobal}, commit);
-    },
+    }
+
     getConnectedSocket(node, socketId, inputConnection = null){
-        const connection = inputConnection ?? this.nodeEventAPI.getConnection(node, socketId);
+        const connection = inputConnection ?? this.getConnection(node, socketId);
 
         if (!connection){
             return;
@@ -76,9 +99,10 @@ const API = {
 
         const isStart = socketId == connection.startSocketId;
         return isStart ? connection.endSocket : connection.startSocket;
-    },
+    }
+
     verifyConnection(node, socketId){
-        const connection = this.nodeEventAPI.getConnection(node, socketId);
+        const connection = this.getConnection(node, socketId);
 
         if (!connection){
             return;
@@ -90,7 +114,8 @@ const API = {
         if (!Shared.canConvertSocket(startType, endType)){
             this.selectedAsset.removeConnection(connection.id);
         }
-    },
+    }
+
     forEachNode(callback, isGlobal){
         if (isGlobal){
             const allLogic = this.$store.getters['GameData/getAllLogic'];
@@ -110,24 +135,17 @@ const API = {
                 callback(nodes[i]);
             }
         }
-    },
+    }
+
     deleteNode(node){
         this.actionDeleteNodes({nodeRefList: [node]}, false);
-    },
+    }
+
     dialogConfirm(textInfo, callback){
         this.$emit('dialog-confirm', {textInfo, callback});
-    },
+    }
+
     dialogNewVariable(callback){
         this.dialogNewVariable(callback);
     }
-};
-
-export default function(context){
-    const returnAPI = {};
-
-    for (const i in API){
-        returnAPI[i] = API[i].bind(context);
-    }
-
-    return returnAPI;
 }

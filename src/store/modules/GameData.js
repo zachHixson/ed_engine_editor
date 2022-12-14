@@ -31,8 +31,8 @@ const actions = {
     deleteAsset({commit}, {category, id}){
         commit('deleteAsset', {category, id});
     },
-    loadSaveData({commit}, loadObj){
-        commit('loadSaveData', loadObj);
+    loadSaveData({commit}, {loadObj, nodeAPI}){
+        commit('loadSaveData', {loadObj, nodeAPI});
     },
     purgeMissingReferences({commit}){
         commit('purgeMissingReferences');
@@ -102,12 +102,12 @@ const mutations = {
             }
         }
     },
-    loadSaveData(state, loadObj){
+    loadSaveData(state, {loadObj, nodeAPI}){
         state.startRoomId = loadObj.startRoom;
         state.sprites = loadObj.sprites.map(s => new Shared.Sprite().fromSaveData(s));
         state.objects = loadObj.objects.map(o => new Shared.Game_Object().fromSaveData(o, state.sprites));
         state.rooms = loadObj.rooms.map(r => new Shared.Room().fromSaveData(r, state.objects));
-        state.logic = loadObj.logic.map(l => new Logic().fromSaveData(l));
+        state.logic = loadObj.logic.map(l => new Logic().fromSaveData(l, nodeAPI));
     },
     purgeMissingReferences(){
         state.objects.forEach(o => o.purgeMissingReferences(state.sprites));

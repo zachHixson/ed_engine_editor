@@ -57,7 +57,7 @@ export default class Logic{
         return logic;
     }
 
-    fromSaveData(data){
+    fromSaveData(data, nodeAPI){
         const nodeMap = {};
 
         Object.assign(this, data);
@@ -73,7 +73,8 @@ export default class Logic{
                 Shared.NODE_MAP[node.templateId],
                 node.nodeId,
                 Victor.fromObject(node.pos),
-                node.graphId
+                node.graphId,
+                nodeAPI
             ).fromSaveData(node);
         });
 
@@ -136,9 +137,9 @@ export default class Logic{
         }
     }
 
-    addNode(templateId, pos, nodeRef = null){
+    addNode(templateId, pos, nodeRef = null, nodeAPI){
         const nodeTemplate = Shared.NODE_MAP[templateId];
-        const newNode = nodeRef ?? new Node(nodeTemplate, this.nextNodeId, pos, this.selectedGraphId);
+        const newNode = nodeRef ?? new Node(nodeTemplate, this.nextNodeId, pos, this.selectedGraphId, nodeAPI);
         
         newNode.dispatchEvent(new CustomEvent("init"));
         this.nodes.push(newNode);

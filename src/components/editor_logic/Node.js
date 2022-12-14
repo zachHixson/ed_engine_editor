@@ -1,7 +1,7 @@
 import { EventListenerMixin } from "../common/Event_Listener";
 
 export default class Node extends EventListenerMixin() {
-    constructor(template, id, pos = new Victor(), graphId){
+    constructor(template, id, pos = new Victor(), graphId, editorAPI){
         super(...arguments);
         this._template = template;
         this.nodeId = id;
@@ -13,7 +13,7 @@ export default class Node extends EventListenerMixin() {
         this.inputs = new Map();
         this.outputs = new Map();
         this.graphId = graphId;
-        this.editorAPI = null;
+        this._editorAPI = editorAPI;
         this.domRef = null;
         this.pos = pos.clone();
         this.dataCache = new Map();
@@ -72,6 +72,7 @@ export default class Node extends EventListenerMixin() {
 
     get template(){return this._template}
     get templateId(){return this._template.id}
+    get editorAPI(){return this._editorAPI}
 
     toSaveData(){
         this.dispatchEvent(new CustomEvent("beforeSave"));

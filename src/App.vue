@@ -42,6 +42,7 @@ export default {
     },
     mounted(){
         this.$store.dispatch('newProject');
+        this.$store.getters['getNodeAPI'].setGlobalStore = this.$store;
         this.updateEditorAsset();
     },
     methods: {

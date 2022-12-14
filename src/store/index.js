@@ -7,6 +7,7 @@ import ArtEditor from './modules/ArtEditor';
 import AssetBrowser from './modules/AssetBrowser';
 import RoomEditor from './modules/RoomEditor';
 import LogicEditor from './modules/LogicEditor';
+import Node_API from '@/components/editor_logic/Node_API.js';
 import i18n from '@/i18n';
 
 Vue.use(Vuex);
@@ -23,6 +24,7 @@ export default new Vuex.Store({
         projectName: i18n.t('editor_main.default_name'),
         inputActive: false,
         playState: PLAY_STATES.NOT_PLAYING,
+        nodeAPI: new Node_API(),
     },
     getters: {
         getProjectName: state => state.projectName,
@@ -54,6 +56,7 @@ export default new Vuex.Store({
         getInputActive: state => state.inputActive,
         getPlayStates: ()=>{return PLAY_STATES},
         getPlayState: state => state.playState,
+        getNodeAPI: state => state.nodeAPI,
     },
     actions: {
         setProjectName({commit}, newName){
@@ -68,10 +71,11 @@ export default new Vuex.Store({
             dispatch('AssetBrowser/selectRoom', newRoom);
         },
         loadSaveData({commit, dispatch, getters}, projString){
-            let loadObj = JSON.parse(projString);
+            const nodeAPI = getters['getNodeAPI'];
+            const loadObj = JSON.parse(projString);
 
             commit('loadSaveData', loadObj);
-            dispatch('GameData/loadSaveData', loadObj);
+            dispatch('GameData/loadSaveData', {loadObj, nodeAPI});
             dispatch('LogicEditor/setGlobalVariableMap', loadObj.globalVariableMap);
 
             if (loadObj.selectedRoomId != undefined){
