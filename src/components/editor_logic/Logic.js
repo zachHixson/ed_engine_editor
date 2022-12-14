@@ -79,7 +79,8 @@ export default class Logic{
 
         this.nodes.forEach(node => {
             nodeMap[node.nodeId] = node;
-            node.dispatchEvent("init");
+            node.dispatchEvent(new CustomEvent("allNodesLoaded"));
+            node.dispatchEvent(new CustomEvent("init"));
         });
 
         this.connections = this.connections.map(connection => {
@@ -136,9 +137,10 @@ export default class Logic{
     }
 
     addNode(templateId, pos, nodeRef = null){
-        let nodeTemplate = Shared.NODE_MAP[templateId];
-        let newNode = nodeRef ?? new Node(nodeTemplate, this.nextNodeId, pos, this.selectedGraphId);
-
+        const nodeTemplate = Shared.NODE_MAP[templateId];
+        const newNode = nodeRef ?? new Node(nodeTemplate, this.nextNodeId, pos, this.selectedGraphId);
+        
+        newNode.dispatchEvent(new CustomEvent("init"));
         this.nodes.push(newNode);
 
         return newNode;

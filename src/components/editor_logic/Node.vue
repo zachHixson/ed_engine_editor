@@ -132,7 +132,7 @@ export default {
         window.addEventListener('mouseup', this.mouseUpEvent);
 
         this.updateNodeSize();
-        this.nodeObj.dispatchEvent(new CustomEvent("onVisible"));
+        this.nodeObj.dispatchEvent(new CustomEvent("onMount"));
     },
     beforeDestroy(){
         window.removeEventListener('mouseup', this.mouseUpEvent);

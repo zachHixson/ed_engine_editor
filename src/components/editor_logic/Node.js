@@ -16,6 +16,7 @@ export default class Node extends EventListenerMixin() {
         this.editorAPI = null;
         this.domRef = null;
         this.pos = pos.clone();
+        this.dataCache = new Map();
 
         //map template to node
         let inputAnys = 0;

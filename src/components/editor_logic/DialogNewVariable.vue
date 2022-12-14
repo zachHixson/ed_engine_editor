@@ -101,7 +101,7 @@ export default {
             this.callback(true, {
                 name: varName,
                 type,
-                global: isGlobal,
+                isGlobal,
                 isList,
             });
             this.close();

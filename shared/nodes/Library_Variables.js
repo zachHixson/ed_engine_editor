@@ -12,34 +12,58 @@ export default [
         $onCreate(){
             this.editorAPI.dialogNewVariable((positive, varInfo) => {
                 if (positive){
-                    const {name, type, global, isList} = varInfo;
-                    const nameSocket = this.inputs.get('_varName');
-                    const typeSocket = this.inputs.get('_varType');
-                    const valSocket = this.inputs.get('initial_value');
-
-                    nameSocket.value = {titleId: 'node.create_var_display_name', data: name, translate: false};
-
-                    if (global){
-                        nameSocket.decoratorIcon = 'global_variable';
-                        nameSocket.decoratorText = 'node.global_variable';
-                    }
-
-                    typeSocket.value = {titleId: 'node.create_var_display_type', data: `node.${type.description}`, translate: true}
-                    typeSocket.decoratorIcon = `socket_${type.description.toLowerCase()}`;
-                    
-                    valSocket.type = type;
-                    valSocket.value = SOCKET_DEFAULT.get(type);
-                    this.dispatchEvent(new CustomEvent('socketsChanged'));
-                    this.dispatchEvent(new CustomEvent('recalcWidth'));
-                    this.editorAPI.setVariableType(name, type, global);
+                    this.dataCache.set('varInfo', varInfo);
+                    this.method('initVarNode');
                 }
                 else{
                     this.editorAPI.deleteNode(this);
                 }
             });
         },
+        $afterSave({detail}){
+            const saveData = detail.data;
+            const valueInput = saveData.inputs.find(input => input.id == 'initial_value');
+            const varInfo = Object.assign({}, this.dataCache.get('varInfo'));
+            
+            varInfo.type = varInfo.type.description;
+            saveData.details = varInfo;
+            saveData.inputs = [valueInput];
+        },
+        $beforeLoad({detail}){
+            const saveData = detail.data;
+            const varInfo = saveData.details;
+
+            varInfo.type = Symbol.for(varInfo.type);
+            this.dataCache.set('varInfo', varInfo);
+        },
+        $onMount(){
+            this.method('initVarNode');
+        },
         $onBeforeDelete(){
             //
+        },
+        methods: {
+            initVarNode(){
+                const {varName, type, isGlobal, isList} = this.dataCache.get('varInfo');
+                const nameSocket = this.inputs.get('_varName');
+                const typeSocket = this.inputs.get('_varType');
+                const valSocket = this.inputs.get('initial_value');
+
+                nameSocket.value = {titleId: 'node.create_var_display_name', data: varName, translate: false};
+
+                if (isGlobal){
+                    nameSocket.decoratorIcon = 'global_variable';
+                    nameSocket.decoratorText = 'node.global_variable';
+                }
+
+                typeSocket.value = {titleId: 'node.create_var_display_type', data: `node.${type.description}`, translate: true}
+                typeSocket.decoratorIcon = `socket_${type.description.toLowerCase()}`;
+                
+                valSocket.type = type;
+                this.dispatchEvent(new CustomEvent('socketsChanged'));
+                this.dispatchEvent(new CustomEvent('recalcWidth'));
+                this.editorAPI.setVariableType(varName, type, isGlobal);
+            }
         }
     },
     {// Set Variable
