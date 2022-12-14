@@ -26,7 +26,7 @@
                 @blur="onTextBlur"
                 :disabled="socket.disabled"
                 v-input-active/>
-                <Tooltip for="textInput" :text="socket.disabled ? socket.value : ''"/>
+                <Tooltip for="textInput" :text="socket.disabled && socket.value.length > 8 ? socket.value : ''"/>
             <div
                 v-if="socket.type == SOCKET_TYPE.OBJECT"
                 class="selfBox">{{$t('logic_editor.self')}}</div>
@@ -132,6 +132,10 @@ export default {
         },
     },
     mounted(){
+        this.forceSocketUpdate = this.forceSocketUpdate.bind(this);
+
+        this.socket.node.addEventListener('forceSocketUpdate', this.forceSocketUpdate);
+
         this.$nextTick(()=>{
             this.hasSize = true;
 
@@ -141,6 +145,12 @@ export default {
         });
     },
     methods: {
+        forceSocketUpdate(){
+            this.$nextTick(()=>{
+                console.log(this.socket.disabled);
+                this.socket.value = this.socket.value;
+            });
+        },
         onInput(event){
             this.socket.value = event.target.value;
             this.$emit('on-input', event);

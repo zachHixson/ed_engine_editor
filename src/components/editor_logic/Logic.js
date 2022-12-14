@@ -58,6 +58,7 @@ export default class Logic{
     }
 
     fromSaveData(data, nodeAPI){
+        const nodeEventObj = new CustomEvent("logicLoaded", {detail: this});
         const nodeMap = {};
 
         Object.assign(this, data);
@@ -80,7 +81,6 @@ export default class Logic{
 
         this.nodes.forEach(node => {
             nodeMap[node.nodeId] = node;
-            node.dispatchEvent(new CustomEvent("allNodesLoaded"));
         });
 
         this.connections = this.connections.map(connection => {
@@ -92,6 +92,11 @@ export default class Logic{
         for (const v in data.localVariables){
             this.localVariables.set(v, Symbol.for(data.localVariables[v]));
         }
+
+        //dispatch node event
+        this.nodes.forEach(node => {
+            node.dispatchEvent(nodeEventObj);
+        });
 
         return this;
     }

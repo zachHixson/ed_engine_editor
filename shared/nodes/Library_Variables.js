@@ -12,11 +12,13 @@ export default [
         $onCreate(){
             this.editorAPI.dialogNewVariable((positive, varInfo) => {
                 if (positive){
+                    const {varName, type, isGlobal, isList} = varInfo;
                     const valSocket = this.inputs.get('initial_value');
 
                     this.dataCache.set('varInfo', varInfo);
                     this.method('initVarNode');
                     valSocket.value = SOCKET_DEFAULT.get(varInfo.type);
+                    this.editorAPI.setVariableType(varName, type, isGlobal);
                 }
                 else{
                     this.editorAPI.deleteNode(this);
@@ -93,8 +95,12 @@ export default [
         $onInput(event){
             this.method('validate', [event.detail.target]);
         },
-        $onNewConnection,
-        $onRemoveConnection,
+        $projectLoaded(){
+            determineConnected.call(this);
+            this.method('validate');
+        },
+        $onNewConnection: determineConnected,
+        $onRemoveConnection: determineConnected,
         methods: {
             setVar(){
                 const varName = this.getInput('name').trim().toLowerCase();
@@ -125,8 +131,8 @@ export default [
         $onInput(event){
             this.method('validate', [event.detail.target]);
         },
-        $onNewConnection,
-        $onRemoveConnection,
+        $onNewConnection: determineConnected,
+        $onRemoveConnection: determineConnected,
         methods: {
             getVar(){
                 const name = this.getInput('name').trim().toLowerCase();
@@ -190,20 +196,16 @@ export default [
     },
 ];
 
-function $onNewConnection(){
+function determineConnected(){
     const nameSocket = this.inputs.get('name');
-    nameSocket.disabled = true;
-}
-
-function $onRemoveConnection(){
-    const nameSocket = this.inputs.get('name');
-    nameSocket.disabled = false;
+    const isDataConnected = !!this.editorAPI.getConnection(this, 'data');
+    nameSocket.disabled = isDataConnected;
 }
 
 function validate(textbox){
     const nameSocket = this.inputs.get('name');
     const dataSocket = this.inputs.get('data') || this.outputs.get('data');
-    const varName = textbox.value.trim().toLowerCase();
+    const varName = textbox?.value ?? this.getInput('name');
     const globalGet = this.editorAPI.getVariableType(varName, true);
     const localGet = this.editorAPI.getVariableType(varName, false);
     const isValid = !!globalGet || !!localGet;
@@ -228,5 +230,6 @@ function validate(textbox){
         nameSocket.decoratorText = 'node.error_var_not_found';
     }
 
+    this.dataCache.set('isValid', isValid);
     this.dispatchEvent(new CustomEvent('socketsChanged'));
 }

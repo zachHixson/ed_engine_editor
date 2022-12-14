@@ -17,25 +17,34 @@ export default class Node_API {
 
     getVariableType(name, isGlobal){
         const globalVariableMap = this.store.getters['LogicEditor/getGlobalVariableMap'];
-        const varMap = isGlobal ? globalVariableMap : this.editor.selectedAsset.localVariables;
-        return varMap.get(name.toLowerCase());
+        const localVariableMap = this.editor?.selectedAsset.localVariables;
+        const varName = name.trim().toLowerCase();
+        
+        if (isGlobal === undefined){
+            return localVariableMap?.get(varName) ?? globalVariableMap.get(varName);
+        }
+        else{
+            return isGlobal ? globalVariableMap.get(varName) : localVariableMap?.get(varName);
+        }
     }
 
     setVariableType(name, type, isGlobal){
         const globalVariableMap = this.store.getters['LogicEditor/getGlobalVariableMap'];
         const varMap = isGlobal ? globalVariableMap : this.editor.selectedAsset.localVariables;
-        varMap.set(name, type);
+        const varName = name.trim().toLowerCase();
+        varMap.set(varName, type);
     }
 
     deleteVariableType(name, isGlobal){
         const globalVariableMap = this.store.getters['LogicEditor/getGlobalVariableMap'];
         const varMap = isGlobal ? globalVariableMap : this.editor.selectedAsset.localVariables;
-        varMap.delete(name);
+        const varName = name.trim().toLowerCase();
+        varMap.delete(varName);
     }
 
     getVariableUsage(name, nodeType, isGlobal){
         const usage = [];
-        name = name.toLowerCase();
+        name = name.trim().toLowerCase();
 
         this.forEachNode(node=>{
             const isVar = node.inputs.get('name')?.value == name;
@@ -54,18 +63,15 @@ export default class Node_API {
 
     getConnection(node, socketId){
         const allLogic = this.store.getters['GameData/getAllLogic'];
-        let logic;
+        const logic = allLogic.find(logic => {
+            const nodes = logic.nodes;
 
-        //find correct logic script
-        for (let l = 0; l < allLogic.length; l++){
-            const curLogic = allLogic[l];
-
-            for (let n = 0; n < curLogic.nodes.length; n++){
-                if (curLogic.nodes[n] == node){
-                    logic = curLogic;
+            for (let n = 0; n < nodes.length; n++){
+                if (nodes[n] == node){
+                    return logic;
                 }
             }
-        }
+        });
 
         //find correct connection
         for (let i = 0; i < logic.connections.length; i++){
@@ -121,7 +127,7 @@ export default class Node_API {
 
     forEachNode(callback, isGlobal){
         if (isGlobal){
-            const allLogic = this.$store.getters['GameData/getAllLogic'];
+            const allLogic = this.store.getters['GameData/getAllLogic'];
 
             for (let l = 0; l < allLogic.length; l++){
                 const curLogic = allLogic[l];
@@ -140,6 +146,12 @@ export default class Node_API {
         }
     }
 
+    dispatchAll(eventObj){
+        this.forEachNode(node => {
+            node.dispatchEvent(eventObj);
+        }, true);
+    }
+
     deleteNode(node){
         this.actionDeleteNodes({nodeRefList: [node]}, false);
     }
@@ -149,6 +161,6 @@ export default class Node_API {
     }
 
     dialogNewVariable(callback){
-        this.dialogNewVariable(callback);
+        this.editor.dialogNewVariable(callback);
     }
 }

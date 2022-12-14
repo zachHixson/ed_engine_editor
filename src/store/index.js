@@ -82,6 +82,8 @@ export default new Vuex.Store({
                 let room = getters['GameData/getAllRooms'].find(r => r.id == loadObj.selectedRoomId);
                 dispatch('AssetBrowser/selectRoom', room);
             }
+
+            nodeAPI.dispatchAll(new CustomEvent("projectLoaded"));
         },
         setInputActive({commit}, newState){
             commit('setInputActive', newState);
