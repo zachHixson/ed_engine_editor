@@ -68,6 +68,8 @@ export default class Node extends EventListenerMixin() {
         if (inputAnys > 1){
             console.error(`Error in node template '${this.templateId}'. Nodes can currently only have 1 'ANY' input socket at a time.`);
         }
+
+        this.dispatchEvent(new CustomEvent("init"));
     }
 
     get template(){return this._template}

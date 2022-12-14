@@ -39,9 +39,18 @@ export default [
             varInfo.type = Symbol.for(varInfo.type);
             this.dataCache.set('varInfo', varInfo);
         },
+        $afterLoad(){
+            const {varName, type, isGlobal, isList} = this.dataCache.get('varInfo');
+            isGlobal && this.editorAPI.setVariableType(varName, type, isGlobal);
+        },
         $onMount(){
-            if (!this.dataCache.get('varInfo')) return;
+            const varInfo = this.dataCache.get('varInfo');
+            
+            if (!varInfo) return;
 
+            const {varName, type, isGlobal} = varInfo;
+
+            !varInfo.isGlobal && this.editorAPI.setVariableType(varName, type, isGlobal);
             this.method('initVarNode');
         },
         $onBeforeDelete(){
@@ -67,7 +76,6 @@ export default [
                 valSocket.type = type;
                 this.dispatchEvent(new CustomEvent('socketsChanged'));
                 this.dispatchEvent(new CustomEvent('recalcWidth'));
-                this.editorAPI.setVariableType(varName, type, isGlobal);
             }
         }
     },

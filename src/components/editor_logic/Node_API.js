@@ -16,17 +16,20 @@ export default class Node_API {
     }
 
     getVariableType(name, isGlobal){
-        const varMap = isGlobal ? this.editor.globalVariableMap : this.editor.selectedAsset.localVariables;
+        const globalVariableMap = this.store.getters['LogicEditor/getGlobalVariableMap'];
+        const varMap = isGlobal ? globalVariableMap : this.editor.selectedAsset.localVariables;
         return varMap.get(name.toLowerCase());
     }
 
     setVariableType(name, type, isGlobal){
-        const varMap = isGlobal ? this.editor.globalVariableMap : this.editor.selectedAsset.localVariables;
+        const globalVariableMap = this.store.getters['LogicEditor/getGlobalVariableMap'];
+        const varMap = isGlobal ? globalVariableMap : this.editor.selectedAsset.localVariables;
         varMap.set(name, type);
     }
 
     deleteVariableType(name, isGlobal){
-        const varMap = isGlobal ? this.editor.globalVariableMap : this.editor.selectedAsset.localVariables;
+        const globalVariableMap = this.store.getters['LogicEditor/getGlobalVariableMap'];
+        const varMap = isGlobal ? globalVariableMap : this.editor.selectedAsset.localVariables;
         varMap.delete(name);
     }
 

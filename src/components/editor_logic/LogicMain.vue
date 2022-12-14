@@ -333,9 +333,6 @@ export default {
         graphKeys(){
             return this.selectedAsset.graphs.map(graph => graph.id);
         },
-        globalVariableMap(){
-            return this.$store.getters['LogicEditor/getGlobalVariableMap'];
-        },
     },
     beforeCreate(){
         this.$store.getters['getNodeAPI'].setNodeEditorContext(this);

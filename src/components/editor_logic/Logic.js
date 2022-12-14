@@ -81,7 +81,6 @@ export default class Logic{
         this.nodes.forEach(node => {
             nodeMap[node.nodeId] = node;
             node.dispatchEvent(new CustomEvent("allNodesLoaded"));
-            node.dispatchEvent(new CustomEvent("init"));
         });
 
         this.connections = this.connections.map(connection => {
