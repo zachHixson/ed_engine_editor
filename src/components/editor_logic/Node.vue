@@ -118,20 +118,21 @@ export default {
             return getComputedStyle(document.body).getPropertyValue('--heading');
         }
     },
+    created(){
+        this.updateAllSockets();
+    },
     mounted(){
         this.nodeObj.setDomRef(this.$el);
         this.mouseUpEvent = this.mouseUp.bind(this);
         this.updateConnections = this.updateConnections.bind(this);
         this.updateNodeSize = this.updateNodeSize.bind(this);
 
-        this.updateAllSockets();
-        this.nodeObj.dispatchEvent(new CustomEvent("onVisible"));
-
         this.nodeObj.addEventListener('onMove', this.updateConnections);
         this.nodeObj.addEventListener('recalcWidth', this.updateNodeSize);
         window.addEventListener('mouseup', this.mouseUpEvent);
 
         this.updateNodeSize();
+        this.nodeObj.dispatchEvent(new CustomEvent("onVisible"));
     },
     beforeDestroy(){
         window.removeEventListener('mouseup', this.mouseUpEvent);
