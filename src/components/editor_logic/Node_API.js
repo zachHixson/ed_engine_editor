@@ -73,6 +73,8 @@ export default class Node_API {
             }
         });
 
+        if (!logic) return;
+
         //find correct connection
         for (let i = 0; i < logic.connections.length; i++){
             const curConnection = logic.connections[i];

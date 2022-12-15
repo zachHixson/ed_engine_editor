@@ -807,11 +807,10 @@ export default {
                 });
 
                 connectionRefList.forEach(connection => {
-                    const eventObj = new CustomEvent("onRemoveConnection", {detail: {connection}});
-
+                    const eventObj = new CustomEvent("onRemoveConnection", {detail: connection});
+                    this.selectedAsset.removeConnection(connection.id);
                     connection.startNode?.dispatchEvent(eventObj);
                     connection.endNode?.dispatchEvent(eventObj);
-                    this.selectedAsset.removeConnection(connection.id)
                 });
 
                 //delete node
@@ -851,7 +850,7 @@ export default {
             }
         },
         actionMakeConnection({connectionObj, socketOver}, makeCommit = true){
-            const eventObj = new CustomEvent("onNewConnection", {detail: {connection: connectionObj}});
+            const eventObj = new CustomEvent("onNewConnection", {detail: connectionObj});
 
             if (socketOver.isInput){
                 connectionObj.endNode = socketOver.node;
@@ -896,12 +895,9 @@ export default {
             this.undoStore.cache.delete('prev_socket');
         },
         actionRemoveConnection({connectionObj}, makeCommit = true){
-            const eventObj = new CustomEvent("onRemoveConnection", {detail: {connection: connectionObj}});
+            const eventObj = new CustomEvent("onRemoveConnection", {detail: connectionObj});
 
             makeCommit &= !!(connectionObj.startNode && connectionObj.endNode);
-
-            connectionObj.startNode?.dispatchEvent(eventObj);
-            connectionObj.endNode?.dispatchEvent(eventObj);
 
             if (makeCommit){
                 let data = {connectionObj: Object.assign(new Node_Connection(), connectionObj)};
@@ -912,6 +908,8 @@ export default {
             }
 
             this.selectedAsset.removeConnection(connectionObj.id);
+            connectionObj.startNode?.dispatchEvent(eventObj);
+            connectionObj.endNode?.dispatchEvent(eventObj);
         },
         actionDisconnectIncompatable({newConnection, breakConnectionList, isGlobal}, makeCommit = true){
             // const assetConnectionMap = new Map();
@@ -976,7 +974,7 @@ export default {
             });
 
             connectionRefList.forEach(connection => {
-                const eventObj = new CustomEvent("onNewConnection", {detail: {connection}});
+                const eventObj = new CustomEvent("onNewConnection", {detail: connection});
 
                 this.selectedAsset.addConnection(connection);
                 connection.startNode.dispatchEvent(eventObj);

@@ -97,13 +97,13 @@ export default class Node extends EventListenerMixin() {
             outObj.widgetData = JSON.stringify(this.widgetData);
         }
 
-        this.dispatchEvent(new CustomEvent("afterSave", {detail: {data: outObj}}));
+        this.dispatchEvent(new CustomEvent("afterSave", {detail: outObj}));
 
         return outObj;
     }
 
     fromSaveData(data){
-        this.dispatchEvent(new CustomEvent("beforeLoad", {detail: {data}}));
+        this.dispatchEvent(new CustomEvent("beforeLoad", {detail: data}));
 
         if (data.widgetData){
             this.widgetData = JSON.parse(data.widgetData);

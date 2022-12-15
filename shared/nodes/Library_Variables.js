@@ -25,8 +25,7 @@ export default [
                 }
             });
         },
-        $afterSave({detail}){
-            const saveData = detail.data;
+        $afterSave({detail: saveData}){
             const valueInput = saveData.inputs.find(input => input.id == 'initial_value');
             const varInfo = Object.assign({}, this.dataCache.get('varInfo'));
             
@@ -34,8 +33,7 @@ export default [
             saveData.details = varInfo;
             saveData.inputs = [valueInput];
         },
-        $beforeLoad({detail}){
-            const saveData = detail.data;
+        $beforeLoad({detail: saveData}){
             const varInfo = saveData.details;
 
             varInfo.type = Symbol.for(varInfo.type);
@@ -92,7 +90,7 @@ export default [
             {id: 'name', type: SOCKET_TYPE.STRING, default: '', hideSocket: true},
             {id: 'data', type: SOCKET_TYPE.ANY, default: null, disabled: true, hideInput: true},
         ],
-        $onInput(event){
+        $onInput({detail: event}){
             this.method('validate', [event.detail.target]);
         },
         $projectLoaded(){
@@ -128,8 +126,12 @@ export default [
         outputs: [
             {id: 'data', type: SOCKET_TYPE.ANY, execute: 'getVar'},
         ],
-        $onInput(event){
-            this.method('validate', [event.detail.target]);
+        $onInput({detail: event}){
+            this.method('validate', [event.target]);
+        },
+        $projectLoaded(){
+            determineConnected.call(this);
+            this.method('validate');
         },
         $onNewConnection: determineConnected,
         $onRemoveConnection: determineConnected,
@@ -197,8 +199,9 @@ export default [
 ];
 
 function determineConnected(){
+    const connection = this.editorAPI.getConnection(this, 'data');
     const nameSocket = this.inputs.get('name');
-    const isDataConnected = !!this.editorAPI.getConnection(this, 'data');
+    const isDataConnected = !!connection;
     nameSocket.disabled = isDataConnected;
 }
 
