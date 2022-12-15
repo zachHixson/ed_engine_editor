@@ -9,6 +9,9 @@ export default [
             {id: '_varType', type: SOCKET_TYPE.INFO, hideSocket: true},
             {id: 'initial_value', type: SOCKET_TYPE.NUMBER, default: 0, hideSocket: true},
         ],
+        $init(){
+            this.editorCanDelete = false;
+        },
         $onCreate(){
             this.editorAPI.dialogNewVariable((positive, varInfo) => {
                 if (positive){
@@ -41,7 +44,7 @@ export default [
         },
         $afterLoad(){
             const {varName, type, isGlobal, isList} = this.dataCache.get('varInfo');
-            isGlobal && this.editorAPI.setVariableType(varName, type, isGlobal);
+            if (isGlobal) this.editorAPI.setVariableType(varName, type, isGlobal);
         },
         $onMount(){
             const varInfo = this.dataCache.get('varInfo');
@@ -50,11 +53,30 @@ export default [
 
             const {varName, type, isGlobal} = varInfo;
 
-            !varInfo.isGlobal && this.editorAPI.setVariableType(varName, type, isGlobal);
+            if (!varInfo.isGlobal) this.editorAPI.setVariableType(varName, type, isGlobal);
             this.method('initVarNode');
         },
-        $onBeforeDelete(){
-            //
+        $onDeleteStopped({detail}){
+            const createVars = detail.filter(node => node.templateId == this.templateId);
+            const varNames = createVars.map(node => node.inputs.get('_varName').value.data);
+            const message = varNames.length > 1 ? 'node.create_var_confirm_multiple' : 'node.create_var_confirm';
+            const selectedNodes = this.editorAPI.getSelectedNodes();
+
+            this.editorAPI.dialogConfirm({
+                textId: message,
+                vars: {varList: varNames.join(', ')}
+            }, positive => {
+                if (!positive) return;
+                const allGetSetNodes = [];
+
+                varNames.forEach(varName => {
+                    const isGlobal = !!this.editorAPI.getVariableType(varName, true);
+                    const getSetNodes = this.editorAPI.getVariableUsage(varName, null, isGlobal);
+                    allGetSetNodes.push(...getSetNodes);
+                });
+
+                this.editorAPI.deleteNodes([...selectedNodes, ...allGetSetNodes]);
+            });
         },
         methods: {
             initVarNode(){

@@ -389,7 +389,6 @@ export default {
             this.actionMap.set(Shared.LOGIC_ACTION.MOVE, this.actionMoveNodes);
             this.actionMap.set(Shared.LOGIC_ACTION.CONNECT, this.actionMakeConnection);
             this.actionMap.set(Shared.LOGIC_ACTION.DISCONNECT, this.actionRemoveConnection);
-            this.actionMap.set(Shared.LOGIC_ACTION.DISCONNECT_INCOMPATABLE, this.actionDisconnectIncompatable);
             this.actionMap.set(Shared.LOGIC_ACTION.CHANGE_INPUT, this.actionChangeInput);
         },
         bindReversions(){
@@ -398,7 +397,6 @@ export default {
             this.revertMap.set(Shared.LOGIC_ACTION.MOVE, this.revertMoveNodes);
             this.revertMap.set(Shared.LOGIC_ACTION.CONNECT, this.revertMakeConnection);
             this.revertMap.set(Shared.LOGIC_ACTION.DISCONNECT, this.revertRemoveConnection);
-            this.revertMap.set(Shared.LOGIC_ACTION.DISCONNECT_INCOMPATABLE, this.revertDisconnectIncompatable);
             this.revertMap.set(Shared.LOGIC_ACTION.CHANGE_INPUT, this.revertChangeInput);
         },
         getNewNodePos(){
@@ -754,8 +752,21 @@ export default {
             this.selectedNodes.splice(0);
         },
         deleteSelectedNodes(){
-            this.actionDeleteNodes({nodeRefList: this.selectedNodes}, true);
-            this.deselectAllNodes();
+            const protectedNodes = [];
+            const deletableNodes = this.selectedNodes.filter(node => {
+                if (node.editorCanDelete) return true;
+
+                protectedNodes.push(node);
+                return false;
+            });
+            const eventObj = new CustomEvent('onDeleteStopped', {detail: protectedNodes});
+
+            if (deletableNodes.length){
+                this.actionDeleteNodes({nodeRefList: deletableNodes}, true);
+                this.deselectAllNodes();
+            }
+
+            protectedNodes.forEach(node => node.dispatchEvent(eventObj));
         },
         checkLoop(leftNode, rightNode){
             let connectionMap = new Map();
@@ -793,33 +804,39 @@ export default {
             }
         },
         actionDeleteNodes({nodeRefList}, makeCommit = true){
-            let connectionRefList = [];
+            const connectionRefMap = new Map();
 
             nodeRefList.forEach(node => {
                 //find and delete connections attached to the node
-                this.selectedAsset.connections.forEach(connection => {
-                    let startNodeId = connection.startNode.nodeId;
-                    let endNodeId = connection.endNode.nodeId;
+                const currentConnections = [];
+                
+                node.parentScript.connections.forEach(connection => {
+                    const startNodeId = connection.startNode.nodeId;
+                    const endNodeId = connection.endNode.nodeId;
 
                     if (startNodeId == node.nodeId || endNodeId == node.nodeId){
-                        connectionRefList.push(connection);
+                        currentConnections.push(connection);
                     }
                 });
 
-                connectionRefList.forEach(connection => {
+                currentConnections.forEach(connection => {
                     const eventObj = new CustomEvent("onRemoveConnection", {detail: connection});
-                    this.selectedAsset.removeConnection(connection.id);
+                    const connectionMapGet = connectionRefMap.get(node.parentScript) ?? [];
+
+                    if (!connectionMapGet.length) connectionRefMap.set(node.parentScript, connectionMapGet);
+                    connectionMapGet.push(connection);
+                    node.parentScript.removeConnection(connection.id);
                     connection.startNode?.dispatchEvent(eventObj);
                     connection.endNode?.dispatchEvent(eventObj);
                 });
 
                 //delete node
                 node.dispatchEvent(new CustomEvent("onBeforeDelete"));
-                this.selectedAsset.deleteNode(node);
+                node.parentScript.deleteNode(node);
             });
 
             if (makeCommit){
-                let data = {nodeRefList: [...nodeRefList], connectionRefList: [...connectionRefList]};
+                const data = {nodeRefList: [...nodeRefList], connectionRefMap};
                 this.undoStore.commit({action: Shared.LOGIC_ACTION.DELETE_NODES, data});
             }
         },
@@ -911,43 +928,6 @@ export default {
             connectionObj.startNode?.dispatchEvent(eventObj);
             connectionObj.endNode?.dispatchEvent(eventObj);
         },
-        actionDisconnectIncompatable({newConnection, breakConnectionList, isGlobal}, makeCommit = true){
-            // const assetConnectionMap = new Map();
-
-            // if (isGlobal){
-            //     const allLogic = this.$store.getters['GameData/getAllLogic'];
-
-            //     for (let i = 0; i < allLogic.length; i++){
-            //         for (let j = 0; j < breakConnectionList.length; j++){
-            //             const connection = breakConnectionList[j];
-
-            //             if (allLogic[i].removeConnection(null, connection)){
-            //                 assetConnectionMap.set(connection, allLogic[i]);
-            //             }
-            //         }
-            //     }
-            // }
-            // else{
-            //     for (let i = 0; i < breakConnectionList.length; i++){
-            //         const connection = breakConnectionList[i];
-            //         this.selectedAsset.removeConnection(null, connection.id);
-            //         assetConnectionMap.set(connection, this.selectedAsset);
-            //     }
-            // }
-
-            // if (!this.selectedAsset.connections.find(c => c == newConnection)){
-            //     this.selectedAsset.addConnection(newConnection);
-            // }
-
-            if (makeCommit){
-                //const data = {newConnection, breakConnectionList, isGlobal, assetConnectionMap};
-                //this.undoStore.commit({action: Shared.LOGIC_ACTION.DISCONNECT_INCOMPATABLE, data});
-            }
-
-            this.$nextTick(()=>{
-                this.relinkConnections();
-            });
-        },
         actionChangeInput({socket, oldVal, newVal, node}, makeCommit = true){
             socket.value = newVal;
 
@@ -966,19 +946,21 @@ export default {
             nodeRef.dispatchEvent(new CustomEvent("onBeforeDelete"));
             this.selectedAsset.deleteNode(nodeRef);
         },
-        revertDeleteNodes({nodeRefList, connectionRefList}){
+        revertDeleteNodes({nodeRefList, connectionRefMap}){
             const nodeAPI = this.$store.getters['getNodeAPI'];
 
             nodeRefList.forEach(node => {
-                this.selectedAsset.addNode(node.templateId, null, node, nodeAPI);
+                node.parentScript.addNode(node.templateId, null, node, nodeAPI);
             });
 
-            connectionRefList.forEach(connection => {
-                const eventObj = new CustomEvent("onNewConnection", {detail: connection});
+            connectionRefMap.forEach((connectionList, parentScript) => {
+                connectionList.forEach(connection => {
+                    const eventObj = new CustomEvent("onNewConnection", {detail: connection});
 
-                this.selectedAsset.addConnection(connection);
-                connection.startNode.dispatchEvent(eventObj);
-                connection.endNode.dispatchEvent(eventObj);
+                    parentScript.addConnection(connection);
+                    connection.startNode.dispatchEvent(eventObj);
+                    connection.endNode.dispatchEvent(eventObj);
+                });
             });
 
             this.$nextTick(()=>{
@@ -1008,17 +990,6 @@ export default {
             this.$nextTick(()=>{
                 this.relinkConnections();
             })
-        },
-        revertDisconnectIncompatable({newConnection, assetConnectionMap}){
-            for (let [connection, logic] of assetConnectionMap){
-                logic.addConnection(connection);
-            }
-
-            this.selectedAsset.removeConnection(newConnection.id);
-
-            this.$nextTick(()=>{
-                this.relinkConnections();
-            });
         },
         revertChangeInput({socket, oldVal, newVal, node}){
             socket.value = oldVal;

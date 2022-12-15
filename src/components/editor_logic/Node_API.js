@@ -47,13 +47,12 @@ export default class Node_API {
         name = name.trim().toLowerCase();
 
         this.forEachNode(node=>{
-            const isVar = node.inputs.get('name')?.value == name;
-            const isSetVar = (node.templateId == nodeType) || !nodeType;
-            const isDataCon = !!this.getConnection(node, 'data');
-            const isConnected = isSetVar && isDataCon;
-            const globalMatch = node.inputs.get('global')?.value == isGlobal;
+            const isVarMatch = node.inputs.get('name')?.value == name;
+            const isVarNode = node.templateId == 'set_variable' || node.templateId == 'get_variable';
+            const isUsage = (node.templateId == nodeType) || (!nodeType && isVarNode);
+            const isGlobalMatch = isGlobal ^ !!node.parentScript.localVariables.get(name);
 
-            if (isVar && isConnected && globalMatch){
+            if (isVarMatch && isUsage && isGlobalMatch){
                 usage.push(node);
             }
         }, isGlobal);
@@ -97,10 +96,6 @@ export default class Node_API {
         this.editor.undoStore.popLast();
     }
 
-    batchRemoveConnections(newConnection, breakConnectionList, isGlobal, commit){
-        this.actionDisconnectIncompatable({newConnection, breakConnectionList, isGlobal}, commit);
-    }
-
     getConnectedSocket(node, socketId, inputConnection = null){
         const connection = inputConnection ?? this.getConnection(node, socketId);
 
@@ -127,6 +122,14 @@ export default class Node_API {
         }
     }
 
+    getSelectedNodes(){
+        return [...this.editor.selectedNodes];
+    }
+
+    deleteNodes(nodeList){
+        this.editor.actionDeleteNodes({nodeRefList: nodeList}, true);
+    }
+
     forEachNode(callback, isGlobal){
         if (isGlobal){
             const allLogic = this.store.getters['GameData/getAllLogic'];
@@ -140,7 +143,7 @@ export default class Node_API {
             }
         }
         else{
-            const nodes = this.selectedAsset.nodes;
+            const nodes = this.editor.selectedAsset.nodes;
 
             for (let i = 0; i < nodes.length; i++){
                 callback(nodes[i]);
@@ -159,7 +162,7 @@ export default class Node_API {
     }
 
     dialogConfirm(textInfo, callback){
-        this.$emit('dialog-confirm', {textInfo, callback});
+        this.editor.$emit('dialog-confirm', {textInfo, callback});
     }
 
     dialogNewVariable(callback){

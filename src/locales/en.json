@@ -205,6 +205,8 @@
         "false": "False",
         "create_var_display_name": "Name: ",
         "create_var_display_type": "Type: ",
+        "create_var_confirm": "Warning: You are about to delete a variable node. All connections related to this variable will be broken.<br><br>Are you sure?",
+        "create_var_confirm_multiple": "Warning: You are about to delete multiple variables. All connections related to these variables will be broken.<br><br>Are you sure?<br><br>Variables to be deleted: {varList}",
         "global_variable": "Global Variable",
         "initial_value": "Initial Value",
         "NUMBER": "Number",

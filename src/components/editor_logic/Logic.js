@@ -74,6 +74,7 @@ export default class Logic{
                 Shared.NODE_MAP[node.templateId],
                 node.nodeId,
                 Victor.fromObject(node.pos),
+                this,
                 node.graphId,
                 nodeAPI
             ).fromSaveData(node);
@@ -143,7 +144,7 @@ export default class Logic{
 
     addNode(templateId, pos, nodeRef = null, nodeAPI){
         const nodeTemplate = Shared.NODE_MAP[templateId];
-        const newNode = nodeRef ?? new Node(nodeTemplate, this.nextNodeId, pos, this.selectedGraphId, nodeAPI);
+        const newNode = nodeRef ?? new Node(nodeTemplate, this.nextNodeId, pos, this, this.selectedGraphId, nodeAPI);
         
         newNode.dispatchEvent(new CustomEvent("init"));
         this.nodes.push(newNode);
