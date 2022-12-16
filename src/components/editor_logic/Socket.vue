@@ -1,52 +1,58 @@
 <template>
     <div class="dataSocket" :class="isInput ? 'isInput' : ''">
-        <div class="decorator-placeholder"></div>
-        <div v-if="showLabel" class="socket_name" :class="socket.hideLabel ? 'invisible':''">
-            <div>{{$t('node.' + socket.id)}}</div>
+        <div v-if="socket.enableDecorators" class="decorator-wrapper">
             <Decorator
                 v-if="socket.decoratorIcon"
                 class="decorator"
                 :src="require(`@/assets/${socket.decoratorIcon}.svg`)"
                 :tooltipText="$te(socket.decoratorText) ? $t(socket.decoratorText, socket.decoratorTextVars || {}): ''"/>
         </div>
-        <div v-if="isInput && !isConnected && !hideInput" class="inputBox">
-            <input
-                v-if="socket.type == SOCKET_TYPE.NUMBER"
-                type="number" :value="getValue()"
-                @change="numValueChanged($event.target)"
-                @input="onInput($event)"
-                :disabled="socket.disabled"
-                v-input-active/>
-            <input
-                v-if="socket.type == SOCKET_TYPE.STRING"
-                name="textInput"
-                type="text" :value="getValue()"
-                @change="valueChanged($event.target)"
-                @input="onInput($event)"
-                @blur="onTextBlur"
-                :disabled="socket.disabled"
-                v-input-active/>
-                <Tooltip for="textInput" :text="socket.disabled && socket.value.length > 8 ? socket.value : ''"/>
-            <div
-                v-if="socket.type == SOCKET_TYPE.OBJECT"
-                class="selfBox">{{$t('logic_editor.self')}}</div>
-            <input
-                v-if="socket.type == SOCKET_TYPE.BOOL"
-                type="checkbox"
-                :checked="getValue()"
-                @change="boolValueChanged($event.target)"
-                @input="onInput($event)"
-                :disabled="socket.disabled"
-                ref="boolCheckbox"/>
+        <div class="name-input-wrapper" :style="isInput && !socket.flipInput ? 'flex-direction: row-reverse;':''">
+            <div v-if="showLabel" class="socket_name" :class="socket.hideLabel ? 'invisible':''">
+                <div>{{$t('node.' + socket.id)}}</div>
+            </div>
+            <div v-if="isInput && !isConnected && !hideInput" class="inputBox">
+                <input
+                    v-if="socket.type == SOCKET_TYPE.NUMBER"
+                    type="number"
+                    :style="customStyles"
+                    :value="getValue()"
+                    @change="numValueChanged($event.target)"
+                    @input="onInput($event)"
+                    :disabled="socket.disabled"
+                    v-input-active/>
+                <input
+                    v-if="socket.type == SOCKET_TYPE.STRING"
+                    name="textInput"
+                    type="text"
+                    :style="customStyles"
+                    :value="getValue()"
+                    @change="valueChanged($event.target)"
+                    @input="onInput($event)"
+                    @blur="onTextBlur"
+                    :disabled="socket.disabled"
+                    v-input-active/>
+                    <Tooltip for="textInput" :text="socket.disabled && socket.value.length > 8 ? socket.value : ''"/>
+                <div
+                    v-if="socket.type == SOCKET_TYPE.OBJECT"
+                    class="selfBox"
+                    :style="customStyles">
+                        {{$t('logic_editor.self')}}
+                </div>
+                <input
+                    v-if="socket.type == SOCKET_TYPE.BOOL"
+                    type="checkbox"
+                    :style="customStyles"
+                    :checked="getValue()"
+                    @change="boolValueChanged($event.target)"
+                    @input="onInput($event)"
+                    :disabled="socket.disabled"
+                    ref="boolCheckbox"/>
+            </div>
         </div>
         <div v-if="socket.type == SOCKET_TYPE.INFO && socket.value" class="infoBox">
             <div v-html="$t(socket.value.titleId)" class="infoTitle"></div>
             <div>{{$te(socket.value.data) && socket.value.translate ? $t(socket.value.data) : socket.value.data}}</div>
-            <Decorator
-                v-if="socket.decoratorIcon"
-                class="decorator"
-                :src="require(`@/assets/${socket.decoratorIcon}.svg`)"
-                :tooltipText="$te(socket.decoratorText) ? $t(socket.decoratorText, socket.decoratorTextVars || {}): ''"/>
         </div>
         <div
             v-if="!(isTrigger || hideSocket)"
@@ -130,6 +136,10 @@ export default {
                 [Shared.SOCKET_TYPE.BOOL, 'assets/socket_bool'],
             ]);
         },
+        customStyles(){
+            const width = this.socket.node.inputBoxWidth;
+            return width ? `width: ${width}rem` : '';
+        }
     },
     mounted(){
         this.forceSocketUpdate = this.forceSocketUpdate.bind(this);
@@ -272,10 +282,18 @@ export default {
     opacity: 0%;
 }
 
+.name-input-wrapper{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+}
+
 .socket_name{
     position: relative;
     display: flex;
     flex-direction: row;
+    justify-content: center;
     align-items: center;
 }
 
@@ -298,11 +316,13 @@ export default {
 
 .inputBox{
     position: relative;
+    display: flex;
+    flex-direction: row;
+    height: 25px;
 }
 
 .inputBox > *{
-    width: 6rem;
-    margin-right: 3px;
+    width: 4rem;
     box-sizing: border-box;
 }
 
@@ -318,10 +338,8 @@ export default {
     position: relative;
     display: flex;
     flex-direction: row;
-}
-
-.infoBox > * {
-    margin-right: 10px;
+    align-items: center;
+    gap: 10px;
 }
 
 .infoTitle{
@@ -341,14 +359,15 @@ input[type="checkbox"]{
     margin: 0px;
 }
 
+.decorator-wrapper{
+    position: relative;
+    display: block;
+    width: 25px;
+    height: 25px;
+}
+
 .decorator{
     width: 25px;
     height: auto;
-    transform: translateX(5px);
-}
-
-.decorator-placeholder{
-    display: block;
-    width: 12px;
 }
 </style>

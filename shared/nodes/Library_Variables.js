@@ -11,6 +11,9 @@ export default [
         ],
         $init(){
             this.editorCanDelete = false;
+            this.inputs.get('_varName').enableDecorators = true;
+            this.inputs.get('_varType').enableDecorators = true;
+            this.inputs.get('initial_value').flipInput = true;
         },
         $onScriptAdd(){
             if (this.engine){
@@ -134,6 +137,10 @@ export default [
             {id: 'name', type: SOCKET_TYPE.STRING, default: '', hideSocket: true},
             {id: 'data', type: SOCKET_TYPE.ANY, default: null, disabled: true, hideInput: true},
         ],
+        $init(){
+            this.inputBoxWidth = 6;
+            this.inputs.get('name').enableDecorators = true;
+        },
         $onInput({detail: event}){
             this.method('validate', [event.detail.target]);
         },
@@ -165,6 +172,12 @@ export default [
         outputs: [
             {id: 'data', type: SOCKET_TYPE.ANY, disabled: true, execute: 'getVar'},
         ],
+        $init(){
+            const nameInput = this.inputs.get('name');
+            // nameInput.enableDecorators = true;
+            nameInput.flipInput = true;
+            this.inputBoxWidth = 6;
+        },
         $onInput({detail: event}){
             this.method('validate', [event.target]);
         },
@@ -245,21 +258,20 @@ function determineConnected(){
 }
 
 function validate(textbox){
-    const nameSocket = this.inputs.get('name');
     const dataSocket = this.inputs.get('data') || this.outputs.get('data');
     const varName = textbox?.value ?? this.getInput('name');
     const globalGet = this.editorAPI.getVariableType(varName, true);
     const localGet = this.parentScript.localVariables.get(varName);
     const isValid = !!globalGet || !!localGet;
 
-    nameSocket.decoratorIcon = null;
+    this.decoratorIcon = null;
 
     if (isValid){
         const type = localGet ?? globalGet;
 
         if (!!globalGet && !!localGet){
-            nameSocket.decorator = 'warning_decorator';
-            nameSocket.decoratorText = 'logic_editor.local_global_name_warning';
+            this.decoratorIcon = 'warning_decorator';
+            this.decoratorText = 'logic_editor.local_global_name_warning';
         }
 
         dataSocket.disabled = false;
@@ -268,8 +280,8 @@ function validate(textbox){
     else if (varName.length){
         dataSocket.disabled = true;
         dataSocket.type = SOCKET_TYPE.ANY;
-        nameSocket.decoratorIcon = 'error_decorator';
-        nameSocket.decoratorText = 'node.error_var_not_found';
+        this.decoratorIcon = 'error_decorator';
+        this.decoratorText = 'node.error_var_not_found';
     }
 
     this.dataCache.set('isValid', isValid);

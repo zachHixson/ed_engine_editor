@@ -2,9 +2,16 @@
     <div class="node" :style="isSelected ? 'border-color: var(--button-norm)' : ''"
         @click="$emit('node-clicked', {nodeObj, jsEvent: $event})"
         @mousedown="mouseDown">
-        <div class="heading" :style="'background:' + headingColor">
+        <div class="heading" :class="categoryClass">
             <div v-if="nodeObj.isEvent" class="node-icon"><img src="@/assets/event.svg"/></div>
             <div>{{$t('node.' + nodeObj.templateId)}}</div>
+            <div class="decorator-wrapper">
+                <Decorator
+                    v-if="nodeObj.decoratorIcon"
+                    class="decorator"
+                    :src="require(`@/assets/${nodeObj.decoratorIcon}.svg`)"
+                    :tooltipText="$te(nodeObj.decoratorText) ? $t(nodeObj.decoratorText, nodeObj.decoratorTextVars || {}): ''"/>
+            </div>
         </div>
         <div v-if="!!nodeObj.widget" class="widgetWrapper">
             <Widget
@@ -73,6 +80,7 @@
 <script>
 import Socket from './Socket';
 import Widget from './Widget.vue';
+import Decorator from '../common/Decorator';
 
 export default {
     name: 'Node',
@@ -91,6 +99,7 @@ export default {
     components: {
         Socket,
         Widget,
+        Decorator,
     },
     computed: {
         widgetData(){
@@ -110,13 +119,13 @@ export default {
                 c => (c.startNode?.nodeId == this.nodeObj.nodeId || c.endNode?.nodeId == this.nodeObj.nodeId)
             );
         },
-        headingColor(){
+        categoryClass(){
             if (this.nodeObj.isEvent){
-                return '#DF554B';
+                return 'category-event';
             }
 
-            return getComputedStyle(document.body).getPropertyValue('--heading');
-        }
+            return 'category-default';
+        },
     },
     created(){
         this.updateAllSockets();
@@ -213,6 +222,9 @@ export default {
         },
         onInput(event){
             this.nodeObj.dispatchEvent(new CustomEvent('onInput', {detail: event}));
+            this.$nextTick(()=>{
+                this.$forceUpdate();
+            });
         },
         updateConnections(){
             for (let i = 0; i < this.connections.length; i++){
@@ -261,6 +273,7 @@ export default {
 .heading{
     display: flex;
     flex-direction: row;
+    justify-content: flex-start;
     align-items: center;
     gap: 5px;
     padding-bottom: 5px;
@@ -300,5 +313,24 @@ export default {
     flex-direction: column;
     align-items: stretch;
     gap: 5px;
+}
+
+.decorator-wrapper{
+    width: 25px;
+    height: 25px;
+    margin-left: auto;
+}
+
+.decorator{
+    width: 25px;
+    height: auto;
+}
+
+.category-default{
+    background: #68ABBD;
+}
+
+.category-event{
+    background: #DF554B;
 }
 </style>

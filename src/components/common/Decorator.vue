@@ -1,9 +1,7 @@
 <template>
     <div class="decorator">
-        <div class="wrapper">
-            <img name="decorator" class="img" :src="src" draggable="false" />
-            <Tooltip for="decorator" :text="text"/>
-        </div>
+        <img name="decorator" class="img" :src="src" draggable="false" />
+        <Tooltip for="decorator" class="tooltip" :text="text"/>
     </div>
 </template>
 
@@ -31,20 +29,9 @@ export default {
 
 <style scoped>
 .decorator{
-    position: absolute;
-    right: 0;
-    top: 0;
-    height: 100%;
-}
-
-.wrapper{
-    position: relative;
-    right: -100%;
-    top: 0;
     display: flex;
     flex-direction: row;
-    align-items: center;
-    height: 100%;
-    margin-left: 5px;
+    justify-content: center;
+    height: auto;
 }
 </style>

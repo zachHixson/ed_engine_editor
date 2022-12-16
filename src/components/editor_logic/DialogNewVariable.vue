@@ -8,8 +8,10 @@
                 <div class="control">
                     <label for="name">Name: </label>
                     <input id="name" type="text" v-model="varName" :maxlength="CHAR_LIMIT" autocomplete="off"/>
-                    <Decorator v-show="error" ref="error" style="width: 25px" :src="require(`@/assets/error_decorator.svg`)" />
-                    <Decorator v-show="warning" ref="warning" style="width: 25px" :src="require(`@/assets/warning_decorator.svg`)" />
+                    <div class="decorator-wrapper">
+                        <Decorator v-show="error" ref="error" class="decorator" :src="require(`@/assets/error_decorator.svg`)" />
+                        <Decorator v-show="warning" ref="warning" class="decorator" :src="require(`@/assets/warning_decorator.svg`)" />
+                    </div>
                 </div>
                 <div class="control">
                     <label for="type">{{$t('logic_editor.type')}}: </label>
@@ -201,5 +203,22 @@ export default {
 
 .button:disabled{
     background: var(--button-disabled);
+}
+
+.decorator-wrapper{
+    position: absolute;
+    right: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 0px;
+    height: 100%;
+    background: red;
+}
+
+.decorator{
+    position: absolute;
+    left: 3px;
+    width: 25px;
 }
 </style>
