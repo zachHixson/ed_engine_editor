@@ -19,12 +19,15 @@ export class Instance{
         this.customVars = [];
 
         //engine props
-        this._animProgress = 0;
-        this.startFrame = 0;
-        this.fps = 0;
-        this.animLoop = false;
-        this.animPlaying = false;
-        this.lastPos = this.pos.clone();
+        if (window.IS_ENGINE){
+            this._animProgress = 0;
+            this.startFrame = 0;
+            this.fps = 0;
+            this.animLoop = false;
+            this.animPlaying = false;
+            this.lastPos = this.pos.clone();
+            this.localVariables = new Map(this.logic.localVariableDefaults);
+        }
     }
 
     get TYPE(){return ENTITY_TYPE.INSTANCE}
@@ -84,7 +87,7 @@ export class Instance{
         const clone = new Instance(this.id, this.pos, this.objRef);
         Object.assign(clone, this);
         clone.pos = this.pos.clone();
-        clone.lastPos = this.lastPos.clone();
+        if (this.lastPos) clone.lastPos = this.lastPos.clone();
         return clone;
     }
 
@@ -93,14 +96,8 @@ export class Instance{
 
         sanitized.objId = this.objRef.id;
         sanitized.pos = this.pos.toObject();
-
+        
         delete sanitized.objRef;
-        delete sanitized._animProgress;
-        delete sanitized.startFrame;
-        delete sanitized.fps;
-        delete sanitized.animLoop;
-        delete sanitized.animPlaying;
-        delete sanitized.lastPos;
 
         return sanitized;
     }
@@ -121,5 +118,15 @@ export class Instance{
         if (this.animPlaying){
             this._animProgress += deltaTime;
         }
+    }
+
+    setLocalVariable(name, data){
+        const varName = name.trim().toLowerCase();
+        this.localVariables.set(name, data);
+    }
+
+    getLocalVariable(name){
+        const varName = name.trim().toLowerCase();
+        return this.localVariables.get(name);
     }
 };

@@ -147,7 +147,6 @@ export default {
     methods: {
         forceSocketUpdate(){
             this.$nextTick(()=>{
-                console.log(this.socket.disabled);
                 this.socket.value = this.socket.value;
             });
         },

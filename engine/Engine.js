@@ -17,6 +17,8 @@ class Engine{
     static get ACTION_KEY(){return 'Space'}
 
     constructor({canvas, gameData, callbacks}){
+        window.IS_ENGINE = true;
+
         this._canvas = canvas;
         this._timeStart = null;
         this._curTime = null;
@@ -33,7 +35,7 @@ class Engine{
         this._nodeAsyncEventMap = {};
         this._nodeEventCache = {};
         this._collisionMap = {};
-        this._globalVariables = {};
+        this._globalVariables = new Map();
         this._errorLogs = {};
         this._gameData = this._parseGameData(gameData);
         this._previousTransition = {exit: null, instance: null};
@@ -45,6 +47,7 @@ class Engine{
         this._linkLogic();
         this._dialogBox.onCloseCallback = this._onDialogBoxClose;
         this._dialogFullscreen.onCloseCallback = this._onFullScreenClose;
+        window.IS_ENGINE = false;
     }
 
     get room(){return this._loadedRoom}
@@ -53,7 +56,7 @@ class Engine{
 
     _loadRoom = (roomId)=>{
         const room = this._gameData.rooms.find(r => r.id == roomId);
-        this._dispatchNodeEvent('e_before_destroy');
+        this._dispatchLogicEvent('e_before_destroy');
         this._loadedRoom = room.persist ? room : room.clone();
         this._collisionMap = {};
         this._renderer.setRoom(this._loadedRoom);
@@ -64,7 +67,7 @@ class Engine{
             this._registerInstanceEvents(instance);
         });
 
-        this._dispatchNodeEvent('e_create');
+        this._dispatchLogicEvent('e_create');
     }
 
     _updateLoop = (time)=>{
@@ -78,6 +81,7 @@ class Engine{
     }
 
     _update = ()=>{
+        window.IS_ENGINE = true;
         try{
             this._processDebugNav();
             this._processCollisions();
@@ -92,6 +96,7 @@ class Engine{
         this._renderer.render(this.deltaTime);
         this._dialogBox.render(this.deltaTime);
         this._dialogFullscreen.render(this.deltaTime);
+        window.IS_ENGINE = false;
     }
 
     _processDebugNav = ()=>{
@@ -393,7 +398,7 @@ class Engine{
 
         if (!this._keymap[e.code] && !this._dialogBox.active && !this._dialogFullscreen.active){
             this._keymap[e.code] = true;
-            this._dispatchNodeEvent('e_keyboard', {
+            this._dispatchLogicEvent('e_keyboard', {
                 which_key: e.key.toUpperCase(),
                 code: e.code,
                 type: 'down',
@@ -407,7 +412,7 @@ class Engine{
 
     _keyUp = (e)=>{
         this._keymap[e.code] = false;
-        this._dispatchNodeEvent('e_keyboard', {
+        this._dispatchLogicEvent('e_keyboard', {
             which_key: e.key.toUpperCase(),
             code: e.code,
             type: 'up',
@@ -448,7 +453,7 @@ class Engine{
         return tag;
     }
 
-    _dispatchNodeEvent = (eventName, data)=>{
+    _dispatchLogicEvent = (eventName, data)=>{
         const nodeEvent = this._nodeEventMap[eventName];
 
         if (!nodeEvent) return;
@@ -458,9 +463,9 @@ class Engine{
         }
     }
 
-    _dispatchAsyncNodeEvent = (tag, clearEvent = false)=>{
+    _dispatchAsyncLogicEvent = (tag, clearEvent = false)=>{
         const {instance, node, methodName} = this._nodeAsyncEventMap[tag];
-        node.logic.executeAsyncNodeMethod(instance, node, methodName);
+        node.parentScript.executeAsyncNodeMethod(instance, node, methodName);
 
         if (clearEvent){
             this._nodeAsyncEventMap[tag] = null;
@@ -496,7 +501,7 @@ class Engine{
     }
 
     _onDialogBoxClose = (tag)=>{
-        this._dispatchAsyncNodeEvent(tag, true);
+        this._dispatchAsyncLogicEvent(tag, true);
     }
 
     _onFullScreenClose = (tag, restart)=>{
@@ -505,11 +510,12 @@ class Engine{
             this.restart();
         }
         else{
-            this._dispatchAsyncNodeEvent(tag, true);
+            this._dispatchAsyncLogicEvent(tag, true);
         }
     }
 
     start = ()=>{
+        window.IS_ENGINE = true;
         this._isRunning = true;
         this._timeStart = performance.now();
         this._curTime = this._timeStart;
@@ -538,6 +544,7 @@ class Engine{
 
         this._update();
         requestAnimationFrame(this._updateLoop);
+        window.IS_ENGINE = false;
     }
 
     stop = ()=>{
@@ -549,6 +556,7 @@ class Engine{
         this._nodeEventCache = {};
         this._collisionMap = {};
         this._globalVariables = {};
+        window.IS_ENGINE = false;
     }
 
     registerCollision = (sourceInstance, collisionInstance, force = false)=>{
@@ -615,11 +623,13 @@ class Engine{
     }
 
     setGlobalVariable = (name, data)=>{
-        this._globalVariables[name] = data;
+        const varname = name.trim().toLowerCase();
+        this._globalVariables.set(varname, data);
     }
 
     getGlobalVariable = (name)=>{
-        return this._globalVariables[name];
+        const varname = name.trim().toLowerCase();
+        return this._globalVariables.get(varname);
     }
 
     openDialogBox = (text, node, methodName)=>{

@@ -10,18 +10,28 @@ export default [
             {id: 'initial_value', type: SOCKET_TYPE.NUMBER, default: 0, hideSocket: true},
         ],
         $init(){
-            this.editorCanDelete = false;
+            if (this.engine){
+                const {varName, isGlobal} = this.dataCache.get('varInfo');
+                const initialValue = this.getInput('initial_value');
+
+                isGlobal ?
+                    this.engine.setGlobalVariable(varName, initialValue)
+                    : this.parentScript.setLocalVariableDefault(varName, initialValue);
+            }
+            else{
+                this.editorCanDelete = false;
+                this.method('editor_setVar');
+            }
         },
         $onCreate(){
             this.editorAPI.dialogNewVariable((positive, varInfo) => {
                 if (positive){
-                    const {varName, type, isGlobal, isList} = varInfo;
                     const valSocket = this.inputs.get('initial_value');
 
                     this.dataCache.set('varInfo', varInfo);
-                    this.method('initVarNode');
+                    this.method('editor_initVarNode');
                     valSocket.value = SOCKET_DEFAULT.get(varInfo.type);
-                    this.editorAPI.setVariableType(varName, type, isGlobal);
+                    this.method('setVar');
                 }
                 else{
                     this.editorAPI.deleteNode(this);
@@ -42,19 +52,12 @@ export default [
             varInfo.type = Symbol.for(varInfo.type);
             this.dataCache.set('varInfo', varInfo);
         },
-        $afterLoad(){
-            const {varName, type, isGlobal, isList} = this.dataCache.get('varInfo');
-            if (isGlobal) this.editorAPI.setVariableType(varName, type, isGlobal);
-        },
         $onMount(){
             const varInfo = this.dataCache.get('varInfo');
             
             if (!varInfo) return;
 
-            const {varName, type, isGlobal} = varInfo;
-
-            if (!varInfo.isGlobal) this.editorAPI.setVariableType(varName, type, isGlobal);
-            this.method('initVarNode');
+            this.method('editor_initVarNode');
         },
         $onDeleteStopped({detail}){
             const createVars = detail.filter(node => node.templateId == this.templateId);
@@ -76,10 +79,11 @@ export default [
                 });
 
                 this.editorAPI.deleteNodes([...selectedNodes, ...allGetSetNodes]);
+                this.method('editor_deleteVar');
             });
         },
         methods: {
-            initVarNode(){
+            editor_initVarNode(){
                 const {varName, type, isGlobal, isList} = this.dataCache.get('varInfo');
                 const nameSocket = this.inputs.get('_varName');
                 const typeSocket = this.inputs.get('_varType');
@@ -98,6 +102,19 @@ export default [
                 valSocket.type = type;
                 this.dispatchEvent(new CustomEvent('socketsChanged'));
                 this.dispatchEvent(new CustomEvent('recalcWidth'));
+            },
+            editor_setVar(){
+                const varInfo = this.dataCache.get('varInfo');
+
+                if (!varInfo) return;
+                const {varName, type, isGlobal, isList} = varInfo;
+                const method = isGlobal ? this.editorAPI.setVariableType : this.parentScript.localVariables.set;
+
+                method(varName, type, isGlobal);
+            },
+            editor_deleteVar(){
+                const {varName, isGlobal} = this.dataCache.get('varInfo');
+                this.editorAPI.deleteVariableType(varName, isGlobal);
             }
         }
     },
@@ -123,17 +140,11 @@ export default [
         $onRemoveConnection: determineConnected,
         methods: {
             setVar(){
-                const varName = this.getInput('name').trim().toLowerCase();
+                const varName = this.getInput('name');
                 const data = this.getInput('data');
-                const global = this.getInput('global');
+                const isGlobal = this.engine.getGlobalVariable(varName);
 
-                if (global){
-                    this.engine.setGlobalVariable(varName, data);
-                }
-                else{
-                    this.engine.setInstanceVariable(this.instance, varName, data);
-                }
-
+                isGlobal ? this.engine.setGlobalVariable(varName, data) : this.instance.setLocalVariable(varName, data);
                 this.triggerOutput('_o');
             },
             validate,
@@ -146,7 +157,7 @@ export default [
             {id: 'name', type: SOCKET_TYPE.STRING, default: '', hideSocket: true},
         ],
         outputs: [
-            {id: 'data', type: SOCKET_TYPE.ANY, execute: 'getVar'},
+            {id: 'data', type: SOCKET_TYPE.ANY, disabled: true, execute: 'getVar'},
         ],
         $onInput({detail: event}){
             this.method('validate', [event.target]);
@@ -159,10 +170,9 @@ export default [
         $onRemoveConnection: determineConnected,
         methods: {
             getVar(){
-                const name = this.getInput('name').trim().toLowerCase();
-                const global = this.getInput('global');
-                const value = global ? this.engine.getGlobalVariable(name)
-                    : this.engine.getInstanceVariable(this.instance, name);
+                const varName = this.getInput('name');
+                const isGlobal = this.engine.getGlobalVariable(varName);
+                const value = isGlobal ? this.engine.getGlobalVariable(varName) : this.instance.getLocalVariable(varName);
                 
                 if (value == undefined){
                     return null;
@@ -232,7 +242,7 @@ function validate(textbox){
     const dataSocket = this.inputs.get('data') || this.outputs.get('data');
     const varName = textbox?.value ?? this.getInput('name');
     const globalGet = this.editorAPI.getVariableType(varName, true);
-    const localGet = this.editorAPI.getVariableType(varName, false);
+    const localGet = this.parentScript.localVariables.get(varName);
     const isValid = !!globalGet || !!localGet;
 
     nameSocket.decoratorIcon = null;

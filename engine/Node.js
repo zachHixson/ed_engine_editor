@@ -2,7 +2,7 @@ export default class Node{
     constructor(template, id, logic, engine){
         this.template = template;
         this.nodeId = id;
-        this.logic = logic;
+        this.parentScript = logic;
         this.engine = engine;
         this.isEvent = template.isEvent;
         this.widgetData;
@@ -12,9 +12,9 @@ export default class Node{
         this.inputs = {};
         this.outputs = {};
         this.methods = {};
-        this._dataCache = null;
+        this.dataCache = new Map();
         this._getInstanceCallback;
-        this._stackTrace = {logic: logic.id, nodeId: id};
+        this._stackTrace = {parentScript: this.parentScript.id, nodeId: id};
 
         template.inTriggers?.forEach(trigger => {
             const {execute} = trigger;

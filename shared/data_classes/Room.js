@@ -65,6 +65,7 @@ export class Room extends Asset{
 
             delete curInstance.pos;
             delete curInstance.objId;
+
             Object.assign(newInstance, curInstance);
         }
 

@@ -5,33 +5,37 @@ export default class Logic{
         this.id = logicData.id;
         this.events = {};
         this._instance = null;
-        this._localVariableDefaults = {};
+        this._localVariableDefaults = new Map();
 
         const nodes = {};
 
         //create all nodes
-        logicData.nodes.forEach(node => {
-            const template = Shared.NODE_MAP[node.templateId];
-            const newNode = new Node(template, node.nodeId, this, engine);
-            nodes[node.nodeId] = newNode;
+        logicData.nodes.forEach(nodeData => {
+            const template = Shared.NODE_MAP[nodeData.templateId];
+            const newNode = new Node(template, nodeData.nodeId, this, engine);
+            nodes[nodeData.nodeId] = newNode;
+
+            newNode.template.$beforeLoad?.call(newNode, {detail: nodeData}); //replace with event code once Event_Listener is moved to Shared or Core
 
             if (template.isEvent){
-                if (!this.events[node.templateId]){
-                    this.events[node.templateId] = [];
+                if (!this.events[nodeData.templateId]){
+                    this.events[nodeData.templateId] = [];
                 }
 
-                this.events[node.templateId].push(newNode);
+                this.events[nodeData.templateId].push(newNode);
             }
 
-            if (node.widgetData){
-                newNode.widgetData = JSON.parse(node.widgetData);
+            if (nodeData.widgetData){
+                newNode.widgetData = JSON.parse(nodeData.widgetData);
             }
 
             newNode.setInstanceCallback(()=>this._instance);
 
-            node.inputs.forEach(srcInput => {
+            nodeData.inputs.forEach(srcInput => {
                 newNode.inputs[srcInput.id].value = srcInput.value;
-            })
+            });
+
+            newNode.template.$init?.call(newNode); //replace with event code once Event_Listener is moved to Shared or Core
         });
 
         //create and link connections
@@ -45,13 +49,9 @@ export default class Logic{
             allStartSockets[startSocketId].connection = allEndSockets[endSocketId];
             allEndSockets[endSocketId].connection = allStartSockets[startSocketId];
         });
-
-        //setup local variable defaults
-        for (const v in logicData.localVariables){
-            const type = Symbol.for(logicData.localVariables[v]);
-            this._localVariableDefaults[v] = Shared.SOCKET_DEFAULT.get(type);
-        }
     }
+
+    get localVariableDefaults(){return this._localVariableDefaults};
 
     executeEvent(eventName, instance, data){
         this._instance = instance;
@@ -64,5 +64,9 @@ export default class Logic{
         this._instance = instance;
         node.method(methodName);
         this._instance = oldInstance;
+    }
+
+    setLocalVariableDefault(name, data){
+        this._localVariableDefaults.set(name, data);
     }
 }
