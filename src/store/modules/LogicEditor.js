@@ -23,22 +23,12 @@ const actions = {
     setGraphPanelState({commit}, newState){
         commit('setGraphPanelState', newState);
     },
-    setGlobalVariableMap({commit}, variableMap){
-        const map = new Map();
-
-        for (const v in variableMap){
-            map.set(v, Symbol.for(variableMap[v]));
-        }
-
-        commit('setGlobalVariableMap', map);
-    },
 };
 
 const mutations = {
     selectNavTool: (state, newTool) => state.selectedNavTool = newTool,
     setLibraryPanelState: (state, newState) => state.libraryPanelOpen = newState,
     setGraphPanelState: (state, newState) => state.graphPanelOpen = newState,
-    setGlobalVariableMap: (state, newMap) => state.globalVariableMap = newMap,
 };
 
 export default {

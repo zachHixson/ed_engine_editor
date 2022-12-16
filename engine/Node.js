@@ -60,6 +60,8 @@ export default class Node{
         for (let method in template.methods){
             this.methods[method] = template.methods[method];
         }
+
+        this.template.$init?.call(this);
     }
 
     get instance(){return this._getInstanceCallback()}

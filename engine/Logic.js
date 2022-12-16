@@ -4,6 +4,7 @@ export default class Logic{
     constructor(logicData, engine){
         this.id = logicData.id;
         this.events = {};
+        this._nodes = [];
         this._instance = null;
         this._localVariableDefaults = new Map();
 
@@ -14,6 +15,7 @@ export default class Logic{
             const template = Shared.NODE_MAP[nodeData.templateId];
             const newNode = new Node(template, nodeData.nodeId, this, engine);
             nodes[nodeData.nodeId] = newNode;
+            this._nodes.push(newNode);
 
             newNode.template.$beforeLoad?.call(newNode, {detail: nodeData}); //replace with event code once Event_Listener is moved to Shared or Core
 
@@ -35,7 +37,7 @@ export default class Logic{
                 newNode.inputs[srcInput.id].value = srcInput.value;
             });
 
-            newNode.template.$init?.call(newNode); //replace with event code once Event_Listener is moved to Shared or Core
+            newNode.template.$onScriptAdd?.call(newNode);
         });
 
         //create and link connections
@@ -67,6 +69,17 @@ export default class Logic{
     }
 
     setLocalVariableDefault(name, data){
-        this._localVariableDefaults.set(name, data);
+        const varName = name.trim().toLowerCase();
+        this._localVariableDefaults.set(varName, data);
+    }
+
+    dispatchLifecycleEvent(name, data){
+        const eventName = '$' + name;
+
+        for (let i = 0; i < this._nodes.length; i++){
+            const curNode = this._nodes[i];
+            const templateMethod = curNode.template[eventName];
+            templateMethod?.call(curNode, data);
+        }
     }
 }

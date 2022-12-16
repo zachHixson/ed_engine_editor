@@ -88,6 +88,7 @@ export class Instance{
         Object.assign(clone, this);
         clone.pos = this.pos.clone();
         if (this.lastPos) clone.lastPos = this.lastPos.clone();
+        clone.localVariables = new Map(this.localVariables);
         return clone;
     }
 
@@ -98,6 +99,7 @@ export class Instance{
         sanitized.pos = this.pos.toObject();
         
         delete sanitized.objRef;
+        delete sanitized.localVariables;
 
         return sanitized;
     }
@@ -120,13 +122,17 @@ export class Instance{
         }
     }
 
+    initLocalVariables(){
+        this.localVariables = new Map(this.logic.localVariableDefaults);
+    }
+
     setLocalVariable(name, data){
         const varName = name.trim().toLowerCase();
-        this.localVariables.set(name, data);
+        this.localVariables.set(varName, data);
     }
 
     getLocalVariable(name){
         const varName = name.trim().toLowerCase();
-        return this.localVariables.get(name);
+        return this.localVariables.get(varName);
     }
 };

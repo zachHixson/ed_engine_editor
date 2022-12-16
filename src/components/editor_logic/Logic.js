@@ -89,11 +89,6 @@ export default class Logic{
             return new Node_Connection(connection).fromSaveData(connection, nodeMap);
         });
 
-        this.localVariables = new Map();
-        for (const v in data.localVariables){
-            this.localVariables.set(v, Symbol.for(data.localVariables[v]));
-        }
-
         //dispatch node event
         this.nodes.forEach(node => {
             node.dispatchEvent(nodeEventObj);
@@ -146,7 +141,7 @@ export default class Logic{
         const nodeTemplate = Shared.NODE_MAP[templateId];
         const newNode = nodeRef ?? new Node(nodeTemplate, this.nextNodeId, pos, this, this.selectedGraphId, nodeAPI);
         
-        newNode.dispatchEvent(new CustomEvent("init"));
+        newNode.dispatchEvent(new CustomEvent("onScriptAdd"));
         this.nodes.push(newNode);
 
         return newNode;

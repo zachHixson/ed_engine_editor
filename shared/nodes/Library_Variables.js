@@ -10,6 +10,9 @@ export default [
             {id: 'initial_value', type: SOCKET_TYPE.NUMBER, default: 0, hideSocket: true},
         ],
         $init(){
+            this.editorCanDelete = false;
+        },
+        $onScriptAdd(){
             if (this.engine){
                 const {varName, isGlobal} = this.dataCache.get('varInfo');
                 const initialValue = this.getInput('initial_value');
@@ -19,7 +22,6 @@ export default [
                     : this.parentScript.setLocalVariableDefault(varName, initialValue);
             }
             else{
-                this.editorCanDelete = false;
                 this.method('editor_setVar');
             }
         },
@@ -31,7 +33,7 @@ export default [
                     this.dataCache.set('varInfo', varInfo);
                     this.method('editor_initVarNode');
                     valSocket.value = SOCKET_DEFAULT.get(varInfo.type);
-                    this.method('setVar');
+                    this.method('editor_setVar');
                 }
                 else{
                     this.editorAPI.deleteNode(this);
@@ -51,6 +53,9 @@ export default [
 
             varInfo.type = Symbol.for(varInfo.type);
             this.dataCache.set('varInfo', varInfo);
+        },
+        $afterLoad(){
+            if (!this.engine) this.method('editor_setVar');
         },
         $onMount(){
             const varInfo = this.dataCache.get('varInfo');
@@ -108,9 +113,9 @@ export default [
 
                 if (!varInfo) return;
                 const {varName, type, isGlobal, isList} = varInfo;
-                const method = isGlobal ? this.editorAPI.setVariableType : this.parentScript.localVariables.set;
-
-                method(varName, type, isGlobal);
+                isGlobal ?
+                    this.editorAPI.setVariableType(varName, type, isGlobal)
+                    : this.parentScript.localVariables.set(varName, type);
             },
             editor_deleteVar(){
                 const {varName, isGlobal} = this.dataCache.get('varInfo');
@@ -132,7 +137,8 @@ export default [
         $onInput({detail: event}){
             this.method('validate', [event.detail.target]);
         },
-        $projectLoaded(){
+        $afterGameDataLoaded(){
+            if (this.engine) return;
             determineConnected.call(this);
             this.method('validate');
         },
@@ -162,7 +168,8 @@ export default [
         $onInput({detail: event}){
             this.method('validate', [event.target]);
         },
-        $projectLoaded(){
+        $afterGameDataLoaded(){
+            if (this.engine) return;
             determineConnected.call(this);
             this.method('validate');
         },

@@ -64,6 +64,7 @@ class Engine{
 
         //setup instances
         this._loadedRoom.instances.list.forEach(instance => {
+            instance.initLocalVariables();
             this._registerInstanceEvents(instance);
         });
 
@@ -350,8 +351,8 @@ class Engine{
     }
 
     _parseGameData = (gameData)=>{
+        const loadedData = {};
         let parsedJson;
-        let loadedData = {};
 
         try {
             parsedJson = JSON.parse(gameData);
@@ -367,11 +368,7 @@ class Engine{
         loadedData.rooms = parsedJson.rooms.map(r => new Shared.Room().fromSaveData(r, loadedData.objects));
         loadedData.logic = parsedJson.logic.map(l => new Logic(l, this));
 
-        //set up global variable defaults
-        for (const v in parsedJson.globalVariableMap){
-            const type = Symbol.for(parsedJson.globalVariableMap[v]);
-            this._globalVariables[v] = Shared.SOCKET_DEFAULT.get(type);
-        }
+        loadedData.logic.forEach(logic => logic.dispatchLifecycleEvent('afterGameDataLoaded'));
 
         return loadedData;
     }

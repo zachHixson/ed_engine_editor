@@ -34,16 +34,6 @@ export default new Vuex.Store({
                 editor_version: EDITOR_VERSION,
                 newestID: Shared.ID_Generator.getCurrentID(),
                 selectedRoomId: AssetBrowser.state.selectedRoom.id,
-                globalVariableMap: (()=>{
-                    const map = getters['LogicEditor/getGlobalVariableMap'];
-                    const newMap = {};
-    
-                    map.forEach((val, key) => {
-                        newMap[key] = val.description;
-                    });
-    
-                    return newMap;
-                })(),
                 startRoom: getters['GameData/getStartRoom'],
                 sprites: getters['GameData/getSpriteSaveData'],
                 objects: getters['GameData/getObjectSaveData'],
@@ -76,14 +66,13 @@ export default new Vuex.Store({
 
             commit('loadSaveData', loadObj);
             dispatch('GameData/loadSaveData', {loadObj, nodeAPI});
-            dispatch('LogicEditor/setGlobalVariableMap', loadObj.globalVariableMap);
 
             if (loadObj.selectedRoomId != undefined){
                 let room = getters['GameData/getAllRooms'].find(r => r.id == loadObj.selectedRoomId);
                 dispatch('AssetBrowser/selectRoom', room);
             }
 
-            nodeAPI.dispatchAll(new CustomEvent("projectLoaded"));
+            nodeAPI.dispatchAll(new CustomEvent("afterGameDataLoaded"));
         },
         setInputActive({commit}, newState){
             commit('setInputActive', newState);
