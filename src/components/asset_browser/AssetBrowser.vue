@@ -232,16 +232,12 @@ export default {
         },
         orderChanged(event){
             const selectedList = [...this.selectedList];
-            const movedAsset = this.selectedList[event.itemIdx];
-            const startIdx = Math.min(event.itemIdx, event.newIdx);
-            const endIdx = Math.max(event.itemIdx, event.newIdx);
-            const shiftDir = event.itemIdx > event.newIdx ? 1 : -1;
+            const movedAsset = selectedList.splice(event.itemIdx, 1);
+            selectedList.splice(event.newIdx, 0, ...movedAsset);
             
-            for (let i = startIdx; i <= endIdx; i++){
-                selectedList[i].sortOrder += shiftDir;
+            for (let i = 0; i < selectedList.length; i++){
+                selectedList[i].sortOrder = i;
             }
-
-            movedAsset.sortOrder = event.newIdx;
         },
     }
 }
