@@ -107,6 +107,10 @@ export default {
         }
     },
     mounted(){
+        const maxFrame = this.selectedAsset.frames.length - 1;
+        const selectedFrame = Math.min(this.selectedFrameIdx, maxFrame);
+        
+        this.selectedFrameIdx = selectedFrame;
         window.addEventListener('resize', this.resize);
         this.undoStore.setInitialState(this.packageUndoData());
 
