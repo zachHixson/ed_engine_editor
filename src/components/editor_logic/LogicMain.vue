@@ -796,12 +796,12 @@ export default {
             const pos = this.getNewNodePos();
             const newNode = this.selectedAsset.addNode(templateId, pos, nodeRef, nodeAPI);
 
-            newNode.dispatchEvent(new CustomEvent("onCreate"));
-
             if (makeCommit){
                 let data = {templateId, nodeRef: newNode};
                 this.undoStore.commit({action: Shared.LOGIC_ACTION.ADD_NODE, data});
             }
+
+            if (!nodeRef) newNode.dispatchEvent(new CustomEvent("onCreate"));
         },
         actionDeleteNodes({nodeRefList}, makeCommit = true){
             const connectionRefMap = new Map();

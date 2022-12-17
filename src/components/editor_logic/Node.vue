@@ -47,7 +47,10 @@
         </div>
         <div v-if="showTriggers && showDataSockets" class="separator"></div>
         <div v-if="showDataSockets" class="io">
-            <div class="socket-column"  style="align-items: flex-start">
+            <div
+                class="socket-column" 
+                style="align-items: flex-start"
+                :style="nodeObj.reverseInputs ? 'flex-direction: column-reverse':''">
                 <Socket
                     v-for="input in inputList"
                     :key="input.id"
@@ -61,7 +64,10 @@
                     @on-input="onInput"
                     @value-changed="socketValueChanged"/>
             </div>
-            <div class="socket-column" style="align-items: flex-end">
+            <div
+                class="socket-column"
+                style="align-items: flex-end"
+                :style="nodeObj.reverseOutputs ? 'flex-direction: column-reverse':''">
                 <Socket
                     v-for="output in outputList"
                     :key="output.id"

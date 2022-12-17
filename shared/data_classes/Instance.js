@@ -26,7 +26,7 @@ export class Instance{
             this.animLoop = false;
             this.animPlaying = false;
             this.lastPos = this.pos.clone();
-            this.localVariables = new Map(this.logic.localVariableDefaults);
+            this.localVariables = new Map(this.logic?.localVariableDefaults);
         }
     }
 
@@ -123,7 +123,7 @@ export class Instance{
     }
 
     initLocalVariables(){
-        this.localVariables = new Map(this.logic.localVariableDefaults);
+        this.localVariables = new Map(this.logic?.localVariableDefaults);
     }
 
     setLocalVariable(name, data){

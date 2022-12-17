@@ -9,11 +9,17 @@ export default [
             {id: '_varType', type: SOCKET_TYPE.INFO, hideSocket: true},
             {id: 'initial_value', type: SOCKET_TYPE.NUMBER, default: 0, hideSocket: true},
         ],
+        outputs: [
+            {id: '_value', type: SOCKET_TYPE.ANY, execute: 'getInitialValue'}
+        ],
         $init(){
-            this.editorCanDelete = false;
-            this.inputs.get('_varName').enableDecorators = true;
-            this.inputs.get('_varType').enableDecorators = true;
-            this.inputs.get('initial_value').flipInput = true;
+            if (!this.engine){
+                this.editorCanDelete = false;
+                this.reverseOutputs = true;
+                this.inputs.get('_varName').enableDecorators = true;
+                this.inputs.get('_varType').enableDecorators = true;
+                this.inputs.get('initial_value').flipInput = true;
+            }
         },
         $onScriptAdd(){
             if (this.engine){
@@ -29,6 +35,9 @@ export default [
             }
         },
         $onCreate(){
+            this.editorAPI.deleteNodes([this], false);
+            this.editorAPI.popLastCommit();
+
             this.editorAPI.dialogNewVariable((positive, varInfo) => {
                 if (positive){
                     const valSocket = this.inputs.get('initial_value');
@@ -37,9 +46,7 @@ export default [
                     this.method('editor_initVarNode');
                     valSocket.value = SOCKET_DEFAULT.get(varInfo.type);
                     this.method('editor_setVar');
-                }
-                else{
-                    this.editorAPI.deleteNode(this);
+                    this.editorAPI.addNode(this, true);
                 }
             });
         },
@@ -96,6 +103,7 @@ export default [
                 const nameSocket = this.inputs.get('_varName');
                 const typeSocket = this.inputs.get('_varType');
                 const valSocket = this.inputs.get('initial_value');
+                const outSocket = this.outputs.get('_value');
 
                 nameSocket.value = {titleId: 'node.create_var_display_name', data: varName, translate: false};
 
@@ -105,9 +113,9 @@ export default [
                 }
 
                 typeSocket.value = {titleId: 'node.create_var_display_type', data: `node.${type.description}`, translate: true}
-                typeSocket.decoratorIcon = `socket_${type.description.toLowerCase()}`;
                 
                 valSocket.type = type;
+                outSocket.type = type;
                 this.dispatchEvent(new CustomEvent('socketsChanged'));
                 this.dispatchEvent(new CustomEvent('recalcWidth'));
             },
@@ -123,7 +131,10 @@ export default [
             editor_deleteVar(){
                 const {varName, isGlobal} = this.dataCache.get('varInfo');
                 this.editorAPI.deleteVariableType(varName, isGlobal);
-            }
+            },
+            getInitialValue(){
+                return this.getInput('initial_value');
+            },
         }
     },
     {// Set Variable
@@ -138,8 +149,10 @@ export default [
             {id: 'data', type: SOCKET_TYPE.ANY, default: null, disabled: true, hideInput: true},
         ],
         $init(){
-            this.inputBoxWidth = 6;
-            this.inputs.get('name').enableDecorators = true;
+            if (!this.engine){
+                this.inputBoxWidth = 6;
+                this.inputs.get('name').enableDecorators = true;
+            }
         },
         $onInput({detail: event}){
             this.method('validate', [event.detail.target]);
@@ -173,10 +186,11 @@ export default [
             {id: 'data', type: SOCKET_TYPE.ANY, disabled: true, execute: 'getVar'},
         ],
         $init(){
-            const nameInput = this.inputs.get('name');
-            // nameInput.enableDecorators = true;
-            nameInput.flipInput = true;
-            this.inputBoxWidth = 6;
+            if (!this.engine){
+                const nameInput = this.inputs.get('name');
+                nameInput.flipInput = true;
+                this.inputBoxWidth = 6;
+            }
         },
         $onInput({detail: event}){
             this.method('validate', [event.target]);

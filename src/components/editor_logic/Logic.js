@@ -43,15 +43,6 @@ export default class Logic{
             graphs: this.graphs,
             nodes: this.nodes.map(n => n.toSaveData()),
             connections: this.connections.map(c => c.toSaveData()),
-            localVariables: (()=>{
-                const newMap = {};
-
-                this.localVariables.forEach((val, key)=>{
-                    newMap[key] = val.description;
-                });
-
-                return newMap;
-            })()
         }
 
         return logic;

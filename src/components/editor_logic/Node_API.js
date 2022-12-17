@@ -126,8 +126,12 @@ export default class Node_API {
         return [...this.editor.selectedNodes];
     }
 
-    deleteNodes(nodeList){
-        this.editor.actionDeleteNodes({nodeRefList: nodeList}, true);
+    addNode(node, commit = true){
+        this.editor.actionAddNode({templateId: node.templateId, nodeRef: node}, commit);
+    }
+
+    deleteNodes(nodeList, commit = true){
+        this.editor.actionDeleteNodes({nodeRefList: nodeList}, commit);
     }
 
     forEachNode(callback, isGlobal){
@@ -157,15 +161,15 @@ export default class Node_API {
         }, true);
     }
 
-    deleteNode(node){
-        this.actionDeleteNodes({nodeRefList: [node]}, false);
-    }
-
     dialogConfirm(textInfo, callback){
         this.editor.$emit('dialog-confirm', {textInfo, callback});
     }
 
     dialogNewVariable(callback){
         this.editor.dialogNewVariable(callback);
+    }
+
+    popLastCommit(){
+        return this.editor.undoStore.popLast();
     }
 }
