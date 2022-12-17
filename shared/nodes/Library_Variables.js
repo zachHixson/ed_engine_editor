@@ -95,6 +95,7 @@ export default [
                 });
 
                 this.editorAPI.deleteNodes([...selectedNodes, ...allGetSetNodes]);
+                this.editorAPI.clearSelectedNodes();
                 this.method('editor_deleteVar');
             });
         },

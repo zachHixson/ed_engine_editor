@@ -118,6 +118,10 @@ export default class Node_API {
         return [...this.editor.selectedNodes];
     }
 
+    clearSelectedNodes(){
+        this.editor.selectedNodes.splice(0, this.editor.selectedNodes.length);
+    }
+
     addNode(node, commit = true){
         this.editor.actionAddNode({templateId: node.templateId, nodeRef: node}, commit);
     }

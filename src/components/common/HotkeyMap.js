@@ -50,10 +50,8 @@ export default class HotkeyMap{
     }
 
     keyUp(event){
-        if (this.enabled){
-            this.keymap.set(event.key.toLowerCase(), false);
-            this.releaseEvents(event);
-        }
+        this.keymap.set(event.key.toLowerCase(), false);
+        this.releaseEvents(event);
     }
 
     detectKeyCombo(event){
@@ -85,9 +83,10 @@ export default class HotkeyMap{
             if (curEvent.keys.includes(event.key)){
                 event.preventDefault();
                 curEvent.releaseCallback(...curEvent.releaseArgs);
-                this.active.splice(i, 1);
                 i--;
             }
+
+            this.active.splice(i, 1);
         }
     }
 
