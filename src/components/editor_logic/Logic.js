@@ -49,7 +49,6 @@ export default class Logic{
     }
 
     fromSaveData(data, nodeAPI){
-        const nodeEventObj = new CustomEvent("logicLoaded", {detail: this});
         const nodeMap = {};
 
         Object.assign(this, data);
@@ -82,7 +81,7 @@ export default class Logic{
 
         //dispatch node event
         this.nodes.forEach(node => {
-            node.dispatchEvent(nodeEventObj);
+            node.logicLoaded(this);
         });
 
         return this;
@@ -132,7 +131,7 @@ export default class Logic{
         const nodeTemplate = Shared.NODE_MAP[templateId];
         const newNode = nodeRef ?? new Node(nodeTemplate, this.nextNodeId, pos, this, this.selectedGraphId, nodeAPI);
         
-        newNode.dispatchEvent(new CustomEvent("onScriptAdd"));
+        newNode.onScriptAdd();
         this.nodes.push(newNode);
 
         return newNode;
@@ -171,5 +170,20 @@ export default class Logic{
         }
 
         return false;
+    }
+
+    setLocalVariable(name, type){
+        name = name.trim().toLowerCase();
+        this.localVariables.set(name, type);
+    }
+
+    getLocalVariable(name){
+        name = name.trim().toLowerCase();
+        return this.localVariables.get(name);
+    }
+
+    deleteLocalVariable(name){
+        name = name.trim().toLowerCase();
+        this.localVariables.delete(name);
     }
 };

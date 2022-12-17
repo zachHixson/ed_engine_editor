@@ -17,7 +17,7 @@ export default class Logic{
             nodes[nodeData.nodeId] = newNode;
             this._nodes.push(newNode);
 
-            newNode.template.$beforeLoad?.call(newNode, {detail: nodeData}); //replace with event code once Event_Listener is moved to Shared or Core
+            newNode.template.$beforeLoad?.call(newNode, nodeData); //replace with event code once Event_Listener is moved to Shared or Core
 
             if (template.isEvent){
                 if (!this.events[nodeData.templateId]){

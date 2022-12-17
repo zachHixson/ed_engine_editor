@@ -12,7 +12,7 @@ export default [
         outputs: [
             {id: '_value', type: SOCKET_TYPE.ANY, execute: 'getInitialValue'}
         ],
-        $init(){
+        init(){
             if (!this.engine){
                 this.editorCanDelete = false;
                 this.reverseOutputs = true;
@@ -21,7 +21,7 @@ export default [
                 this.inputs.get('initial_value').flipInput = true;
             }
         },
-        $onScriptAdd(){
+        onScriptAdd(){
             if (this.engine){
                 const {varName, isGlobal} = this.dataCache.get('varInfo');
                 const initialValue = this.getInput('initial_value');
@@ -34,7 +34,7 @@ export default [
                 this.method('editor_setVar');
             }
         },
-        $onCreate(){
+        onCreate(){
             this.editorAPI.deleteNodes([this], false);
             this.editorAPI.popLastCommit();
 
@@ -50,7 +50,7 @@ export default [
                 }
             });
         },
-        $afterSave({detail: saveData}){
+        afterSave(saveData){
             const valueInput = saveData.inputs.find(input => input.id == 'initial_value');
             const varInfo = Object.assign({}, this.dataCache.get('varInfo'));
             
@@ -58,24 +58,24 @@ export default [
             saveData.details = varInfo;
             saveData.inputs = [valueInput];
         },
-        $beforeLoad({detail: saveData}){
+        beforeLoad(saveData){
             const varInfo = saveData.details;
 
             varInfo.type = Symbol.for(varInfo.type);
             this.dataCache.set('varInfo', varInfo);
         },
-        $afterLoad(){
+        afterLoad(){
             if (!this.engine) this.method('editor_setVar');
         },
-        $onMount(){
+        onMount(){
             const varInfo = this.dataCache.get('varInfo');
             
             if (!varInfo) return;
 
             this.method('editor_initVarNode');
         },
-        $onDeleteStopped({detail}){
-            const createVars = detail.filter(node => node.templateId == this.templateId);
+        onDeleteStopped(protectedNodes){
+            const createVars = protectedNodes.filter(node => node.templateId == this.templateId);
             const varNames = createVars.map(node => node.inputs.get('_varName').value.data);
             const message = varNames.length > 1 ? 'node.create_var_confirm_multiple' : 'node.create_var_confirm';
             const selectedNodes = this.editorAPI.getSelectedNodes();
@@ -88,7 +88,7 @@ export default [
                 const allGetSetNodes = [];
 
                 varNames.forEach(varName => {
-                    const isGlobal = !!this.editorAPI.getVariableType(varName, true);
+                    const isGlobal = !!this.editorAPI.getGlobalVariable(varName);
                     const getSetNodes = this.editorAPI.getVariableUsage(varName, null, isGlobal);
                     allGetSetNodes.push(...getSetNodes);
                 });
@@ -125,12 +125,14 @@ export default [
                 if (!varInfo) return;
                 const {varName, type, isGlobal, isList} = varInfo;
                 isGlobal ?
-                    this.editorAPI.setVariableType(varName, type, isGlobal)
-                    : this.parentScript.localVariables.set(varName, type);
+                    this.editorAPI.setGlobalVariable(varName, type)
+                    : this.parentScript.setLocalVariable(varName, type);
             },
             editor_deleteVar(){
                 const {varName, isGlobal} = this.dataCache.get('varInfo');
-                this.editorAPI.deleteVariableType(varName, isGlobal);
+                isGlobal ?
+                    this.editorAPI.deleteGlobalVariable(varName)
+                    : this.parentScript.deleteLocalVariable(varName);
             },
             getInitialValue(){
                 return this.getInput('initial_value');
@@ -148,22 +150,22 @@ export default [
             {id: 'name', type: SOCKET_TYPE.STRING, default: '', hideSocket: true},
             {id: 'data', type: SOCKET_TYPE.ANY, default: null, disabled: true, hideInput: true},
         ],
-        $init(){
+        init(){
             if (!this.engine){
                 this.inputBoxWidth = 6;
                 this.inputs.get('name').enableDecorators = true;
             }
         },
-        $onInput({detail: event}){
+        onInput(event){
             this.method('validate', [event.detail.target]);
         },
-        $afterGameDataLoaded(){
+        afterGameDataLoaded(){
             if (this.engine) return;
             determineConnected.call(this);
             this.method('validate');
         },
-        $onNewConnection: determineConnected,
-        $onRemoveConnection: determineConnected,
+        onNewConnection: determineConnected,
+        onRemoveConnection: determineConnected,
         methods: {
             setVar(){
                 const varName = this.getInput('name');
@@ -185,23 +187,23 @@ export default [
         outputs: [
             {id: 'data', type: SOCKET_TYPE.ANY, disabled: true, execute: 'getVar'},
         ],
-        $init(){
+        init(){
             if (!this.engine){
                 const nameInput = this.inputs.get('name');
                 nameInput.flipInput = true;
                 this.inputBoxWidth = 6;
             }
         },
-        $onInput({detail: event}){
+        onInput(event){
             this.method('validate', [event.target]);
         },
-        $afterGameDataLoaded(){
+        afterGameDataLoaded(){
             if (this.engine) return;
             determineConnected.call(this);
             this.method('validate');
         },
-        $onNewConnection: determineConnected,
-        $onRemoveConnection: determineConnected,
+        onNewConnection: determineConnected,
+        onRemoveConnection: determineConnected,
         methods: {
             getVar(){
                 const varName = this.getInput('name');
@@ -274,8 +276,8 @@ function determineConnected(){
 function validate(textbox){
     const dataSocket = this.inputs.get('data') || this.outputs.get('data');
     const varName = textbox?.value ?? this.getInput('name');
-    const globalGet = this.editorAPI.getVariableType(varName, true);
-    const localGet = this.parentScript.localVariables.get(varName);
+    const globalGet = this.editorAPI.getGlobalVariable(varName);
+    const localGet = this.parentScript.getLocalVariable(varName);
     const isValid = !!globalGet || !!localGet;
 
     this.decoratorIcon = null;

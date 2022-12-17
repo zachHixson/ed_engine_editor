@@ -147,7 +147,7 @@ export default {
         window.addEventListener('mouseup', this.mouseUpEvent);
 
         this.updateNodeSize();
-        this.nodeObj.dispatchEvent(new CustomEvent("onMount"));
+        this.nodeObj.onMount();
     },
     beforeDestroy(){
         window.removeEventListener('mouseup', this.mouseUpEvent);
@@ -227,7 +227,7 @@ export default {
             this.$emit('socket-value-changed', event)
         },
         onInput(event){
-            this.nodeObj.dispatchEvent(new CustomEvent('onInput', {detail: event}));
+            this.nodeObj.onInput(event);
             this.$nextTick(()=>{
                 this.$forceUpdate();
             });

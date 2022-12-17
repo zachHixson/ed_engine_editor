@@ -343,8 +343,6 @@ export default {
         this.hotkeyUpHandler = this.hotkeyMap.keyUp.bind(this.hotkeyMap);
     },
     mounted(){
-        const allMountedEventObj = new CustomEvent("allNodesMounted");
-
         this.nodeViewportEl = this.$refs.nodeVP;
         this.nodeNavEl = this.$refs.nodeNav;
 
@@ -364,7 +362,7 @@ export default {
         this.relinkConnections();
         this.updateNodeBounds();
 
-        this.selectedAsset.nodes.forEach(node => node.dispatchEvent(allMountedEventObj));
+        this.selectedAsset.nodes.forEach(node => node.allNodesMounted());
     },
     beforeDestroy(){
         window.removeEventListener('keydown', this.keyDown);
@@ -759,14 +757,13 @@ export default {
                 protectedNodes.push(node);
                 return false;
             });
-            const eventObj = new CustomEvent('onDeleteStopped', {detail: protectedNodes});
 
             if (deletableNodes.length){
                 this.actionDeleteNodes({nodeRefList: deletableNodes}, true);
                 this.deselectAllNodes();
             }
 
-            protectedNodes.forEach(node => node.dispatchEvent(eventObj));
+            protectedNodes.forEach(node => node.onDeleteStopped(protectedNodes));
         },
         checkLoop(leftNode, rightNode){
             let connectionMap = new Map();
@@ -801,7 +798,7 @@ export default {
                 this.undoStore.commit({action: Shared.LOGIC_ACTION.ADD_NODE, data});
             }
 
-            if (!nodeRef) newNode.dispatchEvent(new CustomEvent("onCreate"));
+            if (!nodeRef) newNode.onCreate();
         },
         actionDeleteNodes({nodeRefList}, makeCommit = true){
             const connectionRefMap = new Map();
@@ -820,18 +817,17 @@ export default {
                 });
 
                 currentConnections.forEach(connection => {
-                    const eventObj = new CustomEvent("onRemoveConnection", {detail: connection});
                     const connectionMapGet = connectionRefMap.get(node.parentScript) ?? [];
 
                     if (!connectionMapGet.length) connectionRefMap.set(node.parentScript, connectionMapGet);
                     connectionMapGet.push(connection);
                     node.parentScript.removeConnection(connection.id);
-                    connection.startNode?.dispatchEvent(eventObj);
-                    connection.endNode?.dispatchEvent(eventObj);
+                    connection.startNode?.onRemoveConnection(connection);
+                    connection.endNode?.onRemoveConnection(connection);
                 });
 
                 //delete node
-                node.dispatchEvent(new CustomEvent("onBeforeDelete"));
+                node.onBeforeDelete();
                 node.parentScript.deleteNode(node);
             });
 
@@ -867,8 +863,6 @@ export default {
             }
         },
         actionMakeConnection({connectionObj, socketOver}, makeCommit = true){
-            const eventObj = new CustomEvent("onNewConnection", {detail: connectionObj});
-
             if (socketOver.isInput){
                 connectionObj.endNode = socketOver.node;
                 connectionObj.endSocketId = socketOver.socketData.id;
@@ -880,8 +874,8 @@ export default {
                 connectionObj.startSocketEl = socketOver.socketEl;
             }
 
-            connectionObj.startNode.dispatchEvent(eventObj);
-            connectionObj.endNode.dispatchEvent(eventObj);
+            connectionObj.startNode.onNewConnection(connectionObj);
+            connectionObj.endNode.onNewConnection(connectionObj);
 
             //if connection was removed entirely by a previous undo, we need to recreate
             if (!connectionObj.connectionComponent){
@@ -912,8 +906,6 @@ export default {
             this.undoStore.cache.delete('prev_socket');
         },
         actionRemoveConnection({connectionObj}, makeCommit = true){
-            const eventObj = new CustomEvent("onRemoveConnection", {detail: connectionObj});
-
             makeCommit &= !!(connectionObj.startNode && connectionObj.endNode);
 
             if (makeCommit){
@@ -925,17 +917,17 @@ export default {
             }
 
             this.selectedAsset.removeConnection(connectionObj.id);
-            connectionObj.startNode?.dispatchEvent(eventObj);
-            connectionObj.endNode?.dispatchEvent(eventObj);
+            connectionObj.startNode?.onRemoveConnection(connectionObj);
+            connectionObj.endNode?.onRemoveConnection(connectionObj);
         },
         actionChangeInput({socket, oldVal, newVal, node}, makeCommit = true){
             socket.value = newVal;
 
-            node.dispatchEvent(new CustomEvent("onValueChange", {detail: {
+            node.onValueChange({
                 socketId: socket.id,
                 oldVal,
                 newVal
-            }}));
+            });
 
             if (makeCommit){
                 let data = {socket, oldVal, newVal, node};
@@ -943,7 +935,7 @@ export default {
             }
         },
         revertAddNode({nodeRef}){
-            nodeRef.dispatchEvent(new CustomEvent("onBeforeDelete"));
+            nodeRef.onBeforeDelete();
             this.selectedAsset.deleteNode(nodeRef);
         },
         revertDeleteNodes({nodeRefList, connectionRefMap}){
@@ -955,11 +947,9 @@ export default {
 
             connectionRefMap.forEach((connectionList, parentScript) => {
                 connectionList.forEach(connection => {
-                    const eventObj = new CustomEvent("onNewConnection", {detail: connection});
-
                     parentScript.addConnection(connection);
-                    connection.startNode.dispatchEvent(eventObj);
-                    connection.endNode.dispatchEvent(eventObj);
+                    connection.startNode.onNewConnection(connection);
+                    connection.endNode.onNewConnection(connection);
                 });
             });
 
@@ -993,11 +983,11 @@ export default {
         },
         revertChangeInput({socket, oldVal, newVal, node}){
             socket.value = oldVal;
-            node.dispatchEvent(new CustomEvent("onValueChange", {detail: {
+            node.onValueChange({
                 socketId: socket.id,
                 newVal,
                 oldVal
-            }}));
+            });
         },
     }
 }

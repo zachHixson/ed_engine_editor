@@ -72,7 +72,7 @@ export default new Vuex.Store({
                 dispatch('AssetBrowser/selectRoom', room);
             }
 
-            nodeAPI.dispatchAll(new CustomEvent("afterGameDataLoaded"));
+            nodeAPI.forEachNode(node => node.afterGameDataLoaded());
         },
         setInputActive({commit}, newState){
             commit('setInputActive', newState);

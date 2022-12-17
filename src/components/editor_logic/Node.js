@@ -20,9 +20,29 @@ export default class Node extends EventListenerMixin() {
         this.dataCache = new Map();
         this.editorCanDelete = true;
 
-        //map template to node
-        let inputAnys = 0;
+        //bind lifecycle events
+        const uBind = ()=>{};
+        this.init = template.init?.bind(this) ?? uBind;
+        this.onScriptAdd = template.onScriptAdd?.bind(this) ?? uBind;
+        this.onCreate = template.onCreate?.bind(this) ?? uBind;
+        this.beforeSave = template.beforeSave?.bind(this) ?? uBind;
+        this.afterSave = template.afterSave?.bind(this) ?? uBind;
+        this.beforeLoad = template.beforeLoad?.bind(this) ?? uBind;
+        this.afterLoad = template.afterLoad?.bind(this) ?? uBind;
+        this.logicLoaded = template.logicLoaded?.bind(this) ?? uBind;
+        this.afterGameDataLoaded = template.afterGameDataLoaded?.bind(this) ?? uBind;
+        this.onScriptAdd = template.onScriptAdd?.bind(this) ?? uBind;
+        this.onMount = template.onMount?.bind(this) ?? uBind;
+        this.allNodesMounted = template.allNodesMounted?.bind(this) ?? uBind;
+        this.onInput = template.onInput?.bind(this) ?? uBind;
+        this.onMove = template.onMove?.bind(this) ?? uBind;
+        this.onNewConnection = template.onNewConnection?.bind(this) ?? uBind;
+        this.onRemoveConnection = template.onRemoveConnection?.bind(this) ?? uBind;
+        this.onValueChange = template.onValueChange?.bind(this) ?? uBind;
+        this.onBeforeDelete = template.onBeforeDelete?.bind(this) ?? uBind;
+        this.onDeleteStopped = template.onDeleteStopped?.bind(this) ?? uBind;
 
+        //map template to node
         template.inTriggers?.forEach(trigger => {
             this.inTriggers.set(trigger.id, {
                 id: trigger.id,
@@ -44,8 +64,6 @@ export default class Node extends EventListenerMixin() {
                 value = Shared.SOCKET_DEFAULT.get(input.type);
             }
 
-            inputAnys += input.type == Shared.SOCKET_TYPE.ANY;
-
             this.inputs.set(input.id, Object.assign({
                 value,
                 node: this,
@@ -66,12 +84,7 @@ export default class Node extends EventListenerMixin() {
             }
         }
 
-        //error out if there are too many any sockets
-        if (inputAnys > 1){
-            console.error(`Error in node template '${this.templateId}'. Nodes can currently only have 1 'ANY' input socket at a time.`);
-        }
-
-        this.dispatchEvent(new CustomEvent("init"));
+        this.init();
     }
 
     get template(){return this._template}
@@ -79,7 +92,7 @@ export default class Node extends EventListenerMixin() {
     get editorAPI(){return this._editorAPI}
 
     toSaveData(){
-        this.dispatchEvent(new CustomEvent("beforeSave"));
+        this.beforeSave();
 
         const roundedPos = new Victor(
             Math.floor(this.pos.x * 100) / 100,
@@ -99,13 +112,13 @@ export default class Node extends EventListenerMixin() {
             outObj.widgetData = JSON.stringify(this.widgetData);
         }
 
-        this.dispatchEvent(new CustomEvent("afterSave", {detail: outObj}));
+        this.afterSave(outObj);
 
         return outObj;
     }
 
     fromSaveData(data){
-        this.dispatchEvent(new CustomEvent("beforeLoad", {detail: data}));
+        this.beforeLoad(data);
 
         if (data.widgetData){
             this.widgetData = JSON.parse(data.widgetData);
@@ -117,7 +130,7 @@ export default class Node extends EventListenerMixin() {
             nodeInput.value = input.value;
         });
 
-        this.dispatchEvent(new CustomEvent("afterLoad"));
+        this.afterLoad();
 
         return this;
     }

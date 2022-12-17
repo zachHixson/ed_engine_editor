@@ -2,10 +2,12 @@ export default class Node_API {
     constructor(){
         this._editor;
         this._store;
+        this._globalVariableMap;
     }
 
     get editor(){return this._editor};
     get store(){return this._store};
+    get globalVariableMap(){return this._globalVariableMap};
 
     setNodeEditorContext(editorContext){
         this._editor = editorContext;
@@ -13,33 +15,22 @@ export default class Node_API {
 
     setGlobalStore(store){
         this._store = store;
+        this._globalVariableMap = this.store.getters['LogicEditor/getGlobalVariableMap'];
     }
 
-    getVariableType(name, isGlobal){
-        const globalVariableMap = this.store.getters['LogicEditor/getGlobalVariableMap'];
-        const localVariableMap = this.editor?.selectedAsset.localVariables;
-        const varName = name.trim().toLowerCase();
-        
-        if (isGlobal === undefined){
-            return localVariableMap?.get(varName) ?? globalVariableMap.get(varName);
-        }
-        else{
-            return isGlobal ? globalVariableMap.get(varName) : localVariableMap?.get(varName);
-        }
+    getGlobalVariable(name){
+        name = name.trim().toLowerCase();
+        return this.globalVariableMap.get(name);
     }
 
-    setVariableType(name, type, isGlobal){
-        const globalVariableMap = this.store.getters['LogicEditor/getGlobalVariableMap'];
-        const varMap = isGlobal ? globalVariableMap : this.editor.selectedAsset.localVariables;
-        const varName = name.trim().toLowerCase();
-        varMap.set(varName, type);
+    setGlobalVariable(name, type){
+        name = name.trim().toLowerCase();
+        this.globalVariableMap.set(name, type);
     }
 
-    deleteVariableType(name, isGlobal){
-        const globalVariableMap = this.store.getters['LogicEditor/getGlobalVariableMap'];
-        const varMap = isGlobal ? globalVariableMap : this.editor.selectedAsset.localVariables;
-        const varName = name.trim().toLowerCase();
-        varMap.delete(varName);
+    deleteGlobalVariable(name){
+        name = name.trim().toLowerCase();
+        this.globalVariableMap.delete(name);
     }
 
     getVariableUsage(name, nodeType, isGlobal){
@@ -47,9 +38,10 @@ export default class Node_API {
         name = name.trim().toLowerCase();
 
         this.forEachNode(node=>{
-            const isVarMatch = node.inputs.get('name')?.value == name;
+            const curVarName = node.inputs.get('name')?.value.trim().toLowerCase();
+            const isVarMatch = curVarName == name;
             const isVarNode = node.templateId == 'set_variable' || node.templateId == 'get_variable';
-            const isUsage = (node.templateId == nodeType) || (!nodeType && isVarNode);
+            const isUsage = nodeType?.includes(node.templateId) || isVarNode;
             const isGlobalMatch = isGlobal ^ !!node.parentScript.localVariables.get(name);
 
             if (isVarMatch && isUsage && isGlobalMatch){
@@ -134,7 +126,7 @@ export default class Node_API {
         this.editor.actionDeleteNodes({nodeRefList: nodeList}, commit);
     }
 
-    forEachNode(callback, isGlobal){
+    forEachNode(callback, isGlobal = true){
         if (isGlobal){
             const allLogic = this.store.getters['GameData/getAllLogic'];
 
@@ -153,12 +145,6 @@ export default class Node_API {
                 callback(nodes[i]);
             }
         }
-    }
-
-    dispatchAll(eventObj){
-        this.forEachNode(node => {
-            node.dispatchEvent(eventObj);
-        }, true);
     }
 
     dialogConfirm(textInfo, callback){
