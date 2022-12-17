@@ -34,13 +34,14 @@ export default class Node extends EventListenerMixin() {
         this.onScriptAdd = template.onScriptAdd?.bind(this) ?? uBind;
         this.onMount = template.onMount?.bind(this) ?? uBind;
         this.allNodesMounted = template.allNodesMounted?.bind(this) ?? uBind;
+        this.onNewVariable = template.onNewVariable?.bind(this) ?? uBind;
         this.onInput = template.onInput?.bind(this) ?? uBind;
         this.onMove = template.onMove?.bind(this) ?? uBind;
         this.onNewConnection = template.onNewConnection?.bind(this) ?? uBind;
         this.onRemoveConnection = template.onRemoveConnection?.bind(this) ?? uBind;
         this.onValueChange = template.onValueChange?.bind(this) ?? uBind;
-        this.onBeforeDelete = template.onBeforeDelete?.bind(this) ?? uBind;
         this.onDeleteStopped = template.onDeleteStopped?.bind(this) ?? uBind;
+        this.onBeforeDelete = template.onBeforeDelete?.bind(this) ?? uBind;
 
         //map template to node
         template.inTriggers?.forEach(trigger => {

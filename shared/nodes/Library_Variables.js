@@ -47,6 +47,7 @@ export default [
                     valSocket.value = SOCKET_DEFAULT.get(varInfo.type);
                     this.method('editor_setVar');
                     this.editorAPI.addNode(this, true);
+                    document.dispatchEvent(new CustomEvent('onNewVariable'));
                 }
             });
         },
@@ -154,6 +155,7 @@ export default [
             if (!this.engine){
                 this.inputBoxWidth = 6;
                 this.inputs.get('name').enableDecorators = true;
+                document.addEventListener('onNewVariable', this.onNewVariable);
             }
         },
         onInput(event){
@@ -164,8 +166,15 @@ export default [
             determineConnected.call(this);
             this.method('validate');
         },
+        onNewVariable(){
+            this.method('validate');
+            this.dispatchEvent(new CustomEvent('forceUpdate'));
+        },
         onNewConnection: determineConnected,
         onRemoveConnection: determineConnected,
+        onBeforeDelete(){
+            document.removeEventListener('onNewVariable', this.onNewVariable);
+        },
         methods: {
             setVar(){
                 const varName = this.getInput('name');
@@ -192,6 +201,7 @@ export default [
                 const nameInput = this.inputs.get('name');
                 nameInput.flipInput = true;
                 this.inputBoxWidth = 6;
+                document.addEventListener('onNewVariable', this.onNewVariable);
             }
         },
         onInput(event){
@@ -202,8 +212,15 @@ export default [
             determineConnected.call(this);
             this.method('validate');
         },
+        onNewVariable(){
+            this.method('validate');
+            this.dispatchEvent(new CustomEvent('forceUpdate'));
+        },
         onNewConnection: determineConnected,
         onRemoveConnection: determineConnected,
+        onBeforeDelete(){
+            document.removeEventListener('onNewVariable', this.onNewVariable);
+        },
         methods: {
             getVar(){
                 const varName = this.getInput('name');

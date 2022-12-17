@@ -141,9 +141,11 @@ export default {
         this.mouseUpEvent = this.mouseUp.bind(this);
         this.updateConnections = this.updateConnections.bind(this);
         this.updateNodeSize = this.updateNodeSize.bind(this);
+        this.forceUpdate = this.forceUpdate.bind(this);
 
         this.nodeObj.addEventListener('onMove', this.updateConnections);
         this.nodeObj.addEventListener('recalcWidth', this.updateNodeSize);
+        this.nodeObj.addEventListener('forceUpdate', this.forceUpdate);
         window.addEventListener('mouseup', this.mouseUpEvent);
 
         this.updateNodeSize();
@@ -151,8 +153,9 @@ export default {
     },
     beforeDestroy(){
         window.removeEventListener('mouseup', this.mouseUpEvent);
-        window.removeEventListener('mousemove', this.mouseMoveEvent);
         this.nodeObj.removeEventListener('onMove', this.updateConnections);
+        this.nodeObj.removeEventListener('recalcWidth', this.updateNodeSize);
+        this.nodeObj.removeEventListener('forceUpdate', this.forceUpdate);
     },
     methods: {
         updateAllSockets(){
@@ -236,6 +239,11 @@ export default {
             for (let i = 0; i < this.connections.length; i++){
                 this.connections[i].connectionComponent.update();
             }
+        },
+        forceUpdate(){
+            this.$nextTick(()=>{
+                this.$forceUpdate();
+            });
         },
         getRelinkInfo(){
             let inTriggers = this.$refs.inTriggers ?? [];
