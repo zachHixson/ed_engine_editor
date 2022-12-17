@@ -167,8 +167,8 @@ export default class Room_Edit_Renderer{
         ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         ctx.drawImage(this.objBuff, 0, 0, this.objBuff.width, this.objBuff.height);
-        ctx.drawImage(this.iconBuff,0, 0, this.iconBuff.width, this.iconBuff.height);
         ctx.drawImage(this.gridBuff, 0, 0, this.gridBuff.width, this.gridBuff.height);
+        ctx.drawImage(this.iconBuff,0, 0, this.iconBuff.width, this.iconBuff.height);
         ctx.drawImage(this.cursorBuff, 0, 0, this.cursorBuff.width, this.cursorBuff.height);
 
         //composite selection buff
@@ -295,7 +295,7 @@ export default class Room_Edit_Renderer{
             let br = cameraPos.clone().addScalar(120 * cameraSize);
             ul = this.worldToScreenPos(ul);
             br = this.worldToScreenPos(br);
-            ctx.strokeStyle = "#00000088";
+            ctx.strokeStyle = "#00000055";
             ctx.lineWidth = 2;
             ctx.strokeRect(ul.x, ul.y, br.x - ul.x, br.y - ul.y);
         }
