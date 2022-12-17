@@ -20,7 +20,10 @@
             </div>
         </div>
         <div class="controls">
-            <button class="iconBtn" :title="$t('editor_main.package')" @click="packageGame"><img class="icon" src="@/assets/package.svg"/></button>
+            <div class="icon-btn-wrapper">
+                <button class="iconBtn" name="packageBtn" @click="packageGame"><img class="icon" src="@/assets/package.svg"/></button>
+                <Tooltip for="packageBtn" :text="$t('editor_main.package')" />
+            </div>
             <button class="iconBtn" :title="$t('editor_main.debug')" @click="playState = PLAY_STATES.DEBUGGING"><img class="icon" src="@/assets/debug.svg"/></button>
             <button class="iconBtn" :title="$t('editor_main.run')" @click="playState = PLAY_STATES.PLAYING"><img class="icon" src="@/assets/play.svg"/></button>
         </div>
@@ -29,10 +32,15 @@
 </template>
 
 <script>
+import Tooltip from '@/components/common/Tooltip.vue';
+
 let enumID = 0;
 
 export default {
     name: 'HeaderPanel',
+    components: {
+        Tooltip
+    },
     data() {
         return {
             fileVisible: false,
@@ -252,6 +260,10 @@ export default {
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
+}
+
+.icon-btn-wrapper{
+    position: relative;
 }
 
 .iconBtn{

@@ -1,10 +1,20 @@
 <template>
-    <div v-show="showTooltip" ref="tooltip" class="tooltip">
+    <div v-show="showTooltip" ref="tooltip" class="tooltip" :class="invert ? 'tooltip-below':'tooltip-above'">
         <div ref="positionWrapper"
-            class="position-wrapper">
-            <div v-html="text" ref="messageText" class="message-text" :style="`left: ${hOffset}px`">
+            class="position-wrapper"
+            :class="invert ? 'below':'above'">
+            <svg v-if="invert" width="20" height="15" class="arrow arrow-top">
+                <path d="M0 15 L10 0 L20 15"/>
+            </svg>
+            <div ref="messageText" class="message-text" :style="`left: ${hOffset}px`">
+                <div v-if="invert" class="arrow-blocker">
+                    <svg v-if="invert" width="20" height="15">
+                        <path d="M0 15 L10 0 L20 15"/>
+                    </svg>
+                </div>
+                <div v-html="text"></div>
             </div>
-            <svg width="20" height="15" class="arrow">
+            <svg v-if="!invert" width="20" height="15" class="arrow arrow-bottom">
                 <path d="M0 0 L10 15 L20 0"/>
             </svg>
         </div>
@@ -22,6 +32,7 @@ export default {
             showTooltip: false,
             timeout: null,
             hOffset: 0,
+            invert: false,
         }
     },
     mounted(){
@@ -56,6 +67,7 @@ export default {
             }
 
             this.timeout = setTimeout(()=>{
+                console.log("Show")
                 this.showTooltip = true;
                 this.recalculateOffset();
             }, timeLimit);
@@ -66,14 +78,26 @@ export default {
         },
         recalculateOffset(){
             this.$nextTick(()=>{
-                const textBounds = this.$refs.messageText.getBoundingClientRect();
-                const windowBorder = document.documentElement.clientWidth;
-                const rOverflow = Math.min(0, windowBorder - textBounds.right);
-                const lOverflow = Math.max(0, -textBounds.left);
-
-                this.hOffset = rOverflow + lOverflow;
+                this.hOffset = this.getTextOffset();
+                this.invert = this.getInvertedState();
             });
         },
+        getTextOffset(){
+            const textBounds = this.$refs.messageText.getBoundingClientRect();
+            const windowBorder = document.documentElement.clientWidth;
+            const rOverflow = Math.min(0, windowBorder - textBounds.right);
+            const lOverflow = Math.max(0, -textBounds.left);
+
+            return rOverflow + lOverflow;
+        },
+        getInvertedState(){
+            const parentEl = this.$el.parentElement;
+            const parentBounds = parentEl.getBoundingClientRect();
+            const textBounds = this.$refs.messageText.getBoundingClientRect();
+            const textHeight = textBounds.bottom - textBounds.top;
+
+            return textHeight > parentBounds.top;
+        }
     }
 }
 </script>
@@ -81,11 +105,19 @@ export default {
 <style scoped>
 .tooltip{
     position: absolute;
-    top: 3px;
     width: 100%;
     height: 100%;
     flex-direction: column;
     pointer-events: none;
+    z-index: 1000;
+}
+
+.tooltip-above{
+    top: 3px;
+}
+
+.tooltip-below{
+    top: -3px;
 }
 
 .position-wrapper{
@@ -95,7 +127,14 @@ export default {
     align-items: center;
     width: 100%;
     height: min-content;
+}
+
+.above{
     transform: translateY(-100%);
+}
+
+.below{
+    transform: translateY(100%);
 }
 
 .message-text{
@@ -111,9 +150,28 @@ export default {
 
 .arrow{
     position: relative;
-    top: -2px;
     fill: lightgrey;
     stroke: var(--border);
     stroke-width: 2px;
+}
+
+.arrow-top{
+    top: 2px;
+}
+
+.arrow-bottom{
+    bottom: 2px;
+}
+
+.arrow-blocker{
+    position: absolute;
+    top: 0;
+    left: 50%;
+}
+
+.arrow-blocker > *{
+    transform: translate(-50%, -90%);
+    top: -3px;
+    fill: lightgrey;
 }
 </style>
