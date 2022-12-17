@@ -33,8 +33,8 @@ export default {
             const child = parentEl.childNodes[i];
 
             if (child.name == this.for){
-                child.addEventListener('mouseenter', this.siblingEntered);
-                child.addEventListener('mouseleave', this.siblingLeft);
+                child.addEventListener('mouseover', this.siblingEntered);
+                child.addEventListener('mouseout', this.siblingLeft);
             }
         }
     },
@@ -43,8 +43,8 @@ export default {
 
         for (let i = 0; i < parentEl?.childNodes.length; i++){
             const child = parentEl.childNodes[i];
-            child.removeEventListener('mouseenter', this.siblingEntered);
-            child.removeEventListener('mouseleave', this.siblingLeft);
+            child.removeEventListener('mouseover', this.siblingEntered);
+            child.removeEventListener('mouseout', this.siblingLeft);
         }
     },
     methods: {
@@ -61,7 +61,7 @@ export default {
             }, timeLimit);
         },
         siblingLeft(){
-            clearTimeout(this.interval);
+            clearTimeout(this.timeout);
             this.showTooltip = false;
         },
         recalculateOffset(){
