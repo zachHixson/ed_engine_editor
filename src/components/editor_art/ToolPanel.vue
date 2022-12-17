@@ -1,14 +1,14 @@
 <template>
     <div class="toolPanel">
-        <div class="toolPanelWrapper" :class="{toolPanelWrapperClosed : !isOpen}">
-            <div v-show="isOpen" class="panelContents">
-                <div class="pickerWrapper">
+        <div class="tool-panel-wrapper" :class="{toolPanelWrapperClosed : !isOpen}">
+            <div v-show="isOpen" class="panel-contents">
+                <div class="picker-wrapper">
                     <ColorPicker
                         width="200"
                         :color="toolColor"
                         @change-end="colorChanged"/>
                 </div>
-                <div class="brushSizeContainer">
+                <div class="brush-size-container">
                     <Tool
                         :key="size.tool"
                         v-for="size in brushSizes"
@@ -18,7 +18,7 @@
                         :curSelection="toolSize"
                         @toolClicked="sizeChanged"/>
                 </div>
-                <div class="toolType">
+                <div class="tool-type">
                     <Tool
                         :key="brush.tool"
                         v-for="brush in brushes"
@@ -29,8 +29,8 @@
                         @toolClicked="toolChanged"/>
                 </div>
             </div>
-            <div class="resizeBtnWrapper">
-                <button class="resizeBtn" ref="collapseButton" @click="toggleOpen">
+            <div class="resize-btn-wrapper">
+                <button class="resize-btn" ref="collapse-button" @click="toggleOpen">
                     <img v-show="isOpen" src="@/assets/arrow_01.svg" style="transform: rotate(-90deg)"/>
                     <img v-show="!isOpen" src="@/assets/brush.svg" />
                 </button>
@@ -213,7 +213,7 @@ export default {
 </script>
 
 <style scoped>
-.toolPanelWrapper{
+.tool-panel-wrapper{
     position: relative;
     background: var(--tool-panel-bg);
     border: 2px solid var(--border);
@@ -222,7 +222,6 @@ export default {
     height: 95%;
     top: 50%;
     transform: translateY(-50%);
-    overflow: hidden;
     z-index: 10;
 }
 
@@ -230,7 +229,7 @@ export default {
     border: none;
 }
 
-.panelContents{
+.panel-contents{
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -241,13 +240,13 @@ export default {
     overflow-y: auto;
 }
 
-.pickerWrapper{
+.picker-wrapper{
     display: flex;
     justify-content: center;
     padding: 10pt;
 }
 
-.brushSizeContainer{
+.brush-size-container{
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -255,13 +254,13 @@ export default {
     width: 100%;
 }
 
-.toolType{
+.tool-type{
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
 }
 
-.collapseButton{
+.collapse-button{
     align-self: center;
     display: flex;
     justify-content: center;
@@ -273,14 +272,14 @@ export default {
     border: 1px solid black;
 }
 
-.resizeBtnWrapper{
+.resize-btn-wrapper{
     position: absolute;
     right: 0;
     top: 50%;
     transform: translate(100%, -50%);
 }
 
-.resizeBtn{
+.resize-btn{
     position: relative;
     width: 30px;
     height: 70px;
@@ -293,7 +292,7 @@ export default {
     z-index: 15;
 }
 
-.resizeBtn > img{
+.resize-btn > img{
     width: 100%;
     height: 100%;
 }
