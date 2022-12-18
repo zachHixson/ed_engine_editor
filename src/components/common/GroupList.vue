@@ -24,17 +24,22 @@
                 </div>
             </div>
         </div>
-        <button class="addBtn" :title="tooltip_text" @click="addGroup">
-            <img src="@/assets/plus.svg"/>
+        <button class="addBtn" @click="addGroup" v-tooltip="tooltip_text">
+            <img name="plusBtn" src="@/assets/plus.svg" />
+            <!-- <Tooltip for="plusBtn" :text="tooltip_text" /> -->
         </button>
     </div>
 </template>
 
 <script>
+import Tooltip from '@/components/common/Tooltip';
 
 export default {
     name: 'GroupList',
     props: ['editList', 'readOnlyList', 'tooltip_text'],
+    components: {
+        Tooltip,
+    },
     methods: {
         validateName(name, oldname){
             let roCollisions = this.readOnlyList?.includes(name);
@@ -87,5 +92,9 @@ export default {
 
 .readOnly{
     opacity: 75%;
+}
+
+.addBtn{
+    position: relative;
 }
 </style>

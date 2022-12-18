@@ -32,7 +32,7 @@
                     @blur="onTextBlur"
                     :disabled="socket.disabled"
                     v-input-active/>
-                    <Tooltip for="textInput" :text="socket.disabled && socket.value.length > 8 ? socket.value : ''"/>
+                    <!-- <Tooltip for="textInput" :text="socket.disabled && socket.value.length > 8 ? socket.value : ''"/> -->
                 <div
                     v-if="socket.type == SOCKET_TYPE.OBJECT"
                     class="selfBox"

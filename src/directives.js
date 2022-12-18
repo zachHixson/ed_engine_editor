@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import store from './store'
+import { getTooltipComponent, showTooltip, hideTooltip } from './components/common/Tooltip.vue';
 
 //Run code when clicking outside of an element
 Vue.directive('click-outside', {
@@ -43,3 +44,34 @@ Vue.directive('input-active', {
         el.removeEventListener('mousemove', el.stopProp);
     },
 });
+
+//Popup global tooltip above components
+Vue.directive('tooltip', {
+    inserted: function(el, binding){
+        const ttComponent = getTooltipComponent();
+
+        el.mouseOverHandler = function(){
+            const timeLimit = ttComponent.HOVER_TIME * 1000;
+            ttComponent.text = binding.value;
+
+            if (!ttComponent.text.length){
+                return;
+            }
+
+            ttComponent.timeout = setTimeout(()=>{
+                showTooltip(el);
+            }, timeLimit);
+        };
+        el.mouseOutHandler = function(){
+            hideTooltip();
+        };
+
+        el.addEventListener('mouseover', el.mouseOverHandler);
+        el.addEventListener('mouseout', el.mouseOutHandler);
+    },
+
+    unbind: function(el){
+        el.removeEventListener('mouseover', el.mouseOverHandler);
+        el.removeEventListener('mouseout', el.mouseOutHandler);
+    }
+})

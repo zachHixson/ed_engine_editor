@@ -11,6 +11,7 @@
         <transition name="playWindow">
             <PlayWindow v-if="playState != PLAY_STATES.NOT_PLAYING" class="playWindow" />
         </transition>
+        <Tooltip />
     </div>
 </template>
 
@@ -22,6 +23,7 @@ import TabPanel from './components/TabPanel';
 import AssetBrowser from './components/asset_browser/AssetBrowser';
 import EditorWindow from './components/EditorWindow';
 import PlayWindow from './components/PlayWindow';
+import Tooltip from './components/common/Tooltip';
 
 export default {
     name: 'App',
@@ -31,6 +33,7 @@ export default {
         AssetBrowser,
         EditorWindow,
         PlayWindow,
+        Tooltip,
     },
     computed: {
         PLAY_STATES(){
@@ -99,6 +102,7 @@ html, body{
 }
 
 #app {
+    position: relative;
     font-family: Avenir, Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

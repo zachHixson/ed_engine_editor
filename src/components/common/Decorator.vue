@@ -1,7 +1,6 @@
 <template>
     <div class="decorator">
-        <img name="decorator" class="img" :src="src" draggable="false" />
-        <Tooltip for="decorator" class="tooltip" :text="text"/>
+        <img name="decorator" class="img" :src="src" draggable="false" v-tooltip="text"/>
     </div>
 </template>
 
