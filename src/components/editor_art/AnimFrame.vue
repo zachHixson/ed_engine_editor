@@ -11,9 +11,9 @@
         </canvas>
         <button
             class="button deleteFrame"
-            :title="$t('art_editor.delete_frame')"
             v-show="canDelete && hover"
-            @click="deleteFrame">
+            @click="deleteFrame"
+            v-tooltip="$t('art_editor.delete_frame')">
             <img class="btnIcon" src="@/assets/trash.svg" style="fill: none"/>
         </button>
         <button

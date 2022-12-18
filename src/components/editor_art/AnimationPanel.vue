@@ -26,7 +26,7 @@
                             @frameMoved="frameMoved"/>
                     </template>
                 </DragList>
-                <button class="addFrame" :title="$t('art_editor.add_frame')" @click="addFrame()">
+                <button class="addFrame" @click="addFrame()" v-tooltip="$t('art_editor.add_frame')">
                     <img class="icon" src="@/assets/plus.svg"/>
                 </button>
             </div>

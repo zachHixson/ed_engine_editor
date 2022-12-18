@@ -1,5 +1,5 @@
 <template>
-    <div class="viewportControl" :title="altText" @click="onClick">
+    <div class="viewportControl" @click="onClick" v-tooltip="altText">
         <img
             v-show="iconLoaded"
             class="icon"
@@ -23,7 +23,7 @@ export default {
         }
     },
     methods: {
-        onClick(event){
+        onClick(){
             if (this.isActive){
                 this.$emit('click');
             }

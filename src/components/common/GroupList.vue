@@ -26,7 +26,6 @@
         </div>
         <button class="addBtn" @click="addGroup" v-tooltip="tooltip_text">
             <img name="plusBtn" src="@/assets/plus.svg" />
-            <!-- <Tooltip for="plusBtn" :text="tooltip_text" /> -->
         </button>
     </div>
 </template>

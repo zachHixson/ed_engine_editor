@@ -2,7 +2,7 @@
     <div class="categoryWrapper">
         <div class="title">
             <img class="icon" :src="require(`@/${iconPath}.svg`)"/>
-            {{title}}
+            {{heading}}
         </div>
         <div class="contents"><slot /></div>
     </div>
@@ -11,7 +11,7 @@
 <script>
 export default {
     name: 'CategoryWrapper',
-    props: ['title', 'iconPath']
+    props: ['heading', 'iconPath']
 }
 </script>
 

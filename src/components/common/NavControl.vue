@@ -2,9 +2,9 @@
     <div
         class="viewportControl"
         ref="navControl"
-        :title="control.altText"
         @click="onClick"
-        :class="{controlSelected : isSelected}">
+        :class="{controlSelected : isSelected}"
+        v-tooltip="control.altText">
         <img v-show="iconLoaded" class="icon" ref="iconImg" :src="require(`@/${this.control.icon}.svg`)" @error="iconLoaded = false"/>
         <div v-show="!iconLoaded" class="altText" ref="altText">
             {{control.altText}}

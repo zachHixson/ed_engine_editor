@@ -27,7 +27,7 @@
                 </button>
             </div>
         </div>
-        <button class="addBtn" :title="tooltip_text" @click="addVar">
+        <button class="addBtn" v-tooltip="tooltip_text" @click="addVar">
             <img src="@/assets/plus.svg"/>
         </button>
     </div>

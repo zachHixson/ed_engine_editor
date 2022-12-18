@@ -57,8 +57,9 @@ export function getTooltipComponent(){
 
 export function showTooltip(el){
     const elBounds = el.getBoundingClientRect();
-    
+
     this.x = (elBounds.left + elBounds.right) / 2;
+    this.hOffset = 0;
     this.showTooltip = true;
     this.$nextTick(()=>{
         recalculateOffsets(this, el);
@@ -107,6 +108,10 @@ function getInvertedState(tooltipComp, el){
     z-index: 1000;
 }
 
+.tooltip > *{
+    --bg: #EEEEEE;
+}
+
 .position-wrapper{
     position: absolute;
     display: flex;
@@ -126,14 +131,14 @@ function getInvertedState(tooltipComp, el){
     width: max-content;
     max-width: 300px;
     padding: 10px;
-    background: lightgrey;
+    background: var(--bg);
     border: 2px solid var(--border);
     border-radius: 10px;
 }
 
 .arrow{
     position: relative;
-    fill: lightgrey;
+    fill: var(--bg);
     stroke: var(--border);
     stroke-width: 2px;
 }
@@ -155,6 +160,6 @@ function getInvertedState(tooltipComp, el){
 .arrow-blocker > *{
     transform: translate(-50%, -90%);
     top: -3px;
-    fill: lightgrey;
+    fill: var(--bg);
 }
 </style>

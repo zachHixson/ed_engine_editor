@@ -21,11 +21,8 @@
         </div>
         <div class="controls">
             <button class="iconBtn" name="packageBtn" @click="packageGame" v-tooltip="$t('editor_main.package')"><img class="icon" src="@/assets/package.svg"/></button>
-                <!-- <Tooltip for="packageBtn" :text="$t('editor_main.package')"/> -->
-            <button class="iconBtn" name="debugBtn" @click="playState = PLAY_STATES.DEBUGGING"><img class="icon" src="@/assets/debug.svg"/></button>
-                <!-- <Tooltip for="debugBtn" :text="$t('editor_main.debug')" /> -->
-            <button class="iconBtn" name="runBtn" @click="playState = PLAY_STATES.PLAYING"><img class="icon" src="@/assets/play.svg"/></button>
-                <!-- <Tooltip for="runBtn" :text="$t('editor_main.run')" /> -->
+            <button class="iconBtn" name="debugBtn" @click="playState = PLAY_STATES.DEBUGGING" v-tooltip="$t('editor_main.debug')"><img class="icon" src="@/assets/debug.svg"/></button>
+            <button class="iconBtn" name="runBtn" @click="playState = PLAY_STATES.PLAYING" v-tooltip="$t('editor_main.run')"><img class="icon" src="@/assets/play.svg"/></button>
         </div>
         <input type="file" ref="fileOpen" style="display: none" accept=".html, .edproj" @change="loadProjectFile"/>
     </div>

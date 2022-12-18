@@ -1,5 +1,5 @@
 <template>
-    <div class="tool" :class="{toolSelected : isSelected}" @click="click" :title="name">
+    <div class="tool" :class="{toolSelected : isSelected}" @click="click" v-tooltip="name">
         <img v-show="iconLoaded" class="icon" ref="iconImg" :src="require(`@/${icon}.svg`)" @error="iconLoaded = false"/>
         <div v-show="!iconLoaded" class="altText" ref="altText">
             {{name}}
