@@ -1,20 +1,15 @@
-const path = require('path');
-
-module.exports = {
+const { defineConfig } = require('@vue/cli-service')
+module.exports = defineConfig({
   pluginOptions: {
     i18n: {
       locale: 'en',
       fallbackLocale: 'en',
       localeDir: 'locales',
-      enableInSFC: false
-    }
-  },
-  configureWebpack: {
-    resolve: {
-      alias: {
-        '@compiled': path.resolve(__dirname, './_compiled'),
-      }
+      enableLegacy: false,
+      runtimeOnly: false,
+      compositionOnly: false,
+      fullInstall: true
     }
   },
   publicPath: process.env.PUBLIC_PATH
-}
+})
