@@ -7,7 +7,6 @@ export * from './data_classes/Room';
 export * from './data_classes/Spacial_Collection';
 export * from './data_classes/Sprite';
 
-export * from './nodes/Events';
 export * from './nodes/Node_Enums';
 export * from './nodes/Node_Library';
 export * from './nodes/Socket_Conversions';

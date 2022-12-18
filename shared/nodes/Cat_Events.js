@@ -1,6 +1,6 @@
 import {SOCKET_TYPE, WIDGET, COLLISION_EVENT} from './Node_Enums';
 
-export const EVENTS = [
+export default [
     {// Create
         id: 'e_create',
         isEvent: true,

@@ -1,9 +1,9 @@
 import {SOCKET_TYPE, WIDGET} from './Node_Enums';
-import {EVENTS} from './Events';
-import Library_Variables from './Library_Variables';
+import Cat_Events from './Cat_Events';
+import Cat_Variables from './Cat_Variables';
 
 export const NODE_LIST = [
-    ...EVENTS,
+    ...Cat_Events,
     {
         id: 'trigger_2io',
         category: 'testing',
@@ -367,7 +367,7 @@ export const NODE_LIST = [
             },
         },
     },
-    ...Library_Variables,
+    ...Cat_Variables,
 ];
 
 export const NODE_MAP = {};
