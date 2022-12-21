@@ -20,6 +20,12 @@ export const EDITOR_ID = createEnum([
     'LOGIC',
 ]);
 
+export const NAV_TOOL_TYPE = createEnum({
+    PAN,
+    ZOOM,
+    CENTER,
+});
+
 export const ART_TOOL_SIZE = createEnum([
     'SMALL',
     'MEDIUM',

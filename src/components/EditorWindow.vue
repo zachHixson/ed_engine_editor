@@ -1,14 +1,83 @@
+<script setup lang="ts">
+import RoomEditor from './editor_room/RoomMain.vue';
+// import ArtEditor from './editor_art/ArtMain';
+// import ObjectEditor from './editor_object/ObjectMain';
+// import LogicEditor from './editor_logic/LogicMain';
+
+import { ref, computed, watch, defineEmits } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useMainStore } from '@/stores/Main';
+import { useAssetBrowserStore } from '@/stores/AssetBrowser';
+import Shared from '@/Shared';
+
+export interface DialogBoxProps {
+    textInfo: {
+        textId: string,
+        vars: {[keys: string]: any}
+    },
+    callback: (...args: any)=>void,
+}
+
+const { t } = useI18n();
+const mainStore = useMainStore();
+const assetBrowserStore = useAssetBrowserStore();
+
+t('test', {var1: 'string'});
+
+const emit = defineEmits(['asset-changed']);
+
+const selectedEditor = computed(()=>mainStore.getSelectedEditor);
+const currentEditor = computed(()=>{
+    switch(selectedEditor){
+        case Shared.EDITOR_ID.ROOM:
+            return RoomEditor;
+        case Shared.EDITOR_ID.ART:
+            //return ArtEditor;
+        case Shared.EDITOR_ID.OBJECT:
+            //return ObjectEditor;
+        case Shared.EDITOR_ID.LOGIC:
+            //return LogicEditor;
+        default:
+            return RoomEditor;
+    }
+});
+const selectedAsset = computed(()=>assetBrowserStore.getSelectedAsset);
+const selectedRoom = computed(()=>assetBrowserStore.getSelectedRoom);
+const dialogConfirmText = computed((dialogTextId, dialogTextVars)=>t(dialogTextId, dialogTextVars));
+
+watch(selectedEditor, ()=>dialogClose(false));
+watch(selectedAsset, ()=>dialogClose(true));
+
+const dialogConfirmOpen = ref<boolean>(false);
+const dialogTextId = ref<string>('');
+const dialogTextVars = ref<{[key: string]: any}>();
+let dialogCallback: (positive: boolean)=>void = ()=>{};
+
+function dialogConfirm({textInfo, callback}: DialogBoxProps): void {
+    dialogConfirmOpen.value = true;
+    dialogTextId.value = textInfo.textId;
+    dialogTextVars.value = textInfo.vars;
+    dialogCallback = callback;
+}
+
+function dialogClose(positive: boolean): void {
+    dialogCallback(positive);
+    dialogCallback = ()=>{};
+    dialogConfirmOpen.value = false;
+}
+</script>
+
 <template>
     <div class="editorWindow">
         <component ref="editor"
         :is="currentEditor"
         :selectedAsset="selectedAsset"
         :selectedRoom="selectedRoom"
-        @asset-changed="$emit('asset-changed', $event)"
+        @asset-changed="emit('asset-changed', $event)"
         @dialog-confirm="dialogConfirm" />
         <div v-if="dialogConfirmOpen" class="dialog-confirm-bg">
             <div class="dialog-confirm-box">
-                <div v-html="$t(dialogTextId, dialogTextVars)"></div>
+                <div v-html="dialogConfirmText"></div>
                 <div class="dialog-buttons">
                     <button @click="dialogClose(false)">Cancel</button>
                     <button @click="dialogClose(true)">OK</button>
@@ -17,74 +86,6 @@
         </div>
     </div>
 </template>
-
-<script>
-import RoomEditor from './editor_room/RoomMain';
-import ArtEditor from './editor_art/ArtMain';
-import ObjectEditor from './editor_object/ObjectMain';
-import LogicEditor from './editor_logic/LogicMain';
-
-export default {
-    name: 'EditorWindow',
-    components: {
-        RoomEditor
-    },
-    watch: {
-        selectedTab(){
-            this.dialogClose(false);
-        },
-        selectedAsset(){
-            this.dialogClose(false);
-        },
-    },
-    computed: {
-        currentEditor(){
-            switch(this.selectedTab){
-                case Shared.EDITOR_ID.ROOM:
-                    return RoomEditor;
-                case Shared.EDITOR_ID.ART:
-                    return ArtEditor;
-                case Shared.EDITOR_ID.OBJECT:
-                    return ObjectEditor;
-                case Shared.EDITOR_ID.LOGIC:
-                    return LogicEditor;
-                default:
-                    return RoomEditor;
-            }
-        },
-        selectedTab(){
-            return this.$store.getters['selectedTab'];
-        },
-        selectedAsset(){
-            return this.$store.getters['AssetBrowser/getSelectedAsset'];
-        },
-        selectedRoom(){
-            return this.$store.getters['AssetBrowser/getSelectedRoom'];
-        },
-    },
-    data() {
-        return {
-            dialogConfirmOpen: false,
-            dialogTextId: null,
-            dialogTextVars: null,
-            dialogCallback: ()=>{},
-        }
-    },
-    methods: {
-        dialogConfirm({textInfo, callback}){
-            this.dialogConfirmOpen = true;
-            this.dialogTextId = textInfo.textId;
-            this.dialogTextVars = textInfo.vars;
-            this.dialogCallback = callback;
-        },
-        dialogClose(positive){
-            this.dialogCallback(positive);
-            this.dialogCallback = ()=>{};
-            this.dialogConfirmOpen = false;
-        },
-    }
-}
-</script>
 
 <style scoped>
 .editorWindow{

@@ -1,6 +1,6 @@
 import { EventListenerMixin } from "../common/Event_Listener";
 
-export default class Node extends EventListenerMixin() {
+export default class Node extends EventListenerMixin(class {}) {
     constructor(template, id, pos = new Victor(), parentScript, graphId, editorAPI){
         super(...arguments);
         this._template = template;

@@ -1,3 +1,23 @@
+<script setup lang="ts">
+import { ref, defineProps, defineEmits } from 'vue';
+
+const props = defineProps<{
+    icon: string,
+    altText: string,
+    isActive: boolean,
+}>();
+
+const emit = defineEmits(['click']);
+
+const iconLoaded = ref<boolean>(true);
+
+function onClick(){
+    if (props.isActive){
+        emit('click');
+    }
+}
+</script>
+
 <template>
     <div class="viewportControl" @click="onClick" v-tooltip="altText">
         <img
@@ -5,32 +25,13 @@
             class="icon"
             :class="{iconDisabled : !isActive}"
             ref="iconImg"
-            :src="require(`@/${icon}.svg`)"
+            :src="props.icon"
             @error="iconLoaded = false" />
         <div v-show="!iconLoaded" class="altText" ref="altText">
             {{altText}}
         </div>
     </div>
 </template>
-
-<script>
-export default {
-    name: 'UndoButton',
-    props: ['icon', 'altText', 'isActive'],
-    data() {
-        return {
-            iconLoaded: true
-        }
-    },
-    methods: {
-        onClick(){
-            if (this.isActive){
-                this.$emit('click');
-            }
-        }
-    }
-}
-</script>
 
 <style scoped>
 @import './viewportButtons.css';

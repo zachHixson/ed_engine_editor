@@ -1,33 +1,33 @@
+<script setup lang="ts">
+import { ref, defineProps, defineEmits, computed } from 'vue';
+
+const props = defineProps<{
+    icon: string,
+    tool: any,
+    name: string,
+    curSelection?: any,
+    toggled?: boolean,
+}>();
+
+const emit = defineEmits(['tool-clicked']);
+
+const iconLoaded = ref(true);
+
+const isSelected = computed(()=>(props.curSelection == props.tool) || (props.toggled));
+
+function click(event: MouseEvent): void {
+    emit('tool-clicked', props.tool);
+}
+</script>
+
 <template>
     <div class="tool" :class="{toolSelected : isSelected}" @click="click" v-tooltip="name">
-        <img v-show="iconLoaded" class="icon" ref="iconImg" :src="require(`@/${icon}.svg`)" @error="iconLoaded = false"/>
+        <img v-show="iconLoaded" class="icon" ref="iconImg" :src="props.icon" @error="iconLoaded = false"/>
         <div v-show="!iconLoaded" class="altText" ref="altText">
             {{name}}
         </div>
     </div>
 </template>
-
-<script>
-export default {
-    name: 'Tool',
-    props: ['icon', 'tool', 'name', 'curSelection', 'toggled'],
-    data() {
-        return {
-            iconLoaded: true
-        }
-    },
-    computed: {
-        isSelected(){
-            return (this.curSelection == this.tool) || (this.toggled);
-        }
-    },
-    methods: {
-        click(event){
-            this.$emit('toolClicked', this.tool);
-        }
-    }
-}
-</script>
 
 <style scoped>
 .tool{

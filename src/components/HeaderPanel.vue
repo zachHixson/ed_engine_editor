@@ -1,3 +1,131 @@
+<script setup lang="ts">
+import { ref, nextTick, defineEmits, computed, onMounted } from 'vue';
+import { useMainStore, PLAY_STATE } from '@/stores/Main';
+import { useI18n } from 'vue-i18n';
+
+const mainStore = useMainStore();
+const { t } = useI18n();
+
+let enumID = 0;
+
+const fileVisible = ref<boolean>(false);
+const isRenaming = ref<boolean>(false);
+const displayEditBox = ref<HTMLElement>();
+const projNameEdit = ref<HTMLInputElement>();
+const fileOpen = ref<HTMLElement>();
+const choices = [
+    {
+        id: enumID++,
+        text: t('file_menu.new'),
+        method: newProject
+    },
+    {
+        id: enumID++,
+        text: t('file_menu.open'),
+        method: open
+    },
+    {
+        id: enumID++,
+        text: t('file_menu.save'),
+        method: save
+    },
+    {
+        id: enumID++,
+        text: t('file_menu.export'),
+        method: packageGame
+    },
+    {
+        id: enumID++,
+        text: t('file_menu.prefs'),
+        method: () => {console.log("Preferences")}
+    },
+    {
+        id: enumID++,
+        text: t('file_menu.about'),
+        method: () => {console.log("About")}
+    }
+];
+
+const emit = defineEmits(['new-project', 'save-project', 'open-project', 'package-game']);
+
+const projName = computed({
+    get(): string {
+        return mainStore.getProjectName;
+    },
+    set(newName: string): void {
+        mainStore.setProjectName(newName);
+    }
+});
+
+const playState = computed({
+    get(): PLAY_STATE {
+        return mainStore.getPlayState;
+    },
+    set(state: PLAY_STATE): void {
+        mainStore.setPlayState(state);
+    }
+})
+
+onMounted(()=>{
+    document.addEventListener('keypress', (event) => {
+        if (isRenaming.value && event.key == 'Enter'){
+            isRenaming.value = false;
+        }
+    });
+
+    displayEditBox.value?.addEventListener('dblclick', rename);
+});
+
+function closeFileMenu(): void {
+    fileVisible.value = false;
+}
+
+function rename(): void {
+    isRenaming.value = true;
+    nextTick(()=>{
+        projNameEdit.value?.focus();
+        projNameEdit.value?.select();
+    });
+}
+
+function stopRenaming(): void {
+    isRenaming.value = false;
+}
+
+function newProject(): void {
+    emit('new-project');
+}
+
+function save(): void {
+    emit('save-project');
+}
+
+function open(): void {
+    fileOpen.value?.click();
+}
+
+const loadProjectFile = (event: Event): void => {
+    let input = event.target as HTMLInputElement;
+
+    if (!input.files){
+        return;
+    }
+
+    if ('files' in input && input.files.length > 0){
+        let reader = new FileReader();
+        reader.onload = () => {
+            emit('open-project', reader.result);
+        }
+        reader.readAsText(input.files[0]);
+    }
+}
+
+function packageGame(): void {
+    emit('package-game');
+}
+
+</script>
+
 <template>
     <div class="headerPanel">
         <button class="fileMenu" @click="(event)=>{event.stopPropagation(); fileVisible = !fileVisible}"
@@ -21,131 +149,12 @@
         </div>
         <div class="controls">
             <button class="iconBtn" name="packageBtn" @click="packageGame" v-tooltip="$t('editor_main.package')"><img class="icon" src="@/assets/package.svg"/></button>
-            <button class="iconBtn" name="debugBtn" @click="playState = PLAY_STATES.DEBUGGING" v-tooltip="$t('editor_main.debug')"><img class="icon" src="@/assets/debug.svg"/></button>
-            <button class="iconBtn" name="runBtn" @click="playState = PLAY_STATES.PLAYING" v-tooltip="$t('editor_main.run')"><img class="icon" src="@/assets/play.svg"/></button>
+            <button class="iconBtn" name="debugBtn" @click="playState = PLAY_STATE.DEBUGGING" v-tooltip="$t('editor_main.debug')"><img class="icon" src="@/assets/debug.svg"/></button>
+            <button class="iconBtn" name="runBtn" @click="playState = PLAY_STATE.PLAYING" v-tooltip="$t('editor_main.run')"><img class="icon" src="@/assets/play.svg"/></button>
         </div>
         <input type="file" ref="fileOpen" style="display: none" accept=".html, .edproj" @change="loadProjectFile"/>
     </div>
 </template>
-
-<script>
-import Tooltip from '@/components/common/Tooltip.vue';
-
-let enumID = 0;
-
-export default {
-    name: 'HeaderPanel',
-    components: {
-        Tooltip
-    },
-    data() {
-        return {
-            fileVisible: false,
-            isRenaming: false,
-            choices: [
-                {
-                    id: enumID++,
-                    text: this.$t('file_menu.new'),
-                    method: this.new
-                },
-                {
-                    id: enumID++,
-                    text: this.$t('file_menu.open'),
-                    method: this.open
-                },
-                {
-                    id: enumID++,
-                    text: this.$t('file_menu.save'),
-                    method: this.save
-                },
-                {
-                    id: enumID++,
-                    text: this.$t('file_menu.export'),
-                    method: this.packageGame
-                },
-                {
-                    id: enumID++,
-                    text: this.$t('file_menu.prefs'),
-                    method: () => {console.log("Preferences")}
-                },
-                {
-                    id: enumID++,
-                    text: this.$t('file_menu.about'),
-                    method: () => {console.log("About")}
-                }
-            ]
-        }
-    },
-    computed: {
-        projName: {
-            get: function(){
-                return this.$store.getters['getProjectName'];
-            },
-            set: function(newName){
-                this.$store.dispatch('setProjectName', newName);
-            }
-        },
-        PLAY_STATES(){
-            return this.$store.getters['getPlayStates'];
-        },
-        playState: {
-            get: function(){
-                return this.$store.getters['getPlayState'];
-            },
-            set: function(newState){
-                this.$store.dispatch('setPlayState', newState);
-            },
-        },
-    },
-    mounted() {
-        document.addEventListener('keypress', (event) => {
-            if (this.isRenaming && event.key == 'Enter'){
-                this.isRenaming = false;
-            }
-        });
-
-        this.$refs.displayEditBox.addEventListener('dblclick', this.rename);
-    },
-    methods: {
-        closeFileMenu(){
-            this.fileVisible = false;
-        },
-        rename(){
-            this.isRenaming = true;
-            this.$nextTick(()=>{
-                this.$refs.projNameEdit.focus();
-                this.$refs.projNameEdit.select();
-            });
-        },
-        stopRenaming(){
-            this.isRenaming = false;
-        },
-        new(){
-            this.$emit('new-project');
-        },
-        save(){
-            this.$emit('save-project');
-        },
-        open(event){
-            this.$refs.fileOpen.click();
-        },
-        loadProjectFile(){
-            let input = event.target;
-
-            if ('files' in input && input.files.length > 0){
-                let reader = new FileReader();
-                reader.onload = () => {
-                    this.$emit('open-project', reader.result);
-                }
-                reader.readAsText(input.files[0]);
-            }
-        },
-        packageGame(){
-            this.$emit('package-game');
-        }
-    }
-}
-</script>
 
 <style scoped>
 .headerPanel{

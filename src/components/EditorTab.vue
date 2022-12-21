@@ -1,34 +1,33 @@
+<script setup lang="ts">
+import { ref, defineProps, computed } from 'vue';
+import { useMainStore } from '@/stores/Main';
+import type Shared from '@/Shared';
+
+const mainStore = useMainStore();
+
+const props = defineProps<{
+    tabText: string;
+    logoPath: string;
+    editorID: typeof Shared.EDITOR_ID;
+}>();
+
+const isSelected = computed<boolean>(()=>mainStore.getSelectedEditor == props.editorID);
+
+function tabClick(): void {
+    mainStore.setSelectedEditor(props.editorID);
+}
+</script>
+
 <template>
     <div class="editorTab" @click="tabClick" :class="{tabSelected : isSelected}">
         <div class="tabEl logoBox">
-            <img class="tabImg" :src="require(`@/${logoPath}.svg`)"/>
+            <img class="tabImg" :src="logoPath"/>
         </div>
         <div class="tabEl name">
             {{tabText}}
         </div>
     </div>
 </template>
-
-<script>
-import {mapActions, mapGetters} from 'vuex';
-
-export default {
-    name: 'EditorTab',
-    props: ['tabText', 'logoPath', 'editorID'],
-    methods: {
-        ...mapActions(['switchTab']),
-        tabClick(e) {
-            this.switchTab(this.editorID);
-        }
-    },
-    computed: {
-        ...mapGetters(['selectedTab']),
-        isSelected(){
-            return (this.selectedTab == this.editorID);
-        }
-    }
-} 
-</script>
 
 <style scoped>
 *{

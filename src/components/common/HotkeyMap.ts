@@ -1,20 +1,26 @@
-export default class HotkeyMap{
-    constructor(){
-        this.keymap = new Map();
-        this.events = [];
-        this.active = [];
-        this.enabled = false;
-    }
+interface iEvent {
+    keys: string[],
+    callback: (...args: any)=>void,
+    args: any[],
+    releaseCallback: (...args: any)=>void,
+    releaseArgs: any[],
+}
 
-    mouseEnter(){
+export default class HotkeyMap{
+    keymap: Map<string, boolean> = new Map<string, boolean>();
+    events: iEvent[] = [];
+    active: iEvent[] = [];
+    enabled: boolean = false;
+
+    mouseEnter(): void {
         this.enabled = true;
     }
 
-    mouseLeave(){
+    mouseLeave(): void {
         this.enabled = false;
     }
 
-    mouseDown(event){
+    mouseDown(event: MouseEvent): void {
         switch (event.which){
             case 1:
                 this.keymap.set('lmb', true);
@@ -26,10 +32,10 @@ export default class HotkeyMap{
                 this.keymap.set('rmb', true);
         }
 
-        this.detectKeyCombo(event);
+        this.detectKeyCombo(event as MouseEvent & KeyboardEvent);
     }
 
-    mouseUp(event){
+    mouseUp(event: MouseEvent): void {
         switch (event.which){
             case 1:
                 this.keymap.set('lmb', false);
@@ -42,30 +48,33 @@ export default class HotkeyMap{
         }
     }
 
-    keyDown(event){
+    keyDown(event: KeyboardEvent): void {
         if (this.enabled){
             this.keymap.set(event.key.toLowerCase(), true);
-            this.detectKeyCombo(event);
+            this.detectKeyCombo(event as MouseEvent & KeyboardEvent);
         }
     }
 
-    keyUp(event){
+    keyUp(event: KeyboardEvent): void {
         this.keymap.set(event.key.toLowerCase(), false);
-        this.releaseEvents(event);
+        this.releaseEvents(event as MouseEvent & KeyboardEvent);
     }
 
-    detectKeyCombo(event){
+    detectKeyCombo(event: MouseEvent & KeyboardEvent): void {
         for (let i = 0; i < this.events.length; i++){
-            let curEvent = this.events[i];
+            const curEvent = this.events[i];
+            const controlDown = this.keymap.get('control') ? 1 : 0;
+            const altDown = this.keymap.get('alt') ? 1 : 0;
+            const shiftDown = this.keymap.get('shift') ? 1 : 0;
+            const modifiersDown = controlDown + altDown + shiftDown;
             let keysDown = 0;
             let modifiersRequired = 0;
-            let modifiersDown = !!this.keymap.get('control') + !!this.keymap.get('alt') + !!this.keymap.get('shift');
  
             for (let key = 0; key < curEvent.keys.length; key++){
                 modifiersRequired += (curEvent.keys[key] == 'control') ? 1 : 0;
                 modifiersRequired += (curEvent.keys[key] == 'alt') ? 1 : 0;
                 modifiersRequired += (curEvent.keys[key] == 'shift') ? 1 : 0;
-                keysDown += !!this.keymap.get(curEvent.keys[key]);
+                keysDown += !!this.keymap.get(curEvent.keys[key]) ? 1 : 0;
             }
 
             if (keysDown == curEvent.keys.length && modifiersRequired == modifiersDown){
@@ -76,7 +85,7 @@ export default class HotkeyMap{
         }
     }
 
-    releaseEvents(event){
+    releaseEvents(event: MouseEvent & KeyboardEvent): void {
         for (let i = 0; i < this.active.length; i++){
             let curEvent = this.active[i];
 
@@ -90,7 +99,13 @@ export default class HotkeyMap{
         }
     }
 
-    bindKey(keys, callback, args = [], releaseCallback = ()=>{}, releaseArgs = []){
+    bindKey(
+        keys: string[],
+        callback: (...args: any)=>void,
+        args: any[] = [],
+        releaseCallback: (...args: any)=>void = ()=>{},
+        releaseArgs: any[] = []
+    ): void {
         this.events.push({
             keys,
             callback,
@@ -100,15 +115,15 @@ export default class HotkeyMap{
         });
     }
 
-    checkKeys(keyArr, combo = false){
-        let keysActive = false;
+    checkKeys(keyArr: string[], combo: boolean = false): boolean {
+        let keysActive = 0;
 
         for (let i = 0; i < keyArr.length; i++){
             if (combo){
-                keysActive &= !!this.keymap.get(keyArr[i]);
+                keysActive &= !!this.keymap.get(keyArr[i]) ? 1 : 0;
             }
             else{
-                keysActive |= !!this.keymap.get(keyArr[i]);
+                keysActive |= !!this.keymap.get(keyArr[i]) ? 1 : 0;
             }
         }
 

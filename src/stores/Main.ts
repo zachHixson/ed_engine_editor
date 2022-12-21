@@ -1,16 +1,15 @@
 import { defineStore } from 'pinia';
 import {version as EDITOR_VERSION} from '@/../package.json';
-import {useI18n} from 'vue-i18n';
+import i18n from '@/i18n';
 import Node_API from '@/components/editor_logic/Node_API.ts';
 import type iLoadObj from './iLoadObj';
 import { useGameDataStore } from './GameData';
 import { useAssetBrowserStore } from './AssetBrowser';
+import Shared from '@/Shared';
 
-const {t} = useI18n();
-const gameDataStore = useGameDataStore();
-const assetBrowserStore = useAssetBrowserStore();
+const t = i18n.global.t;
 
-enum PLAY_STATE {
+export enum PLAY_STATE {
     PLAYING,
     DEBUGGING,
     NOT_PLAYING,
@@ -21,7 +20,7 @@ interface iState {
     inputActive: boolean,
     playState: PLAY_STATE,
     nodeAPI: any,
-    selectedEditor: Shared.EDITOR_ID,
+    selectedEditor: typeof Shared.EDITOR_ID,
 }
 
 export const useMainStore = defineStore({
@@ -36,8 +35,9 @@ export const useMainStore = defineStore({
     }),
 
     getters: {
-        getProjectName: state => state.projectName,
-        getSaveData: state => {
+        getProjectName: (state): string => state.projectName,
+        getSaveData: (state): any => {
+            const gameDataStore = useGameDataStore();
             const saveObj = {
                 projectName: state.projectName,
                 editor_version: EDITOR_VERSION,
@@ -51,11 +51,10 @@ export const useMainStore = defineStore({
 
             return JSON.stringify(saveObj);
         },
-        getSelectedEditor: state => state.selectedEditor,
-        getInputActive: state => state.inputActive,
-        getPlayStates: ()=>{return PLAY_STATE},
-        getPlayState: state => state.playState,
-        getNodeAPI: state => state.nodeAPI,
+        getSelectedEditor: (state): object => state.selectedEditor,
+        getInputActive: (state): boolean => state.inputActive,
+        getPlayState: (state): PLAY_STATE => state.playState,
+        getNodeAPI: (state): object => state.nodeAPI,
     },
 
     actions: {
@@ -63,6 +62,9 @@ export const useMainStore = defineStore({
             this.projectName = newName;
         },
         newProject(){
+            const assetBrowserStore = useAssetBrowserStore();
+            const gameDataStore = useGameDataStore();
+
             this.projectName = t('editor_main.default_name');
             gameDataStore.setSpriteList([]);
             gameDataStore.setObjectList([]);
@@ -72,8 +74,9 @@ export const useMainStore = defineStore({
             assetBrowserStore.selectRoom(gameDataStore.getAllRooms[0]);
         },
         loadSaveData(projString: string){
+            const assetBrowserStore = useAssetBrowserStore();
+            const gameDataStore = useGameDataStore();
             const loadObj: iLoadObj = JSON.parse(projString) || {};
-            const gameData = {} //gameData.state
 
             this.projectName = loadObj.projectName;
             Shared.ID_Generator.setID(loadObj.newestID);
@@ -81,14 +84,17 @@ export const useMainStore = defineStore({
             
             if (loadObj.selectedRoomId != undefined){
                 const room = gameDataStore.getAllRooms.find(r => r.id == loadObj.selectedRoomId)
-                //assetBrowser.selectRoom(room)
+                assetBrowserStore.selectRoom(room)
             }
 
             this.nodeAPI.forEachNode(node => node.afterGameDataLoaded());
         },
-        setSelectedEditor(newEditor: Shared.EDITOR_ID){ this.selectedEditor = newEditor },
+        setSelectedEditor(newEditor: typeof Shared.EDITOR_ID){ this.selectedEditor = newEditor },
         setInputActive(newState: boolean){
             this.inputActive = newState;
+        },
+        setPlayState(newState: PLAY_STATE): void {
+            this.playState = newState;
         }
     },
 })

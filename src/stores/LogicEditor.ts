@@ -18,11 +18,10 @@ export const useLogicEditorStore = defineStore({
     }),
     
     getters: {
-        test: state => state,
-        getSelectedNavTool: state => state.selectedNavTool,
-        isLibraryPanelOpen: state => state.libraryPanelOpen,
-        isGraphPanelOpen: state => state.graphPanelOpen,
-        getGlobalVariableMap: state => state.globalVariableMap,
+        getSelectedNavTool: (state): Shared.NAV_TOOL_TYPE => state.selectedNavTool,
+        isLibraryPanelOpen: (state): boolean => state.libraryPanelOpen,
+        isGraphPanelOpen: (state): boolean => state.graphPanelOpen,
+        getGlobalVariableMap: (state): Map<string, Shared.SOCKET_TYPE> => state.globalVariableMap,
     },
 
     actions: {

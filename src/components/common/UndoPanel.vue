@@ -1,52 +1,52 @@
+<script setup lang="ts">
+import UndoButton from '@/components/common/UndoButton.vue';
+import HotkeyMap from '@/components/common/HotkeyMap';
+import undoButtonSVG from '@/assets/undo.svg';
+import redoButtonSVG from '@/asset/redo.svg';
+
+import {
+    computed,
+    defineProps,
+    defineEmits,
+    onMounted,
+    onBeforeUnmount
+} from 'vue';
+
+const props = defineProps<{
+    undoLength: number,
+    redoLength: number,
+}>();
+
+const emit = defineEmits(['undo', 'redo']);
+
+const hotkeyMap = new HotkeyMap();
+const keyDown = hotkeyMap.keyDown.bind(hotkeyMap);
+const keyUp = hotkeyMap.keyUp.bind(hotkeyMap);
+
+const undoActive = computed(()=>props.undoLength > 0);
+const redoActive = computed(()=>props.redoLength > 0);
+
+onMounted(()=>{
+    document.addEventListener('keydown', keyDown as EventListener);
+    document.addEventListener('keyup', keyUp as EventListener);
+
+    hotkeyMap.enabled = true;
+    hotkeyMap.bindKey(['control', 'z'], ()=>emit('undo'));
+    hotkeyMap.bindKey(['control', 'shift', 'z'], ()=>emit('undo'));
+});
+
+onBeforeUnmount(()=>{
+    document.removeEventListener('keydown', keyDown as EventListener);
+    document.removeEventListener('keyup', keyUp as EventListener);
+});
+</script>
+
 <template>
     <div class="undoPanel">
-        <UndoButton icon="assets/undo" :altText="$t('undo.undo')" :isActive="undoActive" @click="$emit('undo')"/>
-        <UndoButton icon="assets/redo" :altText="$t('undo.redo')" :isActive="redoActive" @click="$emit('redo')"/>
+        <UndoButton :icon="undoButtonSVG" :altText="$t('undo.undo')" :isActive="undoActive" @click="$emit('undo')"/>
+        <UndoButton :icon="redoButtonSVG" :altText="$t('undo.redo')" :isActive="redoActive" @click="$emit('redo')"/>
     </div>
 </template>
-
-<script>
-import UndoButton from '@/components/common/UndoButton';
-import HotkeyMap from '@/components/common/HotkeyMap'
-
-export default {
-    name: 'UndoPanel',
-    props: ['undoLength', 'redoLength'],
-    components: {
-        UndoButton
-    },
-    data(){
-        return {
-            hotkeyMap: new HotkeyMap(),
-            keyDown: null,
-            keyUp: null
-        }
-    },
-    computed:{
-        undoActive(){
-            return (this.undoLength > 0);
-        },
-        redoActive(){
-            return (this.redoLength > 0);
-        }
-    },
-    mounted(){
-        this.keyDown = this.hotkeyMap.keyDown.bind(this.hotkeyMap);
-        this.keyUp = this.hotkeyMap.keyUp.bind(this.hotkeyMap);
-
-        document.addEventListener('keydown', this.keyDown);
-        document.addEventListener('keyup', this.keyUp);
-
-        this.hotkeyMap.enabled = true;
-        this.hotkeyMap.bindKey(['control', 'z'], this.$emit.bind(this), ['undo']);
-        this.hotkeyMap.bindKey(['control', 'shift', 'z'], this.$emit.bind(this), ['redo']);
-    },
-    beforeDestroy(){
-        document.removeEventListener('keydown', this.keyDown);
-        document.removeEventListener('keyup', this.keyUp);
-    }
-}
-</script>
 
 <style scoped>
     .undoPanel{

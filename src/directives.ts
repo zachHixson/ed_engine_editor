@@ -1,33 +1,39 @@
-import Vue from 'vue';
-import store from './store'
+import type { DirectiveBinding, VNode } from 'vue';
+import { useMainStore } from './stores/Main';
 import { getTooltipComponent, showTooltip, hideTooltip } from './components/common/Tooltip.vue';
 
+type ExpandedEl = HTMLElement & {[key: string | number | symbol]: any};
+
 //Run code when clicking outside of an element
-Vue.directive('click-outside', {
-    bind: function (el, binding, vnode) {
-        el.checkOutside = (event) => {
-            if (!(el == event.target || el.contains(event.target))) {
-                vnode.context[binding.expression](event);
+export const vClickOutside = {
+    beforeMount: function (el: ExpandedEl, binding: DirectiveBinding, vnode: VNode) {
+        el.checkOutside = (event: Event) => {
+            if (!(el == event.target || el.contains(event.target as HTMLElement))) {
+                const instance = binding.instance as any;
+                console.log("clickOutside", instance);
+                //instance && binding.instance[binding.value](event);
             }
         };
 
         document.body.addEventListener('click', el.checkOutside);
     },
-    unbind: function (el) {
+    unmounted: function (el: ExpandedEl) {
         document.body.removeEventListener('click', el.checkOutside)
     }
-});
+};
 
 //Allows hotkey code to detect when the user is typing in an input
-Vue.directive('input-active', {
-    bind: function(el){
+export const vInputActive = {
+    beforeMount: function(el: ExpandedEl){
+        const mainStore = useMainStore();
+
         el.onFocus = ()=>{
-            store.dispatch('setInputActive', true);
+            mainStore.setInputActive(true);
         };
         el.onBlur = ()=>{
-            store.dispatch('setInputActive', false);
+            mainStore.setInputActive(false);
         };
-        el.stopProp = (event)=>{event.stopPropagation()};
+        el.stopProp = (event: Event)=>{event.stopPropagation()};
 
         el.addEventListener('focus', el.onFocus);
         el.addEventListener('blur', el.onBlur);
@@ -36,18 +42,18 @@ Vue.directive('input-active', {
         el.addEventListener('mousemove', el.stopProp);
     },
 
-    unbind: function(el){
+    unmounted: function(el: ExpandedEl){
         el.removeEventListener('focus', el.onFocus);
         el.removeEventListener('blur', el.onBlur);
         el.removeEventListener('mousedown', el.stopProp);
         el.removeEventListener('click', el.stopProp);
         el.removeEventListener('mousemove', el.stopProp);
     },
-});
+};
 
 //Popup global tooltip above components
-Vue.directive('tooltip', {
-    inserted: function(el, binding){
+export const vTooltip = {
+    beforeMount: function(el: ExpandedEl, binding: DirectiveBinding){
         const ttComponent = getTooltipComponent();
 
         el.mouseOverHandler = function(){
@@ -70,8 +76,8 @@ Vue.directive('tooltip', {
         el.addEventListener('mouseout', el.mouseOutHandler);
     },
 
-    unbind: function(el){
+    unmounted: function(el: ExpandedEl){
         el.removeEventListener('mouseover', el.mouseOverHandler);
         el.removeEventListener('mouseout', el.mouseOutHandler);
     }
-})
+};

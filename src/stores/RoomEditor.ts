@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia';
+import Shared from '@/Shared';
 
 interface iState {
-    selectedTool: Shared.ROOM_TOOL_TYPE | null,
-    selectedNavTool: Shared.NAV_TOOL_TYPE | null,
+    selectedTool: typeof Shared.ROOM_TOOL_TYPE | null,
+    selectedNavTool: typeof Shared.NAV_TOOL_TYPE | null,
     propertiesOpen: boolean,
     viewGrid: boolean,
 }
@@ -25,8 +26,8 @@ export const useRoomEditorStore = defineStore({
     },
 
     actions: {
-        setSelectedTool(newTool: Shared.ROOM_TOOL_TYPE){ this.selectedTool = newTool },
-        setSelectedNavTool(newTool: Shared.NAV_TOOL_TYPE){ this.selectedNavTool = newTool },
+        setSelectedTool(newTool: typeof Shared.ROOM_TOOL_TYPE){ this.selectedTool = newTool },
+        setSelectedNavTool(newTool: typeof Shared.NAV_TOOL_TYPE){ this.selectedNavTool = newTool },
         setPropPanelState(newState: boolean){ this.propertiesOpen = newState },
         setGridState(newState: boolean){ this.viewGrid = newState },
     }

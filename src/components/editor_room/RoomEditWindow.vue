@@ -1,3 +1,208 @@
+<script lang="ts">
+export interface imEvent{
+    type: typeof Shared.MOUSE_EVENT,
+    canvasPos: typeof Victor,
+    cell: typeof Victor,
+    worldCell: typeof Victor,
+}
+</script>
+
+<script setup lang="ts">
+import NavControlPanel from '@/components/common/NavControlPanel.vue';
+import UndoPanel from '@/components/common/UndoPanel.vue';
+import Room_Edit_Renderer from './Room_Edit_Renderer';
+
+import {
+    ref,
+    computed,
+    watch,
+    defineProps,
+    defineEmits,
+    onMounted,
+    onBeforeUnmount
+} from 'vue';
+import { useRoomEditorStore } from '@/stores/RoomEditor';
+import { useGameDataStore } from '@/stores/GameData';
+import Shared, { Victor } from '@/Shared';
+import { RoomMainEventBus } from './RoomMain.vue';
+import { Event_Bus } from '@/components/common/Event_Listener';
+
+const roomEditorStore = useRoomEditorStore();
+const gameDataStore = useGameDataStore();
+
+const props = defineProps<{
+    selectedRoom: typeof Shared.Room,
+    editorSelection: typeof Shared.Instance_Base,
+    undoLength: number,
+    redoLength: number
+}>();
+
+const emit = defineEmits([
+    'mouse-event',
+    'mouse-down',
+    'mouse-up',
+    'mouse-move',
+    'mouse-enter',
+    'mouse-leave',
+    'mouse-wheel',
+    'nav-set-container-dimentions'
+]);
+
+//define data
+const RoomEditWindowEventBus = new Event_Bus();
+const devicePixelRatio = window.devicePixelRatio;
+let renderer: Room_Edit_Renderer;
+let contentsBounds = ref<number[]>([0, 0, 0, 0]);
+let loadedImages = 0;
+let unitWidth = 1;
+let navHotkeyTool: typeof Shared.NAV_TOOL_TYPE | null = null;
+
+//template refs
+const canvasEl = ref<HTMLCanvasElement>();
+const editWindow = ref<HTMLElement>();
+const navControlPanel = ref();
+const canvasImages = ref();
+const camera_icon = ref();
+const noSprite_icon = ref();
+const exit_icon = ref();
+const end_icon = ref();
+
+const checkAssetDeletion = computed(()=>gameDataStore.getAllObjects.length + gameDataStore.getAllSprites.length);
+const gridEnabled = computed(()=>roomEditorStore.getGridState);
+
+watch(props.selectedRoom, ()=>roomChange());
+watch(props.editorSelection, ()=>setSelection());
+watch(gridEnabled, (newVal)=>renderer.setGridVisibility(newVal));
+watch(checkAssetDeletion, (newVal, oldVal)=> (newVal < oldVal) && renderer.drawObjects());
+
+onMounted(()=>{
+    renderer = new Room_Edit_Renderer(
+        canvasEl.value ?? document.createElement('canvas'),
+        props.selectedRoom.navState,
+        {
+        camera: camera_icon.value,
+        noSprite: noSprite_icon.value,
+        exit: exit_icon.value,
+        end: end_icon.value
+    });
+    contentsBounds.value = props.selectedRoom.getContentsBounds();
+    unitWidth = renderer.UNIT_WIDTH;
+    resize();
+
+    //bind events
+    window.addEventListener('resize', resize);
+    canvasEl.value?.addEventListener('wheel', mouseWheel);
+    canvasEl.value?.addEventListener('mouseenter', mouseEnter);
+    canvasEl.value?.addEventListener('mouseleave', mouseLeave);
+    RoomMainEventBus.addEventListener('resize', resize);
+    RoomMainEventBus.addEventListener('bgColorChanged', bgColorChanged);
+    RoomMainEventBus.addEventListener('instances-changed', instancesChanged);
+    RoomMainEventBus.addEventListener('camera-changed', cameraChanged);
+
+    if (props.selectedRoom){
+        roomChange();
+    }
+});
+
+onBeforeUnmount(()=>{
+    window.removeEventListener('resize', resize);
+    RoomMainEventBus.removeEventListener('resize', resize);
+    RoomMainEventBus.removeEventListener('bgColorChanged', bgColorChanged);
+    RoomMainEventBus.removeEventListener('instances-changed', instancesChanged);
+    RoomMainEventBus.removeEventListener('camera-changed', cameraChanged);
+});
+
+function mouseDown(event: MouseEvent): void {
+    RoomEditWindowEventBus.emit('mouse-down', event);
+    emitMouseEvent(event, Shared.MOUSE_EVENT.DOWN);
+}
+
+function mouseUp(event: MouseEvent): void {
+    RoomEditWindowEventBus.emit('mouse-up', event);
+    emitMouseEvent(event, Shared.MOUSE_EVENT.UP);
+}
+
+function mouseMove(event: MouseEvent): void {
+    RoomEditWindowEventBus.emit('mouse-move', event);
+    emitMouseEvent(event, Shared.MOUSE_EVENT.MOVE);
+    renderer.mouseMove(event);
+}
+
+function mouseWheel(event: MouseEvent): void {
+    RoomEditWindowEventBus.emit('mouse-wheel', event);
+}
+
+function mouseEnter(event: MouseEvent): void {
+    RoomEditWindowEventBus.emit('mouse-enter', event);
+    renderer.enableCursor = true;
+}
+
+function mouseLeave(event: MouseEvent): void {
+    RoomEditWindowEventBus.emit('mouse-leave');
+    emitMouseEvent(event, Shared.MOUSE_EVENT.LEAVE);
+    renderer.enableCursor = false;
+    renderer.mouseMove(event);
+}
+
+function roomChange(): void {
+   renderer.setRoomRef(props.selectedRoom);
+   contentsBounds.value = props.selectedRoom.getContentsBounds();
+}
+
+function resize(): void {
+    const wrapper = editWindow.value as HTMLElement;
+    const width = Math.max(wrapper.clientWidth, 1);
+    const height = Math.max(wrapper.clientHeight, 1);
+
+    Shared.resizeHDPICanvas(canvasEl, width, height);
+
+    RoomEditWindowEventBus.emit('nav-set-container-dimentions', {width: wrapper.clientWidth, height: wrapper.clientHeight});
+
+    renderer?.resize();
+}
+
+function emitMouseEvent(event: MouseEvent, type: typeof Shared.MOUSE_EVENT): void {
+    if (event.which == 1 && roomEditorStore.getSelectedNavTool == null && navHotkeyTool == null){
+        const canvasPos = new Victor(event.offsetX, event.offsetY);
+        const cell = renderer.getMouseCell();
+        const worldCell = renderer.getMouseWorldCell();
+        
+        emit('mouse-event', {type, canvasPos, cell, worldCell} satisfies imEvent);
+    }
+}
+
+function instancesChanged(): void {
+    contentsBounds = props.selectedRoom.getContentsBounds();
+    renderer.instancesChanged();
+}
+
+function setSelection(): void {
+    renderer.setSelection(props.editorSelection);
+}
+
+function cameraChanged(): void {
+    contentsBounds.value = props.selectedRoom.getContentsBounds();
+    renderer.instancesChanged();
+}
+
+function bgColorChanged(): void {
+    renderer.bgColorChanged();
+}
+
+function checkImageLoading(): void {
+    loadedImages++;
+    
+    if (loadedImages >= canvasImages.value.children.length){
+        renderer.fullRedraw();
+    }
+}
+
+function navToolSelected(tool: typeof Shared.NAV_TOOL_TYPE): void {
+    roomEditorStore.setSelectedTool(null);
+    roomEditorStore.setSelectedNavTool(tool);
+}
+</script>
+
 <template>
     <div ref="editWindow" class="editWindow">
         <UndoPanel
@@ -10,13 +215,15 @@
             ref="navControlPanel"
             class="navControlPanel"
             :navState="selectedRoom.navState"
-            :selectedNavTool="selectedNavTool"
+            :selectedNavTool="roomEditorStore.getSelectedNavTool"
             :contentsBounds="contentsBounds"
             :unitScale="unitWidth"
             :dpiScale="devicePixelRatio"
-            maxZoom="2"
-            @navChanged="renderer.navChange()"
-            @tool-selected="navToolSelected"/>
+            :maxZoom="2"
+            :parentEventBus="RoomEditWindowEventBus"
+            @nav-changed="renderer.navChange()"
+            @tool-selected="navToolSelected"
+            @hotkey-tool-selected="navHotkeyTool = $event"/>
         <canvas
             ref="canvas"
             class="canvas"
@@ -31,171 +238,6 @@
         </div>
     </div>
 </template>
-
-<script>
-import NavControlPanel from '@/components/common/NavControlPanel';
-import UndoPanel from '@/components/common/UndoPanel';
-import Room_Edit_Renderer from './Room_Edit_Renderer';
-
-export default {
-    name: 'RoomEditWindow',
-    props: ['selectedRoom', 'editorSelection', 'undoLength', 'redoLength'],
-    components: {
-        NavControlPanel,
-        UndoPanel
-    },
-    data() {
-        return {
-            canvasEl: null,
-            renderer: null,
-            loadedImages: 0,
-            contentsBounds: [0, 0, 0, 0],
-            unitWidth: 1
-        }
-    },
-    computed: {
-        gridEnabled(){
-            return this.$store.getters["RoomEditor/getGridState"];
-        },
-        checkAssetDeletion(){
-            //if either of the following values change, it will trigger an update for the watcher of this prop
-            return this.$store.getters['GameData/getAllObjects'].length + this.$store.getters['GameData/getAllSprites'].length;
-        },
-        selectedNavTool(){
-            return this.$store.getters['RoomEditor/getSelectedNavTool'];
-        },
-        devicePixelRatio(){
-            return devicePixelRatio;
-        }
-    },
-    watch: {
-        selectedRoom(){
-            this.roomChange();
-        },
-        editorSelection(){
-            this.setSelection();
-        },
-        gridEnabled(newVal){
-            this.renderer.setGridVisibility(newVal);
-        },
-        checkAssetDeletion(newVal, oldVal){
-            if (newVal < oldVal){
-                this.renderer.drawObjects();
-            }
-        }
-    },
-    mounted() {
-        //Setup Canvas and renderer
-        this.canvasEl = this.$refs.canvas;
-        this.renderer = new Room_Edit_Renderer(this.canvasEl, this.selectedRoom.navState);
-        this.contentsBounds = this.selectedRoom.getContentsBounds();
-        this.unitWidth = this.renderer.UNIT_WIDTH;
-        this.resize();
-
-        //bind events
-        window.addEventListener('resize', this.resize);
-        this.canvasEl.addEventListener('wheel', this.$refs.navControlPanel.scroll);
-        this.canvasEl.addEventListener('mouseenter', this.mouseEnter);
-        this.canvasEl.addEventListener('mouseleave', this.mouseLeave);
-
-        this.renderer.setSVG({
-            camera: this.$refs.camera_icon,
-            noSprite: this.$refs.noSprite_icon,
-            exit: this.$refs.exit_icon,
-            end: this.$refs.end_icon
-        });
-
-        if (this.selectedRoom){
-            this.roomChange();
-        }
-    },
-    beforeDestroy() {
-        //unbind events
-        window.removeEventListener('resize', this.resize);
-        this.canvasEl.removeEventListener('wheel', this.$refs.navControlPanel.scroll);
-        this.canvasEl.removeEventListener('mouseleave', this.$refs.navControlPanel.mouseLeave);
-    },
-    methods: {
-        mouseDown(event){
-            this.$refs.navControlPanel.mouseDown(event);
-            this.emitMouseEvent(event, Shared.MOUSE_EVENT.DOWN);
-        },
-        mouseUp(event){
-            this.$refs.navControlPanel.mouseUp(event);
-            this.emitMouseEvent(event, Shared.MOUSE_EVENT.UP);
-        },
-        mouseMove(event){
-            this.$refs.navControlPanel.mouseMove(event);
-            this.emitMouseEvent(event, Shared.MOUSE_EVENT.MOVE);
-            this.renderer.mouseMove(event);
-        },
-        mouseEnter(event){
-            this.$refs.navControlPanel.mouseEnter(event);
-            this.renderer.enableCursor = true;
-        },
-        mouseLeave(event){
-            this.$refs.navControlPanel.mouseLeave(event);
-            this.emitMouseEvent(event, Shared.MOUSE_EVENT.LEAVE);
-            this.renderer.enableCursor = false;
-            this.renderer.mouseMove(event);
-        },
-        roomChange(){
-            this.renderer.setRoomRef(this.selectedRoom);
-            this.contentsBounds = this.selectedRoom.getContentsBounds();
-        },
-        resize(){
-            let wrapper = this.$refs.editWindow;
-            let width = Math.max(wrapper.clientWidth, 1);
-            let height = Math.max(wrapper.clientHeight, 1);
-
-            Shared.resizeHDPICanvas(this.canvasEl, width, height);
-
-            this.$refs.navControlPanel.setContainerDimensions(wrapper.clientWidth, wrapper.clientHeight);
-
-            if (this.renderer){
-                this.renderer.resize();
-            }
-        },
-        emitMouseEvent(event, type){
-            let selectedNavTool = this.$store.getters['RoomEditor/getSelectedNavTool'];
-            let navToolState = this.$refs.navControlPanel.hotkeyTool;
-
-            if (event.which == 1 && selectedNavTool == null && navToolState == null){
-                let canvasPos = new Victor(event.offsetX, event.offsetY);
-                let cell = this.renderer.getMouseCell();
-                let worldCell = this.renderer.getMouseWorldCell();
-                
-                this.$emit('mouse-event', {type, canvasPos, cell, worldCell});
-            }
-        },
-        instancesChanged(){
-            this.contentsBounds = this.selectedRoom.getContentsBounds();
-            this.renderer.instancesChanged();
-        },
-        setSelection(){
-            this.renderer.setSelection(this.editorSelection);
-        },
-        cameraChanged(){
-            this.contentsBounds = this.selectedRoom.getContentsBounds();
-            this.renderer.instancesChanged();
-        },
-        bgColorChanged(){
-            this.renderer.bgColorChanged();
-        },
-        checkImageLoading(){
-            this.loadedImages++;
-            
-            if (this.loadedImages >= this.$refs.canvasImages.children.length){
-                this.renderer.fullRedraw();
-            }
-        },
-        navToolSelected(tool){
-            this.$store.dispatch('RoomEditor/setSelectedTool', null);
-            this.$store.dispatch('RoomEditor/setSelectedNavTool', tool);
-        }
-    }
-}
-</script>
 
 <style scoped>
 .editWindow{

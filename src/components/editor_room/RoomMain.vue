@@ -1,3 +1,776 @@
+<script lang="ts">
+export const RoomMainEventBus = new Event_Bus();
+</script>
+
+<script setup lang="ts">
+import Undo_Store, {UndoHelpers} from '@/components/common/Undo_Store';
+import RoomEditWindow from './RoomEditWindow.vue';
+import Properties from './Properties.vue';
+import Tool from '@/components/common/Tool.vue';
+import HotkeyMap from '@/components/common/HotkeyMap';
+import { Event_Bus } from '@/components/common/Event_Listener';
+import gridIcon from '@/assets/grid.svg';
+import selectMoveIcon from '@/assets/select_move.svg';
+import brushAddIcon from '@/assets/brush_add.svg';
+import eraserIcon from '@/assets/eraser.svg';
+import cameraIcon from '@/assets/camera.svg';
+import exitIcon from '@/assets/exit.svg';
+import gearIcon from '@/assets/gear.svg';
+
+import {
+    ref,
+    reactive,
+    defineProps,
+    computed,
+    watch,
+    nextTick,
+    onMounted,
+    onBeforeUnmount
+} from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useMainStore } from '@/stores/Main';
+import { useRoomEditorStore } from '@/stores/RoomEditor';
+import { useGameDataStore } from '@/stores/GameData';
+import Shared, { Victor } from '@/Shared';
+import type { imEvent } from './RoomEditWindow.vue';
+
+//define stores
+const { t } = useI18n();
+const mainStore = useMainStore();
+const roomEditorStore = useRoomEditorStore();
+const gameDataStore = useGameDataStore();
+
+const props = defineProps<{
+    selectedAsset: typeof Shared.Asset_Base;
+    selectedRoom: typeof Shared.Room;
+}>();
+
+//define dom refs
+const editWindow = ref<any>();
+
+//define component data
+const tools = [
+    {
+        tool: Shared.ROOM_TOOL_TYPE.SELECT_MOVE,
+        text: t('room_editor.select_move'),
+        icon: selectMoveIcon,
+    },
+    {
+        tool: Shared.ROOM_TOOL_TYPE.ADD_BRUSH,
+        text: t('room_editor.add_brush'),
+        icon: brushAddIcon,
+    },
+    {
+        tool: Shared.ROOM_TOOL_TYPE.ERASER,
+        text: t('room_editor.eraser'),
+        icon: eraserIcon,
+    },
+    {
+        tool: Shared.ROOM_TOOL_TYPE.CAMERA,
+        text: t('room_editor.camera'),
+        icon: cameraIcon,
+    },
+    {
+        tool: Shared.ROOM_TOOL_TYPE.EXIT,
+        text: t('room_editor.exit'),
+        icon: exitIcon,
+    },
+    {
+        tool: Shared.ROOM_TOOL_TYPE.ROOM_PROPERTIES,
+        text: t('room_editor.room_props'),
+        icon: gearIcon,
+    }
+];
+const undoStore = new Undo_Store(32, false);
+const hotkeyMap = new HotkeyMap();
+const hotkeyDown = hotkeyMap.keyDown.bind(hotkeyMap);
+const hotkeyUp = hotkeyMap.keyUp.bind(hotkeyMap);
+const toolMap = new Map<typeof Shared.ROOM_TOOL_TYPE, (mEvent: imEvent)=>void>();
+const actionMap = new Map<typeof Shared.ROOM_ACTION, (data?: any | object, commit?: boolean)=>void>();
+const revertMap = new Map<typeof Shared.ROOM_ACTION, (data?: any | object, commit?: boolean)=>void>();
+const mouse = reactive({
+    down: false,
+    wpLastDown: new Victor(0, 0),
+    downOnSelection: false,
+    newSelection: false,
+    cellCache: new Array<typeof Victor>(),
+    inWindow: false,
+});
+const editorSelection = ref<any | null>(); //replace with Shared.InstanceBase
+
+//computed properties
+const propertiesOpen = computed<boolean>({
+    get(): boolean {
+        return roomEditorStore.getPropPanelState;
+    },
+    set(newVal: boolean): void {
+        roomEditorStore.setPropPanelState(newVal);
+    }
+});
+const isRoomSelected = computed<boolean>(()=>props.selectedRoom != null);
+const cssBG = computed<string>(()=>{
+    const color =  props.selectedRoom?.bgColor.toHex() ?? '#FFFFFF'
+    return 'background:' + color;
+});
+const isInputActive = computed<boolean>(()=>mainStore.getInputActive);
+
+//watchers
+watch(props.selectedRoom, (newRoom, oldRoom)=>{
+    if (newRoom && oldRoom && newRoom.id != oldRoom.id){
+        editorSelection.value = null;
+    }
+});
+watch(isInputActive, (newVal: boolean)=>{hotkeyMap.enabled = !newVal && mouse.inWindow});
+watch(mouse, (newVal)=>{hotkeyMap.enabled = newVal && !isInputActive});
+
+//lifecycle
+onMounted(()=>{
+    window.addEventListener('keydown', hotkeyDown as EventListener);
+    window.addEventListener('keyup', hotkeyUp as EventListener);
+
+    resize();
+    bindHotkeys();
+    bindTools();
+    bindActions();
+    bindReversions();
+});
+
+onBeforeUnmount(()=>{
+    roomEditorStore.setPropPanelState(propertiesOpen.value);
+
+    window.removeEventListener('keydown', hotkeyDown as (e: Event)=>void);
+    window.removeEventListener('keydown', hotkeyUp as (e: Event)=>void);
+});
+
+//Methods
+const { stepForward, stepBackward, applyChronoStep } = UndoHelpers;
+
+function bindHotkeys(): void {
+    const deleteEntity = () => {
+        const type = editorSelection.value?.TYPE;
+        const id = editorSelection.value?.id;
+        const pos = editorSelection.value?.pos;
+
+        if (type == Shared.ENTITY_TYPE.INSTANCE){
+            actionDelete({instId: id, pos});
+        }
+        else if (type == Shared.ENTITY_TYPE.EXIT){
+            actionExitDelete({exitId: id, pos});
+        }
+    }
+
+    hotkeyMap.bindKey(['s'], toolClicked, [Shared.ROOM_TOOL_TYPE.SELECT_MOVE]);
+    hotkeyMap.bindKey(['b'], toolClicked, [Shared.ROOM_TOOL_TYPE.ADD_BRUSH]);
+    hotkeyMap.bindKey(['e'], toolClicked, [Shared.ROOM_TOOL_TYPE.ERASER]);
+    hotkeyMap.bindKey(['c'], toolClicked, [Shared.ROOM_TOOL_TYPE.CAMERA]);
+    hotkeyMap.bindKey(['x'], toolClicked, [Shared.ROOM_TOOL_TYPE.EXIT]);
+    hotkeyMap.bindKey(['r'], toolClicked, [Shared.ROOM_TOOL_TYPE.ROOM_PROPERTIES]);
+    hotkeyMap.bindKey(['g'], ()=>{roomEditorStore.setGridState(!roomEditorStore.getGridState)});
+    hotkeyMap.bindKey(['n'], ()=>{propertiesOpen.value = !propertiesOpen.value; resize()});
+    hotkeyMap.bindKey(['delete'], deleteEntity);
+    hotkeyMap.bindKey(['backspace'], deleteEntity);
+}
+
+function bindTools(): void {
+    toolMap.set(Shared.ROOM_TOOL_TYPE.SELECT_MOVE, toolSelectMove);
+    toolMap.set(Shared.ROOM_TOOL_TYPE.ADD_BRUSH, toolAddBrush);
+    toolMap.set(Shared.ROOM_TOOL_TYPE.ERASER, toolEraser);
+    toolMap.set(Shared.ROOM_TOOL_TYPE.EXIT, toolExit);
+    toolMap.set(Shared.ROOM_TOOL_TYPE.CAMERA, toolCamera);
+}
+
+function bindActions(): void {
+    actionMap.set(Shared.ROOM_ACTION.MOVE, actionMove);
+    actionMap.set(Shared.ROOM_ACTION.ADD, actionAdd);
+    actionMap.set(Shared.ROOM_ACTION.DELETE, actionDelete);
+    actionMap.set(Shared.ROOM_ACTION.INSTANCE_CHANGE, actionInstanceChange);
+    actionMap.set(Shared.ROOM_ACTION.INSTANCE_GROUP_CHANGE, actionInstanceGroupChange);
+    actionMap.set(Shared.ROOM_ACTION.INSTANCE_VAR_CHANGE, actionInstanceVarChange);
+    actionMap.set(Shared.ROOM_ACTION.EXIT_ADD, actionExitAdd);
+    actionMap.set(Shared.ROOM_ACTION.EXIT_CHANGE, actionExitChange);
+    actionMap.set(Shared.ROOM_ACTION.EXIT_DELETE, actionExitDelete);
+    actionMap.set(Shared.ROOM_ACTION.CAMERA_CHANGE, actionCameraChange);
+    actionMap.set(Shared.ROOM_ACTION.ROOM_PROP_CHANGE, actionRoomPropChange);
+    actionMap.set(Shared.ROOM_ACTION.ROOM_VAR_CHANGE, actionRoomVarChange);
+}
+
+function bindReversions(): void {
+    revertMap.set(Shared.ROOM_ACTION.MOVE, revertMove);
+    revertMap.set(Shared.ROOM_ACTION.ADD, revertAdd);
+    revertMap.set(Shared.ROOM_ACTION.DELETE, revertDelete);
+    revertMap.set(Shared.ROOM_ACTION.INSTANCE_CHANGE, revertInstanceChange);
+    revertMap.set(Shared.ROOM_ACTION.INSTANCE_GROUP_CHANGE, revertInstanceGroupChange);
+    revertMap.set(Shared.ROOM_ACTION.INSTANCE_VAR_CHANGE, revertInstanceVarChange);
+    revertMap.set(Shared.ROOM_ACTION.EXIT_ADD, revertExitAdd);
+    revertMap.set(Shared.ROOM_ACTION.EXIT_CHANGE, revertExitChange);
+    revertMap.set(Shared.ROOM_ACTION.EXIT_DELETE, revertExitDelete);
+    revertMap.set(Shared.ROOM_ACTION.CAMERA_CHANGE, revertCameraChange);
+    revertMap.set(Shared.ROOM_ACTION.ROOM_PROP_CHANGE, revertRoomPropChange);
+    revertMap.set(Shared.ROOM_ACTION.ROOM_VAR_CHANGE, revertRoomVarChange);
+}
+
+function resize(): void {
+    nextTick(()=>{
+        RoomMainEventBus.emit('resized');
+    });
+}
+
+function bgColorChanged(): void {
+    RoomMainEventBus.emit('bgColorChanged');
+}
+
+function toolClicked(tool: typeof Shared.ROOM_TOOL_TYPE): void {
+    roomEditorStore.setSelectedTool(tool);
+    roomEditorStore.setSelectedNavTool(null);
+}
+
+function selectInstanceByPos(pos: typeof Victor): void {
+    const nearbyInst = props.selectedRoom.getInstancesInRadius(pos, 0);
+
+    if (nearbyInst.length > 0){
+        const instInCell = [];
+        let selectedInListIdx = -1;
+
+        //get instances in same cell
+        for (let i = 0; i < nearbyInst.length; i++){
+            if (pos.isEqualTo(nearbyInst[i].pos)){
+                instInCell.push(nearbyInst[i]);
+            }
+        }
+
+        //search instances in cell for selected instance
+        for (let i = 0; i < instInCell.length && selectedInListIdx < 0; i++){
+            if (editorSelection.value?.id == instInCell[i].id){
+                selectedInListIdx = i;
+            }
+        }
+
+        //if selected instance is in current cell, then select next item in cell
+        if (selectedInListIdx >= 0){
+            editorSelection.value = instInCell[++selectedInListIdx % instInCell.length];
+        }
+        else{
+            editorSelection.value = instInCell[0];
+        }
+    }
+    else{
+        editorSelection.value = null;
+    }
+}
+
+function mouseEvent(mEvent: imEvent): void {
+    const toolScript = toolMap.get(roomEditorStore.getSelectedTool);
+
+    if (mEvent.type == Shared.MOUSE_EVENT.DOWN){
+        mouse.down = true;
+        mouse.wpLastDown.copy(mEvent.worldCell);
+    }
+    else if (mEvent.type == Shared.MOUSE_EVENT.UP){
+        mouse.down = false;
+    }
+    
+    if (toolScript){
+        toolScript(mEvent);
+    }
+}
+
+function toolSelectMove(mEvent: imEvent): void {
+    switch(mEvent.type){
+        case Shared.MOUSE_EVENT.DOWN:
+            if (editorSelection.value == null){
+                selectInstanceByPos(mEvent.worldCell);
+                mouse.newSelection = true;
+            }
+            else if (editorSelection.value.pos.isEqualTo(mEvent.worldCell)){
+                mouse.downOnSelection = true;
+                mouse.cellCache.push(mEvent.worldCell.clone());
+            }
+            break;
+        case Shared.MOUSE_EVENT.MOVE:
+            if (
+                mouse.down &&
+                mouse.downOnSelection &&
+                !mouse.cellCache[0].isEqualTo(mEvent.worldCell)
+            ){
+                actionMove({instRef: editorSelection.value, newPos: mEvent.worldCell}, false);
+                mouse.cellCache[0].copy(mEvent.worldCell);
+            }
+            break;
+        case Shared.MOUSE_EVENT.UP:
+            if (mEvent.worldCell.isEqualTo(mouse.wpLastDown) && !mouse.newSelection){
+                selectInstanceByPos(mEvent.worldCell);
+            }
+
+            if (undoStore.cache.get('move_start')){
+                actionMove({}, true);
+            }
+
+            mouse.downOnSelection = false;
+            mouse.newSelection = false;
+            mouse.cellCache = [];
+            break;
+    }
+}
+
+function toolAddBrush(mEvent: imEvent): void {
+    switch(mEvent.type){
+        case Shared.MOUSE_EVENT.MOVE:
+        case Shared.MOUSE_EVENT.DOWN:
+            let hasVisited = false;
+
+            //check if cell has already been visited
+            for (let i = 0; i < mouse.cellCache.length; i++){
+                hasVisited ||= mouse.cellCache[i].isEqualTo(mEvent.worldCell);
+            }
+
+            if (!hasVisited && mouse.down){
+                if (mouse.down && props.selectedAsset?.category_ID == Shared.CATEGORY_ID.OBJECT){
+                    actionAdd({objId: props.selectedAsset.id, pos: mEvent.worldCell}, false);
+                }
+                
+                mouse.cellCache.push(mEvent.worldCell.clone());
+            }
+
+            break;
+        case Shared.MOUSE_EVENT.UP:
+            actionAdd({}, true);
+            mouse.cellCache = [];
+            break;
+    }
+}
+
+function toolEraser(mEvent: imEvent): void {
+    switch(mEvent.type){
+        case Shared.MOUSE_EVENT.MOVE:
+        case Shared.MOUSE_EVENT.DOWN:
+            let removedFromCell = false;
+
+            if (mouse.cellCache.length > 0){
+                removedFromCell ||= mouse.cellCache[0].isEqualTo(mEvent.worldCell);
+            }
+
+            if (!removedFromCell && mouse.down){
+                let instances: typeof Shared.Instance_Base[] = props.selectedRoom.getInstancesInRadius(mEvent.worldCell, 0);
+                instances = instances.filter((i) => i.pos.isEqualTo(mEvent.worldCell));
+                //@ts-ignore
+                instances.sort((a, b) => a.zDepth > b.zDepth);
+
+                if (instances.length > 0){
+                    actionDelete({instId: instances[0].id, pos: instances[0].pos}, false);
+                }
+
+                mouse.cellCache[0] = mEvent.worldCell;
+            }
+            break;
+        case Shared.MOUSE_EVENT.UP:
+            actionDelete({}, true);
+    }
+}
+
+function toolCamera(mEvent: imEvent): void {
+    switch(mEvent.type){
+        case Shared.MOUSE_EVENT.MOVE:
+        case Shared.MOUSE_EVENT.DOWN:
+            if (mouse.down){
+                actionCameraChange({newState: {pos: mEvent.worldCell.addScalar(8)}});
+            }
+            break;
+    }
+}
+
+function toolExit(mEvent: imEvent): void {
+    if (mEvent.type == Shared.MOUSE_EVENT.DOWN){
+        const exitAtCursor = props.selectedRoom.getExitsAtPosition(mEvent.worldCell)
+            .find((e: typeof Shared.Exit) => e.pos.isEqualTo(mEvent.worldCell));
+
+        if (exitAtCursor){
+            editorSelection.value = exitAtCursor;
+        }
+        else{
+            editorSelection.value = actionExitAdd({pos: mEvent.worldCell});
+        }
+    }
+}
+
+type MoveProps = {instId?: number, instRef?: typeof Shared.Instance_Base, newPos?: typeof Victor, oldPos?: typeof Victor};
+function actionMove({instId, instRef, newPos}: MoveProps, makeCommit = true): void {
+    if (makeCommit){
+        const {instRef, oldPos} = undoStore.cache.get('move_start');
+        const data = {instId: instRef.id, instRef, newPos: instRef.pos.clone(), oldPos} satisfies MoveProps;
+        undoStore.commit({action: Shared.ROOM_ACTION.MOVE, data});
+        undoStore.cache.delete('move_start');
+        return;
+    }
+
+    if (!instRef){
+        instRef = props.selectedRoom.getInstanceById(instId);
+    }
+
+    if (!undoStore.cache.get('move_start')){
+        undoStore.cache.set('move_start', {instRef, oldPos: instRef.pos.clone()});
+    }
+
+    props.selectedRoom.setInstancePosition(instRef, newPos);
+    RoomMainEventBus.emit('instances-changed');
+}
+
+type AddProps = {objId?: number, instRefList?: typeof Shared.Instance_Base[], pos?: typeof Victor};
+function actionAdd({objId, instRefList = [], pos}: AddProps, makeCommit = true): void {
+    const object = gameDataStore.getAllObjects.find((o) => o.id == objId);
+    const cacheList = undoStore.cache.get('add_list');
+    let newInst;
+
+    if (makeCommit){
+        const data = {instRefList: cacheList};
+        undoStore.commit({action: Shared.ROOM_ACTION.ADD, data});
+        undoStore.cache.delete('add_list');
+        return;
+    }
+
+    if (objId){
+        newInst = new Shared.Instance(props.selectedRoom.curInstId, pos, object);
+        instRefList.push(newInst);
+    }
+
+    for (let i = 0; i < instRefList.length; i++){
+        props.selectedRoom.addInstance(instRefList[i]);
+    }
+
+    RoomMainEventBus.emit('instances-changed');
+
+    if (cacheList){
+        cacheList.push(newInst);
+    }
+    else if (newInst){
+        undoStore.cache.set('add_list', [newInst]);
+    }
+}
+
+type DeleteProps = {instId?: number, instRefList?: typeof Shared.Instance_Base[], pos?: typeof Victor};
+function actionDelete({instId, instRefList = [], pos}: DeleteProps, makeCommit = true): void {
+    const cacheList = undoStore.cache.get('delete_list');
+    const singleInstance = !cacheList && makeCommit;
+    let instRef;
+
+    if (makeCommit && !singleInstance){
+        const data = {instRefList: cacheList};
+        undoStore.commit({action: Shared.ROOM_ACTION.DELETE, data})
+        undoStore.cache.delete('delete_list');
+        return;
+    }
+
+    if (instId != undefined){
+        instRef = props.selectedRoom.removeInstance(instId, pos);
+
+        if (instRef == editorSelection){
+            editorSelection.value = null;
+        }
+    }
+
+    for (let i = 0; i < instRefList.length; i++){
+        let inst = instRefList[i]
+        props.selectedRoom.removeInstance(inst.id, inst.pos);
+    }
+
+    RoomMainEventBus.emit('instances-changed');
+
+    if (cacheList){
+        cacheList.push(instRef);
+    }
+    else if (instRef){
+        undoStore.cache.set('delete_list', [instRef]);
+    }
+
+    if (singleInstance){
+        actionDelete({}, true);
+    }
+}
+
+type InstanceChangeProps = {newState: object, oldState?: object, instRef?: typeof Shared.Instance_Base};
+function actionInstanceChange({newState, instRef}: InstanceChangeProps, makeCommit = true): void {
+    const curInstance = instRef ?? editorSelection.value;
+    const oldState = Object.assign({}, curInstance);
+
+    Object.assign(curInstance, newState);
+    
+    RoomMainEventBus.emit('instances-changed');
+
+    if (makeCommit){
+        let data = {newState, oldState, instRef: curInstance} satisfies InstanceChangeProps;
+        undoStore.commit({action: Shared.ROOM_ACTION.INSTANCE_CHANGE, data});
+    }
+}
+
+type InstanceGroupChangeProps = {
+    add?: boolean, groupName?: string, newName?: string, remove?: boolean, oldIdx?: number, instRef?: typeof Shared.Instance_Base
+};
+function actionInstanceGroupChange(
+    {add, groupName, newName, remove, oldIdx, instRef}: InstanceGroupChangeProps, makeCommit = true
+): void{
+    let groups;
+
+    if (instRef){
+        groups = instRef.groups;
+    }
+    else{
+        groups = editorSelection.value.groups;
+    }
+
+    if (add){
+        groups.push(groupName);
+    }
+    else if (newName){
+        const idx = groups.indexOf(groupName);
+        groups[idx] = newName;
+    }
+    else if (remove){
+        const idx = groups.indexOf(groupName);
+        groups.splice(idx, 1);
+    }
+
+    if (makeCommit){
+        const data = {add, groupName, newName, remove, oldIdx, instRef: editorSelection.value} satisfies InstanceGroupChangeProps;
+        undoStore.commit({action: Shared.ROOM_ACTION.INSTANCE_GROUP_CHANGE, data});
+    }
+}
+
+type InstanceVarChangeProps = {changeObj: CustomVarProps, instRef?: typeof Shared.Instance_Base};
+function actionInstanceVarChange({changeObj, instRef}: InstanceVarChangeProps, makeCommit = true): void {
+    const varList = instRef?.customVars ?? editorSelection.value.customVars;
+
+    changeCustomVar(varList, changeObj);
+
+    if (makeCommit){
+        const data = {changeObj, instRef: editorSelection} satisfies InstanceVarChangeProps;
+        undoStore.commit({action: Shared.ROOM_ACTION.INSTANCE_VAR_CHANGE, data});
+    }
+}
+
+type CameraChangeProps = {newState?: object, oldState?: object};
+function actionCameraChange({newState}: CameraChangeProps, makeCommit = true): void {
+    const oldState = Object.assign({}, props.selectedRoom.camera);
+
+    Object.assign(props.selectedRoom.camera, newState);
+    
+    RoomMainEventBus.emit('camera-changed');
+
+    if (makeCommit){
+        const data = {newState, oldState} satisfies CameraChangeProps;
+        undoStore.commit({action: Shared.ROOM_ACTION.CAMERA_CHANGE, data});
+    }
+}
+
+type ExitAddProps = {exitRef?: typeof Shared.Instance_Base, pos: typeof Victor};
+function actionExitAdd({exitRef, pos}: ExitAddProps, makeCommit = true): void {
+    const newExit = exitRef ?? new Shared.Exit(props.selectedRoom.curExitId, pos);
+    const newExitName = t('room_editor.new_exit_prefix') + newExit.id;
+    props.selectedRoom.addExit(newExit);
+
+    newExit.name = newExitName;
+    
+    RoomMainEventBus.emit('instances-changed');
+
+    if (makeCommit){
+        const data = {exitRef: newExit, pos: pos.clone()} satisfies ExitAddProps;
+        undoStore.commit({action: Shared.ROOM_ACTION.EXIT_ADD, data});
+    }
+
+    return newExit;
+}
+
+type ExitChangeProps = {newState: object, oldState?: object, exitRef?: typeof Shared.Exit};
+function actionExitChange({newState}: ExitChangeProps, makeCommit = true): void {
+    const oldState = Object.assign({}, editorSelection.value);
+
+    Object.assign(editorSelection.value, newState);
+
+    RoomMainEventBus.emit('instances-changed');
+
+    if (makeCommit){
+        const data = {newState, oldState, exitRef: editorSelection.value} satisfies ExitChangeProps;
+        undoStore.commit({action: Shared.ROOM_ACTION.EXIT_CHANGE, data});
+    }
+}
+
+type ExitDeleteProps = {exitId: number, pos: typeof Victor, exitRef?: typeof Shared.Exit};
+function actionExitDelete({exitId, pos}: ExitDeleteProps, makeCommit = true): void {
+    let exitRef = props.selectedRoom.removeExit(exitId, pos);
+    editorSelection.value = null;
+
+    RoomMainEventBus.emit('instances-changed');
+
+    if (makeCommit){
+        let data = {exitId, exitRef, pos} satisfies ExitDeleteProps;
+        undoStore.commit({action: Shared.ROOM_ACTION.EXIT_DELETE, data});
+    }
+}
+
+type RoomPropChangeProps = {newState: object, oldState?: object};
+function actionRoomPropChange({newState}: RoomPropChangeProps, makeCommit = true): void {
+    const oldState = Object.assign({}, props.selectedRoom);
+
+    Object.assign(props.selectedRoom, newState);
+
+    if (oldState.bgColor != props.selectedRoom.bgColor){
+        bgColorChanged();
+    }
+
+    if (makeCommit){
+        let data = {newState, oldState} satisfies RoomPropChangeProps;
+        undoStore.commit({action: Shared.ROOM_ACTION.ROOM_PROP_CHANGE, data});
+    }
+}
+
+type RoomVarChangeProps = {changeObj: CustomVarProps};
+function actionRoomVarChange({changeObj}: RoomVarChangeProps, makeCommit = true): void {
+    if (makeCommit){
+        const data = {changeObj} satisfies RoomVarChangeProps;
+        undoStore.commit({action: Shared.ROOM_ACTION.ROOM_VAR_CHANGE, data});
+    }
+}
+
+function revertMove({instRef, oldPos}: MoveProps): void {
+    props.selectedRoom.setInstancePosition(instRef, oldPos);
+    RoomMainEventBus.emit('instances-changed');
+}
+
+function revertAdd({instRefList = []}: AddProps): void {
+    for (let i = 0; i < instRefList.length; i++){
+        const instRef = instRefList[i];
+
+        if (instRef.id == editorSelection.value?.id){
+            editorSelection.value = null;
+        }
+
+        props.selectedRoom.removeInstance(instRef.id, instRef.pos);
+    }
+
+    RoomMainEventBus.emit('instances-changed');
+}
+
+function revertDelete({instRefList = []}: DeleteProps): void {
+    for (let i = 0; i < instRefList.length; i++){
+        props.selectedRoom.addInstance(instRefList[i]);
+    }
+
+    RoomMainEventBus.emit('instances-changed');
+}
+
+function revertInstanceChange({oldState, instRef}: InstanceChangeProps): void {
+    Object.assign(instRef, oldState);
+    RoomMainEventBus.emit('instances-changed');
+}
+
+function revertInstanceGroupChange({add, groupName, newName, remove, oldIdx, instRef}: InstanceGroupChangeProps): void {
+    const groups = instRef.groups;
+
+    if (add){
+        const idx = instRef.groups.indexOf(groupName);
+        groups.splice(idx, 1);
+    }
+    else if (newName){
+        const idx = instRef.groups.indexOf(newName);
+        groups[idx] = groupName;
+    }
+    else if (remove){
+        groups.splice(oldIdx, 0, groupName);
+    }
+}
+
+function revertInstanceVarChange({changeObj, instRef}: InstanceVarChangeProps): void {
+    const varList = instRef.customVars;
+    unchangeCustomVar(varList, changeObj);
+}
+
+function revertCameraChange({oldState}: CameraChangeProps): void {
+    Object.assign(props.selectedRoom.camera, oldState);
+    RoomMainEventBus.emit('camera-changed');
+}
+
+function revertExitAdd({exitRef}: ExitAddProps): void {
+    if (exitRef.id == editorSelection.value?.id){
+        editorSelection.value = null;
+    }
+
+    props.selectedRoom.removeExit(exitRef.id, exitRef.pos);
+    RoomMainEventBus.emit('instances-changed');
+}
+
+function revertExitDelete({exitRef}: ExitDeleteProps): void {
+    const exit = props.selectedRoom.addExit(exitRef.pos);
+    Object.assign(exit, exitRef);
+    RoomMainEventBus.emit('instances-changed');
+}
+
+function revertExitChange({oldState, exitRef}: ExitChangeProps): void {
+    Object.assign(exitRef, oldState);
+    RoomMainEventBus.emit('instances-changed');
+}
+
+function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
+    let oldBG = props.selectedRoom.bgColor;
+
+    Object.assign(props.selectedRoom, oldState);
+
+    if (oldBG != props.selectedRoom.bgColor){
+        bgColorChanged();
+    }
+}
+
+function revertRoomVarChange({changeObj}: RoomVarChangeProps): void {
+    const varList = props.selectedRoom.customVars;
+    unchangeCustomVar(varList, changeObj);
+}
+
+type CustomVarProps = {varName: string, newName?: string, newVal?: any, oldVal?: any, add?: boolean, remove?: boolean, oldIdx?: number};
+function changeCustomVar(varList: {[key: string]: any}[], {varName, newName, newVal, add, remove, oldIdx}: CustomVarProps): void {
+    let varIdx = -1;
+
+    for (let i = 0; i < varList.length && varIdx < 0; i++){
+        varIdx = (varList[i].name == varName) ? i : -1;
+    }
+
+    if (varIdx >= 0){
+        if (newVal != null){
+            varList[varIdx].val = newVal;
+        }
+
+        if (newName){
+            varList[varIdx].name = newName;
+        }
+
+        if (remove){
+            varList.splice(varIdx, 1);
+        }
+    }
+    else{
+        let newVar = {name: varName, val: newVal};
+
+        if (oldIdx){
+            varList.splice(oldIdx, 0, newVar)
+        }
+        else{
+            varList.push(newVar);
+        }
+    }
+}
+
+function unchangeCustomVar(varList: {[key: string]: any}[], {varName, newName, oldVal, newVal, add, remove, oldIdx}: CustomVarProps){
+    if (varName && newName){
+        changeCustomVar(varList, {varName: newName, newName: varName});
+    }
+    else if (newVal != null && oldVal != null){
+        changeCustomVar(varList, {varName, newVal: oldVal});
+    }
+    else if (add){
+        changeCustomVar(varList, {varName, remove: true});
+    }
+    else if (remove){
+        changeCustomVar(varList, {varName, newVal, oldIdx});
+    }
+}
+</script>
+
 <template>
     <div class="roomMain" :style="cssBG">
         <div v-if="selectedRoom" class="toolPanel">
@@ -7,15 +780,15 @@
                 :icon="tool.icon"
                 :name="tool.text"
                 :tool="tool.tool"
-                :curSelection="curToolSelection"
-                @toolClicked="toolClicked"/>
+                :curSelection="roomEditorStore.getSelectedTool"
+                @tool-clicked="toolClicked"/>
             <div class="toolSpacer"></div>
             <Tool
                 :tool="0"
-                icon="assets/grid"
+                :icon="gridIcon"
                 :name="$t('room_editor.toggle_grid')"
-                :toggled="viewGrid"
-                @toolClicked="$store.dispatch('RoomEditor/setGridState', !viewGrid)"/>
+                :toggled="roomEditorStore.getGridState"
+                @tool-clicked="roomEditorStore.setGridState(!roomEditorStore.getGridState)"/>
         </div>
         <RoomEditWindow
             v-if="isRoomSelected"
@@ -41,11 +814,11 @@
             <div v-show="propertiesOpen" class="propertiesContents">
                 <Properties
                     ref="props"
-                    :selectedTool="curToolSelection"
+                    :selectedTool="roomEditorStore.getSelectedTool"
                     :selectedEntity="editorSelection"
                     :camera="(selectedRoom) ? selectedRoom.camera : null"
                     :room="selectedRoom"
-                    @inst-prop-set="actionInstanceChange({newState: $event})"
+                    @inst-prop-set="actionInstanceChange({newState: $event as object})"
                     @inst-group-changed="actionInstanceGroupChange($event)"
                     @inst-var-changed="actionInstanceVarChange({changeObj: $event})"
                     @cam-prop-set="actionCameraChange({newState: $event})"
@@ -57,703 +830,6 @@
         </div>
     </div>
 </template>
-
-<script>
-import Vue from 'vue';
-import Undo_Store, {UndoHelpers} from '@/components/common/Undo_Store';
-import RoomEditWindow from './RoomEditWindow';
-import Properties from './Properties';
-import Tool from '@/components/common/Tool';
-import HotkeyMap from '@/components/common/HotkeyMap';
-
-export default {
-    name: 'RoomEditor',
-    props: ['selectedAsset', 'selectedRoom'],
-    components: {
-        RoomEditWindow,
-        Properties,
-        Tool
-    },
-    data() {
-        return {
-            propertiesOpen: this.$store.getters['RoomEditor/getPropPanelState'],
-            editorSelection: null,
-            tools: [
-                {
-                    tool: Shared.ROOM_TOOL_TYPE.SELECT_MOVE,
-                    text: this.$t('room_editor.select_move'),
-                    icon: 'assets/select_move'
-                },
-                {
-                    tool: Shared.ROOM_TOOL_TYPE.ADD_BRUSH,
-                    text: this.$t('room_editor.add_brush'),
-                    icon: 'assets/brush_add'
-                },
-                {
-                    tool: Shared.ROOM_TOOL_TYPE.ERASER,
-                    text: this.$t('room_editor.eraser'),
-                    icon: 'assets/eraser'
-                },
-                {
-                    tool: Shared.ROOM_TOOL_TYPE.CAMERA,
-                    text: this.$t('room_editor.camera'),
-                    icon: 'assets/camera'
-                },
-                {
-                    tool: Shared.ROOM_TOOL_TYPE.EXIT,
-                    text: this.$t('room_editor.exit'),
-                    icon: 'assets/exit'
-                },
-                {
-                    tool: Shared.ROOM_TOOL_TYPE.ROOM_PROPERTIES,
-                    text: this.$t('room_editor.room_props'),
-                    icon: 'assets/gear'
-                }
-            ],
-            undoStore: new Undo_Store(32, false),
-            hotkeyMap: new HotkeyMap(),
-            hotkeyDown: null,
-            hotkeyUp: null,
-            toolMap: new Map(),
-            actionMap: new Map(),
-            revertMap: new Map(),
-            mouse: {
-                down: false,
-                wpLastDown: new Victor(0, 0),
-                downOnSelection: false,
-                newSelection: false,
-                cellCache: [],
-                inWindow: false,
-            },
-        }
-    },
-    watch: {
-        selectedRoom(newRoom, oldRoom){
-            if (newRoom && oldRoom && newRoom.id != oldRoom.id){
-                this.editorSelection = null;
-            }
-        },
-        inputActive(newVal){
-            this.hotkeyMap.enabled = !newVal && this.mouse.inWindow;
-        },
-        inWindow(newVal){
-            this.hotkeyMap.enabled = newVal && !this.inputActive;
-        },
-    },
-    computed: {
-        curToolSelection() {
-            return this.$store.getters['RoomEditor/getSelectedTool'];
-        },
-        viewGrid() {
-            return this.$store.getters['RoomEditor/getGridState'];
-        },
-        isRoomSelected() {
-            return this.selectedRoom != null;
-        },
-        inputActive(){
-            return this.$store.getters['getInputActive'];
-        },
-        inWindow(){
-            return this.mouse.inWindow;
-        },
-        cssBG(){
-            let color =  this.selectedRoom?.bgColor.toHex() ?? '#FFFFFF'
-            return 'background:' + color;
-        },
-    },
-    mounted() {
-        this.hotkeyDown = this.hotkeyMap.keyDown.bind(this.hotkeyMap);
-        this.hotkeyUp = this.hotkeyMap.keyUp.bind(this.hotkeyMap);
-
-        window.addEventListener('keydown', this.hotkeyDown);
-        window.addEventListener('keyup', this.hotkeyUp);
-
-        this.resize();
-        this.bindHotkeys();
-        this.bindTools();
-        this.bindActions();
-        this.bindReversions();
-    },
-    beforeDestroy() {
-        this.$store.dispatch('RoomEditor/setPropPanelState', this.propertiesOpen);
-
-        window.removeEventListener('keydown', this.hotkeyDown);
-        window.removeEventListener('keydown', this.hotkeyUp);
-    },
-    methods: {
-        ...UndoHelpers,
-        bindHotkeys(){
-            let deleteEntity = () => {
-                let type = this.editorSelection?.TYPE;
-                let id = this.editorSelection?.id;
-                let pos = this.editorSelection?.pos;
-
-                if (type == Shared.ENTITY_TYPE.INSTANCE){
-                    this.actionDelete({instId: id, pos});
-                }
-                else if (type == Shared.ENTITY_TYPE.EXIT){
-                    this.actionExitDelete({exitId: id, pos});
-                }
-            }
-
-            this.hotkeyMap.bindKey(['s'], this.toolClicked, [Shared.ROOM_TOOL_TYPE.SELECT_MOVE]);
-            this.hotkeyMap.bindKey(['b'], this.toolClicked, [Shared.ROOM_TOOL_TYPE.ADD_BRUSH]);
-            this.hotkeyMap.bindKey(['e'], this.toolClicked, [Shared.ROOM_TOOL_TYPE.ERASER]);
-            this.hotkeyMap.bindKey(['c'], this.toolClicked, [Shared.ROOM_TOOL_TYPE.CAMERA]);
-            this.hotkeyMap.bindKey(['x'], this.toolClicked, [Shared.ROOM_TOOL_TYPE.EXIT]);
-            this.hotkeyMap.bindKey(['r'], this.toolClicked, [Shared.ROOM_TOOL_TYPE.ROOM_PROPERTIES]);
-            this.hotkeyMap.bindKey(['g'], ()=>{this.$store.dispatch('RoomEditor/setGridState', !this.viewGrid)});
-            this.hotkeyMap.bindKey(['n'], ()=>{this.propertiesOpen = !this.propertiesOpen; this.resize()});
-            this.hotkeyMap.bindKey(['delete'], deleteEntity);
-            this.hotkeyMap.bindKey(['backspace'], deleteEntity);
-        },
-        bindTools(){
-            this.toolMap.set(Shared.ROOM_TOOL_TYPE.SELECT_MOVE, this.toolSelectMove);
-            this.toolMap.set(Shared.ROOM_TOOL_TYPE.ADD_BRUSH, this.toolAddBrush);
-            this.toolMap.set(Shared.ROOM_TOOL_TYPE.ERASER, this.toolEraser);
-            this.toolMap.set(Shared.ROOM_TOOL_TYPE.EXIT, this.toolExit);
-            this.toolMap.set(Shared.ROOM_TOOL_TYPE.CAMERA, this.toolCamera);
-        },
-        bindActions(){
-            this.actionMap.set(Shared.ROOM_ACTION.MOVE, this.actionMove);
-            this.actionMap.set(Shared.ROOM_ACTION.ADD, this.actionAdd);
-            this.actionMap.set(Shared.ROOM_ACTION.DELETE, this.actionDelete);
-            this.actionMap.set(Shared.ROOM_ACTION.INSTANCE_CHANGE, this.actionInstanceChange);
-            this.actionMap.set(Shared.ROOM_ACTION.INSTANCE_GROUP_CHANGE, this.actionInstanceGroupChange);
-            this.actionMap.set(Shared.ROOM_ACTION.INSTANCE_VAR_CHANGE, this.actionInstanceVarChange);
-            this.actionMap.set(Shared.ROOM_ACTION.EXIT_ADD, this.actionExitAdd);
-            this.actionMap.set(Shared.ROOM_ACTION.EXIT_CHANGE, this.actionExitChange);
-            this.actionMap.set(Shared.ROOM_ACTION.EXIT_DELETE, this.actionExitDelete);
-            this.actionMap.set(Shared.ROOM_ACTION.CAMERA_CHANGE, this.actionCameraChange);
-            this.actionMap.set(Shared.ROOM_ACTION.ROOM_PROP_CHANGE, this.actionRoomPropChange);
-            this.actionMap.set(Shared.ROOM_ACTION.ROOM_VAR_CHANGE, this.actionRoomVarChange);
-        },
-        bindReversions(){
-            this.revertMap.set(Shared.ROOM_ACTION.MOVE, this.revertMove);
-            this.revertMap.set(Shared.ROOM_ACTION.ADD, this.revertAdd);
-            this.revertMap.set(Shared.ROOM_ACTION.DELETE, this.revertDelete);
-            this.revertMap.set(Shared.ROOM_ACTION.INSTANCE_CHANGE, this.revertInstanceChange);
-            this.revertMap.set(Shared.ROOM_ACTION.INSTANCE_GROUP_CHANGE, this.revertInstanceGroupChange);
-            this.revertMap.set(Shared.ROOM_ACTION.INSTANCE_VAR_CHANGE, this.revertInstanceVarChange);
-            this.revertMap.set(Shared.ROOM_ACTION.EXIT_ADD, this.revertExitAdd);
-            this.revertMap.set(Shared.ROOM_ACTION.EXIT_CHANGE, this.revertExitChange);
-            this.revertMap.set(Shared.ROOM_ACTION.EXIT_DELETE, this.revertExitDelete);
-            this.revertMap.set(Shared.ROOM_ACTION.CAMERA_CHANGE, this.revertCameraChange);
-            this.revertMap.set(Shared.ROOM_ACTION.ROOM_PROP_CHANGE, this.revertRoomPropChange);
-            this.revertMap.set(Shared.ROOM_ACTION.ROOM_VAR_CHANGE, this.revertRoomVarChange);
-        },
-        resize() {
-            this.$nextTick(()=>{
-                if (this.$refs.editWindow){
-                    this.$refs.editWindow.resize();
-                }
-            });
-        },
-        bgColorChanged(){
-            this.$refs.editWindow.bgColorChanged();
-        },
-        toolClicked(tool){
-            this.selectedTool = tool;
-            this.$store.dispatch('RoomEditor/setSelectedTool', tool);
-            this.$store.dispatch('RoomEditor/setSelectedNavTool', null);
-        },
-        selectInstanceByPos(pos){
-            let nearbyInst = this.selectedRoom.getInstancesInRadius(pos, 0);
-
-            if (nearbyInst.length > 0){
-                let selectedInListIdx = -1;
-                let instInCell = [];
-
-                //get instances in same cell
-                for (let i = 0; i < nearbyInst.length; i++){
-                    if (pos.isEqualTo(nearbyInst[i].pos)){
-                        instInCell.push(nearbyInst[i]);
-                    }
-                }
-
-                //search instances in cell for selected instance
-                for (let i = 0; i < instInCell.length && selectedInListIdx < 0; i++){
-                    if (this.editorSelection?.id == instInCell[i].id){
-                        selectedInListIdx = i;
-                    }
-                }
-
-                //if selected instance is in current cell, then select next item in cell
-                if (selectedInListIdx >= 0){
-                    this.editorSelection = instInCell[++selectedInListIdx % instInCell.length];
-                }
-                else{
-                    this.editorSelection = instInCell[0];
-                }
-            }
-            else{
-                this.editorSelection = null;
-            }
-        },
-        mouseEvent(mEvent){
-            let toolScript = this.toolMap.get(this.curToolSelection);
-
-            if (mEvent.type == Shared.MOUSE_EVENT.DOWN){
-                this.mouse.down = true;
-                this.mouse.wpLastDown.copy(mEvent.worldCell);
-            }
-            else if (mEvent.type == Shared.MOUSE_EVENT.UP){
-                this.mouse.down = false;
-            }
-            
-            if (toolScript){
-                toolScript(mEvent);
-            }
-        },
-        toolSelectMove(mEvent){
-            switch(mEvent.type){
-                case Shared.MOUSE_EVENT.DOWN:
-                    if (this.editorSelection == null){
-                        this.selectInstanceByPos(mEvent.worldCell);
-                        this.mouse.newSelection = true;
-                    }
-                    else if (this.editorSelection.pos.isEqualTo(mEvent.worldCell)){
-                        this.mouse.downOnSelection = true;
-                        this.mouse.cellCache.push(mEvent.worldCell.clone());
-                    }
-                    break;
-                case Shared.MOUSE_EVENT.MOVE:
-                    if (
-                        this.mouse.down &&
-                        this.mouse.downOnSelection &&
-                        !this.mouse.cellCache[0].isEqualTo(mEvent.worldCell)
-                    ){
-                        this.actionMove({instRef: this.editorSelection, newPos: mEvent.worldCell}, false);
-                        this.mouse.cellCache[0].copy(mEvent.worldCell);
-                    }
-                    break;
-                case Shared.MOUSE_EVENT.UP:
-                    if (mEvent.worldCell.isEqualTo(this.mouse.wpLastDown) && !this.mouse.newSelection){
-                        this.selectInstanceByPos(mEvent.worldCell);
-                    }
-
-                    if (this.undoStore.cache.get('move_start')){
-                        this.actionMove({}, true);
-                    }
-
-                    this.mouse.downOnSelection = false;
-                    this.mouse.newSelection = false;
-                    this.mouse.cellCache = [];
-                    break;
-            }
-        },
-        toolAddBrush(mEvent){
-            switch(mEvent.type){
-                case Shared.MOUSE_EVENT.MOVE:
-                case Shared.MOUSE_EVENT.DOWN:
-                    let hasVisited = false;
-
-                    //check if cell has already been visited
-                    for (let i = 0; i < this.mouse.cellCache.length; i++){
-                        hasVisited |= this.mouse.cellCache[i].isEqualTo(mEvent.worldCell);
-                    }
-
-                    if (!hasVisited && this.mouse.down){
-                        if (this.mouse.down && this.selectedAsset?.category_ID == Shared.CATEGORY_ID.OBJECT){
-                            this.actionAdd({objId: this.selectedAsset.id, pos: mEvent.worldCell}, false);
-                        }
-                        
-                        this.mouse.cellCache.push(mEvent.worldCell.clone());
-                    }
-
-                    break;
-                case Shared.MOUSE_EVENT.UP:
-                    this.actionAdd({}, true);
-                    this.mouse.cellCache = [];
-                    break;
-            }
-        },
-        toolEraser(mEvent){
-            switch(mEvent.type){
-                case Shared.MOUSE_EVENT.MOVE:
-                case Shared.MOUSE_EVENT.DOWN:
-                    let removedFromCell = false;
-
-                    if (this.mouse.cellCache.length > 0){
-                        removedFromCell |= this.mouse.cellCache[0].isEqualTo(mEvent.worldCell);
-                    }
-
-                    if (!removedFromCell && this.mouse.down){
-                        let instances = this.selectedRoom.getInstancesInRadius(mEvent.worldCell, 0);
-                        instances = instances.filter((i) => i.pos.isEqualTo(mEvent.worldCell));
-                        instances.sort((a, b) => a.zDepth > b.zDepth);
-
-                        if (instances.length > 0){
-                            this.actionDelete({instId: instances[0].id, pos: instances[0].pos}, false);
-                        }
-
-                        this.mouse.cellCache[0] = mEvent.worldCell;
-                    }
-                    break;
-                case Shared.MOUSE_EVENT.UP:
-                    this.actionDelete({}, true);
-            }
-        },
-        toolCamera(mEvent){
-            switch(mEvent.type){
-                case Shared.MOUSE_EVENT.MOVE:
-                case Shared.MOUSE_EVENT.DOWN:
-                    if (this.mouse.down){
-                        this.actionCameraChange({newState: {pos: mEvent.worldCell.addScalar(8)}});
-                    }
-                    break;
-            }
-        },
-        toolExit(mEvent){
-            if (mEvent.type == Shared.MOUSE_EVENT.DOWN){
-                let exitAtCursor = this.selectedRoom.getExitsAtPosition(mEvent.worldCell)
-                    .find(e => e.pos.isEqualTo(mEvent.worldCell));
-
-                if (exitAtCursor){
-                    this.editorSelection = exitAtCursor;
-                }
-                else{
-                    this.editorSelection = this.actionExitAdd({pos: mEvent.worldCell});
-                }
-            }
-        },
-        actionMove({instId, instRef, newPos}, makeCommit = true){
-            if (makeCommit){
-                let {instRef, oldPos} = this.undoStore.cache.get('move_start');
-                let data = {instId: instRef.id, instRef, newPos: instRef.pos.clone(), oldPos};
-                this.undoStore.commit({action: Shared.ROOM_ACTION.MOVE, data});
-                this.undoStore.cache.delete('move_start');
-                return;
-            }
-
-            if (!instRef){
-                instRef = this.selectedRoom.getInstanceById(instId);
-            }
-
-            if (!this.undoStore.cache.get('move_start')){
-                this.undoStore.cache.set('move_start', {instRef, oldPos: instRef.pos.clone()});
-            }
-
-            this.selectedRoom.setInstancePosition(instRef, newPos);
-            this.$refs.editWindow.instancesChanged();
-        },
-        actionAdd({objId, instRefList = [], pos}, makeCommit = true){
-            let object = this.$store.getters['GameData/getAllObjects'].find((o) => o.id == objId);
-            let cacheList = this.undoStore.cache.get('add_list');
-            let newInst;
-
-            if (makeCommit){
-                let data = {instRefList: cacheList};
-                this.undoStore.commit({action: Shared.ROOM_ACTION.ADD, data});
-                this.undoStore.cache.delete('add_list');
-                return;
-            }
-
-            if (objId){
-                newInst = new Shared.Instance(this.selectedRoom.curInstId, pos, object);
-                instRefList.push(newInst);
-            }
-
-            for (let i = 0; i < instRefList.length; i++){
-                this.selectedRoom.addInstance(instRefList[i]);
-            }
-
-            this.$refs.editWindow.instancesChanged();
-
-            if (cacheList){
-                cacheList.push(newInst);
-            }
-            else if (newInst){
-                this.undoStore.cache.set('add_list', [newInst]);
-            }
-        },
-        actionDelete({instId, instRefList = [], pos}, makeCommit = true){
-            let cacheList = this.undoStore.cache.get('delete_list');
-            let instRef;
-            let singleInstance = !cacheList && makeCommit;
-
-            if (makeCommit && !singleInstance){
-                let data = {instRefList: cacheList};
-                this.undoStore.commit({action: Shared.ROOM_ACTION.DELETE, data})
-                this.undoStore.cache.delete('delete_list');
-                return;
-            }
-
-            if (instId != undefined){
-                instRef = this.selectedRoom.removeInstance(instId, pos);
-
-                if (instRef == this.editorSelection){
-                    this.editorSelection = null;
-                }
-            }
-
-            for (let i = 0; i < instRefList.length; i++){
-                let inst = instRefList[i]
-                this.selectedRoom.removeInstance(inst.id, inst.pos);
-            }
-
-            this.$refs.editWindow.instancesChanged();
-
-            if (cacheList){
-                cacheList.push(instRef);
-            }
-            else if (instRef){
-                this.undoStore.cache.set('delete_list', [instRef]);
-            }
-
-            if (singleInstance){
-                this.actionDelete({}, true);
-            }
-        },
-        actionInstanceChange({newState, instRef}, makeCommit = true){
-            let curInstance = (instRef) ? instRef : this.editorSelection;
-            let oldState = Object.assign({}, curInstance);
-
-            Object.assign(curInstance, newState);
-            this.$refs.editWindow.instancesChanged();
-
-            if (makeCommit){
-                let data = {newState, oldState, instRef: curInstance};
-                this.undoStore.commit({action: Shared.ROOM_ACTION.INSTANCE_CHANGE, data});
-            }
-        },
-        actionInstanceGroupChange({add, groupName, newName, remove, oldIdx, instRef}, makeCommit = true){
-            let groups;
-
-            if (instRef){
-                groups = instRef.groups;
-            }
-            else{
-                groups = this.editorSelection.groups;
-            }
-
-            if (add){
-                groups.push(groupName);
-            }
-            else if (newName){
-                let idx = groups.indexOf(groupName);
-                Vue.set(groups, idx, newName);
-            }
-            else if (remove){
-                let idx = groups.indexOf(groupName);
-                groups.splice(idx, 1);
-            }
-
-            if (makeCommit){
-                let data = {add, groupName, newName, remove, oldIdx, instRef: this.editorSelection};
-                this.undoStore.commit({action: Shared.ROOM_ACTION.INSTANCE_GROUP_CHANGE, data});
-            }
-        },
-        actionInstanceVarChange({changeObj, instRef}, makeCommit = true){
-            let varList = (instRef) ? instRef.customVars : this.editorSelection.customVars;
-
-            this.changeCustomVar(varList, changeObj);
-
-            if (makeCommit){
-                let data = {changeObj, instRef: this.editorSelection};
-                this.undoStore.commit({action: Shared.ROOM_ACTION.INSTANCE_VAR_CHANGE, data});
-            }
-        },
-        actionCameraChange({newState}, makeCommit = true){
-            let oldState = Object.assign({}, this.selectedRoom.camera);
-
-            Object.assign(this.selectedRoom.camera, newState);
-            this.$refs.editWindow.cameraChanged();
-
-            if (makeCommit){
-                let data = {newState, oldState};
-                this.undoStore.commit({action: Shared.ROOM_ACTION.CAMERA_CHANGE, data});
-            }
-        },
-        actionExitAdd({exitRef, pos}, makeCommit = true){
-            let newExit = exitRef ?? new Shared.Exit(this.selectedRoom.curExitId, pos);
-            let newExitName = this.$t('room_editor.new_exit_prefix') + newExit.id;
-            this.selectedRoom.addExit(newExit);
-
-            newExit.name = newExitName;
-            this.$refs.editWindow.instancesChanged();
-
-            if (makeCommit){
-                let data = {exitRef: newExit, pos: pos.clone()};
-                this.undoStore.commit({action: Shared.ROOM_ACTION.EXIT_ADD, data});
-            }
-
-            return newExit;
-        },
-        actionExitChange({newState}, makeCommit = true){
-            let oldState = Object.assign({}, this.editorSelection);
-
-            Object.assign(this.editorSelection, newState);
-            this.$refs.editWindow.instancesChanged();
-
-            if (makeCommit){
-                let data = {newState, oldState, exitRef: this.editorSelection};
-                this.undoStore.commit({action: Shared.ROOM_ACTION.EXIT_CHANGE, data});
-            }
-        },
-        actionExitDelete({exitId, pos}, makeCommit = true){
-            let exitRef = this.selectedRoom.removeExit(exitId, pos);
-            this.editorSelection = null;
-            this.$refs.editWindow.instancesChanged();
-
-            if (makeCommit){
-                let data = {exitId, exitRef, pos};
-                this.undoStore.commit({action: Shared.ROOM_ACTION.EXIT_DELETE, data});
-            }
-        },
-        actionRoomPropChange({newState}, makeCommit = true){
-            let oldState = Object.assign({}, this.selectedRoom);
-
-            Object.assign(this.selectedRoom, newState);
-
-            if (oldState.bgColor != this.selectedRoom.bgColor){
-                this.bgColorChanged();
-            }
-
-            if (makeCommit){
-                let data = {newState, oldState};
-                this.undoStore.commit({action: Shared.ROOM_ACTION.ROOM_PROP_CHANGE, data});
-            }
-        },
-        actionRoomVarChange({changeObj}, makeCommit = true){
-            let varList = this.selectedRoom.customVars;
-            let varIdx = this.changeCustomVar(varList, changeObj);
-
-            if (makeCommit){
-                let data = {changeObj};
-                this.undoStore.commit({action: Shared.ROOM_ACTION.ROOM_VAR_CHANGE, data});
-            }
-        },
-        revertMove({instRef, oldPos}){
-            this.selectedRoom.setInstancePosition(instRef, oldPos);
-            this.$refs.editWindow.instancesChanged();
-        },
-        revertAdd({instRefList}){
-            for (let i = 0; i < instRefList.length; i++){
-                let instRef = instRefList[i];
-
-                if (instRef.id == this.editorSelection?.id){
-                    this.editorSelection = null;
-                }
-
-                this.selectedRoom.removeInstance(instRef.id, instRef.pos);
-            }
-
-            this.$refs.editWindow.instancesChanged();
-        },
-        revertDelete({instRefList}){
-            for (let i = 0; i < instRefList.length; i++){
-                this.selectedRoom.addInstance(instRefList[i]);
-            }
-
-            this.$refs.editWindow.instancesChanged();
-        },
-        revertInstanceChange({oldState, instRef}){
-            Object.assign(instRef, oldState);
-            this.$refs.editWindow.instancesChanged();
-        },
-        revertInstanceGroupChange({add, groupName, newName, remove, oldIdx, instRef}){
-            let groups = instRef.groups;
-
-            if (add){
-                let idx = instRef.groups.indexOf(groupName);
-                groups.splice(idx, 1);
-            }
-            else if (newName){
-                let idx = instRef.groups.indexOf(newName);
-                Vue.set(groups, idx, groupName);
-            }
-            else if (remove){
-                groups.splice(oldIdx, 0, groupName);
-            }
-        },
-        revertInstanceVarChange({changeObj, instRef}){
-            let varList = instRef.customVars;
-            this.unchangeCustomVar(varList, changeObj);
-        },
-        revertCameraChange({oldState}){
-            Object.assign(this.selectedRoom.camera, oldState);
-            this.$refs.editWindow.cameraChanged();
-        },
-        revertExitAdd({exitRef}){
-            if (exitRef.id == this.editorSelection?.id){
-                this.editorSelection = null;
-            }
-
-            this.selectedRoom.removeExit(exitRef.id, exitRef.pos);
-            this.$refs.editWindow.instancesChanged();
-        },
-        revertExitDelete({exitRef}){
-            let exit = this.selectedRoom.addExit(exitRef.pos);
-            Object.assign(exit, exitRef);
-            this.$refs.editWindow.instancesChanged();
-        },
-        revertExitChange({oldState, exitRef}){
-            Object.assign(exitRef, oldState);
-            this.$refs.editWindow.instancesChanged();
-        },
-        revertRoomPropChange({oldState}){
-            let oldBG = this.selectedRoom.bgColor;
-
-            Object.assign(this.selectedRoom, oldState);
-
-            if (oldBG != this.selectedRoom.bgColor){
-                this.$refs.props.updateBGColorPicker(this.selectedRoom.bgColor);
-                this.bgColorChanged();
-            }
-        },
-        revertRoomVarChange({changeObj}){
-            let varList = this.selectedRoom.customVars;
-            this.unchangeCustomVar(varList, changeObj);
-        },
-        changeCustomVar(varList, {varName, newName, newVal, add, remove, oldIdx}){
-            let varIdx = -1;
-
-            for (let i = 0; i < varList.length && varIdx < 0; i++){
-                varIdx = (varList[i].name == varName) ? i : -1;
-            }
-
-            if (varIdx >= 0){
-                if (newVal != null){
-                    varList[varIdx].val = newVal;
-                }
-
-                if (newName){
-                    varList[varIdx].name = newName;
-                }
-
-                if (remove){
-                    varList.splice(varIdx, 1);
-                }
-            }
-            else{
-                let newVar = {name: varName, val: newVal};
-
-                if (oldIdx){
-                    varList.splice(oldIdx, 0, newVar)
-                }
-                else{
-                    varList.push(newVar);
-                }
-            }
-        },
-        unchangeCustomVar(varList, {varName, newName, oldVal, newVal, add, remove, oldIdx}){
-            if (varName && newName){
-                this.changeCustomVar(varList, {varName: newName, newName: varName});
-            }
-            else if (newVal != null && oldVal != null){
-                this.changeCustomVar(varList, {varName, newVal: oldVal});
-            }
-            else if (add){
-                this.changeCustomVar(varList, {varName, remove: true});
-            }
-            else if (remove){
-                this.changeCustomVar(varList, {varName, newVal, oldIdx});
-            }
-        },
-    }
-}
-</script>
 
 <style scoped>
 .roomMain{

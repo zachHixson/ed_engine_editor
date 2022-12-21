@@ -1,32 +1,44 @@
+import Shared, { Victor } from '@/Shared';
+
 const NO_SPRITE_PADDING = 0.75;
 
 export default class Room_Edit_Renderer{
-    constructor(element, navState){
-        this.showGrid = true;
-        this.roomRef = null;
+    showGrid: boolean = true;
+    roomRef: typeof Shared.Room | null = null;
+    canvas: HTMLCanvasElement;
+    objBuff = document.createElement('canvas') as HTMLCanvasElement;
+    iconBuff = document.createElement('canvas') as HTMLCanvasElement;
+    iconColor = document.createElement('canvas') as HTMLCanvasElement;
+    cursorBuff = document.createElement('canvas') as HTMLCanvasElement;
+    gridBuff = document.createElement('canvas') as HTMLCanvasElement;
+    selectionBuff = document.createElement('canvas') as HTMLCanvasElement;
+    zDrawList: typeof Shared.Linked_List | null = null;
+    exits: typeof Shared.Exit[] | null = null;
+    selectedEntity: typeof Shared.Instance_Base = null;
+    mouseCell = new Victor(0, 0);
+    enableCursor = false;
+    navState: {[key: string]: any};
+    cameraIcon: HTMLImageElement;
+    noSpriteSVG: HTMLImageElement;
+    exitSVG: HTMLImageElement;
+    endSVG: HTMLImageElement;
+
+    //data caches
+    spriteCache = new Map<string, HTMLCanvasElement>();
+    roundedCanvas = new Victor(0, 0);
+    scaledCellWidth: number;
+    halfCanvas = new Victor(0, 0);
+    
+    constructor(element: HTMLCanvasElement, navState: object, svgIcons: {[key: string]: HTMLImageElement}){
         this.canvas = element;
-        this.objBuff = document.createElement('canvas');
-        this.iconBuff = document.createElement('canvas');
-        this.iconColor = document.createElement('canvas');
-        this.cursorBuff = document.createElement('canvas');
-        this.gridBuff = document.createElement('canvas');
-        this.selectionBuff = document.createElement('canvas');
-        this.zDrawList = null;
-        this.exits = null;
-        this.spriteCache = new Map();
-        this.selectedEntity = null;
-        this.mouseCell = new Victor(0, 0);
-        this.enableCursor = false;
         this.navState = navState;
-        this.cameraIcon = null;
-        this.noSpriteSVG = null;
-        this.exitSVG = null;
-        this.endSVG = null;
+        this.cameraIcon = svgIcons.cameraIcon;
+        this.noSpriteSVG = svgIcons.noSpriteSVG;
+        this.exitSVG = svgIcons.exitSVG;
+        this.endSVG = svgIcons.endSVG;
 
         //cached data
-        this.roundedCanvas = new Victor(0, 0);
-        this.scaledCellWidth = this.cell_px_width * this.navState.zoomFac;
-        this.halfCanvas = new Victor(0, 0);
+        this.scaledCellWidth = this.CELL_PX_WIDTH * this.navState.zoomFac;
         this.recalcRoundedCanvas();
         this.recalcHalfCanvas();
     }
@@ -42,7 +54,7 @@ export default class Room_Edit_Renderer{
         return this.mouseCell.clone().multiplyScalar(16);
     }
 
-    setRoomRef(roomObj){
+    setRoomRef(roomObj: typeof Shared.Room){
         this.roomRef = roomObj;
         this.zDrawList = this.roomRef.zSortedList;
         this.exits = this.roomRef.exitsList;
@@ -50,20 +62,13 @@ export default class Room_Edit_Renderer{
         this.navChange();
     }
 
-    setSelection(instRef){
+    setSelection(instRef: typeof Shared.Instance_Base){
         this.selectedEntity = instRef;
         this._drawCursor();
         this._composite();
     }
 
-    setSVG({camera, noSprite, exit, end}){
-        this.cameraIcon = camera;
-        this.noSpriteSVG = noSprite;
-        this.exitSVG = exit;
-        this.endSVG = end;
-    }
-
-    setGridVisibility(newVisibility){
+    setGridVisibility(newVisibility: boolean){
         this.showGrid = newVisibility;
         this._drawGrid();
         this._composite();
@@ -79,7 +84,7 @@ export default class Room_Edit_Renderer{
         this.roundedCanvas.y = Math.ceil(this.canvas.height / this.scaledCellWidth) * this.scaledCellWidth;
     }
 
-    mouseMove(event){
+    mouseMove(event: MouseEvent){
         let screenCoords = new Victor(event.offsetX, event.offsetY);
         let worldCoords = this.screenToWorldPos(screenCoords.clone());
         let cell = worldCoords.clone();
@@ -147,11 +152,11 @@ export default class Room_Edit_Renderer{
     }
 
     _composite(){
-        let ctx = this.canvas.getContext('2d');
-        let iconCtx = this.iconBuff.getContext('2d');
-        let iconColorCtx = this.iconColor.getContext('2d');
-        let bgColor = this.roomRef?.bgColor ?? new Shared.Color(255, 255, 255);
-        let luma = Math.max(Math.max(bgColor.r, bgColor.g), bgColor.b);
+        const ctx = this.canvas.getContext('2d') as CanvasRenderingContext2D;
+        const iconCtx = this.iconBuff.getContext('2d') as CanvasRenderingContext2D;
+        const iconColorCtx = this.iconColor.getContext('2d') as CanvasRenderingContext2D;
+        const bgColor = this.roomRef?.bgColor ?? new Shared.Color(255, 255, 255);
+        const luma = Math.max(Math.max(bgColor.r, bgColor.g), bgColor.b);
 
         //composite icon and iconColor buffs together
         iconColorCtx.fillStyle = (luma > 100) ? '#000' : '#EEE';
@@ -178,13 +183,12 @@ export default class Room_Edit_Renderer{
     }
 
     _drawObjects(){
-        let ctx = this.objBuff.getContext('2d');
-        let iconCtx = this.iconBuff.getContext('2d');
+        let ctx = this.objBuff.getContext('2d') as CanvasRenderingContext2D;
+        let iconCtx = this.iconBuff.getContext('2d') as CanvasRenderingContext2D;
 
         ctx.clearRect(0, 0, this.objBuff.width, this.objBuff.height);
         iconCtx.clearRect(0, 0, this.iconBuff.width, this.iconBuff.height);
         ctx.imageSmoothingEnabled = false;
-        ctx.webkitImageSmoothingEnabled = false;
 
         this._drawInstances();
         this._drawExits();
@@ -197,13 +201,13 @@ export default class Room_Edit_Renderer{
 
             paddingOffset /= 2;
 
-            this.zDrawList.forEach((inst) => {
+            this.zDrawList.forEach((inst: typeof Shared.Instance_Base) => {
                 this._drawInstance(inst, paddingOffset);
             });
         }
     }
 
-    _drawInstance(inst, paddingOffset){
+    _drawInstance(inst: typeof Shared.Instance_Base, paddingOffset: number){
         let pos = Victor.fromObject(inst.pos);
         let offset = 0;
 
@@ -216,23 +220,23 @@ export default class Room_Edit_Renderer{
             pos.y > -this.scaledCellWidth &&
             pos.y < this.objBuff.height + this.scaledCellWidth
         ){
-            let spriteBuff;
-            let scaleFac;
-            let ctx = this.objBuff.getContext('2d');
+            let ctx = this.objBuff.getContext('2d') as CanvasRenderingContext2D;
+            let spriteBuff: HTMLCanvasElement | HTMLOrSVGImageElement | undefined;
+            let scaleFac = 1;
 
             if (inst.hasEditorFrame){
                 //cache sprites after they are parsed once
                 spriteBuff = this.spriteCache.get(inst.editorFrameID);
 
                 if (!spriteBuff){
-                    spriteBuff = inst.editorFrame;
+                    spriteBuff = inst.editorFrame as HTMLCanvasElement;
                     this.spriteCache.set(inst.editorFrameID, spriteBuff);
                 }
 
                 scaleFac = this.scaledCellWidth / spriteBuff.width;
             }
             else if (this.noSpriteSVG){
-                ctx = this.iconBuff.getContext('2d');
+                ctx = this.iconBuff.getContext('2d') as CanvasRenderingContext2D;
                 spriteBuff = this.noSpriteSVG;
                 scaleFac = this.scaledCellWidth / spriteBuff.width;
                 scaleFac *= NO_SPRITE_PADDING;
@@ -252,12 +256,13 @@ export default class Room_Edit_Renderer{
     }
 
     _drawExits(){
-        let ctx = this.iconBuff.getContext('2d');
+        const ctx = this.iconBuff.getContext('2d') as CanvasRenderingContext2D;
 
         if (this.exits){
             this.exits.forEach((exit) => {
-                let pos = Victor.fromObject(exit.pos);
-                let scaleFac = this.scaledCellWidth / this.exitSVG.width;
+                const pos = Victor.fromObject(exit.pos);
+                const scaleFac = this.scaledCellWidth / this.exitSVG.width;
+
                 this.worldToScreenPos(pos);
                 ctx.translate(pos.x, pos.y);
                 ctx.scale(scaleFac, scaleFac);
@@ -275,14 +280,14 @@ export default class Room_Edit_Renderer{
     }
 
     _drawCameraCursor(){
-        let ctx = this.iconBuff.getContext('2d');
+        const ctx = this.iconBuff.getContext('2d') as CanvasRenderingContext2D;
 
         if (this.roomRef?.camera){
-            let cameraPos = this.roomRef.camera.pos;
-            let cameraSize = this.roomRef.camera.size;
+            const cameraPos = this.roomRef.camera.pos;
+            const cameraSize = this.roomRef.camera.size;
 
             //draw camera icon
-            let scaleFac = this.scaledCellWidth / this.cameraIcon.width;
+            const scaleFac = this.scaledCellWidth / this.cameraIcon.width;
             let screenPos = cameraPos.clone().subtractScalar(8);
             screenPos = this.worldToScreenPos(screenPos);
             ctx.translate(screenPos.x, screenPos.y);
@@ -304,12 +309,12 @@ export default class Room_Edit_Renderer{
     _drawCursor(){
         const CURSOR_SHIFT = 120;
 
-        let ctx = this.cursorBuff.getContext('2d');
-        let selectionCtx = this.selectionBuff.getContext('2d');
-        let screenCell = this.worldToScreenPos(this.getMouseWorldCell());
-        let bgColor = this.roomRef?.bgColor ?? new Shared.Color(255, 255, 255);
-        let luma = Math.max(Math.max(bgColor.r, bgColor.g), bgColor.b);
-        let shiftDir = (luma > 127) ? -CURSOR_SHIFT : CURSOR_SHIFT;
+        const ctx = this.cursorBuff.getContext('2d') as CanvasRenderingContext2D;
+        const selectionCtx = this.selectionBuff.getContext('2d') as CanvasRenderingContext2D;
+        const screenCell = this.worldToScreenPos(this.getMouseWorldCell());
+        const bgColor = this.roomRef?.bgColor ?? new Shared.Color(255, 255, 255);
+        const luma = Math.max(Math.max(bgColor.r, bgColor.g), bgColor.b);
+        const shiftDir = (luma > 127) ? -CURSOR_SHIFT : CURSOR_SHIFT;
 
         ctx.clearRect(0, 0, this.cursorBuff.width, this.cursorBuff.height);
         selectionCtx.clearRect(0, 0, this.selectionBuff.width, this.selectionBuff.height);
@@ -334,16 +339,16 @@ export default class Room_Edit_Renderer{
         const GRID_SHIFT = 30;
         const AXIS_SHIFT = 100;
 
-        let ctx = this.gridBuff.getContext('2d');
-        let maxDim = Math.max(this.gridBuff.width, this.gridBuff.height);
+        const ctx = this.gridBuff.getContext('2d') as CanvasRenderingContext2D;
+        const maxDim = Math.max(this.gridBuff.width, this.gridBuff.height);
+        const origin = new Victor(0, 0);
+        const bgCol = this.roomRef?.bgColor ?? new Shared.Color(6, 95, 233);
+        const luma = Math.max(bgCol.r, bgCol.g, bgCol.b);
+        const gridShiftAmt = (luma > 127) ? -GRID_SHIFT * 0.4 : GRID_SHIFT;
+        const gridCol = Shared.RGBAToHex(bgCol.r + gridShiftAmt, bgCol.g + gridShiftAmt, bgCol.b + gridShiftAmt);
+        const xAxisCol = Shared.RGBAToHex(bgCol.r + AXIS_SHIFT, bgCol.g - AXIS_SHIFT, bgCol.b - AXIS_SHIFT);
+        const yAxisCol = Shared.RGBAToHex(bgCol.r - AXIS_SHIFT, bgCol.g + AXIS_SHIFT, bgCol.b - AXIS_SHIFT);
         let lineCount = Math.ceil(maxDim / this.scaledCellWidth);
-        let origin = new Victor(0, 0);
-        let bgCol = this.roomRef?.bgColor ?? new Shared.Color(6, 95, 233);
-        let luma = Math.max(bgCol.r, bgCol.g, bgCol.b);
-        let gridShiftAmt = (luma > 127) ? -GRID_SHIFT * 0.4 : GRID_SHIFT;
-        let gridCol = Shared.RGBAToHex(bgCol.r + gridShiftAmt, bgCol.g + gridShiftAmt, bgCol.b + gridShiftAmt);
-        let xAxisCol = Shared.RGBAToHex(bgCol.r + AXIS_SHIFT, bgCol.g - AXIS_SHIFT, bgCol.b - AXIS_SHIFT);
-        let yAxisCol = Shared.RGBAToHex(bgCol.r - AXIS_SHIFT, bgCol.g + AXIS_SHIFT, bgCol.b - AXIS_SHIFT);
 
         lineCount += (lineCount % 2 == 0) ? 1 : 0;
         this.worldToScreenPos(origin);
@@ -395,7 +400,7 @@ export default class Room_Edit_Renderer{
         ctx.fillRect(this.gridBuff.width - 10, this.gridBuff.height - 10, this.gridBuff.width, this.gridBuff.height);
     }
 
-    screenToWorldPos(pt){
+    screenToWorldPos(pt: typeof Victor){
         pt.multiplyScalar(devicePixelRatio)
         pt.subtract(this.halfCanvas);
         pt.divideScalar(this.navState.zoomFac);
@@ -405,7 +410,7 @@ export default class Room_Edit_Renderer{
         return pt;
     }
 
-    worldToScreenPos(pt){
+    worldToScreenPos(pt: typeof Victor){
         pt.multiplyScalar(this.UNIT_WIDTH);
         pt.add(this.navState.offset);
         pt.multiplyScalar(this.navState.zoomFac);

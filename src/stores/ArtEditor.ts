@@ -24,13 +24,13 @@ export const useArtEditorStore = defineStore({
     }),
 
     getters: {
-        getSelectedColor: state => state.selectedColor,
-        getSelectedSize: state => state.selectedSize,
-        getSelectedTool: state => state.selectedTool,
-        getSelectedNavTool: state => state.selectedNavTool,
-        getSelectedFrame: state => state.selectedFrame,
-        isToolPanelOpen: state => state.toolPanelOpen,
-        isAnimPanelOpen: state => state.animPanelOpen,
+        getSelectedColor: (state): Shared.Color => state.selectedColor,
+        getSelectedSize: (state): Shared.ART_TOOL_SIZE => state.selectedSize,
+        getSelectedTool: (state): Shared.ART_TOOL_TYPE => state.selectedTool,
+        getSelectedNavTool: (state): Shared.NAV_TOOL_TYPE => state.selectedNavTool,
+        getSelectedFrame: (state): number => state.selectedFrame,
+        isToolPanelOpen: (state): boolean => state.toolPanelOpen,
+        isAnimPanelOpen: (state): boolean => state.animPanelOpen,
     },
 
     actions: {

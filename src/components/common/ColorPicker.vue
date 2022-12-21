@@ -1,18 +1,238 @@
+<script setup lang="ts">
+import { ref, watch, defineProps, defineEmits, onMounted, onBeforeUnmount } from 'vue';
+import Shared, { Victor } from '@/Shared';
+
+const EXPAND = 1.15;
+
+interface iProps {
+    
+}
+
+const props = defineProps<{
+    color: typeof Shared.Color,
+    width: number,
+}>();
+
+const emit = defineEmits(['change-start', 'change', 'change-end']);
+
+const canvasRef = ref<HTMLCanvasElement>();
+const sliderRef = ref<HTMLElement>();
+const cursorRef = ref<HTMLElement>();
+const valueCursorRef = ref<HTMLElement>();
+const valueCursorBGRef = ref<HTMLElement>();
+const wheelBuffer = Shared.createHDPICanvas(props.width, props.width) as HTMLCanvasElement;
+const valueBuffer = Shared.createHDPICanvas(props.width, props.width) as HTMLCanvasElement;
+const circleBuffer = Shared.createHDPICanvas(props.width, props.width) as HTMLCanvasElement;
+const cursorPos = new Victor(0, 0);
+const valuePos = ref(1);
+let selectedHS = props.color ?? new Shared.Color(255, 255, 255, 255);
+let selectedColor = props.color ?? new Shared.Color(255, 255, 255, 255);
+
+watch(props.color, newVal => {
+    if (newVal != selectedColor){
+        selectedColor = newVal;
+        moveCursorToColor(selectedColor);
+    }
+});
+watch(valuePos, ()=>composite());
+
+onMounted(()=>{
+    Shared.resizeHDPICanvas(canvasRef.value, props.width, props.width);
+
+    drawWheel();
+    drawCircleBuff();
+    composite();
+    moveCursorToColor(selectedColor);
+});
+
+onBeforeUnmount(()=>{
+    document.removeEventListener('mousemove', wheelMove as EventListener);
+    document.removeEventListener('mousemove', valueMove);
+    document.removeEventListener('mouseup', mouseUp);
+});
+
+function drawWheel(): void {
+    const canvas = canvasRef.value!;
+    const ctx = wheelBuffer.getContext('2d')!;
+    const colors = new Uint8ClampedArray(canvas.width * canvas.height * 4);
+    let imgData;
+
+    for (let i = 0; i < colors.length; i += 4){
+        const posIdx = i / 4;
+        const pos = new Victor(posIdx % canvas.width, Math.floor(posIdx / canvas.width));
+        const relPos = new Victor(pos.x / canvas.width, pos.y / canvas.height).subtractScalar(0.5).multiplyScalar(2);
+        const hue = (Math.atan2(relPos.y, relPos.x) + Math.PI) * (180 / Math.PI);
+        const sat = relPos.length() * EXPAND;
+        const val = 1;
+        const rgb = Shared.HSVToRGB(hue, sat, val);
+
+        colors[i + 0] = rgb.r;
+        colors[i + 1] = rgb.g;
+        colors[i + 2] = rgb.b;
+        colors[i + 3] = 255;
+    }
+
+    imgData = new ImageData(colors, canvas.width);
+    ctx.putImageData(imgData, 0, 0);
+}
+
+function drawCircleBuff(): void {
+    const canvas = canvasRef.value!;
+    const ctx = circleBuffer.getContext('2d')!;
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.arc(canvas.width / 2, canvas.height / 2, canvas.width / 2, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+function composite(): void {
+    const canvas = canvasRef.value!;
+    const ctx = canvas.getContext('2d')!;
+    const valueCtx = valueBuffer.getContext('2d')!;
+    const value = Math.round(valuePos.value * 255);
+
+    //draw value canvas
+    valueCtx.fillStyle = `rgb(${value},${value},${value})`;
+    valueCtx.fillRect(0, 0, valueBuffer.width, valueBuffer.height);
+
+    //composite
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(wheelBuffer, 0, 0);
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.drawImage(valueBuffer, 0, 0);
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.drawImage(circleBuffer, 0, 0);
+}
+
+function updateCursorPos(x: number, y: number): void {
+    const canvas = canvasRef.value!;
+    const halfCanvas = canvas.clientWidth / 2;
+    const canvasBounds = canvas.getBoundingClientRect();
+    const cursorClientPos = new Victor(x, y);
+    const wheelClientPos = new Victor(canvasBounds.left, canvasBounds.top);
+    const cursorPos = cursorClientPos.subtract(wheelClientPos);
+    const lengthBounds = halfCanvas - cursorRef.value!.clientWidth / 2 - 3;
+
+    cursorPos.copy(cursorPos);
+    cursorPos.subtractScalar(halfCanvas);
+    
+    if (cursorPos.length() > lengthBounds){
+        cursorPos.normalize();
+        cursorPos.multiplyScalar(lengthBounds);
+    }
+
+    cursorPos.addScalar(halfCanvas).unfloat();
+
+    cursorRef.value!.style.left = cursorPos.x + 'px';
+    cursorRef.value!.style.top = cursorPos.y + 'px';
+    updateCursorColors();
+}
+
+function updateValuePos(x: number): void {
+    const slider = sliderRef.value!;
+    const valueCursor = valueCursorRef.value!;
+    const halfCursorWidth = valueCursor.clientWidth / 2;
+    const slideX = slider.getBoundingClientRect().left;
+    const rBound = slider.clientWidth - valueCursor.clientWidth;
+    let cursorX = x - slideX - halfCursorWidth;
+    let fac;
+
+    cursorX = Math.max(Math.min(cursorX, rBound), 0);
+    fac = cursorX / rBound;
+
+    valuePos.value = fac;
+    valueCursor.style.left = cursorX + 'px';
+    updateCursorColors();
+}
+
+function updateCursorColors(): void {
+    const canvas = canvasRef.value!;
+    const imgData = wheelBuffer.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data;
+    const dpiCorrectCursor = cursorPos.clone().multiplyScalar(devicePixelRatio).unfloat();
+    const baseIdx = Math.round(dpiCorrectCursor.y * canvas.width * 4 + dpiCorrectCursor.x * 4);
+    const rgbArr = [
+        imgData[baseIdx + 0],
+        imgData[baseIdx + 1],
+        imgData[baseIdx + 2],
+    ];
+    const hs = new Shared.Color().fromArray([...rgbArr, 255]);
+    const hsv = new Shared.Color().fromArray([...rgbArr.map(i => Math.round(i * valuePos.value)), 255]);
+    
+    selectedColor = hsv;
+    cursorRef.value!.style.background = selectedColor.toCSS();
+    valueCursorBGRef.value!.style.background = selectedColor.toCSS();
+    sliderRef.value!.style.backgroundImage = `linear-gradient(to right, black, ${hs.toCSS()})`;
+}
+
+function moveCursorToColor(rgba: typeof Shared.Color): void {
+    const wheelBounds = canvasRef.value!.getBoundingClientRect();
+    const wheelPos = new Victor(wheelBounds.left, wheelBounds.top);
+    const sliderX = sliderRef.value!.getBoundingClientRect().left;
+    const halfCanvas = canvasRef.value!.clientWidth / 2;
+    const hsv = Shared.RGBToHSV(rgba.r, rgba.g, rgba.b);
+    const hueRad = hsv.hue * (Math.PI / 180);
+    const pos = new Victor(-Math.cos(hueRad), -Math.sin(hueRad)).multiplyScalar(hsv.sat * halfCanvas / EXPAND);
+
+    pos.addScalar(halfCanvas);
+    pos.add(wheelPos);
+    updateCursorPos(pos.x, pos.y);
+    updateValuePos((hsv.val * sliderRef.value!.clientWidth) + sliderX);
+}
+
+function wheelDown(event: MouseEvent): void {
+    updateCursorPos(event.clientX, event.clientY);
+    document.addEventListener('mousemove', wheelMove as EventListener);
+    document.addEventListener('mouseup', mouseUp);
+    emit('change-start');
+    emit('change', selectedColor);
+}
+
+function valueDown(event: MouseEvent): void {
+    updateValuePos(event.clientX);
+    document.addEventListener('mousemove', valueMove);
+    document.addEventListener('mouseup', mouseUp);
+    emit('change-start');
+}
+
+function wheelMove(event: WheelEvent): void {
+    updateCursorPos(event.clientX, event.clientY);
+    emit('change', selectedColor);
+}
+
+function valueMove(event: MouseEvent): void {
+    updateValuePos(event.clientX);
+    emit('change', selectedColor);
+}
+
+function mouseUp(): void {
+    document.removeEventListener('mousemove', wheelMove as EventListener);
+    document.removeEventListener('mousemove', valueMove);
+    document.removeEventListener('mouseup', mouseUp);
+    emit('change-end', selectedColor);
+}
+
+const old = {
+    methods: {
+        
+    }
+}
+</script>
+
 <template>
     <div class="colorPicker">
         <div class="wheelWrapper">
             <canvas
-                ref="canvas"
+                ref="canvasRef"
                 class="canvas"
                 @mousedown="wheelDown">
                 //Error loading canvas
             </canvas>
-            <div ref="cursor" class="cursor">
+            <div ref="cursorRef" class="cursor">
                 <div class="cursorInside"></div>
             </div>
         </div>
-        <div ref="slider" class="valueSlider" @mousedown="valueDown">
-            <div ref="valueCursor" class="valueCursor">
+        <div ref="sliderRef" class="valueSlider" @mousedown="valueDown">
+            <div ref="valueCursorRef" class="valueCursor">
                 <div class="valueCursorOutside" ref="valueCursorBG">
                     <div class="valueCursorInside"></div>
                 </div>
@@ -20,203 +240,6 @@
         </div>
     </div>
 </template>
-
-<script>
-const EXPAND = 1.15;
-
-export default {
-    name: 'ColorPicker',
-    props: ['color', 'width'],
-    data(){
-        return {
-            canvas: null,
-            slider: null,
-            wheelBuffer: null,
-            valueBuffer: null,
-            circleBuffer: null,
-            cursorPos: new Victor(0, 0),
-            valuePos: 1,
-            selectedHS: this.color ?? new Shared.Color(255, 255, 255, 255),
-            selectedColor: this.color ?? new Shared.Color(255, 255, 255, 255),
-        }
-    },
-    watch: {
-        color(newVal){
-            if (newVal != this.selectedColor){
-                this.selectedColor = newVal;
-                this.moveCursorToColor(this.selectedColor);
-            }
-        },
-        valuePos(){
-            this.composite();
-        },
-    },
-    mounted(){
-        this.canvas = this.$refs.canvas;
-        this.slider = this.$refs.slider;
-
-        let canvasDim = this.width;
-        Shared.resizeHDPICanvas(this.canvas, this.width, this.width);
-        this.wheelBuffer = Shared.createHDPICanvas(canvasDim, canvasDim);
-        this.valueBuffer = Shared.createHDPICanvas(canvasDim, canvasDim);
-        this.circleBuffer = Shared.createHDPICanvas(canvasDim, canvasDim);
-
-        this.drawWheel();
-        this.drawCircleBuff();
-        this.composite();
-        this.moveCursorToColor(this.selectedColor);
-    },
-    beforeDestroy(){
-        document.removeEventListener('mousemove', this.wheelMove);
-        document.removeEventListener('mousemove', this.valueMove);
-        document.removeEventListener('mouseup', this.mouseUp);
-    },
-    methods: {
-        drawWheel(){
-            let ctx = this.wheelBuffer.getContext('2d');
-            let colors = new Uint8ClampedArray(this.canvas.width * this.canvas.height * 4);
-            let imgData;
-
-            for (let i = 0; i < colors.length; i += 4){
-                let posIdx = i / 4;
-                let pos = new Victor(posIdx % this.canvas.width, Math.floor(posIdx / this.canvas.width));
-                let relPos = new Victor(pos.x / this.canvas.width, pos.y / this.canvas.height).subtractScalar(0.5).multiplyScalar(2);
-                let hue = (Math.atan2(relPos.y, relPos.x) + Math.PI) * (180 / Math.PI);
-                let sat = relPos.length() * EXPAND;
-                let val = 1;
-                let rgb = Shared.HSVToRGB(hue, sat, val);
-
-                colors[i + 0] = rgb.r;
-                colors[i + 1] = rgb.g;
-                colors[i + 2] = rgb.b;
-                colors[i + 3] = 255;
-            }
-
-            imgData = new ImageData(colors, this.canvas.width);
-            ctx.putImageData(imgData, 0, 0);
-        },
-        drawCircleBuff(){
-            let ctx = this.circleBuffer.getContext('2d');
-            ctx.fillStyle = 'white';
-            ctx.beginPath();
-            ctx.arc(this.canvas.width / 2, this.canvas.height / 2, this.canvas.width / 2, 0, Math.PI * 2);
-            ctx.fill();
-        },
-        composite(){
-            let ctx = this.canvas.getContext('2d');
-            let valueCtx = this.valueBuffer.getContext('2d');
-            let value = Math.round(this.valuePos * 255);
-
-            //draw value canvas
-            valueCtx.fillStyle = `rgb(${value},${value},${value})`;
-            valueCtx.fillRect(0, 0, this.valueBuffer.width, this.valueBuffer.height);
-
-            //composite
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.drawImage(this.wheelBuffer, 0, 0);
-            ctx.globalCompositeOperation = 'multiply';
-            ctx.drawImage(this.valueBuffer, 0, 0);
-            ctx.globalCompositeOperation = 'destination-in';
-            ctx.drawImage(this.circleBuffer, 0, 0);
-        },
-        updateCursorPos(x, y){
-            let canvas = this.$refs.canvas;
-            let halfCanvas = canvas.clientWidth / 2;
-            let canvasBounds = canvas.getBoundingClientRect();
-            let cursorClientPos = new Victor(x, y);
-            let wheelClientPos = new Victor(canvasBounds.left, canvasBounds.top);
-            let cursorPos = cursorClientPos.subtract(wheelClientPos);
-            let lengthBounds = halfCanvas - this.$refs.cursor.clientWidth / 2 - 3;
-
-            this.cursorPos.copy(cursorPos);
-            this.cursorPos.subtractScalar(halfCanvas);
-            
-            if (this.cursorPos.length() > lengthBounds){
-                this.cursorPos.normalize();
-                this.cursorPos.multiplyScalar(lengthBounds);
-            }
-
-            this.cursorPos.addScalar(halfCanvas).unfloat();
-
-            this.$refs.cursor.style.left = this.cursorPos.x + 'px';
-            this.$refs.cursor.style.top = this.cursorPos.y + 'px';
-            this.updateCursorColors();
-        },
-        updateValuePos(x){
-            let halfCursorWidth = this.$refs.valueCursor.clientWidth / 2;
-            let slideX = this.slider.getBoundingClientRect().left;
-            let cursorX = x - slideX - halfCursorWidth;
-            let rBound = this.slider.clientWidth - this.$refs.valueCursor.clientWidth;
-            let fac;
-
-            cursorX = Math.max(Math.min(cursorX, rBound), 0);
-            fac = cursorX / rBound;
-
-            this.valuePos = fac;
-            this.$refs.valueCursor.style.left = cursorX + 'px';
-            this.updateCursorColors();
-        },
-        updateCursorColors(){
-            let imgData = this.wheelBuffer.getContext('2d').getImageData(0, 0, this.canvas.width, this.canvas.height).data;
-            let dpiCorrectCursor = this.cursorPos.clone().multiplyScalar(devicePixelRatio).unfloat();
-            let baseIdx = Math.round(dpiCorrectCursor.y * this.canvas.width * 4 + dpiCorrectCursor.x * 4);
-            let rgbArr = [
-                imgData[baseIdx + 0],
-                imgData[baseIdx + 1],
-                imgData[baseIdx + 2],
-            ];
-            let hs = new Shared.Color().fromArray([...rgbArr, 255]);
-            let hsv = new Shared.Color().fromArray([...rgbArr.map(i => Math.round(i * this.valuePos)), 255]);
-            
-            this.selectedColor = hsv;
-            this.$refs.cursor.style.background = this.selectedColor.toCSS();
-            this.$refs.valueCursorBG.style.background = this.selectedColor.toCSS();
-            this.slider.style.backgroundImage = `linear-gradient(to right, black, ${hs.toCSS()})`;
-        },
-        moveCursorToColor(rgba){
-            let wheelBounds = this.canvas.getBoundingClientRect();
-            let wheelPos = new Victor(wheelBounds.left, wheelBounds.top);
-            let sliderX = this.slider.getBoundingClientRect().left;
-            let halfCanvas = this.canvas.clientWidth / 2;
-            let hsv = Shared.RGBToHSV(rgba.r, rgba.g, rgba.b);
-            let hueRad = hsv.hue * (Math.PI / 180);
-            let pos = new Victor(-Math.cos(hueRad), -Math.sin(hueRad)).multiplyScalar(hsv.sat * halfCanvas / EXPAND);
-
-            pos.addScalar(halfCanvas);
-            pos.add(wheelPos);
-            this.updateCursorPos(pos.x, pos.y);
-            this.updateValuePos((hsv.val * this.slider.clientWidth) + sliderX);
-        },
-        wheelDown(event){
-            this.updateCursorPos(event.clientX, event.clientY);
-            document.addEventListener('mousemove', this.wheelMove);
-            document.addEventListener('mouseup', this.mouseUp);
-            this.$emit('change-start');
-            this.$emit('change', this.selectedColor);
-        },
-        valueDown(event){
-            this.updateValuePos(event.clientX);
-            document.addEventListener('mousemove', this.valueMove);
-            document.addEventListener('mouseup', this.mouseUp);
-            this.$emit('change-start');
-        },
-        wheelMove(event){
-            this.updateCursorPos(event.clientX, event.clientY);
-            this.$emit('change', this.selectedColor);
-        },
-        valueMove(event){
-            this.updateValuePos(event.clientX);
-            this.$emit('change', this.selectedColor);
-        },
-        mouseUp(){
-            document.removeEventListener('mousemove', this.wheelMove);
-            document.removeEventListener('mousemove', this.valueMove);
-            document.removeEventListener('mouseup', this.mouseUp);
-            this.$emit('change-end', this.selectedColor);
-        },
-    }
-}
-</script>
 
 <style scoped>
 .colorPicker{

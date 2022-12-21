@@ -1,3 +1,72 @@
+<script lang="ts">
+export interface iGroupChangedProps {
+    groupName: string,
+    add?: boolean,
+    remove?: boolean,
+    newName?: string,
+    oldIdx?: number,
+}
+</script>
+
+<script setup lang="ts">
+import { ref, defineProps, defineEmits, nextTick } from 'vue';
+import { useI18n } from 'vue-i18n';
+import Shared from '@/Shared';
+
+const { t } = useI18n();
+
+const props = defineProps<{
+    editList: string[],
+    readOnlyList: string[],
+    tooltip_text?: string,
+}>();
+
+const emit = defineEmits(['group-changed']);
+
+const list = ref();
+
+function validateName(name: string, oldname: string): string {
+    const roCollisions = props.readOnlyList?.includes(name);
+    const editCollisions = props.editList.includes(name);
+
+    if (name.length <= 0){
+        return oldname;
+    }
+
+    if (roCollisions || editCollisions){
+        return oldname;
+    }
+
+    return name;
+}
+
+function addGroup(): void {
+    const nextNum = Math.max(
+        Shared.getHighestEndingNumber(props.editList),
+        (props.readOnlyList) ? Shared.getHighestEndingNumber(props.readOnlyList) : []
+    ) + 1;
+
+    emit('group-changed', {
+        add: true,
+        groupName: t('object_editor.group_prefix') + nextNum
+    } satisfies iGroupChangedProps);
+    nextTick(()=>{
+        const listEl = list.value;
+        listEl.scrollTop = listEl.scrollHeight - listEl.clientHeight;
+    });
+}
+
+function groupNameChanged(group: string, event: any): void {
+    const obj = {groupName: group, newName: validateName(event.target.value, group)} satisfies iGroupChangedProps;
+    emit('group-changed', obj);
+}
+
+function groupDeleted(group: string, idx: number, event: any): void {
+    const obj = {groupName: group, remove: true, oldIdx: idx} satisfies iGroupChangedProps;
+    emit('group-changed', obj);
+}
+</script>
+
 <template>
     <div class="editList">
         <div class="editListTitle">
@@ -17,8 +86,8 @@
                     v-for="(group, idx) in editList"
                     :key="group"
                     class="item">
-                    <input class="listInput" :value="group" @change="$emit('group-changed', {groupName: group, newName: validateName($event.target.value, group)})"/>
-                    <button class="deleteBtn" @click="$emit('group-changed', {groupName: group, remove: true, oldIdx: idx})">
+                    <input class="listInput" :value="group" @change="groupNameChanged(group, $event)"/>
+                    <button class="deleteBtn" @click="groupDeleted(group, idx, $event)">
                         <img src="@/assets/plus.svg" style="transform: rotate(45deg)"/>
                     </button>
                 </div>
@@ -29,49 +98,6 @@
         </button>
     </div>
 </template>
-
-<script>
-import Tooltip from '@/components/common/Tooltip';
-
-export default {
-    name: 'GroupList',
-    props: ['editList', 'readOnlyList', 'tooltip_text'],
-    components: {
-        Tooltip,
-    },
-    methods: {
-        validateName(name, oldname){
-            let roCollisions = this.readOnlyList?.includes(name);
-            let editCollisions = this.editList.includes(name);
-
-            if (name.length <= 0){
-                return oldname;
-            }
-
-            if (roCollisions || editCollisions){
-                return oldname;
-            }
-
-            return name;
-        },
-        addGroup(){
-            let nextNum = Math.max(
-                Shared.getHighestEndingNumber(this.editList),
-                (this.readOnlyList) ? Shared.getHighestEndingNumber(this.readOnlyList) : []
-            ) + 1;
-
-            this.$emit('group-changed', {
-                add: true,
-                groupName: this.$t('object_editor.group_prefix') + nextNum
-            });
-            this.$nextTick(()=>{
-                let list = this.$refs.list;
-                list.scrollTop = list.scrollHeight - list.clientHeight;
-            });
-        }
-    }
-}
-</script>
 
 <style scoped>
 @import './editList.css';

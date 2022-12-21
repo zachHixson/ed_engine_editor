@@ -1,8 +1,66 @@
+<script setup lang="ts">
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { useMainStore } from '@/stores/Main';
+import Shared, { Engine } from '@/Shared';
+import { PLAY_STATE } from '@/stores/Main';
+
+const mainStore = useMainStore();
+
+const canvasWrapper = ref<HTMLElement>();
+const canvas = ref<HTMLCanvasElement>();
+
+let engine: typeof Engine = null;
+let resizeInterval: number;
+
+const playState = computed<PLAY_STATE>({
+    get(){
+        return mainStore.getPlayState;
+    },
+    set(newState: PLAY_STATE){
+        mainStore.setPlayState(newState);
+    }
+});
+
+onMounted(()=>{
+    start();
+});
+
+onBeforeUnmount(()=>{
+    engine = null;
+});
+
+function start(): void {
+    const restart = ()=>{
+        start();
+    };
+
+    resizeInterval = setInterval(()=>{
+        const wrapper = canvasWrapper.value as HTMLElement;
+        const minDim = Math.min(wrapper.clientWidth, wrapper.clientHeight);
+
+        Shared.resizeHDPICanvas(canvas, minDim, minDim);
+    }, 20);
+
+    engine = new Engine({
+        canvas: canvas.value,
+        gameData: mainStore.getSaveData,
+        callbacks: {restart}
+    });
+    engine.start();
+}
+
+function close(): void {
+    playState.value = PLAY_STATE.NOT_PLAYING;
+    clearInterval(resizeInterval);
+    engine.stop();
+}
+</script>
+
 <template>
     <div class="playWindow">
         <div class="headerBar">
             <div class="headerText">
-                {{playState == PLAY_STATES.PLAYING ? $t('editor_main.run') : $t('editor_main.debug')}}
+                {{playState == PLAY_STATE.PLAYING ? $t('editor_main.run') : $t('editor_main.debug')}}
             </div>
             <button class="closeBtn" @click="close">
                 X
@@ -13,64 +71,6 @@
         </div>
     </div>
 </template>
-
-<script>
-export default {
-    name: 'PlayWindow',
-    data(){
-        return{
-            engine: null,
-            resizeInterval: null,
-        };
-    },
-    computed: {
-        PLAY_STATES(){
-            return this.$store.getters['getPlayStates'];
-        },
-        playState: {
-            get: function(){
-                return this.$store.getters['getPlayState'];
-            },
-            set: function(newState){
-                this.$store.dispatch('setPlayState', newState);
-            },
-        },
-    },
-    mounted(){
-        this.start();
-    },
-    destroyed(){
-        this.engine = null;
-    },
-    methods: {
-        start(){
-            let canvas = this.$refs.canvas;
-            let restart = ()=>{
-                this.start();
-            };
-
-            this.resizeInterval = setInterval(()=>{
-                let wrapper = this.$refs.canvasWrapper;
-                let minDim = Math.min(wrapper.clientWidth, wrapper.clientHeight);
-
-                Shared.resizeHDPICanvas(canvas, minDim, minDim);
-            }, 20);
-
-            this.engine = new Engine({
-                canvas: this.$refs.canvas,
-                gameData: this.$store.getters['getSaveData'],
-                callbacks: {restart}
-            });
-            this.engine.start();
-        },
-        close(){
-            this.playState = this.PLAY_STATES.NOT_PLAYING;
-            clearInterval(this.resizeInterval);
-            this.engine.stop();
-        },
-    },
-}
-</script>
 
 <style scoped>
 .playWindow{

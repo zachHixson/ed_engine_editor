@@ -1,3 +1,79 @@
+<script setup lang="ts">
+import HeaderPanel from './components/HeaderPanel.vue';
+import TabPanel from './components/TabPanel.vue';
+import AssetBrowser from './components/asset_browser/AssetBrowser.vue';
+import EditorWindow from './components/EditorWindow.vue';
+import PlayWindow from './components/PlayWindow.vue';
+import Tooltip from './components/common/Tooltip.vue';
+
+import { ref, onMounted } from 'vue';
+import {template} from '@compiled/Engine';
+import {saveAs} from 'file-saver';
+import { useMainStore, PLAY_STATE } from './stores/Main';
+import { useGameDataStore } from './stores/GameData';
+import { useAssetBrowserStore } from './stores/AssetBrowser';
+
+//stores
+const mainStore = useMainStore();
+const gameDataStore = useGameDataStore();
+const assetBrowserStore = useAssetBrowserStore();
+
+//refs
+const assetBrowser = ref<AssetBrowser>(null);
+const tabPanel = ref<TabPanel>(null);
+
+onMounted(()=>{
+    mainStore.newProject();
+    mainStore.getNodeAPI.setGlobalStore(mainStore);
+    updateEditorAsset();
+});
+
+function updateAssetPreviews(id: number): void {
+    assetBrowser.updateAsset(id);
+}
+
+function updateEditorAsset(): void {
+    tabPanel.updateEditorTabs();
+}
+
+function updateAfterDeletion(): void {
+    gameDataStore.purgeMissingReferences();
+}
+
+function newProject(): void {
+    mainStore.newProject();
+}
+
+function openProject(data: any): void {
+    mainStore.loadSaveData(data);
+    resetUI();
+}
+
+function saveProject(): void {
+    let blob = new Blob([mainStore.getSaveData]);
+    saveAs(blob, `${mainStore.getProjectName}.edproj`);
+}
+
+function packageGame(): void {
+    let projectName = mainStore.getProjectName;
+    let shared = (document.getElementById('shared') as HTMLElement).innerHTML;
+    let engine = (document.getElementById('engine') as HTMLElement).innerHTML;
+    let gameData = mainStore.getSaveData;
+    let compiled = template.replace('[title]', projectName)
+        .replace('[shared]', shared)
+        .replace('[engine]', engine)
+        .replace('[gameData]', gameData);
+    let blob = new Blob([compiled]);
+    saveAs(blob, `${projectName}.html`);
+}
+
+function resetUI(): void {
+    assetBrowserStore.deselectAssets();
+    mainStore.setSelectedEditor(Shared.EDITOR_ID.ROOM);
+    updateEditorAsset();
+}
+</script>
+
 <template>
     <div id="app">
         <HeaderPanel class="headerPanel"
@@ -5,91 +81,15 @@
             @open-project="openProject"
             @save-project="saveProject"
             @package-game="packageGame" />
-        <TabPanel class="TabPanel" ref="TabPanel"/>
+        <TabPanel class="TabPanel" ref="tabPanel"/>
         <AssetBrowser class="assetBrowser" ref="assetBrowser" @asset-selected="updateEditorAsset" @asset-deleted="updateAfterDeletion" />
         <EditorWindow class="editorWindow" ref="editorWindow" @asset-changed="updateAssetPreviews"/>
         <transition name="playWindow">
-            <PlayWindow v-if="playState != PLAY_STATES.NOT_PLAYING" class="playWindow" />
+            <PlayWindow v-if="mainStore.getPlayState != PLAY_STATE.NOT_PLAYING" class="playWindow" />
         </transition>
         <Tooltip />
     </div>
 </template>
-
-<script>
-import {template} from '@compiled/Engine';
-import {saveAs} from 'file-saver';
-import HeaderPanel from './components/HeaderPanel';
-import TabPanel from './components/TabPanel';
-import AssetBrowser from './components/asset_browser/AssetBrowser';
-import EditorWindow from './components/EditorWindow';
-import PlayWindow from './components/PlayWindow';
-import Tooltip from './components/common/Tooltip';
-
-export default {
-    name: 'App',
-    components: {
-        HeaderPanel,
-        TabPanel,
-        AssetBrowser,
-        EditorWindow,
-        PlayWindow,
-        Tooltip,
-    },
-    computed: {
-        PLAY_STATES(){
-            return this.$store.getters['getPlayStates'];
-        },
-        playState(){
-            return this.$store.getters['getPlayState'];
-        },
-    },
-    mounted(){
-        this.$store.dispatch('newProject');
-        this.$store.getters['getNodeAPI'].setGlobalStore(this.$store);
-        this.updateEditorAsset();
-    },
-    methods: {
-        updateAssetPreviews(id){
-            this.$refs.assetBrowser.updateAsset(id);
-        },
-        updateEditorAsset(){
-            this.$refs.TabPanel.updateEditorTabs();
-        },
-        updateAfterDeletion(){
-            this.$store.dispatch('GameData/purgeMissingReferences');
-        },
-        newProject(){
-            this.$store.dispatch('newProject');
-            this.resetUI();
-        },
-        openProject(data){
-            this.$store.dispatch('loadSaveData', data);
-            this.resetUI();
-        },
-        saveProject(){
-            let blob = new Blob([this.$store.getters['getSaveData']]);
-            saveAs(blob, `${this.$store.getters['getProjectName']}.edproj`);
-        },
-        packageGame(){
-            let projectName = this.$store.getters['getProjectName'];
-            let shared = document.getElementById('shared').innerHTML;
-            let engine = document.getElementById('engine').innerHTML;
-            let gameData = this.$store.getters['getSaveData'];
-            let compiled = template.replace('[title]', projectName)
-                .replace('[shared]', shared)
-                .replace('[engine]', engine)
-                .replace('[gameData]', gameData);
-            let blob = new Blob([compiled]);
-            saveAs(blob, `${projectName}.html`);
-        },
-        resetUI(){
-            this.$store.dispatch('AssetBrowser/deselectAssets');
-            this.$store.dispatch('switchTab', Shared.EDITOR_ID.ROOM);
-            this.updateEditorAsset();
-        }
-    }
-}
-</script>
 
 <style>
 @import 'components/common/colorScheme.css';

@@ -1,11 +1,14 @@
 class Undo_Store{
+    stepLimit: number;
+    undoStore = new Shared.Linked_List();
+    redoStore = new Shared.Linked_List();
+    initialState = null;
+    returnPrevStep: boolean;
+    cache = new Map<any, any | object>();
+
     constructor(stepLimit = 1, returnPrevStep = true){
         this.stepLimit = stepLimit;
-        this.undoStore = new Shared.Linked_List();
-        this.redoStore = new Shared.Linked_List();
-        this.initialState = null;
         this.returnPrevStep = returnPrevStep;
-        this.cache = new Map();
     }
 
     get undoLength(){return this.undoStore.length}

@@ -1,3 +1,198 @@
+<script lang="ts">
+export const AssetBrowserEventBus = new Event_Bus();
+</script>
+
+<script setup lang="ts">
+import Asset from './Asset.vue';
+import DragList from '@/components/common/DragList.vue';
+
+import { ref, computed, defineEmits, nextTick, onBeforeMount } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useAssetBrowserStore } from '@/stores/AssetBrowser';
+import { useGameDataStore } from '@/stores/GameData';
+import Shared from '@/Shared';
+import { Event_Bus } from '@/components/common/Event_Listener';
+import type { iChangeEventProps } from '@/components/common/DragList.vue';
+import type { iRenameEventProps } from './Asset.vue';
+import spriteIcon from '@/assets/sprite_icon.svg';
+import objectIcon from '@/assets/object_icon.svg';
+import logicIcon from '@/assets/logic.svg';
+import roomIcon from '@/assets/room_icon.svg';
+
+const { t } = useI18n();
+const assetBrowserStore = useAssetBrowserStore();
+const gameDataStore = useGameDataStore();
+
+const emit = defineEmits(['asset-deleted', 'asset-selected']);
+
+const slideWrapperRef = ref<HTMLElement>();
+const assetListRef = ref<HTMLElement>();
+const categories = [
+    {
+        cat_ID: Shared.CATEGORY_ID.SPRITE,
+        text: t("asset_browser.sprites"),
+        icon: spriteIcon,
+    },
+    {
+        cat_ID: Shared.CATEGORY_ID.OBJECT,
+        text: t("asset_browser.objects"),
+        icon: objectIcon,
+    },
+    {
+        cat_ID: Shared.CATEGORY_ID.LOGIC,
+        text: t("asset_browser.logic"),
+        icon: logicIcon,
+    },
+    {
+        cat_ID: Shared.CATEGORY_ID.ROOM,
+        text: t("asset_browser.rooms"),
+        icon: roomIcon,
+    }
+];
+const selected_category = ref<typeof categories[number]>(categories[0]);
+
+const selectedList = computed(()=>{
+    const list: typeof Shared.Asset_Base[] = [];
+
+    switch(selected_category.value.cat_ID){
+        case Shared.CATEGORY_ID.SPRITE:
+            list.push(...gameDataStore.getAllSprites);
+            break;
+        case Shared.CATEGORY_ID.OBJECT:
+            list.push(...gameDataStore.getAllObjects);
+            break;
+        case Shared.CATEGORY_ID.LOGIC:
+            list.push(...gameDataStore.getAllLogic);
+            break;
+        case Shared.CATEGORY_ID.ROOM:
+            list.push(...gameDataStore.getAllRooms);
+            break;
+    }
+
+    //@ts-ignore
+    list.sort((a, b) => {
+        const ao = a.sortOrder;
+        const bo = b.sortOrder;
+
+        if (ao < bo){
+            return -1;
+        }
+        if (ao == bo){
+            return 0;
+        }
+        if (ao > bo){
+            return 1;
+        }
+    });
+
+    return list;
+});
+const keylist = computed<string[] | null>(()=>{
+    switch(selected_category.value!.cat_ID){
+        case Shared.CATEGORY_ID.SPRITE:
+            return selectedList.value.map((s) => s.frameIDs[0]) as string[];
+        case Shared.CATEGORY_ID.OBJECT:
+            return selectedList.value.map((o) => o.sprite?.frameIDs[o.startFrame] ?? o.id) as string[];
+        default:
+            return null;
+    }
+});
+
+function openCategory(category: typeof categories[number]): void {
+    selected_category.value = category;
+    slideWrapperRef.value!.classList.add('category_selected');
+}
+
+function back(): void {
+    slideWrapperRef.value!.classList.remove('category_selected');
+}
+
+function addAsset(): void {
+    const assetList = assetListRef.value!;
+
+    gameDataStore.addAsset(selected_category.value.cat_ID);
+
+    nextTick(()=>{
+        if (assetList){
+            assetList.scrollTop = assetList.scrollHeight - assetList.clientHeight;
+        }
+    });
+}
+
+function deleteAsset(asset: typeof Shared.Asset): void {
+    const isRoom = asset.category_ID == Shared.CATEGORY_ID.ROOM;
+    const selectedAsset = isRoom ? assetBrowserStore.getSelectedRoom : assetBrowserStore.getSelectedAsset;
+
+    //if the selected asset was deleted, shift the selection to the adjacent asset
+    if (selectedAsset && asset.id == selectedAsset.id){
+        selectAdjacent(asset);
+    }
+
+    //Actually delete the asset from Vuex
+    gameDataStore.deleteAsset(asset.category_ID, asset.id);
+    emit('asset-deleted');
+}
+
+function selectAsset(asset: typeof Shared.Asset_Base, catId = null): void {
+    if (asset && catId == null){
+        catId = asset.category_ID;
+    }
+
+    if (catId == Shared.CATEGORY_ID.ROOM){
+        assetBrowserStore.selectRoom(asset);
+    }
+    else{
+        assetBrowserStore.selectAsset(asset);
+    }
+
+    emit('asset-selected');
+}
+
+function selectAdjacent(delAsset: typeof Shared.Asset_Base): void {
+    let newSelection = null;
+
+    for (let i = 0; i < selectedList.value.length; i++){
+        if (selectedList.value[i].id == delAsset.id){
+            newSelection = (i > 0) ? selectedList.value[i - 1] : selectedList.value[i + 1]
+        }
+    }
+
+    selectAsset(newSelection, delAsset.category_ID);
+}
+
+function updateAsset(id = null): void {
+    AssetBrowserEventBus.emit('draw-thumbnail');
+}
+
+function assetRenamed({asset, oldName}: iRenameEventProps): void {
+    let duplicateName = false;
+
+    for (let i = 0; i < selectedList.value.length; i++){
+        const curAsset = selectedList.value[i];
+
+        duplicateName ||= (curAsset.name == asset.name) && !(curAsset == asset);
+    }
+
+    if (asset.name.trim().length <= 0){
+        asset.name == oldName;
+    }
+
+    if (duplicateName){
+        asset.name += '_' + t('room_editor.duplicate_name_suffix');
+    }
+}
+
+function orderChanged(event: iChangeEventProps): void {
+    const selectedListCopy = [...selectedList.value];
+    const movedAsset = selectedListCopy.splice(event.itemIdx, 1);
+    selectedListCopy.splice(event.newIdx, 0, ...movedAsset);
+    
+    for (let i = 0; i < selectedListCopy.length; i++){
+        selectedListCopy[i].sortOrder = i;
+    }
+}
+</script>
+
 <template>
     <div class="assetBrowser">
         <div ref="slideWrapper" class="slideWrapper">
@@ -7,7 +202,7 @@
                         v-for="category in categories"
                         :key="category.cat_ID">
                         <div class="cat_title">
-                            <img class="cat_icon" :src="require(`@/${category.icon}.svg`)"/>
+                            <img class="cat_icon" :src="category.icon"/>
                             {{category.text}}
                         </div>
                         <button class="btn" @click="openCategory(category)">
@@ -21,7 +216,7 @@
                             <button class="btn" @click="back">
                                 <img class="btn_icon" src="@/assets/arrow_01.svg" style="transform: rotate(-90deg);"/>
                             </button>
-                            <img class="assetHeadingLogo" :src="require(`@/${selected_category.icon}.svg`)"/>
+                            <img class="assetHeadingLogo" :src="selected_category.icon"/>
                             {{selected_category.text}}
                         </div>
                         <div class="rightHeading">
@@ -37,11 +232,10 @@
                             @order-changed="orderChanged">
                             <template #item="{item}">
                                 <Asset
-                                    ref="assets"
                                     :asset="item"
                                     :defaultIcon="selected_category.icon"
-                                    @deleteAsset="deleteAsset"
-                                    @selectAsset="selectAsset"
+                                    @delete-asset="deleteAsset"
+                                    @select-asset="selectAsset"
                                     @renamed="assetRenamed" />
                             </template>
                         </DragList>
@@ -52,196 +246,6 @@
         </div>
     </div>
 </template>
-
-<script>
-import Asset from './Asset';
-import DragList from '@/components/common/DragList';
-
-export default {
-    name: 'AssetBrowser',
-    data(){
-        return {
-            selected_category: null,
-            categories: [
-                {
-                    cat_ID: Shared.CATEGORY_ID.SPRITE,
-                    text: this.$t("asset_browser.sprites"),
-                    icon: 'assets/sprite_icon'
-                },
-                {
-                    cat_ID: Shared.CATEGORY_ID.OBJECT,
-                    text: this.$t("asset_browser.objects"),
-                    icon: 'assets/object_icon'
-                },
-                {
-                    cat_ID: Shared.CATEGORY_ID.LOGIC,
-                    text: this.$t("asset_browser.logic"),
-                    icon: 'assets/logic'
-                },
-                {
-                    cat_ID: Shared.CATEGORY_ID.ROOM,
-                    text: this.$t("asset_browser.rooms"),
-                    icon: 'assets/room_icon'
-                }
-            ]
-        }
-    },
-    components: {
-        Asset,
-        DragList
-    },
-    computed: {
-        selectedList(){
-            const list = [];
-
-            switch(this.selected_category.cat_ID){
-                case Shared.CATEGORY_ID.SPRITE:
-                    list.push(...this.$store.getters['GameData/getAllSprites']);
-                    break;
-                case Shared.CATEGORY_ID.OBJECT:
-                    list.push(...this.$store.getters['GameData/getAllObjects']);
-                    break;
-                case Shared.CATEGORY_ID.LOGIC:
-                    list.push(...this.$store.getters['GameData/getAllLogic']);
-                    break;
-                case Shared.CATEGORY_ID.ROOM:
-                    list.push(...this.$store.getters['GameData/getAllRooms']);
-                    break;
-            }
-
-            list.sort((a, b) => {
-                const ao = a.sortOrder;
-                const bo = b.sortOrder;
-
-                if (ao < bo){
-                    return -1;
-                }
-                if (ao == bo){
-                    return 0;
-                }
-                if (ao > bo){
-                    return 1;
-                }
-            });
-
-            return list;
-        },
-        keylist(){
-            switch(this.selected_category.cat_ID){
-                case Shared.CATEGORY_ID.SPRITE:
-                    return this.selectedList.map((s) => s.frameIDs[0]);
-                case Shared.CATEGORY_ID.OBJECT:
-                    return this.selectedList.map((o) => o.sprite?.frameIDs[o.startFrame] ?? o.id);
-                default:
-                    return null;
-            }
-        },
-    },
-    beforeMount(){
-        this.selected_category = this.categories[0];
-    },
-    methods: {
-        openCategory(category){
-            this.selected_category = category;
-            this.$refs.slideWrapper.classList.add('category_selected');
-        },
-        back(){
-            this.$refs.slideWrapper.classList.remove('category_selected');
-        },
-        addAsset(){
-            let assetList = this.$refs.assetList;
-
-            this.$store.dispatch('GameData/addAsset', this.selected_category.cat_ID);
-
-            this.$nextTick(()=>{
-                if (assetList){
-                    assetList.scrollTop = assetList.scrollHeight - assetList.clientHeight;
-                }
-            });
-        },
-        deleteAsset(asset){
-            let selectedAsset = null;
-
-            //determine which type of asset has been deleted
-            if (asset.category_ID == Shared.CATEGORY_ID.ROOM){
-                selectedAsset = this.$store.getters['AssetBrowser/getSelectedRoom'];
-            }
-            else{
-                selectedAsset = this.$store.getters['AssetBrowser/getSelectedAsset'];
-            }
-
-            //if the selected asset was deleted, shift the selection to the adjacent asset
-            if (selectedAsset && asset.id == selectedAsset.id){
-                this.selectAdjacent(asset);
-            }
-
-            //Actually delete the asset from Vuex
-            this.$store.dispatch('GameData/deleteAsset', {category: asset.category_ID, id: asset.id});
-            this.$emit('asset-deleted');
-        },
-        selectAsset(asset, catId = null){
-            if (asset && catId == null){
-                catId = asset.category_ID;
-            }
-
-            if (catId == Shared.CATEGORY_ID.ROOM){
-                this.$store.dispatch('AssetBrowser/selectRoom', asset);
-            }
-            else{
-                this.$store.dispatch('AssetBrowser/selectAsset', asset);
-            }
-
-            this.$emit('asset-selected');
-        },
-        selectAdjacent(delAsset){
-            let newSelection = null;
-
-            for (let i = 0; i < this.selectedList.length; i++){
-                if (this.selectedList[i].id == delAsset.id){
-                    newSelection = (i > 0) ? this.selectedList[i - 1] : this.selectedList[i + 1]
-                }
-            }
-
-            this.selectAsset(newSelection, delAsset.category_ID);
-        },
-        updateAsset(id = null){
-            for (let i = 0; i < this.$refs.assets.length; i++){
-                let curAsset = this.$refs.assets[i];
-
-                if (id == null || curAsset.asset.id == id){
-                    curAsset.drawThumbnail();
-                }
-            }
-        },
-        assetRenamed({asset, oldName}){
-            let duplicateName = false;
-
-            for (let i = 0; i < this.selectedList.length; i++){
-                let curAsset = this.selectedList[i];
-
-                duplicateName |= (curAsset.name == asset.name) && !(curAsset == asset);
-            }
-
-            if (asset.name.trim().length <= 0){
-                asset.name == oldName;
-            }
-
-            if (duplicateName){
-                asset.name += '_' + this.$t('room_editor.duplicate_name_suffix');
-            }
-        },
-        orderChanged(event){
-            const selectedList = [...this.selectedList];
-            const movedAsset = selectedList.splice(event.itemIdx, 1);
-            selectedList.splice(event.newIdx, 0, ...movedAsset);
-            
-            for (let i = 0; i < selectedList.length; i++){
-                selectedList[i].sortOrder = i;
-            }
-        },
-    }
-}
-</script>
 
 <style scoped>
 *{

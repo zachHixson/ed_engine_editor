@@ -1,6 +1,4 @@
-interface iAnyObj {
-    [key: string | number | symbol]: any
-}
+type iAnyObj = {[key: string | number | symbol]: any};
 
 export default interface iLoadObj {
     projectName: string,

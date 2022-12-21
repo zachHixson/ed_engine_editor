@@ -1,17 +1,18 @@
 import { defineStore } from 'pinia';
 import Logic from '@/components/editor_logic/Logic.ts';
 import Node_API from '@/components/editor_logic/Node_API.ts';
-import {useI18n} from 'vue-i18n';
+import i18n from '@/i18n';
+import Shared from '@/Shared';
 import type iLoadObj from './iLoadObj';
 
-const {t} = useI18n();
+const t = i18n.global.t;
 
 interface iState {
     startRoomId: number | null,
-    sprites: Shared.Sprite[],
-    objects: Shared.Game_Object[],
+    sprites: typeof Shared.Sprite[],
+    objects: typeof Shared.Game_Object[],
     logic: Logic[],
-    rooms: Shared.Room[]
+    rooms: typeof Shared.Room[]
 }
 
 export const useGameDataStore = defineStore({
@@ -26,34 +27,34 @@ export const useGameDataStore = defineStore({
     }),
 
     getters: {
-        getStartRoom: state => state.startRoomId,
-        getAllSprites: state => state.sprites,
-        getAllObjects: state => state.objects,
-        getAllLogic: state => state.logic,
-        getAllRooms: state => state.rooms,
-        getSpriteSaveData: state => state.sprites.map(s => s.toSaveData()),
-        getObjectSaveData: state => state.objects.map(o => o.toSaveData()),
-        getRoomSaveData: state => state.rooms.map(r => r.toSaveData()),
-        getLogicSaveData: state => state.logic.map(r => r.toSaveData()),
+        getStartRoom: (state): number | null => state.startRoomId,
+        getAllSprites: (state): typeof Shared.Sprite[] => state.sprites,
+        getAllObjects: (state): typeof Shared.Game_Object[] => state.objects,
+        getAllLogic: (state): typeof Shared.Logic[] => state.logic,
+        getAllRooms: (state): typeof Shared.Room[] => state.rooms,
+        getSpriteSaveData: (state): object => state.sprites.map(s => s.toSaveData()),
+        getObjectSaveData: (state): object => state.objects.map(o => o.toSaveData()),
+        getRoomSaveData: (state): object => state.rooms.map(r => r.toSaveData()),
+        getLogicSaveData: (state): object => state.logic.map(r => r.toSaveData()),
     },
 
     actions: {
         setStartRoomId(newStartRoomId: number){
             this.startRoomId = newStartRoomId;
         },
-        setSpriteList(sprites: Shared.Sprite[]){
+        setSpriteList(sprites: typeof Shared.Sprite[]){
             this.sprites = sprites;
         },
-        setObjectList(objects: Shared.Game_Object[]){
+        setObjectList(objects: typeof Shared.Game_Object[]){
             this.sprites = objects;
         },
         setLogicList(logic: Logic[]){
             this.sprites = logic;
         },
-        setRoomList(rooms: Shared.Room[]){
+        setRoomList(rooms: typeof Shared.Room[]){
             this.sprites = rooms;
         },
-        addAsset(category: Shared.CATEGORY_ID){
+        addAsset(category: typeof Shared.CATEGORY_ID){
             switch (category){
                 case Shared.CATEGORY_ID.SPRITE:
                     let spriteName = t(`asset_browser.sprite_prefix`) + getSuffixNum(this.sprites);
@@ -86,8 +87,8 @@ export const useGameDataStore = defineStore({
                     break;
             }
         },
-        deleteAsset(category: Shared.CATEGORY_ID, id: number){
-            let curList: Shared.AssetBase[];
+        deleteAsset(category: typeof Shared.CATEGORY_ID, id: number){
+            let curList: typeof Shared.Asset_Base[];
             let hasFound = false;
     
             switch(category){
