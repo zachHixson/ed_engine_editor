@@ -1,20 +1,22 @@
 export default class Transition{
-    constructor(canvas){
+    private _canvas: HTMLCanvasElement;
+    private _progress: number = 0;
+    private _duration: number = 0;
+    private _active: boolean = false;
+    private switchCallback: (()=>void) | null = null;
+    private completeCallback: (()=>void) | null = null;
+
+    constructor(canvas: HTMLCanvasElement){
         this._canvas = canvas;
-        this._progress = 0;
-        this._duration = 0;
-        this._active = false;
-        this.switchCallback = null;
-        this.completeCallback = null;
     }
 
     get active(){return this._active}
 
-    _normCos(x){
+    private _normCos(x: number){
         return (-Math.cos(x * Math.PI * 2) + 1) / 2;
     }
 
-    start(type, duration, switchCallback = null, completeCallback = null){
+    start(type: any, duration: number, switchCallback: ()=>void, completeCallback: ()=>void): void {
         this._active = true;
         this._progress = 0;
         this._duration = duration;
@@ -22,12 +24,12 @@ export default class Transition{
         this.completeCallback = completeCallback;
     }
 
-    render(deltaTime){
+    render(deltaTime: number): void {
         if (!this._active){
             return;
         }
 
-        const ctx = this._canvas.getContext('2d');
+        const ctx = this._canvas.getContext('2d')!;
         const fac = Math.min(this._progress / this._duration, 1);
         const opacity = this._normCos(fac);
 

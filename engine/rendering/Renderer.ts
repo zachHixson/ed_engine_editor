@@ -1,34 +1,39 @@
+import { Room } from "@engine/core/core_filemap";
 import Transition from "./Transition";
 
 export default class Renderer{
     static get SCREEN_RES(){return 240}
 
-    constructor(canvas){
+    private _spriteCache: Map<number, HTMLCanvasElement[]> = new Map();
+    private _scaleFac: number = 1;
+    private _transition: Transition;
+
+    canvas: HTMLCanvasElement;
+    room: Room | null = null;
+
+    constructor(canvas: HTMLCanvasElement){
         this.canvas = canvas;
-        this.room = null;
-        this._spriteCache = {};
-        this._scaleFac = null;
         this._transition = new Transition(this.canvas);
     }
 
     get isTransitioning(){return this._transition.active}
 
-    setRoom = (room)=>{
+    setRoom = (room: Room): void =>{
         this.room = room;
-        this._spriteCache = {};
+        this._spriteCache = new Map();
     }
 
-    startTransition = (type, duration, switchCallback = null, completeCallback = null)=>{
+    startTransition = (type: any, duration: number, switchCallback: ()=>void, completeCallback: ()=>void): void =>{
         this._transition.start(type, duration, switchCallback, completeCallback);
     }
 
-    render = (deltaTime)=>{
+    render = (deltaTime: number): void =>{
         if (!this.room){
             console.error('Cannot render scene without room being set');
             return;
         }
 
-        const ctx = this.canvas.getContext('2d');
+        const ctx = this.canvas.getContext('2d')!;
 
         this._scaleFac = this.canvas.width / Renderer.SCREEN_RES;
 
@@ -40,13 +45,12 @@ export default class Renderer{
         this._transition.render(deltaTime);
     }
 
-    _drawInstances = (deltaTime)=>{
-        const ctx = this.canvas.getContext('2d');
-        const {camera, instances} = this.room;
+    _drawInstances = (deltaTime: number): void =>{
+        const ctx = this.canvas.getContext('2d')!;
+        const {camera, instances} = this.room!;
         const scale = (1 / camera.size) * this._scaleFac;
 
         ctx.imageSmoothingEnabled = false;
-        ctx.webkitImageSmoothingEnabled = false;
 
         //camera transform
         ctx.translate(
@@ -57,13 +61,13 @@ export default class Renderer{
 
         instances.zSort.forEach((instance)=>{
             if (instance.sprite){
-                const cacheGrab = this._spriteCache[instance.sprite.id];
+                const cacheGrab = this._spriteCache.get(instance.sprite.id);
                 let sprite = cacheGrab;
                 let curFrame;
 
-                if (!cacheGrab){
-                    sprite = instance.sprite.drawAllFrames()
-                    this._spriteCache[instance.sprite.id] = sprite;
+                if (!sprite){
+                    sprite = instance.sprite.drawAllFrames();
+                    this._spriteCache.set(instance.sprite.id, sprite);
                 }
 
                 curFrame = sprite[instance.animFrame];

@@ -1,19 +1,26 @@
 import Node from './Node';
-import { iAnyObj } from './core/interfaces';
+import Engine from './Engine';
+import { Object_Instance, NODE_MAP, Interfaces } from '@core';
 
-export default class Logic{
-    constructor(logicData, engine){
+type iAnyObj = Interfaces.iAnyObj;
+
+export default class Logic {
+    private _nodes: Node[] = [];
+    private _instance: Object_Instance | null = null;
+    private _localVariableDefaults: Map<string, any> = new Map();
+
+    id: number;
+    events: Map<string, Node> = new Map();
+
+    constructor(logicData: iAnyObj, engine: Engine){
         this.id = logicData.id;
-        this.events = {};
-        this._nodes = [];
-        this._instance = null;
-        this._localVariableDefaults = new Map();
 
         const nodes = {};
 
         //create all nodes
-        logicData.nodes.forEach(nodeData => {
-            const template = Shared.NODE_MAP[nodeData.templateId];
+        logicData.nodes.forEach((nodeData: iAnyObj) => {
+            const templateId = nodeData.templateId as number;
+            const template = NODE_MAP[templateId];
             const newNode = new Node(template, nodeData.nodeId, this, engine);
             nodes[nodeData.nodeId] = newNode;
             this._nodes.push(newNode);

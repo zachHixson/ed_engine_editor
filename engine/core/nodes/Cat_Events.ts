@@ -1,4 +1,5 @@
 import {SOCKET_TYPE, WIDGET, COLLISION_EVENT} from './Node_Enums';
+import { iNodeTemplate } from './iNodeTemplate';
 
 export default [
     {// Create
@@ -186,4 +187,4 @@ export default [
             },
         },
     },
-];
+] as iNodeTemplate[];

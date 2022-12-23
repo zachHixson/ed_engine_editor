@@ -1,14 +1,14 @@
-export const SOCKET_TYPE = {
-    ANY: Symbol.for('ANY'),
-    NUMBER: Symbol.for('NUMBER'),
-    STRING: Symbol.for('STRING'),
-    OBJECT: Symbol.for('OBJECT'),
-    BOOL: Symbol.for('BOOL'),
-    INFO: Symbol.for('NODE_INFO'),
-    BUTTON: Symbol.for('NODE_BUTTON'),
+export enum SOCKET_TYPE {
+    ANY = 1,
+    NUMBER,
+    STRING,
+    OBJECT,
+    BOOL,
+    INFO,
+    BUTTON,
 };
 
-export const SOCKET_DEFAULT = new Map([
+export const SOCKET_DEFAULT = new Map<SOCKET_TYPE, any>([
     [SOCKET_TYPE.ANY, null],
     [SOCKET_TYPE.NUMBER, 0],
     [SOCKET_TYPE.STRING, ''],
@@ -16,14 +16,15 @@ export const SOCKET_DEFAULT = new Map([
     [SOCKET_TYPE.BOOL, false],
 ]);
 
-export const WIDGET = {
-    ENUM: Symbol('ENUM'),
-    KEY: Symbol('KEY'),
-    MOUSE_BTN: Symbol('MOUSE_BTN'),
+export enum WIDGET {
+    ENUM = 1,
+    KEY,
+    MOUSE_BTN,
+    TEXT_AREA,
 }
 
-export const COLLISION_EVENT = {
-    START: Symbol('START'),
-    REPEAT: Symbol('REPEAT'),
-    STOP: Symbol('STOP'),
+export enum COLLISION_EVENT {
+    START = 1,
+    REPEAT,
+    STOP,
 }

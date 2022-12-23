@@ -1,8 +1,11 @@
 import {SOCKET_TYPE, WIDGET} from './Node_Enums';
+import { iNodeTemplate } from './iNodeTemplate';
 import Cat_Events from './Cat_Events';
 import Cat_Variables from './Cat_Variables';
+import { Vector } from '../Vector';
+import { iAnyObj } from '../interfaces';
 
-export const NODE_LIST = [
+export const NODE_LIST: iNodeTemplate[] = [
     ...Cat_Events,
     {
         id: 'trigger_2io',
@@ -303,7 +306,7 @@ export const NODE_LIST = [
         methods: {
             setPosition(){
                 const relative = this.getInput('relative');
-                const newPos = new Victor(
+                const newPos = new Vector(
                     Math.round(this.getInput('x')),
                     -Math.round(this.getInput('y'))
                 );
@@ -329,7 +332,7 @@ export const NODE_LIST = [
         ],
         methods: {
             moveTiled(){
-                const newPos = new Victor(
+                const newPos = new Vector(
                     Math.round(this.getInput('x')),
                     -Math.round(this.getInput('y'))
                 ).add(this.instance.pos);
@@ -370,7 +373,7 @@ export const NODE_LIST = [
     ...Cat_Variables,
 ];
 
-export const NODE_MAP = {};
+export const NODE_MAP = {} as iAnyObj;
 
 NODE_LIST.forEach(node => {
     NODE_MAP[node.id] = node;

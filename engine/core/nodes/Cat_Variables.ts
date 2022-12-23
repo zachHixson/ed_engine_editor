@@ -1,3 +1,4 @@
+import { iNodeTemplate } from './iNodeTemplate';
 import {SOCKET_TYPE, SOCKET_DEFAULT} from './Node_Enums';
 
 export default [
@@ -220,7 +221,7 @@ export default [
         onNewConnection: determineConnected,
         onRemoveConnection: determineConnected,
         onBeforeDelete(){
-            document.removeEventListener('onNewVariable', this.onNewVariable);
+            document.removeEventListener('onNewVariable', this.onNewVariable as unknown as EventListener);
         },
         methods: {
             getVar(){
@@ -282,7 +283,7 @@ export default [
             },
         }
     },
-];
+] as iNodeTemplate[];
 
 function determineConnected(){
     const connection = this.editorAPI.getConnection(this, 'data');

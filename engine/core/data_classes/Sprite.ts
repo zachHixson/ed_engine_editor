@@ -175,7 +175,7 @@ export class Sprite extends Asset_Base {
         return Sprite.drawToCanvas(frame, canvas);
     }
 
-    drawAllFrames(): ImageData[] {
+    drawAllFrames(): HTMLCanvasElement[] {
         const frameArr = new Array(this.frames.length);
 
         for (let i = 0; i < frameArr.length; i++){
