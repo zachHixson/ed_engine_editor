@@ -1,52 +1,47 @@
 import { iAnyObj } from "../interfaces";
 import { SOCKET_TYPE, WIDGET } from "./Node_Enums";
+import { iNodeLifecycleEvents } from "../LogicInterfaces";
 
-export interface iNodeTemplate {
+export interface iNodeTemplate extends iNodeLifecycleEvents {
     id: string;
     category: string;
     isEvent?: boolean;
-    inTriggers?: Array<{
-        id: string;
-        execute: string;
-    }>;
+    inTriggers?: Array<iInTrigger>;
     outTriggers?: Array<string>;
-    inputs?: Array<{
-        id: string;
-        type: SOCKET_TYPE;
-        default?: any;
-        required?: boolean;
-        triple?: boolean;
-        hideSocket?: boolean;
-        disabled?: boolean;
-        hideInput?: boolean;
-    }>;
+    inputs?: Array<iInput>;
     widget?: {
         id: string;
         type: WIDGET;
         options?: iAnyObj | any[];
     };
-    outputs?: Array<{
-        id: string;
-        type: SOCKET_TYPE;
-        execute: string;
-        disabled?: boolean;
-    }>;
+    outputs?: Array<iOutput>;
     execute?(data: any): void;
     methods?: iAnyObj;
 
-    //lifecycle events
-    init?(): void;
-    onScriptAdd?(): void;
-    onCreate?(): void;
-    afterSave?(saveData: iAnyObj): void;
-    beforeLoad?(saveData: iAnyObj): void;
-    afterLoad?(): void;
-    afterGameDataLoaded?(): void;
-    onMount?(): void;
-    onInput?(event: Event): void;
-    onNewVariable?(variable: string): void;
-    onNewConnection?(connection: iAnyObj): void;
-    onRemoveConnection?(connection: iAnyObj): void;
-    onDeleteStopped?(protectedNodes: Node[]): void;
-    onBeforeDelete?(): void;
+    [key: string]: any;
 }
+
+export interface iInTrigger {
+    id: string;
+    execute: string;
+};
+
+export interface iInput {
+    id: string;
+    type: SOCKET_TYPE;
+    default?: any;
+    required?: boolean;
+    triple?: boolean;
+    hideSocket?: boolean;
+    disabled?: boolean;
+    hideInput?: boolean;
+    enableDecorators?: boolean;
+    flipInput?: boolean;
+};
+
+export interface iOutput {
+    id: string;
+    type: SOCKET_TYPE;
+    execute: string;
+    disabled?: boolean;
+};

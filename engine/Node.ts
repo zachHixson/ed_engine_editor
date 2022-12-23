@@ -1,55 +1,73 @@
-export default class Node{
-    constructor(template, id, logic, engine){
+import { iEngineInput, iEngineLogic, iEngineNode, iNodeTemplate, Object_Instance } from "@core";
+import { iAnyObj } from "./core/interfaces";
+import Engine from "./Engine";
+import Logic from "./Logic";
+import { convertSocketType } from "@core";
+
+export default class Node implements iEngineNode {
+    private _getInstanceCallback: (()=>Object_Instance) | null = null;
+    private _dataCache: Map<string, any> = new Map();
+    private _stackTrace: {parentScriptId: number, nodeId: number};
+
+    template: iNodeTemplate;
+    nodeId: number;
+    parentScript: iEngineLogic;
+    engine: Engine;
+    isEvent: boolean;
+    widgetData: iAnyObj | null = null;
+    defaultTriggerId: string | null = null;
+    inTriggers: iEngineNode["inTriggers"] = new Map();
+    outTriggers: iEngineNode["outTriggers"] = new Map();
+    inputs: iEngineNode["inputs"] = new Map();
+    outputs: iEngineNode["outputs"] = new Map();
+    execute: ((...args: any)=>void) | null = null;
+    methods: Map<string, (...args: any)=>any> = new Map();
+
+
+    constructor(template: iNodeTemplate, id: number, logic: Logic, engine: Engine){
         this.template = template;
         this.nodeId = id;
         this.parentScript = logic;
         this.engine = engine;
-        this.isEvent = template.isEvent;
-        this.widgetData;
-        this.defaultTriggerId = null;
-        this.inTriggers = {};
-        this.outTriggers = {};
-        this.inputs = {};
-        this.outputs = {};
-        this.methods = {};
-        this.dataCache = new Map();
-        this._getInstanceCallback;
-        this._stackTrace = {parentScript: this.parentScript.id, nodeId: id};
+        this.isEvent = template.isEvent ?? false;
+        this._stackTrace = {parentScriptId: this.parentScript.id, nodeId: id};
 
         template.inTriggers?.forEach(trigger => {
             const {execute} = trigger;
-            this.inTriggers[trigger.id] = {
+            this.inTriggers.set(trigger.id, {
                 execute,
                 node: this,
                 connection: null,
-            };
+            });
         });
 
         template.outTriggers?.forEach(trigger => {
-            this.outTriggers[trigger] = {connection: null};
+            this.outTriggers.set(trigger, {connection: null});
         });
 
         template.inputs?.forEach(input => {
-            const {id, value, type} = input;
-            this.inputs[id] = {
-                value,
+            const {id, type} = input;
+            const def = input.default ?? 0;
+
+            this.inputs.set(id, {
+                value: def,
                 type,
                 connection: null,
-            };
+            });
         });
 
         template.outputs?.forEach(output => {
             const {id, type, execute} = output;
-            this.outputs[output.id] = {
+            this.outputs.set(output.id, {
                 id,
                 connection: null,
                 node: this,
                 type,
                 execute,
-            };
+            });
         })
 
-        if (template.outTriggers?.length > 0){
+        if (template.outTriggers && template.outTriggers.length > 0){
             this.defaultTriggerId = template.outTriggers[0];
         }
 
@@ -58,20 +76,20 @@ export default class Node{
         }
 
         for (let method in template.methods){
-            this.methods[method] = template.methods[method];
+            this.methods.set(method, template.methods[method]);
         }
 
-        this.template.$init?.call(this);
+        this.template.init?.call(this);
     }
 
-    get instance(){return this._getInstanceCallback()}
-    get data(){return this._dataCache};
+    get instance(){return this._getInstanceCallback!()}
+    get data(){return this._dataCache ?? {}};
 
-    setInstanceCallback(callback){
+    setInstanceCallback(callback: ()=>Object_Instance): void {
         this._getInstanceCallback = callback;
     }
 
-    executeEvent(data){
+    executeEvent(data: any): void {
         if (!this.isEvent) {
             console.error('Error: Cannot call \"executeEvent()\" from non-event node');
             return
@@ -87,24 +105,24 @@ export default class Node{
         }
     }
 
-    method(methodName, data){
-        return this.methods[methodName].call(this, data);
+    method(methodName: string, data?: any): any {
+        return this.methods.get(methodName)?.call(this, data);
     }
 
-    getWidgetData(){
+    getWidgetData(): any {
         return this.widgetData;
     }
 
-    getInput(inputName){
-        const input = this.inputs[inputName];
+    getInput(inputName: string): iEngineInput {
+        const input = this.inputs.get(inputName)!;
         let inputVal;
 
         if (input.connection){
             const node = input.connection.node;
             const method = input.connection.execute;
-            const val = node.method(method)
+            const val = node.method(method);
 
-            inputVal = Shared.convertSocketType(input.connection.type, input.type, val);
+            inputVal = convertSocketType(input.connection.type, input.type, val);
         }
         else{
             inputVal = input.value;
@@ -113,10 +131,10 @@ export default class Node{
         return inputVal;
     }
 
-    triggerOutput(outputId){
-        const trigger = this.outTriggers[outputId];
+    triggerOutput(outputId: string){
+        const trigger = this.outTriggers.get(outputId);
 
-        if (trigger.connection){
+        if (trigger?.connection){
             const node = trigger.connection.node;
             const method = trigger.connection.execute;
             node.method(method);

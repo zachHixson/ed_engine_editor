@@ -1,5 +1,7 @@
 import { iNodeTemplate } from './iNodeTemplate';
 import {SOCKET_TYPE, SOCKET_DEFAULT} from './Node_Enums';
+import { iEditorNode, iEngineNode } from '../LogicInterfaces';
+import { iAnyObj } from '../interfaces';
 
 export default [
     {// Create Variable
@@ -13,13 +15,13 @@ export default [
         outputs: [
             {id: '_value', type: SOCKET_TYPE.ANY, execute: 'getInitialValue'}
         ],
-        init(){
+        init(this: iEditorNode & iEngineNode){
             if (!this.engine){
                 this.editorCanDelete = false;
                 this.reverseOutputs = true;
-                this.inputs.get('_varName').enableDecorators = true;
-                this.inputs.get('_varType').enableDecorators = true;
-                this.inputs.get('initial_value').flipInput = true;
+                this.inputs.get('_varName')!.enableDecorators = true;
+                this.inputs.get('_varType')!.enableDecorators = true;
+                this.inputs.get('initial_value')!.flipInput = true;
             }
         },
         onScriptAdd(){
@@ -35,13 +37,13 @@ export default [
                 this.method('editor_setVar');
             }
         },
-        onCreate(){
+        onCreate(this: iEditorNode){
             this.editorAPI.deleteNodes([this], false);
             this.editorAPI.popLastCommit();
 
             this.editorAPI.dialogNewVariable((positive, varInfo) => {
                 if (positive){
-                    const valSocket = this.inputs.get('initial_value');
+                    const valSocket = this.inputs.get('initial_value')!;
 
                     this.dataCache.set('varInfo', varInfo);
                     this.method('editor_initVarNode');
@@ -53,7 +55,7 @@ export default [
             });
         },
         afterSave(saveData){
-            const valueInput = saveData.inputs.find(input => input.id == 'initial_value');
+            const valueInput = saveData.inputs.find((input: iAnyObj) => input.id == 'initial_value');
             const varInfo = Object.assign({}, this.dataCache.get('varInfo'));
             
             varInfo.type = varInfo.type.description;
@@ -76,9 +78,9 @@ export default [
 
             this.method('editor_initVarNode');
         },
-        onDeleteStopped(protectedNodes){
+        onDeleteStopped(this: iEditorNode, protectedNodes){
             const createVars = protectedNodes.filter(node => node.templateId == this.templateId);
-            const varNames = createVars.map(node => node.inputs.get('_varName').value.data);
+            const varNames = createVars.map(node => node.inputs.get('_varName')!.value.data);
             const message = varNames.length > 1 ? 'node.create_var_confirm_multiple' : 'node.create_var_confirm';
             const selectedNodes = this.editorAPI.getSelectedNodes();
 
@@ -87,7 +89,7 @@ export default [
                 vars: {varList: varNames.join(', ')}
             }, positive => {
                 if (!positive) return;
-                const allGetSetNodes = [];
+                const allGetSetNodes: iEditorNode[] = [];
 
                 varNames.forEach(varName => {
                     const isGlobal = !!this.editorAPI.getGlobalVariable(varName);
@@ -153,17 +155,17 @@ export default [
             {id: 'name', type: SOCKET_TYPE.STRING, default: '', hideSocket: true},
             {id: 'data', type: SOCKET_TYPE.ANY, default: null, disabled: true, hideInput: true},
         ],
-        init(){
+        init(this: iEditorNode & iEngineNode){
             if (!this.engine){
                 this.inputBoxWidth = 6;
-                this.inputs.get('name').enableDecorators = true;
-                document.addEventListener('onNewVariable', this.onNewVariable);
+                this.inputs.get('name')!.enableDecorators = true;
+                document.addEventListener('onNewVariable', this.onNewVariable as EventListener);
             }
         },
-        onInput(event){
+        onInput(event: {detail: InputEvent}){
             this.method('validate', [event.detail.target]);
         },
-        afterGameDataLoaded(){
+        afterGameDataLoaded(this: iEditorNode & iEngineNode){
             if (this.engine) return;
             determineConnected.call(this);
             this.method('validate');
@@ -175,7 +177,7 @@ export default [
         onNewConnection: determineConnected,
         onRemoveConnection: determineConnected,
         onBeforeDelete(){
-            document.removeEventListener('onNewVariable', this.onNewVariable);
+            document.removeEventListener('onNewVariable', this.onNewVariable as EventListener);
         },
         methods: {
             setVar(){
@@ -198,18 +200,18 @@ export default [
         outputs: [
             {id: 'data', type: SOCKET_TYPE.ANY, disabled: true, execute: 'getVar'},
         ],
-        init(){
+        init(this: iEditorNode & iEngineNode){
             if (!this.engine){
-                const nameInput = this.inputs.get('name');
+                const nameInput = this.inputs.get('name')!;
                 nameInput.flipInput = true;
                 this.inputBoxWidth = 6;
-                document.addEventListener('onNewVariable', this.onNewVariable);
+                document.addEventListener('onNewVariable', this.onNewVariable as EventListener);
             }
         },
         onInput(event){
             this.method('validate', [event.target]);
         },
-        afterGameDataLoaded(){
+        afterGameDataLoaded(this: iEditorNode & iEngineNode){
             if (this.engine) return;
             determineConnected.call(this);
             this.method('validate');
@@ -285,15 +287,15 @@ export default [
     },
 ] as iNodeTemplate[];
 
-function determineConnected(){
+function determineConnected(this: iEditorNode){
     const connection = this.editorAPI.getConnection(this, 'data');
-    const nameSocket = this.inputs.get('name');
+    const nameSocket = this.inputs.get('name')!;
     const isDataConnected = !!connection;
     nameSocket.disabled = isDataConnected;
 }
 
-function validate(textbox){
-    const dataSocket = this.inputs.get('data') || this.outputs.get('data');
+function validate(this: iEditorNode, textbox: HTMLInputElement){
+    const dataSocket = this.inputs.get('data') || this.outputs.get('data')!;
     const varName = textbox?.value ?? this.getInput('name');
     const globalGet = this.editorAPI.getGlobalVariable(varName);
     const localGet = this.parentScript.getLocalVariable(varName);
@@ -320,5 +322,5 @@ function validate(textbox){
     }
 
     this.dataCache.set('isValid', isValid);
-    this.dispatchEvent(new CustomEvent('socketsChanged'));
+    this.emit('socketsChanged');
 }

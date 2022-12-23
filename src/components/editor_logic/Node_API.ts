@@ -99,21 +99,6 @@ export default class Node_API {
         return isStart ? connection.endSocket : connection.startSocket;
     }
 
-    verifyConnection(node, socketId){
-        const connection = this.getConnection(node, socketId);
-
-        if (!connection){
-            return;
-        }
-
-        const startType = connection.startSocket.type;
-        const endType = connection.endSocket.type;
-
-        if (!Shared.canConvertSocket(startType, endType)){
-            this.selectedAsset.removeConnection(connection.id);
-        }
-    }
-
     getSelectedNodes(){
         return [...this.editor.selectedNodes];
     }

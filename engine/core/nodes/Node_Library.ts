@@ -4,6 +4,7 @@ import Cat_Events from './Cat_Events';
 import Cat_Variables from './Cat_Variables';
 import { Vector } from '../Vector';
 import { iAnyObj } from '../interfaces';
+import { iEngineNode } from '../LogicInterfaces';
 
 export const NODE_LIST: iNodeTemplate[] = [
     ...Cat_Events,
@@ -331,7 +332,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
         ],
         methods: {
-            moveTiled(){
+            moveTiled(this: iEngineNode){
                 const newPos = new Vector(
                     Math.round(this.getInput('x')),
                     -Math.round(this.getInput('y'))

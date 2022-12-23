@@ -1,5 +1,6 @@
 import {SOCKET_TYPE, WIDGET, COLLISION_EVENT} from './Node_Enums';
 import { iNodeTemplate } from './iNodeTemplate';
+import { iEngineNode } from '../LogicInterfaces';
 
 export default [
     {// Create
@@ -158,7 +159,7 @@ export default [
             this.engine.cacheNodeEventData('timer', data);
         },
         methods: {
-            name(){
+            name(this: iEngineNode){
                 const data = this.engine.getCachedNodeEventData('timer', data);
                 return data.name;
             }
@@ -173,15 +174,15 @@ export default [
             {id: 'name', type: SOCKET_TYPE.STRING, execute: 'name'},
             {id: 'data', type: SOCKET_TYPE.ANY, execute: 'data'},
         ],
-        execute(){
+        execute(this: iEngineNode){
             this.engine.cacheNodeEventData('message', data);
         },
         methods: {
-            name(){
+            name(this: iEngineNode){
                 const data = this.engine.getCachedNodeEventData('message', data);
                 return data.name;
             },
-            data(){
+            data(this: iEngineNode){
                 const data = this.engine.getCachedNodeEventData('message', data);
                 return data.data;
             },
