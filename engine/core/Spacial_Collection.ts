@@ -9,15 +9,29 @@
     ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠
 */
 
-import {mod} from '../Util';
-import {Linked_List} from '../Linked_List';
+import {mod} from './Util';
+import {Linked_List} from './Linked_List';
+import { Vector } from './Vector';
+import { iAnyObj } from './interfaces';
 
-export class Spacial_Collection{
-    constructor(area, cellSize){
+interface iSpacialObject {
+    id: number,
+    zDepth: number,
+    pos: Vector,
+    clone(): any,
+}
+
+export class Spacial_Collection<T extends iSpacialObject>{
+    area: number;
+    cellSize: number;
+    cellCount: number;
+    zSort: Linked_List<T> = new Linked_List();
+    spacialGrid: Linked_List<T>[];
+
+    constructor(area: number, cellSize: number){
         this.area = area;
         this.cellSize = cellSize;
         this.cellCount = this.area / this.cellSize;
-        this.zSort = new Linked_List();
         this.spacialGrid = new Array(Math.ceil(this.cellCount * this.cellCount));
         
         for (let i = 0; i < this.spacialGrid.length; i++){
@@ -27,8 +41,8 @@ export class Spacial_Collection{
 
     get list(){return this.zSort};
 
-    clone(recursive = false){
-        const clone = new Spacial_Collection(this.area, this.cellSize);
+    clone(recursive = false): Spacial_Collection<T> {
+        const clone = new Spacial_Collection<T>(this.area, this.cellSize);
         this.zSort.forEach(item => {
             const newItem = recursive ? item.clone() : item;
             clone.add(newItem, newItem.pos)
@@ -36,9 +50,9 @@ export class Spacial_Collection{
         return clone;
     }
 
-    toSaveData(){
-        let rawInstances = this.zSort.toArray();
-        let sanitizedInstances = [];
+    toSaveData(): iAnyObj {
+        const rawInstances = this.zSort.toArray();
+        const sanitizedInstances = [];
 
         for (let i = 0; i < rawInstances.length; i++){
             sanitizedInstances.push(rawInstances[i].toSaveData());
@@ -47,7 +61,7 @@ export class Spacial_Collection{
         return sanitizedInstances;
     }
 
-    add(data, pos){
+    add(data: T, pos: Vector): T {
         let nodeRef;
         let spacialIdx = this.getSpacialCellIdx(pos);
 
@@ -58,7 +72,7 @@ export class Spacial_Collection{
         return data;
     }
 
-    remove(id, pos = null){
+    remove(id: number, pos: Vector | null = null){
         let instRef = null;
         let spacialIdx;
         let cellList;
@@ -91,18 +105,18 @@ export class Spacial_Collection{
         }
     }
 
-    getSpacialCellIdx({x, y}){
-        let halfArea = this.area / 2;
-        let offsetX = x + halfArea;
-        let offsetY = y + halfArea;
-        let cellX = Math.floor(offsetX / this.cellSize);
-        let cellY = Math.floor(offsetY / this.cellSize);
-        let cellIdx = (cellY * this.cellCount) + cellX;
+    getSpacialCellIdx({x, y}: {x: number, y: number}){
+        const halfArea = this.area / 2;
+        const offsetX = x + halfArea;
+        const offsetY = y + halfArea;
+        const cellX = Math.floor(offsetX / this.cellSize);
+        const cellY = Math.floor(offsetY / this.cellSize);
+        const cellIdx = (cellY * this.cellCount) + cellX;
         return Math.floor(mod(cellIdx, this.spacialGrid.length));
     }
 
-    getById(instId){
-        if (this.zSort.getFirst().hasOwnProperty(id)){
+    getById(instId: number){
+        if (this.zSort.getFirst().hasOwnProperty('id')){
             return this.zSort.find((i) => i.id == instId);
         }
         else{
@@ -110,7 +124,7 @@ export class Spacial_Collection{
         }
     }
 
-    getByRadius({x, y}, radius){
+    getByRadius({x, y}: {x: number, y: number}, radius: number): T[] {
         let outputInsts = [];
         let cellRadius = Math.floor(radius / this.cellSize) * this.cellSize;
         
@@ -131,7 +145,7 @@ export class Spacial_Collection{
         return outputInsts;
     }
 
-    setPositionByRef(instRef, newPos){
+    setPositionByRef(instRef: T, newPos: Vector){
         let startSpacialIdx = this.getSpacialCellIdx(instRef.pos);
         let newSpacialIdx = this.getSpacialCellIdx(newPos);
 

@@ -1,20 +1,21 @@
-import Renderer from "./Renderer";
+import Renderer from "@engine/rendering/Renderer";
 import Font_Renderer from "./Font_Renderer";
+import { Draw } from "@engine/core/core_filemap";
+import { Vector } from "@core";
 
 const MARGIN = 5;
 const LINES = 4;
 const LETTERS_PER_SEC = 20;
 const BORDER_WIDTH = 2;
 
-const ALIGN = {
-    TOP: Symbol('TOP'),
-    BOTTOM: Symbol('BOTTOM'),
-};
-Object.freeze(ALIGN);
+enum ALIGN {
+    TOP,
+    BOTTOM,
+}
 
 const ARROW_CANVAS = (()=>{
-    const canvas = Shared.createCanvas(8, 8);
-    const ctx = canvas.getContext('2d');
+    const canvas = Draw.createCanvas(8, 8);
+    const ctx = canvas.getContext('2d')!;
     const imgData = ctx.createImageData(canvas.width, canvas.height);
     const bitmap = [
         -1, -1, -1, -1, -1, -1, -1, -1,
@@ -29,8 +30,8 @@ const ARROW_CANVAS = (()=>{
 
     for (let i = 0; i < bitmap.length; i++){
         const idx = i * 4;
-        const white = bitmap[i] > 0;
-        const filled = bitmap[i] != 0;
+        const white = bitmap[i] > 0 ? 1 : 0;
+        const filled = bitmap[i] != 0 ? 1 : 0;
         imgData.data[idx + 0] = white * 255;
         imgData.data[idx + 1] = white * 255;
         imgData.data[idx + 2] = white * 255;
@@ -46,40 +47,46 @@ export default class Dialog_Box{
     static get ALIGN(){return ALIGN}
     static get DIALOG_ARROW_CANVAS(){return ARROW_CANVAS}
 
-    constructor(canvas){
+    protected _canvas: HTMLCanvasElement;
+    protected _arrowBuff: typeof ARROW_CANVAS = ARROW_CANVAS;
+    protected _progress: number = 0;
+    protected _arrowAnim: number = 0;
+    protected _asyncTag: string = '';
+    
+    align: ALIGN = ALIGN.TOP;
+    fontRenderer: Font_Renderer;
+    active: boolean = false;
+    onCloseCallback: (tag: string)=>any = ()=>{};
+
+    constructor(canvas: HTMLCanvasElement){
         const textMargin = MARGIN + 2;
         const backMargin = Renderer.SCREEN_RES - MARGIN * 2 - 4;
 
         this._canvas = canvas;
-        this._arrowBuff = Dialog_Box.DIALOG_ARROW_CANVAS;
         this._progress = 0;
         this._arrowAnim = 0;
-        this._asyncTag = null;
-        this.align = Dialog_Box.ALIGN.TOP;
         this.fontRenderer = new Font_Renderer(
             this._canvas,
-            new Victor(textMargin, textMargin),
+            new Vector(textMargin, textMargin),
             backMargin
         );
-        this.onCloseCallback = ()=>{};
-        this.active = false;
 
         this.fontRenderer.setHeightFromLineCount(LINES);
     }
 
-    get text(){return this.fontRenderer.text}
-    set text(txt){
+    get text() {return this.fontRenderer.text}
+    set text(txt: string){
         this.fontRenderer.text = txt
         this._progress = 0;
     }
 
-    _setProgress(val){
+    _setProgress(val: number): void {
         const pageLength = this.fontRenderer.pageText.length;
         this._progress = Math.max(Math.min(val, pageLength), 0);
         this.fontRenderer.reveal = Math.floor(this._progress);
     }
 
-    open(text, asyncTag){
+    open(text: string, asyncTag: string): void {
         if (this.active){
             this.close();
         }
@@ -89,12 +96,12 @@ export default class Dialog_Box{
         this.active = true;
     }
 
-    close(){
+    close(): void {
         this.active = false;
         this.onCloseCallback(this._asyncTag);
     }
 
-    nextPage(){
+    nextPage(): void {
         if (!this.fontRenderer.pageText){
             return;
         }
@@ -117,18 +124,18 @@ export default class Dialog_Box{
         }
     }
 
-    render(delta){
+    render(delta: number): void {
         if (!this.active){
             return;
         }
 
-        const ctx = this._canvas.getContext('2d');
+        const ctx = this._canvas.getContext('2d')!;
         const scaleFac = this._canvas.width / Renderer.SCREEN_RES;
         const lineWidth = scaleFac * BORDER_WIDTH;
         const arrowX = Math.floor((Renderer.SCREEN_RES / 2) - (this._arrowBuff.width / 2));
         const bottomEdge = this.fontRenderer.height + lineWidth * 2;
-        const p1 = new Victor(scaleFac * MARGIN, 0);
-        const p2 = new Victor(scaleFac * (Renderer.SCREEN_RES - MARGIN * 2), scaleFac * bottomEdge);
+        const p1 = new Vector(scaleFac * MARGIN, 0);
+        const p2 = new Vector(scaleFac * (Renderer.SCREEN_RES - MARGIN * 2), scaleFac * bottomEdge);
 
         if (this.align == Dialog_Box.ALIGN.TOP){
             this.fontRenderer.pos.y = MARGIN + 2;
@@ -141,7 +148,6 @@ export default class Dialog_Box{
         }
 
         ctx.imageSmoothingEnabled = false;
-        ctx.webkitImageSmoothingEnabled = false;
 
         ctx.fillStyle = "black";
         ctx.fillRect(p1.x, p1.y, p2.x, p2.y);

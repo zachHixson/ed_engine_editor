@@ -1,39 +1,46 @@
-import Renderer from './Renderer';
+import Renderer from '@engine/rendering/Renderer';
 import font from './Font';
+import Vector from '@engine/core/Vector';
 
 export default class Font_Renderer{
-    constructor(canvas, pos, width, height){
-        this._text = '';
-        this._brokenText = this._text;
-        this._pages;
-        this._page = 0;
-        this._fontSize = 1;
+    private _text: string = '';
+    private _brokenText: string = this._text;
+    private _pages: string[] = [];
+    private _page: number = 0;
+    private _fontSize: number = 1;
+    private _canvas: HTMLCanvasElement;
+    private _width: number;
+    private _height: number;
+
+    pos: Vector;
+    reveal: number = 0;
+    splitPages: boolean = true;
+
+    constructor(canvas: HTMLCanvasElement, pos?: Vector, width?: number, height?: number){
         this._canvas = canvas;
         this._width = width ?? Renderer.SCREEN_RES;
         this._height = height ?? Renderer.SCREEN_RES;
-        this.pos = pos?.clone() ?? new Victor(0, 0);
-        this.reveal = 0;
-        this.splitPages = true;
+        this.pos = pos?.clone() ?? new Vector(0, 0);
     }
 
     get text(){return this._text}
-    set text(text){
+    set text(text: string){
         this._text = text;
         this._page = 0;
         this._breakText();
     }
 
     get page(){return this._page}
-    set page(val){
+    set page(val: number){
         this._page = Math.max(Math.min(this._pages.length - 1, val), 0);
     }
 
-    get brokenText(){return this._brokenText}
-    get pageText(){return this._pages ? this._pages[this._page] : ''}
-    get isLastPage(){return this._page == this._pages.length - 1}
+    get brokenText(): string {return this._brokenText}
+    get pageText(): string {return this._pages ? this._pages[this._page] : ''}
+    get isLastPage(): boolean {return this._page >= this._pages.length - 1};
 
     get fontSize(){return this._fontSize}
-    set fontSize(size){
+    set fontSize(size: number){
         this._fontSize = size;
         this._breakText();
     }
@@ -43,15 +50,13 @@ export default class Font_Renderer{
 
     get fontDim(){
         const {width, height} = font['0'];
-        return new Victor(
+        return new Vector(
             width * this._fontSize,
             height * this._fontSize
         );
     }
 
-    get isLastPage(){return this._page >= this._pages.length - 1};
-
-    _breakText(){
+    _breakText(): void {
         const charWidth = this._fontSize * font['0'].width;
         const words = this._text.split(' ');
         const output = [];
@@ -103,18 +108,18 @@ export default class Font_Renderer{
         }
     }
 
-    setDimensions(width, height){
+    setDimensions(width: number, height: number): void {
         this._width = width;
         this._height = height;
         this._breakText();
     }
 
-    setHeightFromLineCount(lineCount){
+    setHeightFromLineCount(lineCount: number): void {
         this._height = font['0'].height * lineCount;
     }
 
-    render(){
-        const ctx = this._canvas.getContext('2d');
+    render(): void {
+        const ctx = this._canvas.getContext('2d')!;
         const drawText = this.splitPages ? this._pages[this._page] : this._brokenText;
         const charHeight = font['0'].height;
         const drawCount = Math.min(drawText.length, this.reveal);

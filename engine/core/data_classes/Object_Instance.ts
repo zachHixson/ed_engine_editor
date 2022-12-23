@@ -1,30 +1,41 @@
 import {ENTITY_TYPE} from '../Enums';
+import { iAnyObj } from '../interfaces';
+import { Vector } from '../Vector';
+import { Game_Object } from './Game_Object';
+import { Instance_Base } from './Instance_Base';
 
-const COLLISION_OVERRIDE = {
-    KEEP: 'K',
-    FORCE: 'F',
-    IGNORE: 'I',
+enum COLLISION_OVERRIDE {
+    KEEP = 'K',
+    FORCE = 'F',
+    IGNORE = 'I',
 };
-Object.freeze(COLLISION_OVERRIDE);
 
-export class Instance{
-    constructor(id, pos, objRef){
-        this.id = id;
+export class Object_Instance extends Instance_Base{
+    private _animProgress: number = 0;
+
+    objRef: Game_Object;
+    zDepthOverride: number | null = null;
+    collisionOverride: COLLISION_OVERRIDE = COLLISION_OVERRIDE.KEEP;
+    groups: string[];
+    startFrame: number = 0;
+    fps: number = 0;
+    animLoop: boolean = false;
+    animPlaying: boolean = false;
+    lastPos: Vector = new Vector();
+    localVariables: Map<string, any> = new Map();
+
+
+    constructor(id: number, pos: Vector, objRef: Game_Object){
+        super(id, pos);
+
         this.objRef = objRef;
-        this.pos = new Victor.fromObject(pos);
         this.name = this.objRef.name + '_' + this.id;
         this.zDepthOverride = null;
         this.collisionOverride = COLLISION_OVERRIDE.KEEP;
         this.groups = [];
-        this.customVars = [];
 
         //engine props
         if (window.IS_ENGINE){
-            this._animProgress = 0;
-            this.startFrame = 0;
-            this.fps = 0;
-            this.animLoop = false;
-            this.animPlaying = false;
             this.lastPos = this.pos.clone();
             this.localVariables = new Map(this.logic?.localVariableDefaults);
         }
@@ -50,7 +61,7 @@ export class Instance{
         let hasCollisionEvent = false;
 
         for (const eventKey in this.logic?.events){
-            hasCollisionEvent |= eventKey == 'e_collision';
+            hasCollisionEvent ||= eventKey == 'e_collision';
         }
 
         return !!hasCollisionEvent;
@@ -73,7 +84,7 @@ export class Instance{
             return Math.min(frame, this.sprite.frames.length - 1);
         }
     }
-    set animFrame(val){
+    set animFrame(val: number){
         if (!this.sprite){
             return;
         }
@@ -83,8 +94,8 @@ export class Instance{
         this._animProgress = Math.floor(frame / this.sprite.frames.length * animDur);
     }
 
-    clone(){
-        const clone = new Instance(this.id, this.pos, this.objRef);
+    clone(): Object_Instance {
+        const clone = new Object_Instance(this.id, this.pos, this.objRef);
         Object.assign(clone, this);
         clone.pos = this.pos.clone();
         if (this.lastPos) clone.lastPos = this.lastPos.clone();
@@ -92,8 +103,8 @@ export class Instance{
         return clone;
     }
 
-    toSaveData(){
-        let sanitized = Object.assign({}, this);
+    toSaveData(): iAnyObj {
+        let sanitized = Object.assign({}, this) as iAnyObj;
 
         sanitized.objId = this.objRef.id;
         sanitized.pos = this.pos.toObject();
@@ -104,11 +115,20 @@ export class Instance{
         return sanitized;
     }
 
-    executeNodeEvent(eventName, data){
-        this.logic.executeEvent(eventName, this, data);
+    fromSaveData(data: iAnyObj): Object_Instance {
+        delete data.pos;
+        delete data.objId;
+
+        Object.assign(this, data);
+
+        return this;
     }
 
-    initAnimProps(){
+    executeNodeEvent(eventName: string, data: iAnyObj): void {
+        this.logic?.executeEvent(eventName, this, data);
+    }
+
+    initAnimProps(): void {
         this.startFrame = this.objRef.startFrame;
         this.fps = this.objRef.fps;
         this.animLoop = this.objRef.animLoop;
@@ -116,22 +136,22 @@ export class Instance{
         this.animFrame = this.objRef.startFrame;
     }
 
-    advanceAnimation(deltaTime){
+    advanceAnimation(deltaTime: number): void {
         if (this.animPlaying){
             this._animProgress += deltaTime;
         }
     }
 
-    initLocalVariables(){
+    initLocalVariables(): void {
         this.localVariables = new Map(this.logic?.localVariableDefaults);
     }
 
-    setLocalVariable(name, data){
+    setLocalVariable(name: string, data: any): void {
         const varName = name.trim().toLowerCase();
         this.localVariables.set(varName, data);
     }
 
-    getLocalVariable(name){
+    getLocalVariable(name: string): any {
         const varName = name.trim().toLowerCase();
         return this.localVariables.get(varName);
     }

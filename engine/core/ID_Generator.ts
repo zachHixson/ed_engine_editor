@@ -1,21 +1,21 @@
 export const ID_Generator = {
     curStep: 0,
 
-    newID(){
+    newID(): number {
         let id = this.curStep;
         this.curStep++;
         return id;
     },
 
-    reset(){
+    reset(): void {
         this.curStep = 0;
     },
 
-    getCurrentID(){
+    getCurrentID(): number {
         return this.curStep;
     },
 
-    setID(id){
+    setID(id: number): void {
         this.curStep = id;
     }
 };

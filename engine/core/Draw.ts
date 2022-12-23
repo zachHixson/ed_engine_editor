@@ -1,8 +1,8 @@
-import {getSpriteDimensions, get2DIdx} from './Util_2D';
+import {getSpriteDimensions, get2DIdx} from './Util';
 import {clamp} from './Util';
 
-export function drawCheckerBG(canvas, checkerSize, lightCol = '#AAA', darkCol = '#CCC'){
-    let ctx = canvas.getContext('2d');
+export function drawCheckerBG(canvas: HTMLCanvasElement, checkerSize: number, lightCol: string = '#AAA', darkCol: string = '#CCC'): void {
+    const ctx = canvas.getContext('2d')!;
     let xCount = Math.ceil(canvas.width / checkerSize);
     let yCount = Math.ceil(canvas.height / checkerSize);
 
@@ -29,7 +29,7 @@ export function drawCheckerBG(canvas, checkerSize, lightCol = '#AAA', darkCol = 
     ctx.resetTransform();
 };
 
-export function hexToRGBA(hexStr){
+export function hexToRGBA(hexStr: string): {r: number, g: number, b: number, a: number} {
     let offset = 0;
 
     if (hexStr.charAt(0) == '#'){
@@ -48,7 +48,7 @@ export function hexToRGBA(hexStr){
     }
 };
 
-export function RGBAToHex(r = 0, g = 0, b = 0, a = 255){
+export function RGBAToHex(r: number = 0, g: number = 0, b: number = 0, a: number = 255): string {
     r = clamp(r, 0, 255);
     g = clamp(g, 0, 255);
     b = clamp(b, 0, 255);
@@ -62,7 +62,7 @@ export function RGBAToHex(r = 0, g = 0, b = 0, a = 255){
     return '#' + hexR + hexG + hexB + hexA;
 };
 
-export function HSVToRGB(h, s, v){
+export function HSVToRGB(h: number, s: number, v: number): {r: number, g: number, b: number} {
     let c = v * s;
     let x = c * (1 - Math.abs(((h / 60) % 2) - 1));
     let m = v - c;
@@ -88,6 +88,7 @@ export function HSVToRGB(h, s, v){
     }
     else{
         console.trace("Error: Hue is not 0-360 [" + h + "]");
+        out = [0, 0, 0];
     }
 
     for (let i = 0; i < out.length; i++){
@@ -101,7 +102,7 @@ export function HSVToRGB(h, s, v){
     }
 };
 
-export function RGBToHSV(r, g, b){
+export function RGBToHSV(r: number, g: number, b: number): {hue: number, sat: number, val: number} {
     let rp = r / 255;
     let gp = g / 255;
     let bp = b / 255;
@@ -124,6 +125,9 @@ export function RGBToHSV(r, g, b){
     else if (cmax == bp){
         hue = (rp - gp) / delta + 4;
     }
+    else{
+        hue = 0;
+    }
 
     hue *= 60;
     sat = (cmax == 0) ? 0 : delta / cmax;
@@ -132,23 +136,23 @@ export function RGBToHSV(r, g, b){
     return {hue, sat, val};
 };
 
-export function createCanvas(width, height){
+export function createCanvas(width: number, height: number): HTMLCanvasElement {
     const canvas = document.createElement('canvas');
     resizeCanvas(canvas, width, height);
     return canvas;
 }
 
-export function resizeCanvas(canvas, width, height){
+export function resizeCanvas(canvas: HTMLCanvasElement, width: number, height: number): void {
     Object.assign(canvas, {width, height});
 }
 
-export function createHDPICanvas(width, height){
+export function createHDPICanvas(width: number, height: number): HTMLCanvasElement {
     const canvas = document.createElement('canvas');
     resizeHDPICanvas(canvas, width, height);
     return canvas;
 }
 
-export function resizeHDPICanvas(canvas, width, height){
+export function resizeHDPICanvas(canvas: HTMLCanvasElement, width: number, height: number): void {
     canvas.width = width * devicePixelRatio;
     canvas.height = height * devicePixelRatio;
     canvas.style.width = width + 'px';
@@ -156,14 +160,18 @@ export function resizeHDPICanvas(canvas, width, height){
 }
 
 export class Color{
+    private _r: number;
+    private _g: number;
+    private _b: number;
+    private _a: number;
+    private _needsUpdate: boolean = true;
+    private _hexCache: string | null = null;
+
     constructor(r = 0, g = 0, b = 0, a = 255){
         this._r = r;
         this._g = g;
         this._b = b;
         this._a = a;
-        this._needsUpdate = true;
-
-        this._hexCache = null;
     }
 
     get r(){return this._r};
@@ -176,37 +184,37 @@ export class Color{
     set b(val){this._b = val; this._needsUpdate = true};
     set a(val){this._a = val; this._needsUpdate = true};
 
-    set(r = 0, g = 0, b = 0, a = 255){
+    set(r = 0, g = 0, b = 0, a = 255): void {
         Object.assign(this, {r, g, b, a});
     }
 
-    toCSS(){
+    toCSS(): string {
         return `rgba(${this._r}, ${this._g}, ${this._b}, ${this._a})`;
     }
 
-    toHex(){
+    toHex(): string {
         if (this._needsUpdate){
             const {r, g, b, a} = this;
             this._hexCache = RGBAToHex(r, g, b, a);
             this._needsUpdate = false;
         }
 
-        return this._hexCache;
+        return this._hexCache!;
     }
 
-    fromHex(hexStr){
+    fromHex(hexStr: string): Color {
         const RGBA = hexToRGBA(hexStr);
         Object.assign(this, RGBA);
         return this;
     }
 
-    fromArray(arr){
+    fromArray(arr: number[]): Color {
         const [r, g, b, a] = arr;
         Object.assign(this, {r, g, b, a});
         return this;
     }
     
-    compare(col){
+    compare(col: Color): boolean {
         return (
             this.r == col.r &&
             this.g == col.g &&

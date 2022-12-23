@@ -1,10 +1,11 @@
 import { iAnyObj } from "../interfaces";
 import { Vector } from "../Vector";
 
-export abstract class Instance_Base<T extends Instance_Base<T>>{
+export abstract class Instance_Base{
     id: number;
     name: string;
     pos: Vector;
+    zDepth: number = 0;
 
     constructor(id: number, pos: Vector = new Vector()){
         this.id = id;
@@ -12,7 +13,7 @@ export abstract class Instance_Base<T extends Instance_Base<T>>{
         this.pos = pos;
     }
     
-    abstract clone(): T;
+    abstract clone(): any;
     abstract toSaveData(): iAnyObj;
-    abstract fromSaveData(data: iAnyObj): T;
+    abstract fromSaveData(data: iAnyObj): any;
 }

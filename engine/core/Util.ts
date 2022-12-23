@@ -1,11 +1,13 @@
-export function getHighestEndingNumber(list){
+import { Sprite, Vector } from "./core_filemap";
+
+export function getHighestEndingNumber(list: string[]): number {
     let highest = -1;
     let pattern = /\d+$/;
 
     for (let i = 0; i < list.length; i++){
-        let number = parseInt(list[i].match(pattern));
+        const number = parseInt(list[i].match(pattern)![0] ?? '') as number;
 
-        if (number != NaN && number > highest){
+        if (isNaN(number) && number > highest){
             highest = number;
         }
     }
@@ -13,35 +15,23 @@ export function getHighestEndingNumber(list){
     return highest;
 }
 
-export function removeStroke(svg){
-    let paths = svg.childNodes;
-
-    for (let i = 0; i < paths.length; i++){
-        if (paths[i].style){
-            paths[i].style.stroke = '';
-        }
-    }
-
-    return svg;
-}
-
-export function mod(n, m){
+export function mod(n: number, m: number): number{
     return ((n%m)+m)%m;
 }
 
-export function clamp(x, min, max){
+export function clamp(x: number, min: number, max: number): number{
     return Math.max(Math.min(x, max), min);
 }
 
-export function lerp(a, b, t){
+export function lerp(a: number, b: number, t: number): number {
     return t * (b - a) + a;
 }
 
-export function get2DIdx(x, y, width){
+export function get2DIdx(x: number, y: number, width: number): number {
     return (y * width) + x;
 };
 
-export function isInBounds(x, y, lowX, lowY, highX, highY){
+export function isInBounds(x: number, y: number, lowX: number, lowY: number, highX: number, highY: number): boolean {
     return (
         x >= lowX &&
         y >= lowY &&
@@ -50,13 +40,6 @@ export function isInBounds(x, y, lowX, lowY, highX, highY){
     );
 };
 
-export function getSpriteDimensions(spriteArr){
-    return Math.round(Math.sqrt(spriteArr.length));
-};
-
-export function compareVector(vec1, vec2){
-    return (
-        vec1.x == vec2.x &&
-        vec1.y == vec2.y
-    );
+export function getSpriteDimensions(spriteFrame: ImageData): number {
+    return spriteFrame.width;
 };

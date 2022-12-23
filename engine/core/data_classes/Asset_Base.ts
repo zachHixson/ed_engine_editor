@@ -1,37 +1,36 @@
 import {CATEGORY_ID} from '../Enums';
 import {ID_Generator} from '../ID_Generator';
+import { iAnyObj, iNavState } from '../interfaces';
+import { Vector } from '../Vector';
 
-export class Asset{
+export abstract class Asset_Base {
+    id: number = ID_Generator.newID();
+    name:string = this.id.toString();
+    sortOrder: number = 0;
+    navState?: iNavState;
+
     constructor(){
-        this.id = ID_Generator.newID();
-        this.name = this.id;
-        this.sortOrder = 0;
-
-        if (window.EDITOR){
+        if (!window.IS_ENGINE){
             this.navState = this.defaultNavState;
         }
     }
 
-    get category_ID(){return CATEGORY_ID.UNDEFINED}
-    get thumbnail(){return null}
+    abstract get category_ID(): CATEGORY_ID;
+    get thumbnail(): HTMLCanvasElement | null {return null}
     get defaultNavState(){return {
-        offset: new Victor(0, 0),
+        offset: new Vector(0, 0),
         zoomFac: 1,
     }}
 
-    parseNavData(navData){
+    parseNavData(navData: iAnyObj){
         return {
-            offset: new Victor.fromObject(navData.offset),
+            offset: Vector.fromObject(navData.offset),
             zoomFac: navData.zoomFac
         }
     }
     
-    toSaveData(){return this}
+    abstract toSaveData(): any;
+    abstract fromSaveData(data: iAnyObj, ...other: any): any;
 
-    fromSaveData(data){
-        Object.assign(this, data);
-        return this;
-    }
-
-    purgeMissingReferences(){}
+    purgeMissingReferences(...args: any): void {};
 };

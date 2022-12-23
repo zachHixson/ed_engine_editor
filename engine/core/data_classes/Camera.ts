@@ -1,36 +1,35 @@
-const MOVE_TYPES = {
-    LOCKED: 'L',
-    FOLLOW: 'F',
-    SCROLL: 'S',
-};
-Object.freeze(MOVE_TYPES);
+import { Vector } from "../Vector";
+import { iAnyObj } from "../interfaces";
 
-const SCROLL_DIRS = {
-    UP: 'U',
-    DOWN: 'D',
-    RIGHT: 'R',
-    LEFT: 'L',
-};
-Object.freeze(SCROLL_DIRS);
+enum MOVE_TYPES {
+    LOCKED = 'L',
+    FOLLOW = 'F',
+    SCROLL = 'S',
+}
 
-const FOLLOW_TYPES = {
-    SMOOTH: 'S',
-    TILED: 'T',
+enum SCROLL_DIRS {
+    UP = 'U',
+    DOWN = 'D',
+    RIGHT = 'R',
+    LEFT = 'L',
 };
-Object.freeze(FOLLOW_TYPES);
+
+enum FOLLOW_TYPES {
+    SMOOTH = 'S',
+    TILED = 'T',
+};
 
 export class Camera{
-    constructor() {
-        this.pos = new Victor(8, -8);
-        this.velocity = new Victor(0, 0);
-        this._size = 1;
-        this.moveType = MOVE_TYPES.LOCKED;
-        this.scrollDir = SCROLL_DIRS.RIGHT;
-        this.scrollSpeed = 10;
-        this.followObjId = null;
-        this.followType = FOLLOW_TYPES.SMOOTH;
-        this.tiledOrigin = null;
-    }
+    private _size: number = 1;
+
+    pos: Vector = new Vector(8, -8);
+    velocity: Vector = new Vector(0, 0);
+    moveType: MOVE_TYPES = MOVE_TYPES.LOCKED;
+    scrollDir: SCROLL_DIRS = SCROLL_DIRS.RIGHT;
+    scrollSpeed: number = 10;
+    followObjId: number | null = null;
+    followType: FOLLOW_TYPES = FOLLOW_TYPES.SMOOTH;
+    tiledOrigin: Vector | null = null;
 
     static get MOVE_TYPES() {return MOVE_TYPES};
     static get SCROLL_DIRS(){return SCROLL_DIRS};
@@ -40,16 +39,16 @@ export class Camera{
 
     set size(newSize){this._size = Math.max(newSize, 0.5)}
 
-    clone(){
+    clone(): Camera {
         const clone = Object.assign(new Camera(), this);
         clone.pos = this.pos.clone();
         return clone;
     }
 
-    fromSaveData(camera){
+    fromSaveData(camera: iAnyObj){
         Object.assign(this, camera);
-        this.pos = Victor.fromObject(camera.pos);
-        this.velocity = Victor.fromObject(camera.velocity);
+        this.pos = Vector.fromObject(camera.pos);
+        this.velocity = Vector.fromObject(camera.velocity);
 
         return this;
     }

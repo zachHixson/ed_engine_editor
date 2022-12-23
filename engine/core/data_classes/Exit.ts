@@ -1,35 +1,31 @@
-import {ENTITY_TYPE} from '../Enums';
+import { iAnyObj } from '../interfaces';
+import { Vector } from '../Vector';
+import { Instance_Base } from './Instance_Base';
+import { Room } from './Room';
 
-const TRANSITION = {
-    NONE: 'N',
-    FADE: 'F',
+enum TRANSITION {
+    NONE = 'N',
+    FADE = 'F',
 };
-Object.freeze(TRANSITION);
 
-export class Exit{
-    constructor(id, pos = {x:0, y:0}){
-        this.id = id;
-        this.name = this.id.toString();
-        this.pos = new Victor.fromObject(pos);
-        this.isEnding = false;
-        this.destinationRoom = null;
-        this.destinationExit = null;
-        this.transition = TRANSITION.NONE;
-        this.endingDialog = "";
-    }
+export class Exit extends Instance_Base {
+    isEnding: boolean = false;
+    destinationRoom: number | null = null;
+    destinationExit: Exit | null = null;
+    transition: TRANSITION = TRANSITION.NONE;
+    endingDialog: string = '';
 
-    get TYPE(){return ENTITY_TYPE.EXIT};
     static get TRANSITION_TYPES(){return TRANSITION};
 
-    clone(){
+    clone(): Exit {
         const clone = new Exit(this.id, this.pos);
         Object.assign(clone, this);
         clone.pos = this.pos.clone();
         return clone;
     }
 
-    toSaveData(){
-        let sanitized = {};
+    toSaveData(): iAnyObj {
+        const sanitized = {} as iAnyObj;
 
         Object.assign(sanitized, this);
         sanitized.destinationRoom = this.destinationRoom;
@@ -38,9 +34,9 @@ export class Exit{
         return sanitized;
     }
 
-    fromSaveData(data){
+    fromSaveData(data: iAnyObj): Exit {
         Object.assign(this, data);
-        this.pos = Victor.fromObject(data.pos);
+        this.pos = Vector.fromObject(data.pos);
 
         return this;
     }

@@ -1,4 +1,5 @@
 import Node from './Node';
+import { iAnyObj } from './core/interfaces';
 
 export default class Logic{
     constructor(logicData, engine){
@@ -73,7 +74,7 @@ export default class Logic{
         this._localVariableDefaults.set(varName, data);
     }
 
-    dispatchLifecycleEvent(name, data){
+    dispatchLifecycleEvent(name: string, data?: iAnyObj){
         const eventName = '$' + name;
 
         for (let i = 0; i < this._nodes.length; i++){

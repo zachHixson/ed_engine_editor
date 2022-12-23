@@ -1,15 +1,22 @@
-export class Linked_List{
+export class Linked_List<T>{
+    private _start: Node<T> | null = null;
+    private _end: Node<T> | null = null;
+    private _lastInserted: Node<T> | null = null;
+    private _length: number = 0;
+
     constructor(){
-        this.start = null;
-        this.end = null;
-        this.lastInserted = null;
-        this.length = 0;
+        this._start = null;
+        this._end = null;
+        this._lastInserted = null;
+        this._length = 0;
     }
 
-    get(idx){
-        let curNode = this.start;
+    get length(){return this._length}
 
-        if (idx >= this.length){
+    get(idx: number): T | null {
+        let curNode = this._start;
+
+        if (idx >= this._length){
             console.error("Error: Index " + idx + " out of bounds");
             return null;
         }
@@ -28,36 +35,36 @@ export class Linked_List{
         }
     }
 
-    getFirst(){
-        if (this.start){
-            return this.start.val;
+    getFirst(): T | null {
+        if (this._start){
+            return this._start.val;
         }
 
         return null;
     }
 
-    getLast(){
-        if (this.end){
-            return this.end.val;
+    getLast(): T | null {
+        if (this._end){
+            return this._end.val;
         }
 
         return null;
     }
 
-    getLastNodeRef(){
-        return this.end;
+    getLastNodeRef(): Node<T> | null {
+        return this._end;
     }
 
-    getLastInsertedRef(){
-        return this.lastInserted;
+    getLastInsertedRef(): Node<T> | null {
+        return this._lastInserted;
     }
 
-    find(searchFunc = a => a == a){
-        return this.findRef(searchFunc)?.val;
+    find(searchFunc = (a: T) => a == a): T | null {
+        return this.findRef(searchFunc)?.val ?? null;
     }
 
-    findRef(searchFunc = a => a == a){
-        let current = this.start;
+    findRef(searchFunc = (a: T) => a == a): Node<T> | null {
+        let current = this._start;
 
         while (current){
             if (searchFunc(current.val)){
@@ -66,53 +73,55 @@ export class Linked_List{
 
             current = current.next;
         }
+
+        return null;
     }
 
-    push(val){
+    push(val: T): void {
         let newNode;
 
-        if (this.start == null){
-            newNode = new this.Node(val);
-            this.start = newNode;
-            this.end = newNode;
+        if (this._start == null){
+            newNode = new Node(val);
+            this._start = newNode;
+            this._end = newNode;
         }
         else{
-            newNode = new this.Node(val, null, this.end);
-            this.end.next = newNode;
-            this.end = newNode;
+            newNode = new Node(val, null, this._end);
+            this._end!.next = newNode;
+            this._end = newNode;
         }
 
-        this.lastInserted = newNode;
+        this._lastInserted = newNode;
 
-        this.length++;
+        this._length++;
     }
 
-    pop(){
-        if (this.end && this.end.prev){
-            let returnVal = this.end.val;
-            this.end = this.end.prev;
-            this.end.next = null;
+    pop(): T | null {
+        if (this._end && this._end.prev){
+            let returnVal = this._end.val;
+            this._end = this._end.prev;
+            this._end.next = null;
             length--;
             return returnVal;
         }
-        else if (this.end){
-            let returnVal = this.end.val;
-            this.end = null;
-            this.start = null;
-            this.length = 0;
+        else if (this._end){
+            let returnVal = this._end.val;
+            this._end = null;
+            this._start = null;
+            this._length = 0;
             return returnVal;
         }
         
         return null;
     }
 
-    popFirst(){
-        if (this.start){
-            let returnVal = this.start.val;
-            let secondNode = this.start.next;
-            this.start = secondNode;
-            secondNode.prev = null;
-            this.length--;
+    popFirst(): T | null {
+        if (this._start){
+            const returnVal = this._start.val;
+            const secondNode = this._start.next;
+            this._start = secondNode;
+            if (secondNode) secondNode.prev = null;
+            this._length--;
             return returnVal;
         }
         else{
@@ -120,10 +129,10 @@ export class Linked_List{
         }
     }
 
-    insert(val, idx){
-        let lNode = this.start;
+    insert(val: T, idx: number): boolean {
+        let lNode = this._start;
 
-        if (idx >= this.length){
+        if (idx >= this._length){
             console.error("Error: Index " + idx + " out of bounds");
             return false;
         }
@@ -135,11 +144,11 @@ export class Linked_List{
 
         if (lNode){
             let rNode = lNode.next;
-            let newNode = new this.Node(val, rNode, lNode);
+            let newNode = new Node(val, rNode, lNode);
 
             lNode.next = newNode;
-            this.length++;
-            this.lastInserted = newNode;
+            this._length++;
+            this._lastInserted = newNode;
             return true;
         }
         else{
@@ -147,17 +156,17 @@ export class Linked_List{
         }
     }
 
-    insertSorted(val, smallestFunc = (a, b) => a < b){
-        let lNode = this.start;
+    insertSorted(val: T, smallestFunc: (a: T, b: T) => boolean = (a, b) => a < b): Node<T> {
+        let lNode = this._start;
         let rNode = lNode ? lNode.next : null;
         let newNode = null;
 
         if (!lNode){
-            this.start = new this.Node(val);
-            this.end = this.start;
-            this.lastInserted = this.start;
-            this.length++;
-            return this.start;
+            this._start = new Node(val);
+            this._end = this._start;
+            this._lastInserted = this._start;
+            this._length++;
+            return this._start;
         }
 
         while (lNode.next && smallestFunc(lNode.val, val)){
@@ -165,29 +174,29 @@ export class Linked_List{
             rNode = lNode.next;
         }
 
-        newNode = new this.Node(val, rNode, lNode)
+        newNode = new Node(val, rNode, lNode)
 
         if (rNode){
             rNode.prev = newNode;
         }
 
         lNode.next = newNode;
-        this.lastInserted = lNode.next;
-        this.length++;
-        return;
+        this._lastInserted = lNode.next;
+        this._length++;
+        return newNode;
     }
 
-    clear(){
-        if (this.start){
-            this._clear(this.start);
+    clear(): void {
+        if (this._start){
+            this._clear(this._start);
         }
 
-        this.start = null;
-        this.end = null;
-        this.length = 0;
+        this._start = null;
+        this._end = null;
+        this._length = 0;
     }
 
-    _clear(node){
+    private _clear(node: Node<T>): void {
         if (node.next){
             this._clear(node.next);
         }
@@ -196,12 +205,16 @@ export class Linked_List{
         }
     }
 
-    sort(smallestFunc = (a, b) => a < b){
+    sort(smallestFunc: (a: T, b: T)=>boolean = (a, b) => a < b): void {
         let head = null;
         let tail = null;
 
-        while (this.start){
-            let smallest = this._findSmallestNode(smallestFunc);
+        if (!this._start){
+            return;
+        }
+
+        while (this._start){
+            const smallest = this._findSmallestNode(smallestFunc)!;
 
             this._removeNode(smallest);
 
@@ -213,8 +226,8 @@ export class Linked_List{
                 head = smallest;
             }
 
-            if (smallest == this.start){
-                this.start = (this.start.next) ? this.start.next : null;
+            if (smallest == this._start){
+                this._start = (this._start.next) ? this._start.next : null;
             }
 
             smallest.prev = tail;
@@ -222,28 +235,28 @@ export class Linked_List{
             tail = smallest;
         }
 
-        this.start = head;
-        this.end = tail;
+        this._start = head;
+        this._end = tail;
     }
 
-    removeByNodeRef(nodeRef){
+    removeByNodeRef(nodeRef: Node<T>): void {
         this._removeNode(nodeRef);
     }
 
-    _removeNode(node){
-        if (node == this.start){
-            this.start = this.start.next;
+    private _removeNode(node: Node<T>): void {
+        if (node == this._start){
+            this._start = this._start.next;
 
-            if (this.start){
-                this.start.prev = null;
+            if (this._start){
+                this._start.prev = null;
             }
         }
 
-        if (node == this.end){
-            this.end = this.end.prev;
+        if (node == this._end){
+            this._end = this._end.prev;
 
-            if (this.end){
-                this.end.next = null;
+            if (this._end){
+                this._end.next = null;
             }
         }
 
@@ -255,15 +268,15 @@ export class Linked_List{
             node.next.prev = node.prev;
         }
 
-        this.length--;
+        this._length--;
     }
 
-    _findSmallestNode(smallestFunc = (a, b) => a < b){
-        let smallest = this.start;
-        let seeker = this.start?.next;
+    private _findSmallestNode(smallestFunc: (a: T, b: T)=>boolean = (a, b) => a < b): Node<T> | null {
+        let smallest = this._start;
+        let seeker = this._start?.next;
 
         while (seeker){
-            if (smallestFunc(seeker.val, smallest.val)){
+            if (smallestFunc(seeker.val, smallest!.val)){
                 smallest = seeker;
             }
 
@@ -273,9 +286,9 @@ export class Linked_List{
         return smallest;
     }
 
-    toArray(){
+    toArray(): T[] {
         let newArray = [];
-        let curNode = this.start;
+        let curNode = this._start;
 
         while (curNode){
             newArray.push(curNode.val);
@@ -285,8 +298,8 @@ export class Linked_List{
         return newArray;
     }
 
-    forEach(func){
-        let curNode = this.start;
+    forEach(func: (e: T)=>void): void {
+        let curNode = this._start;
 
         while (curNode){
             func(curNode.val);
@@ -294,8 +307,8 @@ export class Linked_List{
         }
     }
 
-    map(func){
-        let curNode = this.start;
+    map(func: (e: T)=>T): void {
+        let curNode = this._start;
 
         while (curNode){
             curNode.val = func(curNode.val);
@@ -304,8 +317,12 @@ export class Linked_List{
     }
 };
 
-Linked_List.prototype.Node = class {
-    constructor(val, next = null, prev = null){
+class Node<T> {
+    val: T;
+    next: Node<T> | null;
+    prev: Node<T> | null;
+
+    constructor(val: T, next: Node<T> | null = null, prev: Node<T> | null = null){
         this.val = val;
         this.next = next;
         this.prev = prev;

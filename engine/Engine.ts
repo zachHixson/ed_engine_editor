@@ -1,13 +1,18 @@
-import Renderer from './Renderer.js';
+import Renderer from './rendering/Renderer';
 import Logic from './Logic';
-import Dialog_Box from './Dialog_Box.js';
-import Dialog_Fullscreen from './Dialog_Fullscreen.js';
+import Dialog_Box from './text/Dialog_Box';
+import Dialog_Fullscreen from './text/Dialog_Fullscreen';
+import { Exit, Room, Sprite, Game_Object, Instance_Base, Interfaces } from '@core';
+import iGameData from './iGameData';
+
+type iSerializedGameData = Interfaces.iSerializedGameData;
+type iAnyObj = Interfaces.iAnyObj;
 
 const DEFAULT_ENV_CALLBACKS = {
     log: function(){console.log(...arguments)},
     warn: function(){console.warn(...arguments)},
     error: function(){console.error(...arguments)},
-    nodeException: function(error, treeData){console.error(error)},
+    nodeException: function(error: string, treeData: any){console.error(error)},
     restart: function(){location.reload()}
 };
 Object.freeze(DEFAULT_ENV_CALLBACKS);
@@ -16,29 +21,35 @@ class Engine{
     static get VERSION(){return '0.1.0'}
     static get ACTION_KEY(){return 'Space'}
 
-    constructor({canvas, gameData, callbacks}){
+    private _canvas: HTMLCanvasElement;
+    private _timeStart: number = 0;
+    private _curTime: number = 0;
+    private _deltaTime: number = 0;
+    private _lastLoopTimestamp: number = 0;
+    private _loadedRoom: Room | null = null;
+    private _renderer: Renderer;
+    private _dialogBox: Dialog_Box;
+    private _dialogFullscreen: Dialog_Fullscreen;
+    private _nextAnimationFrame: number | null = null;
+    private _keymap: Map<string, ()=>any> = new Map();
+    private _nodeEventMap: Map<string, any> = new Map();
+    private _nodeAsyncEventMap: Map<string, any> = new Map();
+    private _nodeEventCache: Map<string, any> = new Map();
+    private _collisionMap: Map<object, object> = new Map();
+    private _globalVariables: Map<string, any> = new Map();
+    private _errorLogs: Map<string, object> = new Map();
+    private _gameData: iGameData;
+    private _previousTransition: {exit: Exit, instance: Instance_Base} | null = null;
+
+
+    constructor(canvas: HTMLCanvasElement, gameData: string, callbacks: typeof DEFAULT_ENV_CALLBACKS){
         window.IS_ENGINE = true;
 
         this._canvas = canvas;
-        this._timeStart = null;
-        this._curTime = null;
-        this._deltaTime = null;
-        this._lastLoopTimestamp = null;
-        this._isRunning = false;
-        this._loadedRoom = null;
         this._renderer = new Renderer(this._canvas);
         this._dialogBox = new Dialog_Box(this._canvas);
         this._dialogFullscreen = new Dialog_Fullscreen(this._canvas);
-        this._nextAnimationFrame = null;
-        this._keymap = {};
-        this._nodeEventMap = {};
-        this._nodeAsyncEventMap = {};
-        this._nodeEventCache = {};
-        this._collisionMap = {};
-        this._globalVariables = new Map();
-        this._errorLogs = {};
         this._gameData = this._parseGameData(gameData);
-        this._previousTransition = {exit: null, instance: null};
 
         //integrate callbacks
         Object.assign(this, DEFAULT_ENV_CALLBACKS);
@@ -54,8 +65,8 @@ class Engine{
     get currentTime(){return this._curTime}
     get deltaTime(){return this._deltaTime}
 
-    _loadRoom = (roomId)=>{
-        const room = this._gameData.rooms.find(r => r.id == roomId);
+    _loadRoom = (roomId: number)=>{
+        const room = this._gameData.rooms.find((r: Room) => r.id == roomId);
         this._dispatchLogicEvent('e_before_destroy');
         this._loadedRoom = room.persist ? room : room.clone();
         this._collisionMap = {};
@@ -350,8 +361,12 @@ class Engine{
         }
     }
 
-    _parseGameData = (gameData)=>{
-        const loadedData = {};
+    _parseGameData = (gameData: string): iGameData => {
+        type serialSprite = iSerializedGameData["sprites"][number];
+        type serialObject = iSerializedGameData["objects"][number];
+        type serialRoom = iSerializedGameData["rooms"][number];
+        type serialLogic = iSerializedGameData["logic"][number];
+        const loadedData = {} as iGameData;
         let parsedJson;
 
         try {
@@ -359,14 +374,14 @@ class Engine{
         }
         catch (e) {
             console.error("ERROR: Engine could not parse provided JSON", e);
-            return;
+            return {} as iGameData;
         }
 
         loadedData.startRoom = parsedJson.startRoom;
-        loadedData.sprites = parsedJson.sprites.map(s => new Shared.Sprite().fromSaveData(s));
-        loadedData.objects = parsedJson.objects.map(o => new Shared.Game_Object().fromSaveData(o, loadedData.sprites));
-        loadedData.rooms = parsedJson.rooms.map(r => new Shared.Room().fromSaveData(r, loadedData.objects));
-        loadedData.logic = parsedJson.logic.map(l => new Logic(l, this));
+        loadedData.sprites = parsedJson.sprites.map((s: serialSprite) => new Sprite().fromSaveData(s));
+        loadedData.objects = parsedJson.objects.map((o: serialObject) => new Game_Object().fromSaveData(o, loadedData.sprites));
+        loadedData.rooms = parsedJson.rooms.map((r: serialRoom) => new Room().fromSaveData(r, loadedData.objects));
+        loadedData.logic = parsedJson.logic.map((l: serialLogic) => new Logic(l, this));
 
         loadedData.logic.forEach(logic => logic.dispatchLifecycleEvent('afterGameDataLoaded'));
 
@@ -450,8 +465,8 @@ class Engine{
         return tag;
     }
 
-    _dispatchLogicEvent = (eventName, data)=>{
-        const nodeEvent = this._nodeEventMap[eventName];
+    _dispatchLogicEvent = (eventName: string, data?: iAnyObj): void => {
+        const nodeEvent = this._nodeEventMap.get(eventName);
 
         if (!nodeEvent) return;
 
@@ -513,7 +528,6 @@ class Engine{
 
     start = ()=>{
         window.IS_ENGINE = true;
-        this._isRunning = true;
         this._timeStart = performance.now();
         this._curTime = this._timeStart;
         this._lastLoopTimestamp = this._timeStart;
