@@ -17,6 +17,7 @@ import {
     ENTITY_TYPE,
     Node_Enums,
 } from '@core';
+import * as Core from '@core';
 import Node from './Node';
 import iGameData from './iGameData';
 
@@ -42,9 +43,10 @@ interface iCollisionMapping {
     }>,
 }
 
-class Engine implements iEngineCallbacks {
+export class Engine implements iEngineCallbacks {
     static get VERSION(){return '0.1.0'}
     static get ACTION_KEY(){return 'Space'}
+    static Core = Core;
 
     private _canvas: HTMLCanvasElement;
     private _timeStart: number = 0;
@@ -565,7 +567,7 @@ class Engine implements iEngineCallbacks {
         }
     }
 
-    start = (): void =>{
+    public start = (): void =>{
         window.IS_ENGINE = true;
         this._timeStart = performance.now();
         this._curTime = this._timeStart;

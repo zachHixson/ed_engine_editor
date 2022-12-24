@@ -1,39 +1,49 @@
-const uglify = require('uglify-js');
 const fs = require('fs');
 const {execSync} = require('child_process');
-const rollupConfig = require('../engine/rollup.config.js');
 const outputPath = './_compiled/';
-const fileName = 'Engine.js';
+const typesPath = './_compiled/@engineTypes/';
 
-function escapeQuotes(text){
-    return text.replace(/\\/g, "\\\\")
-            .replace(/\$/g, "\\$")
-            .replace(/'/g, "\\'")
-            .replace(/"/g, "\\\"")
-            .replace(/`/g, "\\\`");
-}
+process.argv.includes('--build-font') && execSync('npm run build-font');
 
-execSync('npx rollup --config ./engine/rollup.config.js');
-
-const debug = process.argv.includes('--debug');
-const tempFilePath = rollupConfig[0].output.file;
-const rolledEngine = fs.readFileSync(tempFilePath, {encoding: 'utf-8'});
-const minifiedEngine = debug ? rolledEngine : uglify.minify(rolledEngine, {output: {quote_style: 2}}).code;
-const htmlTemplate = fs.readFileSync('./Engine/export_template.html', {encoding: 'utf-8'});
+require("esbuild").build({
+    entryPoints: ['..\\engine\\Engine.ts'],
+    outfile: '.\\_compiled\\engine_raw.js',
+    format: 'iife',
+    globalName: 'Engine',
+    bundle: true,
+    sourcemap: process.argv.includes('--debug') ? 'inline' : false,
+    minify: true,
+    watch: process.argv.includes('--watch'),
+    loader: {".ts": "ts"}
+})
+.then(() => {
+const tempFile = fs.readFileSync('./_compiled/engine_raw.js', {encoding: 'utf-8'});
 const formatted =
-`let engineCode = \`${escapeQuotes(minifiedEngine)}\`;
+`export const EngineRawText = \`${
+    tempFile
+    .replace('"use strict";var', '"use strict";')
+    .replace(/\\/g, "\\\\")
+    .replace(/\$/g, "\\$")
+    .replace(/'/g, "\\'")
+    .replace(/"/g, "\\\"")
+    .replace(/`/g, "\\\`")
+}\`;
 
-export const template = \`${escapeQuotes(htmlTemplate)}\`;
-
-export function loadEngine(){
-    const engine = engineCode;
-    engineCode = '';
-    return engine;
-};`;
+export const Engine = (()=>{
+    let Engine;
+    eval(EngineRawText);
+    return Engine.Engine;
+})();
+`;
 
 if (!fs.existsSync(outputPath)){
     fs.mkdirSync(outputPath);
 }
 
-fs.unlinkSync(tempFilePath);
-fs.writeFileSync(outputPath + fileName, formatted);
+if (!fs.existsSync(typesPath)){
+    fs.mkdirSync(typesPath);
+}
+
+fs.unlinkSync('./_compiled/engine_raw.js');
+fs.writeFileSync(outputPath + 'Engine.js', formatted);
+});
