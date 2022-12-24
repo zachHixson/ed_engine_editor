@@ -124,7 +124,7 @@ export class Object_Instance extends Instance_Base{
         return this;
     }
 
-    executeNodeEvent(eventName: string, data: iAnyObj): void {
+    executeNodeEvent(eventName: string, data?: iAnyObj): void {
         this.logic?.executeEvent(eventName, this, data);
     }
 

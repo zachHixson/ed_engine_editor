@@ -2,22 +2,47 @@ import Renderer from './rendering/Renderer';
 import Logic from './Logic';
 import Dialog_Box from './text/Dialog_Box';
 import Dialog_Fullscreen from './text/Dialog_Fullscreen';
-import { Exit, Room, Sprite, Game_Object, Instance_Base, Interfaces } from '@core';
+import {
+    Exit,
+    Room,
+    Camera,
+    Sprite,
+    Game_Object,
+    Instance_Base,
+    Interfaces,
+    Vector,
+    Object_Instance,
+    Util,
+    Spacial_Collection,
+    ENTITY_TYPE,
+    Node_Enums,
+} from '@core';
+import Node from './Node';
 import iGameData from './iGameData';
 
 type iSerializedGameData = Interfaces.iSerializedGameData;
 type iAnyObj = Interfaces.iAnyObj;
 
-const DEFAULT_ENV_CALLBACKS = {
-    log: function(){console.log(...arguments)},
-    warn: function(){console.warn(...arguments)},
-    error: function(){console.error(...arguments)},
-    nodeException: function(error: string, treeData: any){console.error(error)},
-    restart: function(){location.reload()}
-};
-Object.freeze(DEFAULT_ENV_CALLBACKS);
+interface iEngineCallbacks {
+    log?: (...args: any)=>void
+    warn?: (...args: any)=>void
+    error?: (...args: any)=>void
+    nodeException?: (error: string, treeData: any)=>void;
+    restart?: ()=>void
+}
 
-class Engine{
+interface iCollisionMapping {
+    sourceInstance: Object_Instance,
+    collisions: Map<number, {
+        instance: Object_Instance,
+        startCollision: number,
+        lastChecked: number,
+        active: boolean,
+        force: boolean,
+    }>,
+}
+
+class Engine implements iEngineCallbacks {
     static get VERSION(){return '0.1.0'}
     static get ACTION_KEY(){return 'Space'}
 
@@ -26,23 +51,29 @@ class Engine{
     private _curTime: number = 0;
     private _deltaTime: number = 0;
     private _lastLoopTimestamp: number = 0;
-    private _loadedRoom: Room | null = null;
+    private _loadedRoom: Room = new Room();
     private _renderer: Renderer;
     private _dialogBox: Dialog_Box;
     private _dialogFullscreen: Dialog_Fullscreen;
-    private _nextAnimationFrame: number | null = null;
-    private _keymap: Map<string, ()=>any> = new Map();
-    private _nodeEventMap: Map<string, any> = new Map();
+    private _nextAnimationFrame: number = -1;
+    private _keymap: Map<string, boolean> = new Map();
+    private _nodeEventMap: Map<string, Map<number, Object_Instance>> = new Map();
     private _nodeAsyncEventMap: Map<string, any> = new Map();
     private _nodeEventCache: Map<string, any> = new Map();
-    private _collisionMap: Map<object, object> = new Map();
+    private _collisionMap: Map<number, iCollisionMapping> = new Map();
     private _globalVariables: Map<string, any> = new Map();
-    private _errorLogs: Map<string, object> = new Map();
+    private _errorLogs: Map<string, boolean> = new Map();
     private _gameData: iGameData;
-    private _previousTransition: {exit: Exit, instance: Instance_Base} | null = null;
+    private _previousTransition: {exit: Exit | null, instance: Instance_Base | null} = {exit: null, instance: null};
+
+    log: (...args: any)=>void = function(){console.log(...arguments)};
+    warn: (...args: any)=>void = function(){console.warn(...arguments)};
+    error: (...args: any)=>void = function(){console.error(...arguments)};
+    nodeException: (error: string, treeData: any)=>void = function(error: string, treeData: any){console.error(error)};
+    restart: ()=>void = function(){location.reload()};
 
 
-    constructor(canvas: HTMLCanvasElement, gameData: string, callbacks: typeof DEFAULT_ENV_CALLBACKS){
+    constructor(canvas: HTMLCanvasElement, gameData: string, callbacks: iEngineCallbacks){
         window.IS_ENGINE = true;
 
         this._canvas = canvas;
@@ -52,8 +83,11 @@ class Engine{
         this._gameData = this._parseGameData(gameData);
 
         //integrate callbacks
-        Object.assign(this, DEFAULT_ENV_CALLBACKS);
-        Object.assign(this, callbacks);
+        if (callbacks.log) this.log = callbacks.log;
+        if (callbacks.warn) this.warn = callbacks.warn;
+        if (callbacks.error) this.error = callbacks.error;
+        if (callbacks.nodeException) this.nodeException = callbacks.nodeException;
+        if (callbacks.restart) this.restart = callbacks.restart;
 
         this._linkLogic();
         this._dialogBox.onCloseCallback = this._onDialogBoxClose;
@@ -65,16 +99,16 @@ class Engine{
     get currentTime(){return this._curTime}
     get deltaTime(){return this._deltaTime}
 
-    _loadRoom = (roomId: number)=>{
-        const room = this._gameData.rooms.find((r: Room) => r.id == roomId);
+    private _loadRoom = (roomId: number): void =>{
+        const room = this._gameData.rooms.find((r: Room) => r.id == roomId)!;
         this._dispatchLogicEvent('e_before_destroy');
         this._loadedRoom = room.persist ? room : room.clone();
-        this._collisionMap = {};
+        this._collisionMap = new Map();
         this._renderer.setRoom(this._loadedRoom);
         this._clearNodeEvents();
 
         //setup instances
-        this._loadedRoom.instances.list.forEach(instance => {
+        this._loadedRoom.instances.forEach(instance => {
             instance.initLocalVariables();
             this._registerInstanceEvents(instance);
         });
@@ -82,7 +116,7 @@ class Engine{
         this._dispatchLogicEvent('e_create');
     }
 
-    _updateLoop = (time)=>{
+    private _updateLoop = (time: number): void =>{
         this._curTime = time;
         this._deltaTime = Math.max((time - this._lastLoopTimestamp) / 1000, 0);
 
@@ -92,7 +126,7 @@ class Engine{
         this._nextAnimationFrame = requestAnimationFrame(this._updateLoop);
     }
 
-    _update = ()=>{
+    private _update = (): void =>{
         window.IS_ENGINE = true;
         try{
             this._processDebugNav();
@@ -111,24 +145,24 @@ class Engine{
         window.IS_ENGINE = false;
     }
 
-    _processDebugNav = ()=>{
-        const camera = this._loadedRoom.camera;
-        const controlVelocity = new Victor(0, 0);
+    private _processDebugNav = (): void =>{
+        const camera = this._loadedRoom!.camera;
+        const controlVelocity = new Vector(0, 0);
         const speed = 2 * camera.size;
         const zoomSpeed = 0.1;
         let zoom = 0;
 
-        controlVelocity.y = (!!this._keymap['KeyI'] * speed) - (!!this._keymap['KeyK'] * speed);
-        controlVelocity.x = (!!this._keymap['KeyJ'] * speed) - (!!this._keymap['KeyL'] * speed);
-        zoom = (!!this._keymap['KeyO'] * zoomSpeed) - (!!this._keymap['KeyU'] * zoomSpeed);
+        controlVelocity.y = (!!this._keymap.get('KeyI') ? speed : 0) - (!!this._keymap.get('KeyK') ? speed : 0);
+        controlVelocity.x = (!!this._keymap.get('KeyJ') ? speed : 0) - (!!this._keymap.get('KeyL') ? speed : 0);
+        zoom = (!!this._keymap.get('KeyO') ? zoomSpeed : 0) - (!!this._keymap.get('KeyU') ? zoomSpeed : 0);
 
         camera.velocity.copy(controlVelocity);
         camera.size += zoom;
     }
 
-    _updateCamera(){
-        const camera = this._loadedRoom.camera;
-        const {MOVE_TYPES, SCROLL_DIRS, FOLLOW_TYPES} = Shared.Camera;
+    private _updateCamera = (): void =>{
+        const camera = this._loadedRoom!.camera;
+        const {MOVE_TYPES, SCROLL_DIRS, FOLLOW_TYPES} = Camera;
 
         camera.pos.add(camera.velocity.clone().multiplyScalar(this._deltaTime));
 
@@ -139,9 +173,9 @@ class Engine{
                 break;
 
             case MOVE_TYPES.FOLLOW:
-                const target = this._loadedRoom.instances.list.find(
+                const target = this._loadedRoom!.instances.find(
                     instance => instance.id == camera.followObjId
-                );
+                )!;
                 const targetPos = target.pos.clone().addScalar(8);
 
                 switch(camera.followType){
@@ -183,19 +217,19 @@ class Engine{
         }
     }
 
-    _processCollisions = ()=>{
+    private _processCollisions = (): void =>{
         this._mapInstanceOverlaps();
         this._dispatchCollisionEvents();
     }
 
-    _mapInstanceOverlaps = ()=>{
-        const prevExit = this._previousTransition.exit;
-        const prevInst = this._previousTransition.instance;
-        let overlappedExit;
-        let triggeredInstance;
+    private _mapInstanceOverlaps = (): void =>{
+        const prevExit = this._previousTransition!.exit;
+        const prevInst = this._previousTransition!.instance;
+        let overlappedExit: Exit | null = null;
+        let triggeredInstance: Object_Instance | null = null;
         let doubleTriggerExit;
 
-        this._loadedRoom.instances.list.forEach(instance => {
+        this._loadedRoom!.instances.forEach(instance => {
             const overlappingInstances = instance.hasCollisionEvent ? this.getInstancesOverlapping(instance) : [];
             const overlappingExits = instance.triggerExits ? this.getExitsOverlapping(instance) : [];
 
@@ -214,62 +248,63 @@ class Engine{
 
         doubleTriggerExit = prevExit == overlappedExit && prevInst == triggeredInstance;
 
-        if (overlappedExit){
-            if (!doubleTriggerExit){
-                if (overlappedExit.isEnding){
-                    this._triggerEnding(overlappedExit.endingDialog);
-                }
-                else{
-                    this._triggerExit(overlappedExit, triggeredInstance);
-                }
-            }
+        if (!overlappedExit){
+            this._previousTransition!.exit = null;
+            this._previousTransition!.instance = null;
+            return;
+        }
+
+        //type assertion since typescript doesn't know how to check callbacks
+        overlappedExit = overlappedExit as Exit;
+
+        if (doubleTriggerExit) return;
+
+        if (overlappedExit.isEnding){
+            this._triggerEnding(overlappedExit['endingDialog']);
         }
         else{
-            this._previousTransition.exit = null;
-            this._previousTransition.instance = null;
+            this._triggerExit(overlappedExit, triggeredInstance!);
         }
     }
 
-    _dispatchCollisionEvents = ()=>{
-        for (const instanceKey in this._collisionMap){
-            const instanceEntry = this._collisionMap[instanceKey];
+    private _dispatchCollisionEvents = (): void =>{
+        this._collisionMap.forEach((instanceEntry)=>{
             const sourceInstance = instanceEntry.sourceInstance;
 
-            for (const collisionKey in instanceEntry.collisions){
-                const collision = instanceEntry.collisions[collisionKey];
+            instanceEntry.collisions.forEach(collision => {
 
                 if (collision.active){
                     let eventType;
 
                     if (collision.startCollision == this._curTime || collision.force){
-                        eventType = Shared.COLLISION_EVENT.START;
+                        eventType = Node_Enums.COLLISION_EVENT.START;
                     }
                     else if (collision.lastChecked != this._curTime){
-                        eventType = Shared.COLLISION_EVENT.STOP;
+                        eventType = Node_Enums.COLLISION_EVENT.STOP;
                         collision.active = false;
                     }
                     else{
-                        eventType = Shared.COLLISION_EVENT.REPEAT;
+                        eventType = Node_Enums.COLLISION_EVENT.REPEAT;
                     }
 
                     collision.force = false;
 
-                    sourceInstance.logic.executeEvent('e_collision', sourceInstance, {
+                    sourceInstance.logic!.executeEvent('e_collision', sourceInstance, {
                         type: eventType,
                         instance: sourceInstance
                     });
                 }
-            }
-        }
+            });
+        });
     }
 
-    _triggerEnding = (endingText)=>{
+    private _triggerEnding = (endingText: string): void =>{
         if (!this._dialogFullscreen.active){
             this._dialogFullscreen.open(endingText);
         }
     }
 
-    _triggerExit = (exit, instance)=>{
+    private _triggerExit = (exit: Exit, instance: Object_Instance)=>{
         if (this._renderer.isTransitioning){
             return;
         }
@@ -287,28 +322,28 @@ class Engine{
             }
         }
         else{
-            if (!this._errorLogs['exit_' + exit.id]){
+            if (!this._errorLogs.get('exit_' + exit.id)){
                 this.warn('no_destination_specified');
-                this._errorLogs['exit_' + exit.id] = true;
+                this._errorLogs.set('exit_' + exit.id, true);
             }
         }
     }
 
-    _transitionRoom = (exit, instance)=>{
+    private _transitionRoom = (exit: Exit, instance: Object_Instance): void =>{
         const {
             TO_DESTINATION,
             THROUGH_DESTINATION,
             KEEP_POSIION,
             TRANSITION_ONLY,
-        } = Shared.Game_Object.EXIT_TYPES;
+        } = Game_Object.EXIT_TYPES;
         const exitBehavior = instance.objRef.exitBehavior;
         const prevRoom = this.room;
         const prevInstId = instance.id;
 
-        this._loadRoom(exit.destinationRoom);
+        if (exit.destinationRoom) this._loadRoom(exit.destinationRoom);
 
         if (exit.destinationExit != null){
-            const destExit = this.room.exits.list.find(e => e.id == exit.destinationExit);
+            const destExit = this.room.exits.find(e => e.id == exit.destinationExit)!;
 
             switch(exitBehavior){
                 case TO_DESTINATION:
@@ -319,8 +354,8 @@ class Engine{
                     const velocity = instance.pos.clone().subtract(instance.lastPos);
                     const destPos = destExit.pos.clone();
                     const normDir = velocity.clone();
-                    normDir.x = (Math.abs(normDir.x) > 0) * Math.sign(normDir.x) * 16;
-                    normDir.y = (Math.abs(normDir.y) > 0) * Math.sign(normDir.y) * 16;
+                    normDir.x = +(Math.abs(normDir.x) > 0) * Math.sign(normDir.x) * 16;
+                    normDir.y = +(Math.abs(normDir.y) > 0) * Math.sign(normDir.y) * 16;
                     destPos.add(normDir);
                     instance.pos.copy(destPos);
                     this.room.addInstance(instance);
@@ -361,7 +396,7 @@ class Engine{
         }
     }
 
-    _parseGameData = (gameData: string): iGameData => {
+    private _parseGameData = (gameData: string): iGameData => {
         type serialSprite = iSerializedGameData["sprites"][number];
         type serialObject = iSerializedGameData["objects"][number];
         type serialRoom = iSerializedGameData["rooms"][number];
@@ -388,28 +423,28 @@ class Engine{
         return loadedData;
     }
 
-    _linkLogic = ()=>{
+    private _linkLogic = (): void =>{
         const objects = this._gameData.objects;
         const logicScripts = this._gameData.logic;
 
         for (let i = 0; i < objects.length; i++){
             const curObj = objects[i];
-            curObj.logicScript = logicScripts.find(l => l.id == curObj.logicScript);
+            curObj.logicScript = logicScripts.find(l => l.id == (curObj.logicScript as unknown as number))!;
         }
     }
 
-    _bindInputEvents = ()=>{
+    private _bindInputEvents = ()=>{
         document.addEventListener("keydown", this._keyDown);
         document.addEventListener("keyup", this._keyUp);
     }
 
-    _keyDown = (e)=>{
+    private _keyDown = (e: KeyboardEvent): void =>{
         if (this._renderer.isTransitioning){
             return;
         }
 
-        if (!this._keymap[e.code] && !this._dialogBox.active && !this._dialogFullscreen.active){
-            this._keymap[e.code] = true;
+        if (!this._keymap.get(e.code) && !this._dialogBox.active && !this._dialogFullscreen.active){
+            this._keymap.set(e.code, true);
             this._dispatchLogicEvent('e_keyboard', {
                 which_key: e.key.toUpperCase(),
                 code: e.code,
@@ -422,8 +457,8 @@ class Engine{
         }
     }
 
-    _keyUp = (e)=>{
-        this._keymap[e.code] = false;
+    private _keyUp = (e: KeyboardEvent): void =>{
+        this._keymap.set(e.code, false);
         this._dispatchLogicEvent('e_keyboard', {
             which_key: e.key.toUpperCase(),
             code: e.code,
@@ -431,12 +466,12 @@ class Engine{
         });
     }
 
-    _unbindInputEvents = ()=>{
+    private _unbindInputEvents = ()=>{
         document.removeEventListener("keydown", this._keyDown);
         document.removeEventListener("keyup", this._keyUp);
     }
 
-    _registerInstanceEvents = (instance)=>{
+    private _registerInstanceEvents = (instance: Object_Instance): void =>{
         const logicEvents = instance.logic?.events;
 
         for (const event in logicEvents){
@@ -446,50 +481,53 @@ class Engine{
         instance.initAnimProps();
     }
 
-    _registerNodeEvent = (eventName, instance)=>{
-        if (!this._nodeEventMap[eventName]){
-            this._nodeEventMap[eventName] = {};
+    private _registerNodeEvent = (eventName: string, instance: Object_Instance)=>{
+        let eventMapGet = this._nodeEventMap.get(eventName);
+
+        if (!eventMapGet){
+            eventMapGet = new Map();
+            this._nodeEventMap.set(eventName, eventMapGet);
         }
 
-        this._nodeEventMap[eventName][instance.id] = instance;
+        eventMapGet.set(instance.id, instance);
     }
 
-    _registerAsyncNodeEvent = (node, methodName)=>{
+    private _registerAsyncNodeEvent = (node: Node, methodName: string): string =>{
         const tag = this._newAsyncTag();
-        this._nodeAsyncEventMap[tag] = {
+        this._nodeAsyncEventMap.set(tag, {
             instance: node.instance,
             node,
             methodName
-        };
+        });
 
         return tag;
     }
 
-    _dispatchLogicEvent = (eventName: string, data?: iAnyObj): void => {
+    private _dispatchLogicEvent = (eventName: string, data?: iAnyObj): void => {
         const nodeEvent = this._nodeEventMap.get(eventName);
 
         if (!nodeEvent) return;
 
-        for (const instance in nodeEvent){
-            nodeEvent[instance].executeNodeEvent(eventName, data);
-        }
+        nodeEvent.forEach(nodeEvent => {
+            nodeEvent.executeNodeEvent(eventName, data);
+        })
     }
 
-    _dispatchAsyncLogicEvent = (tag, clearEvent = false)=>{
-        const {instance, node, methodName} = this._nodeAsyncEventMap[tag];
+    private _dispatchAsyncLogicEvent = (tag: string, clearEvent: boolean = false): void =>{
+        const {instance, node, methodName} = this._nodeAsyncEventMap.get(tag);
         node.parentScript.executeAsyncNodeMethod(instance, node, methodName);
 
         if (clearEvent){
-            this._nodeAsyncEventMap[tag] = null;
+            this._nodeAsyncEventMap.set(tag, null);
         }
     }
 
-    _clearNodeEvents = ()=>{
-        this._nodeEventMap = {};
-        this._nodeEventCache = {};
+    private _clearNodeEvents = (): void =>{
+        this._nodeEventMap = new Map();
+        this._nodeEventCache = new Map();
     }
 
-    _filterOverlapping = (entityList, {id, pos, TYPE})=>{
+    private _filterOverlapping = <T extends Instance_Base>(entityList: Spacial_Collection<T>, {id, pos, TYPE}: {id: number, pos: Vector, TYPE: ENTITY_TYPE}): Instance_Base[] =>{
         const broadCheck = entityList.getByRadius(pos, 32);
         return broadCheck.filter(checkEntity => (
                 checkEntity.pos.x + 16 > pos.x &&
@@ -500,7 +538,7 @@ class Engine{
         ));
     }
 
-    _newAsyncTag = ()=>{
+    private _newAsyncTag = (): string =>{
         const LENGTH = 10;
         let tag = '';
 
@@ -512,21 +550,22 @@ class Engine{
         return tag;
     }
 
-    _onDialogBoxClose = (tag)=>{
+    private _onDialogBoxClose = (tag: string | null): void =>{
+        if (!tag) return;
         this._dispatchAsyncLogicEvent(tag, true);
     }
 
-    _onFullScreenClose = (tag, restart)=>{
+    private _onFullScreenClose = (tag: string | null, restart?: boolean): void =>{
         if (restart){
             this.stop();
             this.restart();
         }
-        else{
+        else if (tag){
             this._dispatchAsyncLogicEvent(tag, true);
         }
     }
 
-    start = ()=>{
+    start = (): void =>{
         window.IS_ENGINE = true;
         this._timeStart = performance.now();
         this._curTime = this._timeStart;
@@ -558,54 +597,54 @@ class Engine{
         window.IS_ENGINE = false;
     }
 
-    stop = ()=>{
+    stop = (): void =>{
         cancelAnimationFrame(this._nextAnimationFrame);
         this._unbindInputEvents();
-        this._keymap = {};
-        this._nodeEventMap = {};
-        this._nodeAsyncEventMap = {};
-        this._nodeEventCache = {};
-        this._collisionMap = {};
-        this._globalVariables = {};
+        this._keymap = new Map();
+        this._nodeEventMap = new Map();
+        this._nodeAsyncEventMap = new Map();
+        this._nodeEventCache = new Map();
+        this._collisionMap = new Map();
+        this._globalVariables = new Map();
         window.IS_ENGINE = false;
     }
 
-    registerCollision = (sourceInstance, collisionInstance, force = false)=>{
+    registerCollision = (sourceInstance: Object_Instance, collisionInstance: Object_Instance, force = false): void =>{
         let sourceInstanceEntry;
 
         //create entry for source instance if it does not already exist
-        if (!this._collisionMap[sourceInstance.id]){
-            this._collisionMap[sourceInstance.id] = {
+        if (!this._collisionMap.get(sourceInstance.id)){
+            this._collisionMap.set(sourceInstance.id, {
                 sourceInstance,
-                collisions: {}
-            };
+                collisions: new Map(),
+            });
         }
 
-        sourceInstanceEntry = this._collisionMap[sourceInstance.id];
+        sourceInstanceEntry = this._collisionMap.get(sourceInstance.id)!;
 
         //Register collision to map
-        if (sourceInstanceEntry.collisions[collisionInstance.id]){
-            const ref = sourceInstanceEntry.collisions[collisionInstance.id];
+        if (sourceInstanceEntry.collisions.get(collisionInstance.id)){
+            const ref = sourceInstanceEntry.collisions.get(collisionInstance.id)!;
             ref.startCollision = ref.active ? ref.startCollision : this._curTime;
             ref.lastChecked = this._curTime;
             ref.active = true;
             ref.force = force;
         }
         else{
-            sourceInstanceEntry.collisions[collisionInstance.id] = {
+            sourceInstanceEntry.collisions.set(collisionInstance.id, {
                 instance: collisionInstance,
                 startCollision: this._curTime,
                 lastChecked: this._curTime,
                 active: true,
                 force,
-            }
+            });
         }
     }
 
-    getInstancesAtPosition = (pos)=>{
-        const broadCheck = this.room.instances.getByRadius(pos, 32);
+    getInstancesAtPosition = (pos: Vector): Object_Instance[] =>{
+        const broadCheck = this.room!.instances.getByRadius(pos, 32);
         return broadCheck.filter(instance => 
-            Shared.isInBounds(
+            Util.isInBounds(
                 pos.x,
                 pos.y,
                 instance.pos.x,
@@ -616,44 +655,45 @@ class Engine{
         );
     }
 
-    getInstancesOverlapping = (instance)=>{
-        return this._filterOverlapping(this.room.instances, instance);
+    getInstancesOverlapping = (instance: Object_Instance): Object_Instance[] =>{
+        return this._filterOverlapping(this.room!.instances, instance) as Object_Instance[];
     }
 
-    getExitsOverlapping = (instance)=>{
-        return this._filterOverlapping(this.room.exits, instance);
+    getExitsOverlapping = (instance: Object_Instance): Exit[] =>{
+        return this._filterOverlapping(this.room!.exits, instance) as Exit[];
     }
 
-    setInstancePosition = (instance, pos)=>{
+    setInstancePosition = (instance: Object_Instance, pos: Vector): void =>{
         instance.lastPos.copy(instance.pos);
-        this.room.instances.setPositionByRef(instance, pos);
+        instance.pos.copy(pos);
+        this.room!.instances.updatePosition(instance.id);
     }
 
-    removeInstance = (instance)=>{
-        this.room.removeInstance(instance.id, instance.pos);
+    removeInstance = (instance: Object_Instance): void =>{
+        this.room!.removeInstance(instance.id);
     }
 
-    setGlobalVariable = (name, data)=>{
+    setGlobalVariable = (name: string, data: any): void =>{
         const varname = name.trim().toLowerCase();
         this._globalVariables.set(varname, data);
     }
 
-    getGlobalVariable = (name)=>{
+    getGlobalVariable = (name: string): any=>{
         const varname = name.trim().toLowerCase();
         return this._globalVariables.get(varname);
     }
 
-    openDialogBox = (text, node, methodName)=>{
+    openDialogBox = (text: string, node: Node, methodName: string): void =>{
         const asyncTag = node ? this._registerAsyncNodeEvent(node, methodName) : null;
         this._dialogBox.open(text, asyncTag);
     }
 
-    cacheNodeEventData = (tag, data)=>{
-        this._nodeEventCache[tag] = data;
+    cacheNodeEventData = (tag: string, data: any): void =>{
+        this._nodeEventCache.set(tag, data);
     }
 
-    getCachedNodeEventData = (tag)=>{
-        return this._nodeEventCache[tag];
+    getCachedNodeEventData = (tag: string): any =>{
+        return this._nodeEventCache.get(tag);
     }
 }
 

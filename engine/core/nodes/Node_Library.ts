@@ -5,6 +5,7 @@ import Cat_Variables from './Cat_Variables';
 import { Vector } from '../Vector';
 import { iAnyObj } from '../interfaces';
 import { iEngineNode } from '../LogicInterfaces';
+import { Object_Instance } from '../core_filemap';
 
 export const NODE_LIST: iNodeTemplate[] = [
     ...Cat_Events,
@@ -343,8 +344,8 @@ export const NODE_LIST: iNodeTemplate[] = [
                 instancesInSpace = this.engine.getInstancesOverlapping({
                     id: this.instance.id,
                     pos: newPos
-                });
-                spaceEmpty = instancesInSpace.length > 0 ? instancesInSpace.filter(i => i.isSolid) <= 0 : true;
+                } as Object_Instance);
+                spaceEmpty = instancesInSpace.length > 0 ? instancesInSpace.filter(i => i.isSolid).length <= 0 : true;
 
                 if (spaceEmpty || !this.instance.isSolid){
                     this.engine.setInstancePosition(this.instance, newPos);

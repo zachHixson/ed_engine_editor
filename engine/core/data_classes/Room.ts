@@ -23,8 +23,8 @@ export class Room extends Asset_Base {
     gravity: number = 9.81;
     
     get category_ID(){return CATEGORY_ID.ROOM}
-    get zSortedList(){return this.instances.zSort}
-    get exitsList(){return this.exits.zSort}
+    get instanceList(){return this.instances}
+    get exitsList(){return this.exits}
     get curInstId(){return this._curInstId++};
     get curExitId(){return this._curExitId++};
 
@@ -77,22 +77,22 @@ export class Room extends Asset_Base {
             let curExitData = room.exitsSerial[i];
             let newExit = new Exit(curExitData.id).fromSaveData(curExitData);
             this._curExitId = Math.max(newExit.id + 1, this._curExitId);
-            this.exits.add(newExit, newExit.pos);
+            this.exits.add(newExit);
         }
 
         return this;
     }
 
     purgeMissingReferences(objects: Game_Object[], rooms: Room[]){
-        this.instances.zSort.forEach((i) => {
+        this.instances.forEach(i => {
             const foundObj = objects.find(o => o.id == i.objRef.id);
 
             if (!foundObj){
-                this.removeInstance(i.id, i.pos);
+                this.removeInstance(i.id);
             }
         });
 
-        this.exits.zSort.forEach((e) => {
+        this.exits.forEach(e => {
             const foundRoom = rooms.find(r => r.id == e.destinationRoom);
 
             if (!foundRoom){
@@ -102,48 +102,49 @@ export class Room extends Asset_Base {
         });
     }
 
-    addInstance(newInstance: Object_Instance): Object_Instance {
-        return this.instances.add(newInstance, newInstance.pos);
+    addInstance(newInstance: Object_Instance): void {
+        this.instances.add(newInstance);
     }
 
     getInstanceById(instId: number): Object_Instance | null {
         return this.instances.getById(instId);
     }
 
-    getInstancesInRadius({x, y}: {x: number, y: number}, radius: number): Object_Instance[] {
-        return this.instances.getByRadius({x, y}, radius);
+    getInstancesInRadius(pos: Vector, radius: number): Object_Instance[] {
+        return this.instances.getByRadius(pos, radius);
     }
 
     getAllInstances(): Object_Instance[] {
-        return this.instances.zSort.toArray();
+        return this.instances.toArray();
     }
 
-    removeInstance(instId: number, pos: Vector | null = null): Object_Instance {
-        return this.instances.remove(instId, pos);
+    removeInstance(instId: number): Object_Instance | null {
+        return this.instances.remove(instId);
     }
 
     setInstancePosition(instRef: Object_Instance, newPos: Vector): void {
-        this.instances.setPositionByRef(instRef, newPos);
+        instRef.pos.copy(newPos);
+        this.instances.updatePosition(instRef.id);
     }
 
-    addExit(newExit: Exit): Exit {
-        return this.exits.add(newExit, newExit.pos);
+    addExit(newExit: Exit): void {
+        this.exits.add(newExit);
     }
 
     getExitById(exitId: number): Exit | null {
         return this.exits.getById(exitId);
     }
 
-    getExitsAtPosition({x, y}: {x: number, y: number}): Exit[] {
-        return this.exits.getByRadius({x, y}, 0);
+    getExitsAtPosition(pos: Vector): Exit[] {
+        return this.exits.getByRadius(pos, 0);
     }
 
     getAllExits(): Exit[] {
-        return this.exits.zSort.toArray();
+        return this.exits.toArray();
     }
 
-    removeExit(exitId: number, pos: Vector | null = null): Exit {
-        return this.exits.remove(exitId, pos);
+    removeExit(exitId: number, pos: Vector | null = null): Exit | null {
+        return this.exits.remove(exitId);
     }
 
     getContentsBounds(): number[] {
@@ -154,13 +155,13 @@ export class Room extends Asset_Base {
         bounds[2] = this.camera.pos.x;
         bounds[3] = this.camera.pos.y;
 
-        this.instances.zSort.forEach((i)=>{
+        this.instances.forEach(i =>{
             bounds[0] = Math.min(i.pos.x, bounds[0]);
             bounds[1] = Math.min(i.pos.y, bounds[1]);
             bounds[2] = Math.max(i.pos.x, bounds[2]);
             bounds[3] = Math.max(i.pos.y, bounds[3]);
         });
-        this.exits.zSort.forEach((i)=>{
+        this.exits.forEach(i =>{
             bounds[0] = Math.min(i.pos.x, bounds[0]);
             bounds[1] = Math.min(i.pos.y, bounds[1]);
             bounds[2] = Math.max(i.pos.x, bounds[2]);

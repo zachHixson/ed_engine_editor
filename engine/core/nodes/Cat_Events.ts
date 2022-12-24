@@ -160,7 +160,7 @@ export default [
         },
         methods: {
             name(this: iEngineNode){
-                const data = this.engine.getCachedNodeEventData('timer', data);
+                const data = this.engine.getCachedNodeEventData('timer');
                 return data.name;
             }
         },
@@ -174,16 +174,16 @@ export default [
             {id: 'name', type: SOCKET_TYPE.STRING, execute: 'name'},
             {id: 'data', type: SOCKET_TYPE.ANY, execute: 'data'},
         ],
-        execute(this: iEngineNode){
+        execute(this: iEngineNode, data: any){
             this.engine.cacheNodeEventData('message', data);
         },
         methods: {
             name(this: iEngineNode){
-                const data = this.engine.getCachedNodeEventData('message', data);
+                const data = this.engine.getCachedNodeEventData('message');
                 return data.name;
             },
             data(this: iEngineNode){
-                const data = this.engine.getCachedNodeEventData('message', data);
+                const data = this.engine.getCachedNodeEventData('message');
                 return data.data;
             },
         },

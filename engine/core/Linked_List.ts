@@ -12,6 +12,7 @@ export class Linked_List<T>{
     }
 
     get length(){return this._length}
+    get NodeClass(){return Node};
 
     get(idx: number): T | null {
         let curNode = this._start;
@@ -317,7 +318,7 @@ export class Linked_List<T>{
     }
 };
 
-class Node<T> {
+export class Node<T> {
     val: T;
     next: Node<T> | null;
     prev: Node<T> | null;

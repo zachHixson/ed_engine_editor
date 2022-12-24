@@ -30,8 +30,8 @@ const ARROW_CANVAS = (()=>{
 
     for (let i = 0; i < bitmap.length; i++){
         const idx = i * 4;
-        const white = bitmap[i] > 0 ? 1 : 0;
-        const filled = bitmap[i] != 0 ? 1 : 0;
+        const white = +(bitmap[i] > 0);
+        const filled = +(bitmap[i] != 0);
         imgData.data[idx + 0] = white * 255;
         imgData.data[idx + 1] = white * 255;
         imgData.data[idx + 2] = white * 255;
@@ -51,12 +51,12 @@ export default class Dialog_Box{
     protected _arrowBuff: typeof ARROW_CANVAS = ARROW_CANVAS;
     protected _progress: number = 0;
     protected _arrowAnim: number = 0;
-    protected _asyncTag: string = '';
+    protected _asyncTag: string | null = null;
     
     align: ALIGN = ALIGN.TOP;
     fontRenderer: Font_Renderer;
     active: boolean = false;
-    onCloseCallback: (tag: string)=>any = ()=>{};
+    onCloseCallback: (tag: string | null)=>any = ()=>{};
 
     constructor(canvas: HTMLCanvasElement){
         const textMargin = MARGIN + 2;
@@ -86,7 +86,7 @@ export default class Dialog_Box{
         this.fontRenderer.reveal = Math.floor(this._progress);
     }
 
-    open(text: string, asyncTag: string): void {
+    open(text: string, asyncTag: string | null = null): void {
         if (this.active){
             this.close();
         }

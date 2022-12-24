@@ -697,8 +697,9 @@ function revertExitAdd({exitRef}: ExitAddProps): void {
 }
 
 function revertExitDelete({exitRef}: ExitDeleteProps): void {
-    const exit = props.selectedRoom.addExit(exitRef.pos);
+    const exit = new Exit();
     Object.assign(exit, exitRef);
+    props.selectedRoom.addExit(exit);
     RoomMainEventBus.emit('instances-changed');
 }
 

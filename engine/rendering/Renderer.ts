@@ -23,8 +23,8 @@ export default class Renderer{
         this._spriteCache = new Map();
     }
 
-    startTransition = (type: any, duration: number, switchCallback: ()=>void, completeCallback: ()=>void): void =>{
-        this._transition.start(type, duration, switchCallback, completeCallback);
+    startTransition = (type: any, duration: number, switchCallback: ()=>void, completeCallback?: ()=>void): void =>{
+        this._transition.start(type, duration, switchCallback, completeCallback ?? (()=>{}));
     }
 
     render = (deltaTime: number): void =>{
@@ -59,7 +59,7 @@ export default class Renderer{
         );
         ctx.scale(scale, scale);
 
-        instances.zSort.forEach((instance)=>{
+        instances.forEach(instance => {
             if (instance.sprite){
                 const cacheGrab = this._spriteCache.get(instance.sprite.id);
                 let sprite = cacheGrab;

@@ -1,163 +1,166 @@
-/*
-    ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠
-    This is completely cursed code.
-    This class basically needs to be able to access
-    data either by location, or by a loopable list.
-    Due to Javascript not directly supporting pointers
-    this is really hacked together and needs to be
-    refactored.
-    ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠ ☠
-*/
-
-import {mod} from './Util';
-import {Linked_List} from './Linked_List';
-import { Vector } from './Vector';
-import { iAnyObj } from './interfaces';
+import { Linked_List, Node as LL_Node } from "./Linked_List";
+import { Vector } from "./Vector";
+import { mod } from './Util';
+import { iAnyObj } from "./interfaces";
 
 interface iSpacialObject {
     id: number,
     zDepth: number,
     pos: Vector,
     clone(): any,
+    toSaveData?(): iAnyObj,
 }
 
-export class Spacial_Collection<T extends iSpacialObject>{
-    area: number;
-    cellSize: number;
-    cellCount: number;
-    zSort: Linked_List<T> = new Linked_List();
-    spacialGrid: Linked_List<T>[];
+export class Spacial_Collection<T extends iSpacialObject> {
+    private _size: number;
+    private _divisions: number;
+    private _cellDimensions: number;
+    private _map: Map<number, Spacial_Reference<T>> = new Map();
+    private _list: Linked_List<Spacial_Reference<T>> = new Linked_List();
+    private _spacialGrid: Linked_List<Spacial_Reference<T>>[];
 
-    constructor(area: number, cellSize: number){
-        this.area = area;
-        this.cellSize = cellSize;
-        this.cellCount = this.area / this.cellSize;
-        this.spacialGrid = new Array(Math.ceil(this.cellCount * this.cellCount));
-        
-        for (let i = 0; i < this.spacialGrid.length; i++){
-            this.spacialGrid[i] = new Linked_List();
+    constructor(size: number, divisions: number) {
+        this._size = size;
+        this._divisions = divisions;
+        this._cellDimensions = this._size / this._divisions;
+        this._spacialGrid = new Array(this._divisions * this._divisions);
+
+        for (let i = 0; i < this._spacialGrid.length; i++){
+            this._spacialGrid[i] = new Linked_List<Spacial_Reference<T>>();
         }
     }
 
-    get list(){return this.zSort};
+    add(data: T){
+        const spacialReference = new Spacial_Reference<T>(data, data.pos);
+        const cellIdx = this._posToCellIdx(data.pos);
+        const cell = this._spacialGrid[cellIdx];
 
-    clone(recursive = false): Spacial_Collection<T> {
-        const clone = new Spacial_Collection<T>(this.area, this.cellSize);
-        this.zSort.forEach(item => {
-            const newItem = recursive ? item.clone() : item;
-            clone.add(newItem, newItem.pos)
+        this._list.insertSorted(spacialReference, (a, b) => a.data.zDepth <= b.data.zDepth);
+        this._map.set(data.id, spacialReference);
+        cell.push(spacialReference);
+
+        spacialReference.listNode = this._list.getLastInsertedRef()!;
+        spacialReference.gridNode = cell.getLastInsertedRef()!;
+        spacialReference.gridCell = cell;
+    }
+
+    remove(id: number): T | null {
+        const spacialRef = this._map.get(id);
+
+        spacialRef?.gridCell?.removeByNodeRef(spacialRef.gridNode!);
+        this._list.removeByNodeRef(spacialRef?.listNode!);
+        this._map.delete(id);
+
+        return spacialRef?.data ?? null;
+    }
+
+    forEach(callback: (data: T)=>void): void {
+        this._list.forEach(spacialRef => {
+            callback(spacialRef.data);
+        });
+    }
+
+    find(callback: (data: T)=>boolean): T | null {
+        return this._list.find(spacialRef => callback(spacialRef.data))?.data ?? null;
+    }
+
+    clone(recursive: boolean = false): Spacial_Collection<T> {
+        const clone = new Spacial_Collection<T>(this._size, this._divisions);
+        this._list.forEach(spacialRef => {
+            const newData = recursive ? spacialRef.data.clone() : spacialRef.data;
+            clone.add(newData)
         });
         return clone;
     }
 
     toSaveData(): iAnyObj {
-        const rawInstances = this.zSort.toArray();
-        const sanitizedInstances = [];
+        const sanitizedInstances: iAnyObj[] = [];
 
-        for (let i = 0; i < rawInstances.length; i++){
-            sanitizedInstances.push(rawInstances[i].toSaveData());
-        }
+        this._list.forEach(spacialRef => {
+            const data = spacialRef.data;
+
+            if (data.toSaveData){
+                sanitizedInstances.push(data.toSaveData());
+            }
+            else{
+                sanitizedInstances.push({id: data.id, pos: data.pos.toObject()});
+            }
+        });
 
         return sanitizedInstances;
     }
 
-    add(data: T, pos: Vector): T {
-        let nodeRef;
-        let spacialIdx = this.getSpacialCellIdx(pos);
+    toArray(): T[] {
+        const outArr = new Array(this._list.length);
+        let idx = 0;
+        this._list.forEach(spacialRef => outArr[idx++] = spacialRef.data);
 
-        this.zSort.insertSorted(data, (a, b) => a.zDepth <= b.zDepth);
-        nodeRef = this.zSort.getLastInsertedRef();
-        this.spacialGrid[spacialIdx].push(nodeRef);
-
-        return data;
+        return outArr;
     }
 
-    remove(id: number, pos: Vector | null = null){
-        let instRef = null;
-        let spacialIdx;
-        let cellList;
-        let cellRef;
-
-        if (pos){
-            spacialIdx = this.getSpacialCellIdx(pos);
-            cellList = this.spacialGrid[spacialIdx];
-            instRef = cellList.findRef((i) => i.val.id == id);
-            
-            cellList.removeByNodeRef(instRef);
-            this.zSort.removeByNodeRef(instRef.val);
-        }
-        else{
-            instRef = this.zSort.findRef((i) => i.id == id);
-            spacialIdx = this.getSpacialCellIdx(instRef.val.pos);
-            cellList = this.spacialGrid[spacialIdx];
-            cellRef = cellList.findRef((i) => i.val.id == id);
-
-            this.zSort.removeByNodeRef(instRef);
-            cellList.removeByNodeRef(cellRef);
-        }
-
-        return instRef.val.val;
+    resortZ(): void {
+        this._list.sort((a, b) => a.data.zDepth < b.data.zDepth);
     }
 
-    resortZ(){
-        if (this.zSort.length > 0 && this.zSort.getFirst().zDepth != undefined){
-            this.zSort.sort((a, b) => a.zDepth < b.zDepth);
-        }
+    getById(id: number): T | null {
+        return this._map.get(id)?.data ?? null;
     }
 
-    getSpacialCellIdx({x, y}: {x: number, y: number}){
-        const halfArea = this.area / 2;
-        const offsetX = x + halfArea;
-        const offsetY = y + halfArea;
-        const cellX = Math.floor(offsetX / this.cellSize);
-        const cellY = Math.floor(offsetY / this.cellSize);
-        const cellIdx = (cellY * this.cellCount) + cellX;
-        return Math.floor(mod(cellIdx, this.spacialGrid.length));
-    }
+    getByRadius(pos: Vector, radius: number): T[] {
+        const surveyCellCount = Math.floor(radius / this._cellDimensions);
+        const surveyGridSize = surveyCellCount * 2 + 1;
+        const startPos = pos.clone().subtractScalar(surveyCellCount * this._cellDimensions);
+        const foundItems: T[] = [];
 
-    getById(instId: number){
-        if (this.zSort.getFirst().hasOwnProperty('id')){
-            return this.zSort.find((i) => i.id == instId);
-        }
-        else{
-            return null;
-        }
-    }
+        for (let y = 0; y < surveyGridSize; y++){
+            for (let x = 0; x < surveyGridSize; x++){
+                const offset = new Vector(x, y).scale(this._cellDimensions);
+                const curPos = startPos.clone().add(offset);
+                const curCellIdx = this._posToCellIdx(curPos);
+                const curCell = this._spacialGrid[curCellIdx];
 
-    getByRadius({x, y}: {x: number, y: number}, radius: number): T[] {
-        let outputInsts = [];
-        let cellRadius = Math.floor(radius / this.cellSize) * this.cellSize;
-        
-        for (let xCell = x - cellRadius; xCell <= x + cellRadius; xCell += this.cellSize){
-            for (let yCell = y - cellRadius; yCell <= y + cellRadius; yCell += this.cellSize){
-                let idx = this.getSpacialCellIdx({x:xCell, y:yCell});
-
-                if (idx > 0 && idx < this.spacialGrid.length - 1){
-                    let cellList = this.spacialGrid[idx].toArray();
-                    
-                    for (let i = 0; i < cellList.length; i++){
-                        outputInsts.push(cellList[i].val);
-                    }
-                }
+                curCell.forEach(spacialRef => foundItems.push(spacialRef.data));
             }
         }
+
+        return foundItems;
+    }
+
+    updatePosition(id: number): void {
+        const spacialRef = this._map.get(id);
+
+        if (!spacialRef) return;
         
-        return outputInsts;
+        const oldCellIdx = this._posToCellIdx(spacialRef.pos);
+        const newCellIdx = this._posToCellIdx(spacialRef.data.pos);
+
+        if (oldCellIdx == newCellIdx) return;
+
+        const newGridCell = this._spacialGrid[newCellIdx];
+
+        spacialRef.gridCell?.removeByNodeRef(spacialRef.gridNode!);
+        newGridCell.push(spacialRef);
+        spacialRef.gridCell = newGridCell;
+        spacialRef.gridNode = newGridCell.getLastInsertedRef()!;
+        spacialRef.pos.copy(spacialRef.data.pos);
     }
 
-    setPositionByRef(instRef: T, newPos: Vector){
-        let startSpacialIdx = this.getSpacialCellIdx(instRef.pos);
-        let newSpacialIdx = this.getSpacialCellIdx(newPos);
-
-        if (startSpacialIdx != newSpacialIdx){
-            let startSpacialCell = this.spacialGrid[startSpacialIdx];
-            let newSpacialCell = this.spacialGrid[newSpacialIdx];
-            let spacialRef = startSpacialCell.findRef((i) => i.val.id == instRef.id);
-
-            startSpacialCell.removeByNodeRef(spacialRef);
-            newSpacialCell.push(spacialRef.val);
-        }
-
-        instRef.pos.copy(newPos);
+    private _posToCellIdx(pos: Vector): number {
+        const boundedPos = new Vector(mod(pos.x, this._size), mod(pos.y, this._size));
+        const cell = boundedPos.scale(1/this._cellDimensions).floor();
+        return (cell.y * this._divisions) + cell.x;
     }
-};
+}
+
+class Spacial_Reference<T> {
+    data: T;
+    pos: Vector;
+    listNode?: LL_Node<Spacial_Reference<T>>;
+    gridNode?: LL_Node<Spacial_Reference<T>>;
+    gridCell?: Linked_List<Spacial_Reference<T>>;
+
+    constructor(data: T, pos: Vector){
+        this.data = data;
+        this.pos = pos.clone();
+    }
+}

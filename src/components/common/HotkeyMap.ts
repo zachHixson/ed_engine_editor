@@ -63,18 +63,18 @@ export default class HotkeyMap{
     detectKeyCombo(event: MouseEvent & KeyboardEvent): void {
         for (let i = 0; i < this.events.length; i++){
             const curEvent = this.events[i];
-            const controlDown = this.keymap.get('control') ? 1 : 0;
-            const altDown = this.keymap.get('alt') ? 1 : 0;
-            const shiftDown = this.keymap.get('shift') ? 1 : 0;
+            const controlDown = +!!this.keymap.get('control');
+            const altDown = +!!this.keymap.get('alt');
+            const shiftDown = +!!this.keymap.get('shift');
             const modifiersDown = controlDown + altDown + shiftDown;
             let keysDown = 0;
             let modifiersRequired = 0;
  
             for (let key = 0; key < curEvent.keys.length; key++){
-                modifiersRequired += (curEvent.keys[key] == 'control') ? 1 : 0;
-                modifiersRequired += (curEvent.keys[key] == 'alt') ? 1 : 0;
-                modifiersRequired += (curEvent.keys[key] == 'shift') ? 1 : 0;
-                keysDown += !!this.keymap.get(curEvent.keys[key]) ? 1 : 0;
+                modifiersRequired += +(curEvent.keys[key] == 'control');
+                modifiersRequired += +(curEvent.keys[key] == 'alt');
+                modifiersRequired += +(curEvent.keys[key] == 'shift');
+                keysDown += +!!this.keymap.get(curEvent.keys[key]);
             }
 
             if (keysDown == curEvent.keys.length && modifiersRequired == modifiersDown){
@@ -120,10 +120,10 @@ export default class HotkeyMap{
 
         for (let i = 0; i < keyArr.length; i++){
             if (combo){
-                keysActive &= !!this.keymap.get(keyArr[i]) ? 1 : 0;
+                keysActive &= +!!this.keymap.get(keyArr[i]);
             }
             else{
-                keysActive |= !!this.keymap.get(keyArr[i]) ? 1 : 0;
+                keysActive |= +!!this.keymap.get(keyArr[i]);
             }
         }
 

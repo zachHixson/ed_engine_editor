@@ -350,7 +350,7 @@ export default class Room_Edit_Renderer{
         const yAxisCol = Shared.RGBAToHex(bgCol.r - AXIS_SHIFT, bgCol.g + AXIS_SHIFT, bgCol.b - AXIS_SHIFT);
         let lineCount = Math.ceil(maxDim / this.scaledCellWidth);
 
-        lineCount += (lineCount % 2 == 0) ? 1 : 0;
+        lineCount += +(lineCount % 2 == 0);
         this.worldToScreenPos(origin);
 
         ctx.clearRect(0, 0, this.gridBuff.width, this.gridBuff.height);

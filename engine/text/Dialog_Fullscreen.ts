@@ -7,7 +7,7 @@ const MARGIN = 5;
 const LETTERS_PER_SEC = 20;
 
 export default class Dialog_Fullscreen extends Dialog_Box{
-    onCloseCallback: (tag: string, restart?: boolean) => any = ()=>{};
+    onCloseCallback: (tag: string | null, restart?: boolean) => any = ()=>{};
 
     constructor(canvas: HTMLCanvasElement){
         const backMargin = Renderer.SCREEN_RES - MARGIN * 2;
