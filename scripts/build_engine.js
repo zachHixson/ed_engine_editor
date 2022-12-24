@@ -46,4 +46,6 @@ if (!fs.existsSync(typesPath)){
 
 fs.unlinkSync('./_compiled/engine_raw.js');
 fs.writeFileSync(outputPath + 'Engine.js', formatted);
+
+execSync('tsc --project .\\engine\\ --declaration true --declarationDir .\\_compiled\\@engineTypes\\ --emitDeclarationOnly')
 });
