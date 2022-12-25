@@ -4,8 +4,6 @@ import App from './App.vue';
 
 import i18n from './i18n.js';
 import * as Directive from './directives';
-// import {loadShared} from '@compiled/Shared';
-// import {loadEngine} from '@compiled/Engine';
 
 export const app = createApp(App).use(i18n)
 

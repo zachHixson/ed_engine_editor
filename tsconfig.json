@@ -5,7 +5,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@compiled/*": ["./_compiled/*"]
+      "@compiled/*": ["./_compiled/*"],
+      "@engine/*": ["./engine/*"]
     }
   },
 

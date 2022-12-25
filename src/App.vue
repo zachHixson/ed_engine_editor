@@ -7,7 +7,6 @@ import PlayWindow from './components/PlayWindow.vue';
 import Tooltip from './components/common/Tooltip.vue';
 
 import { ref, onMounted } from 'vue';
-import {template} from '@compiled/Engine';
 import {saveAs} from 'file-saver';
 import { useMainStore, PLAY_STATE } from './stores/Main';
 import { useGameDataStore } from './stores/GameData';
@@ -56,11 +55,9 @@ function saveProject(): void {
 
 function packageGame(): void {
     let projectName = mainStore.getProjectName;
-    let shared = (document.getElementById('shared') as HTMLElement).innerHTML;
     let engine = (document.getElementById('engine') as HTMLElement).innerHTML;
     let gameData = mainStore.getSaveData;
     let compiled = template.replace('[title]', projectName)
-        .replace('[shared]', shared)
         .replace('[engine]', engine)
         .replace('[gameData]', gameData);
     let blob = new Blob([compiled]);
@@ -69,7 +66,7 @@ function packageGame(): void {
 
 function resetUI(): void {
     assetBrowserStore.deselectAssets();
-    mainStore.setSelectedEditor(Shared.EDITOR_ID.ROOM);
+    mainStore.setSelectedEditor(Core.EDITOR_ID.ROOM);
     updateEditorAsset();
 }
 </script>
