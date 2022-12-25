@@ -25,7 +25,7 @@ export default class Logic{
         return (this.selectedGraphId != null) ? graphNavstate : this.defaultNavState
     }
     get defaultNavState(){return {
-        offset: new Victor(0, 0),
+        offset: new Vector(0, 0),
         zoomFac: 1,
     }}
 
@@ -55,7 +55,7 @@ export default class Logic{
 
         this.graphs = this.graphs.map(graph => {
             this._nextGraphId = Math.max(this._nextGraphId, graph.id + 1);
-            graph.navState.offset = Victor.fromObject(this.navState.offset);
+            graph.navState.offset = Vector.fromObject(this.navState.offset);
             return graph;
         });
         this.nodes = this.nodes.map(node => {
@@ -63,7 +63,7 @@ export default class Logic{
             return new Node(
                 Shared.NODE_MAP[node.templateId],
                 node.nodeId,
-                Victor.fromObject(node.pos),
+                Vector.fromObject(node.pos),
                 this,
                 node.graphId,
                 nodeAPI

@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import { ref, watch, defineProps, defineEmits, onMounted, onBeforeUnmount } from 'vue';
-import Shared, { Victor } from '@/Shared';
+import Core from '@/core';
 
 const EXPAND = 1.15;
 
-interface iProps {
-    
-}
+const { Draw, Vector } = Core;
 
 const props = defineProps<{
-    color: typeof Shared.Color,
+    color: Core.Draw.Color,
     width: number,
 }>();
 
@@ -20,13 +18,13 @@ const sliderRef = ref<HTMLElement>();
 const cursorRef = ref<HTMLElement>();
 const valueCursorRef = ref<HTMLElement>();
 const valueCursorBGRef = ref<HTMLElement>();
-const wheelBuffer = Shared.createHDPICanvas(props.width, props.width) as HTMLCanvasElement;
-const valueBuffer = Shared.createHDPICanvas(props.width, props.width) as HTMLCanvasElement;
-const circleBuffer = Shared.createHDPICanvas(props.width, props.width) as HTMLCanvasElement;
-const cursorPos = new Victor(0, 0);
+const wheelBuffer = Draw.createHDPICanvas(props.width, props.width) as HTMLCanvasElement;
+const valueBuffer = Draw.createHDPICanvas(props.width, props.width) as HTMLCanvasElement;
+const circleBuffer = Draw.createHDPICanvas(props.width, props.width) as HTMLCanvasElement;
+const cursorPos = new Vector(0, 0);
 const valuePos = ref(1);
-let selectedHS = props.color ?? new Shared.Color(255, 255, 255, 255);
-let selectedColor = props.color ?? new Shared.Color(255, 255, 255, 255);
+let selectedHS: Core.Draw.Color = props.color ?? new Draw.Color(255, 255, 255, 255);
+let selectedColor: Core.Draw.Color = props.color ?? new Draw.Color(255, 255, 255, 255);
 
 watch(props.color, newVal => {
     if (newVal != selectedColor){
@@ -37,7 +35,7 @@ watch(props.color, newVal => {
 watch(valuePos, ()=>composite());
 
 onMounted(()=>{
-    Shared.resizeHDPICanvas(canvasRef.value, props.width, props.width);
+    Draw.resizeHDPICanvas(canvasRef.value!, props.width, props.width);
 
     drawWheel();
     drawCircleBuff();
@@ -59,12 +57,12 @@ function drawWheel(): void {
 
     for (let i = 0; i < colors.length; i += 4){
         const posIdx = i / 4;
-        const pos = new Victor(posIdx % canvas.width, Math.floor(posIdx / canvas.width));
-        const relPos = new Victor(pos.x / canvas.width, pos.y / canvas.height).subtractScalar(0.5).multiplyScalar(2);
+        const pos = new Vector(posIdx % canvas.width, Math.floor(posIdx / canvas.width));
+        const relPos = new Vector(pos.x / canvas.width, pos.y / canvas.height).subtractScalar(0.5).multiplyScalar(2);
         const hue = (Math.atan2(relPos.y, relPos.x) + Math.PI) * (180 / Math.PI);
         const sat = relPos.length() * EXPAND;
         const val = 1;
-        const rgb = Shared.HSVToRGB(hue, sat, val);
+        const rgb = Draw.HSVToRGB(hue, sat, val);
 
         colors[i + 0] = rgb.r;
         colors[i + 1] = rgb.g;
@@ -108,8 +106,8 @@ function updateCursorPos(x: number, y: number): void {
     const canvas = canvasRef.value!;
     const halfCanvas = canvas.clientWidth / 2;
     const canvasBounds = canvas.getBoundingClientRect();
-    const cursorClientPos = new Victor(x, y);
-    const wheelClientPos = new Victor(canvasBounds.left, canvasBounds.top);
+    const cursorClientPos = new Vector(x, y);
+    const wheelClientPos = new Vector(canvasBounds.left, canvasBounds.top);
     const cursorPos = cursorClientPos.subtract(wheelClientPos);
     const lengthBounds = halfCanvas - cursorRef.value!.clientWidth / 2 - 3;
 
@@ -121,7 +119,7 @@ function updateCursorPos(x: number, y: number): void {
         cursorPos.multiplyScalar(lengthBounds);
     }
 
-    cursorPos.addScalar(halfCanvas).unfloat();
+    cursorPos.addScalar(halfCanvas).round();
 
     cursorRef.value!.style.left = cursorPos.x + 'px';
     cursorRef.value!.style.top = cursorPos.y + 'px';
@@ -148,15 +146,17 @@ function updateValuePos(x: number): void {
 function updateCursorColors(): void {
     const canvas = canvasRef.value!;
     const imgData = wheelBuffer.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data;
-    const dpiCorrectCursor = cursorPos.clone().multiplyScalar(devicePixelRatio).unfloat();
+    const dpiCorrectCursor = cursorPos.clone().multiplyScalar(devicePixelRatio).round();
     const baseIdx = Math.round(dpiCorrectCursor.y * canvas.width * 4 + dpiCorrectCursor.x * 4);
     const rgbArr = [
         imgData[baseIdx + 0],
         imgData[baseIdx + 1],
         imgData[baseIdx + 2],
     ];
-    const hs = new Shared.Color().fromArray([...rgbArr, 255]);
-    const hsv = new Shared.Color().fromArray([...rgbArr.map(i => Math.round(i * valuePos.value)), 255]);
+    const hs = new Draw.Color().fromArray([...rgbArr, 255]);
+    const hsv = new Draw.Color().fromArray([...rgbArr.map(i => Math.round(i * valuePos.value)), 255]);
+
+    let myVal = hsv.toCSS();
     
     selectedColor = hsv;
     cursorRef.value!.style.background = selectedColor.toCSS();
@@ -164,14 +164,14 @@ function updateCursorColors(): void {
     sliderRef.value!.style.backgroundImage = `linear-gradient(to right, black, ${hs.toCSS()})`;
 }
 
-function moveCursorToColor(rgba: typeof Shared.Color): void {
+function moveCursorToColor(rgba: Core.Draw.Color): void {
     const wheelBounds = canvasRef.value!.getBoundingClientRect();
-    const wheelPos = new Victor(wheelBounds.left, wheelBounds.top);
+    const wheelPos = new Vector(wheelBounds.left, wheelBounds.top);
     const sliderX = sliderRef.value!.getBoundingClientRect().left;
     const halfCanvas = canvasRef.value!.clientWidth / 2;
-    const hsv = Shared.RGBToHSV(rgba.r, rgba.g, rgba.b);
+    const hsv = Draw.RGBToHSV(rgba.r, rgba.g, rgba.b);
     const hueRad = hsv.hue * (Math.PI / 180);
-    const pos = new Victor(-Math.cos(hueRad), -Math.sin(hueRad)).multiplyScalar(hsv.sat * halfCanvas / EXPAND);
+    const pos = new Vector(-Math.cos(hueRad), -Math.sin(hueRad)).multiplyScalar(hsv.sat * halfCanvas / EXPAND);
 
     pos.addScalar(halfCanvas);
     pos.add(wheelPos);

@@ -1,6 +1,6 @@
 import Renderer from '@engine/rendering/Renderer';
 import font from './Font';
-import { Vector } from '@engine/core/Vector';
+import { Vector } from '@engine/core/core';
 
 export default class Font_Renderer{
     private _text: string = '';

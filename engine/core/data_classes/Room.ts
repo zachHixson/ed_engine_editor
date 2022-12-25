@@ -143,7 +143,7 @@ export class Room extends Asset_Base {
         return this.exits.toArray();
     }
 
-    removeExit(exitId: number, pos: Vector | null = null): Exit | null {
+    removeExit(exitId: number): Exit | null {
         return this.exits.remove(exitId);
     }
 

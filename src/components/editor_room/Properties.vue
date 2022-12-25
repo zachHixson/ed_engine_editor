@@ -5,7 +5,7 @@ import ColorPicker from '@/components/common/ColorPicker.vue';
 import { ref, computed, defineProps, defineEmits, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useGameDataStore } from '@/stores/GameData';
-import Shared from '@/Shared';
+import Core from '@/core';
 
 type AnyObj = {[key: string]: any};
 

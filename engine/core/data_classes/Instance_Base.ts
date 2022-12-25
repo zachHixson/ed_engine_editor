@@ -6,6 +6,7 @@ export abstract class Instance_Base{
     id: number;
     name: string;
     pos: Vector;
+    groups: string[] = [];
 
     constructor(id: number, pos: Vector = new Vector()){
         this.id = id;
@@ -15,6 +16,10 @@ export abstract class Instance_Base{
 
     get zDepth(){return 0};
     set zDepth(val){};
+
+    get hasEditorFrame(): boolean {return false}
+    get editorFrame(): HTMLCanvasElement | null {return null}
+    get editorFrameID(): string | undefined {return undefined}
     
     abstract get TYPE(): ENTITY_TYPE;
     abstract clone(): any;

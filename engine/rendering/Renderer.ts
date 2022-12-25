@@ -1,4 +1,4 @@
-import { Room } from "@engine/core/core_filemap";
+import { Room } from "@engine/core/core";
 import Transition from "./Transition";
 
 export default class Renderer{

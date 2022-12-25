@@ -3,7 +3,7 @@ import Tool from './Tool';
 class Line_Brush extends Tool{
     constructor(){
         super();
-        this.startPos = new Victor(0, 0);
+        this.startPos = new Vector(0, 0);
     }
 
     mouseDown(event){

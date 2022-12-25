@@ -1,6 +1,6 @@
 <script lang="ts">
 export interface iRenameEventProps {
-    asset: typeof Shared.Asset_Base,
+    asset: Core.Asset_Base,
     oldName: string,
 }
 </script>
@@ -17,12 +17,12 @@ import {
     onBeforeUnmount
 } from 'vue';
 import { useAssetBrowserStore } from '@/stores/AssetBrowser';
-import type Shared from '@/Shared';
+import type Core from '@/core';
 
 const assetBrowserStore = useAssetBrowserStore();
 
 const props = defineProps<{
-    asset: typeof Shared.Asset_Base,
+    asset: Core.Asset_Base,
     defaultIcon: string,
 }>();
 

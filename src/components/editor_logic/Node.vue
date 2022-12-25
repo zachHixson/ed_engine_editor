@@ -93,7 +93,7 @@ export default {
     props: ['nodeObj', 'clientToNavSpace', 'canDrag', 'selectedNodes', 'allConnections'],
     data(){
         return {
-            dragOffset: new Victor(0, 0),
+            dragOffset: new Vector(0, 0),
             mouseUpEvent: null,
             mouseMoveEvent: null,
             inTriggerList: [],
@@ -188,9 +188,9 @@ export default {
             this.$emit("node-down", this.nodeObj);
 
                 if (this.canDrag){
-                    let mousePos = new Victor(event.clientX, event.clientY);
+                    let mousePos = new Vector(event.clientX, event.clientY);
                     let nodeBounds = this.$el.getBoundingClientRect();
-                    let nodeOrigin = new Victor(nodeBounds.left + nodeBounds.right, nodeBounds.top + nodeBounds.bottom).divideScalar(2);
+                    let nodeOrigin = new Vector(nodeBounds.left + nodeBounds.right, nodeBounds.top + nodeBounds.bottom).divideScalar(2);
                     this.dragOffset.copy(nodeOrigin.clone().subtract(mousePos));
                     this.isDragging = true;
                 }

@@ -1,28 +1,29 @@
 import { defineStore } from 'pinia';
-import type Shared from '@/Shared';
+import type Core from '@/core';
 
 interface iState {
-    selectedAsset: typeof Shared.Asset_Base | null,
-    selectedRoom: typeof Shared.Room | null,
+    selectedAsset: Core.Asset_Base | null,
+    selectedRoom: Core.Room | null,
 }
 
 export const useAssetBrowserStore = defineStore({
     id: 'AssetBrowser',
 
-    state: () => ({
+    state: (): iState => ({
         selectedAsset: null,
         selectedRoom: null,
     }),
 
     getters: {
-        getSelectedAsset: (state): typeof Shared.Asset_Base => state.selectedAsset,
-        getSelectedRoom: (state): typeof Shared.Room => state.selectedRoom,
+        getSelectedAsset: (state): Core.Asset_Base | null => state.selectedAsset,
+        //@ts-ignore
+        getSelectedRoom: (state): Core.Room | null => state.selectedRoom,
     },
 
     actions: {
-        selectAsset(newAsset: typeof Shared.Asset_Base){ this.selectedAsset = newAsset },
+        selectAsset(newAsset: Core.Asset_Base){ this.selectedAsset = newAsset },
         deselectAssets(){ this.selectedAsset = null },
-        selectRoom(newRoom: typeof Shared.Room){ this.selectedRoom = newRoom },
+        selectRoom(newRoom: Core.Room){ this.selectedRoom = newRoom },
         deselectRoom(){ this.selectedRoom = null },
         deselectAllAssets(){ this.deselectAssets(); this.deselectRoom(); }
     }

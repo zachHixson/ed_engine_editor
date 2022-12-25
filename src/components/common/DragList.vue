@@ -7,9 +7,11 @@ export interface iChangeEventProps {
 
 <script setup lang="ts">
 import { ref, computed, defineProps, nextTick, defineEmits, onMounted, onBeforeUnmount } from 'vue';
-import Shared, { Victor } from '@/Shared';
+import Core from '@/core';
 
 const DRAG_DIST = 20;
+
+const { Vector } = Core;
 
 const props = defineProps<{
     items: any[],
@@ -27,9 +29,9 @@ const overY = ref(0);
 const downEl = ref<HTMLDivElement | null>(null);
 const dragEl = ref<HTMLDivElement | null>(null);
 const dragIdx = ref<number | null>(null);
-let mouseDownPos: typeof Victor | null;
-let mousePos = new Victor(-5, -5);
-let dragOffset = new Victor(0, 0);
+let mouseDownPos: Core.Vector | null;
+let mousePos = new Vector(-5, -5);
+let dragOffset = new Vector(0, 0);
 
 const assembled = computed(()=>{
     nextTick(()=>{
@@ -59,9 +61,9 @@ function mouseDown(event: MouseEvent): void {
     const elBounds = topLevelEl.getBoundingClientRect();
 
     event.preventDefault();
-    mouseDownPos = new Victor(event.clientX, event.clientY);
+    mouseDownPos = new Vector(event.clientX, event.clientY);
     downEl.value = topLevelEl;
-    dragOffset.copy(mouseDownPos).subtract(new Victor(elBounds.left, elBounds.top));
+    dragOffset.copy(mouseDownPos).subtract(new Vector(elBounds.left, elBounds.top));
 }
 
 function mouseMove(event: MouseEvent): void {
@@ -97,7 +99,7 @@ function mouseMove(event: MouseEvent): void {
 
     //check if mouse has started dragging
     if (mouseDownPos){
-        const distance = mouseDownPos.distance(mousePos);
+        const distance = mouseDownPos.distanceTo(mousePos);
         
         if (distance > DRAG_DIST && !isDragging.value){
             dragStart();

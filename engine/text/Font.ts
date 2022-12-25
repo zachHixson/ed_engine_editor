@@ -1,6 +1,6 @@
 //@ts-ignore
 import loadFontData, {decode, bitmapToCanvas} from "@compiled/FontData";
-import { Draw } from "@engine/core/core_filemap";
+import { Draw } from "@engine/core/core";
 
 export type FontObj = {[key: string]: HTMLCanvasElement};
 

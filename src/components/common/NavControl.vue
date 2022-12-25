@@ -1,8 +1,8 @@
 <script lang="ts">
-import type Shared from '@/Shared';
+import type Core from '@/core';
 
 export interface iControl {
-    id: typeof Shared.NAV_TOOL_TYPE,
+    id: Core.NAV_TOOL_TYPE,
     altText: string,
     icon: string,
     action: (...args: any)=>void;

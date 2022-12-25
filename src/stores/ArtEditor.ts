@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia';
+import Core from '@/core';
 
 interface iState {
-    selectedColor: Shared.Color,
-    selectedSize: Shared.ART_TOOL_SIZE,
-    selectedTool: Shared.ART_TOOL_TYPE | null,
-    selectedNavTool: Shared.NAV_TOOL_TYPE | null,
+    selectedColor: any, //Pinia doesn't like the private variables in Core.Draw.Color for some reason, so using 'any' instead.
+    selectedSize: Core.ART_TOOL_SIZE,
+    selectedTool: Core.ART_TOOL_TYPE | null,
+    selectedNavTool: Core.NAV_TOOL_TYPE | null,
     selectedFrame: number,
     toolPanelOpen: boolean,
     animPanelOpen: boolean,
@@ -14,9 +15,9 @@ export const useArtEditorStore = defineStore({
     id: 'ArtEditor',
 
     state: (): iState => ({
-        selectedColor: new Shared.Color(255, 255, 255, 255),
-        selectedSize: Shared.ART_TOOL_SIZE.SMALL,
-        selectedTool: Shared.ART_TOOL_TYPE.BRUSH,
+        selectedColor: new Core.Draw.Color(255, 255, 255, 255),
+        selectedSize: Core.ART_TOOL_SIZE.SMALL,
+        selectedTool: Core.ART_TOOL_TYPE.BRUSH,
         selectedNavTool: null,
         selectedFrame: 0,
         toolPanelOpen: true,
@@ -24,20 +25,20 @@ export const useArtEditorStore = defineStore({
     }),
 
     getters: {
-        getSelectedColor: (state): Shared.Color => state.selectedColor,
-        getSelectedSize: (state): Shared.ART_TOOL_SIZE => state.selectedSize,
-        getSelectedTool: (state): Shared.ART_TOOL_TYPE => state.selectedTool,
-        getSelectedNavTool: (state): Shared.NAV_TOOL_TYPE => state.selectedNavTool,
+        getSelectedColor: (state): Core.Draw.Color => state.selectedColor,
+        getSelectedSize: (state): Core.ART_TOOL_SIZE => state.selectedSize,
+        getSelectedTool: (state): Core.ART_TOOL_TYPE | null => state.selectedTool,
+        getSelectedNavTool: (state): Core.NAV_TOOL_TYPE | null => state.selectedNavTool,
         getSelectedFrame: (state): number => state.selectedFrame,
         isToolPanelOpen: (state): boolean => state.toolPanelOpen,
         isAnimPanelOpen: (state): boolean => state.animPanelOpen,
     },
 
     actions: {
-        selectColor(newColor: Shared.Color){ this.selectedColor = newColor },
-        selectSize(newSize: Shared.ART_TOOL_SIZE){ this.selectedSize = newSize },
-        selectTool(newTool: Shared.ART_TOOL_TYPE){ this.selectedTool = newTool },
-        setSelectedNavTool(newTool: Shared.NAV_TOOL_TYPE){ this.selectedNavTool = newTool },
+        selectColor(newColor: Core.Draw.Color){ this.selectedColor = newColor },
+        selectSize(newSize: Core.ART_TOOL_SIZE){ this.selectedSize = newSize },
+        selectTool(newTool: Core.ART_TOOL_TYPE){ this.selectedTool = newTool },
+        setSelectedNavTool(newTool: Core.NAV_TOOL_TYPE){ this.selectedNavTool = newTool },
         selectFrame(newFrame: number){ this.selectedFrame = newFrame },
         setToolPanelState(newState: boolean){ this.toolPanelOpen = newState },
         setAnimPanelState(newState: boolean){ this.animPanelOpen = newState },

@@ -12,8 +12,8 @@ export default defineConfig({
       {
         filter: "core.ts",
         replace: {
-          from: "import { Engine as EngineImp } from '@engine/Engine'",
-          to: "import { Engine as EngineImp } from '@compiled/Engine'"
+          from: "export { Engine } from '@engine/Engine'",
+          to: "export { Engine } from '@compiled/Engine'"
         }
       },
       {

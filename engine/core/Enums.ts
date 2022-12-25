@@ -59,7 +59,6 @@ export enum ROOM_ACTION {
     EXIT_DELETE,
     CAMERA_CHANGE,
     ROOM_PROP_CHANGE,
-    ROOM_VAR_CHANGE,
 };
 
 export enum MOUSE_EVENT {

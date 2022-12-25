@@ -5,7 +5,7 @@ import Cat_Variables from './Cat_Variables';
 import { Vector } from '../Vector';
 import { iAnyObj } from '../interfaces';
 import { iEngineNode } from '../LogicInterfaces';
-import { Object_Instance } from '../core_filemap';
+import { Object_Instance } from '../core';
 
 export const NODE_LIST: iNodeTemplate[] = [
     ...Cat_Events,

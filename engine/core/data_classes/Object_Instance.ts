@@ -16,14 +16,13 @@ export class Object_Instance extends Instance_Base{
     objRef: Game_Object;
     zDepthOverride: number | null = null;
     collisionOverride: COLLISION_OVERRIDE = COLLISION_OVERRIDE.KEEP;
-    groups: string[];
     startFrame: number = 0;
     fps: number = 0;
     animLoop: boolean = false;
     animPlaying: boolean = false;
     lastPos: Vector = new Vector();
     localVariables: Map<string, any> = new Map();
-
+    exposedProps: Map<string, any> = new Map();
 
     constructor(id: number, pos: Vector, objRef: Game_Object){
         super(id, pos);
@@ -32,7 +31,6 @@ export class Object_Instance extends Instance_Base{
         this.name = this.objRef.name + '_' + this.id;
         this.zDepthOverride = null;
         this.collisionOverride = COLLISION_OVERRIDE.KEEP;
-        this.groups = [];
 
         //engine props
         if (window.IS_ENGINE){

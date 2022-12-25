@@ -8,7 +8,7 @@ import { ref, computed, watch, defineEmits } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useMainStore } from '@/stores/Main';
 import { useAssetBrowserStore } from '@/stores/AssetBrowser';
-import Shared from '@/Shared';
+import Core from '@/core';
 
 export interface DialogBoxProps {
     textInfo: {

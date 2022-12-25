@@ -5,7 +5,7 @@ import Node_API from '@/components/editor_logic/Node_API.ts';
 import type iLoadObj from './iLoadObj';
 import { useGameDataStore } from './GameData';
 import { useAssetBrowserStore } from './AssetBrowser';
-import Shared from '@/Shared';
+import Core from '@/core';
 
 const t = i18n.global.t;
 

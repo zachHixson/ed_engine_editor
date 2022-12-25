@@ -11,7 +11,7 @@ export interface iGroupChangedProps {
 <script setup lang="ts">
 import { ref, defineProps, defineEmits, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
-import Shared from '@/Shared';
+import Core from '@/core';
 
 const { t } = useI18n();
 

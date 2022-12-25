@@ -45,6 +45,18 @@ export class Vector {
 
     multiplyScalar = this.scale;
 
+    divide(vec: Vector): Vector {
+        this.x /= vec.x;
+        this.y /= vec.y;
+        return this;
+    }
+
+    divideScalar(scalar: number): Vector {
+        this.x /= scalar;
+        this.y /= scalar;
+        return this;
+    }
+
     dot(vec: Vector): number {
         return this.x * vec.x + this.y * vec.y;
     }
@@ -126,7 +138,7 @@ export class Vector {
         return this;
     }
 
-    compare(vec: Vector): boolean {
+    equalTo(vec: Vector): boolean {
         return (
             this.x == vec.x &&
             this.y == vec.y

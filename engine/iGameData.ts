@@ -1,4 +1,4 @@
-import { Game_Object, Room, Sprite } from "./core/core_filemap";
+import { Game_Object, Room, Sprite } from "./core/core";
 import Logic from "./Logic";
 
 export default interface iGameData {

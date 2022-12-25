@@ -1,7 +1,7 @@
 import Renderer from "@engine/rendering/Renderer";
 import Font_Renderer from "./Font_Renderer";
 import Dialog_Box from "./Dialog_Box";
-import { Vector } from '@core';
+import { Vector } from '@engine/core/core';
 
 const MARGIN = 5;
 const LETTERS_PER_SEC = 20;

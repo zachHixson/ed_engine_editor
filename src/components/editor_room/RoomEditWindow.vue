@@ -1,9 +1,9 @@
 <script lang="ts">
 export interface imEvent{
-    type: typeof Shared.MOUSE_EVENT,
-    canvasPos: typeof Victor,
-    cell: typeof Victor,
-    worldCell: typeof Victor,
+    type: Core.MOUSE_EVENT,
+    canvasPos: Core.Vector,
+    cell: Core.Vector,
+    worldCell: Core.Vector,
 }
 </script>
 
@@ -23,7 +23,7 @@ import {
 } from 'vue';
 import { useRoomEditorStore } from '@/stores/RoomEditor';
 import { useGameDataStore } from '@/stores/GameData';
-import Shared, { Victor } from '@/Shared';
+import Core from '@/core';
 import { RoomMainEventBus } from './RoomMain.vue';
 import { Event_Bus } from '@/components/common/Event_Listener';
 
@@ -31,8 +31,8 @@ const roomEditorStore = useRoomEditorStore();
 const gameDataStore = useGameDataStore();
 
 const props = defineProps<{
-    selectedRoom: typeof Shared.Room,
-    editorSelection: typeof Shared.Instance_Base,
+    selectedRoom: Core.Room,
+    editorSelection: Core.Object_Instance | Core.Exit | null,
     undoLength: number,
     redoLength: number
 }>();
@@ -55,7 +55,7 @@ let renderer: Room_Edit_Renderer;
 let contentsBounds = ref<number[]>([0, 0, 0, 0]);
 let loadedImages = 0;
 let unitWidth = 1;
-let navHotkeyTool: typeof Shared.NAV_TOOL_TYPE | null = null;
+let navHotkeyTool: Core.NAV_TOOL_TYPE | null = null;
 
 //template refs
 const canvasEl = ref<HTMLCanvasElement>();
@@ -76,15 +76,18 @@ watch(gridEnabled, (newVal)=>renderer.setGridVisibility(newVal));
 watch(checkAssetDeletion, (newVal, oldVal)=> (newVal < oldVal) && renderer.drawObjects());
 
 onMounted(()=>{
-    renderer = new Room_Edit_Renderer(
-        canvasEl.value ?? document.createElement('canvas'),
-        props.selectedRoom.navState,
-        {
+    const icons = {
         camera: camera_icon.value,
         noSprite: noSprite_icon.value,
         exit: exit_icon.value,
         end: end_icon.value
-    });
+    };
+
+    renderer = new Room_Edit_Renderer(
+        canvasEl.value ?? document.createElement('canvas'),
+        props.selectedRoom.navState!,
+        icons
+    );
     contentsBounds.value = props.selectedRoom.getContentsBounds();
     unitWidth = renderer.UNIT_WIDTH;
     resize();
@@ -114,17 +117,17 @@ onBeforeUnmount(()=>{
 
 function mouseDown(event: MouseEvent): void {
     RoomEditWindowEventBus.emit('mouse-down', event);
-    emitMouseEvent(event, Shared.MOUSE_EVENT.DOWN);
+    emitMouseEvent(event, Core.MOUSE_EVENT.DOWN);
 }
 
 function mouseUp(event: MouseEvent): void {
     RoomEditWindowEventBus.emit('mouse-up', event);
-    emitMouseEvent(event, Shared.MOUSE_EVENT.UP);
+    emitMouseEvent(event, Core.MOUSE_EVENT.UP);
 }
 
 function mouseMove(event: MouseEvent): void {
     RoomEditWindowEventBus.emit('mouse-move', event);
-    emitMouseEvent(event, Shared.MOUSE_EVENT.MOVE);
+    emitMouseEvent(event, Core.MOUSE_EVENT.MOVE);
     renderer.mouseMove(event);
 }
 
@@ -139,7 +142,7 @@ function mouseEnter(event: MouseEvent): void {
 
 function mouseLeave(event: MouseEvent): void {
     RoomEditWindowEventBus.emit('mouse-leave');
-    emitMouseEvent(event, Shared.MOUSE_EVENT.LEAVE);
+    emitMouseEvent(event, Core.MOUSE_EVENT.LEAVE);
     renderer.enableCursor = false;
     renderer.mouseMove(event);
 }
@@ -154,16 +157,16 @@ function resize(): void {
     const width = Math.max(wrapper.clientWidth, 1);
     const height = Math.max(wrapper.clientHeight, 1);
 
-    Shared.resizeHDPICanvas(canvasEl, width, height);
+    Core.Draw.resizeHDPICanvas(canvasEl.value!, width, height);
 
     RoomEditWindowEventBus.emit('nav-set-container-dimentions', {width: wrapper.clientWidth, height: wrapper.clientHeight});
 
     renderer?.resize();
 }
 
-function emitMouseEvent(event: MouseEvent, type: typeof Shared.MOUSE_EVENT): void {
+function emitMouseEvent(event: MouseEvent, type: Core.MOUSE_EVENT): void {
     if (event.which == 1 && roomEditorStore.getSelectedNavTool == null && navHotkeyTool == null){
-        const canvasPos = new Victor(event.offsetX, event.offsetY);
+        const canvasPos = new Core.Vector(event.offsetX, event.offsetY);
         const cell = renderer.getMouseCell();
         const worldCell = renderer.getMouseWorldCell();
         
@@ -172,7 +175,7 @@ function emitMouseEvent(event: MouseEvent, type: typeof Shared.MOUSE_EVENT): voi
 }
 
 function instancesChanged(): void {
-    contentsBounds = props.selectedRoom.getContentsBounds();
+    contentsBounds.value = props.selectedRoom.getContentsBounds();
     renderer.instancesChanged();
 }
 
@@ -197,7 +200,7 @@ function checkImageLoading(): void {
     }
 }
 
-function navToolSelected(tool: typeof Shared.NAV_TOOL_TYPE): void {
+function navToolSelected(tool: Core.NAV_TOOL_TYPE): void {
     roomEditorStore.setSelectedTool(null);
     roomEditorStore.setSelectedNavTool(tool);
 }
@@ -214,7 +217,7 @@ function navToolSelected(tool: typeof Shared.NAV_TOOL_TYPE): void {
         <NavControlPanel
             ref="navControlPanel"
             class="navControlPanel"
-            :navState="selectedRoom.navState"
+            :navState="selectedRoom.navState!"
             :selectedNavTool="roomEditorStore.getSelectedNavTool"
             :contentsBounds="contentsBounds"
             :unitScale="unitWidth"

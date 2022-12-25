@@ -40,7 +40,7 @@ export default {
             navControl: null,
             maxZoom: 2,
             toolMap: new Map(),
-            mouseCell: new Victor(-20, -20),
+            mouseCell: new Vector(-20, -20),
             unitScale: 1
         }
     },
@@ -176,9 +176,9 @@ export default {
         },
         updateMouseCell(event){
             const CELL_SIZE = (this.CANVAS_WIDTH / this.GRID_DIV) * this.navState.zoomFac;
-            let mouseCell = new Victor(event.offsetX, event.offsetY).multiplyScalar(devicePixelRatio);
-            let windowHalfWidth = new Victor(this.canvas.width / 2, this.canvas.height / 2);
-            let canvasHalfWidth = new Victor(this.CANVAS_WIDTH / 2, this.CANVAS_WIDTH / 2);
+            let mouseCell = new Vector(event.offsetX, event.offsetY).multiplyScalar(devicePixelRatio);
+            let windowHalfWidth = new Vector(this.canvas.width / 2, this.canvas.height / 2);
+            let canvasHalfWidth = new Vector(this.CANVAS_WIDTH / 2, this.CANVAS_WIDTH / 2);
             let scaledOffset = this.navState.offset.clone().multiplyScalar(this.navState.zoomFac);
 
             canvasHalfWidth.multiplyScalar(this.navState.zoomFac);

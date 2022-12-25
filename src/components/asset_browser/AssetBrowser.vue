@@ -10,7 +10,7 @@ import { ref, computed, defineEmits, nextTick, onBeforeMount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAssetBrowserStore } from '@/stores/AssetBrowser';
 import { useGameDataStore } from '@/stores/GameData';
-import Shared from '@/Shared';
+import Core from '@/core';
 import { Event_Bus } from '@/components/common/Event_Listener';
 import type { iChangeEventProps } from '@/components/common/DragList.vue';
 import type { iRenameEventProps } from './Asset.vue';

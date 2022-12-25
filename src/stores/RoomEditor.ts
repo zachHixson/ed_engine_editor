@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import Shared from '@/Shared';
+import Core from '@/core';
 
 interface iState {
     selectedTool: typeof Shared.ROOM_TOOL_TYPE | null,

@@ -1,10 +1,12 @@
-import Shared, { Victor } from '@/Shared';
+import Core from '@/core';
+
+const { Vector, Draw } = Core;
 
 const NO_SPRITE_PADDING = 0.75;
 
 export default class Room_Edit_Renderer{
     showGrid: boolean = true;
-    roomRef: typeof Shared.Room | null = null;
+    roomRef: Core.Room | null = null;
     canvas: HTMLCanvasElement;
     objBuff = document.createElement('canvas') as HTMLCanvasElement;
     iconBuff = document.createElement('canvas') as HTMLCanvasElement;
@@ -12,10 +14,9 @@ export default class Room_Edit_Renderer{
     cursorBuff = document.createElement('canvas') as HTMLCanvasElement;
     gridBuff = document.createElement('canvas') as HTMLCanvasElement;
     selectionBuff = document.createElement('canvas') as HTMLCanvasElement;
-    zDrawList: typeof Shared.Linked_List | null = null;
-    exits: typeof Shared.Exit[] | null = null;
-    selectedEntity: typeof Shared.Instance_Base = null;
-    mouseCell = new Victor(0, 0);
+    exits: Core.Exit[] | null = null;
+    selectedEntity: Core.Instance_Base | null = null;
+    mouseCell = new Vector(0, 0);
     enableCursor = false;
     navState: {[key: string]: any};
     cameraIcon: HTMLImageElement;
@@ -25,9 +26,9 @@ export default class Room_Edit_Renderer{
 
     //data caches
     spriteCache = new Map<string, HTMLCanvasElement>();
-    roundedCanvas = new Victor(0, 0);
+    roundedCanvas = new Vector(0, 0);
     scaledCellWidth: number;
-    halfCanvas = new Victor(0, 0);
+    halfCanvas = new Vector(0, 0);
     
     constructor(element: HTMLCanvasElement, navState: object, svgIcons: {[key: string]: HTMLImageElement}){
         this.canvas = element;
@@ -54,15 +55,13 @@ export default class Room_Edit_Renderer{
         return this.mouseCell.clone().multiplyScalar(16);
     }
 
-    setRoomRef(roomObj: typeof Shared.Room){
+    setRoomRef(roomObj: Core.Room){
         this.roomRef = roomObj;
-        this.zDrawList = this.roomRef.zSortedList;
-        this.exits = this.roomRef.exitsList;
-        this.navState = this.roomRef.navState;
+        this.navState = this.roomRef.navState!;
         this.navChange();
     }
 
-    setSelection(instRef: typeof Shared.Instance_Base){
+    setSelection(instRef: Core.Instance_Base){
         this.selectedEntity = instRef;
         this._drawCursor();
         this._composite();
@@ -85,13 +84,13 @@ export default class Room_Edit_Renderer{
     }
 
     mouseMove(event: MouseEvent){
-        let screenCoords = new Victor(event.offsetX, event.offsetY);
-        let worldCoords = this.screenToWorldPos(screenCoords.clone());
-        let cell = worldCoords.clone();
+        const screenCoords = new Vector(event.offsetX, event.offsetY);
+        const worldCoords = this.screenToWorldPos(screenCoords.clone());
+        const cell = worldCoords.clone();
         
         cell.divideScalar(16);
         cell.subtractScalar(0.5);
-        cell.unfloat();
+        cell.round();
 
         this.mouseCell.copy(cell);
 
@@ -117,13 +116,13 @@ export default class Room_Edit_Renderer{
     }
 
     resize(){
-        let {clientWidth, clientHeight} = this.canvas;
-        Shared.resizeHDPICanvas(this.objBuff, clientWidth, clientHeight);
-        Shared.resizeHDPICanvas(this.iconBuff, clientWidth, clientHeight);
-        Shared.resizeHDPICanvas(this.iconColor, clientWidth, clientHeight);
-        Shared.resizeHDPICanvas(this.cursorBuff, clientWidth, clientHeight);
-        Shared.resizeHDPICanvas(this.gridBuff, clientWidth, clientHeight);
-        Shared.resizeHDPICanvas(this.selectionBuff, clientWidth, clientHeight);
+        const {clientWidth, clientHeight} = this.canvas;
+        Draw.resizeHDPICanvas(this.objBuff, clientWidth, clientHeight);
+        Draw.resizeHDPICanvas(this.iconBuff, clientWidth, clientHeight);
+        Draw.resizeHDPICanvas(this.iconColor, clientWidth, clientHeight);
+        Draw.resizeHDPICanvas(this.cursorBuff, clientWidth, clientHeight);
+        Draw.resizeHDPICanvas(this.gridBuff, clientWidth, clientHeight);
+        Draw.resizeHDPICanvas(this.selectionBuff, clientWidth, clientHeight);
         this.recalcRoundedCanvas();
         this.recalcHalfCanvas();
         this.fullRedraw();
@@ -155,7 +154,7 @@ export default class Room_Edit_Renderer{
         const ctx = this.canvas.getContext('2d') as CanvasRenderingContext2D;
         const iconCtx = this.iconBuff.getContext('2d') as CanvasRenderingContext2D;
         const iconColorCtx = this.iconColor.getContext('2d') as CanvasRenderingContext2D;
-        const bgColor = this.roomRef?.bgColor ?? new Shared.Color(255, 255, 255);
+        const bgColor = this.roomRef?.bgColor ?? new Draw.Color(255, 255, 255);
         const luma = Math.max(Math.max(bgColor.r, bgColor.g), bgColor.b);
 
         //composite icon and iconColor buffs together
@@ -183,8 +182,8 @@ export default class Room_Edit_Renderer{
     }
 
     _drawObjects(){
-        let ctx = this.objBuff.getContext('2d') as CanvasRenderingContext2D;
-        let iconCtx = this.iconBuff.getContext('2d') as CanvasRenderingContext2D;
+        const ctx = this.objBuff.getContext('2d') as CanvasRenderingContext2D;
+        const iconCtx = this.iconBuff.getContext('2d') as CanvasRenderingContext2D;
 
         ctx.clearRect(0, 0, this.objBuff.width, this.objBuff.height);
         iconCtx.clearRect(0, 0, this.iconBuff.width, this.iconBuff.height);
@@ -196,19 +195,19 @@ export default class Room_Edit_Renderer{
     }
 
     _drawInstances(){
-        if (this.zDrawList){
+        if (this.roomRef){
             let paddingOffset = this.scaledCellWidth - (this.scaledCellWidth * NO_SPRITE_PADDING);
 
             paddingOffset /= 2;
 
-            this.zDrawList.forEach((inst: typeof Shared.Instance_Base) => {
+            this.roomRef.instanceList.forEach((inst: Core.Instance_Base) => {
                 this._drawInstance(inst, paddingOffset);
             });
         }
     }
 
-    _drawInstance(inst: typeof Shared.Instance_Base, paddingOffset: number){
-        let pos = Victor.fromObject(inst.pos);
+    _drawInstance(inst: Core.Instance_Base, paddingOffset: number){
+        const pos = Vector.fromObject(inst.pos);
         let offset = 0;
 
         this.worldToScreenPos(pos);
@@ -226,11 +225,11 @@ export default class Room_Edit_Renderer{
 
             if (inst.hasEditorFrame){
                 //cache sprites after they are parsed once
-                spriteBuff = this.spriteCache.get(inst.editorFrameID);
+                spriteBuff = this.spriteCache.get(inst.editorFrameID!);
 
                 if (!spriteBuff){
                     spriteBuff = inst.editorFrame as HTMLCanvasElement;
-                    this.spriteCache.set(inst.editorFrameID, spriteBuff);
+                    this.spriteCache.set(inst.editorFrameID!, spriteBuff);
                 }
 
                 scaleFac = this.scaledCellWidth / spriteBuff.width;
@@ -258,9 +257,9 @@ export default class Room_Edit_Renderer{
     _drawExits(){
         const ctx = this.iconBuff.getContext('2d') as CanvasRenderingContext2D;
 
-        if (this.exits){
-            this.exits.forEach((exit) => {
-                const pos = Victor.fromObject(exit.pos);
+        if (this.roomRef){
+            this.roomRef.exitsList.forEach((exit) => {
+                const pos = Vector.fromObject(exit.pos);
                 const scaleFac = this.scaledCellWidth / this.exitSVG.width;
 
                 this.worldToScreenPos(pos);
@@ -312,7 +311,7 @@ export default class Room_Edit_Renderer{
         const ctx = this.cursorBuff.getContext('2d') as CanvasRenderingContext2D;
         const selectionCtx = this.selectionBuff.getContext('2d') as CanvasRenderingContext2D;
         const screenCell = this.worldToScreenPos(this.getMouseWorldCell());
-        const bgColor = this.roomRef?.bgColor ?? new Shared.Color(255, 255, 255);
+        const bgColor = this.roomRef?.bgColor ?? new Draw.Color(255, 255, 255);
         const luma = Math.max(Math.max(bgColor.r, bgColor.g), bgColor.b);
         const shiftDir = (luma > 127) ? -CURSOR_SHIFT : CURSOR_SHIFT;
 
@@ -321,7 +320,7 @@ export default class Room_Edit_Renderer{
 
         //draw mouse cursor
         if (this.enableCursor){
-            ctx.fillStyle = Shared.RGBAToHex(bgColor.r + shiftDir, bgColor.g + shiftDir, bgColor.b + shiftDir, 120);
+            ctx.fillStyle = Draw.RGBAToHex(bgColor.r + shiftDir, bgColor.g + shiftDir, bgColor.b + shiftDir, 120);
             ctx.fillRect(screenCell.x, screenCell.y, this.scaledCellWidth, this.scaledCellWidth);
         }
 
@@ -341,13 +340,13 @@ export default class Room_Edit_Renderer{
 
         const ctx = this.gridBuff.getContext('2d') as CanvasRenderingContext2D;
         const maxDim = Math.max(this.gridBuff.width, this.gridBuff.height);
-        const origin = new Victor(0, 0);
-        const bgCol = this.roomRef?.bgColor ?? new Shared.Color(6, 95, 233);
+        const origin = new Vector(0, 0);
+        const bgCol = this.roomRef?.bgColor ?? new Draw.Color(6, 95, 233);
         const luma = Math.max(bgCol.r, bgCol.g, bgCol.b);
         const gridShiftAmt = (luma > 127) ? -GRID_SHIFT * 0.4 : GRID_SHIFT;
-        const gridCol = Shared.RGBAToHex(bgCol.r + gridShiftAmt, bgCol.g + gridShiftAmt, bgCol.b + gridShiftAmt);
-        const xAxisCol = Shared.RGBAToHex(bgCol.r + AXIS_SHIFT, bgCol.g - AXIS_SHIFT, bgCol.b - AXIS_SHIFT);
-        const yAxisCol = Shared.RGBAToHex(bgCol.r - AXIS_SHIFT, bgCol.g + AXIS_SHIFT, bgCol.b - AXIS_SHIFT);
+        const gridCol = Draw.RGBAToHex(bgCol.r + gridShiftAmt, bgCol.g + gridShiftAmt, bgCol.b + gridShiftAmt);
+        const xAxisCol = Draw.RGBAToHex(bgCol.r + AXIS_SHIFT, bgCol.g - AXIS_SHIFT, bgCol.b - AXIS_SHIFT);
+        const yAxisCol = Draw.RGBAToHex(bgCol.r - AXIS_SHIFT, bgCol.g + AXIS_SHIFT, bgCol.b - AXIS_SHIFT);
         let lineCount = Math.ceil(maxDim / this.scaledCellWidth);
 
         lineCount += +(lineCount % 2 == 0);
@@ -362,16 +361,16 @@ export default class Room_Edit_Renderer{
             ctx.beginPath();
             for (let i = 1; i <= lineCount; i++){
                 let offset = i * 16;
-                let pos = new Victor(offset, offset);
+                let pos = new Vector(offset, offset);
 
                 this.worldToScreenPos(pos);
 
                 //wrap lines around canvas
-                pos.x = Shared.mod(pos.x, this.roundedCanvas.x);
-                pos.y = Shared.mod(pos.y, this.roundedCanvas.y);
+                pos.x = Core.Util.mod(pos.x, this.roundedCanvas.x);
+                pos.y = Core.Util.mod(pos.y, this.roundedCanvas.y);
 
                 //draw lines
-                pos.unfloat();
+                pos.round();
                 ctx.moveTo(pos.x, 0);
                 ctx.lineTo(pos.x, this.gridBuff.height);
                 ctx.moveTo(0, pos.y);
@@ -400,7 +399,7 @@ export default class Room_Edit_Renderer{
         ctx.fillRect(this.gridBuff.width - 10, this.gridBuff.height - 10, this.gridBuff.width, this.gridBuff.height);
     }
 
-    screenToWorldPos(pt: typeof Victor){
+    screenToWorldPos(pt: Core.Vector){
         pt.multiplyScalar(devicePixelRatio)
         pt.subtract(this.halfCanvas);
         pt.divideScalar(this.navState.zoomFac);
@@ -410,7 +409,7 @@ export default class Room_Edit_Renderer{
         return pt;
     }
 
-    worldToScreenPos(pt: typeof Victor){
+    worldToScreenPos(pt: Core.Vector){
         pt.multiplyScalar(this.UNIT_WIDTH);
         pt.add(this.navState.offset);
         pt.multiplyScalar(this.navState.zoomFac);

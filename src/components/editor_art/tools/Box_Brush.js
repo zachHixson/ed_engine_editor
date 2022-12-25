@@ -4,7 +4,7 @@ class Box_Brush extends Tool{
     constructor(isFilled = false){
         super();
         this.isFilled = isFilled;
-        this.startPos = new Victor(0, 0);
+        this.startPos = new Vector(0, 0);
     }
 
     mouseDown(event){

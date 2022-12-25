@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { ref, defineProps, computed } from 'vue';
 import { useMainStore } from '@/stores/Main';
-import type Shared from '@/Shared';
+import type Core from '@/core';
 
 const mainStore = useMainStore();
 
 const props = defineProps<{
     tabText: string;
     logoPath: string;
-    editorID: typeof Shared.EDITOR_ID;
+    editorID: typeof Core.EDITOR_ID;
 }>();
 
 const isSelected = computed<boolean>(()=>mainStore.getSelectedEditor == props.editorID);

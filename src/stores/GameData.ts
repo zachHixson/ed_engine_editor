@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import Logic from '@/components/editor_logic/Logic.ts';
 import Node_API from '@/components/editor_logic/Node_API.ts';
 import i18n from '@/i18n';
-import Shared from '@/Shared';
+import Core from '@/core';
 import type iLoadObj from './iLoadObj';
 
 const t = i18n.global.t;

@@ -47,17 +47,17 @@ export default {
     props: ['connectionObj', 'clientToNavSpace', 'navWrapper', 'allConnections', 'draggingConnection'],
     data(){
         return {
-            startPoint: new Victor(0, 0),
-            endPoint: new Victor(0, 0),
+            startPoint: new Vector(0, 0),
+            endPoint: new Vector(0, 0),
             width: 0,
             height: 0,
-            cssOrigin: new Victor(0, 0),
+            cssOrigin: new Vector(0, 0),
             path: "",
             mouseMoveHandler: null,
             mouseDragHandler: null,
             grabbedHandle: null,
-            navMouseDown: new Victor(0, 0),
-            navMousePos: new Victor(0, 0),
+            navMouseDown: new Vector(0, 0),
+            navMousePos: new Vector(0, 0),
             mouseOver: false,
         }
     },
@@ -191,7 +191,7 @@ export default {
                 return;
             }
 
-            let clientMouseDown = new Victor(event.clientX, event.clientY);
+            let clientMouseDown = new Vector(event.clientX, event.clientY);
             this.navMouseDown.copy(this.clientToNavSpace(clientMouseDown));
             let distToStart = this.navMouseDown.distance(this.startPoint);
             let distToEnd = this.navMouseDown.distance(this.endPoint);
@@ -237,14 +237,14 @@ export default {
             }
         },
         updateMousePos(event){
-            let clientMousePos = new Victor(event.clientX, event.clientY);
+            let clientMousePos = new Vector(event.clientX, event.clientY);
             let navMousePos = this.clientToNavSpace(clientMousePos);
 
             this.navMousePos.copy(navMousePos);
         },
         centerFromBounds(bounds){
-            let ul = new Victor(bounds.left, bounds.top);
-            let br = new Victor(bounds.right, bounds.bottom);
+            let ul = new Vector(bounds.left, bounds.top);
+            let br = new Vector(bounds.right, bounds.bottom);
             let midPoint = ul.add(br).divideScalar(2);
             
             return midPoint;

@@ -1,7 +1,7 @@
 import { EventListenerMixin } from "../common/Event_Listener";
 
 export default class Node extends EventListenerMixin(class {}) {
-    constructor(template, id, pos = new Victor(), parentScript, graphId, editorAPI){
+    constructor(template, id, pos = new Vector(), parentScript, graphId, editorAPI){
         super(...arguments);
         this._template = template;
         this.nodeId = id;
@@ -95,7 +95,7 @@ export default class Node extends EventListenerMixin(class {}) {
     toSaveData(){
         this.beforeSave();
 
-        const roundedPos = new Victor(
+        const roundedPos = new Vector(
             Math.floor(this.pos.x * 100) / 100,
             Math.floor(this.pos.y * 100) / 100
         );

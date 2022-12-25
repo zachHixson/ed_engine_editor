@@ -16,11 +16,11 @@ import {
     Spacial_Collection,
     ENTITY_TYPE,
     Node_Enums,
-} from '@core';
+} from '@engine/core/core';
 import Node from './Node';
 import iGameData from './iGameData';
 
-export * as Core from '@core';
+export * as Core from '@engine/core/core';
 
 type iSerializedGameData = Interfaces.iSerializedGameData;
 type iAnyObj = Interfaces.iAnyObj;

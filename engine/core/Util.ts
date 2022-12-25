@@ -1,4 +1,4 @@
-import { Sprite, Vector } from "./core_filemap";
+import { Sprite, Vector } from "./core";
 
 export function getHighestEndingNumber(list: string[]): number {
     let highest = -1;

@@ -4,7 +4,7 @@ class Ellipse_Brush extends Tool{
     constructor(isFilled = false){
         super();
         this.isFilled = isFilled;
-        this.startPos = new Victor(0, 0);
+        this.startPos = new Vector(0, 0);
     }
 
     mouseDown(event){
@@ -42,17 +42,17 @@ class Ellipse_Brush extends Tool{
         let y2 = Math.max(vec1.y, vec2.y);
         let a = (x2 - x1) / 2;
         let b = (y2 - y1) / 2;
-        let midPoint = new Victor(x1 + x2, y1 + y2).divideScalar(2);
+        let midPoint = new Vector(x1 + x2, y1 + y2).divideScalar(2);
 
         thickness += 1;
 
         for (let x = x1; x <= x2; x++){
             for (let y = y1; y <= y2; y++){
                 if (Shared.isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
-                    let curPoint = this.isPointInEllipse(new Victor(x, y), midPoint, a, b);
+                    let curPoint = this.isPointInEllipse(new Vector(x, y), midPoint, a, b);
                     let innerA = a - thickness;
                     let innerB = b - thickness;
-                    let innerCheck = Math.ceil(this.isPointInEllipse(new Victor(x, y), midPoint, a - thickness, b - thickness));
+                    let innerCheck = Math.ceil(this.isPointInEllipse(new Vector(x, y), midPoint, a - thickness, b - thickness));
 
                     innerCheck = (innerA > 1 && innerB > 1) ? innerCheck : 2;
 

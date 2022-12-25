@@ -1,8 +1,7 @@
-import { iEngineInput, iEngineLogic, iEngineNode, iNodeTemplate, Object_Instance } from "@core";
+import { iEngineInput, iEngineLogic, iEngineNode, iNodeTemplate, Object_Instance, convertSocketType } from "@engine/core/core";
 import { iAnyObj } from "./core/interfaces";
 import Engine from "./Engine";
 import Logic from "./Logic";
-import { convertSocketType } from "@core";
 
 export default class Node implements iEngineNode {
     private _getInstanceCallback: (()=>Object_Instance) | null = null;

@@ -2,7 +2,7 @@ import { iAnyObj } from "./interfaces";
 import { SOCKET_TYPE } from "./nodes/Node_Enums";
 import { Vector } from "./Vector";
 import Engine from "@engine/Engine";
-import { iInput, iInTrigger, iNodeTemplate, iOutput, Object_Instance } from "./core_filemap";
+import { iInput, iInTrigger, iNodeTemplate, iOutput, Object_Instance } from "./core";
 
 type Graph = {};
 type Connection = {};

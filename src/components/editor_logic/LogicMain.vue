@@ -220,8 +220,8 @@ export default {
             nodeViewportEl: null,
             nodeNavEl: null,
             undoStore: new Undo_Store(32, false),
-            mouseDownPos: new Victor(0, 0),
-            lastMouseDragPos: new Victor(0, 0),
+            mouseDownPos: new Vector(0, 0),
+            lastMouseDragPos: new Vector(0, 0),
             contentsBounds: [0, 0, 0, 0],
             convertClientToNavPos: null,
             currentSocketOver: null,
@@ -230,8 +230,8 @@ export default {
             hotkeyMap: new HotkeyMap(),
             selectionBox: {
                 active: false,
-                origin: new Victor(0, 0),
-                dim: new Victor(0, 0),
+                origin: new Vector(0, 0),
+                dim: new Vector(0, 0),
             },
             shiftDown: false,
             isSearching: false,
@@ -399,8 +399,8 @@ export default {
         },
         getNewNodePos(){
             let vpBounds = this.nodeViewportEl.getBoundingClientRect();
-            let vpUl = new Victor(vpBounds.left, vpBounds.top);
-            let vpBr = new Victor(vpBounds.right, vpBounds.bottom);
+            let vpUl = new Vector(vpBounds.left, vpBounds.top);
+            let vpBr = new Vector(vpBounds.right, vpBounds.bottom);
             let midpoint = vpUl.clone().add(vpBr).divideScalar(2);
             let navPos = this.convertClientToNavPos(midpoint);
 
@@ -409,16 +409,16 @@ export default {
 
                 if (curNode.pos.isEqualTo(navPos)){
                     let size = 50;
-                    let ul = new Victor(-size, -size);
-                    let br = new Victor(size, size);
-                    navPos.add(new Victor(0, 0).randomize(ul, br));
+                    let ul = new Vector(-size, -size);
+                    let br = new Vector(size, size);
+                    navPos.add(new Vector(0, 0).randomize(ul, br));
                 }
             }
             
             return navPos;
         },
         mouseClick(jsEvent){
-            let mouseUpPos = new Victor(jsEvent.clientX, jsEvent.clientY);
+            let mouseUpPos = new Vector(jsEvent.clientX, jsEvent.clientY);
 
             if (mouseUpPos.isEqualTo(this.mouseDownPos)){
                 this.$store.dispatch('LogicEditor/selectNavTool', null);
@@ -449,8 +449,8 @@ export default {
             //position selection box
             if (jsEvent.which == 1 && jsEvent.target == jsEvent.currentTarget){
                 let vpBounds = this.nodeViewportEl.getBoundingClientRect();
-                let vpOrigin = new Victor(vpBounds.left, vpBounds.top);
-                let startPos = new Victor(jsEvent.clientX, jsEvent.clientY).subtract(vpOrigin);
+                let vpOrigin = new Vector(vpBounds.left, vpBounds.top);
+                let startPos = new Vector(jsEvent.clientX, jsEvent.clientY).subtract(vpOrigin);
 
                 this.selectionBox.active = true;
                 this.selectionBox.origin.copy(startPos);
@@ -513,9 +513,9 @@ export default {
         },
         mouseMove(jsEvent){
             let vpBounds = this.nodeViewportEl.getBoundingClientRect();
-            let vpOrigin = new Victor(vpBounds.left, vpBounds.top);
-            let newOrigin = new Victor(jsEvent.clientX, jsEvent.clientY).subtract(vpOrigin);
-            let selectionBoxDim = new Victor(jsEvent.clientX, jsEvent.clientY).subtract(this.mouseDownPos);
+            let vpOrigin = new Vector(vpBounds.left, vpBounds.top);
+            let newOrigin = new Vector(jsEvent.clientX, jsEvent.clientY).subtract(vpOrigin);
+            let selectionBoxDim = new Vector(jsEvent.clientX, jsEvent.clientY).subtract(this.mouseDownPos);
 
             this.$refs.navControlPanel.mouseMove(jsEvent);
             this.selectionBox.dim.copy(selectionBoxDim);
@@ -534,7 +534,7 @@ export default {
             //calculate node velocity and move nodes if applicable
             if (this.isDraggingNode){
                 let startPos = this.clientToNavPos(this.lastMouseDragPos);
-                let mousePos = new Victor(jsEvent.clientX, jsEvent.clientY);
+                let mousePos = new Vector(jsEvent.clientX, jsEvent.clientY);
                 let mouseNavPos = this.clientToNavPos(mousePos);
                 let velocity = mouseNavPos.subtract(startPos);
                 
@@ -555,7 +555,7 @@ export default {
 
             //update grid background
             let tileSize = newState.zoomFac * TILE_SIZE;
-            let center = new Victor(vpEl.clientWidth, vpEl.clientHeight).divideScalar(2);
+            let center = new Vector(vpEl.clientWidth, vpEl.clientHeight).divideScalar(2);
 
             center.add(newState.offset.clone().multiplyScalar(newState.zoomFac));
             this.nodeViewportEl.style.backgroundSize = `${tileSize}px ${tileSize}px`;
@@ -624,11 +624,11 @@ export default {
                     navWrapper dimensions will always be the same since CSS scale does not change pixel values of width/height)
             */
             let vpBounds = this.nodeViewportEl.getBoundingClientRect();
-            let vpOrigin = new Victor(vpBounds.left, vpBounds.top);
-            let vpSize = new Victor(this.nodeViewportEl.clientWidth, this.nodeViewportEl.clientHeight);
+            let vpOrigin = new Vector(vpBounds.left, vpBounds.top);
+            let vpSize = new Vector(this.nodeViewportEl.clientWidth, this.nodeViewportEl.clientHeight);
             let navBounds = this.nodeNavEl.getBoundingClientRect();
-            let navOrigin = new Victor(navBounds.left, navBounds.top).subtract(vpOrigin);
-            let navSize = new Victor(navBounds.right - navBounds.left, navBounds.bottom - navBounds.top);
+            let navOrigin = new Vector(navBounds.left, navBounds.top).subtract(vpOrigin);
+            let navSize = new Vector(navBounds.right - navBounds.left, navBounds.bottom - navBounds.top);
             let offsetPos = pos.clone().subtract(vpOrigin);
             let navPercent = offsetPos.clone().subtract(navOrigin).divide(navSize);
             let nodeNavPos = vpSize.clone().multiply(navPercent);
@@ -663,7 +663,7 @@ export default {
             connectionEls?.forEach(connectionEl => connectionEl.relink(nodeInfo));
         },
         nodeClick({nodeObj, jsEvent}){
-            let mousePos = new Victor(jsEvent.clientX, jsEvent.clientY);
+            let mousePos = new Vector(jsEvent.clientX, jsEvent.clientY);
 
             if (this.mouseDownPos.distance(mousePos) < 2){
                 this.deselectAllNodes();
@@ -714,11 +714,11 @@ export default {
 
             //calculate client/screen space bounds
             let firstBoundingRect = nodes[0].domRef.getBoundingClientRect();
-            let ul = new Victor(firstBoundingRect.left, firstBoundingRect.top);
-            let br = new Victor(firstBoundingRect.right, firstBoundingRect.bottom);
+            let ul = new Vector(firstBoundingRect.left, firstBoundingRect.top);
+            let br = new Vector(firstBoundingRect.right, firstBoundingRect.bottom);
             let vpBounds = this.nodeViewportEl.getBoundingClientRect();
-            let vpSize = new Victor(vpBounds.right - vpBounds.left, vpBounds.bottom - vpBounds.top);
-            let vpOrigin = new Victor(vpBounds.left, vpBounds.top);
+            let vpSize = new Vector(vpBounds.right - vpBounds.left, vpBounds.bottom - vpBounds.top);
+            let vpOrigin = new Vector(vpBounds.left, vpBounds.top);
             let navZoom = this.selectedAsset.navState.zoomFac;
             let navOrigin = this.selectedAsset.navState.offset.clone().multiplyScalar(navZoom);
 

@@ -17,7 +17,7 @@ export default class Art_Canvas_Renderer{
     }
 
     getTranslate(){
-        return new Victor(
+        return new Vector(
             (this.canvas.width / 2) + (this.navState.offset.x * this.navState.zoomFac),
             (this.canvas.height / 2) + (this.navState.offset.y * this.navState.zoomFac)
         );
@@ -153,7 +153,7 @@ export default class Art_Canvas_Renderer{
         ctx.beginPath();
         for (let i = 1; i < this.GRID_DIV; i++) {
             let curLine = i * PIXEL_SIZE;
-            let pos = new Victor(curLine, curLine);
+            let pos = new Vector(curLine, curLine);
 
             pos.subtractScalar(HALF_CANVAS);
 

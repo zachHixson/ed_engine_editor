@@ -9,17 +9,19 @@ import { ref, defineProps, defineEmits, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { Event_Bus } from '@/components/common/Event_Listener';
 import type { iControl } from './NavControl.vue';
-import Shared, { Victor } from '@/Shared';
+import Core from '@/core';
 
 const ZOOM_SENSITIVITY = 0.03;
 const ZOOM_WHEEL_AMT = 0.8;
 const PRECISION = 100;
 
+const { NAV_TOOL_TYPE, Vector } = Core;
+
 const { t } = useI18n();
 
 const props = defineProps<{
-    navState: {[key: string]: any},
-    selectedNavTool: typeof Shared.NAV_TOOL_TYPE,
+    navState: Core.Interfaces.iNavState,
+    selectedNavTool: Core.NAV_TOOL_TYPE,
     maxZoom: number,
     contentsBounds: number[],
     unitScale: number,
@@ -31,45 +33,45 @@ const emit = defineEmits(['tool-selected', 'nav-changed']);
 
 const controls: iControl[] = [
     {
-        id: Shared.NAV_TOOL_TYPE.PAN,
+        id: NAV_TOOL_TYPE.PAN,
         altText: t('navigation.pan_tool'),
         icon: panIcon,
-        action: () => emit('tool-selected', Shared.NAV_TOOL_TYPE.PAN)
+        action: () => emit('tool-selected', NAV_TOOL_TYPE.PAN)
     },
     {
-        id: Shared.NAV_TOOL_TYPE.ZOOM,
+        id: Core.NAV_TOOL_TYPE.ZOOM,
         altText: t('navigation.zoom_tool'),
         icon: zoomIcon,
-        action: () => emit('tool-selected', Shared.NAV_TOOL_TYPE.ZOOM)
+        action: () => emit('tool-selected', NAV_TOOL_TYPE.ZOOM)
     },
     {
-        id: Shared.NAV_TOOL_TYPE.CENTER,
+        id: NAV_TOOL_TYPE.CENTER,
         altText: t('navigation.center_view'),
         icon: centerIcon,
         action: () => centerView()
     }
 ];
-const containerDimensions = new Victor(0, 0);
+const containerDimensions = new Vector(0, 0);
 const mouse = {
-    position: new Victor(0, 0),
+    position: new Vector(0, 0),
     down: false,
     mmDown: false,
-    downPosition: new Victor(0, 0),
-    lastPosition: new Victor(0, 0),
-    dragDistance: new Victor(0, 0),
+    downPosition: new Vector(0, 0),
+    lastPosition: new Vector(0, 0),
+    dragDistance: new Vector(0, 0),
 };
 const hotkeyMap = new HotkeyMap();
 const hotkeyDown = hotkeyMap.keyDown.bind(hotkeyMap);
 const hotkeyUp = hotkeyMap.keyUp.bind(hotkeyMap);
-let hotkeyTool: typeof Shared.NAV_TOOL_TYPE = null;
+let hotkeyTool: Core.NAV_TOOL_TYPE | null = null;
 
 onMounted(()=>{
     window.addEventListener('keydown', hotkeyDown as EventListener);
     window.addEventListener('keyup', hotkeyUp as EventListener);
 
-    hotkeyMap.bindKey(['mmb'], setHotkeyTool, [Shared.NAV_TOOL_TYPE], setHotkeyTool, [null])
-    hotkeyMap.bindKey([' ', 'lmb'], setHotkeyTool, [Shared.NAV_TOOL_TYPE.PAN], setHotkeyTool, [null])
-    hotkeyMap.bindKey(['control', 'lmb'], setHotkeyTool, [Shared.NAV_TOOL_TYPE.ZOOM], setHotkeyTool, [null]);
+    hotkeyMap.bindKey(['mmb'], setHotkeyTool, [NAV_TOOL_TYPE], setHotkeyTool, [null])
+    hotkeyMap.bindKey([' ', 'lmb'], setHotkeyTool, [NAV_TOOL_TYPE.PAN], setHotkeyTool, [null])
+    hotkeyMap.bindKey(['control', 'lmb'], setHotkeyTool, [NAV_TOOL_TYPE.ZOOM], setHotkeyTool, [null]);
     hotkeyMap.bindKey(['control', 'f'], centerView);
 
     props.parentEventBus.addEventListener('mouse-wheel', scroll);
@@ -90,7 +92,7 @@ function controlClick(control: typeof controls[number]): void {
     control.action();
 }
 
-function setHotkeyTool(newTool: typeof Shared.NAV_TOOL_TYPE): void {
+function setHotkeyTool(newTool: Core.NAV_TOOL_TYPE | null): void {
     hotkeyTool = newTool;
 }
 
@@ -103,7 +105,7 @@ function mouseDown(event: MouseEvent): void {
 function mouseUp(event: MouseEvent): void {
     hotkeyMap.mouseUp(event);
 
-    if (hotkeyTool == Shared.NAV_TOOL_TYPE.PAN){
+    if (hotkeyTool == NAV_TOOL_TYPE.PAN){
         setHotkeyTool(null);
     }
 }
@@ -116,10 +118,10 @@ function mouseMove(event: MouseEvent): void {
     if (hotkeyMap.checkKeys(['lmb', 'mmb'])){
         let navTool = hotkeyTool ?? props.selectedNavTool;
         switch (navTool){
-            case Shared.NAV_TOOL_TYPE.PAN:
+            case NAV_TOOL_TYPE.PAN:
                 pan();
                 break;
-            case Shared.NAV_TOOL_TYPE.ZOOM:
+            case NAV_TOOL_TYPE.ZOOM:
                 zoom();
                 break;
         }
@@ -157,15 +159,15 @@ function setZoom(newZoom: number): void {
 }
 
 function pan(): void {
-    let curMouse = new Victor(0,0).copy(mouse.position);
-    let downPos = new Victor(0,0).copy(mouse.lastPosition);
+    let curMouse = new Vector(0,0).copy(mouse.position);
+    let downPos = new Vector(0,0).copy(mouse.lastPosition);
     let difference = curMouse.subtract(downPos);
 
     difference.divideScalar(props.navState.zoomFac).multiplyScalar(devicePixelRatio);
     props.navState.offset.add(difference);
 
     props.navState.offset.multiplyScalar(PRECISION);
-    props.navState.offset.unfloat();
+    props.navState.offset.round();
     props.navState.offset.divideScalar(PRECISION);
 
     emit('nav-changed', props.navState);
@@ -183,19 +185,19 @@ function zoom(): void {
 function centerView(): void {
     const dpiScale = props.dpiScale ?? 1;
 
-    let cornerUL = new Victor(
+    let cornerUL = new Vector(
         props.contentsBounds[0],
         props.contentsBounds[1]
     );
-    let cornerBR = new Victor(
+    let cornerBR = new Vector(
         props.contentsBounds[2],
         props.contentsBounds[3]
     );
-    let dimensions = new Victor(
+    let dimensions = new Vector(
         Math.abs(cornerUL.x - cornerBR.x),
         Math.abs(cornerUL.y - cornerBR.y)
     );
-    let midPoint = new Victor(
+    let midPoint = new Vector(
         (props.contentsBounds[0] + props.contentsBounds[2]) / -2,
         (props.contentsBounds[1] + props.contentsBounds[3]) / 2
     );

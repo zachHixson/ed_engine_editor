@@ -1,7 +1,6 @@
 import Renderer from "@engine/rendering/Renderer";
 import Font_Renderer from "./Font_Renderer";
-import { Draw } from "@engine/core/core_filemap";
-import { Vector } from "@core";
+import { Draw, Vector } from "@engine/core/core";
 
 const MARGIN = 5;
 const LINES = 4;

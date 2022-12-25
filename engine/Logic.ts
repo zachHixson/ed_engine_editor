@@ -1,6 +1,6 @@
 import Node from './Node';
 import Engine from './Engine';
-import { Object_Instance, NODE_MAP, Interfaces, iEngineLogic, iNodeConnection } from '@core';
+import { Object_Instance, NODE_MAP, Interfaces, iEngineLogic, iNodeConnection } from '@engine/core/core';
 
 type iAnyObj = Interfaces.iAnyObj;
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useMainStore } from '@/stores/Main';
-import Shared, { Engine } from '@/Shared';
+import Core, { Engine } from '@/core';
 import { PLAY_STATE } from '@/stores/Main';
 
 const mainStore = useMainStore();
@@ -9,7 +9,7 @@ const mainStore = useMainStore();
 const canvasWrapper = ref<HTMLElement>();
 const canvas = ref<HTMLCanvasElement>();
 
-let engine: typeof Engine = null;
+let engine: Engine | null = null;
 let resizeInterval: number;
 
 const playState = computed<PLAY_STATE>({
@@ -38,21 +38,21 @@ function start(): void {
         const wrapper = canvasWrapper.value as HTMLElement;
         const minDim = Math.min(wrapper.clientWidth, wrapper.clientHeight);
 
-        Shared.resizeHDPICanvas(canvas, minDim, minDim);
+        Core.Draw.resizeHDPICanvas(canvas.value!, minDim, minDim);
     }, 20);
 
-    engine = new Engine({
-        canvas: canvas.value,
-        gameData: mainStore.getSaveData,
-        callbacks: {restart}
-    });
+    engine = new Engine(
+        canvas.value!,
+        mainStore.getSaveData,
+        {restart}
+    );
     engine.start();
 }
 
 function close(): void {
     playState.value = PLAY_STATE.NOT_PLAYING;
     clearInterval(resizeInterval);
-    engine.stop();
+    engine!.stop();
 }
 </script>
 
