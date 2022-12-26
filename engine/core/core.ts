@@ -21,4 +21,4 @@ export * from './Spacial_Collection';
 export * as Util from './Util';
 export * from './Vector';
 
-export * as Interfaces from './interfaces';
+export * from './interfaces';

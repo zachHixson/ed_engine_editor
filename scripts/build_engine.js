@@ -1,7 +1,6 @@
 const fs = require('fs');
 const {execSync} = require('child_process');
 const outputPath = './_compiled/';
-const typesPath = './_compiled/@engineTypes/';
 
 process.argv.includes('--build-font') && execSync('npm run build-font');
 
@@ -42,10 +41,6 @@ export const {Engine, Core} = (()=>{
 
 if (!fs.existsSync(outputPath)){
     fs.mkdirSync(outputPath);
-}
-
-if (!fs.existsSync(typesPath)){
-    fs.mkdirSync(typesPath);
 }
 
 fs.unlinkSync('./_compiled/engine_raw.js');

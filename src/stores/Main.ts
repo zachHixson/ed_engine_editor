@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import {version as EDITOR_VERSION} from '@/../package.json';
 import i18n from '@/i18n';
-import Node_API from '@/components/editor_logic/Node_API.ts';
+import Node_API from '@/components/editor_logic/Node_API';
 import type iLoadObj from './iLoadObj';
 import { useGameDataStore } from './GameData';
 import { useAssetBrowserStore } from './AssetBrowser';
@@ -19,8 +19,8 @@ interface iState {
     projectName: string,
     inputActive: boolean,
     playState: PLAY_STATE,
-    nodeAPI: any,
-    selectedEditor: typeof Shared.EDITOR_ID,
+    nodeAPI: Node_API,
+    selectedEditor: Core.EDITOR_ID,
 }
 
 export const useMainStore = defineStore({
@@ -31,7 +31,7 @@ export const useMainStore = defineStore({
         inputActive: false,
         playState: PLAY_STATE.NOT_PLAYING,
         nodeAPI: new Node_API(),
-        selectedEditor: Shared.EDITOR_ID.ROOM,
+        selectedEditor: Core.EDITOR_ID.ROOM,
     }),
 
     getters: {
@@ -41,7 +41,7 @@ export const useMainStore = defineStore({
             const saveObj = {
                 projectName: state.projectName,
                 editor_version: EDITOR_VERSION,
-                newestID: Shared.ID_Generator.getCurrentID(),
+                newestID: Core.ID_Generator.getCurrentID(),
                 startRoom: gameDataStore.getStartRoom,
                 sprites: gameDataStore.getSpriteSaveData,
                 objects: gameDataStore.getObjectSaveData,
@@ -51,7 +51,7 @@ export const useMainStore = defineStore({
 
             return JSON.stringify(saveObj);
         },
-        getSelectedEditor: (state): object => state.selectedEditor,
+        getSelectedEditor: (state): Core.EDITOR_ID => state.selectedEditor,
         getInputActive: (state): boolean => state.inputActive,
         getPlayState: (state): PLAY_STATE => state.playState,
         getNodeAPI: (state): object => state.nodeAPI,
@@ -69,8 +69,8 @@ export const useMainStore = defineStore({
             gameDataStore.setSpriteList([]);
             gameDataStore.setObjectList([]);
             gameDataStore.setRoomList([]);
-            Shared.ID_Generator.reset();
-            gameDataStore.addAsset(Shared.CATEGORY_ID.ROOM);
+            Core.ID_Generator.reset();
+            gameDataStore.addAsset(Core.CATEGORY_ID.ROOM);
             assetBrowserStore.selectRoom(gameDataStore.getAllRooms[0]);
         },
         loadSaveData(projString: string){
@@ -79,7 +79,7 @@ export const useMainStore = defineStore({
             const loadObj: iLoadObj = JSON.parse(projString) || {};
 
             this.projectName = loadObj.projectName;
-            Shared.ID_Generator.setID(loadObj.newestID);
+            Core.ID_Generator.setID(loadObj.newestID);
             gameDataStore.loadSaveData(loadObj, this.nodeAPI);
             
             if (loadObj.selectedRoomId != undefined){
@@ -89,7 +89,7 @@ export const useMainStore = defineStore({
 
             this.nodeAPI.forEachNode(node => node.afterGameDataLoaded());
         },
-        setSelectedEditor(newEditor: typeof Shared.EDITOR_ID){ this.selectedEditor = newEditor },
+        setSelectedEditor(newEditor: Core.EDITOR_ID){ this.selectedEditor = newEditor },
         setInputActive(newState: boolean){
             this.inputActive = newState;
         },

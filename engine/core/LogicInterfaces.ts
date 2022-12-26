@@ -6,16 +6,13 @@ import { iInput, iInTrigger, iNodeTemplate, iOutput, Object_Instance } from "./c
 
 type Graph = {};
 type Connection = {};
-type EditorNode = {};
 type iNodeAPI = {};
 
 interface iNode_Base extends iNodeLifecycleEvents {
     template: iNodeTemplate;
     nodeId: number;
-    parentScript: iEngineLogic;
-    engine: Engine;
     isEvent: boolean;
-    widgetData: iAnyObj | null;
+    widgetData?: iAnyObj | null;
 }
 
 export interface iNodeLifecycleEvents {
@@ -25,7 +22,7 @@ export interface iNodeLifecycleEvents {
     afterSave?: (saveData: iAnyObj)=>void;
     beforeLoad?: (saveData: iAnyObj)=>void;
     afterLoad?: ()=>void;
-    logicLoaded?: ()=>void;
+    logicLoaded?: (logic: iEditorLogic | iEngineLogic)=>void;
     afterGameDataLoaded?: ()=>void;
     onScriptAdd?: ()=>void;
     onMount?: ()=>void;
@@ -40,22 +37,22 @@ export interface iNodeLifecycleEvents {
     onBeforeDelete?: ()=>void;
 }
 
-export interface iEditorLogic extends iNode_Base {
+export interface iEditorLogic {
     id: number;
     name: string;
     graphs: Graph[];
-    nodes: EditorNode[];
+    nodes: iEditorNode[];
     connections: Connection[];
     selectedGraphId: number | null;
-    selectedNodes: EditorNode[];
+    selectedNodes: iEditorNode[];
     localVariables: Map<string, SOCKET_TYPE>;
 
-    addNode(templateId: number, pos: Vector, nodeRef: EditorNode, nodeAPI: iNodeAPI): void;
-    deleteNode(nodeRef: EditorNode): void;
+    addNode(templateId: string, pos: Vector, newNode: iEditorNode, nodeAPI: iNodeAPI): void;
+    deleteNode(nodeRef: iEditorNode): void;
     addConnection(connectionObj: Connection): void;
     removeConnection(id: number, connectionObj: Connection): boolean;
     setLocalVariable(name: string, type: SOCKET_TYPE): void;
-    getLocalVariable(name: string): SOCKET_TYPE;
+    getLocalVariable(name: string): SOCKET_TYPE | undefined;
     deleteLocalVariable(name: string): void;
 }
 
@@ -69,19 +66,14 @@ export interface iEditorNodeInput extends iInput {
 };
 
 export interface iEditorNodeOutput extends iOutput {
-    value: any,
     node: iEditorNode,
 };
 
-export interface iEditorNode {
-    template: iNodeTemplate;
+export interface iEditorNode extends iNode_Base {
     templateId: string;
-    nodeId: number;
-    isEvent: boolean;
-    widgetData: any;
     inTriggers: Map<string, iEditorNodeInTrigger>;
     outTriggers: Map<string, {
-        id: number,
+        id: string,
         node: iEditorNode,
     }>;
     inputs: Map<string, iEditorNodeInput>;
@@ -99,42 +91,43 @@ export interface iEditorNode {
     decoratorText?: string | null;
 
     method(methodName: string): any;
-    getInput(inputName: string): iEditorNodeInput;
+    getInput(inputName: string): iEditorNodeInput | null;
     emit(eventName: string, data?: any): void;
 }
 
 export interface iNodeConnection {
     id: number;
-    startNodeId: number;
-    endNodeId: number;
-    startSocketId: string;
-    endSocketId: string;
+    startNode: iEditorNode | null;
+    endNode: iEditorNode | null;
+    startSocketId: string | null;
+    endSocketId: string | null;
+}
+
+export interface iNewVarInfo {
+    name: string,
+    type: SOCKET_TYPE,
+    isGlobal: boolean,
+    isList: boolean,
 }
 
 export interface iEditorAPI {
     editor: iAnyObj;
-    store: iAnyObj;
     globalVariableMap: Map<string, SOCKET_TYPE>;
 
     getGlobalVariable(name: string): SOCKET_TYPE;
     setGlobalVariable(name: string, type: SOCKET_TYPE): void;
     deleteGlobalVariable(name: string): void;
     getVariableUsage(name: string, nodeType: string | null, isGlobal: boolean): iEditorNode[];
-    getConnection(node: iEditorNode, socketId: string): iNodeConnection;
+    getConnection(node: iEditorNode, socketId: string): iNodeConnection | null;
     cancelConnection(connection: iNodeConnection): void;
-    getConnectedSocket(node: iEditorNode, socketId: string, inputConnection?: iNodeConnection): iEditorNodeInput | iEditorNodeOutput;
+    getConnectedSocket(node: iEditorNode, socketId: string, inputConnection?: iNodeConnection): iEditorNodeInput | iEditorNodeOutput | undefined;
     getSelectedNodes(): iEditorNode[];
     clearSelectedNodes(): void;
     addNode(node: iEditorNode, commit?: boolean): void;
     deleteNodes(nodeList: iEditorNode[], commit?: boolean): void;
     forEachNode(callback: (...args: any)=>void, isGlobal: boolean): void;
     dialogConfirm(textInfo: {textId: string, vars: {[keys: string]: any}}, callback: (positive: boolean)=>void): void;
-    dialogNewVariable(callback: (positive: boolean, varInfo: {
-        name: string,
-        type: SOCKET_TYPE,
-        isGlobal: boolean,
-        isList: boolean,
-    })=>void): void;
+    dialogNewVariable(callback: (positive: boolean, varInfo: iNewVarInfo)=>void): void;
     popLastCommit(): void;
 }
 
@@ -173,6 +166,7 @@ export interface iEngineNode extends iNode_Base {
     inputs: Map<string, iEngineInput>;
     outputs: Map<string, iEngineOuput>;
 
+    engine: Engine;
     instance: Object_Instance;
     data: any;
 

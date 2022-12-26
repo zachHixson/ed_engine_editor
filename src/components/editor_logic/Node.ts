@@ -1,53 +1,94 @@
 import { EventListenerMixin } from "../common/Event_Listener";
+import Core from '@/core';
+import type Logic from "./Logic";
+import type Node_API from "./Node_API";
 
-export default class Node extends EventListenerMixin(class {}) {
-    constructor(template, id, pos = new Vector(), parentScript, graphId, editorAPI){
-        super(...arguments);
+const { Vector } = Core;
+
+export default class Node extends EventListenerMixin(class {}) implements Core.iEditorNode {
+    private _template: Core.iNodeTemplate;
+    private _editorAPI: Node_API;
+
+    nodeId: number;
+    isEvent: boolean;
+    widget?: Core.iAnyObj;
+    widgetData?: any;
+    inTriggers: Core.iEditorNode['inTriggers'] = new Map();
+    outTriggers: Core.iEditorNode['outTriggers'] = new Map();
+    inputs: Core.iEditorNode['inputs'] = new Map();
+    outputs: Core.iEditorNode['outputs'] = new Map();
+    parentScript: Logic;
+    graphId: number;
+    domRef: HTMLDivElement | null = null;
+    pos: Core.Vector;
+    dataCache: Map<string, any> = new Map();
+    editorCanDelete: boolean = true;
+
+    init: Core.iNodeLifecycleEvents['init'];
+    onCreate: Core.iNodeLifecycleEvents['onCreate'];
+    beforeSave: Core.iNodeLifecycleEvents['beforeSave'];
+    afterSave: Core.iNodeLifecycleEvents['afterSave'];
+    beforeLoad: Core.iNodeLifecycleEvents['beforeLoad'];
+    afterLoad: Core.iNodeLifecycleEvents['afterLoad'];
+    logicLoaded: Core.iNodeLifecycleEvents['logicLoaded'];
+    afterGameDataLoaded: Core.iNodeLifecycleEvents['afterGameDataLoaded'];
+    onScriptAdd: Core.iNodeLifecycleEvents['onScriptAdd'];
+    onMount: Core.iNodeLifecycleEvents['onMount'];
+    allNodesMounted: Core.iNodeLifecycleEvents['allNodesMounted'];
+    onNewVariable: Core.iNodeLifecycleEvents['onNewVariable'];
+    onInput: Core.iNodeLifecycleEvents['onInput'];
+    onMove: Core.iNodeLifecycleEvents['onMove'];
+    onNewConnection: Core.iNodeLifecycleEvents['onNewConnection'];
+    onRemoveConnection: Core.iNodeLifecycleEvents['onRemoveConnection'];
+    onValueChange: Core.iNodeLifecycleEvents['onValueChange'];
+    onDeleteStopped: Core.iNodeLifecycleEvents['onDeleteStopped'];
+    onBeforeDelete: Core.iNodeLifecycleEvents['onBeforeDelete'];
+
+    reverseInputs?: boolean;
+    reverseOutputs?: boolean;
+    inputBoxWidth?: number;
+    decoratorIcon?: string | null;
+    decoratorText?: string | null;
+
+    constructor(template: Core.iNodeTemplate, id: number, pos: Core.Vector, parentScript: Logic, graphId: number, editorAPI: Node_API){
+        super();
         this._template = template;
         this.nodeId = id;
-        this.isEvent = template.isEvent;
+        this.isEvent = template.isEvent ?? false;
         this.widget = template.widget;
-        this.widgetData;
-        this.inTriggers = new Map();
-        this.outTriggers = new Map();
-        this.inputs = new Map();
-        this.outputs = new Map();
         this.parentScript = parentScript;
         this.graphId = graphId;
         this._editorAPI = editorAPI;
-        this.domRef = null;
         this.pos = pos.clone();
-        this.dataCache = new Map();
-        this.editorCanDelete = true;
 
         //bind lifecycle events
-        const uBind = ()=>{};
-        this.init = template.init?.bind(this) ?? uBind;
-        this.onScriptAdd = template.onScriptAdd?.bind(this) ?? uBind;
-        this.onCreate = template.onCreate?.bind(this) ?? uBind;
-        this.beforeSave = template.beforeSave?.bind(this) ?? uBind;
-        this.afterSave = template.afterSave?.bind(this) ?? uBind;
-        this.beforeLoad = template.beforeLoad?.bind(this) ?? uBind;
-        this.afterLoad = template.afterLoad?.bind(this) ?? uBind;
-        this.logicLoaded = template.logicLoaded?.bind(this) ?? uBind;
-        this.afterGameDataLoaded = template.afterGameDataLoaded?.bind(this) ?? uBind;
-        this.onScriptAdd = template.onScriptAdd?.bind(this) ?? uBind;
-        this.onMount = template.onMount?.bind(this) ?? uBind;
-        this.allNodesMounted = template.allNodesMounted?.bind(this) ?? uBind;
-        this.onNewVariable = template.onNewVariable?.bind(this) ?? uBind;
-        this.onInput = template.onInput?.bind(this) ?? uBind;
-        this.onMove = template.onMove?.bind(this) ?? uBind;
-        this.onNewConnection = template.onNewConnection?.bind(this) ?? uBind;
-        this.onRemoveConnection = template.onRemoveConnection?.bind(this) ?? uBind;
-        this.onValueChange = template.onValueChange?.bind(this) ?? uBind;
-        this.onDeleteStopped = template.onDeleteStopped?.bind(this) ?? uBind;
-        this.onBeforeDelete = template.onBeforeDelete?.bind(this) ?? uBind;
+        this.init = template.init?.bind(this);
+        this.onScriptAdd = template.onScriptAdd?.bind(this);
+        this.onCreate = template.onCreate?.bind(this);
+        this.beforeSave = template.beforeSave?.bind(this);
+        this.afterSave = template.afterSave?.bind(this);
+        this.beforeLoad = template.beforeLoad?.bind(this);
+        this.afterLoad = template.afterLoad?.bind(this);
+        this.logicLoaded = template.logicLoaded?.bind(this);
+        this.afterGameDataLoaded = template.afterGameDataLoaded?.bind(this);
+        this.onScriptAdd = template.onScriptAdd?.bind(this);
+        this.onMount = template.onMount?.bind(this);
+        this.allNodesMounted = template.allNodesMounted?.bind(this);
+        this.onNewVariable = template.onNewVariable?.bind(this);
+        this.onInput = template.onInput?.bind(this);
+        this.onMove = template.onMove?.bind(this);
+        this.onNewConnection = template.onNewConnection?.bind(this);
+        this.onRemoveConnection = template.onRemoveConnection?.bind(this);
+        this.onValueChange = template.onValueChange?.bind(this);
+        this.onDeleteStopped = template.onDeleteStopped?.bind(this);
+        this.onBeforeDelete = template.onBeforeDelete?.bind(this);
 
         //map template to node
         template.inTriggers?.forEach(trigger => {
             this.inTriggers.set(trigger.id, {
                 id: trigger.id,
                 node: this,
+                execute: trigger.execute,
             });
         });
 
@@ -62,7 +103,7 @@ export default class Node extends EventListenerMixin(class {}) {
             let value = input.default;
 
             if (value === undefined){
-                value = Shared.SOCKET_DEFAULT.get(input.type);
+                value = Core.Node_Enums.SOCKET_DEFAULT.get(input.type);
             }
 
             this.inputs.set(input.id, Object.assign({
@@ -85,21 +126,21 @@ export default class Node extends EventListenerMixin(class {}) {
             }
         }
 
-        this.init();
+        this.init && this.init();
     }
 
     get template(){return this._template}
     get templateId(){return this._template.id}
     get editorAPI(){return this._editorAPI}
 
-    toSaveData(){
-        this.beforeSave();
+    toSaveData(): Core.iAnyObj {
+        this.beforeSave && this.beforeSave();
 
         const roundedPos = new Vector(
             Math.floor(this.pos.x * 100) / 100,
             Math.floor(this.pos.y * 100) / 100
         );
-        const outObj = {
+        const outObj: Core.iAnyObj = {
             templateId: this.templateId,
             nodeId: this.nodeId,
             graphId: this.graphId,
@@ -113,48 +154,48 @@ export default class Node extends EventListenerMixin(class {}) {
             outObj.widgetData = JSON.stringify(this.widgetData);
         }
 
-        this.afterSave(outObj);
+        this.afterSave && this.afterSave(outObj);
 
         return outObj;
     }
 
-    fromSaveData(data){
-        this.beforeLoad(data);
+    fromSaveData(data: Core.iAnyObj): Node {
+        this.beforeLoad && this.beforeLoad(data);
 
         if (data.widgetData){
             this.widgetData = JSON.parse(data.widgetData);
         }
 
-        data.inputs.forEach(input => {
+        data.inputs.forEach((input: Core.iAnyObj) => {
             const nodeInput = this.inputs.get(input.id);
             if (!nodeInput) return;
             nodeInput.value = input.value;
         });
 
-        this.afterLoad();
+        this.afterLoad && this.afterLoad();
 
         return this;
     }
 
-    setEditorAPI(context){
-        this.editorAPI = context;
+    setEditorAPI(context: Node_API): void {
+        this._editorAPI = context;
     }
 
-    setDomRef(domRef){
+    setDomRef(domRef: HTMLDivElement): void {
         this.domRef = domRef;
         this.domRef.style.left = this.pos.x + 'px';
         this.domRef.style.top = this.pos.y + 'px';
     }
 
-    setPos(newPos){
+    setPos(newPos: Core.Vector): void {
         this.pos.copy(newPos);
-        this.domRef.style.left = this.pos.x + 'px';
-        this.domRef.style.top = this.pos.y + 'px';
-        this.dispatchEvent(new CustomEvent("onMove", {detail: newPos}));
+        this.domRef!.style.left = this.pos.x + 'px';
+        this.domRef!.style.top = this.pos.y + 'px';
+        this.emit('onMove', newPos);
     }
 
-    method(methodName, data = []){
-        const method = this.template.methods[methodName];
+    method(methodName: string, data: any[] = []): any {
+        const method = this.template.methods![methodName];
 
         if (!method){
             console.error(`Could not find method "${methodName}" in template ${this.templateId}`);
@@ -164,7 +205,7 @@ export default class Node extends EventListenerMixin(class {}) {
         return method.call(this, ...data);
     }
 
-    getInput(inputName){
+    getInput(inputName: string ): Core.iEditorNodeInput | null {
         const input = this.inputs.get(inputName);
 
         if (!input){

@@ -1,5 +1,20 @@
-export default class Node_Connection{
-    constructor(inpObj = {}){
+import type Node from './Node';
+import type Core from '@/core';
+
+export default class Node_Connection implements Core.iNodeConnection {
+    id: number;
+    type: Core.Node_Enums.SOCKET_TYPE;
+    graphId: number;
+    canConnect: boolean;
+    connectionComponent: Core.iAnyObj | null;
+    startNode: Node | null;
+    startSocketId: string | null;
+    startSocketEl: HTMLDivElement | null;
+    endNode: Node | null;
+    endSocketId: string | null;
+    endSocketEl: HTMLDivElement | null;
+
+    constructor(inpObj: Core.iAnyObj = {}){
         this.id = inpObj.id;
         this.type = inpObj.type;
         this.graphId = inpObj.graphId;
@@ -14,11 +29,11 @@ export default class Node_Connection{
     }
 
     get startSocket(){
-        return this.startNode?.outputs.get(this.startSocketId);
+        return this.startNode?.outputs.get(this.startSocketId!);
     }
 
     get endSocket(){
-        return this.endNode?.inputs.get(this.endSocketId);
+        return this.endNode?.inputs.get(this.endSocketId!);
     }
 
     componentDestructor(){
@@ -29,13 +44,13 @@ export default class Node_Connection{
 
     toSaveData(){
         let {id, type, graphId, startNode, startSocketId, endNode, endSocketId} = this;
-        let startNodeId = startNode.nodeId;
-        let endNodeId = endNode.nodeId;
+        let startNodeId = startNode!.nodeId;
+        let endNodeId = endNode!.nodeId;
 
         return {id, type, graphId, startNodeId, startSocketId, endNodeId, endSocketId};
     }
 
-    fromSaveData(data, nodeMap){
+    fromSaveData(data: Core.iAnyObj, nodeMap: {[key: string]: Node}){
         this.startNode = nodeMap[data.startNodeId];
         this.endNode = nodeMap[data.endNodeId];
 
@@ -43,6 +58,6 @@ export default class Node_Connection{
     }
 
     updateComponent(){
-        this.connectionComponent.update();
+        this.connectionComponent!.update();
     }
 };

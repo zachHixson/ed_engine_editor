@@ -1,38 +1,53 @@
 import i18n from '@/i18n';
 import Node from './Node';
 import Node_Connection from './Node_Connection';
+import Core from '@/core';
+import type Node_API from './Node_API';
 
-export default class Logic{
+const { Vector } = Core;
+const { t } = i18n.global;
+
+interface iGraph {
+    id: number;
+    name: string;
+    navState: Core.iNavState;
+}
+
+export default class Logic extends Core.Asset_Base implements Core.iEditorLogic {
+    private _nextGraphId: number = 0;
+    private _nextNodeId: number = 0;
+    private _nextConnectionId: number = 0;
+
+    id: number;
+    name: string;
+    graphs: iGraph[] = [];
+    nodes: Node[] = [];
+    connections: Node_Connection[] = [];
+    selectedGraphId: number = 0;
+    selectedNodes: Node[] = [];
+    localVariables: Map<string, Core.Node_Enums.SOCKET_TYPE> = new Map();
+    sortOrder: number = 0;
+
     constructor(){
-        this.id = Shared.ID_Generator.newID();
-        this.name = this.id;
-        this.graphs = [];
-        this.nodes = [];
-        this.connections = [];
-        this.selectedGraphId = null;
-        this.selectedNodes = [];
-        this.localVariables = new Map();
-        this._nextGraphId = 0;
-        this._nextNodeId = 0;
-        this._nextConnectionId = 0;
+        super();
+        this.id = Core.ID_Generator.newID();
+        this.name = this.id.toString();
     }
 
-    get category_ID(){return Shared.CATEGORY_ID.LOGIC}
+    get category_ID(){return Core.CATEGORY_ID.LOGIC}
     get nextGraphId(){return this._nextGraphId++}
     get nextNodeId(){return this._nextNodeId++}
-    get navState(){
-        const graphNavstate = this.graphs.length > 0 ? this.graphs.find(graph => graph.id == this.selectedGraphId).navState : null;
-        return (this.selectedGraphId != null) ? graphNavstate : this.defaultNavState
+    get graphNavState(){
+        const graphNavstate = this.graphs.find(graph => graph.id == this.selectedGraphId)!.navState;
+        return graphNavstate;
     }
     get defaultNavState(){return {
         offset: new Vector(0, 0),
         zoomFac: 1,
     }}
 
-    set navState(newState){
-        if (this.selectedEventId){
-            this.selectedEventId.navState = newState;
-        }
+    set graphNavState(newState: Core.iNavState){
+        this.graphs[this.selectedGraphId].navState = newState!;
     }
 
     toSaveData(){
@@ -48,20 +63,20 @@ export default class Logic{
         return logic;
     }
 
-    fromSaveData(data, nodeAPI){
-        const nodeMap = {};
+    fromSaveData(data: Core.iAnyObj, nodeAPI: Node_API){
+        const nodeMap: {[key: string]: Node} = {};
 
         Object.assign(this, data);
 
         this.graphs = this.graphs.map(graph => {
             this._nextGraphId = Math.max(this._nextGraphId, graph.id + 1);
-            graph.navState.offset = Vector.fromObject(this.navState.offset);
+            graph.navState.offset = Vector.fromObject(this.graphNavState.offset);
             return graph;
         });
         this.nodes = this.nodes.map(node => {
             this._nextNodeId = Math.max(this._nextNodeId, node.nodeId + 1);
             return new Node(
-                Shared.NODE_MAP[node.templateId],
+                Core.NODE_MAP[node.templateId],
                 node.nodeId,
                 Vector.fromObject(node.pos),
                 this,
@@ -81,7 +96,7 @@ export default class Logic{
 
         //dispatch node event
         this.nodes.forEach(node => {
-            node.logicLoaded(this);
+            node.logicLoaded && node.logicLoaded(this);
         });
 
         return this;
@@ -91,7 +106,7 @@ export default class Logic{
         const id = this.nextGraphId;
         const newGraph = {
             id,
-            name: i18n.t('logic_editor.graph_prefix') + id,
+            name: t('logic_editor.graph_prefix') + id,
             navState: this.defaultNavState
         };
 
@@ -102,8 +117,8 @@ export default class Logic{
         }
     }
 
-    deleteGraph(id){
-        let idx = null;
+    deleteGraph(id: number){
+        let idx: number = 0;
 
         for (let i = 0; idx == null && i < this.graphs.length; i++){
             if (this.graphs[i].id == id){
@@ -123,21 +138,18 @@ export default class Logic{
         //select next graph
         if (id == this.selectedGraphId){
             const nextIdx = Math.min(this.graphs.length - 1, idx);
-            this.selectedGraphId = (this.graphs.length > 0) ? this.graphs[nextIdx].id : null;
+            this.selectedGraphId = this.graphs[nextIdx].id;
         }
     }
 
-    addNode(templateId, pos, nodeRef = null, nodeAPI){
-        const nodeTemplate = Shared.NODE_MAP[templateId];
-        const newNode = nodeRef ?? new Node(nodeTemplate, this.nextNodeId, pos, this, this.selectedGraphId, nodeAPI);
+    addNode(templateId: string, pos: Core.Vector, newNode: Node, nodeAPI: Node_API): void {
+        const nodeTemplate = Core.NODE_MAP[templateId];
         
-        newNode.onScriptAdd();
+        newNode.onScriptAdd && newNode.onScriptAdd();
         this.nodes.push(newNode);
-
-        return newNode;
     }
 
-    deleteNode(nodeRef){
+    deleteNode(nodeRef: Node): void {
         let nodeIdx = -1;
 
         for (let i = 0; nodeIdx < 0 && i < this.nodes.length; i++){
@@ -151,7 +163,7 @@ export default class Logic{
         this.nodes.splice(nodeIdx, 1);
     }
 
-    addConnection(connectionObj){
+    addConnection(connectionObj: Node_Connection): void {
         if (!connectionObj.id){
             connectionObj.id = this._nextConnectionId++;
         }
@@ -159,7 +171,7 @@ export default class Logic{
         this.connections.push(connectionObj);
     }
 
-    removeConnection(id, connectionobj){
+    removeConnection(id: number, connectionobj: Node_Connection): boolean {
         for (let i = 0; i < this.connections.length; i++){
             let connection = this.connections[i];
 
@@ -172,17 +184,17 @@ export default class Logic{
         return false;
     }
 
-    setLocalVariable(name, type){
+    setLocalVariable(name: string, type: Core.Node_Enums.SOCKET_TYPE): void {
         name = name.trim().toLowerCase();
         this.localVariables.set(name, type);
     }
 
-    getLocalVariable(name){
+    getLocalVariable(name: string): Core.Node_Enums.SOCKET_TYPE | undefined {
         name = name.trim().toLowerCase();
         return this.localVariables.get(name);
     }
 
-    deleteLocalVariable(name){
+    deleteLocalVariable(name: string): void {
         name = name.trim().toLowerCase();
         this.localVariables.delete(name);
     }
