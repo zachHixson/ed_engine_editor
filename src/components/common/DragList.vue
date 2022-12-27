@@ -36,7 +36,7 @@ let dragOffset = new Vector(0, 0);
 const assembled = computed(()=>{
     nextTick(()=>{
         const root = rootEl.value!;
-        const children = [...root.childNodes!].filter((node: any) => node.name == 'instancedElement');
+        const children = [...root.childNodes!].filter((node: any) => node.getAttribute && node.getAttribute('name'));
         const listEl = children[0] as HTMLElement;
         elHeight.value = listEl ? listEl.clientHeight : 0;
     });
