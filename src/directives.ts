@@ -1,5 +1,6 @@
 import type { DirectiveBinding, VNode } from 'vue';
 import { useMainStore } from './stores/Main';
+//@ts-ignore
 import { TooltipEventBus } from './components/common/Tooltip.vue';
 
 type ExpandedEl = HTMLElement & {[key: string | number | symbol]: any};

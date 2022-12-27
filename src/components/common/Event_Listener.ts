@@ -10,7 +10,6 @@ export function EventListenerMixin<T extends Constructor>(superclass: T){
         private events = new Map<string, Map<Callback, {callback: Callback, options: Options}>>();
 
         addEventListener(name: string, callback: Callback, options: Options = {}){
-            console.log(this.events)
             const lName = name.toLowerCase();
             let callbackList = this.events.get(lName);
         

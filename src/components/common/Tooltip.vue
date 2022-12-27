@@ -29,8 +29,6 @@ function activateTooltip({el, text: txt}: {el: HTMLDivElement, text: string}): v
     const timeLimit = HOVER_TIME * 1000;
     text.value = txt;
 
-    console.log("Hovered")
-
     if (!text.value.length){
         return;
     }
