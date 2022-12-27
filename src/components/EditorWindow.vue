@@ -28,14 +28,14 @@ const emit = defineEmits(['asset-changed']);
 
 const selectedEditor = computed(()=>mainStore.getSelectedEditor);
 const currentEditor = computed(()=>{
-    switch(selectedEditor){
-        case Shared.EDITOR_ID.ROOM:
+    switch(selectedEditor.value){
+        case Core.EDITOR_ID.ROOM:
             return RoomEditor;
-        case Shared.EDITOR_ID.ART:
+        case Core.EDITOR_ID.ART:
             //return ArtEditor;
-        case Shared.EDITOR_ID.OBJECT:
+        case Core.EDITOR_ID.OBJECT:
             //return ObjectEditor;
-        case Shared.EDITOR_ID.LOGIC:
+        case Core.EDITOR_ID.LOGIC:
             //return LogicEditor;
         default:
             return RoomEditor;

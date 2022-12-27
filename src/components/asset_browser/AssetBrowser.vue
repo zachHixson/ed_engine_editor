@@ -29,22 +29,22 @@ const slideWrapperRef = ref<HTMLElement>();
 const assetListRef = ref<HTMLElement>();
 const categories = [
     {
-        cat_ID: Shared.CATEGORY_ID.SPRITE,
+        cat_ID: Core.CATEGORY_ID.SPRITE,
         text: t("asset_browser.sprites"),
         icon: spriteIcon,
     },
     {
-        cat_ID: Shared.CATEGORY_ID.OBJECT,
+        cat_ID: Core.CATEGORY_ID.OBJECT,
         text: t("asset_browser.objects"),
         icon: objectIcon,
     },
     {
-        cat_ID: Shared.CATEGORY_ID.LOGIC,
+        cat_ID: Core.CATEGORY_ID.LOGIC,
         text: t("asset_browser.logic"),
         icon: logicIcon,
     },
     {
-        cat_ID: Shared.CATEGORY_ID.ROOM,
+        cat_ID: Core.CATEGORY_ID.ROOM,
         text: t("asset_browser.rooms"),
         icon: roomIcon,
     }
@@ -52,19 +52,19 @@ const categories = [
 const selected_category = ref<typeof categories[number]>(categories[0]);
 
 const selectedList = computed(()=>{
-    const list: typeof Shared.Asset_Base[] = [];
+    const list: Core.Asset_Base[] = [];
 
     switch(selected_category.value.cat_ID){
-        case Shared.CATEGORY_ID.SPRITE:
+        case Core.CATEGORY_ID.SPRITE:
             list.push(...gameDataStore.getAllSprites);
             break;
-        case Shared.CATEGORY_ID.OBJECT:
+        case Core.CATEGORY_ID.OBJECT:
             list.push(...gameDataStore.getAllObjects);
             break;
-        case Shared.CATEGORY_ID.LOGIC:
+        case Core.CATEGORY_ID.LOGIC:
             list.push(...gameDataStore.getAllLogic);
             break;
-        case Shared.CATEGORY_ID.ROOM:
+        case Core.CATEGORY_ID.ROOM:
             list.push(...gameDataStore.getAllRooms);
             break;
     }
@@ -89,10 +89,10 @@ const selectedList = computed(()=>{
 });
 const keylist = computed<string[] | null>(()=>{
     switch(selected_category.value!.cat_ID){
-        case Shared.CATEGORY_ID.SPRITE:
-            return selectedList.value.map((s) => s.frameIDs[0]) as string[];
-        case Shared.CATEGORY_ID.OBJECT:
-            return selectedList.value.map((o) => o.sprite?.frameIDs[o.startFrame] ?? o.id) as string[];
+        case Core.CATEGORY_ID.SPRITE:
+            return (selectedList.value as Core.Sprite[]).map(s => s.frameIDs[0]) as string[];
+        case Core.CATEGORY_ID.OBJECT:
+            return (selectedList.value as Core.Game_Object[]).map(o => o.sprite?.frameIDs[o.startFrame] ?? o.id) as string[];
         default:
             return null;
     }
@@ -119,8 +119,8 @@ function addAsset(): void {
     });
 }
 
-function deleteAsset(asset: typeof Shared.Asset): void {
-    const isRoom = asset.category_ID == Shared.CATEGORY_ID.ROOM;
+function deleteAsset(asset: Core.Asset_Base): void {
+    const isRoom = asset.category_ID == Core.CATEGORY_ID.ROOM;
     const selectedAsset = isRoom ? assetBrowserStore.getSelectedRoom : assetBrowserStore.getSelectedAsset;
 
     //if the selected asset was deleted, shift the selection to the adjacent asset
@@ -133,13 +133,13 @@ function deleteAsset(asset: typeof Shared.Asset): void {
     emit('asset-deleted');
 }
 
-function selectAsset(asset: typeof Shared.Asset_Base, catId = null): void {
-    if (asset && catId == null){
+function selectAsset(asset: Core.Asset_Base, catId?: Core.CATEGORY_ID): void {
+    if (asset && catId == undefined){
         catId = asset.category_ID;
     }
 
-    if (catId == Shared.CATEGORY_ID.ROOM){
-        assetBrowserStore.selectRoom(asset);
+    if (catId == Core.CATEGORY_ID.ROOM){
+        assetBrowserStore.selectRoom(asset as Core.Room);
     }
     else{
         assetBrowserStore.selectAsset(asset);
@@ -148,8 +148,8 @@ function selectAsset(asset: typeof Shared.Asset_Base, catId = null): void {
     emit('asset-selected');
 }
 
-function selectAdjacent(delAsset: typeof Shared.Asset_Base): void {
-    let newSelection = null;
+function selectAdjacent(delAsset: Core.Asset_Base): void {
+    let newSelection: Core.Asset_Base;
 
     for (let i = 0; i < selectedList.value.length; i++){
         if (selectedList.value[i].id == delAsset.id){
@@ -157,11 +157,11 @@ function selectAdjacent(delAsset: typeof Shared.Asset_Base): void {
         }
     }
 
-    selectAsset(newSelection, delAsset.category_ID);
+    selectAsset(newSelection!, delAsset.category_ID);
 }
 
-function updateAsset(id = null): void {
-    AssetBrowserEventBus.emit('draw-thumbnail');
+function updateAsset(id?: number): void {
+    AssetBrowserEventBus.emit('draw-thumbnail', id);
 }
 
 function assetRenamed({asset, oldName}: iRenameEventProps): void {

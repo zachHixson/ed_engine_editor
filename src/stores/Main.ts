@@ -2,7 +2,6 @@ import { defineStore } from 'pinia';
 import {version as EDITOR_VERSION} from '@/../package.json';
 import i18n from '@/i18n';
 import Node_API from '@/components/editor_logic/Node_API';
-import type iLoadObj from './iLoadObj';
 import { useGameDataStore } from './GameData';
 import { useAssetBrowserStore } from './AssetBrowser';
 import Core from '@/core';
@@ -76,7 +75,7 @@ export const useMainStore = defineStore({
         loadSaveData(projString: string){
             const assetBrowserStore = useAssetBrowserStore();
             const gameDataStore = useGameDataStore();
-            const loadObj: iLoadObj = JSON.parse(projString) || {};
+            const loadObj: Core.iSerializedGameData = JSON.parse(projString) || {};
 
             this.projectName = loadObj.projectName;
             Core.ID_Generator.setID(loadObj.newestID);
@@ -84,10 +83,10 @@ export const useMainStore = defineStore({
             
             if (loadObj.selectedRoomId != undefined){
                 const room = gameDataStore.getAllRooms.find(r => r.id == loadObj.selectedRoomId)
-                assetBrowserStore.selectRoom(room)
+                assetBrowserStore.selectRoom(room!)
             }
 
-            this.nodeAPI.forEachNode(node => node.afterGameDataLoaded());
+            this.nodeAPI.forEachNode(node => node.afterGameDataLoaded && node.afterGameDataLoaded());
         },
         setSelectedEditor(newEditor: Core.EDITOR_ID){ this.selectedEditor = newEditor },
         setInputActive(newState: boolean){

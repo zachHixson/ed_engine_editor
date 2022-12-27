@@ -1,3 +1,7 @@
+<script lang="ts">
+export const AppEventBus = new Event_Bus();
+</script>
+
 <script setup lang="ts">
 import HeaderPanel from './components/HeaderPanel.vue';
 import TabPanel from './components/TabPanel.vue';
@@ -7,32 +11,30 @@ import PlayWindow from './components/PlayWindow.vue';
 import Tooltip from './components/common/Tooltip.vue';
 
 import { ref, onMounted } from 'vue';
+//@ts-ignore
 import {saveAs} from 'file-saver';
 import { useMainStore, PLAY_STATE } from './stores/Main';
 import { useGameDataStore } from './stores/GameData';
 import { useAssetBrowserStore } from './stores/AssetBrowser';
+import { Event_Bus } from './components/common/Event_Listener';
+import Core, { HTMLTemplate } from '@/core';
 
 //stores
 const mainStore = useMainStore();
 const gameDataStore = useGameDataStore();
 const assetBrowserStore = useAssetBrowserStore();
 
-//refs
-const assetBrowser = ref<AssetBrowser>(null);
-const tabPanel = ref<TabPanel>(null);
-
 onMounted(()=>{
     mainStore.newProject();
-    mainStore.getNodeAPI.setGlobalStore(mainStore);
     updateEditorAsset();
 });
 
 function updateAssetPreviews(id: number): void {
-    assetBrowser.updateAsset(id);
+    AppEventBus.emit('update-asset', id);
 }
 
 function updateEditorAsset(): void {
-    tabPanel.updateEditorTabs();
+    AppEventBus.emit('update-editor-tabs');
 }
 
 function updateAfterDeletion(): void {
@@ -57,7 +59,8 @@ function packageGame(): void {
     let projectName = mainStore.getProjectName;
     let engine = (document.getElementById('engine') as HTMLElement).innerHTML;
     let gameData = mainStore.getSaveData;
-    let compiled = template.replace('[title]', projectName)
+    let compiled = HTMLTemplate
+        .replace('[title]', projectName)
         .replace('[engine]', engine)
         .replace('[gameData]', gameData);
     let blob = new Blob([compiled]);

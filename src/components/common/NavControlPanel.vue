@@ -21,7 +21,7 @@ const { t } = useI18n();
 
 const props = defineProps<{
     navState: Core.iNavState,
-    selectedNavTool: Core.NAV_TOOL_TYPE,
+    selectedNavTool: Core.NAV_TOOL_TYPE | null,
     maxZoom: number,
     contentsBounds: number[],
     unitScale: number,

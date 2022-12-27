@@ -59,7 +59,7 @@ let navHotkeyTool: Core.NAV_TOOL_TYPE | null = null;
 
 //template refs
 const canvasEl = ref<HTMLCanvasElement>();
-const editWindow = ref<HTMLElement>();
+const editWindow = ref<HTMLDivElement>();
 const navControlPanel = ref();
 const canvasImages = ref();
 const camera_icon = ref();
@@ -69,18 +69,19 @@ const end_icon = ref();
 
 const checkAssetDeletion = computed(()=>gameDataStore.getAllObjects.length + gameDataStore.getAllSprites.length);
 const gridEnabled = computed(()=>roomEditorStore.getGridState);
+const editorSelection = computed(()=>props.editorSelection);
 
 watch(props.selectedRoom, ()=>roomChange());
-watch(props.editorSelection, ()=>setSelection());
+watch(editorSelection, ()=>setSelection());
 watch(gridEnabled, (newVal)=>renderer.setGridVisibility(newVal));
 watch(checkAssetDeletion, (newVal, oldVal)=> (newVal < oldVal) && renderer.drawObjects());
 
 onMounted(()=>{
     const icons = {
-        camera: camera_icon.value,
-        noSprite: noSprite_icon.value,
-        exit: exit_icon.value,
-        end: end_icon.value
+        cameraIcon: camera_icon.value,
+        noSpriteSVG: noSprite_icon.value,
+        exitSVG: exit_icon.value,
+        endSVG: end_icon.value
     };
 
     renderer = new Room_Edit_Renderer(
@@ -94,9 +95,9 @@ onMounted(()=>{
 
     //bind events
     window.addEventListener('resize', resize);
-    canvasEl.value?.addEventListener('wheel', mouseWheel);
-    canvasEl.value?.addEventListener('mouseenter', mouseEnter);
-    canvasEl.value?.addEventListener('mouseleave', mouseLeave);
+    canvasEl.value!.addEventListener('wheel', mouseWheel);
+    canvasEl.value!.addEventListener('mouseenter', mouseEnter);
+    canvasEl.value!.addEventListener('mouseleave', mouseLeave);
     RoomMainEventBus.addEventListener('resize', resize);
     RoomMainEventBus.addEventListener('bgColorChanged', bgColorChanged);
     RoomMainEventBus.addEventListener('instances-changed', instancesChanged);
@@ -180,7 +181,7 @@ function instancesChanged(): void {
 }
 
 function setSelection(): void {
-    renderer.setSelection(props.editorSelection);
+    renderer.setSelection(props.editorSelection!);
 }
 
 function cameraChanged(): void {
@@ -195,7 +196,7 @@ function bgColorChanged(): void {
 function checkImageLoading(): void {
     loadedImages++;
     
-    if (loadedImages >= canvasImages.value.children.length){
+    if (loadedImages >= canvasImages.value?.children.length){
         renderer.fullRedraw();
     }
 }
@@ -228,7 +229,7 @@ function navToolSelected(tool: Core.NAV_TOOL_TYPE): void {
             @tool-selected="navToolSelected"
             @hotkey-tool-selected="navHotkeyTool = $event"/>
         <canvas
-            ref="canvas"
+            ref="canvasEl"
             class="canvas"
             @mousedown="mouseDown"
             @mouseup="mouseUp"

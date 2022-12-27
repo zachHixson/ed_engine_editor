@@ -272,7 +272,7 @@ function selectInstanceByPos(pos: Vector): void {
 }
 
 function mouseEvent(mEvent: imEvent): void {
-    const toolScript = toolMap.get(roomEditorStore.getSelectedTool);
+    const toolScript = toolMap.get(roomEditorStore.getSelectedTool!);
 
     if (mEvent.type == Core.MOUSE_EVENT.DOWN){
         mouse.down = true;
@@ -439,7 +439,7 @@ function actionAdd({objId, instRefList = [], pos}: AddProps, makeCommit = true):
     }
 
     if (objId){
-        newInst = new Core.Object_Instance(props.selectedRoom.curInstId, pos!, object);
+        newInst = new Core.Object_Instance(props.selectedRoom.curInstId, pos!, object!);
         instRefList.push(newInst);
     }
 
@@ -749,8 +749,8 @@ function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
                 <Properties
                     ref="props"
                     :selectedTool="roomEditorStore.getSelectedTool"
-                    :selectedEntity="editorSelection"
-                    :camera="(selectedRoom) ? selectedRoom.camera : null"
+                    :selectedEntity="editorSelection!"
+                    :camera="selectedRoom.camera"
                     :room="selectedRoom"
                     @inst-prop-set="actionInstanceChange({newState: $event as object})"
                     @inst-group-changed="actionInstanceGroupChange($event)"

@@ -16,29 +16,29 @@ const mainStore = useMainStore();
 const assetBrowserStore = useAssetBrowserStore();
 
 interface iEditorTab {
-    id: typeof Shared.EDITOR_ID,
+    id: Core.EDITOR_ID,
     logoPath: string,
     text: string,
 };
 
 const editorTabs: {[key: string]: iEditorTab} = {
     room: {
-        id: Shared.EDITOR_ID.ROOM,
+        id: Core.EDITOR_ID.ROOM,
         logoPath: roomTab,
         text: t('editor_main.room_tab')
     },
     art: {
-        id: Shared.EDITOR_ID.ART,
+        id: Core.EDITOR_ID.ART,
         logoPath: spriteIcon,
         text: t('editor_main.art_tab')
     },
     object: {
-        id: Shared.EDITOR_ID.OBJECT,
+        id: Core.EDITOR_ID.OBJECT,
         logoPath: objectIcon,
         text: t('editor_main.object_tab')
     },
     logic: {
-        id: Shared.EDITOR_ID.LOGIC,
+        id: Core.EDITOR_ID.LOGIC,
         logoPath: logicIcon,
         text: t('editor_main.logic_tab')
     },
@@ -48,7 +48,7 @@ const contextTabs = ref<iEditorTab[]>([]);
 onMounted(()=>{
     contextTabs.value = [editorTabs.room];
     updateEditorTabs();
-    mainStore.setSelectedEditor(Shared.EDITOR_ID.ROOM);
+    mainStore.setSelectedEditor(Core.EDITOR_ID.ROOM);
 });
 
 function updateEditorTabs(){
@@ -61,29 +61,29 @@ function updateEditorTabs(){
         let assetType = currentAsset.category_ID;
 
         switch(assetType){
-            case Shared.CATEGORY_ID.SPRITE:
+            case Core.CATEGORY_ID.SPRITE:
                 contextTabs.value.push(editorTabs.art);
                 break;
-            case Shared.CATEGORY_ID.OBJECT:
+            case Core.CATEGORY_ID.OBJECT:
                 contextTabs.value.push(editorTabs.object);
                 break;
-            case Shared.CATEGORY_ID.LOGIC:
+            case Core.CATEGORY_ID.LOGIC:
                 contextTabs.value.push(editorTabs.logic);
         }
 
         //if user is in tab that no longer exists, transition them to appropriate tab
         if (contextTabs.value.find(t => t.id == selectedTab) == undefined){
-            let newTab = Shared.EDITOR_ID.ROOM;
+            let newTab = Core.EDITOR_ID.ROOM;
 
             switch(assetType){
-                case Shared.CATEGORY_ID.SPRITE:
-                    newTab = Shared.EDITOR_ID.ART;
+                case Core.CATEGORY_ID.SPRITE:
+                    newTab = Core.EDITOR_ID.ART;
                     break;
-                case Shared.CATEGORY_ID.OBJECT:
-                    newTab = Shared.EDITOR_ID.OBJECT;
+                case Core.CATEGORY_ID.OBJECT:
+                    newTab = Core.EDITOR_ID.OBJECT;
                     break;
-                case Shared.CATEGORY_ID.LOGIC:
-                    newTab = Shared.EDITOR_ID.LOGIC;
+                case Core.CATEGORY_ID.LOGIC:
+                    newTab = Core.EDITOR_ID.LOGIC;
                     break;
             }
 
@@ -91,7 +91,7 @@ function updateEditorTabs(){
         }
     }
     else{
-        mainStore.setSelectedEditor(Shared.EDITOR_ID.ROOM);
+        mainStore.setSelectedEditor(Core.EDITOR_ID.ROOM);
     }
 }
 </script>

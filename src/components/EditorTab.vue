@@ -8,7 +8,7 @@ const mainStore = useMainStore();
 const props = defineProps<{
     tabText: string;
     logoPath: string;
-    editorID: typeof Core.EDITOR_ID;
+    editorID: Core.EDITOR_ID;
 }>();
 
 const isSelected = computed<boolean>(()=>mainStore.getSelectedEditor == props.editorID);
