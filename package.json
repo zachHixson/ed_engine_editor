@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "run-p type-check build-only",
+    "build": "npm run build-engine && run-p type-check build-only",
     "build-font": "node scripts/build_font.js",
     "build-engine": "node scripts/build_engine.js --build-font",
     "build-engine:dev": "node scripts/build_engine.js --build-font --watch",
-    "dev": "vite",
+    "dev": "npm run build-engine && vite",
     "i18n:report": "vue-cli-service i18n:report --src \"./src/**/*.?(js|vue)\" --locales \"./src/locales/**/*.json\"",
     "preview": "vite preview",
     "type-check": "vue-tsc --noEmit"

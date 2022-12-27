@@ -2,7 +2,7 @@
 import GroupList from '@/components/common/GroupList.vue';
 import ColorPicker from '@/components/common/ColorPicker.vue';
 
-import { ref, computed, defineProps, onMounted } from 'vue';
+import { ref, computed, nextTick, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useGameDataStore } from '@/stores/GameData';
 import Core from '@/core';
@@ -36,19 +36,19 @@ const bgColorBtn = ref<HTMLElement>();
 //computed
 const showInstProps = computed(()=>(
     props.selectedEntity &&
-    props.selectedEntity.TYPE == Core.ENTITY_TYPE.INSTANCE &&
-    !showCameraProps &&
-    !showRoomProps
+    props.selectedEntity?.TYPE == Core.ENTITY_TYPE.INSTANCE &&
+    !showCameraProps.value &&
+    !showRoomProps.value
 ));
 const showCameraProps = computed(()=>props.selectedTool == Core.ROOM_TOOL_TYPE.CAMERA);
 const showExitProps = computed(()=>(
     props.selectedEntity &&
     props.selectedEntity.TYPE == Core.ENTITY_TYPE.EXIT &&
-    !showCameraProps &&
-    !showRoomProps
+    !showCameraProps.value &&
+    !showRoomProps.value
 ));
 const showRoomProps = computed(()=>props.selectedTool == Core.ROOM_TOOL_TYPE.ROOM_PROPERTIES);
-const showPlaceHolder = computed(()=>!(showInstProps || showCameraProps || showExitProps || showRoomProps));
+const showPlaceHolder = computed(()=>!(showInstProps.value || showCameraProps.value || showExitProps.value || showRoomProps.value));
 const destinationRoomExits = computed(()=>{
     if (props.selectedEntity?.TYPE != Core.ENTITY_TYPE.EXIT) return null;
     
@@ -275,7 +275,7 @@ function nanToNull(inp: number): number | null {
             <div class="control">
                 <label for="roomBGColor">{{$t('room_editor.bg_color')}}:</label>
                 <button id="roomBGColor" class="changeBgBtn" ref="bgColorBtn" v-tooltip="$t('room_editor.tt_room_background')"
-                    @click="$nextTick(()=>{changeingBG = !changeingBG})"
+                    @click="nextTick(()=>{changeingBG = !changeingBG})"
                     v-click-outside="closeRoomBGColorEditor">
                     <div v-show="changeingBG" ref="bgColorEditor" class="bgColorEditor">
                         <svg width="50" height="25" class="arrow">
