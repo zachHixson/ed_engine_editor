@@ -69,7 +69,7 @@ onMounted(()=>{
     window.addEventListener('keydown', hotkeyDown as EventListener);
     window.addEventListener('keyup', hotkeyUp as EventListener);
 
-    hotkeyMap.bindKey(['mmb'], setHotkeyTool, [NAV_TOOL_TYPE], setHotkeyTool, [null])
+    hotkeyMap.bindKey(['mmb'], setHotkeyTool, [NAV_TOOL_TYPE.PAN], setHotkeyTool, [null])
     hotkeyMap.bindKey([' ', 'lmb'], setHotkeyTool, [NAV_TOOL_TYPE.PAN], setHotkeyTool, [null])
     hotkeyMap.bindKey(['control', 'lmb'], setHotkeyTool, [NAV_TOOL_TYPE.ZOOM], setHotkeyTool, [null]);
     hotkeyMap.bindKey(['control', 'f'], centerView);

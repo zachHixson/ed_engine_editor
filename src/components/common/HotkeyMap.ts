@@ -21,14 +21,14 @@ export default class HotkeyMap{
     }
 
     mouseDown(event: MouseEvent): void {
-        switch (event.which){
-            case 1:
+        switch (event?.button){
+            case 0:
                 this.keymap.set('lmb', true);
                 break;
-            case 2:
+            case 1:
                 this.keymap.set('mmb', true);
                 break;
-            case 3:
+            case 2:
                 this.keymap.set('rmb', true);
         }
 
@@ -36,14 +36,19 @@ export default class HotkeyMap{
     }
 
     mouseUp(event: MouseEvent): void {
-        switch (event.which){
-            case 1:
+        switch (event?.button){
+            case 0:
                 this.keymap.set('lmb', false);
                 break;
-            case 2:
+            case 1:
                 this.keymap.set('mmb', false);
                 break;
-            case 3:
+            case 2:
+                this.keymap.set('rmb', false);
+                break;
+            default:
+                this.keymap.set('lmb', false);
+                this.keymap.set('mmb', false);
                 this.keymap.set('rmb', false);
         }
     }

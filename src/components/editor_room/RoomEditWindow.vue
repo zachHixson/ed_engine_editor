@@ -69,7 +69,6 @@ const checkAssetDeletion = computed(()=>gameDataStore.getAllObjects.length + gam
 const gridEnabled = computed(()=>roomEditorStore.getGridState);
 const editorSelection = computed(()=>props.editorSelection);
 
-watch(props.selectedRoom, ()=>roomChange());
 watch(editorSelection, ()=>setSelection());
 watch(gridEnabled, (newVal)=>renderer.setGridVisibility(newVal));
 watch(checkAssetDeletion, (newVal, oldVal)=> (newVal < oldVal) && renderer.drawObjects());
@@ -100,6 +99,7 @@ onMounted(()=>{
     RoomMainEventBus.addEventListener('bgColorChanged', bgColorChanged);
     RoomMainEventBus.addEventListener('instances-changed', instancesChanged);
     RoomMainEventBus.addEventListener('camera-changed', cameraChanged);
+    RoomMainEventBus.addEventListener('room-changed', roomChange);
 
     if (props.selectedRoom){
         roomChange();
@@ -147,8 +147,8 @@ function mouseLeave(event: MouseEvent): void {
 }
 
 function roomChange(): void {
-   renderer.setRoomRef(props.selectedRoom);
-   contentsBounds.value = props.selectedRoom.getContentsBounds();
+    renderer.setRoomRef(props.selectedRoom);
+    contentsBounds.value = props.selectedRoom.getContentsBounds();
 }
 
 function resize(): void {
@@ -164,7 +164,7 @@ function resize(): void {
 }
 
 function emitMouseEvent(event: MouseEvent, type: Core.MOUSE_EVENT): void {
-    if (event.which == 1 && roomEditorStore.getSelectedNavTool == null && navHotkeyTool == null){
+    if (event.button == 0 && roomEditorStore.getSelectedNavTool == null && navHotkeyTool == null){
         const canvasPos = new Core.Vector(event.offsetX, event.offsetY);
         const cell = renderer.getMouseCell();
         const worldCell = renderer.getMouseWorldCell();

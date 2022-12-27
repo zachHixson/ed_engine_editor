@@ -19,10 +19,8 @@ const text = ref('');
 let timeout = -1;
 
 onMounted(()=>{
-    console.warn("TT")
     TooltipEventBus.addEventListener('activate-tooltip', activateTooltip);
     TooltipEventBus.addEventListener('hide-tooltip', hideTooltip);
-    console.warn("TT")
 });
 
 function activateTooltip({el, text: txt}: {el: HTMLDivElement, text: string}): void {

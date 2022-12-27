@@ -134,6 +134,7 @@ const isInputActive = computed<boolean>(()=>mainStore.getInputActive);
 watch(props.selectedRoom, (newRoom, oldRoom)=>{
     if (newRoom && oldRoom && newRoom.id != oldRoom.id){
         editorSelection.value = null;
+        RoomMainEventBus.emit('room-changed', newRoom);
     }
 });
 watch(isInputActive, (newVal: boolean)=>{hotkeyMap.enabled = !newVal && mouse.inWindow});
