@@ -1,3 +1,214 @@
+<script lang="ts">
+export const ArtMainEventBus = new Event_Bus();
+</script>
+
+<script setup lang="ts">
+import Undo_Store from '@/components/common/Undo_Store';
+import ToolPanel from './ToolPanel.vue';
+import ArtCanvas from './ArtCanvas.vue';
+import AnimationPanel from './AnimationPanel.vue';
+import Tool_Base from './tools/Tool_Base';
+import Brush from './tools/Brush';
+import Bucket from './tools/Bucket';
+import Line_Brush from './tools/Line_Brush';
+import Box_Brush from './tools/Box_Brush';
+import Ellipse_Brush from './tools/Ellipse_Brush';
+import Eraser from './tools/Eraser';
+import Eye_Dropper from './tools/Eye_Dropper';
+
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { useArtEditorStore } from '@/stores/ArtEditor';
+import { Event_Bus } from '@/components/common/Event_Listener';
+import Core from '@/core';
+
+type iSpriteUndoData = {spriteData: ImageData[]}
+
+const artEditorStore = useArtEditorStore();
+
+const props = defineProps<{
+    selectedAsset: Core.Sprite;
+}>();
+
+const emit = defineEmits(['asset-changed']);
+
+const undoStore = new Undo_Store<iSpriteUndoData>(32);
+const toolMap: Map<Core.ART_TOOL_TYPE, ()=>Tool_Base> = new Map();
+let frameIDs = props.selectedAsset.frameIDs;
+let tool: Tool_Base | null = null;
+
+const selectedFrameIdx = computed({
+    get(){
+        return artEditorStore.getSelectedFrame;
+    },
+    set(newIdx){
+        artEditorStore.selectFrame(newIdx);
+    }
+});
+const selectedSize = computed(()=>artEditorStore.getSelectedSize);
+const selectedTool = computed(()=>artEditorStore.getSelectedTool);
+
+watch(props.selectedAsset, ()=>{
+    undoStore.clear();
+
+    if (props.selectedAsset && props.selectedAsset.category_ID == Core.CATEGORY_ID.SPRITE){
+        const selectedFrame = artEditorStore.getSelectedFrame;
+
+        updateFrameIDs()
+
+        if (props.selectedAsset.frames.length < selectedFrame + 1){
+            artEditorStore.selectFrame(0);
+        }
+    }
+});
+watch(artEditorStore.getSelectedColor, (newColor)=>tool.setToolColor(newColor));
+watch(selectedSize, (newSize)=>tool.setToolSize(newSize));
+watch(selectedTool, (newTool)=>toolSelected(newTool!));
+
+onMounted(()=>{
+    const maxFrame = props.selectedAsset.frames.length - 1;
+    const selectedFrame = Math.min(selectedFrameIdx.value, maxFrame);
+    
+    selectedFrameIdx.value = selectedFrame;
+    window.addEventListener('resize', resize);
+    undoStore.setInitialState(packageUndoData());
+
+    toolMap.set(Core.ART_TOOL_TYPE.BRUSH, ()=> new Brush());
+    toolMap.set(Core.ART_TOOL_TYPE.BUCKET, ()=> new Bucket());
+    toolMap.set(Core.ART_TOOL_TYPE.LINE, ()=> new Line_Brush());
+    toolMap.set(Core.ART_TOOL_TYPE.BOX, ()=> new Box_Brush());
+    toolMap.set(Core.ART_TOOL_TYPE.BOX_FILL, ()=> new Box_Brush(true));
+    toolMap.set(Core.ART_TOOL_TYPE.ELLIPSE, ()=> new Ellipse_Brush());
+    toolMap.set(Core.ART_TOOL_TYPE.ELLIPSE_FILL, ()=> new Ellipse_Brush(true));
+    toolMap.set(Core.ART_TOOL_TYPE.ERASER, ()=> new Eraser());
+    toolMap.set(Core.ART_TOOL_TYPE.EYE_DROPPER, ()=> new Eye_Dropper());
+
+    toolSelected(artEditorStore.getSelectedTool!);
+});
+
+onBeforeUnmount(()=> {
+    window.removeEventListener('resize', resize);
+});
+
+function resize(): void {
+    ArtMainEventBus.emit('resize');
+}
+
+function spriteDataChanged(): void {
+    ArtMainEventBus.emit('update-frame-previews');
+    commitFullState();
+    props.selectedAsset.updateFrame(selectedFrameIdx.value);
+    updateFrameIDs();
+    emit('asset-changed', props.selectedAsset.id);
+}
+
+function selectedFrameChanged(): void {
+    updateFrameIDs();
+}
+
+function frameAdded(): void {
+    commitFullState();
+    updateFrameIDs();
+}
+
+function toolSelected(newTool: Core.ART_TOOL_TYPE): void {
+    if (newTool){
+        artEditorStore.setSelectedNavTool(null);
+        tool = getTool(newTool);
+        tool.setToolSize(artEditorStore.getSelectedSize);
+        tool.setToolColor(artEditorStore.getSelectedColor);
+        tool.setCommitCallback(spriteDataChanged);
+    }
+    else{
+        tool = null;
+    }
+}
+
+function getTool(newTool: Core.ART_TOOL_TYPE): Tool_Base {
+    let getter = toolMap.get(newTool);
+
+    if (getter){
+        return getter();
+    }
+    else{
+        console.warn("Warning: Unkown brush: \"" + newTool + ".\" Defaulting to standard brush");
+        return new Brush();
+    }
+}
+
+function mouseDown(event: MouseEvent): void {
+    if (tool){
+        tool.mouseDown(event);
+    }
+}
+
+function mouseUp(event: MouseEvent): void {
+    if (tool){
+        tool.mouseUp(event);
+    }
+}
+
+function mouseMove(event: MouseEvent): void {
+    if (tool){
+        tool.mouseMove(event);
+    }
+}
+
+function mouseLeave(event: MouseEvent): void {
+    if (tool){
+        tool.mouseLeave(event);
+    }
+}
+
+function commitFullState(): void {
+    undoStore.commit(packageUndoData());
+}
+
+function undo(): void {
+    let prevStep = undoStore.stepBack() as any;
+
+    if (prevStep && prevStep.spriteData){
+        props.selectedAsset.setFramesFromArray(prevStep.spriteData);
+    }
+    else{
+        props.selectedAsset.setFramesFromArray(undoStore.initialState!.spriteData);
+    }
+
+    if (selectedFrameIdx.value > props.selectedAsset.frames.length - 1){
+        selectedFrameIdx.value--;
+    }
+
+    updateFrameIDs();
+    
+    nextTick(()=>{
+        ArtMainEventBus.emit('update-frame-previews');
+    });
+}
+
+function redo(): void {
+    let nextStep = undoStore.stepForward();
+
+    if (nextStep && nextStep.spriteData){
+        props.selectedAsset.setFramesFromArray(nextStep.spriteData);
+    }
+
+    updateFrameIDs();
+
+    nextTick(()=>{
+        ArtMainEventBus.emit('update-frame-previews');
+    });
+}
+
+function packageUndoData(): iSpriteUndoData {
+    return {
+        spriteData: props.selectedAsset.getFramesCopy()
+    }
+}
+
+function updateFrameIDs(): void {
+    frameIDs = props.selectedAsset.frameIDs;
+}
+</script>
+
 <template>
     <div class="artMain">
         <ToolPanel
@@ -31,224 +242,6 @@
             @frameCopied="commitFullState()" />
     </div>
 </template>
-
-<script>
-import Undo_Store from '@/components/common/Undo_Store';
-import ToolPanel from './ToolPanel';
-import ArtCanvas from './ArtCanvas';
-import AnimationPanel from './AnimationPanel';
-import Brush from './tools/Brush';
-import Bucket from './tools/Bucket';
-import Line_Brush from './tools/Line_Brush';
-import Box_Brush from './tools/Box_Brush';
-import Ellipse_Brush from './tools/Ellipse_Brush';
-import Eraser from './tools/Eraser';
-import Eye_Dropper from './tools/Eye_Dropper';
-
-const MAX_UNDO_STEPS = 32;
-
-export default {
-    name: 'ArtEditor',
-    props: ['selectedAsset'],
-    components: {
-        ToolPanel,
-        ArtCanvas,
-        AnimationPanel
-    },
-    data(){
-        return{
-            undoStore: new Undo_Store(MAX_UNDO_STEPS),
-            frameIDs: this.selectedAsset.frameIDs,
-            toolMap: new Map(),
-            tool: null
-        }
-    },
-    computed:{
-        selectedFrameIdx: {
-            get: function(){
-                return this.$store.getters['ArtEditor/getSelectedFrame'];
-            },
-            set: function(newIdx){
-                this.$store.dispatch('ArtEditor/selectFrame', newIdx);
-            },
-        },
-        toolColor(){
-            return this.$store.getters['ArtEditor/getSelectedColor'];
-        },
-        toolSize(){
-            return this.$store.getters['ArtEditor/getSelectedSize'];
-        },
-        toolId(){
-            return this.$store.getters['ArtEditor/getSelectedTool'];
-        }
-    },
-    watch:{
-        selectedAsset(){
-            this.undoStore.clear();
-
-            if (this.selectedAsset && this.selectedAsset.category_ID == Shared.CATEGORY_ID.SPRITE){
-                let selectedFrame = this.$store.getters['ArtEditor/getSelectedFrame'];
-
-                this.updateFrameIDs()
-
-                if (this.selectedAsset.frames.length < selectedFrame + 1){
-                    this.$store.dispatch('ArtEditor/selectFrame', 0);
-                }
-            }
-        },
-        toolColor(newColor){
-            this.tool.setToolColor(newColor);
-        },
-        toolSize(newSize){
-            this.tool.setToolSize(newSize);
-        },
-        toolId(newTool){
-            this.toolSelected(newTool);
-        }
-    },
-    mounted(){
-        const maxFrame = this.selectedAsset.frames.length - 1;
-        const selectedFrame = Math.min(this.selectedFrameIdx, maxFrame);
-        
-        this.selectedFrameIdx = selectedFrame;
-        window.addEventListener('resize', this.resize);
-        this.undoStore.setInitialState(this.packageUndoData());
-
-        this.toolMap.set(Shared.ART_TOOL_TYPE.BRUSH, ()=> new Brush());
-        this.toolMap.set(Shared.ART_TOOL_TYPE.BUCKET, ()=> new Bucket());
-        this.toolMap.set(Shared.ART_TOOL_TYPE.LINE, ()=> new Line_Brush());
-        this.toolMap.set(Shared.ART_TOOL_TYPE.BOX, ()=> new Box_Brush());
-        this.toolMap.set(Shared.ART_TOOL_TYPE.BOX_FILL, ()=> new Box_Brush(true));
-        this.toolMap.set(Shared.ART_TOOL_TYPE.ELLIPSE, ()=> new Ellipse_Brush());
-        this.toolMap.set(Shared.ART_TOOL_TYPE.ELLIPSE_FILL, ()=> new Ellipse_Brush(true));
-        this.toolMap.set(Shared.ART_TOOL_TYPE.ERASER, ()=> new Eraser());
-        this.toolMap.set(Shared.ART_TOOL_TYPE.EYE_DROPPER, ()=> new Eye_Dropper());
-
-        this.toolSelected(this.$store.getters['ArtEditor/getSelectedTool']);
-    },
-    beforeDestroy(){
-        window.removeEventListener('resize', this.resize);
-    },
-    methods:{
-        resize(){
-            this.$refs.artCanvas.resize();
-        },
-        spriteDataChanged(){
-            this.$refs.animPanel.updateFramePreviews();
-            this.commitFullState();
-            this.selectedAsset.updateFrame(this.selectedFrameIdx);
-            this.updateFrameIDs();
-            this.$emit('asset-changed', this.selectedAsset.id);
-        },
-        selectedFrameChanged(){
-            this.updateFrameIDs();
-        },
-        frameAdded(){
-            this.commitFullState();
-            this.updateFrameIDs();
-        },
-        toolSelected(newTool){
-            if (newTool){
-                this.$store.dispatch('ArtEditor/setSelectedNavTool', null);
-                this.tool = this.getTool(newTool);
-                this.tool.setToolSize(this.$store.getters['ArtEditor/getSelectedSize']);
-                this.tool.setToolColor(this.$store.getters['ArtEditor/getSelectedColor']);
-                this.tool.setCommitCallback(this.spriteDataChanged.bind(this));
-            }
-            else{
-                this.tool = null;
-            }
-        },
-        getTool(newTool){
-            let getter = this.toolMap.get(newTool);
-
-            if (getter){
-                return getter();
-            }
-            else{
-                console.warn("Warning: Unkown brush: \"" + newTool + ".\" Defaulting to standard brush");
-                return new Brush();
-            }
-        },
-        mouseDown(event){
-            if (this.tool){
-                this.tool.mouseDown(event);
-            }
-        },
-        mouseUp(event){
-            if (this.tool){
-                this.tool.mouseUp(event);
-            }
-        },
-        mouseMove(event){
-            if (this.tool){
-                this.tool.mouseMove(event);
-            }
-        },
-        mouseLeave(event){
-            if (this.tool){
-                this.tool.mouseLeave(event);
-            }
-        },
-        commitFullState(){
-            this.undoStore.commit(this.packageUndoData());
-
-            //force vuex to update
-            this.$set(
-                this.selectedAsset.frames,
-                this.selectedFrameIdx,
-                this.selectedAsset.frames[this.selectedFrameIdx]
-            );
-            this.$set(
-                this.selectedAsset.frameIDs,
-                this.selectedFrameIdx,
-                this.selectedAsset.frameIDs[this.selectedFrameIdx]
-            )
-        },
-        undo(){
-            let prevStep = this.undoStore.stepBack();
-
-            if (prevStep && prevStep.spriteData){
-                this.selectedAsset.setFramesFromArray(prevStep.spriteData);
-            }
-            else{
-                this.selectedAsset.setFramesFromArray(this.undoStore.initialState.spriteData);
-            }
-
-            if (this.selectedFrameIdx > this.selectedAsset.frames.length - 1){
-                this.selectedFrameIdx--;
-            }
-
-            this.updateFrameIDs();
-            
-            this.$nextTick(()=>{
-                this.$refs.animPanel.updateFramePreviews();
-            });
-        },
-        redo(){
-            let nextStep = this.undoStore.stepForward();
-
-            if (nextStep && nextStep.spriteData){
-                this.selectedAsset.setFramesFromArray(nextStep.spriteData);
-            }
-
-            this.updateFrameIDs();
-
-            this.$nextTick(()=>{
-                this.$refs.animPanel.updateFramePreviews();
-            });
-        },
-        packageUndoData(){
-            return {
-                spriteData: this.selectedAsset.getFramesCopy()
-            }
-        },
-        updateFrameIDs(){
-            this.frameIDs = this.selectedAsset.frameIDs;
-        }
-    }
-}
-</script>
 
 <style scoped>
 .artMain{

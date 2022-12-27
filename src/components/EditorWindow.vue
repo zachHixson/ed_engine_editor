@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import RoomEditor from './editor_room/RoomMain.vue';
-// import ArtEditor from './editor_art/ArtMain';
+import ArtEditor from './editor_art/ArtMain.vue';
 // import ObjectEditor from './editor_object/ObjectMain';
 // import LogicEditor from './editor_logic/LogicMain';
 
@@ -32,7 +32,7 @@ const currentEditor = computed(()=>{
         case Core.EDITOR_ID.ROOM:
             return RoomEditor;
         case Core.EDITOR_ID.ART:
-            //return ArtEditor;
+            return ArtEditor;
         case Core.EDITOR_ID.OBJECT:
             //return ObjectEditor;
         case Core.EDITOR_ID.LOGIC:

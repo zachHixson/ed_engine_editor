@@ -1,15 +1,15 @@
 import Core from '@/core';
 
-export interface iUndoStoreData {
+export interface iActionStore {
     action: number;
     data: Core.iAnyObj;
 }
 
-class Undo_Store{
+class Undo_Store<T>{
     stepLimit: number;
-    undoStore = new Core.Linked_List<iUndoStoreData>();
-    redoStore = new Core.Linked_List<iUndoStoreData>();
-    initialState: Core.iAnyObj | null = null;
+    undoStore = new Core.Linked_List<T>();
+    redoStore = new Core.Linked_List<T>();
+    initialState: T | null = null;
     returnPrevStep: boolean;
     cache = new Map<any, any | object>();
 
@@ -21,11 +21,11 @@ class Undo_Store{
     get undoLength(){return this.undoStore.length}
     get redoLength(){return this.redoStore.length}
 
-    setInitialState(data: Core.iAnyObj): void {
+    setInitialState(data: T): void {
         this.initialState = data;
     }
 
-    commit(data: iUndoStoreData): void {
+    commit(data: T): void {
         this.undoStore.push(data);
         this.redoStore.clear();
 
@@ -34,11 +34,11 @@ class Undo_Store{
         }
     }
 
-    peekLastUndo(): Core.iAnyObj | null {
+    peekLastUndo(): T | null {
         return this.undoStore.getLast();
     }
 
-    stepBack(): iUndoStoreData | null {
+    stepBack(): T | null {
         let redoStep = this.undoStore.pop();
 
         if (redoStep){
@@ -53,7 +53,7 @@ class Undo_Store{
         }
     }
 
-    stepForward(): iUndoStoreData | null {
+    stepForward(): T | null {
         let undoStep = this.redoStore.pop();
 
         if (undoStep){
@@ -68,13 +68,13 @@ class Undo_Store{
         this.redoStore.clear();
     }
 
-    popLast(): iUndoStoreData | null {
+    popLast(): T | null {
         return this.undoStore.pop();
     }
 }
 
 interface iComponent {
-    undoStore: Undo_Store;
+    undoStore: Undo_Store<iActionStore>;
     applyChronoStep: typeof UndoHelpers["applyChronoStep"];
     actionMap: Map<number, (data: Core.iAnyObj, commit: boolean)=>void>;
     revertMap: Map<number, (data: Core.iAnyObj, commit: boolean)=>void>;
@@ -91,7 +91,7 @@ const UndoHelpers = {
             this.applyChronoStep(this.undoStore.stepForward()!, this.actionMap);
         }
     },
-    applyChronoStep(step: iUndoStoreData, map: Map<number, (data: Core.iAnyObj, commit: boolean)=>void>){
+    applyChronoStep(step: iActionStore, map: Map<number, (data: Core.iAnyObj, commit: boolean)=>void>){
         let action = map.get(step.action)!;
         
         action(step.data, false);
