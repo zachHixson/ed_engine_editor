@@ -1,39 +1,40 @@
-import Tool from './Tool';
+import Tool_Base from './Tool_Base';
+import Core from '@/core';
 
-class Line_Brush extends Tool{
-    constructor(){
-        super();
-        this.startPos = new Vector(0, 0);
-    }
+type OffsetFunc = (offset: number)=>number;
+type POrderFunc = (offset: number, p: number)=>{x:number, y:number};
 
-    mouseDown(event){
+export default class Line_Brush extends Tool_Base {
+    private startPos: Core.Vector = new Core.Vector();
+
+    mouseDown(event: MouseEvent): void {
         super.mouseDown(event);
         this.startPos.copy(this.mouseCell);
     }
 
-    mouseUp(event){
+    mouseUp(event: MouseEvent): void {
         super.mouseUp(event);
         this.commitResult();
     }
 
-    updateCursorBuff(){
+    updateCursorBuff(): void {
         this.clearPreviewBuff();
 
         if (
             this._mouseDown &&
-            Shared.isInBounds(this.startPos.x, this.startPos.y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)
+            Core.Util.isInBounds(this.startPos.x, this.startPos.y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)
         ){
-            let dx = (this.mouseCell.x - this.startPos.x);
-            let dy = (this.mouseCell.y - this.startPos.y);
-            let slope = (dx != 0) ? (dy / dx) : null;
-            let isVertical = (Math.abs(slope) >= 1) || (slope == null);
-            let invSlope = (slope != null) ? (1 / slope) : 0;
+            const dx = (this.mouseCell.x - this.startPos.x);
+            const dy = (this.mouseCell.y - this.startPos.y);
+            const slope = (dx != 0) ? (dy / dx) : null;
+            const isVertical = (Math.abs(slope!) >= 1) || (slope == null);
+            const invSlope = (slope != null) ? (1 / slope) : 0;
 
             if (isVertical){
                 this.drawLine(
                     this.startPos.y, this.mouseCell.y,
                     this.startPos.x, this.mouseCell.x,
-                    slope,
+                    slope!,
                     (offset) => {return offset += invSlope},
                     (offset, p) => {return {x:offset, y:p}}
                 );
@@ -51,27 +52,27 @@ class Line_Brush extends Tool{
 
         if (
             !this._mouseDown &&
-            Shared.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
+            Core.Util.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth -1)
         ){
             const {x, y} = this.mouseCell;
 
             switch(this.brushSize){
-                case Shared.ART_TOOL_SIZE.SMALL:
+                case Core.ART_TOOL_SIZE.SMALL:
                     this.drawPixel(x, y, this.color);
                     break;
-                case Shared.ART_TOOL_SIZE.MEDIUM:
+                case Core.ART_TOOL_SIZE.MEDIUM:
                     this.fillRect(x, y, x + 1, y + 1);
                     break;
-                case Shared.ART_TOOL_SIZE.LARGE:
+                case Core.ART_TOOL_SIZE.LARGE:
                     this.fillRect(x - 1, y - 1, x + 1, y + 1);
                     break;
             }
         }
     }
 
-    drawLine(a, b, offset1, offset2, slope, offsetFunc, pOrderFunc){
-        let start = Math.min(a, b);
-        let end = Math.max(a, b);
+    drawLine(a: number, b: number, offset1: number, offset2: number, slope: number, offsetFunc: OffsetFunc, pOrderFunc: POrderFunc): void {
+        const start = Math.min(a, b);
+        const end = Math.max(a, b);
         let offset = (slope >= 0) ? Math.min(offset1, offset2) : Math.max(offset1, offset2);
 
         for (let p = start; p <= end; p++){
@@ -83,21 +84,19 @@ class Line_Brush extends Tool{
         }
     }
 
-    drawPoint(x, y){
-        if (Shared.isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
+    drawPoint(x: number, y: number): void {
+        if (Core.Util.isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
             switch(this.brushSize){
-                case Shared.ART_TOOL_SIZE.SMALL:
+                case Core.ART_TOOL_SIZE.SMALL:
                     this.drawPixel(x, y, this.color);
                     break;
-                case Shared.ART_TOOL_SIZE.MEDIUM:
+                case Core.ART_TOOL_SIZE.MEDIUM:
                     this.fillRect(x, y, x + 1, y + 1);
                     break;
-                case Shared.ART_TOOL_SIZE.LARGE:
+                case Core.ART_TOOL_SIZE.LARGE:
                     this.fillRect(x - 1, y - 1, x + 1, y + 1);
                     break;
             }
         }
     }
 }
-
-export default Line_Brush;

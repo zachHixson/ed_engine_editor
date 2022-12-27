@@ -1,11 +1,12 @@
-import Tool from './Tool';
+import Tool_Base from './Tool_Base';
+import Core from '@/core';
 
-class Brush extends Tool{
+export default class Brush extends Tool_Base {
     constructor(){
         super();
     }
 
-    mouseUp(event){
+    mouseUp(event: MouseEvent): void {
         super.mouseUp(event);
         this.commitResult();
     }
@@ -15,20 +16,18 @@ class Brush extends Tool{
             this.clearPreviewBuff();
         }
 
-        if (Shared.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
+        if (Core.Util.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
             switch(this.brushSize){
-                case Shared.ART_TOOL_SIZE.SMALL:
+                case Core.ART_TOOL_SIZE.SMALL:
                     this.drawPixel(this.mouseCell.x, this.mouseCell.y, this.color);
                     break;
-                case Shared.ART_TOOL_SIZE.MEDIUM:
+                case Core.ART_TOOL_SIZE.MEDIUM:
                     this.fillRect(this.mouseCell.x - 1, this.mouseCell.y - 1, this.mouseCell.x, this.mouseCell.y);
                     break;
-                case Shared.ART_TOOL_SIZE.LARGE:
+                case Core.ART_TOOL_SIZE.LARGE:
                     this.fillRect(this.mouseCell.x - 1, this.mouseCell.y - 1, this.mouseCell.x + 1, this.mouseCell.y + 1);
                     break;
             }
         }
     }
 }
-
-export default Brush;

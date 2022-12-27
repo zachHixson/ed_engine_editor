@@ -1,35 +1,32 @@
-import Tool from './Tool';
-import store from '@/store';
+import Tool_Base from './Tool_Base';
+import Core from '@/core';
+import { useArtEditorStore } from '@/stores/ArtEditor';
 
-class Eye_Dropper extends Tool{
-    constructor(){
-        super();
-        this.CURSOR_COLOR = new Shared.Color(255, 255, 255, 170);
-    }
+export default class Eye_Dropper extends Tool_Base {
+    private CURSOR_COLOR = new Core.Draw.Color(255, 255, 255, 170);
 
-    mouseDown(event){
+    mouseDown(event: MouseEvent): void {
         const {x, y} = this.mouseCell;
 
         super.mouseDown(event);
 
-        if (Shared.isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
+        if (Core.Util.isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
             const sampledColor = this._sampleColor(this.pixelBuff, x, y);
 
             if (sampledColor.a > 0){
-                store.dispatch('ArtEditor/selectColor', sampledColor);
+                const artEditorStore = useArtEditorStore();
+                artEditorStore.selectColor(sampledColor);
             }
         }
     }
 
-    updateCursorBuff(){
+    updateCursorBuff(): void {
         const {x, y} = this.mouseCell;
 
         this.clearPreviewBuff();
 
-        if (Shared.isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
+        if (Core.Util.isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
             this.drawPixel(x, y, this.CURSOR_COLOR);
         }
     }
 }
-
-export default Eye_Dropper;

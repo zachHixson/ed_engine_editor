@@ -7,7 +7,7 @@ import Undo_Store from '@/components/common/Undo_Store';
 import ToolPanel from './ToolPanel.vue';
 import ArtCanvas from './ArtCanvas.vue';
 import AnimationPanel from './AnimationPanel.vue';
-import Tool_Base from './tools/Tool_Base';
+import type Tool_Base from './tools/Tool_Base';
 import Brush from './tools/Brush';
 import Bucket from './tools/Bucket';
 import Line_Brush from './tools/Line_Brush';

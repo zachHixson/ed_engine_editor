@@ -1,33 +1,33 @@
-class Tool{
-    constructor(){
-        this.previewBuff = null;
-        this.pixelBuff = null;
-        this.cellWidth = 16;
-        this.mouseCell = null;
-        this.color = new Shared.Color(255, 255, 255, 255);
-        this.size = null;
-        this._mouseDown = false;
-        this.brushSize = Shared.ART_TOOL_SIZE.SMALL;
-        this.canDraw = true;
-        this.commitCallback;
-    }
+import Core from '@/core';
+
+export default abstract class Tool_Base {
+    protected previewBuff: ImageData = new ImageData(16, 16);
+    protected pixelBuff: ImageData = new ImageData(16, 16);
+    protected cellWidth = 16;
+    protected mouseCell: Core.Vector = new Core.Vector();
+    protected color: Core.Draw.Color = new Core.Draw.Color(255, 255, 255, 255);
+    protected _mouseDown: boolean = false;
+    protected brushSize : Core.ART_TOOL_SIZE = Core.ART_TOOL_SIZE.SMALL;
+
+    canDraw: boolean = true;
+    commitCallback: ()=>void = ()=>{};
 
     get brushPxSize(){
         switch(this.brushSize){
-            case Shared.ART_TOOL_SIZE.SMALL:
+            case Core.ART_TOOL_SIZE.SMALL:
                 return 0
-            case Shared.ART_TOOL_SIZE.MEDIUM:
+            case Core.ART_TOOL_SIZE.MEDIUM:
                 return 1
-            case Shared.ART_TOOL_SIZE.LARGE:
+            case Core.ART_TOOL_SIZE.LARGE:
                 return 2
             default:
                 return 0
         }
     }
 
-    _sampleColor(buffer, x, y){
+    protected _sampleColor(buffer: ImageData, x: number, y: number): Core.Draw.Color {
         const idx = (y * buffer.width + x) * 4;
-        return new Shared.Color(
+        return new Core.Draw.Color(
             buffer.data[idx + 0],
             buffer.data[idx + 1],
             buffer.data[idx + 2],
@@ -35,65 +35,65 @@ class Tool{
         );
     }
 
-    mouseDown(){
+    mouseDown(event: MouseEvent): void {
         if (this.canDraw){
             this._mouseDown = true;
         }
     }
 
-    mouseUp(){
+    mouseUp(event: MouseEvent): void {
         if (this.canDraw){
             this._mouseDown = false;
         }
     }
 
-    mouseMove(){
+    mouseMove(event: MouseEvent): void {
         if (this.canDraw){
             this.updateCursorBuff();
         }
     }
 
-    mouseLeave(){
+    mouseLeave(event: MouseEvent): void {
         if (this.canDraw && this._mouseDown){
-            this.mouseUp();
+            this.mouseUp(event);
         }
 
         this._mouseDown = false;
     }
 
-    setMouseCell(vec){
+    setMouseCell(vec: Core.Vector): void {
         this.mouseCell = vec;
     }
 
-    setPreviewBuff(previewBuff){
+    setPreviewBuff(previewBuff: ImageData): void {
         this.previewBuff = previewBuff;
     }
 
-    setPixelBuff(pixelBuff){
+    setPixelBuff(pixelBuff: ImageData): void {
         this.pixelBuff = pixelBuff;
     }
 
-    setCommitCallback(callback){
+    setCommitCallback(callback: ()=>void): void {
         this.commitCallback = callback;
     }
 
-    setToolColor(color){
+    setToolColor(color: Core.Draw.Color): void {
         this.color = color;
     }
 
-    setToolSize(num){
-        this.brushSize = num;
+    setToolSize(val: Core.ART_TOOL_SIZE): void {
+        this.brushSize = val;
     }
 
-    enableDrawing(){
+    enableDrawing(): void {
         this.canDraw = true;
     }
 
-    disableDrawing(){
+    disableDrawing(): void {
         this.canDraw = false;
     }
 
-    beforeDestroy(){}
+    beforeDestroy(): void {}
 
     clearPreviewBuff(){
         for (let i = 0; i < this.previewBuff.data.length; i++){
@@ -101,9 +101,9 @@ class Tool{
         }
     }
 
-    updateCursorBuff(){}
+    abstract updateCursorBuff(): void;
 
-    drawPixel(x, y, color){
+    drawPixel(x: number, y: number, color: Core.Draw.Color): void {
         const idx = ((y * this.cellWidth) + x) * 4;
         this.previewBuff.data[idx + 0] = color.r;
         this.previewBuff.data[idx + 1] = color.g;
@@ -111,7 +111,7 @@ class Tool{
         this.previewBuff.data[idx + 3] = color.a;
     }
 
-    commitResult(){
+    commitResult(): void {
         let canCommit = false;
 
         for (let i = 0; i < this.previewBuff.data.length; i += 4){
@@ -131,11 +131,11 @@ class Tool{
         }
     }
 
-    fillRect(x1, y1, x2, y2, color = this.color){
-        let startX = Shared.clamp(x1, 0, this.cellWidth - 1);
-        let startY = Shared.clamp(y1, 0, this.cellWidth - 1);
-        let endX = Shared.clamp(x2, 0, this.cellWidth - 1);
-        let endY = Shared.clamp(y2, 0, this.cellWidth - 1);
+    fillRect(x1: number, y1: number, x2: number, y2: number, color: Core.Draw.Color = this.color): void {
+        const startX = Core.Util.clamp(x1, 0, this.cellWidth - 1);
+        const startY = Core.Util.clamp(y1, 0, this.cellWidth - 1);
+        const endX = Core.Util.clamp(x2, 0, this.cellWidth - 1);
+        const endY = Core.Util.clamp(y2, 0, this.cellWidth - 1);
 
         for (let x = startX; x <= endX; x++){
             for (let y = startY; y <= endY; y++){
@@ -144,5 +144,3 @@ class Tool{
         }
     }
 }
-
-export default Tool;

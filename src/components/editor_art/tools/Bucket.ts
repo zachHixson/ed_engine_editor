@@ -1,35 +1,33 @@
-import Tool from './Tool';
+import Tool_Base from './Tool_Base';
+import Core from '@/core';
 
-class Bucket extends Tool{
-    constructor(){
-        super();
-        this.sampledColor = null;
-    }
+export default class Bucket extends Tool_Base {
+    private sampledColor: Core.Draw.Color = new Core.Draw.Color();
 
-    mouseDown(event){
+    mouseDown(event: MouseEvent): void {
         this.sampledColor = this._sampleColor(this.pixelBuff, this.mouseCell.x, this.mouseCell.y);
 
-        if (Shared.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
+        if (Core.Util.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
             this.fill(this.mouseCell.x, this.mouseCell.y);
             this.commitResult();
         }
     }
 
-    updateCursorBuff(){
+    updateCursorBuff(): void {
         this.clearPreviewBuff();
 
-        if (Shared.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
+        if (Core.Util.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
             this.sampledColor = this._sampleColor(this.pixelBuff, this.mouseCell.x, this.mouseCell.y);
             this.fill(this.mouseCell.x, this.mouseCell.y);
         }
     }
 
-    fill(x, y){
-        x = Shared.clamp(x, 0, this.cellWidth - 1);
-        y = Shared.clamp(y, 0, this.cellWidth - 1);
+    fill(x: number, y: number): void {
+        x = Core.Util.clamp(x, 0, this.cellWidth - 1);
+        y = Core.Util.clamp(y, 0, this.cellWidth - 1);
 
-        let spriteColor = this._sampleColor(this.pixelBuff, x, y);
-        let previewColor = this._sampleColor(this.previewBuff, x, y);
+        const spriteColor = this._sampleColor(this.pixelBuff, x, y);
+        const previewColor = this._sampleColor(this.previewBuff, x, y);
 
         if (spriteColor.compare(this.sampledColor) && !previewColor.compare(this.color)){
             this.drawPixel(x, y, this.color);
@@ -41,5 +39,3 @@ class Bucket extends Tool{
         }
     }
 }
-
-export default Bucket;
