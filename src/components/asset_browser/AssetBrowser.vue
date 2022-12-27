@@ -195,7 +195,7 @@ function orderChanged(event: iChangeEventProps): void {
 
 <template>
     <div class="assetBrowser">
-        <div ref="slideWrapper" class="slideWrapper">
+        <div ref="slideWrapperRef" class="slideWrapper">
             <div class="columns">
                 <div class="categoryColumn">
                     <div class="category"

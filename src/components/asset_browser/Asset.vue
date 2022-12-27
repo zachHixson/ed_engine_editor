@@ -116,16 +116,10 @@ function drawThumbnail(): void {
         ctx.resetTransform();
     }
 }
-
-const old = {
-    methods: {
-        
-    }
-}
 </script>
 
 <template>
-    <div ref="asset" class="asset" :class="{selected : isSelected}" @click="selectAsset">
+    <div ref="assetRef" class="asset" :class="{selected : isSelected}" @click="selectAsset">
         <div class="leftFloat" v-click-outside="stopRenaming">
             <canvas v-show="thumbnail" class="thumbnail" ref="thumbnailRef" width="20" height="20" draggable="false">Error</canvas>
             <img v-if="!thumbnail" class="thumbnail assetIcon" :src="props.defaultIcon" draggable="false"/>

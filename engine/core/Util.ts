@@ -1,5 +1,3 @@
-import { Sprite, Vector } from "./core";
-
 export function getHighestEndingNumber(list: string[]): number {
     let highest = -1;
     let pattern = /\d+$/;
@@ -7,7 +5,7 @@ export function getHighestEndingNumber(list: string[]): number {
     for (let i = 0; i < list.length; i++){
         const number = parseInt(list[i].match(pattern)![0] ?? '') as number;
 
-        if (isNaN(number) && number > highest){
+        if (!isNaN(number) && number > highest){
             highest = number;
         }
     }

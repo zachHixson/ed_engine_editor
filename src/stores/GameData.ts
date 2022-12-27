@@ -128,7 +128,7 @@ export const useGameDataStore = defineStore({
     }
 });
 
-function getSuffixNum(list: {name: string, [key: string]: any}[]){
+function getSuffixNum(list: Core.Asset_Base[]){
     const PADDING = 2;
     let requiredDigits;
     let nameList = list.map(l => l.name);
