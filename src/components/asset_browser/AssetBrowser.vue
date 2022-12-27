@@ -6,7 +6,8 @@ export const AssetBrowserEventBus = new Event_Bus();
 import Asset from './Asset.vue';
 import DragList from '@/components/common/DragList.vue';
 
-import { ref, computed, nextTick, onBeforeMount } from 'vue';
+import { AppEventBus } from '@/App.vue';
+import { ref, computed, nextTick, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAssetBrowserStore } from '@/stores/AssetBrowser';
 import { useGameDataStore } from '@/stores/GameData';
@@ -52,6 +53,7 @@ const categories = [
 const selected_category = ref<typeof categories[number]>(categories[0]);
 
 const selectedList = computed(()=>{
+    console.log("Computed")
     const list: Core.Asset_Base[] = [];
 
     switch(selected_category.value.cat_ID){
@@ -69,21 +71,7 @@ const selectedList = computed(()=>{
             break;
     }
 
-    //@ts-ignore
-    list.sort((a, b) => {
-        const ao = a.sortOrder;
-        const bo = b.sortOrder;
-
-        if (ao < bo){
-            return -1;
-        }
-        if (ao == bo){
-            return 0;
-        }
-        if (ao > bo){
-            return 1;
-        }
-    });
+    list.sort((a, b) => b.sortOrder - a.sortOrder);
 
     return list;
 });
@@ -96,6 +84,10 @@ const keylist = computed<string[] | null>(()=>{
         default:
             return null;
     }
+});
+
+onMounted(()=>{
+    AppEventBus.addEventListener('update-asset', updateAsset);
 });
 
 function openCategory(category: typeof categories[number]): void {

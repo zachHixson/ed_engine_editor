@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, defineProps, onMounted, onBeforeUnmount } from 'vue';
+import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import Core from '@/core';
 
 const EXPAND = 1.15;
@@ -37,10 +37,12 @@ watch(valuePos, ()=>composite());
 onMounted(()=>{
     Draw.resizeHDPICanvas(canvasRef.value!, props.width, props.width);
 
-    drawWheel();
-    drawCircleBuff();
-    composite();
-    moveCursorToColor(selectedColor);
+    nextTick(()=>{
+        drawWheel();
+        drawCircleBuff();
+        composite();
+        moveCursorToColor(selectedColor);
+    })
 });
 
 onBeforeUnmount(()=>{
@@ -108,10 +110,10 @@ function updateCursorPos(x: number, y: number): void {
     const canvasBounds = canvas.getBoundingClientRect();
     const cursorClientPos = new Vector(x, y);
     const wheelClientPos = new Vector(canvasBounds.left, canvasBounds.top);
-    const cursorPos = cursorClientPos.subtract(wheelClientPos);
+    const relCursorPos = cursorClientPos.subtract(wheelClientPos);
     const lengthBounds = halfCanvas - cursorRef.value!.clientWidth / 2 - 3;
 
-    cursorPos.copy(cursorPos);
+    cursorPos.copy(relCursorPos);
     cursorPos.subtractScalar(halfCanvas);
     
     if (cursorPos.length() > lengthBounds){
@@ -155,8 +157,6 @@ function updateCursorColors(): void {
     ];
     const hs = new Draw.Color().fromArray([...rgbArr, 255]);
     const hsv = new Draw.Color().fromArray([...rgbArr.map(i => Math.round(i * valuePos.value)), 255]);
-
-    let myVal = hsv.toCSS();
     
     selectedColor = hsv;
     cursorRef.value!.style.background = selectedColor.toCSS();
@@ -210,12 +210,6 @@ function mouseUp(): void {
     document.removeEventListener('mouseup', mouseUp);
     emit('change-end', selectedColor);
 }
-
-const old = {
-    methods: {
-        
-    }
-}
 </script>
 
 <template>
@@ -233,7 +227,7 @@ const old = {
         </div>
         <div ref="sliderRef" class="valueSlider" @mousedown="valueDown">
             <div ref="valueCursorRef" class="valueCursor">
-                <div class="valueCursorOutside" ref="valueCursorBG">
+                <div class="valueCursorOutside" ref="valueCursorBGRef">
                     <div class="valueCursorInside"></div>
                 </div>
             </div>
