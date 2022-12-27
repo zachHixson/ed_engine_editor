@@ -53,7 +53,6 @@ const categories = [
 const selected_category = ref<typeof categories[number]>(categories[0]);
 
 const selectedList = computed(()=>{
-    console.log("Computed")
     const list: Core.Asset_Base[] = [];
 
     switch(selected_category.value.cat_ID){
@@ -71,7 +70,7 @@ const selectedList = computed(()=>{
             break;
     }
 
-    list.sort((a, b) => b.sortOrder - a.sortOrder);
+    list.sort((a, b) => a.sortOrder - b.sortOrder);
 
     return list;
 });
