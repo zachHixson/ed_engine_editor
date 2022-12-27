@@ -1,6 +1,6 @@
 import type { DirectiveBinding, VNode } from 'vue';
 import { useMainStore } from './stores/Main';
-import { getTooltipComponent, showTooltip, hideTooltip } from './components/common/Tooltip.vue';
+import { TooltipEventBus } from './components/common/Tooltip.vue';
 
 type ExpandedEl = HTMLElement & {[key: string | number | symbol]: any};
 
@@ -53,22 +53,14 @@ export const vInputActive = {
 //Popup global tooltip above components
 export const vTooltip = {
     beforeMount: function(el: ExpandedEl, binding: DirectiveBinding){
-        const ttComponent = getTooltipComponent();
-
         el.mouseOverHandler = function(){
-            const timeLimit = ttComponent.HOVER_TIME * 1000;
-            ttComponent.text = binding.value;
-
-            if (!ttComponent.text.length){
-                return;
-            }
-
-            ttComponent.timeout = setTimeout(()=>{
-                showTooltip(el);
-            }, timeLimit);
+            TooltipEventBus.emit('activate-tooltip', {
+                el,
+                text: binding.value,
+            })
         };
         el.mouseOutHandler = function(){
-            hideTooltip();
+            TooltipEventBus.emit('hide-tooltip');
         };
 
         el.addEventListener('mouseover', el.mouseOverHandler);

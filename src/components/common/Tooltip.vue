@@ -1,7 +1,90 @@
+<script lang="ts">
+export const TooltipEventBus = new Event_Bus();
+</script>
+
+<script setup lang="ts">
+import { ref, nextTick, onMounted } from 'vue';
+import { Event_Bus } from './Event_Listener';
+
+const messageTextRef = ref<HTMLDivElement>();
+const tooltipRef = ref<HTMLDivElement>();
+
+const HOVER_TIME = 0.8;
+const x = ref(0);
+const y = ref(0);
+const showTooltip = ref(false);
+const hOffset = ref(0);
+const invert = ref(false);
+const text = ref('');
+let timeout = -1;
+
+onMounted(()=>{
+    console.warn("TT")
+    TooltipEventBus.addEventListener('activate-tooltip', activateTooltip);
+    TooltipEventBus.addEventListener('hide-tooltip', hideTooltip);
+    console.warn("TT")
+});
+
+function activateTooltip({el, text: txt}: {el: HTMLDivElement, text: string}): void {
+    const timeLimit = HOVER_TIME * 1000;
+    text.value = txt;
+
+    console.log("Hovered")
+
+    if (!text.value.length){
+        return;
+    }
+
+    timeout = setTimeout(()=>{
+        const elBounds = el.getBoundingClientRect();
+
+        x.value = (elBounds.left + elBounds.right) / 2;
+        hOffset.value = 0;
+        showTooltip.value = true;
+        nextTick(()=>{
+            recalculateOffsets(el);
+        });
+    }, timeLimit);
+}
+
+function hideTooltip(){
+    clearTimeout(timeout);
+    showTooltip.value = false;
+}
+
+function recalculateOffsets(el: HTMLDivElement){
+    setClientYPos(el);
+    hOffset.value = getTextOffset();
+    invert.value = getInvertedState(el);
+}
+
+function setClientYPos(el: HTMLDivElement){
+    const elBounds = el.getBoundingClientRect();
+    y.value = getInvertedState(el) ? elBounds.bottom : elBounds.top;
+}
+
+function getTextOffset(){
+    const textBounds = messageTextRef.value!.getBoundingClientRect();
+    const windowBorder = document.documentElement.clientWidth;
+    const rOverflow = Math.min(0, windowBorder - textBounds.right);
+    const lOverflow = Math.max(0, -textBounds.left);
+
+    return rOverflow + lOverflow;
+};
+
+function getInvertedState(el: HTMLDivElement){
+    const elBounds = el.getBoundingClientRect();
+    const textBounds = messageTextRef.value!.getBoundingClientRect();
+    const textHeight = textBounds.bottom - textBounds.top;
+
+    return textHeight > elBounds.top;
+}
+</script>
+
 <template>
     <div
         v-show="showTooltip"
-        ref="tooltip"
+        ref="tooltipRef"
         class="tooltip"
         :style="`
             position: absolute;
@@ -14,7 +97,7 @@
             <svg v-if="invert" width="20" height="15" class="arrow arrow-top">
                 <path d="M0 15 L10 0 L20 15"/>
             </svg>
-            <div ref="messageText" class="message-text" :style="`transform: translateX(${hOffset}px)`">
+            <div ref="messageTextRef" class="message-text" :style="`transform: translateX(${hOffset}px)`">
                 <div v-if="invert" class="arrow-blocker">
                     <svg v-if="invert" width="20" height="15">
                         <path d="M0 15 L10 0 L20 15"/>
@@ -28,77 +111,6 @@
         </div>
     </div>
 </template>
-
-<script>
-export default {
-    name: "Tooltip",
-    data(){
-        return {
-            HOVER_TIME: 0.8,
-            x: 0,
-            y: 0,
-            showTooltip: false,
-            timeout: null,
-            hOffset: 0,
-            invert: false,
-            text: '',
-        }
-    },
-    beforeCreate(){
-        getTooltipComponent = getTooltipComponent.bind(this);
-        showTooltip = showTooltip.bind(this);
-        hideTooltip = hideTooltip.bind(this);
-    },
-}
-
-export function getTooltipComponent(){
-    return this;
-}
-
-export function showTooltip(el){
-    const elBounds = el.getBoundingClientRect();
-
-    this.x = (elBounds.left + elBounds.right) / 2;
-    this.hOffset = 0;
-    this.showTooltip = true;
-    this.$nextTick(()=>{
-        recalculateOffsets(this, el);
-    });
-}
-
-export function hideTooltip(){
-    clearTimeout(this.timeout);
-    this.showTooltip = false;
-}
-
-function recalculateOffsets(tooltipComp, el){
-    setClientYPos(tooltipComp, el);
-    tooltipComp.hOffset = getTextOffset(tooltipComp);
-    tooltipComp.invert = getInvertedState(tooltipComp, el);
-}
-
-function setClientYPos(tooltipComp, el){
-    const elBounds = el.getBoundingClientRect();
-    tooltipComp.y = getInvertedState(tooltipComp, el) ? elBounds.bottom : elBounds.top;
-}
-
-function getTextOffset(tooltipComp){
-    const textBounds = tooltipComp.$refs.messageText.getBoundingClientRect();
-    const windowBorder = document.documentElement.clientWidth;
-    const rOverflow = Math.min(0, windowBorder - textBounds.right);
-    const lOverflow = Math.max(0, -textBounds.left);
-
-    return rOverflow + lOverflow;
-};
-
-function getInvertedState(tooltipComp, el){
-    const elBounds = el.getBoundingClientRect();
-    const textBounds = tooltipComp.$refs.messageText.getBoundingClientRect();
-    const textHeight = textBounds.bottom - textBounds.top;
-
-    return textHeight > elBounds.top;
-}
-</script>
 
 <style scoped>
 .tooltip{

@@ -8,7 +8,7 @@ import TabPanel from './components/TabPanel.vue';
 import AssetBrowser from './components/asset_browser/AssetBrowser.vue';
 import EditorWindow from './components/EditorWindow.vue';
 import PlayWindow from './components/PlayWindow.vue';
-// import Tooltip from './components/common/Tooltip.vue';
+import Tooltip from './components/common/Tooltip.vue';
 
 import { ref, onMounted } from 'vue';
 //@ts-ignore
@@ -86,7 +86,7 @@ function resetUI(): void {
     <transition name="playWindow">
         <PlayWindow v-if="mainStore.getPlayState != PLAY_STATE.NOT_PLAYING" class="playWindow" />
     </transition>
-    <!-- <Tooltip /> -->
+    <Tooltip />
 </template>
 
 <style>
