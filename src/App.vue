@@ -8,7 +8,7 @@ import TabPanel from './components/TabPanel.vue';
 import AssetBrowser from './components/asset_browser/AssetBrowser.vue';
 import EditorWindow from './components/EditorWindow.vue';
 import PlayWindow from './components/PlayWindow.vue';
-import Tooltip from './components/common/Tooltip.vue';
+// import Tooltip from './components/common/Tooltip.vue';
 
 import { ref, onMounted } from 'vue';
 //@ts-ignore
@@ -75,20 +75,18 @@ function resetUI(): void {
 </script>
 
 <template>
-    <div id="app">
-        <HeaderPanel class="headerPanel"
-            @new-project="newProject"
-            @open-project="openProject"
-            @save-project="saveProject"
-            @package-game="packageGame" />
-        <TabPanel class="TabPanel" ref="tabPanel"/>
-        <AssetBrowser class="assetBrowser" ref="assetBrowser" @asset-selected="updateEditorAsset" @asset-deleted="updateAfterDeletion" />
-        <EditorWindow class="editorWindow" ref="editorWindow" @asset-changed="updateAssetPreviews"/>
-        <transition name="playWindow">
-            <PlayWindow v-if="mainStore.getPlayState != PLAY_STATE.NOT_PLAYING" class="playWindow" />
-        </transition>
-        <Tooltip />
-    </div>
+    <HeaderPanel class="headerPanel"
+        @new-project="newProject"
+        @open-project="openProject"
+        @save-project="saveProject"
+        @package-game="packageGame" />
+    <TabPanel class="TabPanel" ref="tabPanel"/>
+    <AssetBrowser class="assetBrowser" ref="assetBrowser" @asset-selected="updateEditorAsset" @asset-deleted="updateAfterDeletion" />
+    <EditorWindow class="editorWindow" ref="editorWindow" @asset-changed="updateAssetPreviews"/>
+    <transition name="playWindow">
+        <PlayWindow v-if="mainStore.getPlayState != PLAY_STATE.NOT_PLAYING" class="playWindow" />
+    </transition>
+    <!-- <Tooltip /> -->
 </template>
 
 <style>
@@ -96,6 +94,7 @@ function resetUI(): void {
 
 html, body{
     height: 100%;
+    width: 100%;
     margin: 0px;
     padding: 0px;
     overflow: hidden;

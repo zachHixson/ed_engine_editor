@@ -2,12 +2,11 @@
 import UndoButton from '@/components/common/UndoButton.vue';
 import HotkeyMap from '@/components/common/HotkeyMap';
 import undoButtonSVG from '@/assets/undo.svg';
-import redoButtonSVG from '@/asset/redo.svg';
+import redoButtonSVG from '@/assets/redo.svg';
 
 import {
     computed,
     defineProps,
-    defineEmits,
     onMounted,
     onBeforeUnmount
 } from 'vue';

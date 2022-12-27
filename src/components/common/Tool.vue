@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, defineProps, defineEmits, computed } from 'vue';
+import { ref, defineProps, computed } from 'vue';
 
 const props = defineProps<{
     icon: string,

@@ -9,8 +9,6 @@ export interface iRenameEventProps {
 import {
     ref,
     computed,
-    defineProps,
-    defineEmits,
     nextTick,
     getCurrentInstance,
     onMounted,

@@ -9,7 +9,7 @@ export interface iGroupChangedProps {
 </script>
 
 <script setup lang="ts">
-import { ref, defineProps, defineEmits, nextTick } from 'vue';
+import { ref, defineProps, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Core from '@/core';
 
@@ -42,8 +42,8 @@ function validateName(name: string, oldname: string): string {
 
 function addGroup(): void {
     const nextNum = Math.max(
-        Shared.getHighestEndingNumber(props.editList),
-        (props.readOnlyList) ? Shared.getHighestEndingNumber(props.readOnlyList) : []
+        Core.Util.getHighestEndingNumber(props.editList),
+        (props.readOnlyList) ? Core.Util.getHighestEndingNumber(props.readOnlyList) : []
     ) + 1;
 
     emit('group-changed', {

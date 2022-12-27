@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, defineProps, defineEmits, onMounted, onBeforeUnmount } from 'vue';
+import { ref, watch, defineProps, onMounted, onBeforeUnmount } from 'vue';
 import Core from '@/core';
 
 const EXPAND = 1.15;

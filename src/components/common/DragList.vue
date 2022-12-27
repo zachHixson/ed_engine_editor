@@ -6,7 +6,7 @@ export interface iChangeEventProps {
 </script>
 
 <script setup lang="ts">
-import { ref, computed, defineProps, nextTick, defineEmits, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, defineProps, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import Core from '@/core';
 
 const DRAG_DIST = 20;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, defineEmits, computed, onMounted } from 'vue';
+import { ref, nextTick, computed, onMounted } from 'vue';
 import { useMainStore, PLAY_STATE } from '@/stores/Main';
 import { useI18n } from 'vue-i18n';
 

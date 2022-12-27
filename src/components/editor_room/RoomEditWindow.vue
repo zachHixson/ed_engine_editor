@@ -16,8 +16,6 @@ import {
     ref,
     computed,
     watch,
-    defineProps,
-    defineEmits,
     onMounted,
     onBeforeUnmount
 } from 'vue';

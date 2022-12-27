@@ -6,7 +6,7 @@ export const AssetBrowserEventBus = new Event_Bus();
 import Asset from './Asset.vue';
 import DragList from '@/components/common/DragList.vue';
 
-import { ref, computed, defineEmits, nextTick, onBeforeMount } from 'vue';
+import { ref, computed, nextTick, onBeforeMount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAssetBrowserStore } from '@/stores/AssetBrowser';
 import { useGameDataStore } from '@/stores/GameData';

@@ -5,5 +5,6 @@ export default createI18n({
   legacy: false,
   locale: 'en',
   fallbackLocale: 'en',
-  messages: {en}
+  messages: {en},
+  warnHtmlMessage: false,
 })

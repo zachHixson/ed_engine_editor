@@ -2,7 +2,7 @@
 import GroupList from '@/components/common/GroupList.vue';
 import ColorPicker from '@/components/common/ColorPicker.vue';
 
-import { ref, computed, defineProps, defineEmits, onMounted } from 'vue';
+import { ref, computed, defineProps, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useGameDataStore } from '@/stores/GameData';
 import Core from '@/core';

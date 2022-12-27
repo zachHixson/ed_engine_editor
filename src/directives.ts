@@ -10,8 +10,7 @@ export const vClickOutside = {
         el.checkOutside = (event: Event) => {
             if (!(el == event.target || el.contains(event.target as HTMLElement))) {
                 const instance = binding.instance as any;
-                console.log("clickOutside", instance);
-                //instance && binding.instance[binding.value](event);
+                instance && binding.value(event);
             }
         };
 
