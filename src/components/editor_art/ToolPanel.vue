@@ -1,10 +1,192 @@
+<script setup lang="ts">
+import HotkeyMap from '@/components/common/HotkeyMap';
+import ColorPicker from '@/components/common/ColorPicker.vue';
+import Tool from '@/components/common/Tool.vue';
+
+import { computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useMainStore } from '@/stores/Main';
+import { useArtEditorStore } from '@/stores/ArtEditor';
+import Core from '@/core';
+import smallBrushIcon from '@/assets/small_brush.svg';
+import mediumBrushIcon from '@/assets/medium_brush.svg';
+import largeBrushIcon from '@/assets/large_brush.svg';
+import brushIcon from '@/assets/brush.svg';
+import bucketIcon from '@/assets/bucket.svg';
+import lineIcon from '@/assets/line.svg';
+import boxIcon from '@/assets/box.svg';
+import boxFilledIcon from '@/assets/box_filled.svg';
+import circleIcon from '@/assets/circle.svg';
+import circleFilledIcon from '@/assets/circle_filled.svg';
+import eraserIcon from '@/assets/eraser.svg';
+import eyeDropperIcon from '@/assets/eye_dropper.svg';
+
+const { t } = useI18n();
+const mainStore = useMainStore();
+const artEditorStore = useArtEditorStore();
+
+const emit = defineEmits(['resized']);
+
+const brushSizes = [
+    {
+        tool: Core.ART_TOOL_SIZE.SMALL,
+        name: t('art_editor.small_brush'),
+        icon: smallBrushIcon,
+    },
+    {
+        tool: Core.ART_TOOL_SIZE.MEDIUM,
+        name: t('art_editor.medium_brush'),
+        icon: mediumBrushIcon,
+    },
+    {
+        tool: Core.ART_TOOL_SIZE.LARGE,
+        name: t('art_editor.large_brush'),
+        icon: largeBrushIcon,
+    }
+];
+const brushes = [
+    {
+        tool: Core.ART_TOOL_TYPE.BRUSH,
+        name: t('art_editor.brush_tool'),
+        icon: brushIcon,
+    },
+    {
+        tool: Core.ART_TOOL_TYPE.BUCKET,
+        name: t('art_editor.bucket_tool'),
+        icon: bucketIcon,
+    },
+    {
+        tool: Core.ART_TOOL_TYPE.LINE,
+        name: t('art_editor.line_tool'),
+        icon: lineIcon,
+    },
+    {
+        tool: Core.ART_TOOL_TYPE.BOX,
+        name: t('art_editor.box_stroke_tool'),
+        icon: boxIcon,
+    },
+    {
+        tool: Core.ART_TOOL_TYPE.BOX_FILL,
+        name: t('art_editor.box_fill_tool'),
+        icon: boxFilledIcon,
+    },
+    {
+        tool: Core.ART_TOOL_TYPE.ELLIPSE,
+        name: t('art_editor.circle_stroke_tool'),
+        icon: circleIcon,
+    },
+    {
+        tool: Core.ART_TOOL_TYPE.ELLIPSE_FILL,
+        name: t('art_editor.circle_fill_tool'),
+        icon: circleFilledIcon,
+    },
+    {
+        tool: Core.ART_TOOL_TYPE.ERASER,
+        name: t('art_editor.eraser_tool'),
+        icon: eraserIcon,
+    },
+    {
+        tool: Core.ART_TOOL_TYPE.EYE_DROPPER,
+        name: t('art_editor.eye_dropper_tool'),
+        icon: eyeDropperIcon,
+    }
+];
+const hotkeyMap = new HotkeyMap();
+const keyUp = hotkeyMap.keyUp.bind(hotkeyMap);
+const keyDown = hotkeyMap.keyDown.bind(hotkeyMap);
+let isOpen = artEditorStore.isToolPanelOpen;
+
+const toolColor = computed({
+    get(){
+        return artEditorStore.getSelectedColor;
+    },
+    set(newCol){
+        artEditorStore.selectColor(newCol);
+    }
+});
+const toolSize = computed({
+    get(){
+        return artEditorStore.getSelectedSize;
+    },
+    set(newSize){
+        artEditorStore.selectSize(newSize);
+    }
+});
+const toolId = computed({
+    get(){
+        return artEditorStore.getSelectedTool;
+    },
+    set(newTool){
+        artEditorStore.selectTool(newTool);
+    }
+});
+const inputActive = computed(()=>mainStore.getInputActive);
+
+watch(inputActive, (newState)=>hotkeyMap.enabled = !newState);
+
+onMounted(()=>{
+    window.addEventListener('keydown', keyDown);
+    window.addEventListener('keyup', keyUp);
+
+    bindHotkeys();
+
+    emit('resized');
+});
+
+onBeforeUnmount(()=>{
+    window.removeEventListener('keydown', keyDown);
+    window.removeEventListener('keyup', keyUp);
+});
+
+function bindHotkeys(): void {
+    hotkeyMap.enabled = true;
+
+    hotkeyMap.bindKey(['t'], toggleOpen);
+
+    //size hotkeys
+    hotkeyMap.bindKey(['1'], sizeChanged, [Core.ART_TOOL_SIZE.SMALL]);
+    hotkeyMap.bindKey(['2'], sizeChanged, [Core.ART_TOOL_SIZE.MEDIUM]);
+    hotkeyMap.bindKey(['3'], sizeChanged, [Core.ART_TOOL_SIZE.LARGE]);
+
+    //layout based hotkeys
+    hotkeyMap.bindKey(['b'], toolChanged, [Core.ART_TOOL_TYPE.BRUSH]);
+    hotkeyMap.bindKey(['f'], toolChanged, [Core.ART_TOOL_TYPE.BUCKET]);
+    hotkeyMap.bindKey(['x'], toolChanged, [Core.ART_TOOL_TYPE.LINE]);
+    hotkeyMap.bindKey(['s'], toolChanged, [Core.ART_TOOL_TYPE.BOX]);
+    hotkeyMap.bindKey(['alt', 's'], toolChanged, [Core.ART_TOOL_TYPE.BOX_FILL]);
+    hotkeyMap.bindKey(['c'], toolChanged, [Core.ART_TOOL_TYPE.ELLIPSE]);
+    hotkeyMap.bindKey(['alt', 'c'], toolChanged, [Core.ART_TOOL_TYPE.ELLIPSE_FILL]);
+    hotkeyMap.bindKey(['e'], toolChanged, [Core.ART_TOOL_TYPE.ERASER]);
+    hotkeyMap.bindKey(['d'], toolChanged, [Core.ART_TOOL_TYPE.EYE_DROPPER]);
+}
+
+function toggleOpen(): void {
+    isOpen = !isOpen;
+    nextTick(()=>{
+        emit('resized');
+    });
+}
+
+function colorChanged(newColor: Core.Draw.Color): void {
+    toolColor.value = newColor;
+}
+
+function sizeChanged(newSize: Core.ART_TOOL_SIZE): void {
+    toolSize.value = newSize;
+}
+
+function toolChanged(newTool: Core.ART_TOOL_TYPE): void {
+    toolId.value = newTool
+}
+</script>
+
 <template>
     <div class="toolPanel">
         <div class="tool-panel-wrapper" :class="{toolPanelWrapperClosed : !isOpen}">
             <div v-show="isOpen" class="panel-contents">
                 <div class="picker-wrapper">
                     <ColorPicker
-                        width="200"
+                        :width="200"
                         :color="toolColor"
                         @change-end="colorChanged"/>
                 </div>
@@ -38,179 +220,6 @@
         </div>
     </div>
 </template>
-
-<script>
-import HotkeyMap from '@/components/common/HotkeyMap';
-import ColorPicker from '@/components/common/ColorPicker';
-import Tool from '@/components/common/Tool';
-
-export default {
-    name : "ToolPanel",
-    components: {
-        ColorPicker,
-        Tool,
-    },
-    data() {
-        return {
-            isOpen: this.$store.getters['ArtEditor/isToolPanelOpen'],
-            brushSizes: [
-                {
-                    tool: Shared.ART_TOOL_SIZE.SMALL,
-                    name: this.$t('art_editor.small_brush'),
-                    icon: 'assets/small_brush'
-                },
-                {
-                    tool: Shared.ART_TOOL_SIZE.MEDIUM,
-                    name: this.$t('art_editor.medium_brush'),
-                    icon: 'assets/medium_brush'
-                },
-                {
-                    tool: Shared.ART_TOOL_SIZE.LARGE,
-                    name: this.$t('art_editor.large_brush'),
-                    icon: 'assets/large_brush'
-                }
-            ],
-            brushes: [
-                {
-                    tool: Shared.ART_TOOL_TYPE.BRUSH,
-                    name: this.$t('art_editor.brush_tool'),
-                    icon: 'assets/brush'
-                },
-                {
-                    tool: Shared.ART_TOOL_TYPE.BUCKET,
-                    name: this.$t('art_editor.bucket_tool'),
-                    icon: 'assets/bucket'
-                },
-                {
-                    tool: Shared.ART_TOOL_TYPE.LINE,
-                    name: this.$t('art_editor.line_tool'),
-                    icon: 'assets/line'
-                },
-                {
-                    tool: Shared.ART_TOOL_TYPE.BOX,
-                    name: this.$t('art_editor.box_stroke_tool'),
-                    icon: 'assets/box'
-                },
-                {
-                    tool: Shared.ART_TOOL_TYPE.BOX_FILL,
-                    name: this.$t('art_editor.box_fill_tool'),
-                    icon: 'assets/box_filled'
-                },
-                {
-                    tool: Shared.ART_TOOL_TYPE.ELLIPSE,
-                    name: this.$t('art_editor.circle_stroke_tool'),
-                    icon: 'assets/circle'
-                },
-                {
-                    tool: Shared.ART_TOOL_TYPE.ELLIPSE_FILL,
-                    name: this.$t('art_editor.circle_fill_tool'),
-                    icon: 'assets/circle_filled'
-                },
-                {
-                    tool: Shared.ART_TOOL_TYPE.ERASER,
-                    name: this.$t('art_editor.eraser_tool'),
-                    icon: 'assets/eraser'
-                },
-                {
-                    tool: Shared.ART_TOOL_TYPE.EYE_DROPPER,
-                    name: this.$t('art_editor.eye_dropper_tool'),
-                    icon: 'assets/eye_dropper'
-                }
-            ],
-            hotkeyMap: new HotkeyMap(),
-            hotkeyDown: null,
-            hotkeyUp: null,
-        }
-    },
-    mounted(){
-        this.hotkeyDown = this.hotkeyMap.keyDown.bind(this.hotkeyMap);
-        this.hotkeyUp = this.hotkeyMap.keyUp.bind(this.hotkeyMap);
-
-        window.addEventListener('keydown', this.hotkeyDown);
-        window.addEventListener('keyup', this.hotkeyUp);
-        
-        this.bindHotkeys();
-
-        this.$emit('resized');
-    },
-    beforeDestroy(){
-        window.removeEventListener('keydown', this.hotkeyDown);
-        window.removeEventListener('keyup', this.hotkeyUp);
-    },
-    watch: {
-        inputActive(newState){
-            this.hotkeyMap.enabled = !newState;
-        },
-    },
-    computed: {
-        toolColor: {
-            get: function(){
-                return this.$store.getters['ArtEditor/getSelectedColor'];
-            },
-            set: function(newCol){
-                this.$store.dispatch('ArtEditor/selectColor', newCol);
-            }
-        },
-        toolSize: {
-            get: function(){
-                return this.$store.getters['ArtEditor/getSelectedSize'];
-            },
-            set: function(newSize){
-                this.$store.dispatch('ArtEditor/selectSize', newSize);
-            }
-        },
-        toolId: {
-            get: function(){
-                return this.$store.getters['ArtEditor/getSelectedTool'];
-            },
-            set: function(newTool){
-                this.$store.dispatch('ArtEditor/selectTool', newTool);
-            }
-        },
-        inputActive(){
-            return this.$store.getters['getInputActive'];
-        },
-    },
-    methods:{
-        bindHotkeys(){
-            this.hotkeyMap.enabled = true;
-
-            this.hotkeyMap.bindKey(['t'], this.toggleOpen);
-
-            //size hotkeys
-            this.hotkeyMap.bindKey(['1'], this.sizeChanged, [Shared.ART_TOOL_SIZE.SMALL]);
-            this.hotkeyMap.bindKey(['2'], this.sizeChanged, [Shared.ART_TOOL_SIZE.MEDIUM]);
-            this.hotkeyMap.bindKey(['3'], this.sizeChanged, [Shared.ART_TOOL_SIZE.LARGE]);
-
-            //layout based hotkeys
-            this.hotkeyMap.bindKey(['b'], this.toolChanged, [Shared.ART_TOOL_TYPE.BRUSH]);
-            this.hotkeyMap.bindKey(['f'], this.toolChanged, [Shared.ART_TOOL_TYPE.BUCKET]);
-            this.hotkeyMap.bindKey(['x'], this.toolChanged, [Shared.ART_TOOL_TYPE.LINE]);
-            this.hotkeyMap.bindKey(['s'], this.toolChanged, [Shared.ART_TOOL_TYPE.BOX]);
-            this.hotkeyMap.bindKey(['alt', 's'], this.toolChanged, [Shared.ART_TOOL_TYPE.BOX_FILL]);
-            this.hotkeyMap.bindKey(['c'], this.toolChanged, [Shared.ART_TOOL_TYPE.ELLIPSE]);
-            this.hotkeyMap.bindKey(['alt', 'c'], this.toolChanged, [Shared.ART_TOOL_TYPE.ELLIPSE_FILL]);
-            this.hotkeyMap.bindKey(['e'], this.toolChanged, [Shared.ART_TOOL_TYPE.ERASER]);
-            this.hotkeyMap.bindKey(['d'], this.toolChanged, [Shared.ART_TOOL_TYPE.EYE_DROPPER]);
-        },
-        toggleOpen(){
-            this.isOpen = !this.isOpen;
-            this.$nextTick(()=>{
-                this.$emit('resized');
-            });
-        },
-        colorChanged(newColor){
-            this.toolColor = newColor;
-        },
-        sizeChanged(newSize){
-            this.toolSize = newSize;
-        },
-        toolChanged(newTool){
-            this.toolId = newTool
-        }
-    }
-}
-</script>
 
 <style scoped>
 .tool-panel-wrapper{

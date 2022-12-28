@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, defineProps, computed } from 'vue';
+import { defineProps, computed } from 'vue';
 import { useMainStore } from '@/stores/Main';
 import type Core from '@/core';
 

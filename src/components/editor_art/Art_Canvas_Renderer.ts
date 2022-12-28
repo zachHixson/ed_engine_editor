@@ -1,14 +1,26 @@
-export default class Art_Canvas_Renderer{
-    constructor(element, spriteData, previewData, navState){
-        this.GRID_DIV = Shared.Sprite.DIMENSIONS;
-        this.CANVAS_WIDTH = this.GRID_DIV * 20;
+import Core from '@/core';
 
+export default class Art_Canvas_Renderer{
+    private readonly GRID_DIV = Core.Sprite.DIMENSIONS;
+    private readonly CANVAS_WIDTH = this.GRID_DIV * 20;
+
+    private canvas: HTMLCanvasElement;
+    private checkerBGBuff: HTMLCanvasElement;
+    private checkerStencilBuff: HTMLCanvasElement;
+    private pixelBuff: HTMLCanvasElement;
+    private gridBuff: HTMLCanvasElement;
+    private previewBuff: HTMLCanvasElement;
+    private spriteData: ImageData;
+    private previewData: ImageData;
+    private navState: Core.iNavState;
+
+    constructor(element: HTMLCanvasElement, spriteData: ImageData, previewData: ImageData, navState: Core.iNavState){
         this.canvas = element;
-        this.checkerBGBuff = Shared.createHDPICanvas(this.canvas.width, this.canvas.height);
-        this.checkerStencilBuff = Shared.createHDPICanvas(this.canvas.width, this.canvas.height);
-        this.pixelBuff = Shared.createCanvas(this.GRID_DIV, this.GRID_DIV);
-        this.gridBuff = Shared.createHDPICanvas(this.canvas.width, this.canvas.height);
-        this.previewBuff = Shared.createCanvas(this.GRID_DIV, this.GRID_DIV);
+        this.checkerBGBuff = Core.Draw.createHDPICanvas(this.canvas.width, this.canvas.height);
+        this.checkerStencilBuff = Core.Draw.createHDPICanvas(this.canvas.width, this.canvas.height);
+        this.pixelBuff = Core.Draw.createCanvas(this.GRID_DIV, this.GRID_DIV);
+        this.gridBuff = Core.Draw.createHDPICanvas(this.canvas.width, this.canvas.height);
+        this.previewBuff = Core.Draw.createCanvas(this.GRID_DIV, this.GRID_DIV);
         this.spriteData = spriteData;
         this.previewData = previewData;
         this.navState = navState;
@@ -16,15 +28,15 @@ export default class Art_Canvas_Renderer{
         this.fullRedraw();
     }
 
-    getTranslate(){
-        return new Vector(
+    getTranslate(): Core.Vector {
+        return new Core.Vector(
             (this.canvas.width / 2) + (this.navState.offset.x * this.navState.zoomFac),
             (this.canvas.height / 2) + (this.navState.offset.y * this.navState.zoomFac)
         );
     }
 
-    fullRedraw(){
-        let ctx = this.canvas.getContext("2d");
+    fullRedraw(): void {
+        const ctx = this.canvas.getContext("2d")!;
 
         this.drawCheckerBG();
         this.drawBGStencil();
@@ -35,18 +47,17 @@ export default class Art_Canvas_Renderer{
         this.composite(ctx);
     }
 
-    composite(ctx = this.canvas.getContext("2d")){
+    composite(ctx = this.canvas.getContext("2d")!): void {
         const HALF_CANVAS = this.CANVAS_WIDTH / 2;
 
-        let scaleFac = (this.CANVAS_WIDTH / this.GRID_DIV) * this.navState.zoomFac;
-        let halfScale = -HALF_CANVAS * this.navState.zoomFac;
-        let translate = this.getTranslate();
+        const scaleFac = (this.CANVAS_WIDTH / this.GRID_DIV) * this.navState.zoomFac;
+        const halfScale = -HALF_CANVAS * this.navState.zoomFac;
+        const translate = this.getTranslate();
 
         ctx.drawImage(this.checkerBGBuff, 0, 0, this.checkerBGBuff.width, this.checkerBGBuff.height);
 
         //draw pixel and preview buffers (they require a transformation)
         ctx.imageSmoothingEnabled = false;
-        ctx.webkitImageSmoothingEnabled = false;
 
         ctx.translate(translate.x, translate.y);
         ctx.translate(halfScale, halfScale)
@@ -62,15 +73,15 @@ export default class Art_Canvas_Renderer{
         ctx.drawImage(this.checkerStencilBuff, 0, 0, this.checkerStencilBuff.width, this.checkerStencilBuff.height);
     }
 
-    resize(width = this.canvas.clientWidth, height = this.canvas.clientHeight){
-        Shared.resizeHDPICanvas(this.checkerBGBuff, width, height);
-        Shared.resizeHDPICanvas(this.checkerStencilBuff, width, height);
-        Shared.resizeHDPICanvas(this.gridBuff, width, height);
+    resize(width = this.canvas.clientWidth, height = this.canvas.clientHeight): void {
+        Core.Draw.resizeHDPICanvas(this.checkerBGBuff, width, height);
+        Core.Draw.resizeHDPICanvas(this.checkerStencilBuff, width, height);
+        Core.Draw.resizeHDPICanvas(this.gridBuff, width, height);
 
         this.fullRedraw();
     }
 
-    navChanged(){        
+    navChanged(): void {        
         this.drawBGStencil();
         this.drawSpriteData();
         this.drawGrid();
@@ -79,40 +90,41 @@ export default class Art_Canvas_Renderer{
         this.composite();
     }
 
-    setSprite(newSprite, navRef){
+    setSprite(newSprite: ImageData, navRef: Core.iNavState): void {
         this.spriteData = newSprite;
         this.navState = navRef;
 
         this.fullRedraw();
     }
 
-    mouseDown(){
+    mouseDown(): void {
         this.drawSpriteData();
         this.drawPreviewBuffer();
         this.composite();
     }
 
-    mouseUp(){
+    mouseUp(): void {
         this.drawSpriteData();
         this.drawPreviewBuffer();
         this.composite();
     }
 
-    mouseMove(){
+    mouseMove(): void {
         this.drawSpriteData();
         this.drawPreviewBuffer();
         this.composite();
     }
 
-    drawCheckerBG(canvas = this.checkerBGBuff){
-        Shared.drawCheckerBG(canvas, 10, "#B5B5B5", "#CCCCCC");
+    drawCheckerBG(canvas = this.checkerBGBuff): void {
+        Core.Draw.drawCheckerBG(canvas, 10, "#B5B5B5", "#CCCCCC");
     }
 
-    drawBGStencil(ctx = this.checkerStencilBuff.getContext('2d')){
+    drawBGStencil(ctx = this.checkerStencilBuff.getContext('2d')!): void {
         const FULL_WIDTH = this.CANVAS_WIDTH * this.navState.zoomFac;
         const HALF_WIDTH = -FULL_WIDTH / 2;
+        const canvas = ctx.canvas;
 
-        let translate = this.getTranslate();
+        const translate = this.getTranslate();
 
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, this.checkerStencilBuff.width, this.checkerStencilBuff.height);
@@ -126,17 +138,17 @@ export default class Art_Canvas_Renderer{
         ctx.fillRect(canvas.width - 10, canvas.height - 10, 10, 10);
     }
 
-    drawPixelData(canvas, pixelData){
+    drawPixelData(canvas: HTMLCanvasElement, pixelData: ImageData): void {
         if (pixelData){
-            canvas.getContext('2d').putImageData(pixelData, 0, 0);
+            canvas.getContext('2d')!.putImageData(pixelData, 0, 0);
         }
     }
 
-    drawSpriteData(canvas = this.pixelBuff){
+    drawSpriteData(canvas = this.pixelBuff): void {
         this.drawPixelData(canvas, this.spriteData);
     }
  
-    drawGrid(ctx = this.gridBuff.getContext("2d")){
+    drawGrid(ctx = this.gridBuff.getContext("2d")!): void {
         const PIXEL_SIZE = Math.round(this.CANVAS_WIDTH / this.GRID_DIV);
         const HALF_CANVAS = this.CANVAS_WIDTH / 2;
 
@@ -153,7 +165,7 @@ export default class Art_Canvas_Renderer{
         ctx.beginPath();
         for (let i = 1; i < this.GRID_DIV; i++) {
             let curLine = i * PIXEL_SIZE;
-            let pos = new Vector(curLine, curLine);
+            let pos = new Core.Vector(curLine, curLine);
 
             pos.subtractScalar(HALF_CANVAS);
 
@@ -167,7 +179,7 @@ export default class Art_Canvas_Renderer{
         ctx.stroke();
     }
 
-    drawPreviewBuffer(canvas = this.previewBuff){
+    drawPreviewBuffer(canvas = this.previewBuff): void {
         this.drawPixelData(canvas, this.previewData);
     }
 }

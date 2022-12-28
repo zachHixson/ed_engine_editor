@@ -37,7 +37,7 @@ export const useArtEditorStore = defineStore({
     actions: {
         selectColor(newColor: Core.Draw.Color){ this.selectedColor = newColor },
         selectSize(newSize: Core.ART_TOOL_SIZE){ this.selectedSize = newSize },
-        selectTool(newTool: Core.ART_TOOL_TYPE){ this.selectedTool = newTool },
+        selectTool(newTool: Core.ART_TOOL_TYPE | null){ this.selectedTool = newTool },
         setSelectedNavTool(newTool: Core.NAV_TOOL_TYPE | null){ this.selectedNavTool = newTool },
         selectFrame(newFrame: number){ this.selectedFrame = newFrame },
         setToolPanelState(newState: boolean){ this.toolPanelOpen = newState },

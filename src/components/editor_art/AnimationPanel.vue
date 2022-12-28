@@ -1,3 +1,196 @@
+<script lang="ts">
+export const AnimationPanelEventBus = new Event_Bus();
+</script>
+
+<script setup lang="ts">
+import AnimFrame from './AnimFrame.vue';
+import AnimationPlayer from '@/components/common/AnimationPlayer.vue';
+import HotkeyMap from '@/components/common/HotkeyMap';
+import DragList from '@/components/common/DragList.vue';
+
+import {ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { useMainStore } from '@/stores/Main';
+import { useArtEditorStore } from '@/stores/ArtEditor';
+import { Event_Bus } from '@/components/common/Event_Listener';
+import { ArtMainEventBus } from './ArtMain.vue';
+import type Core from '@/core';
+
+
+const mainStore = useMainStore();
+const artEditorStore = useArtEditorStore();
+
+const props = defineProps<{
+    sprite: Core.Sprite,
+    frameIDs: string[],
+}>();
+
+const emit = defineEmits([
+    'resized',
+    'frame-added',
+    'frame-deleted',
+    'frame-moved',
+    'frame-copied',
+    'selected-frame-changed',
+]);
+
+const frameListRef = ref<HTMLDivElement>();
+const isOpen = ref(artEditorStore.isAnimPanelOpen);
+const hotkeyMap = new HotkeyMap();
+const hotkeyDown = hotkeyMap.keyDown.bind(hotkeyMap);
+const hotkeyUp = hotkeyMap.keyUp.bind(hotkeyMap);
+
+const selectedFrameIdx = computed({
+    get(){
+        return artEditorStore.getSelectedFrame;
+    },
+    set(newIdx){
+        artEditorStore.selectFrame(newIdx);
+    }
+});
+const inputActive = computed(()=>mainStore.getInputActive);
+const animFrames = computed(()=>props.sprite.frames);
+const animFrameKeys = computed(()=>props.sprite.frameIDs);
+
+watch(inputActive, (newState: boolean)=>hotkeyMap.enabled = !newState);
+
+onMounted(()=>{
+    window.addEventListener('keydown', hotkeyDown);
+    window.addEventListener('keyup', hotkeyUp);
+
+    ArtMainEventBus.addEventListener('update-frame-previews', updateFramePreviews);
+
+    hotkeyMap.enabled = true;
+    bindHotkeys();
+});
+
+onBeforeUnmount(()=>{
+    window.removeEventListener('keydown', hotkeyDown);
+    window.removeEventListener('keyup', hotkeyUp);
+    
+    artEditorStore.setAnimPanelState(isOpen.value);
+});
+
+function bindHotkeys(): void {
+    const prevFrame = () => {
+        if (selectedFrameIdx.value > 0){
+            const newIdx = selectedFrameIdx.value - 1;
+            artEditorStore.selectFrame(newIdx);
+            selectedFrameChanged(newIdx);
+        }
+    }
+    const nextFrame = () => {
+        if (selectedFrameIdx.value < props.sprite.frames.length - 1){
+            const newIdx = selectedFrameIdx.value + 1;
+            artEditorStore.selectFrame(newIdx);
+            selectedFrameChanged(newIdx);
+        }
+    }
+
+    hotkeyMap.bindKey(['n'], toggleOpen);
+    hotkeyMap.bindKey(['arrowleft'], prevFrame);
+    hotkeyMap.bindKey(['arrowright'], nextFrame);
+    hotkeyMap.bindKey(['arrowdown'], ()=>AnimationPanelEventBus.emit('play-animation'));
+    hotkeyMap.bindKey(['escape'], ()=>AnimationPanelEventBus.emit('stop-animation'));
+}
+
+function toggleOpen(): void {
+    isOpen.value = !isOpen.value;
+
+    nextTick(()=>{
+        AnimationPanelEventBus.emit('frame-data-changed');
+        emit('resized');
+    })
+}
+
+function updateFramePreviews(range: number[] = [0, -1]): void {
+    if (range[1] == -1){
+        range[1] = props.sprite.frames.length - 1;
+    }
+
+    if (isOpen.value){
+        AnimationPanelEventBus.emit('frame-data-changed');
+
+        if (range.length == 1){
+            range = [range[0], range[0] + 1];
+        }
+
+        for (let i = range[0]; i <= range[1]; i++){
+            props.sprite.updateFrame(i);
+        }
+    }
+}
+
+function addFrame(): void {
+    let newFrameIdx = props.sprite.addFrame();
+    artEditorStore.selectFrame(newFrameIdx);
+    emit('frame-added');
+
+    nextTick(()=>{
+        const frameList = frameListRef.value;
+
+        if (frameList){
+            frameList.scrollTop = frameList.scrollHeight - frameList.clientHeight;
+        }
+    });
+}
+
+function deleteFrame(idx: number): void {
+    props.sprite.deleteFrame(idx);
+    selectedFrameIdx.value = Math.min(selectedFrameIdx.value, props.sprite.frames.length - 1);
+    emit('frame-deleted');
+}
+
+function frameMoved({idx, dir}: {idx: number, dir: number}): void {
+    if (dir < 0){
+        updateFramePreviews([
+            Math.max(idx - 1, 0),
+            Math.min(idx + 1, props.sprite.frames.length - 1)
+        ]);
+    }
+    else{
+        updateFramePreviews([
+            idx,
+            Math.min(idx + 2, props.sprite.frames.length - 1)
+        ]);
+    }
+    
+    emit('frame-moved');
+}
+
+function frameCopied(): void {
+    emit('frame-copied');
+}
+
+function selectedFrameChanged(newIdx: number): void {
+    emit('selected-frame-changed', newIdx);
+}
+
+function frameOrderChanged(event: {itemIdx: number, newIdx: number}): void {
+    const {itemIdx, newIdx} = event;
+    const movedFrame = props.sprite.frames[itemIdx];
+    const shiftForward = itemIdx > newIdx;
+    const compFunc = shiftForward ? (i: number) => i > newIdx : (i: number) => i < newIdx;
+    const dir = shiftForward ? -1 : 1;
+
+    for (let i = itemIdx; compFunc(i); i += dir){
+        props.sprite.frames[i] = props.sprite.frames[i + dir];
+        props.sprite.updateFrame(i);
+
+        if (selectedFrameIdx.value == i && i != itemIdx){
+            selectedFrameIdx.value -= dir;
+        }
+    }
+
+    props.sprite.updateFrame(newIdx);
+
+    if (itemIdx == selectedFrameIdx.value){
+        nextTick(()=>{
+            selectedFrameIdx.value = newIdx;
+        });
+    }
+}
+</script>
+
 <template>
     <div class="animPanel" :class="{animPanelClosed : !isOpen}">
         <div class="resizeBtnWrapper">
@@ -8,9 +201,15 @@
         </div>
         <div v-show="isOpen" ref="contents" class="panelContents">
             <div class="animPlayerWrapper">
-                <AnimationPlayer ref="animPlayer" :sprite="sprite" fps="12" startFrame="0" :loop="true"/>
+                <AnimationPlayer
+                    ref="animPlayer"
+                    :sprite="sprite"
+                    :fps="12"
+                    :startFrame="0"
+                    :loop="true"
+                    :parent-event-bus="AnimationPanelEventBus"/>
             </div>
-            <div v-if="isOpen" ref="frameList" class="scrollWrapper">
+            <div v-if="isOpen" ref="frameListRef" class="scrollWrapper">
                 <DragList
                     :items="animFrames"
                     :keylist="animFrameKeys"
@@ -33,189 +232,6 @@
         </div>
     </div>
 </template>
-
-<script>
-import AnimFrame from './AnimFrame';
-import AnimationPlayer from '@/components/common/AnimationPlayer';
-import HotkeyMap from '@/components/common/HotkeyMap';
-import DragList from '@/components/common/DragList';
-
-export default {
-    name: 'AnimationPanel',
-    components: {
-        AnimFrame,
-        AnimationPlayer,
-        DragList,
-    },
-    props: ['sprite', 'frameIDs'],
-    data(){
-        return {
-            isOpen: this.isOpen = this.$store.getters['ArtEditor/isAnimPanelOpen'],
-            hotkeyMap: new HotkeyMap(),
-            hotkeyDown: null,
-            hotkeyUp: null
-        }
-    },
-    watch: {
-        inputActive(newState){
-            this.hotkeyMap.enabled = !newState;
-        },
-    },
-    computed: {
-        selectedFrameIdx: {
-            get: function(){
-                return this.$store.getters['ArtEditor/getSelectedFrame'];
-            },
-            set: function(newIdx){
-                this.$store.dispatch('ArtEditor/selectFrame', newIdx);
-            },
-        },
-        inputActive(){
-            return this.$store.getters['getInputActive'];
-        },
-        animFrames(){
-            return this.sprite.frames;
-        },
-        animFrameKeys(){
-            return this.sprite.frameIDs;
-        }
-    },
-    mounted(){
-        this.hotkeyDown = this.hotkeyMap.keyDown.bind(this.hotkeyMap);
-        this.hotkeyUp = this.hotkeyMap.keyUp.bind(this.hotkeyMap);
-
-        window.addEventListener('keydown', this.hotkeyDown);
-        window.addEventListener('keyup', this.hotkeyUp);
-
-        this.hotkeyMap.enabled = true;
-        this.bindHotkeys();
-    },
-    beforeDestroy(){
-        window.removeEventListener('keydown', this.hotkeyDown);
-        window.removeEventListener('keyup', this.hotkeyUp);
-        
-        this.$store.dispatch('ArtEditor/setAnimPanelState', this.isOpen);
-    },
-    methods: {
-        bindHotkeys(){
-            let prevFrame = () => {
-                if (this.selectedFrameIdx > 0){
-                    let newIdx = this.selectedFrameIdx - 1;
-                    this.$store.dispatch('ArtEditor/selectFrame', newIdx);
-                    this.selectedFrameChanged(newIdx);
-                }
-            }
-            let nextFrame = () => {
-                if (this.selectedFrameIdx < this.sprite.frames.length - 1){
-                    let newIdx = this.selectedFrameIdx + 1;
-                    this.$store.dispatch('ArtEditor/selectFrame', newIdx);
-                    this.selectedFrameChanged(newIdx);
-                }
-            }
-
-            this.hotkeyMap.bindKey(['n'], this.toggleOpen);
-            this.hotkeyMap.bindKey(['arrowleft'], prevFrame);
-            this.hotkeyMap.bindKey(['arrowright'], nextFrame);
-            this.hotkeyMap.bindKey(['arrowdown'], this.$refs.animPlayer.playAnimation);
-            this.hotkeyMap.bindKey(['escape'], this.$refs.animPlayer.stopAnimation);
-        },
-        toggleOpen(){
-            this.isOpen = !this.isOpen;
-
-            this.$nextTick(()=>{
-                this.$refs.animPlayer.frameDataChanged();
-                this.$emit('resized');
-            })
-        },
-        updateFramePreviews(range = [0, -1]){
-            if (range[1] == -1){
-                range[1] = this.sprite.frames.length - 1;
-            }
-
-            if (this.isOpen){
-                this.$refs.animPlayer.frameDataChanged();
-
-                if (range.length == 1){
-                    range = [range[0], range[0] + 1];
-                }
-
-                for (let i = range[0]; i <= range[1]; i++){
-                    this.sprite.updateFrame(i);
-                }
-            }
-        },
-        addFrame(){
-            let newFrameIdx = this.sprite.addFrame();
-            this.$store.dispatch('ArtEditor/selectFrame', newFrameIdx);
-            this.$emit('frameAdded');
-
-            this.$nextTick(()=>{
-                const frameList = this.$refs.frameList;
-
-                if (frameList){
-                    frameList.scrollTop = frameList.scrollHeight - frameList.clientHeight;
-                }
-            });
-        },
-        deleteFrame(idx){
-            this.sprite.deleteFrame(idx);
-            this.selectedFrameIdx = Math.min(this.selectedFrameIdx, this.sprite.frames.length - 1);
-            this.$emit('frameDeleted');
-        },
-        frameMoved({idx, dir}){
-            if (dir < 0){
-                this.updateFramePreviews([
-                    Math.max(idx - 1, 0),
-                    Math.min(idx + 1, this.sprite.frames.length - 1)
-                ]);
-            }
-            else{
-                this.updateFramePreviews([
-                    idx,
-                    Math.min(idx + 2, this.sprite.frames.length - 1)
-                ]);
-            }
-            
-            this.$emit('frameMoved');
-        },
-        frameCopied(){
-            this.$emit('frameCopied');
-        },
-        selectedFrameChanged(){
-            this.$emit('selectedFrameChanged');
-        },
-        frameOrderChanged(event){
-            const {itemIdx, newIdx} = event;
-            const movedFrame = this.sprite.frames[itemIdx];
-            const shiftForward = itemIdx > newIdx;
-            const compFunc = shiftForward ? i => i > newIdx : i => i < newIdx;
-            const dir = shiftForward ? -1 : 1;
-
-            for (let i = itemIdx; compFunc(i); i += dir){
-                this.sprite.frames[i] = this.sprite.frames[i + dir];
-                this.sprite.updateFrame(i);
-
-                if (this.selectedFrameIdx == i && i != itemIdx){
-                    this.selectedFrameIdx -= dir;
-                }
-            }
-
-            this.$set(
-                this.sprite.frames,
-                newIdx,
-                movedFrame
-            );
-            this.sprite.updateFrame(newIdx);
-
-            if (itemIdx == this.selectedFrameIdx){
-                this.$nextTick(()=>{
-                    this.selectedFrameIdx = newIdx;
-                });
-            }
-        }
-    }
-}
-</script>
 
 <style scoped>
 .animPanel{

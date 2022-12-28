@@ -1,6 +1,135 @@
+<script setup lang="ts">
+import { ref, computed, watch, nextTick, onMounted } from 'vue';
+import Core from '@/core';
+import type { Event_Bus } from './Event_Listener';
+
+const props = defineProps<{
+    sprite: Core.Sprite,
+    fps: number,
+    startFrame: number,
+    loop: boolean,
+    parentEventBus: Event_Bus
+}>();
+
+const curFrameIdx = ref(0);
+const canvasRef = ref<HTMLCanvasElement>();
+const checkerBGBuff = Core.Draw.createHDPICanvas(500, 500);
+const pixelBuff = Core.Draw.createCanvas(Core.Sprite.DIMENSIONS, Core.Sprite.DIMENSIONS);
+const animationLoop = ref(-1);
+const dimensions = 150;
+
+const isPlaying = computed(()=>animationLoop.value >= 0);
+const sprite = computed(()=>props.sprite);
+const startFrame = computed(()=>props.startFrame);
+
+watch(sprite, ()=>newSpriteSelection());
+watch(startFrame, (newVal)=>{
+    curFrameIdx.value = newVal;
+    drawFrame();
+});
+
+onMounted(()=>{
+    const canvas = canvasRef.value!;
+
+    Core.Draw.resizeCanvas(checkerBGBuff, canvas.width, canvas.height);
+    Core.Draw.drawCheckerBG(checkerBGBuff, 4, "#B5B5B5", '#CCCCCC');
+
+    props.parentEventBus.addEventListener('frame-deleted', onFrameDelete);
+    props.parentEventBus.addEventListener('fps-changed', fpsChanged);
+    props.parentEventBus.addEventListener('frame-data-changed', frameDataChanged);
+    newSpriteSelection();
+});
+
+function drawFrame(): void {
+    const canvas = canvasRef.value!;
+    const ctx = canvas.getContext('2d')!;
+
+    Core.Draw.resizeHDPICanvas(canvas, dimensions, dimensions);
+    
+    ctx.drawImage(checkerBGBuff, 0, 0, canvas.width, canvas.height);
+
+    if (props.sprite && props.sprite.frames[curFrameIdx.value] != null){
+        const scaleFac = canvas.width / Core.Sprite.DIMENSIONS;
+
+        props.sprite.drawToCanvas(curFrameIdx.value, pixelBuff);
+
+        ctx.imageSmoothingEnabled = false;
+
+        ctx.scale(scaleFac, scaleFac);
+        ctx.drawImage(pixelBuff, 0, 0, pixelBuff.width, pixelBuff.height);
+        ctx.resetTransform();
+    }
+}
+
+function advanceFrame(): void {
+    const nextFrame = (curFrameIdx.value + 1);
+
+    if (props.loop){
+        curFrameIdx.value = nextFrame % props.sprite.frames.length;
+    }
+    else{
+        curFrameIdx.value = Math.min(nextFrame, props.sprite.frames.length - 1);
+    }
+}
+
+function playAnimation(): void {
+    if (props.sprite && animationLoop.value < 0 && props.fps > 0){
+        let intervalTime = 1000/props.fps;
+
+        animationLoop.value = setInterval(()=>{
+            advanceFrame();
+            drawFrame();
+        }, intervalTime);
+    }
+    else{
+        pauseAnimation();
+    }
+}
+
+function pauseAnimation(): void {
+    clearInterval(animationLoop.value);
+    animationLoop.value = -1;
+}
+
+function stopAnimation(): void {
+    pauseAnimation();
+    curFrameIdx.value = props.startFrame;
+    drawFrame();
+}
+
+function frameDataChanged(): void {
+    drawFrame();
+}
+
+function fpsChanged(): void {
+    if (animationLoop.value >= 0){
+        pauseAnimation();
+        playAnimation();
+    }
+}
+
+function newSpriteSelection(): void {
+    if (props.sprite){
+        pixelBuff.width = Core.Sprite.DIMENSIONS;
+        pixelBuff.height = Core.Sprite.DIMENSIONS;
+    }
+
+    curFrameIdx.value = props.startFrame;
+
+    nextTick(()=>{
+        drawFrame();
+    });
+}
+
+function onFrameDelete(): void {
+    curFrameIdx.value = Math.min(curFrameIdx.value, props.sprite.frames.length - 1);
+    drawFrame();
+}
+</script>
+
 <template>
     <div class="animationPlayer">
-        <canvas ref="canvas" width="150" height="150">
+        <canvas ref="canvasRef" width="150" height="150">
             //Error loading HTML5 canvas
         </canvas>
         <div class="buttons">
@@ -14,126 +143,6 @@
         </div>
     </div>
 </template>
-
-<script>
-export default {
-    name: 'AnimationPlayer',
-    props: ['sprite', 'fps', 'startFrame', 'loop'],
-    data(){
-        return {
-            curFrameIdx: 0,
-            canvas: null,
-            checkerBGBuff: null,
-            pixelBuff: null,
-            animationLoop: null,
-            dimensions: 150,
-        }
-    },
-    computed: {
-        isPlaying(){
-            return this.animationLoop != null;
-        }
-    },
-    watch: {
-        sprite(){
-            this.newSpriteSelection();
-        },
-        startFrame: function(val) {
-            this.curFrameIdx = val;
-            this.drawFrame();
-        },
-    },
-    mounted(){
-        let spriteDim = Shared.Sprite.DIMENSIONS;
-        this.canvas = this.$refs.canvas;
-        this.checkerBGBuff = Shared.createHDPICanvas(this.canvas.width, this.canvas.height);
-        this.pixelBuff = Shared.createCanvas(spriteDim, spriteDim);
-
-        Shared.drawCheckerBG(this.checkerBGBuff, 4, "#B5B5B5", '#CCCCCC');
-        this.$parent.$on('frameDeleted', this.onFrameDelete);
-        this.newSpriteSelection();
-    },
-    methods: {
-        drawFrame(){
-            let ctx = this.canvas.getContext('2d');
-
-            Shared.resizeHDPICanvas(this.canvas, this.dimensions, this.dimensions);
-            
-            ctx.drawImage(this.checkerBGBuff, 0, 0, this.canvas.width, this.canvas.height);
-
-            if (this.sprite && this.sprite.frames[this.curFrameIdx] != null){
-                let scaleFac = this.canvas.width / Shared.Sprite.DIMENSIONS;
-
-                this.sprite.drawToCanvas(this.curFrameIdx, this.pixelBuff);
-
-                ctx.imageSmoothingEnabled = false;
-                ctx.webkitImageSmoothingEnabled = false;
-
-                ctx.scale(scaleFac, scaleFac);
-                ctx.drawImage(this.pixelBuff, 0, 0, this.pixelBuff.width, this.pixelBuff.height);
-                ctx.resetTransform();
-            }
-        },
-        advanceFrame(){
-            let nextFrame = (this.curFrameIdx + 1);
-
-            if (this.loop){
-                this.curFrameIdx = nextFrame % this.sprite.frames.length;
-            }
-            else{
-                this.curFrameIdx = Math.min(nextFrame, this.sprite.frames.length - 1);
-            }
-        },
-        playAnimation(){
-            if (this.sprite && this.animationLoop == null && this.fps > 0){
-                let intervalTime = 1000/this.fps;
-
-                this.animationLoop = setInterval(()=>{
-                    this.advanceFrame();
-                    this.drawFrame();
-                }, intervalTime);
-            }
-            else{
-                this.pauseAnimation();
-            }
-        },
-        pauseAnimation(){
-            clearInterval(this.animationLoop);
-            this.animationLoop = null;
-        },
-        stopAnimation(){
-            this.pauseAnimation();
-            this.curFrameIdx = this.startFrame;
-            this.drawFrame();
-        },
-        frameDataChanged(){
-            this.drawFrame();
-        },
-        fpsChanged(){
-            if (this.animationLoop){
-                this.pauseAnimation();
-                this.playAnimation();
-            }
-        },
-        newSpriteSelection(){
-            if (this.sprite){
-                this.pixelBuff.width = Shared.Sprite.DIMENSIONS;
-                this.pixelBuff.height = Shared.Sprite.DIMENSIONS;
-            }
-
-            this.curFrameIdx = this.startFrame;
-
-            this.$nextTick(()=>{
-                this.drawFrame();
-            });
-        },
-        onFrameDelete(){
-            this.curFrameIdx = Math.min(this.curFrameIdx, this.sprite.frames.length - 1);
-            this.drawFrame();
-        },
-    }
-}
-</script>
 
 <style scoped>
 .animationPlayer{

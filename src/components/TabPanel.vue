@@ -5,6 +5,7 @@ import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useMainStore } from '@/stores/Main';
 import { useAssetBrowserStore } from '@/stores/AssetBrowser';
+import { AppEventBus } from '@/App.vue';
 import Core from '@/core';
 import roomTab from '@/assets/room_icon.svg';
 import spriteIcon from '@/assets/sprite_icon.svg';
@@ -49,6 +50,7 @@ onMounted(()=>{
     contextTabs.value = [editorTabs.room];
     updateEditorTabs();
     mainStore.setSelectedEditor(Core.EDITOR_ID.ROOM);
+    AppEventBus.addEventListener('update-editor-tabs', updateEditorTabs);
 });
 
 function updateEditorTabs(){
@@ -58,7 +60,7 @@ function updateEditorTabs(){
     contextTabs.value = [editorTabs.room];
 
     if (currentAsset){
-        let assetType = currentAsset.category_ID;
+        const assetType = currentAsset.category_ID;
 
         switch(assetType){
             case Core.CATEGORY_ID.SPRITE:

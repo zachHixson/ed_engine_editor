@@ -1,12 +1,126 @@
+<script setup lang='ts'>
+import { ref, computed, nextTick, onMounted } from 'vue';
+import { useAssetBrowserStore } from '@/stores/AssetBrowser';
+import { useArtEditorStore } from '@/stores/ArtEditor';
+import Core from '@/core';
+
+const assetBrowserStore = useAssetBrowserStore();
+const artEditorStore = useArtEditorStore();
+
+const props = defineProps<{
+    sprite: Core.Sprite,
+    index: number,
+}>();
+
+const emit = defineEmits([
+    'selected-frame-changed',
+    'frame-deleted',
+    'frame-copied',
+    'frame-moved',
+]);
+
+const hover = ref(false);
+const canvasRef = ref<HTMLCanvasElement>();
+const wrapperRef = ref<HTMLDivElement>();
+const checkerBGBuff: HTMLCanvasElement = Core.Draw.createHDPICanvas(500, 500);
+const pixelBuff: HTMLCanvasElement = Core.Draw.createCanvas(Core.Sprite.DIMENSIONS, Core.Sprite.DIMENSIONS);
+
+const selectedFrameIdx = computed(()=>artEditorStore.getSelectedFrame);
+const isSelected = computed(()=>selectedFrameIdx.value == props.index);
+const canDelete = computed(()=>props.sprite.frames.length > 1);
+const isFirst = computed(()=>props.index == 0);
+const isLast = computed(()=>props.index >= props.sprite.frames.length - 1);
+
+onMounted(()=>{
+    nextTick(()=>{
+        const canvas = canvasRef.value!;
+        const {clientWidth, clientHeight} = wrapperRef.value!;
+
+        Core.Draw.resizeHDPICanvas(canvas, clientWidth, clientHeight);
+        Core.Draw.resizeHDPICanvas(checkerBGBuff, canvas.width, canvas.height);
+
+        Core.Draw.drawCheckerBG(checkerBGBuff, 4, "#B5B5B5", '#CCCCCC');
+
+        drawCanvas();
+    });
+});
+
+function getSprite(): Core.Sprite {
+    return assetBrowserStore.getSelectedAsset as Core.Sprite;
+}
+
+function drawCanvas(): void {
+    const canvas = canvasRef.value!;
+    const ctx = canvas.getContext('2d')!;
+    
+    ctx.drawImage(checkerBGBuff, 0, 0, canvas.width, canvas.height);
+
+    if (props.sprite.frames[props.index]){
+        const scaleFac = canvas.width / Core.Sprite.DIMENSIONS;
+
+        props.sprite.drawToCanvas(props.index, pixelBuff);
+
+        ctx.imageSmoothingEnabled = false;
+
+        ctx.scale(scaleFac, scaleFac);
+        ctx.drawImage(pixelBuff, 0, 0, pixelBuff.width, pixelBuff.height);
+        ctx.resetTransform();
+    }
+}
+
+function updateCanvas(): void {
+    drawCanvas();
+}
+
+function selectFrame(idx: number = props.index): void {
+    artEditorStore.selectFrame(idx);
+    emit('selected-frame-changed');
+}
+
+function deleteFrame(event: MouseEvent): void {
+    event.stopPropagation();
+    emit('frame-deleted', props.index);
+}
+
+function copyFrame(event: MouseEvent): void {
+    let selectedFrame = selectedFrameIdx.value;
+
+    event.stopPropagation();
+
+    if (props.index < selectedFrame){
+        selectedFrame += 1;
+    }
+    
+    props.sprite.copyFrame(props.index);
+    artEditorStore.selectFrame(selectedFrame);
+    emit('frame-copied', props.index);
+}
+
+function moveFrame(event: MouseEvent, dir: number): void {
+    let selectFrame = selectedFrameIdx.value;
+
+    event.stopPropagation();
+
+    if (isSelected.value){
+        selectFrame += dir;
+    }
+    
+    props.sprite.moveFrame(props.index, dir);
+    artEditorStore.selectFrame(selectFrame);
+    emit('selected-frame-changed');
+    emit('frame-moved', {idx: props.index, dir});
+}
+</script>
+
 <template>
     <div
         class="animFrame"
-        ref="wrapper"
+        ref="wrapperRef"
         @click="selectFrame()"
         @mouseover="hover = true"
         @mouseleave="hover = false"
         :class="{selected: isSelected}">
-        <canvas ref="canvas">
+        <canvas ref="canvasRef">
             //Error loading HTML5 canvas
         </canvas>
         <button
@@ -36,115 +150,6 @@
         </button>
     </div>
 </template>
-
-<script>
-export default {
-    name: 'AnimFrame',
-    props: ['sprite', 'index'],
-    data(){
-        return {
-            hover: false,
-            canvas: null,
-            checkerBGBuff: null,
-            pixelBuff: null
-        }
-    },
-    mounted(){
-        let spriteDim = Shared.Sprite.DIMENSIONS;
-        let {clientWidth, clientHeight} = this.$refs.wrapper;
-
-        this.canvas = this.$refs.canvas;
-        Shared.resizeHDPICanvas(this.canvas, clientWidth, clientHeight);
-        this.checkerBGBuff = Shared.createHDPICanvas(this.canvas.width, this.canvas.height);
-        this.pixelBuff = Shared.createCanvas(spriteDim, spriteDim);
-
-        Shared.drawCheckerBG(this.checkerBGBuff, 4, "#B5B5B5", '#CCCCCC');
-
-        this.drawCanvas();
-    },
-    computed: {
-        isSelected(){
-            return this.selectedFrameIdx == this.index;
-        },
-        canDelete(){
-            return this.sprite.frames.length > 1;
-        },
-        selectedFrameIdx(){
-            return this.$store.getters['ArtEditor/getSelectedFrame'];
-        },
-        isFirst(){
-            return this.index == 0;
-        },
-        isLast(){
-            return this.index >= this.sprite.frames.length - 1;
-        }
-    },
-    methods: {
-        getSprite(){
-            return this.$store.getters['AssetBrowser/getSelectedAsset'];
-        },
-        drawCanvas(){
-            let ctx = this.canvas.getContext('2d');
-            
-            ctx.drawImage(this.checkerBGBuff, 0, 0, this.canvas.width, this.canvas.height);
-
-            if (this.sprite.frames[this.index]){
-                let scaleFac = this.canvas.width / Shared.Sprite.DIMENSIONS;
-
-                this.sprite.drawToCanvas(this.index, this.pixelBuff);
-
-                ctx.imageSmoothingEnabled = false;
-                ctx.webkitImageSmoothingEnabled = false;
-
-                ctx.scale(scaleFac, scaleFac);
-                ctx.drawImage(this.pixelBuff, 0, 0, this.pixelBuff.width, this.pixelBuff.height);
-                ctx.resetTransform();
-            }
-        },
-        updateCanvas(){
-            this.drawCanvas();
-        },
-        selectFrame(idx = this.index){
-            this.$store.dispatch('ArtEditor/selectFrame', idx);
-            this.$emit('selectedFrameChanged');
-        },
-        deleteFrame(event){
-            event.stopPropagation();
-            event.cancelBubble = true;
-            this.$emit('frameDeleted', this.index);
-        },
-        copyFrame(event){
-            let selectedFrame = this.selectedFrameIdx;
-
-            event.stopPropagation();
-            event.cancelBubble = true;
-
-            if (this.index < selectedFrame){
-                selectedFrame += 1;
-            }
-            
-            this.sprite.copyFrame(this.index);
-            this.$store.dispatch('ArtEditor/selectFrame', selectedFrame);
-            this.$emit('frameCopied', this.index);
-        },
-        moveFrame(event, dir){
-            let selectFrame = this.selectedFrameIdx;
-
-            event.stopPropagation();
-            event.cancelBubble = true;
-
-            if (this.isSelected){
-                selectFrame += dir;
-            }
-            
-            this.sprite.moveFrame(this.index, dir);
-            this.$store.dispatch('ArtEditor/selectFrame', selectFrame);
-            this.$emit('selectedFrameChanged');
-            this.$emit('frameMoved', {idx: this.index, dir});
-        }
-    }
-}
-</script>
 
 <style scoped>
 .animFrame{

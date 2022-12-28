@@ -29,7 +29,7 @@ const props = defineProps<{
     parentEventBus: Event_Bus,
 }>();
 
-const emit = defineEmits(['tool-selected', 'nav-changed']);
+const emit = defineEmits(['tool-selected', 'nav-changed', 'set-hotkey-tool']);
 
 const controls: iControl[] = [
     {
@@ -94,6 +94,7 @@ function controlClick(control: typeof controls[number]): void {
 
 function setHotkeyTool(newTool: Core.NAV_TOOL_TYPE | null): void {
     hotkeyTool = newTool;
+    emit('set-hotkey-tool', hotkeyTool);
 }
 
 function mouseDown(event: MouseEvent): void {

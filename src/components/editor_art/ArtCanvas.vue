@@ -1,201 +1,231 @@
+<script lang="ts">
+export const ArtCanvasEventBus = new Event_Bus();
+</script>
+
+<script setup lang="ts">
+import UndoPanel from '@/components/common/UndoPanel.vue';
+import NavControlPanel from '@/components/common/NavControlPanel.vue';
+import Art_Canvas_Renderer from './Art_Canvas_Renderer';
+
+import { ref, computed, watch, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
+import type Tool_Base from './tools/Tool_Base';
+import { useArtEditorStore } from '@/stores/ArtEditor';
+import { Event_Bus } from '@/components/common/Event_Listener';
+import { ArtMainEventBus } from './ArtMain.vue';
+import Core from '@/core';
+
+const DEFAULT_CELL_SIZE = 20;
+
+const props = defineProps<{
+    tool: Tool_Base,
+    navState: Core.iNavState,
+    spriteFrame: ImageData,
+    undoLength: number,
+    redoLength: number,
+}>();
+
+const emit = defineEmits([
+    'mouse-down',
+    'mouse-up',
+    'mouse-move',
+    'mouse-enter',
+    'mouse-leave',
+    'mouse-wheel',
+    'nav-selected',
+    'undo',
+    'redo',
+]);
+
+const artEditorStore = useArtEditorStore();
+const { Vector } = Core;
+
+const artCanvasRef = ref<HTMLDivElement>();
+const canvasRef = ref<HTMLCanvasElement>();
+const navHotkeyTool = ref<Core.NAV_TOOL_TYPE | null>(null);
+const previewData: ImageData = new ImageData(Core.Sprite.DIMENSIONS, Core.Sprite.DIMENSIONS);
+const maxZoom = ref(2);
+const mouseCell = new Core.Vector(-20, -20);
+const unitScale = ref(1);
+const devicePixelRatio = ref(window.devicePixelRatio);
+let renderer: Art_Canvas_Renderer | null = null;
+
+const CANVAS_WIDTH = Core.Sprite.DIMENSIONS * DEFAULT_CELL_SIZE;
+const UNIT_WIDTH = DEFAULT_CELL_SIZE / Core.Sprite.DIMENSIONS;
+const contentsBounds = (()=>{
+    const halfCanvas = (CANVAS_WIDTH / 2);
+    return [-halfCanvas, -halfCanvas, halfCanvas, halfCanvas];
+})();
+
+const tool = computed(()=>props.tool);
+const toolSize = computed(()=>artEditorStore.getSelectedSize);
+const spriteFrame = computed(()=>props.spriteFrame);
+
+watch(tool, ()=>{
+    if (tool){
+        tool.value.beforeDestroy();
+        tool.value.setPixelBuff(props.spriteFrame);
+        tool.value.setPreviewBuff(previewData);
+        tool.value.setMouseCell(mouseCell);
+        tool.value.updateCursorBuff();
+        renderer!.mouseMove();
+    }
+});
+watch(toolSize, ()=>{
+    if (tool){
+        tool.value.updateCursorBuff();
+        renderer!.mouseMove();
+    }
+});
+watch(spriteFrame, ()=>{
+    renderer!.setSprite(props.spriteFrame, props.navState);
+    tool.value.setPixelBuff(props.spriteFrame);
+    previewData.data.fill(0);
+});
+
+onBeforeMount(()=>{
+    ArtMainEventBus.addEventListener('resize', resize);
+});
+
+onMounted(()=>{
+    renderer = new Art_Canvas_Renderer(canvasRef.value!, props.spriteFrame, previewData, props.navState);
+
+    canvasRef.value!.addEventListener('mousedown', mouseDown);
+    canvasRef.value!.addEventListener('mouseup', mouseUp);
+    canvasRef.value!.addEventListener('mousemove', mouseMove);
+    canvasRef.value!.addEventListener('wheel', wheel);
+    canvasRef.value!.addEventListener('mouseenter', mouseEnter);
+    canvasRef.value!.addEventListener('mouseleave', mouseLeave);
+
+    maxZoom.value = getZoomBounds().max;
+});
+
+onBeforeUnmount(()=>{
+    renderer = null;
+});
+
+function mouseDown(event: MouseEvent): void {
+    ArtCanvasEventBus.emit('mouse-down', event);
+
+    if (navHotkeyTool.value == null){
+        emit('mouse-down', event);
+        renderer!.mouseDown();
+    }
+}
+
+function mouseUp(event: MouseEvent): void {
+    if (navHotkeyTool.value == null){
+        emit('mouse-up', event);
+        renderer!.mouseUp();
+    }
+
+    ArtCanvasEventBus.emit('mouse-up');
+}
+
+function mouseMove(event: MouseEvent): void {
+    ArtCanvasEventBus.emit('mouse-move', event);
+
+    if (navHotkeyTool.value == null){
+        updateMouseCell(event);
+        emit('mouse-move', event);
+        renderer!.mouseMove();
+    }
+}
+
+function mouseEnter(event: MouseEvent): void {
+    ArtCanvasEventBus.emit('mouse-enter');
+    emit('mouse-enter');
+}
+
+function mouseLeave(event: MouseEvent): void {
+    mouseMove(event);
+    ArtCanvasEventBus.emit('mouse-leave');
+    emit('mouse-leave', event);
+}
+
+function wheel(event: WheelEvent): void {
+    ArtCanvasEventBus.emit('mouse-wheel', event);
+    emit('mouse-wheel', event);
+}
+
+function resize(): void {
+    const wrapper = artCanvasRef.value!;
+    const canvas = canvasRef.value!;
+
+    Core.Draw.resizeHDPICanvas(
+        canvas,
+        Math.max(wrapper.clientWidth, 1),
+        Math.max(wrapper.clientHeight, 1)
+    );
+
+    ArtCanvasEventBus.emit('set-container.dimensions', {width: wrapper.clientWidth, height: wrapper.clientHeight});
+
+    if (renderer){
+        renderer.resize();
+        maxZoom.value = getZoomBounds().max;
+    }
+}
+
+function enableNav(navTool: Core.NAV_TOOL_TYPE): void {
+    artEditorStore.selectTool(null);
+    artEditorStore.setSelectedNavTool(navTool);
+    emit('nav-selected');
+}
+
+function getZoomBounds(): {min: number, max: number} {
+    const canvas = canvasRef.value!;
+    let maxZoom = (Math.max(canvas.clientWidth, canvas.clientHeight) / CANVAS_WIDTH) * 2;
+    return {min: 0.5, max: maxZoom};
+}
+
+function undo(): void {
+    emit('undo');
+}
+
+function redo(): void {
+    emit('redo');
+}
+
+function updateMouseCell(event: MouseEvent): void {
+    const CELL_SIZE = (CANVAS_WIDTH / Core.Sprite.DIMENSIONS) * props.navState.zoomFac;
+    let mouseCell = new Vector(event.offsetX, event.offsetY).multiplyScalar(devicePixelRatio.value);
+    let windowHalfWidth = new Vector(canvasRef.value!.width / 2, canvasRef.value!.height / 2);
+    let canvasHalfWidth = new Vector(CANVAS_WIDTH / 2, CANVAS_WIDTH / 2);
+    let scaledOffset = props.navState.offset.clone().multiplyScalar(props.navState.zoomFac);
+
+    canvasHalfWidth.multiplyScalar(props.navState.zoomFac);
+
+    mouseCell.subtract(windowHalfWidth);
+    mouseCell.add(canvasHalfWidth);
+    mouseCell.subtract(scaledOffset);
+    mouseCell.divideScalar(CELL_SIZE);
+
+    mouseCell.floor();
+
+    mouseCell.copy(mouseCell);
+}
+</script>
+
 <template>
-    <div id="artCanvas" ref="artCanvas">
+    <div id="artCanvas" ref="artCanvasRef">
         <UndoPanel class="undoPanel" :undoLength="undoLength" :redoLength="redoLength" @undo="undo()" @redo="redo()"/>
-        <canvas id="canvas" class="canvas" ref="canvas">
+        <canvas id="canvas" class="canvas" ref="canvasRef">
             //Error loading HTML5 canvas, check browser compatibility
         </canvas>
         <NavControlPanel
             class="navControlPanel"
-            ref="navControlPanel"
+            ref="navControlPanelRef"
             :navState="navState"
-            :selectedNavTool="selectedNavTool"
+            :selectedNavTool="artEditorStore.getSelectedNavTool"
             :maxZoom="maxZoom"
             :contentsBounds="contentsBounds"
             :unitScale="UNIT_WIDTH"
             :dpiScale="devicePixelRatio"
-            @navChanged="renderer.navChanged()"
-            @tool-selected="enableNav"/>
+            :parent-event-bus="ArtCanvasEventBus"
+            @navChanged="renderer!.navChanged()"
+            @tool-selected="enableNav"
+            @set-hotkey-tool="navHotkeyTool = $event"/>
     </div>
 </template>
-
-<script>
-import UndoPanel from "@/components/common/UndoPanel";
-import NavControlPanel from '@/components/common/NavControlPanel';
-import Art_Canvas_Renderer from './Art_Canvas_Renderer';
-
-const DEFAULT_CELL_SIZE = 20;
-
-export default {
-    name: "ArtCanvas",
-    props: ['tool', 'navState', 'spriteFrame', 'undoLength', 'redoLength'],
-    components: {
-        UndoPanel,
-        NavControlPanel
-    },
-    data() {
-        return {
-            canvas: null,
-            renderer: null,
-            previewData: new ImageData(Shared.Sprite.DIMENSIONS, Shared.Sprite.DIMENSIONS),
-            navControl: null,
-            maxZoom: 2,
-            toolMap: new Map(),
-            mouseCell: new Vector(-20, -20),
-            unitScale: 1
-        }
-    },
-    computed: {
-        GRID_DIV(){
-            return Shared.Sprite.DIMENSIONS;
-        },
-        CANVAS_WIDTH(){
-            return this.GRID_DIV * DEFAULT_CELL_SIZE;
-        },
-        UNIT_WIDTH(){
-            return DEFAULT_CELL_SIZE / this.GRID_DIV;
-        },
-        contentsBounds(){
-            let halfCanvas = (this.CANVAS_WIDTH / 2) * 1;
-            return [-halfCanvas, -halfCanvas, halfCanvas, halfCanvas];
-        },
-        selectedNavTool(){
-            return this.$store.getters['ArtEditor/getSelectedNavTool'];
-        },
-        toolSize(){
-            return this.$store.getters['ArtEditor/getSelectedSize'];
-        },
-        devicePixelRatio(){
-            return devicePixelRatio;
-        }
-    },
-    watch: {
-        tool(){
-            if (this.tool){
-                this.tool.beforeDestroy();
-                this.tool.setPixelBuff(this.spriteFrame);
-                this.tool.setPreviewBuff(this.previewData);
-                this.tool.setMouseCell(this.mouseCell);
-                this.tool.updateCursorBuff();
-                this.renderer.mouseMove();
-            }
-        },
-        toolSize(){
-           if (this.tool){
-               this.tool.updateCursorBuff();
-               this.renderer.mouseMove();
-           }
-        },
-        spriteFrame(){
-            this.renderer.setSprite(this.spriteFrame, this.navState);
-            this.tool.setPixelBuff(this.spriteFrame);
-            this.previewData.data.fill(0);
-        }
-    },
-    mounted(){
-        this.canvas = this.$refs.canvas;
-        this.navControl = this.$refs.navControlPanel;
-        this.renderer = new Art_Canvas_Renderer(this.canvas, this.spriteFrame, this.previewData, this.navState);
-        
-        this.canvas.addEventListener('mousedown', this.mouseDown);
-        this.canvas.addEventListener('mouseup', this.mouseUp);
-        this.canvas.addEventListener('mousemove', this.mouseMove);
-        this.canvas.addEventListener('wheel', this.wheel);
-        this.canvas.addEventListener('mouseenter', this.navControl.mouseEnter);
-        this.canvas.addEventListener('mouseleave', this.mouseLeave);
-
-        this.maxZoom = this.getZoomBounds().max;
-    },
-    destroyed(){
-        this.renderer = null;
-    },
-    methods:{
-        mouseDown(event){
-            this.navControl.mouseDown(event);
-
-            if (this.navControl.hotkeyTool == null){
-                this.$emit('mouse-down', event);
-                this.renderer.mouseDown(event);
-            }
-        },
-        mouseUp(event){
-            if (this.navControl.hotkeyTool == null){
-                this.$emit('mouse-up', event);
-                this.renderer.mouseUp(event);
-            }
-
-            this.navControl.mouseUp(event);
-        },
-        mouseMove(event){
-            this.navControl.mouseMove(event);
-
-            if (this.navControl.hotkeyTool == null){
-                this.updateMouseCell(event);
-                this.$emit('mouse-move', event);
-                this.renderer.mouseMove(event);
-            }
-        },
-        mouseLeave(event){
-            this.mouseMove(event);
-            this.navControl.mouseLeave(event);
-            this.$emit('mouse-leave', event);
-        },
-        wheel(event){
-            this.navControl.scroll(event);
-        },
-        resize(){
-            let wrapper = this.$refs.artCanvas;
-            let canvas = this.$refs.canvas;
-
-            Shared.resizeHDPICanvas(
-                canvas,
-                Math.max(wrapper.clientWidth, 1),
-                Math.max(wrapper.clientHeight, 1)
-            );
-
-            this.$refs.navControlPanel.setContainerDimensions(wrapper.clientWidth, wrapper.clientHeight);
-
-            if (this.renderer){
-                this.renderer.resize();
-                this.maxZoom = this.getZoomBounds().max;
-            }
-        },
-        enableNav(navTool){
-            this.$store.dispatch('ArtEditor/selectTool', null);
-            this.$store.dispatch('ArtEditor/setSelectedNavTool', navTool);
-            this.$emit('nav-selected');
-        },
-        getZoomBounds(){
-            let maxZoom = (Math.max(this.canvas.clientWidth, this.canvas.clientHeight) / this.CANVAS_WIDTH) * 2;
-            return {min: 0.5, max: maxZoom};
-        },
-        undo(){
-            this.$emit('undo');
-        },
-        redo(){
-            this.$emit('redo');
-        },
-        updateMouseCell(event){
-            const CELL_SIZE = (this.CANVAS_WIDTH / this.GRID_DIV) * this.navState.zoomFac;
-            let mouseCell = new Vector(event.offsetX, event.offsetY).multiplyScalar(devicePixelRatio);
-            let windowHalfWidth = new Vector(this.canvas.width / 2, this.canvas.height / 2);
-            let canvasHalfWidth = new Vector(this.CANVAS_WIDTH / 2, this.CANVAS_WIDTH / 2);
-            let scaledOffset = this.navState.offset.clone().multiplyScalar(this.navState.zoomFac);
-
-            canvasHalfWidth.multiplyScalar(this.navState.zoomFac);
-
-            mouseCell.subtract(windowHalfWidth);
-            mouseCell.add(canvasHalfWidth);
-            mouseCell.subtract(scaledOffset);
-            mouseCell.divideScalar(CELL_SIZE);
-
-            mouseCell.x = Math.floor(mouseCell.x);
-            mouseCell.y = Math.floor(mouseCell.y);
-
-            this.mouseCell.copy(mouseCell);
-        }
-    }
-}
-</script>
 
 <style scoped>
 .artCanvas{

@@ -60,8 +60,8 @@ watch(props.selectedAsset, ()=>{
         }
     }
 });
-watch(artEditorStore.getSelectedColor, (newColor)=>tool.setToolColor(newColor));
-watch(selectedSize, (newSize)=>tool.setToolSize(newSize));
+watch(artEditorStore.getSelectedColor, (newColor)=>tool!.setToolColor(newColor));
+watch(selectedSize, (newSize)=>tool!.setToolSize(newSize));
 watch(selectedTool, (newTool)=>toolSelected(newTool!));
 
 onMounted(()=>{
@@ -217,8 +217,8 @@ function updateFrameIDs(): void {
         <ArtCanvas
             class="artCanvas"
             ref="artCanvas"
-            :tool="tool"
-            :navState="selectedAsset.navState"
+            :tool="tool!"
+            :navState="selectedAsset.navState!"
             :spriteFrame="selectedAsset.frames[selectedFrameIdx]"
             :debugSprite="selectedAsset"
             :undoLength="undoStore.undoLength"
@@ -235,11 +235,11 @@ function updateFrameIDs(): void {
             :sprite="selectedAsset"
             :frameIDs="frameIDs"
             @resized="resize"
-            @selectedFrameChanged="selectedFrameChanged()"
-            @frameAdded="frameAdded()"
-            @frameDeleted="commitFullState()"
-            @frameMoved="commitFullState()"
-            @frameCopied="commitFullState()" />
+            @selected-frame-changed="selectedFrameChanged()"
+            @frame-added="frameAdded()"
+            @frame-deleted="commitFullState()"
+            @frame-moved="commitFullState()"
+            @frame-copied="commitFullState()" />
     </div>
 </template>
 
