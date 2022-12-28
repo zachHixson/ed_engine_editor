@@ -1,19 +1,19 @@
+<script setup lang="ts">
+const props = defineProps<{
+    heading: string,
+    iconPath: string,
+}>();
+</script>
+
 <template>
     <div class="categoryWrapper">
         <div class="title">
-            <img class="icon" :src="require(`@/${iconPath}.svg`)"/>
+            <img class="icon" :src="iconPath"/>
             {{heading}}
         </div>
         <div class="contents"><slot /></div>
     </div>
 </template>
-
-<script>
-export default {
-    name: 'CategoryWrapper',
-    props: ['heading', 'iconPath']
-}
-</script>
 
 <style>
 .categoryWrapper{

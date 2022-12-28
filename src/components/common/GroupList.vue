@@ -17,7 +17,7 @@ const { t } = useI18n();
 
 const props = defineProps<{
     editList: string[],
-    readOnlyList: string[],
+    readOnlyList?: string[],
     tooltip_text?: string,
 }>();
 
@@ -43,7 +43,7 @@ function validateName(name: string, oldname: string): string {
 function addGroup(): void {
     const nextNum = Math.max(
         Core.Util.getHighestEndingNumber(props.editList),
-        (props.readOnlyList) ? Core.Util.getHighestEndingNumber(props.readOnlyList) : []
+        props.readOnlyList ? Core.Util.getHighestEndingNumber(props.readOnlyList) : 0
     ) + 1;
 
     emit('group-changed', {

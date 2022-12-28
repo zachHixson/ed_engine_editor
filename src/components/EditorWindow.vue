@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import RoomEditor from './editor_room/RoomMain.vue';
 import ArtEditor from './editor_art/ArtMain.vue';
-// import ObjectEditor from './editor_object/ObjectMain';
-// import LogicEditor from './editor_logic/LogicMain';
+import ObjectEditor from './editor_object/ObjectMain.vue';
+// import LogicEditor from './editor_logic/LogicMain.vue';
 
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -34,7 +34,7 @@ const currentEditor = computed(()=>{
         case Core.EDITOR_ID.ART:
             return ArtEditor;
         case Core.EDITOR_ID.OBJECT:
-            //return ObjectEditor;
+            return ObjectEditor;
         case Core.EDITOR_ID.LOGIC:
             //return LogicEditor;
         default:

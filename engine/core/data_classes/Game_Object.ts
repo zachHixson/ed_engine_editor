@@ -8,7 +8,7 @@ type Logic = {[key: string]: any};
 enum EXIT_TYPES {
     TO_DESTINATION = 'TD',
     THROUGH_DESTINATION = 'TH',
-    KEEP_POSIION = 'KP',
+    KEEP_POSITION = 'KP',
     TRANSITION_ONLY = 'TO',
 };
 

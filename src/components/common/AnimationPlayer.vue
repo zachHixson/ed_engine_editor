@@ -37,6 +37,7 @@ onMounted(()=>{
     props.parentEventBus.addEventListener('frame-deleted', onFrameDelete);
     props.parentEventBus.addEventListener('fps-changed', fpsChanged);
     props.parentEventBus.addEventListener('frame-data-changed', frameDataChanged);
+    props.parentEventBus.addEventListener('new-sprite-selected', newSpriteSelection);
     newSpriteSelection();
 });
 

@@ -45,10 +45,6 @@ onMounted(()=>{
     });
 });
 
-function getSprite(): Core.Sprite {
-    return assetBrowserStore.getSelectedAsset as Core.Sprite;
-}
-
 function drawCanvas(): void {
     const canvas = canvasRef.value!;
     const ctx = canvas.getContext('2d')!;
