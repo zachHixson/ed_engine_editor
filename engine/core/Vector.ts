@@ -150,4 +150,17 @@ export class Vector {
         const dy = this.y - vec.y;
         return Math.sqrt(dx * dx + dy * dy);
     }
+
+    randomize(lb: Vector, ub: Vector): Vector {
+        const dx = ub.x - lb.x;
+        const dy = ub.y - lb.y;
+        this.x = Math.random() * dx + lb.x;
+        this.y = Math.random() * dy + lb.y;
+        return this;
+    }
+
+    zero(): Vector {
+        this.x = this.y = 0;
+        return this;
+    }
 }

@@ -1,30 +1,19 @@
+<script setup lang="ts">
+import { ref } from 'vue';
+
+const props = defineProps<{
+    src: string,
+    tooltipText: string,
+}>();
+
+const text = ref(props.tooltipText ?? '');
+</script>
+
 <template>
     <div class="decorator">
         <img name="decorator" class="img" :src="src" draggable="false" v-tooltip="text"/>
     </div>
 </template>
-
-<script>
-import Tooltip from '@/components/common/Tooltip';
-
-export default {
-    name: 'Decorator',
-    props: ['src', 'tooltipText'],
-    components: {
-        Tooltip,
-    },
-    data(){
-        return {
-            text: this.tooltipText ?? '',
-        }
-    },
-    methods: {
-        setTooltipText(text){
-            this.text = text;
-        }
-    }
-}
-</script>
 
 <style scoped>
 .decorator{

@@ -36,7 +36,11 @@ export interface iInput {
     disabled?: boolean;
     hideInput?: boolean;
     enableDecorators?: boolean;
+    decoratorIcon?: string;
+    decoratorText?: string;
+    decoratorTextVars?: any;
     flipInput?: boolean;
+    hideLabel?: boolean;
 };
 
 export interface iOutput {

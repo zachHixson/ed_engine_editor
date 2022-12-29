@@ -142,11 +142,14 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
         }
     }
 
-    addNode(templateId: string, pos: Core.Vector, newNode: Node, nodeAPI: Node_API): void {
+    addNode(templateId: string, pos: Core.Vector, nodeAPI: Node_API, nodeRef?: Node): Node {
         const nodeTemplate = Core.NODE_MAP[templateId];
+        const newNode = nodeRef ?? new Node(nodeTemplate, this.nextNodeId, pos, this, this.selectedGraphId, nodeAPI);
         
         newNode.onScriptAdd && newNode.onScriptAdd();
         this.nodes.push(newNode);
+
+        return newNode
     }
 
     deleteNode(nodeRef: Node): void {
@@ -171,9 +174,9 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
         this.connections.push(connectionObj);
     }
 
-    removeConnection(id: number, connectionobj: Node_Connection): boolean {
+    removeConnection(id: number, connectionobj?: Node_Connection): boolean {
         for (let i = 0; i < this.connections.length; i++){
-            let connection = this.connections[i];
+            const connection = this.connections[i];
 
             if (connection.id == id || (connectionobj == connection)){
                 this.connections.splice(i, 1);

@@ -1,5 +1,207 @@
+<script setup lang="ts">
+import Socket from './Socket.vue';
+import Widget from './Widget.vue';
+import Decorator from '../common/Decorator.vue';
+
+import { ref, computed, nextTick, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
+import type Node from './Node';
+import type Node_Connection from './Node_Connection';
+import type { iHoverSocket, iValueChanged } from './Socket.vue';
+import Core from '@/core';
+
+const { Vector } = Core;
+
+const props = defineProps<{
+    nodeObj: Node;
+    clientToNavSpace: (pos: Core.Vector)=>Core.Vector;
+    canDrag: boolean;
+    selectedNodes: Node[];
+    allConnections: Node_Connection[];
+}>();
+
+const emit = defineEmits([
+    'node-down',
+    'node-move-end',
+    'socket-down',
+    'socket-over',
+    'socket-value-changed'
+]);
+
+const rootRef = ref<HTMLDivElement>();
+const inTriggerRefs = ref<InstanceType<typeof Socket>[]>([]);
+const outTriggerRefs = ref<InstanceType<typeof Socket>[]>([]);
+const inputRefs = ref<InstanceType<typeof Socket>[]>([]);
+const outputRefs = ref<InstanceType<typeof Socket>[]>([]);
+
+const dragOffset = new Vector();
+const inTriggerList = ref<Core.iEditorNodeInTrigger[]>([]);
+const outTriggerList = ref<{id: string, node: Core.iEditorNode}[]>([]);
+const inputList = ref<Core.iEditorNodeInput[]>([]);
+const outputList = ref<Core.iEditorNodeOutput[]>([]);
+const isDragging = ref(false);
+
+const widgetData = computed(()=>props.nodeObj.widgetData);
+const showTriggers = computed(()=>inTriggerList.value.length > 0 || outTriggerList.value.length > 0);
+const showDataSockets = computed(()=>inputList.value.length > 0 || outputList.value.length > 0);
+const isSelected = computed(()=>props.selectedNodes.find(nodeObj => nodeObj.nodeId == props.nodeObj.nodeId) != undefined);
+const connections = computed(()=>props.allConnections.filter(
+    c => (c.startNode?.nodeId == props.nodeObj.nodeId || c.endNode?.nodeId == props.nodeObj.nodeId)
+));
+const categoryClass = computed(()=>{
+    if (props.nodeObj.isEvent){
+        return 'category-event';
+    }
+
+    return 'category-default';
+});
+const decoratorIconPath = computed(()=>new URL(`../../assets/${props.nodeObj.decoratorIcon}.svg`, import.meta.url).href);
+
+onBeforeMount(()=>{
+    updateAllSockets();
+});
+
+onMounted(()=>{
+    props.nodeObj.setDomRef(rootRef.value!);
+
+    props.nodeObj.addEventListener('onMove', updateConnections);
+    props.nodeObj.addEventListener('recalcWidth', updateNodeSize);
+    props.nodeObj.addEventListener('forceUpdate', forceUpdate);
+    window.addEventListener('mouseup', mouseUp);
+
+    updateNodeSize();
+    props.nodeObj.onMount && props.nodeObj.onMount();
+});
+
+onBeforeUnmount(()=>{
+    window.removeEventListener('mouseup', mouseUp);
+    props.nodeObj.removeEventListener('onMove', updateConnections);
+    props.nodeObj.removeEventListener('recalcWidth', updateNodeSize);
+    props.nodeObj.removeEventListener('forceUpdate', forceUpdate);
+});
+
+function updateAllSockets(): void {
+    updateInTriggerList();
+    updateOutTriggerList();
+    updateInputlist();
+    updateOutputList();
+}
+
+function updateInTriggerList(): void {
+    inTriggerList.value = Array.from(props.nodeObj.inTriggers, ([id, trigger]) => trigger);
+}
+
+function updateOutTriggerList(): void {
+    outTriggerList.value = Array.from(props.nodeObj.outTriggers, ([id, trigger]) => trigger);
+}
+
+function updateInputlist(): void {
+    inputList.value = Array.from(props.nodeObj.inputs, ([id, input]) => input);
+}
+
+function updateOutputList(): void {
+    outputList.value = Array.from(props.nodeObj.outputs, ([id, output]) => output);
+}
+
+function updateNodeSize(): void {
+    rootRef.value!.style.width = 'max-content';
+
+    nextTick(()=>{
+        rootRef.value!.style.width = rootRef.value!.offsetWidth + 'px';
+    });
+}
+
+function mouseDown(event: MouseEvent): void {
+    if (event.button == 0){
+        emit('node-down', props.nodeObj);
+
+        if (props.canDrag){
+            const mousePos = new Vector(event.clientX, event.clientY);
+            const nodeBounds = rootRef.value!.getBoundingClientRect();
+            const nodeOrigin = new Vector(nodeBounds.left + nodeBounds.right, nodeBounds.top + nodeBounds.bottom).divideScalar(2);
+            dragOffset.copy(nodeOrigin.clone().subtract(mousePos));
+            isDragging.value = true;
+        }
+    }
+}
+
+function mouseUp(): void {
+    if (isDragging.value == true){
+        emit('node-move-end');
+    }
+
+    isDragging.value = false;
+}
+
+function setWidgetData(data: Core.iAnyObj): void {
+    props.nodeObj.widgetData = data;
+}
+
+function socketDown(connection: Node_Connection): void {
+    let isInput = !connection.startSocketEl;
+
+    if (isInput){
+        connection.endNode = props.nodeObj;
+    }
+    else{
+        connection.startNode = props.nodeObj;
+    }
+
+    emit('socket-down', connection);
+}
+
+function socketOver(event: iHoverSocket): void {
+    if (event){
+        event.node = props.nodeObj;
+    }
+    
+    emit('socket-over', event);
+}
+
+function socketValueChanged(event: iValueChanged): void {
+    event.node = props.nodeObj;
+    emit('socket-value-changed', event)
+}
+
+function onInput(event: InputEvent): void {
+    props.nodeObj.onInput && props.nodeObj.onInput(event);
+}
+
+function updateConnections(): void {
+    for (let i = 0; i < connections.value.length; i++){
+        connections.value[i].connectionComponent!.update();
+    }
+}
+
+function forceUpdate(): void {
+    //this is a snub left during vue 3 upgrade.
+    //vue 3 says it shouldn't need forceUpdate anymore, so if something breaks that leads to this function
+    //we'll know if they were telling the truth or not.
+}
+
+function getRelinkInfo(): {id: number, sockets: Map<number, HTMLElement>} {
+    const inTriggers = inTriggerRefs.value ?? [];
+    const outTriggers = outTriggerRefs.value ?? [];
+    const inData = inputRefs.value ?? [];
+    const outData = outputRefs.value ?? [];
+    const allSocketEls = [...inTriggers, ...outTriggers, ...inData, ...outData];
+    const socketElMap = new Map();
+
+    allSocketEls.forEach(socketEl => {
+        socketElMap.set(socketEl.socket.id, socketEl);
+    });
+
+    return {
+        id: props.nodeObj.nodeId,
+        sockets: socketElMap,
+    }
+}
+
+defineExpose({getRelinkInfo});
+//require(`@/assets/${nodeObj.decoratorIcon}.svg`)
+</script>
+
 <template>
-    <div class="node" :style="isSelected ? 'border-color: var(--button-norm)' : ''"
+    <div ref="rootRef" class="node" :style="isSelected ? 'border-color: var(--button-norm)' : ''"
         @click="$emit('node-clicked', {nodeObj, jsEvent: $event})"
         @mousedown="mouseDown">
         <div class="heading" :class="categoryClass">
@@ -9,8 +211,8 @@
                 <Decorator
                     v-if="nodeObj.decoratorIcon"
                     class="decorator"
-                    :src="require(`@/assets/${nodeObj.decoratorIcon}.svg`)"
-                    :tooltipText="$te(nodeObj.decoratorText) ? $t(nodeObj.decoratorText, nodeObj.decoratorTextVars || {}): ''"/>
+                    :src="decoratorIconPath"
+                    :tooltipText="$te(nodeObj.decoratorText!) ? $t(nodeObj.decoratorText!, nodeObj.decoratorTextVars || {}): ''"/>
             </div>
         </div>
         <div v-if="!!nodeObj.widget" class="widgetWrapper">
@@ -24,8 +226,8 @@
                 <Socket
                     v-for="inTrigger in inTriggerList"
                     :key="inTrigger.id"
-                    ref="inTriggers"
-                    :socket="inTrigger"
+                    ref="inTriggerRefs"
+                    :socket="(inTrigger as any)"
                     :isInput="true"
                     :parentConnections="connections"
                     :parentId="nodeObj.nodeId"
@@ -36,8 +238,8 @@
                 <Socket
                     v-for="outTrigger in outTriggerList"
                     :key="outTrigger.id"
-                    ref="outTriggers"
-                    :socket="outTrigger"
+                    ref="outTriggerRefs"
+                    :socket="(outTrigger as any)"
                     :isInput="false"
                     :parentConnections="connections"
                     :parentId="nodeObj.nodeId"
@@ -54,8 +256,8 @@
                 <Socket
                     v-for="input in inputList"
                     :key="input.id"
-                    ref="inData"
-                    :socket="input"
+                    ref="inputRefs"
+                    :socket="(input as any)"
                     :isInput="true"
                     :parentConnections="connections"
                     :parentId="nodeObj.nodeId"
@@ -71,8 +273,8 @@
                 <Socket
                     v-for="output in outputList"
                     :key="output.id"
-                    ref="outData"
-                    :socket="output"
+                    ref="outputRefs"
+                    :socket="(output as any)"
                     :isInput="false"
                     :parentConnections="connections"
                     :parentId="nodeObj.nodeId"
@@ -82,190 +284,6 @@
         </div>
     </div>
 </template>
-
-<script>
-import Socket from './Socket';
-import Widget from './Widget.vue';
-import Decorator from '../common/Decorator';
-
-export default {
-    name: 'Node',
-    props: ['nodeObj', 'clientToNavSpace', 'canDrag', 'selectedNodes', 'allConnections'],
-    data(){
-        return {
-            dragOffset: new Vector(0, 0),
-            mouseUpEvent: null,
-            mouseMoveEvent: null,
-            inTriggerList: [],
-            outTriggerList: [],
-            inputList: [],
-            outputList: [],
-        }
-    },
-    components: {
-        Socket,
-        Widget,
-        Decorator,
-    },
-    computed: {
-        widgetData(){
-            return this.nodeObj.widgetData;
-        },
-        showTriggers(){
-            return this.inTriggerList.length > 0 || this.outTriggerList.length > 0;
-        },
-        showDataSockets(){
-            return this.inputList.length > 0 || this.outputList.length > 0;
-        },
-        isSelected(){
-            return this.selectedNodes.find(nodeObj => nodeObj.nodeId == this.nodeObj.nodeId) != undefined;
-        },
-        connections(){
-            return this.allConnections.filter(
-                c => (c.startNode?.nodeId == this.nodeObj.nodeId || c.endNode?.nodeId == this.nodeObj.nodeId)
-            );
-        },
-        categoryClass(){
-            if (this.nodeObj.isEvent){
-                return 'category-event';
-            }
-
-            return 'category-default';
-        },
-    },
-    created(){
-        this.updateAllSockets();
-    },
-    mounted(){
-        this.nodeObj.setDomRef(this.$el);
-        this.mouseUpEvent = this.mouseUp.bind(this);
-        this.updateConnections = this.updateConnections.bind(this);
-        this.updateNodeSize = this.updateNodeSize.bind(this);
-        this.forceUpdate = this.forceUpdate.bind(this);
-
-        this.nodeObj.addEventListener('onMove', this.updateConnections);
-        this.nodeObj.addEventListener('recalcWidth', this.updateNodeSize);
-        this.nodeObj.addEventListener('forceUpdate', this.forceUpdate);
-        window.addEventListener('mouseup', this.mouseUpEvent);
-
-        this.updateNodeSize();
-        this.nodeObj.onMount();
-    },
-    beforeDestroy(){
-        window.removeEventListener('mouseup', this.mouseUpEvent);
-        this.nodeObj.removeEventListener('onMove', this.updateConnections);
-        this.nodeObj.removeEventListener('recalcWidth', this.updateNodeSize);
-        this.nodeObj.removeEventListener('forceUpdate', this.forceUpdate);
-    },
-    methods: {
-        updateAllSockets(){
-            this.updateInTriggerList();
-            this.updateOutTriggerList();
-            this.updateInputlist();
-            this.updateOutputList();
-        },
-        updateInTriggerList(){
-            this.inTriggerList = Array.from(this.nodeObj.inTriggers, ([id, trigger]) => trigger);
-        },
-        updateOutTriggerList(){
-            this.outTriggerList = Array.from(this.nodeObj.outTriggers, ([id, trigger]) => trigger);
-        },
-        updateInputlist(){
-            this.inputList = Array.from(this.nodeObj.inputs, ([id, input]) => input);
-        },
-        updateOutputList(){
-            this.outputList = Array.from(this.nodeObj.outputs, ([id, output]) => output);
-        },
-        updateNodeSize(){
-            this.$el.style.width = 'max-content';
-
-            this.$nextTick(()=>{
-                this.$el.style.width = this.$el.offsetWidth + 'px';
-            });
-        },
-        mouseDown(event){
-            if (event.which == 1){
-            this.$emit("node-down", this.nodeObj);
-
-                if (this.canDrag){
-                    let mousePos = new Vector(event.clientX, event.clientY);
-                    let nodeBounds = this.$el.getBoundingClientRect();
-                    let nodeOrigin = new Vector(nodeBounds.left + nodeBounds.right, nodeBounds.top + nodeBounds.bottom).divideScalar(2);
-                    this.dragOffset.copy(nodeOrigin.clone().subtract(mousePos));
-                    this.isDragging = true;
-                }
-            }
-        },
-        mouseUp(){
-            if (this.isDragging == true){
-                this.$emit('node-move-end');
-            }
-
-            this.isDragging = false;
-        },
-        setWidgetData(data){
-            this.nodeObj.widgetData = data;
-        },
-        socketDown(connection){
-            let isInput = !connection.startSocketEl;
-
-            if (isInput){
-                connection.endNode = this.nodeObj;
-            }
-            else{
-                connection.startNode = this.nodeObj;
-            }
-
-            this.$emit('socket-down', connection);
-        },
-        socketOver(event){
-            if (event){
-                event.node = this.nodeObj;
-            }
-            
-            this.$emit('socket-over', event);
-        },
-        socketValueChanged(event){
-            event.node = this.nodeObj;
-            this.$emit('socket-value-changed', event)
-        },
-        onInput(event){
-            this.nodeObj.onInput(event);
-            this.$nextTick(()=>{
-                this.$forceUpdate();
-            });
-        },
-        updateConnections(){
-            for (let i = 0; i < this.connections.length; i++){
-                this.connections[i].connectionComponent.update();
-            }
-        },
-        forceUpdate(){
-            this.$nextTick(()=>{
-                this.$forceUpdate();
-            });
-        },
-        getRelinkInfo(){
-            let inTriggers = this.$refs.inTriggers ?? [];
-            let outTriggers = this.$refs.outTriggers ?? [];
-            let inData = this.$refs.inData ?? [];
-            let outData = this.$refs.outData ?? [];
-            let allSocketEls = [...inTriggers, ...outTriggers, ...inData, ...outData];
-            let socketElMap = new Map();
-
-            allSocketEls.forEach(socketEl => {
-                socketElMap.set(socketEl.socket.id, socketEl);
-            });
-
-            return {
-                id: this.nodeObj.nodeId,
-                el: this,
-                sockets: socketElMap,
-            }
-        },
-    }
-}
-</script>
 
 <style scoped>
 .node{

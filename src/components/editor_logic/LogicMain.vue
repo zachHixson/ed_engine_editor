@@ -1,3 +1,864 @@
+<script lang="ts">
+export const LogicMainEventBus = new Event_Bus();
+</script>
+
+<script setup lang="ts">
+import UndoPanel from '@/components/common/UndoPanel.vue';
+import NavControlPanel from '@/components/common/NavControlPanel.vue';
+import DragList, { type iChangeEventProps } from '@/components/common/DragList.vue';
+import Node from '@/components/editor_logic/Node.vue';
+import Node_Connection from '@/components/editor_logic/Node_Connection';
+import Connection from '@/components/editor_logic/Connection.vue';
+import HotkeyMap from '@/components/common/HotkeyMap';
+import Undo_Store, { type iActionStore, UndoHelpers } from '@/components/common/Undo_Store';
+import DialogNewVariable from './DialogNewVariable.vue';
+
+import { ref, computed, watch, nextTick, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
+import { useMainStore } from '@/stores/Main';
+import { useLogicEditorStore } from '@/stores/LogicEditor';
+import { Event_Bus } from '@/components/common/Event_Listener';
+import type { iHoverSocket } from './Socket.vue';
+import type Logic from './Logic';
+import type { default as Node_Obj } from './Node';
+import Core from '@/core';
+
+type GenericSocket = {id: string, value: any};
+type ActionAddNodeProps = {templateId: string, nodeRef?: Node_Obj};
+type ActionDeleteNodesProps = {nodeRefList: Node_Obj[], connectionRefMap?: Map<Logic, Node_Connection[]>};
+type ActionMoveNodesProps = {nodeRefList: Node_Obj[], velocity: Core.Vector};
+type ActionMakeConnectionProps = {connectionObj: Node_Connection, socketOver: iHoverSocket, prevSocket?: GenericSocket};
+type ActionRemoveConnectionProps = {connectionObj: Node_Connection};
+type ActionChangeInputProps = {socket: GenericSocket, oldVal: any, newVal: any, node: Node_Obj};
+
+const mainStore = useMainStore();
+const logicEditorStore = useLogicEditorStore();
+const { Vector } = Core;
+
+const props = defineProps<{
+    selectedAsset: Logic;
+}>();
+
+const nodeViewportRef = ref<HTMLDivElement>();
+const nodeNavRef = ref<HTMLDivElement>();
+const nodeRefs = ref<InstanceType<Node>[]>([]);
+const connectionRefs = ref<InstanceType<Connection>[]>([]);
+const graphListRef = ref<HTMLDivElement>();
+const graphRenameRefs: Map<number, HTMLInputElement> = new Map();
+const selectionBoxRef = ref<HTMLDivElement>();
+
+const selectedCategory = ref<string | null>(null);
+const actionMap = new Map<Core.LOGIC_ACTION, (data?: any | object, commit?: boolean)=>void>();
+const revertMap = new Map<Core.LOGIC_ACTION, (data?: any | object, commit?: boolean)=>void>();
+const undoStore = new Undo_Store<iActionStore>(32, false);
+const mouseDownPos = new Vector();
+const lastMouseDragPos = new Vector();
+const contentsBounds = [0, 0, 0, 0];
+const currentSocketOver = ref<iHoverSocket | null>(null);
+const isDraggingNode = ref(false);
+const draggingConnection = ref<Node_Connection | null>(null);
+const hotkeyMap = new HotkeyMap();
+const hotkeyDownHandler = hotkeyMap.keyDown.bind(hotkeyMap);
+const hotkeyUpHandler = hotkeyMap.keyUp.bind(hotkeyMap);
+const navControlPanelScroll = (event: WheelEvent)=>LogicMainEventBus.emit('mouse-wheel', event);
+const selectionBox = {
+    active: false,
+    origin: new Vector(),
+    dim: new Vector(),
+};
+const shiftDown = ref(false);
+const isSearching = ref(false);
+const searchQuery = ref('');
+const renamingGraph = ref<number | null>(null);
+const showNewVariableWindow = ref(false);
+const newVariableCallback = ref<(positive: boolean, varInfo: Core.iNewVarInfo)=>void>(()=>{});
+const apiExports: {[key: string]: any} = {};
+const navHotkeyTool: Core.NAV_TOOL_TYPE | null = null;
+
+const selectedNavTool = computed(()=>logicEditorStore.getSelectedNavTool);
+const showLibrary = computed({
+    get(){
+        return logicEditorStore.isLibraryPanelOpen;
+    },
+    set(newState){
+        logicEditorStore.setLibraryPanelState(newState);
+    }
+});
+const showGraphs = computed({
+    get(){
+        return logicEditorStore.isGraphPanelOpen;
+    },
+    set(newState){
+        logicEditorStore.setGraphPanelState(newState);
+    }
+});
+const nodeCategories = computed(()=>{
+    const categories: string[] = [];
+
+    for (let i = 0; i < Core.NODE_LIST.length; i++){
+        let curNode = Core.NODE_LIST[i];
+
+        if (!categories.includes(curNode.category)){
+            categories.push(curNode.category);
+        }
+    }
+
+    return categories;
+});
+const filteredNodes = computed(()=>{
+    if (isSearching.value){
+        if (searchQuery.value.trim().length > 0){
+            return Core.NODE_LIST.filter(node => node.id.includes(searchQuery.value.toLowerCase()));
+        }
+
+        return Core.NODE_LIST;
+    }
+
+    return Core.NODE_LIST.filter(node => node.category == selectedCategory.value);
+});
+const nodeDraggingEnabled = computed(()=>selectedNavTool.value == null);
+const curNavState = computed(()=>{
+    nextTick(()=>{
+        navChange(props.selectedAsset.navState!);
+    });
+    return props.selectedAsset.navState;
+});
+const visibleNodes = computed(()=>props.selectedAsset.nodes.filter(n => n.graphId == props.selectedAsset.selectedGraphId));
+const visibleConnections = computed(()=>props.selectedAsset.connections.filter(n => n.graphId == props.selectedAsset.selectedGraphId));
+const selectedNodes = computed(()=>props.selectedAsset.selectedNodes);
+const inputActive = computed(()=>mainStore.getInputActive);
+const graphs = computed(()=>props.selectedAsset.graphs);
+const graphKeys = computed(()=>props.selectedAsset.graphs.map(graph => graph.id));
+
+watch(props.selectedAsset, ()=>{
+    nextTick(()=>{
+        relinkConnections();
+        navChange(curNavState.value!);
+        updateNodeBounds();
+        undoStore.clear();
+    });
+});
+watch(inputActive, (newState: boolean)=>hotkeyMap.enabled = !newState);
+
+onBeforeMount(()=>{
+    mainStore.getNodeAPI.setNodeEditorContext(apiExports);
+});
+
+onMounted(()=>{
+    window.addEventListener('keydown', keyDown);
+    window.addEventListener('keyup', keyUp);
+    window.addEventListener('mouseup', mouseUp);
+    nodeViewportRef.value!.addEventListener('wheel', navControlPanelScroll);
+    nodeViewportRef.value!.addEventListener ('mouseenter', mouseEnter);
+    nodeViewportRef.value!.addEventListener ('mouseleave', mouseLeave);
+    window.addEventListener('resize', resize);
+    resize();
+
+    bindHotkeys();
+    bindActions();
+    bindReversions();
+    navChange(props.selectedAsset.navState!);
+    relinkConnections();
+    updateNodeBounds();
+
+    props.selectedAsset.nodes.forEach(node => node.allNodesMounted && node.allNodesMounted());
+});
+
+onBeforeUnmount(()=>{
+    window.removeEventListener('keydown', keyDown);
+    window.removeEventListener('keyUp', keyUp as EventListener);
+    window.removeEventListener('mouseup', mouseUp);
+    nodeViewportRef.value!.removeEventListener('wheel', navControlPanelScroll);
+});
+
+const { stepForward, stepBackward, applyChronoStep } = UndoHelpers;
+
+function bindHotkeys(): void {
+    hotkeyMap.bindKey(['delete'], deleteSelectedNodes);
+    hotkeyMap.bindKey(['backspace'], deleteSelectedNodes);
+    hotkeyMap.bindKey(['t'], ()=>{showLibrary.value = !showLibrary.value});
+    hotkeyMap.bindKey(['n'], ()=>{showGraphs.value = !showGraphs.value});
+    hotkeyMap.bindKey(['control', 'a'], selectAllNodes);
+}
+
+function bindActions(): void {
+    actionMap.set(Core.LOGIC_ACTION.ADD_NODE, actionAddNode);
+    actionMap.set(Core.LOGIC_ACTION.DELETE_NODES, actionDeleteNodes);
+    actionMap.set(Core.LOGIC_ACTION.MOVE, actionMoveNodes);
+    actionMap.set(Core.LOGIC_ACTION.CONNECT, actionMakeConnection);
+    actionMap.set(Core.LOGIC_ACTION.DISCONNECT, actionRemoveConnection);
+    actionMap.set(Core.LOGIC_ACTION.CHANGE_INPUT, actionChangeInput);
+}
+
+function bindReversions(): void {
+    revertMap.set(Core.LOGIC_ACTION.ADD_NODE, revertAddNode);
+    revertMap.set(Core.LOGIC_ACTION.DELETE_NODES, revertDeleteNodes);
+    revertMap.set(Core.LOGIC_ACTION.MOVE, revertMoveNodes);
+    revertMap.set(Core.LOGIC_ACTION.CONNECT, revertMakeConnection);
+    revertMap.set(Core.LOGIC_ACTION.DISCONNECT, revertRemoveConnection);
+    revertMap.set(Core.LOGIC_ACTION.CHANGE_INPUT, revertChangeInput);
+}
+
+function getNewNodePos(): Core.Vector {
+    const vpBounds = nodeViewportRef.value!.getBoundingClientRect();
+    const vpUl = new Vector(vpBounds.left, vpBounds.top);
+    const vpBr = new Vector(vpBounds.right, vpBounds.bottom);
+    const midpoint = vpUl.clone().add(vpBr).divideScalar(2);
+    const navPos = clientToNavPos(midpoint);
+
+    for (let i = 0; i < props.selectedAsset.nodes.length; i++){
+        let curNode = props.selectedAsset.nodes[i];
+
+        if (curNode.pos.equalTo(navPos)){
+            let size = 50;
+            let ul = new Vector(-size, -size);
+            let br = new Vector(size, size);
+            navPos.add(new Vector(0, 0).randomize(ul, br));
+        }
+    }
+    
+    return navPos;
+}
+
+function mouseClick(event: MouseEvent): void {
+    let mouseUpPos = new Vector(event.clientX, event.clientY);
+
+    if (mouseUpPos.equalTo(mouseDownPos)){
+        logicEditorStore.selectNavTool(null);
+    }
+
+    if (
+        event.target == event.currentTarget &&
+        !shiftDown.value &&
+        mouseUpPos.distanceTo(mouseDownPos) < 5
+    ){
+        deselectAllNodes();
+    }
+}
+
+function keyDown(event: KeyboardEvent): void {
+    hotkeyMap.keyDown(event);
+    if (event.key == 'Shift') shiftDown.value = true;
+}
+
+function keyUp(event: KeyboardEvent): void {
+    hotkeyMap.keyUp(event);
+    if (event.key == 'Shift') shiftDown.value = false;
+}
+
+function mouseDown(event: MouseEvent): void {
+    mouseDownPos.x = event.clientX;
+    mouseDownPos.y = event.clientY;
+    lastMouseDragPos.copy(mouseDownPos);
+    LogicMainEventBus.emit('mouse-down', event);
+
+    //position selection box
+    if (event.button == 0 && event.target == event.currentTarget){
+        const vpBounds = nodeViewportRef.value!.getBoundingClientRect();
+        const vpOrigin = new Vector(vpBounds.left, vpBounds.top);
+        const startPos = new Vector(event.clientX, event.clientY).subtract(vpOrigin);
+
+        selectionBox.active = true;
+        selectionBox.origin.copy(startPos);
+        selectionBox.dim.zero();
+    }
+}
+
+function mouseUp(event: MouseEvent): void {
+    isDraggingNode.value = false;
+    LogicMainEventBus.emit('mouse-up', event);
+    selectionBox.active = false;
+    selectNodesInBox();
+
+    if (draggingConnection.value){
+        const socketOver = currentSocketOver.value;
+        const connectionObj = draggingConnection.value;
+        const startType = !!connectionObj.startSocketEl ? connectionObj.type : socketOver?.socketData.type;
+        const endType = !!connectionObj.startSocketEl ? socketOver?.socketData.type : connectionObj.type;
+        const isTrigger = startType == endType && startType == null;
+        const typeMatch = isTrigger || Core.canConvertSocket(startType, endType);
+        const directionMatch = !!connectionObj.startSocketEl == !!socketOver?.isInput;
+
+        draggingConnection.value = null;
+
+        if (
+            socketOver &&
+            typeMatch &&
+            directionMatch &&
+            connectionObj.canConnect &&
+            socketOver.canConnect &&
+            !socketOver.socketData.disabled
+        ){
+            const leftNode = (socketOver.isInput) ? socketOver.node : connectionObj.endNode;
+            const rightNode = !(socketOver.isInput) ? socketOver.node : connectionObj.startNode;
+
+            if (!checkLoop(leftNode, rightNode)){
+                actionMakeConnection({connectionObj, socketOver});
+                return;
+            }
+        }
+
+        actionRemoveConnection({connectionObj});
+    }
+}
+
+function mouseEnter(event: MouseEvent): void {
+    if (!inputActive.value){
+        hotkeyMap.mouseEnter();
+    }
+    LogicMainEventBus.emit('mouse-enter', event);
+}
+
+function mouseLeave(event: MouseEvent): void {
+    hotkeyMap.mouseLeave();
+    LogicMainEventBus.emit('mouse-leave', event);
+}
+
+function trashMouseUp(event: MouseEvent): void {
+    if (isDraggingNode.value){
+        event.stopPropagation()
+        deleteSelectedNodes();
+        isDraggingNode.value = false;
+    }
+}
+
+function mouseMove(event: MouseEvent): void {
+    const vpBounds = nodeViewportRef.value!.getBoundingClientRect();
+    const vpOrigin = new Vector(vpBounds.left, vpBounds.top);
+    const newOrigin = new Vector(event.clientX, event.clientY).subtract(vpOrigin);
+    const selectionBoxDim = new Vector(event.clientX, event.clientY).subtract(mouseDownPos);
+
+    LogicMainEventBus.emit('mouse-move', event);
+    selectionBox.dim.copy(selectionBoxDim);
+
+    //if rectangle dimensions are negative, set origin to mouse position
+    if (selectionBoxDim.x < 0){
+        selectionBox.origin.x = newOrigin.x;
+        selectionBox.dim.x = Math.abs(selectionBox.dim.x);
+    }
+
+    if (selectionBoxDim.y < 0){
+        selectionBox.origin.y = newOrigin.y;
+        selectionBox.dim.y = Math.abs(selectionBox.dim.y);
+    }
+
+    //calculate node velocity and move nodes if applicable
+    if (isDraggingNode.value){
+        const startPos = clientToNavPos(lastMouseDragPos);
+        const mousePos = new Vector(event.clientX, event.clientY);
+        const mouseNavPos = clientToNavPos(mousePos);
+        const velocity = mouseNavPos.subtract(startPos);
+        
+        actionMoveNodes({nodeRefList: selectedNodes.value, velocity}, false);
+        lastMouseDragPos.copy(mousePos);
+    }
+}
+
+function navChange(newState: Core.iNavState): void {
+    const TILE_SIZE = 100;
+
+    const vpEl = nodeViewportRef.value!;
+    const navEl = nodeNavRef.value!;
+
+    //update navWrapper
+    navEl.style.left = (newState.offset.x * newState.zoomFac) + 'px';
+    navEl.style.top = (newState.offset.y * newState.zoomFac) + 'px';
+    navEl.style.transform = 'scale(' + newState.zoomFac + ')';
+
+    //update grid background
+    const tileSize = newState.zoomFac * TILE_SIZE;
+    const center = new Vector(vpEl.clientWidth, vpEl.clientHeight).divideScalar(2);
+
+    center.add(newState.offset.clone().multiplyScalar(newState.zoomFac));
+    vpEl.style.backgroundSize = `${tileSize}px ${tileSize}px`;
+    vpEl.style.backgroundPosition = `left ${center.x}px top ${center.y}px`;
+}
+
+function navToolSelected(newTool: Core.NAV_TOOL_TYPE): void {
+    logicEditorStore.selectNavTool(newTool);
+}
+
+function addGraph(): void {
+    props.selectedAsset.addGraph();
+
+    nextTick(()=>{
+        const graphList = graphListRef.value!;
+
+        if (graphList){
+            graphList.scrollTop = graphList.scrollHeight - graphList.clientHeight;
+        }
+    });
+}
+
+function switchGraph(id: number): void {
+    props.selectedAsset.selectedGraphId = id;
+    navChange(props.selectedAsset.navState!);
+
+    nextTick(()=>{
+        deselectAllNodes();
+        relinkConnections();
+    });
+}
+
+function startRenamingGraph(id: number): void {
+    renamingGraph.value = id;
+    nextTick(()=>{
+        const box = graphRenameRefs.get(id)!;
+        box.focus();
+        box.select();
+    });
+}
+
+function stopRenamingGraph(): void {
+    renamingGraph.value = null;
+}
+
+function deleteGraph(event: MouseEvent, graphId: number): void {
+    event.stopPropagation();
+    props.selectedAsset.deleteGraph(graphId);
+}
+
+function graphOrderChanged(event: iChangeEventProps): void {
+    const {itemIdx, newIdx} = event;
+    const movedGraph = props.selectedAsset.graphs[itemIdx];
+    const shiftForward = itemIdx > newIdx;
+    const compFunc: (i: number)=>boolean = shiftForward ? i => i > newIdx : i => i < newIdx;
+    const dir = shiftForward ? -1 : 1;
+
+    for (let i = itemIdx; compFunc(i); i += dir){
+        props.selectedAsset.graphs[i] = props.selectedAsset.graphs[i + dir];
+    }
+
+    props.selectedAsset.graphs[newIdx] = movedGraph;
+}
+
+function clientToNavPos(pos: Core.Vector): Core.Vector {
+    /*
+        - Calculate mouse's viewport position (based on "client space", so that the hierarchy is irrelivent)
+        - Calculate the mouse's position in the navWrapper in percentage (IE: x:50%, y:25%)
+        - Multiply percentage by viewport dimensions to get mouse position in "nav space" (viewport and
+            navWrapper dimensions will always be the same since CSS scale does not change pixel values of width/height)
+    */
+    const vpBounds = nodeViewportRef.value!.getBoundingClientRect();
+    const vpOrigin = new Vector(vpBounds.left, vpBounds.top);
+    const vpSize = new Vector(nodeViewportRef.value!.clientWidth, nodeViewportRef.value!.clientHeight);
+    const navBounds = nodeNavRef.value!.getBoundingClientRect();
+    const navOrigin = new Vector(navBounds.left, navBounds.top).subtract(vpOrigin);
+    const navSize = new Vector(navBounds.right - navBounds.left, navBounds.bottom - navBounds.top);
+    const offsetPos = pos.clone().subtract(vpOrigin);
+    const navPercent = offsetPos.clone().subtract(navOrigin).divide(navSize);
+    const nodeNavPos = vpSize.clone().multiply(navPercent);
+
+    return nodeNavPos;
+}
+
+function resize(): void {
+    const dim = new Vector(nodeViewportRef.value!.clientWidth, nodeViewportRef.value!.clientHeight);
+    LogicMainEventBus.emit('set-container-dimensions', dim);
+}
+
+function createConnection(connectionObj: Node_Connection): void {
+    props.selectedAsset.addConnection(connectionObj);
+    draggingConnection.value = connectionObj;
+}
+
+function dragConnection(connectionObj: Node_Connection): void {
+    let {startNode, startSocketId, endNode, endSocketId} = connectionObj;
+
+    draggingConnection.value = connectionObj;
+    undoStore.cache.set('prev_socket', {startNode, startSocketId, endNode, endSocketId});
+}
+
+function relinkConnections(): void {
+    const nodeEls = nodeRefs.value;
+    const connectionEls = connectionRefs.value;
+    const nodeInfo = new Map();
+
+    nodeEls.forEach(nodeEl => {
+        let info = nodeEl.getRelinkInfo();
+        nodeInfo.set(info.id, info);
+    });
+
+    connectionEls?.forEach(connectionEl => connectionEl.relink(nodeInfo));
+}
+
+function nodeClick({nodeObj, event}: {nodeObj: Node_Obj, event: MouseEvent}): void {
+    let mousePos = new Vector(event.clientX, event.clientY);
+
+    if (mouseDownPos.distanceTo(mousePos) < 2){
+        deselectAllNodes();
+        selectedNodes.value.push(nodeObj);
+    }
+}
+
+function nodeDown(node: Node_Obj): void {
+    const alreadySelected = !!selectedNodes.value.find(n => n.nodeId == node.nodeId);
+    const navHotkeyActive = navHotkeyTool != null;
+    const navToolSelected = logicEditorStore.getSelectedNavTool != null;
+
+    if (!alreadySelected) {
+        if (!shiftDown.value){
+            deselectAllNodes();
+        }
+
+        selectedNodes.value.push(node);
+    }
+
+    if (!(navHotkeyActive || navToolSelected)){
+        isDraggingNode.value = true;
+    }
+}
+
+function nodeMoveEnd(): void {
+    actionMoveNodes({nodeRefList: selectedNodes.value, velocity: new Vector()}, true);
+    updateNodeBounds();
+}
+
+function selectNodesInBox(): void {
+    props.selectedAsset.nodes.forEach(node => {
+        const selectionBounds = selectionBoxRef.value!.getBoundingClientRect();
+        const nodeBounds = node.domRef!.getBoundingClientRect();
+        const overlapX = selectionBounds.right >= nodeBounds.left && nodeBounds.right >= selectionBounds.left;
+        const overlapY = selectionBounds.bottom >= nodeBounds.top && nodeBounds.bottom >= selectionBounds.top;
+        const isSelected = selectedNodes.value.find(n => n.nodeId == node.nodeId);
+
+        if (overlapX && overlapY && !isSelected){
+            selectedNodes.value.push(node);
+        }
+    });
+}
+
+function updateNodeBounds(): void {
+    const nodes = props.selectedAsset.nodes;
+
+    if (nodes.length == 0){
+        contentsBounds.forEach((i, idx) => contentsBounds[idx] = 0);
+        return;
+    }
+
+    //calculate client/screen space bounds
+    const firstBoundingRect = nodes[0].domRef!.getBoundingClientRect();
+    const ul = new Vector(firstBoundingRect.left, firstBoundingRect.top);
+    const br = new Vector(firstBoundingRect.right, firstBoundingRect.bottom);
+    const vpBounds = nodeViewportRef.value!.getBoundingClientRect();
+    const vpSize = new Vector(vpBounds.right - vpBounds.left, vpBounds.bottom - vpBounds.top);
+    const vpOrigin = new Vector(vpBounds.left, vpBounds.top);
+    const navZoom = props.selectedAsset.navState!.zoomFac;
+    const navOrigin = props.selectedAsset.navState!.offset.clone().multiplyScalar(navZoom);
+
+    for (let i = 1; i < nodes.length; i++){
+        let curNodeBounds = nodes[i].domRef!.getBoundingClientRect();
+        ul.x = Math.min(ul.x, curNodeBounds.left);
+        ul.y = Math.min(ul.y, curNodeBounds.top);
+        br.x = Math.max(br.x, curNodeBounds.right);
+        br.y = Math.max(br.y, curNodeBounds.bottom);
+    }
+
+    //align "world space" origin with center of viewport
+    ul.subtract(navOrigin).subtract(vpOrigin).subtract(vpSize.clone().divideScalar(2));
+    br.subtract(navOrigin).subtract(vpOrigin).subtract(vpSize.clone().divideScalar(2));
+    ul.divideScalar(navZoom);
+    br.divideScalar(navZoom);
+
+    //commit result
+    contentsBounds[0] = ul.x;
+    contentsBounds[1] = -ul.y;
+    contentsBounds[2] = br.x;
+    contentsBounds[3] = -br.y;
+}
+
+function selectAllNodes(): void {
+    selectedNodes.value.splice(0);
+    selectedNodes.value.push(...props.selectedAsset.nodes);
+}
+
+function deselectAllNodes(): void {
+    selectedNodes.value.splice(0);
+}
+
+function deleteSelectedNodes(): void {
+    const protectedNodes: Node_Obj[] = [];
+    const deletableNodes = selectedNodes.value.filter(node => {
+        if (node.editorCanDelete) return true;
+
+        protectedNodes.push(node);
+        return false;
+    });
+
+    if (deletableNodes.length){
+        actionDeleteNodes({nodeRefList: deletableNodes}, true);
+        deselectAllNodes();
+    }
+
+    protectedNodes.forEach(node => node.onDeleteStopped && node.onDeleteStopped(protectedNodes));
+}
+
+function checkLoop(leftNode: Node_Obj, rightNode: Node_Obj): boolean {
+    const connectionMap = new Map();
+    const checkedNodes = new Map();
+    const connections = props.selectedAsset.connections;
+
+    for (let i = 0; i < connections.length - 1; i++){
+        const connection = connections[i];
+        const id = connection.startNode?.nodeId + '/' + connection.startSocketId;
+        connectionMap.set(id, connection);
+    }
+
+    checkedNodes.set(rightNode.nodeId, true);
+
+    return _checkLoop({endNode: leftNode}, connectionMap, checkedNodes);
+}
+
+function _checkLoop(connection: {endNode: Node_Obj | null}, connectionMap: Map<string, Node_Connection>, checkedNodes: Map<number, boolean>): boolean {
+    const curNode = connection.endNode!;
+    const socketArr: {id: string}[] = [];
+    let foundLoop = false;
+
+    if (checkedNodes.get(curNode.nodeId)){
+        return true;
+    }
+
+    checkedNodes.set(curNode.nodeId, true);
+
+    curNode.outTriggers?.forEach(trigger => socketArr.push(trigger));
+    curNode.outputs?.forEach(output => socketArr.push(output));
+
+    for (let i = 0; !foundLoop && i < socketArr.length; i++){
+        const socket = socketArr[i];
+        const connectionPath = curNode.nodeId + '/' + socket.id;
+        const nextConnection = connectionMap.get(connectionPath);
+
+        if (nextConnection){
+            foundLoop ||= _checkLoop(nextConnection, connectionMap, checkedNodes);
+        }
+    }
+
+    return !!foundLoop;
+}
+
+function dialogNewVariable(callback: (positive: boolean, varInfo: Core.iNewVarInfo)=>void): void {
+    newVariableCallback.value = callback;
+    showNewVariableWindow.value = true;
+}
+
+function dialogNewVariableClose(): void {
+    newVariableCallback.value = ()=>{};
+    showNewVariableWindow.value = false;
+}
+
+function actionAddNode({templateId, nodeRef}: ActionAddNodeProps, makeCommit = true): void {
+    const nodeAPI = mainStore.getNodeAPI;
+    const pos = getNewNodePos();
+    const newNode = props.selectedAsset.addNode(templateId, pos, nodeAPI, nodeRef);
+
+    if (makeCommit){
+        const data = {templateId, nodeRef: newNode} satisfies ActionAddNodeProps;
+        undoStore.commit({action: Core.LOGIC_ACTION.ADD_NODE, data});
+    }
+
+    if (!nodeRef) newNode.onCreate && newNode.onCreate();
+}
+
+function actionDeleteNodes({nodeRefList}: ActionDeleteNodesProps, makeCommit = true): void {
+    const connectionRefMap: Map<Logic, Node_Connection[]> = new Map();
+
+    nodeRefList.forEach(node => {
+        //find and delete connections attached to the node
+        const currentConnections: Node_Connection[] = [];
+        
+        node.parentScript.connections.forEach(connection => {
+            const startNodeId = connection.startNode!.nodeId;
+            const endNodeId = connection.endNode!.nodeId;
+
+            if (startNodeId == node.nodeId || endNodeId == node.nodeId){
+                currentConnections.push(connection);
+            }
+        });
+
+        currentConnections.forEach(connection => {
+            const connectionMapGet = connectionRefMap.get(node.parentScript) ?? [];
+
+            if (!connectionMapGet.length) connectionRefMap.set(node.parentScript, connectionMapGet);
+            connectionMapGet.push(connection);
+            node.parentScript.removeConnection(connection.id);
+            connection.startNode?.onRemoveConnection && connection.startNode?.onRemoveConnection(connection);
+            connection.endNode?.onRemoveConnection && connection.endNode?.onRemoveConnection(connection);
+        });
+
+        //delete node
+        node.onBeforeDelete && node.onBeforeDelete();
+        node.parentScript.deleteNode(node);
+    });
+
+    if (makeCommit){
+        const data = {nodeRefList: [...nodeRefList], connectionRefMap} satisfies ActionDeleteNodesProps;
+        undoStore.commit({action: Core.LOGIC_ACTION.DELETE_NODES, data});
+    }
+}
+
+function actionMoveNodes({nodeRefList, velocity}: ActionMoveNodesProps, makeCommit = true): void {
+    if (makeCommit){
+        const startVec = undoStore.cache.get('move_start');
+
+        if (startVec){
+            const totalVel = nodeRefList[0].pos.clone().subtract(startVec);
+            const data = {nodeRefList: [...nodeRefList], velocity: totalVel};
+
+            undoStore.commit({action: Core.LOGIC_ACTION.MOVE, data});
+            undoStore.cache.delete('move_start');
+        }
+
+        return;
+    }
+
+    for (let i = 0; i < nodeRefList.length; i++){
+        const curNode = nodeRefList[i];
+        const newPos = curNode.pos.clone().add(velocity);
+
+        curNode.setPos(newPos);
+    }
+
+    if (!undoStore.cache.get('move_start')){
+        undoStore.cache.set('move_start', nodeRefList[0].pos.clone());
+    }
+}
+
+function actionMakeConnection({connectionObj, socketOver}: ActionMakeConnectionProps, makeCommit = true): void {
+    if (socketOver.isInput){
+        connectionObj.endNode = socketOver.node!;
+        connectionObj.endSocketId = socketOver.socketData.id;
+        connectionObj.endSocketEl = socketOver.socketEl;
+    }
+    else{
+        connectionObj.startNode = socketOver.node!;
+        connectionObj.startSocketId = socketOver.socketData.id;
+        connectionObj.startSocketEl = socketOver.socketEl;
+    }
+
+    connectionObj.startNode?.onNewConnection && connectionObj.startNode.onNewConnection(connectionObj);
+    connectionObj.endNode?.onNewConnection && connectionObj.endNode.onNewConnection(connectionObj);
+
+    //if connection was removed entirely by a previous undo, we need to recreate
+    if (!connectionObj.connectionComponent){
+        props.selectedAsset.addConnection(connectionObj);
+    }
+
+    //if this is being connected through a redo, then the socketEl reference might be deprecated and needs a relink
+    if (!socketOver.socketEl){
+        nextTick(()=>{
+            relinkConnections();
+        })
+    }
+
+    if (makeCommit){
+        const prevSocket = undoStore.cache.get('prev_socket');
+        const socketOverCopy: any = Object.assign({}, socketOver);
+
+        delete socketOverCopy.socketEl;
+
+        const data = {connectionObj, socketOver: socketOverCopy, prevSocket} satisfies ActionMakeConnectionProps;
+        undoStore.commit({action: Core.LOGIC_ACTION.CONNECT, data});
+
+        nextTick(()=>{
+            connectionObj.updateComponent();
+        });
+    }
+
+    undoStore.cache.delete('prev_socket');
+}
+
+function actionRemoveConnection({connectionObj}: ActionRemoveConnectionProps, makeCommit = true): void {
+    makeCommit &&= !!(connectionObj.startNode && connectionObj.endNode);
+
+    if (makeCommit){
+        let data = {connectionObj: Object.assign(new Node_Connection(), connectionObj)};
+        let prevSocket = undoStore.cache.get('prev_socket');
+
+        Object.assign(data.connectionObj, prevSocket);
+        undoStore.commit({action: Core.LOGIC_ACTION.DISCONNECT, data});
+    }
+
+    props.selectedAsset.removeConnection(connectionObj.id);
+    connectionObj.startNode?.onRemoveConnection && connectionObj.startNode?.onRemoveConnection(connectionObj);
+    connectionObj.endNode?.onRemoveConnection && connectionObj.endNode?.onRemoveConnection(connectionObj);
+}
+
+function actionChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProps, makeCommit = true): void {
+    socket.value = newVal;
+
+    node.onValueChange && node.onValueChange({
+        socketId: socket.id,
+        oldVal,
+        newVal
+    });
+
+    if (makeCommit){
+        let data = {socket, oldVal, newVal, node};
+        undoStore.commit({action: Core.LOGIC_ACTION.CHANGE_INPUT, data});
+    }
+}
+
+function revertAddNode({nodeRef}: ActionAddNodeProps): void {
+    nodeRef!.onBeforeDelete && nodeRef!.onBeforeDelete();
+    props.selectedAsset.deleteNode(nodeRef!);
+}
+
+function revertDeleteNodes({nodeRefList, connectionRefMap}: ActionDeleteNodesProps): void {
+    const nodeAPI = mainStore.getNodeAPI;
+
+    nodeRefList.forEach(node => {
+        node.parentScript.addNode(node.templateId, new Vector(), nodeAPI, node);
+    });
+
+    connectionRefMap!.forEach((connectionList, parentScript) => {
+        connectionList.forEach(connection => {
+            parentScript.addConnection(connection);
+            connection.startNode?.onNewConnection && connection.startNode.onNewConnection(connection);
+            connection.endNode?.onNewConnection && connection.endNode.onNewConnection(connection);
+        });
+    });
+
+    nextTick(()=>{
+        relinkConnections();
+    });
+}
+
+function revertMoveNodes({nodeRefList, velocity}: ActionMoveNodesProps): void {
+    for (let i = 0; i < nodeRefList.length; i++){
+        const curNode = nodeRefList[i];
+        const newPos = curNode.pos.clone().subtract(velocity);
+
+        curNode.setPos(newPos);
+    }
+}
+
+function revertMakeConnection({connectionObj, prevSocket}: ActionMakeConnectionProps): void {
+    if (prevSocket){
+        Object.assign(connectionObj, prevSocket);
+        relinkConnections();
+    }
+    else{
+        props.selectedAsset.removeConnection(connectionObj.id);
+    }
+}
+
+function revertRemoveConnection({connectionObj}: ActionRemoveConnectionProps): void {
+    props.selectedAsset.addConnection(connectionObj);
+    
+    nextTick(()=>{
+        relinkConnections();
+    });
+}
+
+function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProps): void {
+    socket.value = oldVal;
+    node.onValueChange && node.onValueChange({
+        socketId: socket.id,
+        newVal,
+        oldVal
+    });
+}
+</script>
+
 <template>
     <div class="logicMain">
         <DialogNewVariable
@@ -75,18 +936,18 @@
         </div>
         <div
             :style="(selectedAsset.selectedGraphId != null) ? '' : 'background: white'"
-            ref="nodeVP"
+            ref="nodeViewportRef"
             class="node-viewport"
             @click="mouseClick"
             @mousedown="mouseDown"
             @mousemove="mouseMove">
-            <div ref="nodeNav" class="node-nav-wrapper">
+            <div ref="nodeNavRef" class="node-nav-wrapper">
                 <Connection
                     v-for="connection in visibleConnections"
                     :key="`connection,${selectedAsset.id},${selectedAsset.selectedGraphId},${connection.id}`"
                     ref="connectionEls"
                     :connectionObj="connection"
-                    :clientToNavSpace="convertClientToNavPos"
+                    :clientToNavSpace="clientToNavPos"
                     :navWrapper="$refs.nodeNav"
                     :allConnections="selectedAsset.connections"
                     :draggingConnection="draggingConnection"
@@ -94,9 +955,9 @@
                 <Node
                     v-for="node in visibleNodes"
                     :key="`node,${selectedAsset.id},${selectedAsset.selectedGraphId},${node.nodeId}`"
-                    ref="nodeEls"
+                    ref="nodeRefs"
                     :nodeObj="node"
-                    :clientToNavSpace="convertClientToNavPos"
+                    :clientToNavSpace="clientToNavPos"
                     :canDrag="nodeDraggingEnabled"
                     :selectedNodes="selectedNodes"
                     :allConnections="selectedAsset.connections"
@@ -111,7 +972,7 @@
             <svg class="selection-box-wrapper" width="100%" height="100%">
                 <rect
                     v-show="selectionBox.active"
-                    ref="selectionBox"
+                    ref="selectionBoxRef"
                     :x="selectionBox.origin.x"
                     :y="selectionBox.origin.y"
                     :width="selectionBox.dim.x"
@@ -136,7 +997,7 @@
                         <img src="@/assets/plus.svg" />
                     </button>
                 </div>
-                <div ref="graphList" class="graph-list">
+                <div ref="graphListRef" class="graph-list">
                     <DragList
                         :items="graphs"
                         :keylist="graphKeys"
@@ -156,7 +1017,7 @@
                                         </div>
                                     <div v-show="renamingGraph == item.id">
                                         <input
-                                            :ref="`rename_${item.id}`"
+                                            :ref="el => graphRenameRefs.set(item.id, el as HTMLInputElement)"
                                             style="width: 90%" type="text"
                                             v-model="item.name" v-input-active
                                             @keyup.enter="stopRenamingGraph"/>
@@ -185,840 +1046,20 @@
                 <NavControlPanel
                     ref="navControlPanel"
                     class="nav-control"
-                    :navState="curNavState"
+                    :navState="curNavState!"
                     :selectedNavTool="selectedNavTool"
                     :contentsBounds="contentsBounds"
                     :unitScale="1"
-                    maxZoom="2"
+                    :maxZoom="2"
+                    :dpi-scale="1"
+                    :parent-event-bus="LogicMainEventBus"
                     @navChanged="navChange"
-                    @tool-selected="navToolSelected"/>
+                    @tool-selected="navToolSelected"
+                    @set-hotkey-tool="navHotkeyTool = $event"/>
             </div>
         </div>
     </div>
 </template>
-
-<script>
-import UndoPanel from '@/components/common/UndoPanel';
-import NavControlPanel from '@/components/common/NavControlPanel';
-import DragList from '@/components/common/DragList';
-import Node from '@/components/editor_logic/Node.vue';
-import Node_Connection from '@/components/editor_logic/Node_Connection';
-import Connection from '@/components/editor_logic/Connection';
-import HotkeyMap from '@/components/common/HotkeyMap';
-import Undo_Store, {UndoHelpers} from '@/components/common/Undo_Store';
-import DialogNewVariable from './DialogNewVariable';
-
-export default {
-    name: 'LogicEditor',
-    props: ['selectedAsset'],
-    data(){
-        return {
-            showAddEventModal: false,
-            selectedCategory: null,
-            actionMap: new Map(),
-            revertMap: new Map(),
-            nodeViewportEl: null,
-            nodeNavEl: null,
-            undoStore: new Undo_Store(32, false),
-            mouseDownPos: new Vector(0, 0),
-            lastMouseDragPos: new Vector(0, 0),
-            contentsBounds: [0, 0, 0, 0],
-            convertClientToNavPos: null,
-            currentSocketOver: null,
-            isDraggingNode: false,
-            draggingConnection: null,
-            hotkeyMap: new HotkeyMap(),
-            selectionBox: {
-                active: false,
-                origin: new Vector(0, 0),
-                dim: new Vector(0, 0),
-            },
-            shiftDown: false,
-            isSearching: false,
-            searchQuery: '',
-            renamingGraph: null,
-            showNewVariableWindow: false,
-            newVariableCallback: ()=>{}
-        }
-    },
-    components: {
-        UndoPanel,
-        NavControlPanel,
-        DragList,
-        Node,
-        Connection,
-        DialogNewVariable,
-    },
-    watch: {
-        selectedAsset(){
-            this.$nextTick(()=>{
-                this.relinkConnections();
-                this.navChange(this.curNavState);
-                this.updateNodeBounds();
-                this.undoStore.clear();
-            })
-        },
-        inputActive(newState){
-            this.hotkeyMap.enabled = !newState;
-        }
-    },
-    computed: {
-        selectedNavTool(){
-            return this.$store.getters['LogicEditor/getSelectedNavTool'];
-        },
-        showLibrary: {
-            get(){
-                return this.$store.getters['LogicEditor/isLibraryPanelOpen'];
-            },
-            set(newState){
-                this.$store.dispatch('LogicEditor/setLibraryPanelState', newState);
-            },
-        },
-        showGraphs: {
-            get(){
-                return this.$store.getters['LogicEditor/isGraphPanelOpen'];
-            },
-            set(newState){
-                this.$store.dispatch('LogicEditor/setGraphPanelState', newState);
-            },
-        },
-        nodeCategories(){
-            let categories = [];
-
-            for (let i = 0; i < Shared.NODE_LIST.length; i++){
-                let curNode = Shared.NODE_LIST[i];
-
-                if (!categories.includes(curNode.category)){
-                    categories.push(curNode.category);
-                }
-            }
-
-            return categories;
-        },
-        filteredNodes(){
-            if (this.isSearching){
-                if (this.searchQuery.trim().length > 0){
-                    return Shared.NODE_LIST.filter(node => node.id.includes(this.searchQuery.toLowerCase()));
-                }
-
-                return Shared.NODE_LIST;
-            }
-
-            return Shared.NODE_LIST.filter(node => node.category == this.selectedCategory);
-        },
-        nodeDraggingEnabled(){
-            return this.selectedNavTool == null;
-        },
-        curNavState(){
-            this.$nextTick(()=>{
-                this.navChange(this.selectedAsset.navState);
-            });
-            return this.selectedAsset.navState;
-        },
-        visibleNodes(){
-            return this.selectedAsset.nodes.filter(n => n.graphId == this.selectedAsset.selectedGraphId);
-        },
-        visibleConnections(){
-            return this.selectedAsset.connections.filter(n => n.graphId == this.selectedAsset.selectedGraphId);
-        },
-        selectedNodes(){
-            return this.selectedAsset.selectedNodes;
-        },
-        inputActive(){
-            return this.$store.getters['getInputActive'];;
-        },
-        graphs(){
-            return this.selectedAsset.graphs;
-        },
-        graphKeys(){
-            return this.selectedAsset.graphs.map(graph => graph.id);
-        },
-    },
-    beforeCreate(){
-        this.$store.getters['getNodeAPI'].setNodeEditorContext(this);
-    },
-    created(){
-        this.convertClientToNavPos = this.clientToNavPos.bind(this);
-        this.hotkeyDownHandler = this.hotkeyMap.keyDown.bind(this.hotkeyMap);
-        this.hotkeyUpHandler = this.hotkeyMap.keyUp.bind(this.hotkeyMap);
-    },
-    mounted(){
-        this.nodeViewportEl = this.$refs.nodeVP;
-        this.nodeNavEl = this.$refs.nodeNav;
-
-        window.addEventListener('keydown', this.keyDown);
-        window.addEventListener('keyup', this.keyUp);
-        window.addEventListener('mouseup', this.mouseUp);
-        this.nodeViewportEl.addEventListener('wheel', this.$refs.navControlPanel.scroll);
-        this.nodeViewportEl.addEventListener ('mouseenter', this.mouseEnter);
-        this.nodeViewportEl.addEventListener ('mouseleave', this.mouseLeave);
-        window.addEventListener('resize', this.resize);
-        this.resize();
-
-        this.bindHotkeys();
-        this.bindActions();
-        this.bindReversions();
-        this.navChange(this.selectedAsset.navState);
-        this.relinkConnections();
-        this.updateNodeBounds();
-
-        this.selectedAsset.nodes.forEach(node => node.allNodesMounted());
-    },
-    beforeDestroy(){
-        window.removeEventListener('keydown', this.keyDown);
-        window.removeEventListener('keyUp', this.keyUp);
-        window.removeEventListener('mouseup', this.mouseUp);
-        this.nodeViewportEl.removeEventListener('wheel', this.$refs.navControlPanel.scroll);
-        this.nodeViewportEl.removeEventListener('mouseenter', this.$refs.navControlPanel.mouseEnter);
-        this.nodeViewportEl.removeEventListener('mouseleave', this.$refs.navControlPanel.mouseLeave);
-    },
-    methods: {
-        ...UndoHelpers,
-        bindHotkeys(){
-            this.hotkeyMap.bindKey(['delete'], this.deleteSelectedNodes);
-            this.hotkeyMap.bindKey(['backspace'], this.deleteSelectedNodes);
-            this.hotkeyMap.bindKey(['t'], ()=>{this.showEvents = !this.showEvents});
-            this.hotkeyMap.bindKey(['n'], ()=>{this.showLibrary = !this.showLibrary});
-            this.hotkeyMap.bindKey(['control', 'a'], this.selectAllNodes);
-        },
-        bindActions(){
-            this.actionMap.set(Shared.LOGIC_ACTION.ADD_NODE, this.actionAddNode);
-            this.actionMap.set(Shared.LOGIC_ACTION.DELETE_NODES, this.actionDeleteNodes);
-            this.actionMap.set(Shared.LOGIC_ACTION.MOVE, this.actionMoveNodes);
-            this.actionMap.set(Shared.LOGIC_ACTION.CONNECT, this.actionMakeConnection);
-            this.actionMap.set(Shared.LOGIC_ACTION.DISCONNECT, this.actionRemoveConnection);
-            this.actionMap.set(Shared.LOGIC_ACTION.CHANGE_INPUT, this.actionChangeInput);
-        },
-        bindReversions(){
-            this.revertMap.set(Shared.LOGIC_ACTION.ADD_NODE, this.revertAddNode);
-            this.revertMap.set(Shared.LOGIC_ACTION.DELETE_NODES, this.revertDeleteNodes);
-            this.revertMap.set(Shared.LOGIC_ACTION.MOVE, this.revertMoveNodes);
-            this.revertMap.set(Shared.LOGIC_ACTION.CONNECT, this.revertMakeConnection);
-            this.revertMap.set(Shared.LOGIC_ACTION.DISCONNECT, this.revertRemoveConnection);
-            this.revertMap.set(Shared.LOGIC_ACTION.CHANGE_INPUT, this.revertChangeInput);
-        },
-        getNewNodePos(){
-            let vpBounds = this.nodeViewportEl.getBoundingClientRect();
-            let vpUl = new Vector(vpBounds.left, vpBounds.top);
-            let vpBr = new Vector(vpBounds.right, vpBounds.bottom);
-            let midpoint = vpUl.clone().add(vpBr).divideScalar(2);
-            let navPos = this.convertClientToNavPos(midpoint);
-
-            for (let i = 0; i < this.selectedAsset.nodes.length; i++){
-                let curNode = this.selectedAsset.nodes[i];
-
-                if (curNode.pos.isEqualTo(navPos)){
-                    let size = 50;
-                    let ul = new Vector(-size, -size);
-                    let br = new Vector(size, size);
-                    navPos.add(new Vector(0, 0).randomize(ul, br));
-                }
-            }
-            
-            return navPos;
-        },
-        mouseClick(jsEvent){
-            let mouseUpPos = new Vector(jsEvent.clientX, jsEvent.clientY);
-
-            if (mouseUpPos.isEqualTo(this.mouseDownPos)){
-                this.$store.dispatch('LogicEditor/selectNavTool', null);
-            }
-
-            if (
-                jsEvent.target == jsEvent.currentTarget &&
-                !this.shiftDown &&
-                mouseUpPos.distance(this.mouseDownPos) < 5
-            ){
-                this.deselectAllNodes();
-            }
-        },
-        keyDown(jsEvent){
-            this.hotkeyMap.keyDown(jsEvent);
-            if (jsEvent.key == 'Shift') this.shiftDown = true;
-        },
-        keyUp(jsEvent){
-            this.hotkeyMap.keyUp(jsEvent);
-            if (jsEvent.key == 'Shift') this.shiftDown = false;
-        },
-        mouseDown(jsEvent){
-            this.mouseDownPos.x = jsEvent.clientX;
-            this.mouseDownPos.y = jsEvent.clientY;
-            this.lastMouseDragPos.copy(this.mouseDownPos);
-            this.$refs.navControlPanel.mouseDown(jsEvent);
-
-            //position selection box
-            if (jsEvent.which == 1 && jsEvent.target == jsEvent.currentTarget){
-                let vpBounds = this.nodeViewportEl.getBoundingClientRect();
-                let vpOrigin = new Vector(vpBounds.left, vpBounds.top);
-                let startPos = new Vector(jsEvent.clientX, jsEvent.clientY).subtract(vpOrigin);
-
-                this.selectionBox.active = true;
-                this.selectionBox.origin.copy(startPos);
-                this.selectionBox.dim.zero();
-            }
-        },
-        mouseUp(jsEvent){
-            this.isDraggingNode = false;
-            this.$refs.navControlPanel.mouseUp(jsEvent);
-            this.selectionBox.active = false;
-            this.selectNodesInBox();
-
-            if (this.draggingConnection){
-                const socketOver = this.currentSocketOver;
-                const connectionObj = this.draggingConnection;
-                const startType = !!connectionObj.startSocketEl ? connectionObj.type : socketOver?.socketData.type;
-                const endType = !!connectionObj.startSocketEl ? socketOver?.socketData.type : connectionObj.type;
-                const isTrigger = startType == endType && startType == null;
-                const typeMatch = isTrigger || Shared.canConvertSocket(startType, endType);
-                const directionMatch = !!connectionObj.startSocketEl == !!socketOver?.isInput;
-
-                this.draggingConnection = null;
-
-                if (
-                    socketOver &&
-                    typeMatch &&
-                    directionMatch &&
-                    connectionObj.canConnect &&
-                    socketOver.canConnect &&
-                    !socketOver.socketData.disabled
-                ){
-                    let leftNode = (socketOver.isInput) ? socketOver.node : connectionObj.endNode;
-                    let rightNode = !(socketOver.isInput) ? socketOver.node : connectionObj.startNode;
-
-                    if (!this.checkLoop(leftNode, rightNode)){
-                        this.actionMakeConnection({connectionObj, socketOver});
-                        return;
-                    }
-                }
-
-                this.actionRemoveConnection({connectionObj});
-            }
-        },
-        mouseEnter(jsEvent){
-            if (!this.inputActive){
-                this.hotkeyMap.mouseEnter();
-            }
-            this.$refs.navControlPanel.mouseEnter(jsEvent);
-        },
-        mouseLeave(jsEvent){
-            this.hotkeyMap.mouseLeave();
-            this.$refs.navControlPanel.mouseLeave(jsEvent);
-        },
-        trashMouseUp(jsEvent){
-            if (this.isDraggingNode){
-                jsEvent.stopPropagation()
-                this.deleteSelectedNodes();
-                this.isDraggingNode = false;
-            }
-        },
-        mouseMove(jsEvent){
-            let vpBounds = this.nodeViewportEl.getBoundingClientRect();
-            let vpOrigin = new Vector(vpBounds.left, vpBounds.top);
-            let newOrigin = new Vector(jsEvent.clientX, jsEvent.clientY).subtract(vpOrigin);
-            let selectionBoxDim = new Vector(jsEvent.clientX, jsEvent.clientY).subtract(this.mouseDownPos);
-
-            this.$refs.navControlPanel.mouseMove(jsEvent);
-            this.selectionBox.dim.copy(selectionBoxDim);
-
-            //if rectangle dimensions are negative, set origin to mouse position
-            if (selectionBoxDim.x < 0){
-                this.selectionBox.origin.x = newOrigin.x;
-                this.selectionBox.dim.x = Math.abs(this.selectionBox.dim.x);
-            }
-
-            if (selectionBoxDim.y < 0){
-                this.selectionBox.origin.y = newOrigin.y;
-                this.selectionBox.dim.y = Math.abs(this.selectionBox.dim.y);
-            }
-
-            //calculate node velocity and move nodes if applicable
-            if (this.isDraggingNode){
-                let startPos = this.clientToNavPos(this.lastMouseDragPos);
-                let mousePos = new Vector(jsEvent.clientX, jsEvent.clientY);
-                let mouseNavPos = this.clientToNavPos(mousePos);
-                let velocity = mouseNavPos.subtract(startPos);
-                
-                this.actionMoveNodes({nodeRefList: this.selectedNodes, velocity}, false);
-                this.lastMouseDragPos.copy(mousePos);
-            }
-        },
-        navChange(newState){
-            const TILE_SIZE = 100;
-
-            let vpEl = this.nodeViewportEl;
-            let navEl = this.nodeNavEl;
-
-            //update navWrapper
-            navEl.style.left = (newState.offset.x * newState.zoomFac) + 'px';
-            navEl.style.top = (newState.offset.y * newState.zoomFac) + 'px';
-            navEl.style.transform = 'scale(' + newState.zoomFac + ')';
-
-            //update grid background
-            let tileSize = newState.zoomFac * TILE_SIZE;
-            let center = new Vector(vpEl.clientWidth, vpEl.clientHeight).divideScalar(2);
-
-            center.add(newState.offset.clone().multiplyScalar(newState.zoomFac));
-            this.nodeViewportEl.style.backgroundSize = `${tileSize}px ${tileSize}px`;
-            this.nodeViewportEl.style.backgroundPosition = `left ${center.x}px top ${center.y}px`;
-        },
-        navToolSelected(newTool){
-            this.$store.dispatch('LogicEditor/selectNavTool', newTool);
-        },
-        addGraph(){
-            this.selectedAsset.addGraph();
-
-            this.$nextTick(()=>{
-                const graphList = this.$refs.graphList;
-
-                if (graphList){
-                    graphList.scrollTop = graphList.scrollHeight - graphList.clientHeight;
-                }
-            });
-        },
-        switchGraph(id){
-            this.selectedAsset.selectedGraphId = id;
-            this.navChange(this.selectedAsset.navState);
-
-            this.$nextTick(()=>{
-                this.deselectAllNodes();
-                this.relinkConnections();
-            });
-        },
-        startRenamingGraph(id){
-            this.renamingGraph = id;
-            this.$nextTick(()=>{
-                const box = this.$refs[`rename_${id}`][0];
-                box.focus();
-                box.select();
-            });
-        },
-        stopRenamingGraph(){
-            this.renamingGraph = null;
-        },
-        deleteGraph(jsEvent, graphId){
-            jsEvent.stopPropagation();
-            this.selectedAsset.deleteGraph(graphId);
-        },
-        graphOrderChanged(event){
-            const {itemIdx, newIdx} = event;
-            const movedGraph = this.selectedAsset.graphs[itemIdx];
-            const shiftForward = itemIdx > newIdx;
-            const compFunc = shiftForward ? i => i > newIdx : i => i < newIdx;
-            const dir = shiftForward ? -1 : 1;
-
-            for (let i = itemIdx; compFunc(i); i += dir){
-                this.selectedAsset.graphs[i] = this.selectedAsset.graphs[i + dir];
-            }
-
-            this.$set(
-                this.selectedAsset.graphs,
-                newIdx,
-                movedGraph
-            );
-        },
-        clientToNavPos(pos){
-            /*
-                - Calculate mouse's viewport position (based on "client space", so that the hierarchy is irrelivent)
-                - Calculate the mouse's position in the navWrapper in percentage (IE: x:50%, y:25%)
-                - Multiply percentage by viewport dimensions to get mouse position in "nav space" (viewport and
-                    navWrapper dimensions will always be the same since CSS scale does not change pixel values of width/height)
-            */
-            let vpBounds = this.nodeViewportEl.getBoundingClientRect();
-            let vpOrigin = new Vector(vpBounds.left, vpBounds.top);
-            let vpSize = new Vector(this.nodeViewportEl.clientWidth, this.nodeViewportEl.clientHeight);
-            let navBounds = this.nodeNavEl.getBoundingClientRect();
-            let navOrigin = new Vector(navBounds.left, navBounds.top).subtract(vpOrigin);
-            let navSize = new Vector(navBounds.right - navBounds.left, navBounds.bottom - navBounds.top);
-            let offsetPos = pos.clone().subtract(vpOrigin);
-            let navPercent = offsetPos.clone().subtract(navOrigin).divide(navSize);
-            let nodeNavPos = vpSize.clone().multiply(navPercent);
-
-            return nodeNavPos;
-        },
-        resize(){
-            if (this.$refs.navControlPanel){
-                this.$refs.navControlPanel.setContainerDimensions(this.nodeViewportEl.clientWidth, this.nodeViewportEl.clientHeight);
-            }
-        },
-        createConnection(connectionObj){
-            this.selectedAsset.addConnection(connectionObj);
-            this.draggingConnection = connectionObj;
-        },
-        dragConnection(connectionObj){
-            let {startNode, startSocketId, endNode, endSocketId} = connectionObj;
-
-            this.draggingConnection = connectionObj;
-            this.undoStore.cache.set('prev_socket', {startNode, startSocketId, endNode, endSocketId});
-        },
-        relinkConnections(){
-            let nodeEls = this.$refs.nodeEls;
-            let connectionEls = this.$refs.connectionEls;
-            let nodeInfo = new Map();
-
-            nodeEls?.forEach(nodeEl => {
-                let info = nodeEl.getRelinkInfo();
-                nodeInfo.set(info.id, info);
-            });
-
-            connectionEls?.forEach(connectionEl => connectionEl.relink(nodeInfo));
-        },
-        nodeClick({nodeObj, jsEvent}){
-            let mousePos = new Vector(jsEvent.clientX, jsEvent.clientY);
-
-            if (this.mouseDownPos.distance(mousePos) < 2){
-                this.deselectAllNodes();
-                this.selectedNodes.push(nodeObj);
-            }
-        },
-        nodeDown(node){
-            let alreadySelected = !!this.selectedNodes.find(n => n.nodeId == node.nodeId);
-            let navHotkeyActive = this.$refs.navControlPanel.hotkeyTool != null;
-            let navToolSelected = this.$store.getters['LogicEditor/getSelectedNavTool'] != null;
-
-            if (!alreadySelected) {
-                if (!this.shiftDown){
-                    this.deselectAllNodes();
-                }
-
-                this.selectedNodes.push(node);
-            }
-
-            if (!(navHotkeyActive || navToolSelected)){
-                this.isDraggingNode = true;
-            }
-        },
-        nodeMoveEnd(){
-            this.actionMoveNodes({nodeRefList: this.selectedNodes}, true);
-            this.updateNodeBounds();
-        },
-        selectNodesInBox(){
-            this.selectedAsset.nodes.forEach(node => {
-                let selectionBounds = this.$refs.selectionBox.getBoundingClientRect();
-                let nodeBounds = node.domRef.getBoundingClientRect();
-                let overlapX = selectionBounds.right >= nodeBounds.left && nodeBounds.right >= selectionBounds.left;
-                let overlapY = selectionBounds.bottom >= nodeBounds.top && nodeBounds.bottom >= selectionBounds.top;
-                let isSelected = this.selectedNodes.find(n => n.nodeId == node.nodeId);
-
-                if (overlapX && overlapY && !isSelected){
-                    this.selectedNodes.push(node);
-                }
-            });
-        },
-        updateNodeBounds(){
-            let nodes = this.selectedAsset.nodes;
-
-            if (nodes.length == 0){
-                this.contentsBounds = [0, 0, 0, 0];
-                return;
-            }
-
-            //calculate client/screen space bounds
-            let firstBoundingRect = nodes[0].domRef.getBoundingClientRect();
-            let ul = new Vector(firstBoundingRect.left, firstBoundingRect.top);
-            let br = new Vector(firstBoundingRect.right, firstBoundingRect.bottom);
-            let vpBounds = this.nodeViewportEl.getBoundingClientRect();
-            let vpSize = new Vector(vpBounds.right - vpBounds.left, vpBounds.bottom - vpBounds.top);
-            let vpOrigin = new Vector(vpBounds.left, vpBounds.top);
-            let navZoom = this.selectedAsset.navState.zoomFac;
-            let navOrigin = this.selectedAsset.navState.offset.clone().multiplyScalar(navZoom);
-
-            for (let i = 1; i < nodes.length; i++){
-                let curNodeBounds = nodes[i].domRef.getBoundingClientRect();
-                ul.x = Math.min(ul.x, curNodeBounds.left);
-                ul.y = Math.min(ul.y, curNodeBounds.top);
-                br.x = Math.max(br.x, curNodeBounds.right);
-                br.y = Math.max(br.y, curNodeBounds.bottom);
-            }
-
-            //align "world space" origin with center of viewport
-            ul.subtract(navOrigin).subtract(vpOrigin).subtract(vpSize.clone().divideScalar(2));
-            br.subtract(navOrigin).subtract(vpOrigin).subtract(vpSize.clone().divideScalar(2));
-            ul.divideScalar(navZoom);
-            br.divideScalar(navZoom);
-
-            //commit result
-            this.contentsBounds[0] = ul.x;
-            this.contentsBounds[1] = -ul.y;
-            this.contentsBounds[2] = br.x;
-            this.contentsBounds[3] = -br.y;
-        },
-        selectAllNodes(){
-            this.selectedNodes.splice(0);
-            this.selectedNodes.push(...this.selectedAsset.nodes);
-        },
-        deselectAllNodes(){
-            this.selectedNodes.splice(0);
-        },
-        deleteSelectedNodes(){
-            const protectedNodes = [];
-            const deletableNodes = this.selectedNodes.filter(node => {
-                if (node.editorCanDelete) return true;
-
-                protectedNodes.push(node);
-                return false;
-            });
-
-            if (deletableNodes.length){
-                this.actionDeleteNodes({nodeRefList: deletableNodes}, true);
-                this.deselectAllNodes();
-            }
-
-            protectedNodes.forEach(node => node.onDeleteStopped(protectedNodes));
-        },
-        checkLoop(leftNode, rightNode){
-            let connectionMap = new Map();
-            let checkedNodes = new Map();
-            let connections = this.selectedAsset.connections;
-
-            for (let i = 0; i < connections.length - 1; i++){
-                let connection = connections[i];
-                let id = connection.startNode.nodeId + '/' + connection.startSocketId;
-                connectionMap.set(id, connection);
-            }
-
-            checkedNodes.set(rightNode.nodeId, true);
-
-            return _checkLoop({endNode: leftNode}, connectionMap, checkedNodes);
-        },
-        dialogNewVariable(callback){
-            this.newVariableCallback = callback;
-            this.showNewVariableWindow = true;
-        },
-        dialogNewVariableClose(){
-            this.newVariableCallback = ()=>{};
-            this.showNewVariableWindow = false;
-        },
-        actionAddNode({templateId, nodeRef}, makeCommit = true){
-            const nodeAPI = this.$store.getters['getNodeAPI'];
-            const pos = this.getNewNodePos();
-            const newNode = this.selectedAsset.addNode(templateId, pos, nodeRef, nodeAPI);
-
-            if (makeCommit){
-                let data = {templateId, nodeRef: newNode};
-                this.undoStore.commit({action: Shared.LOGIC_ACTION.ADD_NODE, data});
-            }
-
-            if (!nodeRef) newNode.onCreate();
-        },
-        actionDeleteNodes({nodeRefList}, makeCommit = true){
-            const connectionRefMap = new Map();
-
-            nodeRefList.forEach(node => {
-                //find and delete connections attached to the node
-                const currentConnections = [];
-                
-                node.parentScript.connections.forEach(connection => {
-                    const startNodeId = connection.startNode.nodeId;
-                    const endNodeId = connection.endNode.nodeId;
-
-                    if (startNodeId == node.nodeId || endNodeId == node.nodeId){
-                        currentConnections.push(connection);
-                    }
-                });
-
-                currentConnections.forEach(connection => {
-                    const connectionMapGet = connectionRefMap.get(node.parentScript) ?? [];
-
-                    if (!connectionMapGet.length) connectionRefMap.set(node.parentScript, connectionMapGet);
-                    connectionMapGet.push(connection);
-                    node.parentScript.removeConnection(connection.id);
-                    connection.startNode?.onRemoveConnection(connection);
-                    connection.endNode?.onRemoveConnection(connection);
-                });
-
-                //delete node
-                node.onBeforeDelete();
-                node.parentScript.deleteNode(node);
-            });
-
-            if (makeCommit){
-                const data = {nodeRefList: [...nodeRefList], connectionRefMap};
-                this.undoStore.commit({action: Shared.LOGIC_ACTION.DELETE_NODES, data});
-            }
-        },
-        actionMoveNodes({nodeRefList, velocity}, makeCommit = true){
-            if (makeCommit){
-                let startVec = this.undoStore.cache.get('move_start');
-
-                if (startVec){
-                    let totalVel = nodeRefList[0].pos.clone().subtract(startVec);
-                    let data = {nodeRefList: [...nodeRefList], velocity: totalVel};
-
-                    this.undoStore.commit({action: Shared.LOGIC_ACTION.MOVE, data});
-                    this.undoStore.cache.delete('move_start');
-                }
-
-                return;
-            }
-
-            for (let i = 0; i < nodeRefList.length; i++){
-                let curNode = nodeRefList[i];
-                let newPos = curNode.pos.clone().add(velocity);
-
-                curNode.setPos(newPos);
-            }
-
-            if (!this.undoStore.cache.get('move_start')){
-                this.undoStore.cache.set('move_start', nodeRefList[0].pos.clone());
-            }
-        },
-        actionMakeConnection({connectionObj, socketOver}, makeCommit = true){
-            if (socketOver.isInput){
-                connectionObj.endNode = socketOver.node;
-                connectionObj.endSocketId = socketOver.socketData.id;
-                connectionObj.endSocketEl = socketOver.socketEl;
-            }
-            else{
-                connectionObj.startNode = socketOver.node;
-                connectionObj.startSocketId = socketOver.socketData.id;
-                connectionObj.startSocketEl = socketOver.socketEl;
-            }
-
-            connectionObj.startNode.onNewConnection(connectionObj);
-            connectionObj.endNode.onNewConnection(connectionObj);
-
-            //if connection was removed entirely by a previous undo, we need to recreate
-            if (!connectionObj.connectionComponent){
-                this.selectedAsset.addConnection(connectionObj);
-            }
-
-            //if this is being connected through a redo, then the socketEl reference might be deprecated and needs a relink
-            if (!socketOver.socketEl){
-                this.$nextTick(()=>{
-                    this.relinkConnections();
-                })
-            }
-
-            if (makeCommit){
-                let prevSocket = this.undoStore.cache.get('prev_socket');
-                let socketOverCopy = Object.assign({}, socketOver);
-
-                delete socketOverCopy.socketEl;
-
-                let data = {connectionObj, socketOver: socketOverCopy, prevSocket};
-                this.undoStore.commit({action: Shared.LOGIC_ACTION.CONNECT, data});
-
-                this.$nextTick(()=>{
-                    connectionObj.updateComponent();
-                });
-            }
-
-            this.undoStore.cache.delete('prev_socket');
-        },
-        actionRemoveConnection({connectionObj}, makeCommit = true){
-            makeCommit &= !!(connectionObj.startNode && connectionObj.endNode);
-
-            if (makeCommit){
-                let data = {connectionObj: Object.assign(new Node_Connection(), connectionObj)};
-                let prevSocket = this.undoStore.cache.get('prev_socket');
-
-                Object.assign(data.connectionObj, prevSocket);
-                this.undoStore.commit({action: Shared.LOGIC_ACTION.DISCONNECT, data});
-            }
-
-            this.selectedAsset.removeConnection(connectionObj.id);
-            connectionObj.startNode?.onRemoveConnection(connectionObj);
-            connectionObj.endNode?.onRemoveConnection(connectionObj);
-        },
-        actionChangeInput({socket, oldVal, newVal, node}, makeCommit = true){
-            socket.value = newVal;
-
-            node.onValueChange({
-                socketId: socket.id,
-                oldVal,
-                newVal
-            });
-
-            if (makeCommit){
-                let data = {socket, oldVal, newVal, node};
-                this.undoStore.commit({action: Shared.LOGIC_ACTION.CHANGE_INPUT, data});
-            }
-        },
-        revertAddNode({nodeRef}){
-            nodeRef.onBeforeDelete();
-            this.selectedAsset.deleteNode(nodeRef);
-        },
-        revertDeleteNodes({nodeRefList, connectionRefMap}){
-            const nodeAPI = this.$store.getters['getNodeAPI'];
-
-            nodeRefList.forEach(node => {
-                node.parentScript.addNode(node.templateId, null, node, nodeAPI);
-            });
-
-            connectionRefMap.forEach((connectionList, parentScript) => {
-                connectionList.forEach(connection => {
-                    parentScript.addConnection(connection);
-                    connection.startNode.onNewConnection(connection);
-                    connection.endNode.onNewConnection(connection);
-                });
-            });
-
-            this.$nextTick(()=>{
-                this.relinkConnections();
-            });
-        },
-        revertMoveNodes({nodeRefList, velocity}){
-            for (let i = 0; i < nodeRefList.length; i++){
-                let curNode = nodeRefList[i];
-                let newPos = curNode.pos.clone().subtract(velocity);
-
-                curNode.setPos(newPos);
-            }
-        },
-        revertMakeConnection({connectionObj, prevSocket}){
-            if (prevSocket){
-                Object.assign(connectionObj, prevSocket);
-                this.relinkConnections();
-            }
-            else{
-                this.selectedAsset.removeConnection(connectionObj.id);
-            }
-        },
-        revertRemoveConnection({connectionObj}){
-            this.selectedAsset.addConnection(connectionObj);
-            
-            this.$nextTick(()=>{
-                this.relinkConnections();
-            })
-        },
-        revertChangeInput({socket, oldVal, newVal, node}){
-            socket.value = oldVal;
-            node.onValueChange({
-                socketId: socket.id,
-                newVal,
-                oldVal
-            });
-        },
-    }
-}
-
-function _checkLoop(connection, connectionMap, checkedNodes){
-    let curNode = connection.endNode;
-    let socketArr = [];
-    let foundLoop = false;
-
-    if (checkedNodes.get(curNode.nodeId)){
-        return true;
-    }
-
-    checkedNodes.set(curNode.nodeId, true);
-
-    curNode.outTriggers?.forEach(trigger => socketArr.push(trigger));
-    curNode.outputs?.forEach(output => socketArr.push(output));
-
-    for (let i = 0; !foundLoop && i < socketArr.length; i++){
-        let socket = socketArr[i];
-        let connectionPath = curNode.nodeId + '/' + socket.id;
-        let nextConnection = connectionMap.get(connectionPath);
-
-        if (nextConnection){
-            foundLoop |= _checkLoop(nextConnection, connectionMap, checkedNodes);
-        }
-    }
-
-    return !!foundLoop;
-}
-</script>
 
 <style scoped>
 .logicMain{

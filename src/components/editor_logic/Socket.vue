@@ -1,11 +1,194 @@
+<script lang="ts">
+export interface iHoverSocket {
+    socketData: Core.iAnyObj,
+    isInput: boolean,
+    canConnect: boolean,
+    socketEl: HTMLDivElement,
+    node?: Node;
+}
+
+export interface iValueChanged {
+    socket: any;
+    newVal: any;
+    oldVal: any;
+    node?: Node;
+}
+</script>
+
+<script setup lang="ts">
+import Node_Connection from '@/components/editor_logic/Node_Connection';
+import Decorator from '@/components/common/Decorator.vue';
+import type Node from './Node';
+
+import { ref, computed, nextTick, onMounted } from 'vue';
+import { useAssetBrowserStore } from '@/stores/AssetBrowser';
+import Core from '@/core';
+import socketAnyIcon from '@/assets/socket_any.svg';
+import socketNumberIcon from '@/assets/socket_number.svg';
+import socketStringIcon from '@/assets/socket_string.svg';
+import socketObjectIcon from '@/assets/socket_object.svg';
+import socketBoolIcon from '@/assets/socket_bool.svg';
+import type Logic from './Logic';
+
+const assetBrowserStore = useAssetBrowserStore();
+
+const props = defineProps<{
+    socket: Core.iEditorNodeInput & {node: Node};
+    isInput: boolean;
+    parentConnections: Node_Connection[];
+    parentId: number;
+}>();
+
+const emit = defineEmits(['on-input', 'value-changed', 'mouse-down', 'socket-over']);
+
+const boolCheckboxRef = ref<HTMLInputElement>();
+const socketConnectionRef = ref<HTMLDivElement>();
+const hasSize = ref(false);
+
+const showLabel = computed(()=>props.socket.id.charAt(0) != '_');
+const hideSocket = computed(()=>props.socket.hideSocket);
+const hideInput = computed(()=>props.socket.hideSocket);
+const isTrigger = computed(()=>(props.socket.type == undefined));
+const isConnected = computed(()=>(!!props.parentConnections.find(c => (
+    c.startSocketId == props.socket.id && c.startNode!.nodeId == props.parentId ||
+    c.endSocketId == props.socket.id && c.endNode!.nodeId == props.parentId
+)) && !!hasSize));
+const canConnect = computed(()=>!(isConnected.value && (isTrigger.value != props.isInput)));
+const required = computed(()=>!!props.socket.required);
+const iconMap = computed(()=>new Map<Core.Node_Enums.SOCKET_TYPE, string>([
+    [Core.Node_Enums.SOCKET_TYPE.ANY, socketAnyIcon],
+    [Core.Node_Enums.SOCKET_TYPE.NUMBER, socketNumberIcon],
+    [Core.Node_Enums.SOCKET_TYPE.STRING, socketStringIcon],
+    [Core.Node_Enums.SOCKET_TYPE.OBJECT, socketObjectIcon],
+    [Core.Node_Enums.SOCKET_TYPE.BOOL, socketBoolIcon],
+]));
+const customStyles = computed(()=>{
+    const width = props.socket.node.inputBoxWidth;
+    return width ? `width: ${width}rem` : '';
+});
+const decoratorIconPath = computed(()=>new URL(`../../assets/${props.socket.decoratorIcon}.svg`, import.meta.url).href);
+
+onMounted(()=>{
+    props.socket.node.addEventListener('forceSocketUpdate', forceSocketUpdate);
+
+    nextTick(()=>{
+        hasSize.value = true;
+
+        if (props.socket.type == Core.Node_Enums.SOCKET_TYPE.BOOL && boolCheckboxRef.value){
+            boolCheckboxRef.value.indeterminate = props.socket.value == null;
+        }
+    });
+});
+
+function forceSocketUpdate(): void {
+    nextTick(()=>{
+        props.socket.value = props.socket.value;
+    });
+}
+
+function onInput(event: InputEvent): void {
+    props.socket.value = (event.target as HTMLInputElement).value;
+    emit('on-input', event);
+}
+
+function valueChanged(target: HTMLInputElement): void {
+    emitValueChanged(target.value);
+}
+
+function numValueChanged(target: HTMLInputElement): void {
+    let inputValNum = parseFloat(target.value);
+    let validated = inputValNum;
+
+    if (isNaN(inputValNum) && props.socket.required){
+        validated = parseFloat(props.socket.value);
+    }
+    
+    target.value = validated.toString();
+    emitValueChanged(validated);
+}
+
+function boolValueChanged(target: HTMLInputElement): void {
+    let value: boolean | null = target.checked;
+
+    if (props.socket.triple && props.socket.value){
+        value = null;
+        target.indeterminate = true;
+    }
+
+    if (props.socket.value == null){
+        target.checked = false;
+        value = false;
+    }
+
+    emitValueChanged(value);
+}
+
+function emitValueChanged(newVal: any): void {
+    emit('value-changed', {
+        socket: props.socket,
+        oldVal: props.socket.value,
+        newVal: newVal,
+    });
+}
+
+function mouseDown(event: MouseEvent): void {
+    let connection = new Node_Connection();
+
+    event.stopPropagation();
+
+    if (props.socket.disabled){
+        return;
+    }
+
+    if (props.isInput){
+        connection.endSocketId = props.socket.id;
+        connection.endSocketEl = socketConnectionRef.value!;
+    }
+    else{
+        connection.startSocketId = props.socket.id;
+        connection.startSocketEl = socketConnectionRef.value!;
+    }
+
+    connection.type = props.socket.type;
+    connection.canConnect = canConnect.value;
+    connection.graphId = (assetBrowserStore.getSelectedAsset as unknown as Logic).selectedGraphId;
+
+    emit('mouse-down', connection);
+}
+
+function mouseEnter(event: MouseEvent): void {
+    emit('socket-over', {
+        socketData: props.socket,
+        isInput: props.isInput,
+        canConnect: canConnect.value,
+        socketEl: socketConnectionRef.value,
+    });
+}
+
+function mouseLeave(event: MouseEvent): void {
+    emit('socket-over', null);
+}
+
+function onTextBlur(event: FocusEvent): void {
+    const target = event.target as HTMLInputElement;
+    target.selectionStart = target.selectionEnd = 0;
+}
+
+function getValue(): any {
+    return props.socket.value;
+}
+
+defineExpose({socket: props.socket});
+</script>
+
 <template>
     <div class="dataSocket" :class="isInput ? 'isInput' : ''">
         <div v-if="socket.enableDecorators" class="decorator-wrapper">
             <Decorator
                 v-if="socket.decoratorIcon"
                 class="decorator"
-                :src="require(`@/assets/${socket.decoratorIcon}.svg`)"
-                :tooltipText="$te(socket.decoratorText) ? $t(socket.decoratorText, socket.decoratorTextVars || {}): ''"/>
+                :src="decoratorIconPath"
+                :tooltipText="$te(socket.decoratorText!) ? $t(socket.decoratorText!, socket.decoratorTextVars || {}): ''"/>
         </div>
         <div class="name-input-wrapper" :style="isInput && !socket.flipInput ? 'flex-direction: row-reverse;':''">
             <div v-if="showLabel" class="socket_name" :class="socket.hideLabel ? 'invisible':''">
@@ -13,62 +196,62 @@
             </div>
             <div v-if="isInput && !isConnected && !hideInput" class="inputBox">
                 <input
-                    v-if="socket.type == SOCKET_TYPE.NUMBER"
+                    v-if="socket.type == Core.Node_Enums.SOCKET_TYPE.NUMBER"
                     type="number"
                     :style="customStyles"
                     :value="getValue()"
-                    @change="numValueChanged($event.target)"
-                    @input="onInput($event)"
+                    @change="numValueChanged($event.target as HTMLInputElement)"
+                    @input="onInput($event as InputEvent)"
                     :disabled="socket.disabled"
                     v-input-active/>
                 <input
-                    v-if="socket.type == SOCKET_TYPE.STRING"
+                    v-if="socket.type == Core.Node_Enums.SOCKET_TYPE.STRING"
                     name="textInput"
                     type="text"
                     :style="customStyles"
                     :value="getValue()"
-                    @change="valueChanged($event.target)"
-                    @input="onInput($event)"
-                    @blur="onTextBlur"
+                    @change="valueChanged($event.target as HTMLInputElement)"
+                    @input="onInput($event as InputEvent)"
+                    @blur="onTextBlur($event as FocusEvent)"
                     :disabled="socket.disabled"
                     v-input-active
                     v-tooltip="socket.disabled && socket.value.length > 8 ? socket.value : ''" />
                 <div
-                    v-if="socket.type == SOCKET_TYPE.OBJECT"
+                    v-if="socket.type == Core.Node_Enums.SOCKET_TYPE.OBJECT"
                     class="selfBox"
                     :style="customStyles">
                         {{$t('logic_editor.self')}}
                 </div>
                 <input
-                    v-if="socket.type == SOCKET_TYPE.BOOL"
+                    v-if="socket.type == Core.Node_Enums.SOCKET_TYPE.BOOL"
                     type="checkbox"
                     :style="customStyles"
                     :checked="getValue()"
-                    @change="boolValueChanged($event.target)"
-                    @input="onInput($event)"
+                    @change="boolValueChanged($event.target as HTMLInputElement)"
+                    @input="onInput($event as InputEvent)"
                     :disabled="socket.disabled"
-                    ref="boolCheckbox"/>
+                    ref="boolCheckboxRef"/>
             </div>
         </div>
-        <div v-if="socket.type == SOCKET_TYPE.INFO && socket.value" class="infoBox">
+        <div v-if="socket.type == Core.Node_Enums.SOCKET_TYPE.INFO && socket.value" class="infoBox">
             <div v-html="$t(socket.value.titleId)" class="infoTitle"></div>
             <div>{{$te(socket.value.data) && socket.value.translate ? $t(socket.value.data) : socket.value.data}}</div>
         </div>
         <div
             v-if="!(isTrigger || hideSocket)"
-            ref="socketConnection"
+            ref="socketConnectionRef"
             width="20" height="20"
             class="socket_icon"
             :class="socket.disabled ? 'disabled' :''"
             @mousedown="mouseDown"
             @mouseenter="mouseEnter"
             @mouseleave="mouseLeave">
-            <img :src="require(`@/${iconMap.get(socket.type)}.svg`)" draggable="false"/>
+            <img :src="iconMap.get(socket.type)" draggable="false"/>
         </div>
         <div v-if="hideSocket" class="hidden-socket"></div>
         <svg
             v-if="isTrigger"
-            ref="socketConnection"
+            ref="socketConnectionRef"
             width="20"
             height="20"
             class="trigger_icon"
@@ -79,171 +262,6 @@
         </svg>
     </div>
 </template>
-
-<script>
-import Node_Connection from '@/components/editor_logic/Node_Connection';
-import DragList from '../common/DragList.vue';
-import Decorator from '@/components/common/Decorator';
-import Tooltip from '@/components/common/Tooltip';
-
-export default {
-    components: { DragList },
-    name: 'Socket',
-    props: ['socket', 'isInput', 'parentConnections', 'parentId'],
-    components: {
-        Decorator,
-        Tooltip,
-    },
-    data(){
-        return {
-            hasSize: null,
-        }
-    },
-    computed: {
-        showLabel(){
-            return this.socket.id.charAt(0) != '_';
-        },
-        SOCKET_TYPE(){
-            return Shared.SOCKET_TYPE;
-        },
-        hideSocket(){
-            return this.socket.hideSocket;
-        },
-        hideInput(){
-            return this.socket.hideInput;
-        },
-        isTrigger(){
-            return this.socket.type == undefined;
-        },
-        isConnected(){
-            return !!this.parentConnections.find(c => (
-                c.startSocketId == this.socket.id && c.startNode.nodeId == this.parentId ||
-                c.endSocketId == this.socket.id && c.endNode.nodeId == this.parentId
-            )) && !!this.hasSize;
-        },
-        canConnect(){
-            return !(this.isConnected && (this.isTrigger ^ this.isInput));
-        },
-        required(){
-            return !!this.socket.required;
-        },
-        iconMap(){
-            return new Map([
-                [Shared.SOCKET_TYPE.ANY, 'assets/socket_any'],
-                [Shared.SOCKET_TYPE.NUMBER, 'assets/socket_number'],
-                [Shared.SOCKET_TYPE.STRING, 'assets/socket_string'],
-                [Shared.SOCKET_TYPE.OBJECT, 'assets/socket_object'],
-                [Shared.SOCKET_TYPE.BOOL, 'assets/socket_bool'],
-            ]);
-        },
-        customStyles(){
-            const width = this.socket.node.inputBoxWidth;
-            return width ? `width: ${width}rem` : '';
-        }
-    },
-    mounted(){
-        this.forceSocketUpdate = this.forceSocketUpdate.bind(this);
-
-        this.socket.node.addEventListener('forceSocketUpdate', this.forceSocketUpdate);
-
-        this.$nextTick(()=>{
-            this.hasSize = true;
-
-            if (this.socket.type == Shared.SOCKET_TYPE.BOOL && this.$refs.boolCheckbox){
-                this.$refs.boolCheckbox.indeterminate = this.socket.value == null;
-            }
-        });
-    },
-    methods: {
-        forceSocketUpdate(){
-            this.$nextTick(()=>{
-                this.socket.value = this.socket.value;
-            });
-        },
-        onInput(event){
-            this.socket.value = event.target.value;
-            this.$emit('on-input', event);
-        },
-        valueChanged(target){
-            this.emitValueChanged(target.value);
-        },
-        numValueChanged(target){
-            let inputValNum = parseFloat(target.value);
-            let validated = inputValNum;
-
-            if (isNaN(inputValNum) && this.socket.required){
-                validated = parseFloat(this.socket.value);
-            }
-            
-            target.value = validated;
-            this.emitValueChanged(validated);
-        },
-        boolValueChanged(target){
-            let value = target.checked;
-
-            if (this.socket.triple && this.socket.value){
-                value = null;
-                target.indeterminate = true;
-            }
-
-            if (this.socket.value == null){
-                target.checked = false;
-                value = false;
-            }
-
-            this.emitValueChanged(value);
-        },
-        emitValueChanged(newVal){
-            this.$emit('value-changed', {
-                socket: this.socket,
-                oldVal: this.socket.value,
-                newVal: newVal,
-            });
-        },
-        mouseDown(event){
-            let connection = new Node_Connection();
-
-            event.stopPropagation();
-
-            if (this.socket.disabled){
-                return;
-            }
-
-            if (this.isInput){
-                connection.endSocketId = this.socket.id;
-                connection.endSocketEl = this.$refs.socketConnection;
-            }
-            else{
-                connection.startSocketId = this.socket.id;
-                connection.startSocketEl = this.$refs.socketConnection;
-            }
-
-            connection.type = this.socket.type;
-            connection.canConnect = this.canConnect;
-            connection.graphId = this.$store.getters['AssetBrowser/getSelectedAsset'].selectedGraphId;
-
-            this.$emit('mouse-down', connection);
-        },
-        mouseEnter(event){
-            this.$emit('socket-over', {
-                socketData: this.socket,
-                isInput: this.isInput,
-                canConnect: this.canConnect,
-                socketEl: this.$refs.socketConnection,
-            });
-        },
-        mouseLeave(event){
-            this.$emit('socket-over', null);
-        },
-        onTextBlur(event){
-            event.target.selectionStart = event.target.selectionEnd = 0;
-        },
-        getValue(){
-            return this.socket.value;
-        },
-    },
-}
-</script>
 
 <style scoped>
 .dataSocket{

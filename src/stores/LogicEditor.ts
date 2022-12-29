@@ -26,7 +26,7 @@ export const useLogicEditorStore = defineStore({
     },
 
     actions: {
-        selectNavTool(newTool: Core.NAV_TOOL_TYPE){ this.selectedNavTool = newTool },
+        selectNavTool(newTool: Core.NAV_TOOL_TYPE | null){ this.selectedNavTool = newTool },
         setLibraryPanelState(newState: boolean){ this.libraryPanelOpen = newState },
         setGraphPanelState(newState: boolean){ this.graphPanelOpen = newState },
     }

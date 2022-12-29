@@ -1,3 +1,63 @@
+<script setup lang="ts">
+import { ref, computed, onBeforeMount, onMounted } from 'vue';
+
+const props = defineProps<{
+    widget: any,
+    widgetData: any,
+    setWidgetData: (data: any)=>void,
+}>();
+
+const active = ref(false);
+const key = ref<string | null>(null);
+const code = ref<string | null>(null);
+
+const keyDisplay = computed(()=>{
+    if (code.value == 'Space'){
+        return code.value;
+    }
+
+    return key.value!.length > 1 ? key.value : key.value!.toUpperCase();
+});
+
+onBeforeMount(()=>{
+    if (!props.widgetData){
+        props.setWidgetData({code: null, key: null});
+    }
+});
+
+onMounted(()=>{
+    if (props.widgetData){
+        key.value = props.widgetData.key;
+        code.value = props.widgetData.code;
+    }
+});
+
+function setActive(): void {
+    active.value = true;
+    document.addEventListener('keydown', onKey);
+}
+
+function onKey(event: KeyboardEvent): void {
+    event.preventDefault();
+    deactivate();
+    props.setWidgetData({
+        code: event.code,
+        key: event.key,
+    });
+    key.value = event.key;
+    code.value = event.code;
+}
+
+function deactivate(): void {
+    active.value = false;
+    document.removeEventListener('keydown', onKey);
+}
+
+function deactivateSpace(event: KeyboardEvent): void {
+    event.preventDefault();
+}
+</script>
+
 <template>
     <div class="key-main">
         <button
@@ -13,63 +73,6 @@
         </button>
     </div>
 </template>
-
-<script>
-export default {
-    name: 'Key',
-    props: ['widget', 'widgetData', 'setWidgetData'],
-    data(){
-        return {
-            active: false,
-            key: null,
-            code: null,
-        }
-    },
-    computed: {
-        keyDisplay(){
-            if (this.code == 'Space'){
-                return this.code;
-            }
-
-            return this.key.length > 1 ? this.key : this.key.toUpperCase();
-        }
-    },
-    beforeMount(){
-        if (!this.widgetData){
-            this.setWidgetData({code: null, key: null});
-        }
-    },
-    mounted(){
-        if (this.widgetData){
-            this.key = this.widgetData.key;
-            this.code = this.widgetData.code;
-        }
-    },
-    methods: {
-        setActive(){
-            this.active = true;
-            document.addEventListener('keydown', this.onKey);
-        },
-        onKey(event){
-            event.preventDefault();
-            this.deactivate();
-            this.setWidgetData({
-                code: event.code,
-                key: event.key,
-            });
-            this.key = event.key;
-            this.code = event.code;
-        },
-        deactivate(){
-            this.active = false;
-            document.removeEventListener('keydown', this.onKey);
-        },
-        deactivateSpace(event){
-            event.preventDefault();
-        },
-    }
-}
-</script>
 
 <style scoped>
 .key-main{

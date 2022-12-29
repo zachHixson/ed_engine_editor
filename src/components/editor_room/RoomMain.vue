@@ -3,7 +3,7 @@ export const RoomMainEventBus = new Event_Bus();
 </script>
 
 <script setup lang="ts">
-import Undo_Store, {UndoHelpers} from '@/components/common/Undo_Store';
+import Undo_Store, { type iActionStore, UndoHelpers} from '@/components/common/Undo_Store';
 import RoomEditWindow from './RoomEditWindow.vue';
 import Properties from './Properties.vue';
 import Tool from '@/components/common/Tool.vue';
@@ -97,7 +97,7 @@ const tools = [
         icon: gearIcon,
     }
 ];
-const undoStore = new Undo_Store(32, false);
+const undoStore = new Undo_Store<iActionStore>(32, false);
 const hotkeyMap = new HotkeyMap();
 const hotkeyDown = hotkeyMap.keyDown.bind(hotkeyMap);
 const hotkeyUp = hotkeyMap.keyUp.bind(hotkeyMap);

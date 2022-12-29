@@ -18,7 +18,7 @@ import logicIcon from '@/assets/logic.svg';
 const gameDataStore = useGameDataStore();
 
 const props = defineProps<{
-    selectedAsset: Core.Asset_Base;
+    selectedAsset: Core.Game_Object;
 }>();
 
 const emit = defineEmits(['asset-changed']);
@@ -26,13 +26,12 @@ const emit = defineEmits(['asset-changed']);
 const frameStartRef = ref<HTMLInputElement>();
 const spriteSelectorRef = ref<HTMLSelectElement>();
 
-const selectedObject = computed(()=>props.selectedAsset as Core.Game_Object)
 const spriteChoices = computed(()=>gameDataStore.getAllSprites);
 const logicScripts = computed(()=>gameDataStore.getAllLogic);
 const selectedLogic = computed(()=>(props.selectedAsset as Core.Game_Object).logicScript);
 const startFrame = computed({
     get(){
-        return selectedObject.value.startFrame;
+        return props.selectedAsset.startFrame;
     },
     set(newFrame: number){
         const selectedAsset = props.selectedAsset as Core.Game_Object;
@@ -43,7 +42,7 @@ const startFrame = computed({
 });
 
 watch(props.selectedAsset, ()=>{
-    spriteSelectorRef.value!.value = (selectedObject.value.sprite ?? -1).toString();
+    spriteSelectorRef.value!.value = (props.selectedAsset.sprite ?? -1).toString();
 });
 
 function setObjectSprite() : void {
@@ -52,42 +51,42 @@ function setObjectSprite() : void {
     if (selectedSpriteId >= 0){
         const allSprites = gameDataStore.getAllSprites;
         const selectedSprite = allSprites.find(s => s.id == selectedSpriteId);
-        selectedObject.value.sprite = selectedSprite!;
+        props.selectedAsset.sprite = selectedSprite!;
     }
     else{
-        selectedObject.value.sprite = null;
+        props.selectedAsset.sprite = null;
     }
 
     nextTick(()=>{
         ObjectMainEventBus.emit('new-sprite-selected');
 
-        if (selectedObject.value.sprite){
+        if (props.selectedAsset.sprite){
             //triggers the frame count validation
-            selectedObject.value.startFrame = selectedObject.value.startFrame;
+            props.selectedAsset.startFrame = props.selectedAsset.startFrame;
         }
     });
 
-    emit('asset-changed', selectedObject.value.id);
+    emit('asset-changed', props.selectedAsset.id);
 }
 
 function validateFPS(): void {
-    selectedObject.value.fps = Math.floor(selectedObject.value.fps);
+    props.selectedAsset.fps = Math.floor(props.selectedAsset.fps);
     ObjectMainEventBus.emit('fps-changed');
 }
 
 function groupChanged({add, groupName, newName, remove}: {add: boolean, groupName: string, newName: string, remove: boolean}): void {
     if (add){
-        selectedObject.value.groups.push(groupName);
+        props.selectedAsset.groups.push(groupName);
     }
 
     if (newName){
-        const groupIdx = selectedObject.value.groups.indexOf(groupName);
-        selectedObject.value.groups[groupIdx] = newName;
+        const groupIdx = props.selectedAsset.groups.indexOf(groupName);
+        props.selectedAsset.groups[groupIdx] = newName;
     }
 
     if (remove){
-        const groupIdx = selectedObject.value.groups.indexOf(groupName);
-        selectedObject.value.groups.splice(groupIdx, 1);
+        const groupIdx = props.selectedAsset.groups.indexOf(groupName);
+        props.selectedAsset.groups.splice(groupIdx, 1);
     }
 }
 
@@ -107,10 +106,10 @@ function logicScriptChanged(event: Event): void {
         scriptId = value;
     }
 
-    selectedObject.value.logicScript = (scriptId as any);
+    props.selectedAsset.logicScript = (scriptId as any);
 
     nextTick(()=>{
-        target.value = (selectedObject.value.logicScript as any);
+        target.value = (props.selectedAsset.logicScript as any);
     });
 }
 </script>
@@ -121,7 +120,7 @@ function logicScriptChanged(event: Event): void {
             <div class="options">
                 <div class="control">
                     <label for="drawing_select">{{$t('object_editor.sprite_selector')}}:</label>
-                    <select ref="spriteSelectorRef" id="drawing_select" :value="selectedObject.sprite ? selectedObject.sprite.id : null" @change="setObjectSprite" v-tooltip="$t('object_editor.tt_sprite')">
+                    <select ref="spriteSelectorRef" id="drawing_select" :value="props.selectedAsset.sprite ? props.selectedAsset.sprite.id : null" @change="setObjectSprite" v-tooltip="$t('object_editor.tt_sprite')">
                         <option :value="null">{{$t('generic.no_option')}}</option>
                         <option
                             v-for="sprite in spriteChoices"
@@ -131,39 +130,39 @@ function logicScriptChanged(event: Event): void {
                         </option>
                     </select>
                 </div>
-                <div v-if="selectedObject.sprite" class="control">
+                <div v-if="props.selectedAsset.sprite" class="control">
                     <label for="frameStart">{{$t('object_editor.start_frame')}}:</label>
                     <input type="number" ref="frameStartRef" id="frameStart"  v-model="startFrame" v-tooltip="$t('object_editor.tt_start_frame')"/>
                 </div>
-                <div v-if="selectedObject.sprite" class="control">
+                <div v-if="props.selectedAsset.sprite" class="control">
                     <label for="fps">{{$t('object_editor.fps')}}:</label>
-                    <input type="number" id="fps" v-model="selectedObject.fps" @change="validateFPS" v-tooltip="$t('object_editor.tt_fps')"/>
+                    <input type="number" id="fps" v-model="props.selectedAsset.fps" @change="validateFPS" v-tooltip="$t('object_editor.tt_fps')"/>
                 </div>
-                <div v-if="selectedObject.sprite" class="control">
+                <div v-if="props.selectedAsset.sprite" class="control">
                     <label for="loop">{{$t('object_editor.loop')}}:</label>
-                    <input type="checkbox" id="loop" v-model="selectedObject.animLoop" v-tooltip="$t('object_editor.tt_loop')"/>
+                    <input type="checkbox" id="loop" v-model="props.selectedAsset.animLoop" v-tooltip="$t('object_editor.tt_loop')"/>
                 </div>
-                <div v-if="selectedObject.sprite" class="control">
+                <div v-if="props.selectedAsset.sprite" class="control">
                     <label for="isPlaying">{{$t('object_editor.is_playing')}}:</label>
-                    <input type="checkbox" id="isPlaying" v-model="selectedObject.animPlaying" v-tooltip="$t('object_editor.tt_is_playing')"/>
+                    <input type="checkbox" id="isPlaying" v-model="props.selectedAsset.animPlaying" v-tooltip="$t('object_editor.tt_is_playing')"/>
                 </div>
             </div>
             <AnimationPlayer
-                :sprite="selectedObject.sprite!"
-                :fps="selectedObject.fps"
+                :sprite="props.selectedAsset.sprite!"
+                :fps="props.selectedAsset.fps"
                 :startFrame="startFrame"
-                :loop="selectedObject.animLoop"
+                :loop="props.selectedAsset.animLoop"
                 :parent-event-bus="ObjectMainEventBus"/>
         </CategoryWrapper>
         <CategoryWrapper :iconPath="physicsIcon" :heading="$t('object_editor.heading_physics')">
             <div class="options">
                 <div class="control">
                     <label for="isSolid">{{$t('object_editor.is_solid')}}:</label>
-                    <input type="checkbox" id="isSolid" v-model="selectedObject.isSolid" v-tooltip="$t('object_editor.tt_solid')"/>
+                    <input type="checkbox" id="isSolid" v-model="props.selectedAsset.isSolid" v-tooltip="$t('object_editor.tt_solid')"/>
                 </div>
                 <div class="control">
                     <label for="useGravity">{{$t('object_editor.apply_gravity')}}:</label>
-                    <input type="checkbox" id="useGravity" v-model="selectedObject.applyGravity" v-tooltip="$t('object_editor.tt_gravity')"/>
+                    <input type="checkbox" id="useGravity" v-model="props.selectedAsset.applyGravity" v-tooltip="$t('object_editor.tt_gravity')"/>
                 </div>
             </div>
         </CategoryWrapper>
@@ -171,23 +170,23 @@ function logicScriptChanged(event: Event): void {
             <div class="options">
                 <div class="control">
                     <label for="trigger_exits">{{$t('object_editor.trigger_exits')}}:</label>
-                    <input type="checkbox" id="trigger_exits" v-model="selectedObject.triggerExits" v-tooltip="$t('object_editor.tt_trigger_exits')" />
+                    <input type="checkbox" id="trigger_exits" v-model="props.selectedAsset.triggerExits" v-tooltip="$t('object_editor.tt_trigger_exits')" />
                 </div>
-                <div v-if="selectedObject.triggerExits" class="control">
+                <div v-if="props.selectedAsset.triggerExits" class="control">
                     <label for="exit_behavior">{{$t('object_editor.exit_behavior')}}:</label>
-                    <select id="exit_behavior" v-model="selectedObject.exitBehavior" v-tooltip="$t('object_editor.tt_exit_behavior')">
+                    <select id="exit_behavior" v-model="props.selectedAsset.exitBehavior" v-tooltip="$t('object_editor.tt_exit_behavior')">
                         <option :value="Core.Game_Object.EXIT_TYPES.TO_DESTINATION">{{$t('object_editor.to_destination')}}</option>
                         <option :value="Core.Game_Object.EXIT_TYPES.THROUGH_DESTINATION">{{$t('object_editor.through_destination')}}</option>
                         <option :value="Core.Game_Object.EXIT_TYPES.KEEP_POSITION">{{$t('object_editor.keep_position')}}</option>
                         <option :value="Core.Game_Object.EXIT_TYPES.TRANSITION_ONLY">{{$t('object_editor.transition_only')}}</option>
                     </select>
                 </div>
-                <div v-if="selectedObject.triggerExits" class="control">
+                <div v-if="props.selectedAsset.triggerExits" class="control">
                     <label for="keep_camera_settings">{{$t('object_editor.keep_camera_settings')}}:</label>
-                    <input type="checkbox" id="keep_camera_settings" v-model="selectedObject.keepCameraSettings" v-tooltip="$t('object_editor.tt_keep_camera_settings')" />
+                    <input type="checkbox" id="keep_camera_settings" v-model="props.selectedAsset.keepCameraSettings" v-tooltip="$t('object_editor.tt_keep_camera_settings')" />
                 </div>
-                <div v-if="selectedObject.triggerExits" class="spacer"></div>
-                <div v-if="!selectedObject.customLogic" class="control">
+                <div v-if="props.selectedAsset.triggerExits" class="spacer"></div>
+                <div v-if="!props.selectedAsset.customLogic" class="control">
                     <label for="logic_preset_select">{{$t('object_editor.logic_preset')}}:</label>
                     <select id="logic_preset_select" v-tooltip="$t('object_editor.tt_logic_preset')">
                         <option :value="null">{{$t('generic.no_option')}}</option>
@@ -207,7 +206,7 @@ function logicScriptChanged(event: Event): void {
                     </select>
                 </div>
                 <GroupList
-                    :editList="selectedObject.groups"
+                    :editList="props.selectedAsset.groups"
                     :tooltip_text="$t('object_editor.tt_groups')"
                     @group-changed="groupChanged"/>
             </div>

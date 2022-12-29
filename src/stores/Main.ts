@@ -53,7 +53,7 @@ export const useMainStore = defineStore({
         getSelectedEditor: (state): Core.EDITOR_ID => state.selectedEditor,
         getInputActive: (state): boolean => state.inputActive,
         getPlayState: (state): PLAY_STATE => state.playState,
-        getNodeAPI: (state): object => state.nodeAPI,
+        getNodeAPI: (state): Node_API => state.nodeAPI,
     },
 
     actions: {

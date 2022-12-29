@@ -47,8 +47,9 @@ export default class Node extends EventListenerMixin(class {}) implements Core.i
     reverseInputs?: boolean;
     reverseOutputs?: boolean;
     inputBoxWidth?: number;
-    decoratorIcon?: string | null;
-    decoratorText?: string | null;
+    decoratorIcon?: string;
+    decoratorText?: string;
+    decoratorTextVars?: any;
 
     constructor(template: Core.iNodeTemplate, id: number, pos: Core.Vector, parentScript: Logic, graphId: number, editorAPI: Node_API){
         super();

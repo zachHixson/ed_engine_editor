@@ -15,7 +15,7 @@ const { Vector } = Core;
 
 const props = defineProps<{
     items: any[],
-    keylist: string[] | null,
+    keylist: string[] | number[] | null,
 }>();
 
 const emit = defineEmits(['order-changed']);

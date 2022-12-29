@@ -47,10 +47,10 @@ export interface iEditorLogic {
     selectedNodes: iEditorNode[];
     localVariables: Map<string, SOCKET_TYPE>;
 
-    addNode(templateId: string, pos: Vector, newNode: iEditorNode, nodeAPI: iNodeAPI): void;
+    addNode(templateId: string, pos: Vector, nodeAPI: iNodeAPI, nodeRef?: iEditorNode): iEditorNode;
     deleteNode(nodeRef: iEditorNode): void;
     addConnection(connectionObj: Connection): void;
-    removeConnection(id: number, connectionObj: Connection): boolean;
+    removeConnection(id: number, connectionObj?: Connection): boolean;
     setLocalVariable(name: string, type: SOCKET_TYPE): void;
     getLocalVariable(name: string): SOCKET_TYPE | undefined;
     deleteLocalVariable(name: string): void;
