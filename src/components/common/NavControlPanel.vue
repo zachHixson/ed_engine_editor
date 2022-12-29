@@ -86,6 +86,13 @@ onMounted(()=>{
 onBeforeUnmount(()=>{
     window.removeEventListener('keydown', hotkeyDown as EventListener);
     window.removeEventListener('keyup', hotkeyUp as EventListener);
+    props.parentEventBus.removeEventListener('mouse-wheel', scroll);
+    props.parentEventBus.removeEventListener('mouse-move', mouseMove);
+    props.parentEventBus.removeEventListener('mouse-down', mouseDown);
+    props.parentEventBus.removeEventListener('mouse-up', mouseUp);
+    props.parentEventBus.removeEventListener('mouse-enter', mouseEnter);
+    props.parentEventBus.removeEventListener('mouse-leave', mouseLeave);
+    props.parentEventBus.removeEventListener('nav-set-container-dimensions', setContainerDimensions);
 });
 
 function controlClick(control: typeof controls[number]): void {
