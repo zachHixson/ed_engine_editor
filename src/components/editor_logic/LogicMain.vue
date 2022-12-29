@@ -6,9 +6,10 @@ export const LogicMainEventBus = new Event_Bus();
 import UndoPanel from '@/components/common/UndoPanel.vue';
 import NavControlPanel from '@/components/common/NavControlPanel.vue';
 import DragList, { type iChangeEventProps } from '@/components/common/DragList.vue';
-import Node from '@/components/editor_logic/Node.vue';
+import Node, { type iRelinkInfo } from '@/components/editor_logic/Node.vue';
 import Node_Connection from '@/components/editor_logic/Node_Connection';
 import Connection from '@/components/editor_logic/Connection.vue';
+import type { iHoverSocket } from './Socket.vue';
 import HotkeyMap from '@/components/common/HotkeyMap';
 import Undo_Store, { type iActionStore, UndoHelpers } from '@/components/common/Undo_Store';
 import DialogNewVariable from './DialogNewVariable.vue';
@@ -17,7 +18,6 @@ import { ref, computed, watch, nextTick, onBeforeMount, onMounted, onBeforeUnmou
 import { useMainStore } from '@/stores/Main';
 import { useLogicEditorStore } from '@/stores/LogicEditor';
 import { Event_Bus } from '@/components/common/Event_Listener';
-import type { iHoverSocket } from './Socket.vue';
 import type Logic from './Logic';
 import type { default as Node_Obj } from './Node';
 import Core from '@/core';
@@ -40,8 +40,8 @@ const props = defineProps<{
 
 const nodeViewportRef = ref<HTMLDivElement>();
 const nodeNavRef = ref<HTMLDivElement>();
-const nodeRefs = ref<InstanceType<Node>[]>([]);
-const connectionRefs = ref<InstanceType<Connection>[]>([]);
+const nodeRefs = ref<InstanceType<typeof Node>[]>([]);
+const connectionRefs = ref<InstanceType<typeof Connection>[]>([]);
 const graphListRef = ref<HTMLDivElement>();
 const graphRenameRefs: Map<number, HTMLInputElement> = new Map();
 const selectionBoxRef = ref<HTMLDivElement>();
@@ -270,8 +270,8 @@ function mouseUp(event: MouseEvent): void {
     selectNodesInBox();
 
     if (draggingConnection.value){
-        const socketOver = currentSocketOver.value;
-        const connectionObj = draggingConnection.value;
+        const socketOver = currentSocketOver.value as iHoverSocket;
+        const connectionObj = draggingConnection.value as Node_Connection;
         const startType = !!connectionObj.startSocketEl ? connectionObj.type : socketOver?.socketData.type;
         const endType = !!connectionObj.startSocketEl ? socketOver?.socketData.type : connectionObj.type;
         const isTrigger = startType == endType && startType == null;
@@ -288,8 +288,8 @@ function mouseUp(event: MouseEvent): void {
             socketOver.canConnect &&
             !socketOver.socketData.disabled
         ){
-            const leftNode = (socketOver.isInput) ? socketOver.node : connectionObj.endNode;
-            const rightNode = !(socketOver.isInput) ? socketOver.node : connectionObj.startNode;
+            const leftNode = ((socketOver.isInput) ? socketOver.node : connectionObj.endNode) as Node_Obj;
+            const rightNode = (!(socketOver.isInput) ? socketOver.node : connectionObj.startNode) as Node_Obj;
 
             if (!checkLoop(leftNode, rightNode)){
                 actionMakeConnection({connectionObj, socketOver});
@@ -471,7 +471,7 @@ function dragConnection(connectionObj: Node_Connection): void {
 function relinkConnections(): void {
     const nodeEls = nodeRefs.value;
     const connectionEls = connectionRefs.value;
-    const nodeInfo = new Map();
+    const nodeInfo = new Map<number, iRelinkInfo>();
 
     nodeEls.forEach(nodeEl => {
         let info = nodeEl.getRelinkInfo();
@@ -738,9 +738,10 @@ function actionMakeConnection({connectionObj, socketOver}: ActionMakeConnectionP
     connectionObj.endNode?.onNewConnection && connectionObj.endNode.onNewConnection(connectionObj);
 
     //if connection was removed entirely by a previous undo, we need to recreate
-    if (!connectionObj.connectionComponent){
-        props.selectedAsset.addConnection(connectionObj);
-    }
+    console.warn("Need to come up with solution that doesn't use 'connectionComponent'")
+    // if (!connectionObj.connectionComponent){
+    //     props.selectedAsset.addConnection(connectionObj);
+    // }
 
     //if this is being connected through a redo, then the socketEl reference might be deprecated and needs a relink
     if (!socketOver.socketEl){
@@ -759,7 +760,7 @@ function actionMakeConnection({connectionObj, socketOver}: ActionMakeConnectionP
         undoStore.commit({action: Core.LOGIC_ACTION.CONNECT, data});
 
         nextTick(()=>{
-            connectionObj.updateComponent();
+            connectionObj.update();
         });
     }
 
@@ -948,9 +949,9 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
                     ref="connectionEls"
                     :connectionObj="connection"
                     :clientToNavSpace="clientToNavPos"
-                    :navWrapper="$refs.nodeNav"
+                    :navWrapper="($refs.nodeNav as HTMLDivElement)"
                     :allConnections="selectedAsset.connections"
-                    :draggingConnection="draggingConnection"
+                    :draggingConnection="(draggingConnection as Node_Connection)"
                     @drag-start="dragConnection"/>
                 <Node
                     v-for="node in visibleNodes"

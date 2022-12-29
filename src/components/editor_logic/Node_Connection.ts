@@ -6,20 +6,18 @@ export default class Node_Connection implements Core.iNodeConnection {
     type: Core.Node_Enums.SOCKET_TYPE;
     graphId: number;
     canConnect: boolean;
-    connectionComponent: Core.iAnyObj | null;
     startNode: Node | null;
     startSocketId: string | null;
-    startSocketEl: HTMLDivElement | null;
+    startSocketEl: HTMLElement | null;
     endNode: Node | null;
     endSocketId: string | null;
-    endSocketEl: HTMLDivElement | null;
+    endSocketEl: HTMLElement | null;
 
     constructor(inpObj: Core.iAnyObj = {}){
         this.id = inpObj.id;
         this.type = inpObj.type;
         this.graphId = inpObj.graphId;
         this.canConnect = inpObj.canConnect;
-        this.connectionComponent = inpObj.connectionComponent ?? null;
         this.startNode = inpObj.startNode ?? null;
         this.startSocketId = inpObj.startSocketId ?? null;
         this.startSocketEl = inpObj.startSocketEl ?? null;
@@ -37,7 +35,6 @@ export default class Node_Connection implements Core.iNodeConnection {
     }
 
     componentDestructor(){
-        this.connectionComponent = null;
         this.startSocketEl = null;
         this.endSocketEl = null;
     }
@@ -57,7 +54,8 @@ export default class Node_Connection implements Core.iNodeConnection {
         return this;
     }
 
-    updateComponent(){
-        this.connectionComponent!.update();
+    update(){
+        console.warn('Needs to emit event');
+        //emit 'needs-update' event instead of calling function directly on paired VueComponent
     }
 };

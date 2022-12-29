@@ -1,3 +1,89 @@
+<script setup lang="ts">
+import Decorator from '@/components/common/Decorator.vue';
+
+import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useLogicEditorStore } from '@/stores/LogicEditor';
+import type Logic from './Logic';
+import Core from '@/core';
+import errorIcon from '@/assets/error.svg';
+import warningIcon from '@/assets/warning.svg';
+
+const CHAR_LIMIT = 50;
+
+const { t } = useI18n();
+const logicEditorStore = useLogicEditorStore();
+
+const props = defineProps<{
+    selectedAsset: Logic,
+    callback: (positive: boolean, varInfo: Core.iNewVarInfo)=>void,
+}>();
+
+const emit = defineEmits(['close']);
+
+const errorRef = ref<InstanceType<typeof Decorator>>();
+const warningRef = ref<InstanceType<typeof Decorator>>();
+
+const varName = ref('');
+const type = ref(Core.Node_Enums.SOCKET_TYPE.NUMBER);
+const isGlobal = ref(false);
+const isList = ref(false);
+
+const globalVariableMap = computed(()=>logicEditorStore.getGlobalVariableMap);
+const error = computed(()=>{
+    const varMap = isGlobal.value ? globalVariableMap.value : props.selectedAsset.localVariables;
+    const name = varName.value.trim().toLowerCase();
+    const nameCollision = !!varMap.get(name);
+    const containsSpace = /\s/.test(name);
+    const isError = nameCollision || containsSpace;
+
+    nameCollision && errorRef.value!.setTooltipText(t('logic_editor.variable_name_collision'));
+    containsSpace && errorRef.value!.setTooltipText(t('logic_editor.variable_name_spaces'));
+
+    return isError;
+});
+const warning = computed(()=>{
+    const name = varName.value.trim().toLowerCase();
+    let shouldWarn = false;
+
+    if (!isGlobal.value && globalVariableMap.value.get(name)){
+        shouldWarn = true;
+        warningRef.value!.setTooltipText(t('logic_editor.local_global_name_warning'));
+    }
+
+    if (name.length == CHAR_LIMIT){
+        shouldWarn = true;
+        warningRef.value!.setTooltipText(t('logic_editor.variable_length_warning', {limit: CHAR_LIMIT}));
+    }
+
+    return shouldWarn && !error.value;
+});
+const isValid = computed(()=>!error.value && !!varName.value.length);
+
+function createVariable(): void {
+    props.callback(true, {
+        name: varName.value,
+        type: type.value,
+        isGlobal: isGlobal.value,
+        isList: isList.value,
+    });
+    close();
+}
+
+function cancel(): void {
+    props.callback(false, {} as any);
+    close();
+}
+
+function close(): void {
+    varName.value = '';
+    type.value = Core.Node_Enums.SOCKET_TYPE.NUMBER;
+    isGlobal.value = false;
+    isList.value = false;
+    emit('close');
+}
+</script>
+
 <template>
     <div class="DialogNewVariable">
         <div class="dialog">
@@ -9,17 +95,17 @@
                     <label for="name">Name: </label>
                     <input id="name" type="text" v-model="varName" :maxlength="CHAR_LIMIT" autocomplete="off"/>
                     <div class="decorator-wrapper">
-                        <Decorator v-show="error" ref="error" class="decorator" :src="require(`@/assets/error_decorator.svg`)" />
-                        <Decorator v-show="warning" ref="warning" class="decorator" :src="require(`@/assets/warning_decorator.svg`)" />
+                        <Decorator v-show="error" ref="errorRef" class="decorator" :src="errorIcon" />
+                        <Decorator v-show="warning" ref="warningRef" class="decorator" :src="warningIcon" />
                     </div>
                 </div>
                 <div class="control">
                     <label for="type">{{$t('logic_editor.type')}}: </label>
                     <select style="background: white" v-model="type">
-                        <option :value="Shared.SOCKET_TYPE.NUMBER">{{$t('logic_editor.number')}}</option>
-                        <option :value="Shared.SOCKET_TYPE.STRING">{{$t('logic_editor.string')}}</option>
-                        <option :value="Shared.SOCKET_TYPE.BOOL">{{$t('logic_editor.boolean')}}</option>
-                        <option :value="Shared.SOCKET_TYPE.OBJECT">{{$t('logic_editor.object')}}</option>
+                        <option :value="Core.Node_Enums.SOCKET_TYPE.NUMBER">{{$t('logic_editor.number')}}</option>
+                        <option :value="Core.Node_Enums.SOCKET_TYPE.STRING">{{$t('logic_editor.string')}}</option>
+                        <option :value="Core.Node_Enums.SOCKET_TYPE.BOOL">{{$t('logic_editor.boolean')}}</option>
+                        <option :value="Core.Node_Enums.SOCKET_TYPE.OBJECT">{{$t('logic_editor.object')}}</option>
                     </select>
                 </div>
                 <div class="control">
@@ -38,90 +124,6 @@
         </div>
     </div>
 </template>
-
-<script>
-import Decorator from '@/components/common/Decorator';
-
-export default {
-    name: 'DialogNewVariable',
-    props: ['selectedAsset', 'callback'],
-    components: {
-        Decorator,
-    },
-    data(){
-        return {
-            varName: '',
-            type: Shared.SOCKET_TYPE.NUMBER,
-            isGlobal: false,
-            isList: false,
-            CHAR_LIMIT: 50,
-        }
-    },
-    computed: {
-        Shared(){
-            return Shared;
-        },
-        globalVariableMap(){
-            return this.$store.getters['LogicEditor/getGlobalVariableMap'];
-        },
-        error(){
-            const varMap = this.isGlobal ? this.globalVariableMap : this.selectedAsset.localVariables;
-            const varName = this.varName.trim().toLowerCase();
-            const nameCollision = !!varMap.get(varName);
-            const containsSpace = /\s/.test(varName)
-            const isError = nameCollision || containsSpace;
-
-            nameCollision && this.$refs.error.setTooltipText(this.$t('logic_editor.variable_name_collision'));
-            containsSpace && this.$refs.error.setTooltipText(this.$t('logic_editor.variable_name_spaces'));
-
-            return isError;
-        },
-        warning(){
-            const varName = this.varName.trim().toLowerCase();
-            let shouldWarn = false;
-
-            if (!this.isGlobal && this.globalVariableMap.get(varName)){
-                shouldWarn = true;
-                this.$refs.warning.setTooltipText(this.$t('logic_editor.local_global_name_warning'));
-            }
-
-            if (varName.length == this.CHAR_LIMIT){
-                shouldWarn = true;
-                this.$refs.warning.setTooltipText(this.$t('logic_editor.variable_length_warning', {limit: this.CHAR_LIMIT}));
-            }
-
-            return shouldWarn && !this.error;
-        },
-        isValid(){
-            return !this.error && !!this.varName.length;
-        },
-    },
-    methods: {
-        createVariable(){
-            const {varName, type, isGlobal, isList} = this;
-
-            this.callback(true, {
-                varName,
-                type,
-                isGlobal,
-                isList,
-            });
-            this.close();
-        },
-        cancel(){
-            this.callback(false, {});
-            this.close();
-        },
-        close(){
-            this.varName = '';
-            this.type = Shared.SOCKET_TYPE.NUMBER;
-            this.isGlobal = false;
-            this.isList = false;
-            this.$emit('close');
-        }
-    }
-}
-</script>
 
 <style scoped>
 @import '../common/formStyles.css';

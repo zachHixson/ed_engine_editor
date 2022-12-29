@@ -1,3 +1,10 @@
+<script lang="ts">
+export interface iRelinkInfo {
+    id: number,
+    sockets: Map<string, InstanceType<typeof Socket>>,
+}
+</script>
+
 <script setup lang="ts">
 import Socket from './Socket.vue';
 import Widget from './Widget.vue';
@@ -168,7 +175,7 @@ function onInput(event: InputEvent): void {
 
 function updateConnections(): void {
     for (let i = 0; i < connections.value.length; i++){
-        connections.value[i].connectionComponent!.update();
+        connections.value[i].update();
     }
 }
 
@@ -178,7 +185,7 @@ function forceUpdate(): void {
     //we'll know if they were telling the truth or not.
 }
 
-function getRelinkInfo(): {id: number, sockets: Map<number, HTMLElement>} {
+function getRelinkInfo(): iRelinkInfo {
     const inTriggers = inTriggerRefs.value ?? [];
     const outTriggers = outTriggerRefs.value ?? [];
     const inData = inputRefs.value ?? [];
@@ -197,7 +204,6 @@ function getRelinkInfo(): {id: number, sockets: Map<number, HTMLElement>} {
 }
 
 defineExpose({getRelinkInfo});
-//require(`@/assets/${nodeObj.decoratorIcon}.svg`)
 </script>
 
 <template>
