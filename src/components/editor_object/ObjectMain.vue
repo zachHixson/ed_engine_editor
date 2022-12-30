@@ -7,7 +7,7 @@ import AnimationPlayer from '@/components/common/AnimationPlayer.vue';
 import GroupList from '@/components/common/GroupList.vue';
 import CategoryWrapper from './CategoryWrapper.vue';
 
-import { ref, computed, watch, nextTick } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import { useGameDataStore } from '@/stores/GameData';
 import { Event_Bus } from '../common/Event_Listener';
 import Core from '@/core';
@@ -39,10 +39,6 @@ const startFrame = computed({
         selectedAsset.startFrame = newFrame;
         emit('asset-changed', selectedAsset.id);
     }
-});
-
-watch(props.selectedAsset, ()=>{
-    spriteSelectorRef.value!.value = (props.selectedAsset.sprite ?? -1).toString();
 });
 
 function setObjectSprite() : void {
@@ -121,7 +117,7 @@ function logicScriptChanged(event: Event): void {
                 <div class="control">
                     <label for="drawing_select">{{$t('object_editor.sprite_selector')}}:</label>
                     <select ref="spriteSelectorRef" id="drawing_select" :value="props.selectedAsset.sprite ? props.selectedAsset.sprite.id : ''" @change="setObjectSprite" v-tooltip="$t('object_editor.tt_sprite')">
-                        <option value="">{{$t('generic.no_option')}}</option>
+                        <option :value="''">{{$t('generic.no_option')}}</option>
                         <option
                             v-for="sprite in spriteChoices"
                             :key="sprite.id"
