@@ -10,7 +10,7 @@ import EditorWindow from './components/EditorWindow.vue';
 import PlayWindow from './components/PlayWindow.vue';
 import Tooltip from './components/common/Tooltip.vue';
 
-import { ref, onMounted } from 'vue';
+import { onMounted } from 'vue';
 //@ts-ignore
 import {saveAs} from 'file-saver';
 import { useMainStore, PLAY_STATE } from './stores/Main';

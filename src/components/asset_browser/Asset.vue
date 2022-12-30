@@ -15,6 +15,7 @@ import {
     onBeforeUnmount
 } from 'vue';
 import { useAssetBrowserStore } from '@/stores/AssetBrowser';
+import type { Event_Bus } from '@/components/common/Event_Listener';
 import type Core from '@/core';
 
 const assetBrowserStore = useAssetBrowserStore();
@@ -22,6 +23,7 @@ const assetBrowserStore = useAssetBrowserStore();
 const props = defineProps<{
     asset: Core.Asset_Base,
     defaultIcon: string,
+    assetBrowserEventBus: Event_Bus;
 }>();
 
 const emit = defineEmits(['delete-asset', 'select-asset', 'renamed']);
@@ -105,14 +107,14 @@ function drawThumbnail(): void {
     thumbnail.value = props.asset.thumbnail;
 
     if (thumbnail.value && isVisible.value){
-        const thumbnail = thumbnailRef.value!;
-        const canvas = thumbnailRef.value!;
+        const thumbnailCanvas = thumbnailRef.value!;
+        const canvas = thumbnailCanvas;
         const ctx = canvas.getContext('2d')!;
-        const scaleFac = canvas.width / thumbnail.width;
+        const scaleFac = canvas.width / thumbnail.value.width;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.scale(scaleFac, scaleFac);
-        ctx.drawImage(thumbnail, 0, 0, thumbnail.width, thumbnail.height);
+        ctx.drawImage(thumbnail.value, 0, 0, thumbnail.value.width, thumbnail.value.height);
         ctx.resetTransform();
     }
 }

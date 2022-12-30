@@ -2,7 +2,7 @@
 import RoomEditor from './editor_room/RoomMain.vue';
 import ArtEditor from './editor_art/ArtMain.vue';
 import ObjectEditor from './editor_object/ObjectMain.vue';
-// import LogicEditor from './editor_logic/LogicMain.vue';
+import LogicEditor from './editor_logic/LogicMain.vue';
 
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -22,8 +22,6 @@ const { t } = useI18n();
 const mainStore = useMainStore();
 const assetBrowserStore = useAssetBrowserStore();
 
-t('test', {var1: 'string'});
-
 const emit = defineEmits(['asset-changed']);
 
 const selectedEditor = computed(()=>mainStore.getSelectedEditor);
@@ -36,7 +34,7 @@ const currentEditor = computed(()=>{
         case Core.EDITOR_ID.OBJECT:
             return ObjectEditor;
         case Core.EDITOR_ID.LOGIC:
-            //return LogicEditor;
+            return LogicEditor;
         default:
             return RoomEditor;
     }

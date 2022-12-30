@@ -225,6 +225,7 @@ function orderChanged(event: iChangeEventProps): void {
                                 <Asset
                                     :asset="item"
                                     :defaultIcon="selected_category.icon"
+                                    :assetBrowserEventBus="AssetBrowserEventBus"
                                     @delete-asset="deleteAsset"
                                     @select-asset="selectAsset"
                                     @renamed="assetRenamed" />
