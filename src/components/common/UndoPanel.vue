@@ -31,7 +31,7 @@ onMounted(()=>{
 
     hotkeyMap.enabled = true;
     hotkeyMap.bindKey(['control', 'z'], ()=>emit('undo'));
-    hotkeyMap.bindKey(['control', 'shift', 'z'], ()=>emit('undo'));
+    hotkeyMap.bindKey(['control', 'shift', 'z'], ()=>emit('redo'));
 });
 
 onBeforeUnmount(()=>{

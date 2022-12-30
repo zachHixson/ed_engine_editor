@@ -16,7 +16,7 @@ import Ellipse_Brush from './tools/Ellipse_Brush';
 import Eraser from './tools/Eraser';
 import Eye_Dropper from './tools/Eye_Dropper';
 
-import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { ref, reactive, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { useArtEditorStore } from '@/stores/ArtEditor';
 import { Event_Bus } from '@/components/common/Event_Listener';
 import Core from '@/core';
@@ -31,11 +31,12 @@ const props = defineProps<{
 
 const emit = defineEmits(['asset-changed']);
 
-const undoStore = new Undo_Store<iSpriteUndoData>(32);
+const undoStore = reactive(new Undo_Store<iSpriteUndoData>(32));
 const toolMap: Map<Core.ART_TOOL_TYPE, ()=>Tool_Base> = new Map();
 const tool = ref<Tool_Base | null>(null);
 const frameIDs = ref(props.selectedAsset.frameIDs);
 
+const selectedSprite = computed(()=>props.selectedAsset);
 const selectedFrameIdx = computed({
     get(){
         return artEditorStore.getSelectedFrame;
@@ -47,8 +48,10 @@ const selectedFrameIdx = computed({
 const selectedSize = computed(()=>artEditorStore.getSelectedSize);
 const selectedTool = computed(()=>artEditorStore.getSelectedTool);
 const selectedColor = computed(()=>artEditorStore.getSelectedColor);
+const undoLength = computed(()=>undoStore.undoLength);
+const redoLength = computed(()=>undoStore.redoLength);
 
-watch(props.selectedAsset, ()=>{
+watch(selectedSprite, ()=>{
     undoStore.clear();
 
     if (props.selectedAsset && props.selectedAsset.category_ID == Core.CATEGORY_ID.SPRITE){
@@ -165,7 +168,7 @@ function commitFullState(): void {
 }
 
 function undo(): void {
-    let prevStep = undoStore.stepBack() as any;
+    const prevStep = undoStore.stepBack() as any;
 
     if (prevStep && prevStep.spriteData){
         props.selectedAsset.setFramesFromArray(prevStep.spriteData);
@@ -186,7 +189,7 @@ function undo(): void {
 }
 
 function redo(): void {
-    let nextStep = undoStore.stepForward();
+    const nextStep = undoStore.stepForward();
 
     if (nextStep && nextStep.spriteData){
         props.selectedAsset.setFramesFromArray(nextStep.spriteData);
@@ -222,8 +225,8 @@ function updateFrameIDs(): void {
             :navState="selectedAsset.navState!"
             :spriteFrame="selectedAsset.frames[selectedFrameIdx]"
             :debugSprite="selectedAsset"
-            :undoLength="undoStore.undoLength"
-            :redoLength="undoStore.redoLength"
+            :undoLength="undoLength"
+            :redoLength="redoLength"
             @mouse-down="mouseDown"
             @mouse-up="mouseUp"
             @mouse-move="mouseMove"
