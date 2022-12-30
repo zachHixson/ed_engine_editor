@@ -193,23 +193,23 @@ function zoom(): void {
 function centerView(): void {
     const dpiScale = props.dpiScale ?? 1;
 
-    let cornerUL = new Vector(
+    const cornerUL = new Vector(
         props.contentsBounds[0],
         props.contentsBounds[1]
     );
-    let cornerBR = new Vector(
+    const cornerBR = new Vector(
         props.contentsBounds[2],
         props.contentsBounds[3]
     );
-    let dimensions = new Vector(
+    const dimensions = new Vector(
         Math.abs(cornerUL.x - cornerBR.x),
         Math.abs(cornerUL.y - cornerBR.y)
     );
-    let midPoint = new Vector(
+    const midPoint = new Vector(
         (props.contentsBounds[0] + props.contentsBounds[2]) / -2,
         (props.contentsBounds[1] + props.contentsBounds[3]) / 2
     );
-    let maxContentsDim = Math.max(dimensions.x, dimensions.y);
+    const maxContentsDim = Math.max(dimensions.x, dimensions.y);
     let minContainerDim = Math.min(
         containerDimensions.x,
         containerDimensions.y

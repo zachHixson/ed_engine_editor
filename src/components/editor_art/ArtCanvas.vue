@@ -97,6 +97,7 @@ onMounted(()=>{
     canvasRef.value!.addEventListener('mouseleave', mouseLeave);
 
     maxZoom.value = getZoomBounds().max;
+    resize();
 });
 
 onBeforeUnmount(()=>{
@@ -158,7 +159,7 @@ function resize(): void {
         Math.max(wrapper.clientHeight, 1)
     );
 
-    ArtCanvasEventBus.emit('set-container.dimensions', {width: wrapper.clientWidth, height: wrapper.clientHeight});
+    ArtCanvasEventBus.emit('nav-set-container-dimensions', {width: wrapper.clientWidth, height: wrapper.clientHeight});
 
     if (renderer){
         renderer.resize();
@@ -221,8 +222,8 @@ function updateMouseCell(event: MouseEvent): void {
             :contentsBounds="contentsBounds"
             :unitScale="UNIT_WIDTH"
             :dpiScale="devicePixelRatio"
-            :parent-event-bus="ArtCanvasEventBus"
-            @navChanged="renderer!.navChanged()"
+            :parentEventBus="ArtCanvasEventBus"
+            @nav-changed="renderer!.navChanged()"
             @tool-selected="enableNav"
             @set-hotkey-tool="navHotkeyTool = $event"/>
     </div>
