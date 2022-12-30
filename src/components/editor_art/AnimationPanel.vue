@@ -181,6 +181,7 @@ function frameOrderChanged(event: {itemIdx: number, newIdx: number}): void {
         }
     }
 
+    props.sprite.frames[newIdx] = movedFrame;
     props.sprite.updateFrame(newIdx);
 
     if (itemIdx == selectedFrameIdx.value){

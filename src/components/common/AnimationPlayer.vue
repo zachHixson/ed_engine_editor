@@ -42,7 +42,11 @@ onMounted(()=>{
 });
 
 function drawFrame(): void {
-    const canvas = canvasRef.value!;
+    if (!canvasRef.value){
+        return;
+    }
+
+    const canvas = canvasRef.value;
     const ctx = canvas.getContext('2d')!;
 
     Core.Draw.resizeHDPICanvas(canvas, dimensions, dimensions);
