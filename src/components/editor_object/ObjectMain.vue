@@ -120,8 +120,8 @@ function logicScriptChanged(event: Event): void {
             <div class="options">
                 <div class="control">
                     <label for="drawing_select">{{$t('object_editor.sprite_selector')}}:</label>
-                    <select ref="spriteSelectorRef" id="drawing_select" :value="props.selectedAsset.sprite ? props.selectedAsset.sprite.id : null" @change="setObjectSprite" v-tooltip="$t('object_editor.tt_sprite')">
-                        <option :value="null">{{$t('generic.no_option')}}</option>
+                    <select ref="spriteSelectorRef" id="drawing_select" :value="props.selectedAsset.sprite ? props.selectedAsset.sprite.id : ''" @change="setObjectSprite" v-tooltip="$t('object_editor.tt_sprite')">
+                        <option value="">{{$t('generic.no_option')}}</option>
                         <option
                             v-for="sprite in spriteChoices"
                             :key="sprite.id"
