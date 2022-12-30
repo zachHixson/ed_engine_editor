@@ -151,10 +151,6 @@ function scroll(event: WheelEvent): void {
     setZoom(props.navState.zoomFac + zoomDir);
 }
 
-function getNavState(): {} {
-    return props.navState;
-}
-
 function setContainerDimensions({width, height}: {width: number, height: number}): void {
     containerDimensions.x = width;
     containerDimensions.y = height;
@@ -167,9 +163,9 @@ function setZoom(newZoom: number): void {
 }
 
 function pan(): void {
-    let curMouse = new Vector(0,0).copy(mouse.position);
-    let downPos = new Vector(0,0).copy(mouse.lastPosition);
-    let difference = curMouse.subtract(downPos);
+    const curMouse = new Vector(0,0).copy(mouse.position);
+    const downPos = new Vector(0,0).copy(mouse.lastPosition);
+    const difference = curMouse.subtract(downPos);
 
     difference.divideScalar(props.navState.zoomFac).multiplyScalar(devicePixelRatio);
     props.navState.offset.add(difference);
