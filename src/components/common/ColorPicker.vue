@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import Core from '@/core';
 
 const EXPAND = 1.15;
@@ -26,7 +26,9 @@ const valuePos = ref(1);
 let selectedHS: Core.Draw.Color = props.color ?? new Draw.Color(255, 255, 255, 255);
 let selectedColor: Core.Draw.Color = props.color ?? new Draw.Color(255, 255, 255, 255);
 
-watch(props.color, newVal => {
+const color = computed(()=>props.color);
+
+watch(color, newVal => {
     if (newVal != selectedColor){
         selectedColor = newVal;
         moveCursorToColor(selectedColor);
