@@ -33,8 +33,8 @@ const emit = defineEmits(['asset-changed']);
 
 const undoStore = new Undo_Store<iSpriteUndoData>(32);
 const toolMap: Map<Core.ART_TOOL_TYPE, ()=>Tool_Base> = new Map();
-let frameIDs = props.selectedAsset.frameIDs;
-let tool: Tool_Base | null = null;
+const tool = ref<Tool_Base | null>(null);
+const frameIDs = ref(props.selectedAsset.frameIDs);
 
 const selectedFrameIdx = computed({
     get(){
@@ -46,6 +46,7 @@ const selectedFrameIdx = computed({
 });
 const selectedSize = computed(()=>artEditorStore.getSelectedSize);
 const selectedTool = computed(()=>artEditorStore.getSelectedTool);
+const selectedColor = computed(()=>artEditorStore.getSelectedColor);
 
 watch(props.selectedAsset, ()=>{
     undoStore.clear();
@@ -60,8 +61,8 @@ watch(props.selectedAsset, ()=>{
         }
     }
 });
-watch(artEditorStore.getSelectedColor, (newColor)=>tool!.setToolColor(newColor));
-watch(selectedSize, (newSize)=>tool!.setToolSize(newSize));
+watch(selectedColor, (newColor)=>tool.value!.setToolColor(newColor));
+watch(selectedSize, (newSize)=>tool.value!.setToolSize(newSize));
 watch(selectedTool, (newTool)=>toolSelected(newTool!));
 
 onMounted(()=>{
@@ -113,13 +114,13 @@ function frameAdded(): void {
 function toolSelected(newTool: Core.ART_TOOL_TYPE): void {
     if (newTool){
         artEditorStore.setSelectedNavTool(null);
-        tool = getTool(newTool);
-        tool.setToolSize(artEditorStore.getSelectedSize);
-        tool.setToolColor(artEditorStore.getSelectedColor);
-        tool.setCommitCallback(spriteDataChanged);
+        tool.value = getTool(newTool);
+        tool.value.setToolSize(artEditorStore.getSelectedSize);
+        tool.value.setToolColor(artEditorStore.getSelectedColor);
+        tool.value.setCommitCallback(spriteDataChanged);
     }
     else{
-        tool = null;
+        tool.value = null;
     }
 }
 
@@ -136,26 +137,26 @@ function getTool(newTool: Core.ART_TOOL_TYPE): Tool_Base {
 }
 
 function mouseDown(event: MouseEvent): void {
-    if (tool){
-        tool.mouseDown(event);
+    if (tool.value){
+        tool.value.mouseDown(event);
     }
 }
 
 function mouseUp(event: MouseEvent): void {
-    if (tool){
-        tool.mouseUp(event);
+    if (tool.value){
+        tool.value.mouseUp(event);
     }
 }
 
 function mouseMove(event: MouseEvent): void {
-    if (tool){
-        tool.mouseMove(event);
+    if (tool.value){
+        tool.value.mouseMove(event);
     }
 }
 
 function mouseLeave(event: MouseEvent): void {
-    if (tool){
-        tool.mouseLeave(event);
+    if (tool.value){
+        tool.value.mouseLeave(event);
     }
 }
 
@@ -205,7 +206,7 @@ function packageUndoData(): iSpriteUndoData {
 }
 
 function updateFrameIDs(): void {
-    frameIDs = props.selectedAsset.frameIDs;
+    frameIDs.value = props.selectedAsset.frameIDs;
 }
 </script>
 
@@ -217,7 +218,7 @@ function updateFrameIDs(): void {
         <ArtCanvas
             class="artCanvas"
             ref="artCanvas"
-            :tool="tool!"
+            :tool="(tool as Tool_Base | null)"
             :navState="selectedAsset.navState!"
             :spriteFrame="selectedAsset.frames[selectedFrameIdx]"
             :debugSprite="selectedAsset"

@@ -17,7 +17,7 @@ import Core from '@/core';
 const DEFAULT_CELL_SIZE = 20;
 
 const props = defineProps<{
-    tool: Tool_Base,
+    tool: Tool_Base | null,
     navState: Core.iNavState,
     spriteFrame: ImageData,
     undoLength: number,
@@ -61,7 +61,7 @@ const toolSize = computed(()=>artEditorStore.getSelectedSize);
 const spriteFrame = computed(()=>props.spriteFrame);
 
 watch(tool, ()=>{
-    if (tool){
+    if (tool.value){
         tool.value.beforeDestroy();
         tool.value.setPixelBuff(props.spriteFrame);
         tool.value.setPreviewBuff(previewData);
@@ -71,14 +71,14 @@ watch(tool, ()=>{
     }
 });
 watch(toolSize, ()=>{
-    if (tool){
+    if (tool.value){
         tool.value.updateCursorBuff();
         renderer!.mouseMove();
     }
 });
 watch(spriteFrame, ()=>{
     renderer!.setSprite(props.spriteFrame, props.navState);
-    tool.value.setPixelBuff(props.spriteFrame);
+    tool.value && tool.value.setPixelBuff(props.spriteFrame);
     previewData.data.fill(0);
 });
 
@@ -187,21 +187,21 @@ function redo(): void {
 
 function updateMouseCell(event: MouseEvent): void {
     const CELL_SIZE = (CANVAS_WIDTH / Core.Sprite.DIMENSIONS) * props.navState.zoomFac;
-    let mouseCell = new Vector(event.offsetX, event.offsetY).multiplyScalar(devicePixelRatio.value);
-    let windowHalfWidth = new Vector(canvasRef.value!.width / 2, canvasRef.value!.height / 2);
-    let canvasHalfWidth = new Vector(CANVAS_WIDTH / 2, CANVAS_WIDTH / 2);
-    let scaledOffset = props.navState.offset.clone().multiplyScalar(props.navState.zoomFac);
+    const newMCell = new Vector(event.offsetX, event.offsetY).multiplyScalar(devicePixelRatio.value);
+    const windowHalfWidth = new Vector(canvasRef.value!.width / 2, canvasRef.value!.height / 2);
+    const canvasHalfWidth = new Vector(CANVAS_WIDTH / 2, CANVAS_WIDTH / 2);
+    const scaledOffset = props.navState.offset.clone().multiplyScalar(props.navState.zoomFac);
 
     canvasHalfWidth.multiplyScalar(props.navState.zoomFac);
 
-    mouseCell.subtract(windowHalfWidth);
-    mouseCell.add(canvasHalfWidth);
-    mouseCell.subtract(scaledOffset);
-    mouseCell.divideScalar(CELL_SIZE);
+    newMCell.subtract(windowHalfWidth);
+    newMCell.add(canvasHalfWidth);
+    newMCell.subtract(scaledOffset);
+    newMCell.divideScalar(CELL_SIZE);
 
-    mouseCell.floor();
+    newMCell.floor();
 
-    mouseCell.copy(mouseCell);
+    mouseCell.copy(newMCell);
 }
 </script>
 
