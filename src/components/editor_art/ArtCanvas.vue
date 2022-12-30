@@ -100,6 +100,7 @@ onMounted(()=>{
 });
 
 onBeforeUnmount(()=>{
+    ArtMainEventBus.removeEventListener('resize', resize);
     renderer = null;
 });
 
