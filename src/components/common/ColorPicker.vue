@@ -23,11 +23,10 @@ const valueBuffer = Draw.createHDPICanvas(props.width, props.width) as HTMLCanva
 const circleBuffer = Draw.createHDPICanvas(props.width, props.width) as HTMLCanvasElement;
 const cursorPos = new Vector(0, 0);
 const valuePos = ref(1);
-let selectedHS: Core.Draw.Color = props.color ?? new Draw.Color(255, 255, 255, 255);
 let selectedColor: Core.Draw.Color = props.color ?? new Draw.Color(255, 255, 255, 255);
 
 watch(()=>props.color, newVal => {
-    if (newVal != selectedColor){
+    if (!newVal.compare(selectedColor)){
         selectedColor = newVal;
         moveCursorToColor(selectedColor);
     }
