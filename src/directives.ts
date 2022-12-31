@@ -63,13 +63,18 @@ export const vTooltip = {
         el.mouseOutHandler = function(){
             TooltipEventBus.emit('hide-tooltip');
         };
+        el.mouseDownHandler = function(){
+            TooltipEventBus.emit('mouse-down');
+        };
 
         el.addEventListener('mouseover', el.mouseOverHandler);
         el.addEventListener('mouseout', el.mouseOutHandler);
+        el.addEventListener('mousedown', el.mouseDownHandler);
     },
 
     unmounted: function(el: ExpandedEl){
         el.removeEventListener('mouseover', el.mouseOverHandler);
         el.removeEventListener('mouseout', el.mouseOutHandler);
+        el.removeEventListener('mousedown', el.mouseDownHandler);
     }
 };

@@ -21,6 +21,7 @@ let timeout = -1;
 onMounted(()=>{
     TooltipEventBus.addEventListener('activate-tooltip', activateTooltip);
     TooltipEventBus.addEventListener('hide-tooltip', hideTooltip);
+    TooltipEventBus.addEventListener('mouse-down', hideTooltip);
 });
 
 function activateTooltip({el, text: txt}: {el: HTMLDivElement, text: string}): void {
