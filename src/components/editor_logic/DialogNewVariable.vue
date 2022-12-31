@@ -6,8 +6,8 @@ import { useI18n } from 'vue-i18n';
 import { useLogicEditorStore } from '@/stores/LogicEditor';
 import type Logic from './Logic';
 import Core from '@/core';
-import errorIcon from '@/assets/error.svg';
-import warningIcon from '@/assets/warning.svg';
+import errorIcon from '@/assets/error_decorator.svg';
+import warningIcon from '@/assets/warning_decorator.svg';
 
 const CHAR_LIMIT = 50;
 
