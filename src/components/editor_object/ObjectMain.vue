@@ -28,7 +28,7 @@ const spriteSelectorRef = ref<HTMLSelectElement>();
 
 const spriteChoices = computed(()=>gameDataStore.getAllSprites);
 const logicScripts = computed(()=>gameDataStore.getAllLogic);
-const selectedLogic = computed(()=>(props.selectedAsset as Core.Game_Object).logicScript);
+const selectedLogic = computed(()=>props.selectedAsset.logicScript as unknown as number);
 const startFrame = computed({
     get(){
         return props.selectedAsset.startFrame;
@@ -190,8 +190,8 @@ function logicScriptChanged(event: Event): void {
                 </div>
                 <div class="control">
                     <label for="logic_script_select">{{$t('object_editor.logic_script')}}:</label>
-                    <select id="logic_script_select" :value="selectedLogic" @change="logicScriptChanged" v-tooltip="$t('object_editor.tt_logic_script')">
-                        <option :value="null">{{$t('generic.no_option')}}</option>
+                    <select id="logic_script_select" :value="selectedLogic ?? ''" @change="logicScriptChanged" v-tooltip="$t('object_editor.tt_logic_script')">
+                        <option :value="''">{{$t('generic.no_option')}}</option>
                         <option
                             v-for="script in logicScripts"
                             :key="script.id"
