@@ -253,7 +253,6 @@ function cloneEl(el: HTMLDivElement): HTMLDivElement {
         <div
             v-for="(item, idx) in assembled"
             name="instancedItem"
-            :ref="keys[idx]"
             :key="keys[idx]"
             :idx="idx"
             @mousedown="mouseDown">
