@@ -94,7 +94,6 @@ const brushes = [
 const hotkeyMap = new HotkeyMap();
 const keyUp = hotkeyMap.keyUp.bind(hotkeyMap);
 const keyDown = hotkeyMap.keyDown.bind(hotkeyMap);
-let isOpen = artEditorStore.isToolPanelOpen;
 
 const toolColor = computed({
     get(){
@@ -118,6 +117,14 @@ const toolId = computed({
     },
     set(newTool){
         artEditorStore.selectTool(newTool);
+    }
+});
+const isOpen = computed({
+    get(){
+        return artEditorStore.isToolPanelOpen;
+    },
+    set(newVal: boolean){
+        artEditorStore.setToolPanelState(newVal);
     }
 });
 
@@ -160,7 +167,7 @@ function bindHotkeys(): void {
 }
 
 function toggleOpen(): void {
-    isOpen = !isOpen;
+    isOpen.value = !isOpen.value;
     nextTick(()=>{
         emit('resized');
     });
