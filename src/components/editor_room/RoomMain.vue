@@ -138,8 +138,8 @@ watch(()=>props.selectedRoom, (newRoom, oldRoom)=>{
         editorSelection.value = null;
     }
 });
-watch(isInputActive, (newVal: boolean)=>{hotkeyMap.enabled = !newVal && mouse.inWindow});
-watch(mouse, (newVal)=>{hotkeyMap.enabled = newVal && !isInputActive});
+watch(isInputActive, (newVal: boolean)=>hotkeyMap.enabled = !newVal && mouse.inWindow);
+watch(()=>mouse.inWindow, (newVal)=>hotkeyMap.enabled = newVal && !isInputActive.value);
 
 //lifecycle
 onMounted(()=>{
