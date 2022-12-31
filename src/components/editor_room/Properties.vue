@@ -23,14 +23,12 @@ const emit = defineEmits([
     'inst-prop-set',
     'cam-prop-set',
     'exit-prop-set',
+    'exit-delete',
     'room-prop-set',
 ]);
 
 //data
-const TOOL_ENUMS = Core.ROOM_TOOL_TYPE;
-const objects = gameDataStore.getAllObjects;
 const changeingBG = ref<boolean>(false);
-
 const bgColorBtn = ref<HTMLElement>();
 
 //computed
@@ -267,7 +265,7 @@ function nanToNull(inp: number): number | null {
             <div class="control">
                 <label for="exitDelete">{{$t('room_editor.delete_exit')}}:</label>
                 <input id="exitDelete" type="button" :value="$t('generic.delete')" v-tooltip="$t('room_editor.tt_exit_delete')"
-                    @click="$emit('exit-delete', selectedEntity)" />
+                    @click="emit('exit-delete', selectedEntity)" />
             </div>
         </div>
         <div v-show="showRoomProps" class="propContents">
