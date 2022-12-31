@@ -115,6 +115,7 @@ const mouse = reactive({
 const editorSelection = ref<Core.Object_Instance | Core.Exit | null>(); //replace with Core.InstanceBase
 
 //computed properties
+const selectedRoom = computed(()=>props.selectedRoom);
 const propertiesOpen = computed<boolean>({
     get(): boolean {
         return roomEditorStore.getPropPanelState;
@@ -131,7 +132,7 @@ const cssBG = computed<string>(()=>{
 const isInputActive = computed<boolean>(()=>mainStore.getInputActive);
 
 //watchers
-watch(props.selectedRoom, (newRoom, oldRoom)=>{
+watch(selectedRoom, (newRoom, oldRoom)=>{
     if (newRoom && oldRoom && newRoom.id != oldRoom.id){
         editorSelection.value = null;
         RoomMainEventBus.emit('room-changed', newRoom);
