@@ -18,7 +18,6 @@ const { t } = useI18n();
 const props = defineProps<{
     editList: string[],
     readOnlyList?: string[],
-    tooltip_text?: string,
 }>();
 
 const emit = defineEmits(['group-changed']);
@@ -93,7 +92,7 @@ function groupDeleted(group: string, idx: number, event: any): void {
                 </div>
             </div>
         </div>
-        <button class="addBtn" @click="addGroup" v-tooltip="tooltip_text">
+        <button class="addBtn" @click="addGroup" v-tooltip="t('object_editor.tt_groups')">
             <img name="plusBtn" src="@/assets/plus.svg" />
         </button>
     </div>

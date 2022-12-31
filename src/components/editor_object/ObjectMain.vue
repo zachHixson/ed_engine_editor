@@ -203,7 +203,6 @@ function logicScriptChanged(event: Event): void {
                 </div>
                 <GroupList
                     :editList="props.selectedAsset.groups"
-                    :tooltip_text="$t('object_editor.tt_groups')"
                     @group-changed="groupChanged"/>
             </div>
         </CategoryWrapper>
