@@ -51,15 +51,15 @@ const emit = defineEmits([
 //define data
 const RoomEditWindowEventBus = new Event_Bus();
 const devicePixelRatio = window.devicePixelRatio;
+const contentsBounds = ref([0, 0, 0, 0]);
 let renderer: Room_Edit_Renderer;
-let contentsBounds = ref<number[]>([0, 0, 0, 0]);
 let loadedImages = 0;
 let unitWidth = 1;
 let navHotkeyTool: Core.NAV_TOOL_TYPE | null = null;
 
 //template refs
 const canvasEl = ref<HTMLCanvasElement>();
-const editWindow = ref<HTMLDivElement>();
+const editWindowRef = ref<HTMLDivElement>();
 const navControlPanel = ref();
 const canvasImages = ref();
 const camera_icon = ref();
@@ -153,13 +153,13 @@ function roomChange(newRoom?: Core.Room): void {
 }
 
 function resize(): void {
-    const wrapper = editWindow.value as HTMLElement;
+    const wrapper = editWindowRef.value as HTMLElement;
     const width = Math.max(wrapper.clientWidth, 1);
     const height = Math.max(wrapper.clientHeight, 1);
 
     Core.Draw.resizeHDPICanvas(canvasEl.value!, width, height);
 
-    RoomEditWindowEventBus.emit('nav-set-container-dimentions', {width: wrapper.clientWidth, height: wrapper.clientHeight});
+    RoomEditWindowEventBus.emit('nav-set-container-dimensions', {width: wrapper.clientWidth, height: wrapper.clientHeight});
 
     renderer?.resize();
 }
@@ -207,7 +207,7 @@ function navToolSelected(tool: Core.NAV_TOOL_TYPE): void {
 </script>
 
 <template>
-    <div ref="editWindow" class="editWindow">
+    <div ref="editWindowRef" class="editWindow">
         <UndoPanel
             class="undoPanel"
             :undoLength="undoLength"

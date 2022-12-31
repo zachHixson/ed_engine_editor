@@ -124,7 +124,7 @@ function toolSelected(newTool: Core.ART_TOOL_TYPE): void {
 }
 
 function getTool(newTool: Core.ART_TOOL_TYPE): Tool_Base {
-    let getter = toolMap.get(newTool);
+    const getter = toolMap.get(newTool);
 
     if (getter){
         return getter();
