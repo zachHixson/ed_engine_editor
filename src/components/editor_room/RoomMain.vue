@@ -3,7 +3,7 @@ export const RoomMainEventBus = new Event_Bus();
 </script>
 
 <script setup lang="ts">
-import Undo_Store, { type iActionStore, UndoHelpers} from '@/components/common/Undo_Store';
+import Undo_Store, { type iActionStore, useUndoHelpers} from '@/components/common/Undo_Store';
 import RoomEditWindow from './RoomEditWindow.vue';
 import Properties from './Properties.vue';
 import Tool from '@/components/common/Tool.vue';
@@ -97,7 +97,7 @@ const tools = [
         icon: gearIcon,
     }
 ];
-const undoStore = new Undo_Store<iActionStore>(32, false);
+const undoStore = reactive(new Undo_Store<iActionStore>(32, false)) as Undo_Store<iActionStore>;
 const hotkeyMap = new HotkeyMap();
 const hotkeyDown = hotkeyMap.keyDown.bind(hotkeyMap);
 const hotkeyUp = hotkeyMap.keyUp.bind(hotkeyMap);
@@ -112,10 +112,10 @@ const mouse = reactive({
     cellCache: new Array<Vector>(),
     inWindow: false,
 });
-const editorSelection = ref<Core.Object_Instance | Core.Exit | null>(); //replace with Core.InstanceBase
+const editorSelection = ref<Core.Object_Instance | Core.Exit | null>();
 
 //computed properties
-const selectedRoom = computed(()=>props.selectedRoom);
+const selectedRoom = computed<Core.Room | null>(()=>props.selectedRoom);
 const propertiesOpen = computed<boolean>({
     get(): boolean {
         return roomEditorStore.getPropPanelState;
@@ -130,6 +130,8 @@ const cssBG = computed<string>(()=>{
     return 'background:' + color;
 });
 const isInputActive = computed<boolean>(()=>mainStore.getInputActive);
+const undoLength = computed<number>(()=>undoStore.undoLength);
+const redoLength = computed<number>(()=>undoStore.redoLength);
 
 //watchers
 watch(selectedRoom, (newRoom, oldRoom)=>{
@@ -161,7 +163,7 @@ onBeforeUnmount(()=>{
 });
 
 //Methods
-const { stepForward, stepBackward, applyChronoStep } = UndoHelpers;
+const { stepForward, stepBackward } = useUndoHelpers(undoStore, actionMap, revertMap);
 
 function bindHotkeys(): void {
     const deleteEntity = () => {
@@ -732,8 +734,8 @@ function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
             class="editWindow"
             :selectedRoom="selectedRoom"
             :editorSelection="editorSelection!"
-            :undoLength="undoStore.undoLength"
-            :redoLength="undoStore.redoLength"
+            :undoLength="undoLength"
+            :redoLength="redoLength"
             @mouse-event="mouseEvent"
             @undo="stepBackward"
             @redo="stepForward"

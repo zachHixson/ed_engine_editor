@@ -11,7 +11,7 @@ import Node_Connection from '@/components/editor_logic/Node_Connection';
 import Connection from '@/components/editor_logic/Connection.vue';
 import type { iHoverSocket } from './Socket.vue';
 import HotkeyMap from '@/components/common/HotkeyMap';
-import Undo_Store, { type iActionStore, UndoHelpers } from '@/components/common/Undo_Store';
+import Undo_Store, { type iActionStore, useUndoHelpers } from '@/components/common/Undo_Store';
 import DialogNewVariable from './DialogNewVariable.vue';
 
 import { ref, computed, watch, nextTick, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
@@ -170,7 +170,7 @@ onBeforeUnmount(()=>{
     nodeViewportRef.value!.removeEventListener('wheel', navControlPanelScroll);
 });
 
-const { stepForward, stepBackward, applyChronoStep } = UndoHelpers;
+const { stepForward, stepBackward } = useUndoHelpers(undoStore, actionMap, revertMap);
 
 function bindHotkeys(): void {
     hotkeyMap.bindKey(['delete'], deleteSelectedNodes);

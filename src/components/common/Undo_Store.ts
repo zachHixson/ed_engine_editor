@@ -73,30 +73,30 @@ class Undo_Store<T>{
     }
 }
 
-interface iComponent {
-    undoStore: Undo_Store<iActionStore>;
-    applyChronoStep: typeof UndoHelpers["applyChronoStep"];
-    actionMap: Map<number, (data: Core.iAnyObj, commit: boolean)=>void>;
-    revertMap: Map<number, (data: Core.iAnyObj, commit: boolean)=>void>;
-}
-
-const UndoHelpers = {
-    stepBackward(this: iComponent){
-        if (this.undoStore.undoLength > 0){
-            this.applyChronoStep(this.undoStore.stepBack()!, this.revertMap);
+function useUndoHelpers(undoStore: Undo_Store<any>, actionMap: Map<any, any>, revertMap: Map<any, any>){
+    function stepBackward(): void {
+        if (undoStore.undoLength > 0){
+            applyChronoStep(undoStore.stepBack()!, revertMap);
         }
-    },
-    stepForward(this: iComponent){
-        if (this.undoStore.redoLength > 0){
-            this.applyChronoStep(this.undoStore.stepForward()!, this.actionMap);
+    }
+    
+    function stepForward(): void {
+        if (undoStore.redoLength > 0){
+            applyChronoStep(undoStore.stepForward()!, actionMap);
         }
-    },
-    applyChronoStep(step: iActionStore, map: Map<number, (data: Core.iAnyObj, commit: boolean)=>void>){
-        let action = map.get(step.action)!;
+    }
+    
+    function applyChronoStep(step: iActionStore, map: Map<number, (data: Core.iAnyObj, commit: boolean)=>void>): void {
+        const action = map.get(step.action)!;
         
         action(step.data, false);
-    },
+    }
+
+    return {
+        stepBackward,
+        stepForward,
+    }
 }
 
 export default Undo_Store;
-export {UndoHelpers};
+export {useUndoHelpers};

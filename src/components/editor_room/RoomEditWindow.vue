@@ -43,7 +43,9 @@ const emit = defineEmits([
     'mouse-enter',
     'mouse-leave',
     'mouse-wheel',
-    'nav-set-container-dimentions'
+    'nav-set-container-dimentions',
+    'undo',
+    'redo',
 ]);
 
 //define data
@@ -211,8 +213,8 @@ function navToolSelected(tool: Core.NAV_TOOL_TYPE): void {
             class="undoPanel"
             :undoLength="undoLength"
             :redoLength="redoLength"
-            @undo="$emit('undo')"
-            @redo="$emit('redo')"/>
+            @undo="emit('undo')"
+            @redo="emit('redo')"/>
         <NavControlPanel
             ref="navControlPanel"
             class="navControlPanel"
