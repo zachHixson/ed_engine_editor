@@ -482,7 +482,7 @@ function relinkConnections(): void {
 }
 
 function nodeClick({nodeObj, event}: {nodeObj: Node_Obj, event: MouseEvent}): void {
-    let mousePos = new Vector(event.clientX, event.clientY);
+    const mousePos = new Vector(event.clientX, event.clientY);
 
     if (mouseDownPos.distanceTo(mousePos) < 2){
         deselectAllNodes();

@@ -28,6 +28,7 @@ const props = defineProps<{
 
 const emit = defineEmits([
     'node-down',
+    'node-clicked',
     'node-move-end',
     'socket-down',
     'socket-over',
@@ -208,7 +209,7 @@ defineExpose({getRelinkInfo});
 
 <template>
     <div ref="rootRef" class="node" :style="isSelected ? 'border-color: var(--button-norm)' : ''"
-        @click="$emit('node-clicked', {nodeObj, jsEvent: $event})"
+        @click="emit('node-clicked', {nodeObj, event: $event})"
         @mousedown="mouseDown">
         <div class="heading" :class="categoryClass">
             <div v-if="nodeObj.isEvent" class="node-icon"><img src="@/assets/event.svg"/></div>
