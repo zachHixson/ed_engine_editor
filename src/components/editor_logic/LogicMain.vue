@@ -129,7 +129,7 @@ const inputActive = computed(()=>mainStore.getInputActive);
 const graphs = computed(()=>props.selectedAsset.graphs);
 const graphKeys = computed(()=>props.selectedAsset.graphs.map(graph => graph.id));
 
-watch(props.selectedAsset, ()=>{
+watch(()=>props.selectedAsset, ()=>{
     nextTick(()=>{
         relinkConnections();
         navChange(curNavState.value!);

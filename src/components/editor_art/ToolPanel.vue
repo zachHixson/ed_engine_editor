@@ -120,9 +120,8 @@ const toolId = computed({
         artEditorStore.selectTool(newTool);
     }
 });
-const inputActive = computed(()=>mainStore.getInputActive);
 
-watch(inputActive, (newState)=>hotkeyMap.enabled = !newState);
+watch(()=>mainStore.getInputActive, (newState)=>hotkeyMap.enabled = !newState);
 
 onMounted(()=>{
     window.addEventListener('keydown', keyDown);

@@ -56,29 +56,29 @@ const contentsBounds = (()=>{
     return [-halfCanvas, -halfCanvas, halfCanvas, halfCanvas];
 })();
 
-const tool = computed(()=>props.tool);
-const toolSize = computed(()=>artEditorStore.getSelectedSize);
-const spriteFrame = computed(()=>props.spriteFrame);
+//const tool = computed();
+//const toolSize = computed();
+//const spriteFrame = computed();
 
-watch(tool, ()=>{
-    if (tool.value){
-        tool.value.beforeDestroy();
-        tool.value.setPixelBuff(props.spriteFrame);
-        tool.value.setPreviewBuff(previewData);
-        tool.value.setMouseCell(mouseCell);
-        tool.value.updateCursorBuff();
+watch(()=>props.tool, (newTool)=>{
+    if (newTool){
+        newTool.beforeDestroy();
+        newTool.setPixelBuff(props.spriteFrame);
+        newTool.setPreviewBuff(previewData);
+        newTool.setMouseCell(mouseCell);
+        newTool.updateCursorBuff();
         renderer!.mouseMove();
     }
 });
-watch(toolSize, ()=>{
-    if (tool.value){
-        tool.value.updateCursorBuff();
+watch(()=>artEditorStore.getSelectedSize, ()=>{
+    if (props.tool){
+        props.tool.updateCursorBuff();
         renderer!.mouseMove();
     }
 });
-watch(spriteFrame, ()=>{
+watch(()=>props.spriteFrame, ()=>{
     renderer!.setSprite(props.spriteFrame, props.navState);
-    tool.value && tool.value.setPixelBuff(props.spriteFrame);
+    props.tool && props.tool.setPixelBuff(props.spriteFrame);
     previewData.data.fill(0);
 });
 

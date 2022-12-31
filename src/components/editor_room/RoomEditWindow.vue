@@ -68,12 +68,11 @@ const exit_icon = ref();
 const end_icon = ref();
 
 const checkAssetDeletion = computed(()=>gameDataStore.getAllObjects.length + gameDataStore.getAllSprites.length);
-const gridEnabled = computed(()=>roomEditorStore.getGridState);
-const editorSelection = computed(()=>props.editorSelection);
 
-watch(editorSelection, ()=>setSelection());
-watch(gridEnabled, (newVal)=>renderer.setGridVisibility(newVal));
+watch(()=>props.editorSelection, ()=>setSelection());
+watch(()=>roomEditorStore.getGridState, (newVal)=>renderer.setGridVisibility(newVal));
 watch(checkAssetDeletion, (newVal, oldVal)=> (newVal < oldVal) && renderer.drawObjects());
+watch(()=>props.selectedRoom, (newRoom)=>roomChange(newRoom));
 
 onMounted(()=>{
     const icons = {
@@ -148,7 +147,7 @@ function mouseLeave(event: MouseEvent): void {
     renderer.mouseMove(event);
 }
 
-function roomChange(): void {
+function roomChange(newRoom?: Core.Room): void {
     renderer.setRoomRef(props.selectedRoom);
     contentsBounds.value = props.selectedRoom.getContentsBounds();
 }

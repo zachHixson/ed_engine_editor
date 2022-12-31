@@ -19,11 +19,9 @@ const animationLoop = ref(-1);
 const dimensions = 150;
 
 const isPlaying = computed(()=>animationLoop.value >= 0);
-const sprite = computed(()=>props.sprite);
-const startFrame = computed(()=>props.startFrame);
 
-watch(sprite, ()=>newSpriteSelection());
-watch(startFrame, (newVal)=>{
+watch(()=>props.sprite, ()=>newSpriteSelection());
+watch(()=>props.startFrame, (newVal)=>{
     curFrameIdx.value = newVal;
     drawFrame();
 });

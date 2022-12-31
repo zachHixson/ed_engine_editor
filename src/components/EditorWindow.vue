@@ -24,9 +24,8 @@ const assetBrowserStore = useAssetBrowserStore();
 
 const emit = defineEmits(['asset-changed']);
 
-const selectedEditor = computed(()=>mainStore.getSelectedEditor);
 const currentEditor = computed(()=>{
-    switch(selectedEditor.value){
+    switch(mainStore.getSelectedEditor){
         case Core.EDITOR_ID.ROOM:
             return RoomEditor;
         case Core.EDITOR_ID.ART:
@@ -43,7 +42,7 @@ const selectedAsset = computed(()=>assetBrowserStore.getSelectedAsset);
 const selectedRoom = computed(()=>assetBrowserStore.getSelectedRoom);
 const dialogConfirmText = computed((dialogTextId, dialogTextVars)=>t(dialogTextId, dialogTextVars));
 
-watch(selectedEditor, ()=>dialogClose(false));
+watch(()=>mainStore.getSelectedEditor, ()=>dialogClose(false));
 watch(selectedAsset, ()=>dialogClose(true));
 
 const dialogConfirmOpen = ref<boolean>(false);

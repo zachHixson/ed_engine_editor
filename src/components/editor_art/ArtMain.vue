@@ -36,7 +36,6 @@ const toolMap: Map<Core.ART_TOOL_TYPE, ()=>Tool_Base> = new Map();
 const tool = ref<Tool_Base | null>(null);
 const frameIDs = ref(props.selectedAsset.frameIDs);
 
-const selectedSprite = computed(()=>props.selectedAsset);
 const selectedFrameIdx = computed({
     get(){
         return artEditorStore.getSelectedFrame;
@@ -45,13 +44,10 @@ const selectedFrameIdx = computed({
         artEditorStore.selectFrame(newIdx);
     }
 });
-const selectedSize = computed(()=>artEditorStore.getSelectedSize);
-const selectedTool = computed(()=>artEditorStore.getSelectedTool);
-const selectedColor = computed(()=>artEditorStore.getSelectedColor);
 const undoLength = computed(()=>undoStore.undoLength);
 const redoLength = computed(()=>undoStore.redoLength);
 
-watch(selectedSprite, ()=>{
+watch(()=>props.selectedAsset, ()=>{
     undoStore.clear();
 
     if (props.selectedAsset && props.selectedAsset.category_ID == Core.CATEGORY_ID.SPRITE){
@@ -64,9 +60,9 @@ watch(selectedSprite, ()=>{
         }
     }
 });
-watch(selectedColor, (newColor)=>tool.value!.setToolColor(newColor));
-watch(selectedSize, (newSize)=>tool.value!.setToolSize(newSize));
-watch(selectedTool, (newTool)=>toolSelected(newTool!));
+watch(()=>artEditorStore.getSelectedColor, (newColor)=>tool.value!.setToolColor(newColor));
+watch(()=>artEditorStore.getSelectedSize, (newSize)=>tool.value!.setToolSize(newSize));
+watch(()=>artEditorStore.getSelectedTool, (newTool)=>toolSelected(newTool!));
 
 onMounted(()=>{
     const maxFrame = props.selectedAsset.frames.length - 1;

@@ -47,11 +47,10 @@ const selectedFrameIdx = computed({
         artEditorStore.selectFrame(newIdx);
     }
 });
-const inputActive = computed(()=>mainStore.getInputActive);
 const animFrames = computed(()=>props.sprite.frames);
 const animFrameKeys = computed(()=>props.sprite.frameIDs);
 
-watch(inputActive, (newState: boolean)=>hotkeyMap.enabled = !newState);
+watch(()=>mainStore.getInputActive, (newState: boolean)=>hotkeyMap.enabled = !newState);
 
 onMounted(()=>{
     window.addEventListener('keydown', hotkeyDown);

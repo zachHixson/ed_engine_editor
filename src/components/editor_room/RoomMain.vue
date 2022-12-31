@@ -115,7 +115,6 @@ const mouse = reactive({
 const editorSelection = ref<Core.Object_Instance | Core.Exit | null>();
 
 //computed properties
-const selectedRoom = computed<Core.Room | null>(()=>props.selectedRoom);
 const propertiesOpen = computed<boolean>({
     get(): boolean {
         return roomEditorStore.getPropPanelState;
@@ -134,10 +133,9 @@ const undoLength = computed<number>(()=>undoStore.undoLength);
 const redoLength = computed<number>(()=>undoStore.redoLength);
 
 //watchers
-watch(selectedRoom, (newRoom, oldRoom)=>{
+watch(()=>props.selectedRoom, (newRoom, oldRoom)=>{
     if (newRoom && oldRoom && newRoom.id != oldRoom.id){
         editorSelection.value = null;
-        RoomMainEventBus.emit('room-changed', newRoom);
     }
 });
 watch(isInputActive, (newVal: boolean)=>{hotkeyMap.enabled = !newVal && mouse.inWindow});

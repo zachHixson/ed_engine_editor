@@ -26,9 +26,7 @@ const valuePos = ref(1);
 let selectedHS: Core.Draw.Color = props.color ?? new Draw.Color(255, 255, 255, 255);
 let selectedColor: Core.Draw.Color = props.color ?? new Draw.Color(255, 255, 255, 255);
 
-const color = computed(()=>props.color);
-
-watch(color, newVal => {
+watch(()=>props.color, newVal => {
     if (newVal != selectedColor){
         selectedColor = newVal;
         moveCursorToColor(selectedColor);
