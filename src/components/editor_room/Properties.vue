@@ -100,7 +100,7 @@ function setRoomProp(propObj: AnyObj): void {
 }
 
 function setFollowObj(): void {
-    if (props.selectedEntity!.TYPE == Core.ENTITY_TYPE.INSTANCE){
+    if (props.selectedEntity?.TYPE == Core.ENTITY_TYPE.INSTANCE){
         props.camera.followObjId = props.selectedEntity!.id;
     }
 }
@@ -213,7 +213,7 @@ function nanToNull(inp: number): number | null {
             <div v-show="camera.moveType == Core.Camera.MOVE_TYPES.FOLLOW" class="control">
                 <label for="camFollowObj">{{$t('room_editor.follow_obj')}}: </label>
                 <input id="camFollowObj" type="button" value="Set" v-tooltip="$t('room_editor.tt_camera_follow_obj')"
-                    @click="setFollowObj()" />
+                    @click="setFollowObj()" :disabled="!selectedEntity" />
             </div>
         </div>
         <div v-if="showExitProps" class="propContents">
