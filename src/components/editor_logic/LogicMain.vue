@@ -14,7 +14,7 @@ import HotkeyMap from '@/components/common/HotkeyMap';
 import Undo_Store, { type iActionStore, useUndoHelpers } from '@/components/common/Undo_Store';
 import DialogNewVariable from './DialogNewVariable.vue';
 
-import { ref, computed, watch, nextTick, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
+import { ref, reactive, computed, watch, nextTick, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
 import { useMainStore } from '@/stores/Main';
 import { useLogicEditorStore } from '@/stores/LogicEditor';
 import type Logic from './Logic';
@@ -59,11 +59,11 @@ const hotkeyMap = new HotkeyMap();
 const hotkeyDownHandler = hotkeyMap.keyDown.bind(hotkeyMap);
 const hotkeyUpHandler = hotkeyMap.keyUp.bind(hotkeyMap);
 const navControlPanelScroll = (event: WheelEvent)=>LogicMainEventBus.emit('mouse-wheel', event);
-const selectionBox = {
+const selectionBox = reactive({
     active: false,
     origin: new Vector(),
     dim: new Vector(),
-};
+});
 const shiftDown = ref(false);
 const isSearching = ref(false);
 const searchQuery = ref('');
