@@ -1,5 +1,5 @@
 <script lang="ts">
-export const ObjectMainEventBus = new Event_Bus();
+export const ObjectMainEventBus = new Core.Event_Bus();
 </script>
 
 <script setup lang="ts">
@@ -9,7 +9,6 @@ import CategoryWrapper from './CategoryWrapper.vue';
 
 import { ref, computed, nextTick } from 'vue';
 import { useGameDataStore } from '@/stores/GameData';
-import { Event_Bus } from '../common/Event_Listener';
 import Core from '@/core';
 import spriteIcon from '@/assets/sprite_icon.svg';
 import physicsIcon from '@/assets/physics.svg';

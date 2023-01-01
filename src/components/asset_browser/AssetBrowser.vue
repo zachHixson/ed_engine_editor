@@ -1,5 +1,5 @@
 <script lang="ts">
-export const AssetBrowserEventBus = new Event_Bus();
+export const AssetBrowserEventBus = new Core.Event_Bus();
 </script>
 
 <script setup lang="ts">
@@ -12,7 +12,6 @@ import { useI18n } from 'vue-i18n';
 import { useAssetBrowserStore } from '@/stores/AssetBrowser';
 import { useGameDataStore } from '@/stores/GameData';
 import Core from '@/core';
-import { Event_Bus } from '@/components/common/Event_Listener';
 import type { iChangeEventProps } from '@/components/common/DragList.vue';
 import type { iRenameEventProps } from './Asset.vue';
 import spriteIcon from '@/assets/sprite_icon.svg';

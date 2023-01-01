@@ -1,5 +1,5 @@
 <script lang="ts">
-export const AnimationPanelEventBus = new Event_Bus();
+export const AnimationPanelEventBus = new Core.Event_Bus();
 </script>
 
 <script setup lang="ts">
@@ -11,9 +11,8 @@ import DragList from '@/components/common/DragList.vue';
 import {ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { useMainStore } from '@/stores/Main';
 import { useArtEditorStore } from '@/stores/ArtEditor';
-import { Event_Bus } from '@/components/common/Event_Listener';
 import { ArtMainEventBus } from './ArtMain.vue';
-import type Core from '@/core';
+import Core from '@/core';
 
 
 const mainStore = useMainStore();

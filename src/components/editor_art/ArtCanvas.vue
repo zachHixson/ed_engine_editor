@@ -1,5 +1,5 @@
 <script lang="ts">
-export const ArtCanvasEventBus = new Event_Bus();
+export const ArtCanvasEventBus = new Core.Event_Bus();
 </script>
 
 <script setup lang="ts">
@@ -10,7 +10,6 @@ import Art_Canvas_Renderer from './Art_Canvas_Renderer';
 import { ref, computed, watch, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
 import type Tool_Base from './tools/Tool_Base';
 import { useArtEditorStore } from '@/stores/ArtEditor';
-import { Event_Bus } from '@/components/common/Event_Listener';
 import { ArtMainEventBus } from './ArtMain.vue';
 import Core from '@/core';
 

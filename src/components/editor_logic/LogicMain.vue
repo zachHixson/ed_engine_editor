@@ -1,5 +1,5 @@
 <script lang="ts">
-export const LogicMainEventBus = new Event_Bus();
+export const LogicMainEventBus = new Core.Event_Bus();
 </script>
 
 <script setup lang="ts">
@@ -17,7 +17,6 @@ import DialogNewVariable from './DialogNewVariable.vue';
 import { ref, computed, watch, nextTick, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
 import { useMainStore } from '@/stores/Main';
 import { useLogicEditorStore } from '@/stores/LogicEditor';
-import { Event_Bus } from '@/components/common/Event_Listener';
 import type Logic from './Logic';
 import type { default as Node_Obj } from './Node';
 import Core from '@/core';

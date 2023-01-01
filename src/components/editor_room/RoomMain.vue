@@ -1,5 +1,5 @@
 <script lang="ts">
-export const RoomMainEventBus = new Event_Bus();
+export const RoomMainEventBus = new Core.Event_Bus();
 </script>
 
 <script setup lang="ts">
@@ -8,7 +8,6 @@ import RoomEditWindow from './RoomEditWindow.vue';
 import Properties from './Properties.vue';
 import Tool from '@/components/common/Tool.vue';
 import HotkeyMap from '@/components/common/HotkeyMap';
-import { Event_Bus } from '@/components/common/Event_Listener';
 import gridIcon from '@/assets/grid.svg';
 import selectMoveIcon from '@/assets/select_move.svg';
 import brushAddIcon from '@/assets/brush_add.svg';

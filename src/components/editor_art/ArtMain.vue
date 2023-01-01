@@ -1,5 +1,5 @@
 <script lang="ts">
-export const ArtMainEventBus = new Event_Bus();
+export const ArtMainEventBus = new Core.Event_Bus();
 </script>
 
 <script setup lang="ts">
@@ -18,7 +18,6 @@ import Eye_Dropper from './tools/Eye_Dropper';
 
 import { ref, reactive, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { useArtEditorStore } from '@/stores/ArtEditor';
-import { Event_Bus } from '@/components/common/Event_Listener';
 import Core from '@/core';
 
 type iSpriteUndoData = {spriteData: ImageData[]}

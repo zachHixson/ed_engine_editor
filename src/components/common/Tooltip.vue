@@ -1,10 +1,10 @@
 <script lang="ts">
-export const TooltipEventBus = new Event_Bus();
+export const TooltipEventBus = new Core.Event_Bus();
 </script>
 
 <script setup lang="ts">
 import { ref, nextTick, onMounted } from 'vue';
-import { Event_Bus } from './Event_Listener';
+import Core from '@/core';
 
 const messageTextRef = ref<HTMLDivElement>();
 const tooltipRef = ref<HTMLDivElement>();

@@ -23,7 +23,6 @@ import { useRoomEditorStore } from '@/stores/RoomEditor';
 import { useGameDataStore } from '@/stores/GameData';
 import Core from '@/core';
 import { RoomMainEventBus } from './RoomMain.vue';
-import { Event_Bus } from '@/components/common/Event_Listener';
 
 const roomEditorStore = useRoomEditorStore();
 const gameDataStore = useGameDataStore();
@@ -49,7 +48,7 @@ const emit = defineEmits([
 ]);
 
 //define data
-const RoomEditWindowEventBus = new Event_Bus();
+const RoomEditWindowEventBus = new Core.Event_Bus();
 const devicePixelRatio = window.devicePixelRatio;
 const contentsBounds = ref([0, 0, 0, 0]);
 let renderer: Room_Edit_Renderer;

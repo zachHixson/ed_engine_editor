@@ -1,5 +1,5 @@
 <script lang="ts">
-export const AppEventBus = new Event_Bus();
+export const AppEventBus = new Core.Event_Bus();
 </script>
 
 <script setup lang="ts">
@@ -16,7 +16,6 @@ import {saveAs} from 'file-saver';
 import { useMainStore, PLAY_STATE } from './stores/Main';
 import { useGameDataStore } from './stores/GameData';
 import { useAssetBrowserStore } from './stores/AssetBrowser';
-import { Event_Bus } from './components/common/Event_Listener';
 import Core, { HTMLTemplate } from '@/core';
 
 //stores
