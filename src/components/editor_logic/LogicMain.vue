@@ -71,7 +71,7 @@ const renamingGraph = ref<number | null>(null);
 const showNewVariableWindow = ref(false);
 const newVariableCallback = ref<(positive: boolean, varInfo: Core.iNewVarInfo)=>void>(()=>{});
 const apiExports: {[key: string]: any} = {};
-const navHotkeyTool: Core.NAV_TOOL_TYPE | null = null;
+const navHotkeyTool = ref<Core.NAV_TOOL_TYPE | null>(null);
 
 const selectedNavTool = computed(()=>logicEditorStore.getSelectedNavTool);
 const showLibrary = computed({
@@ -491,7 +491,7 @@ function nodeClick({nodeObj, event}: {nodeObj: Node_Obj, event: MouseEvent}): vo
 
 function nodeDown(node: Node_Obj): void {
     const alreadySelected = !!selectedNodes.value.find(n => n.nodeId == node.nodeId);
-    const navHotkeyActive = navHotkeyTool != null;
+    const navHotkeyActive = navHotkeyTool.value != null;
     const navToolSelected = logicEditorStore.getSelectedNavTool != null;
 
     if (!alreadySelected) {
