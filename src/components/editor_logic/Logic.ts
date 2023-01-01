@@ -38,8 +38,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
     get nextGraphId(){return this._nextGraphId++}
     get nextNodeId(){return this._nextNodeId++}
     get graphNavState(){
-        const graphNavstate = this.graphs.find(graph => graph.id == this.selectedGraphId)!.navState;
-        return graphNavstate;
+        return this.graphs.find(graph => graph.id == this.selectedGraphId)!.navState;
     }
     get defaultNavState(){return {
         offset: new Vector(0, 0),
@@ -117,13 +116,18 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
         }
     }
 
-    deleteGraph(id: number){
-        let idx: number = 0;
+    deleteGraph(id: number): void {
+        let idx: number = -1;
 
-        for (let i = 0; idx == null && i < this.graphs.length; i++){
+        for (let i = 0; idx < 0 && i < this.graphs.length; i++){
             if (this.graphs[i].id == id){
                 idx = i;
             }
+        }
+
+        if (idx < 0){
+            console.trace(`Error deleting graph. Graph ID ${id} does not exist on logic script ${this.name}`);
+            return;
         }
 
         //delete graph and relevant nodes
