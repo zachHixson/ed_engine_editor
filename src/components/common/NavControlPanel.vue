@@ -7,7 +7,6 @@ import centerIcon from '@/assets/navigation_center.svg';
 
 import { ref, defineProps, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { Event_Bus } from '@/components/common/Event_Listener';
 import type { iControl } from './NavControl.vue';
 import Core from '@/core';
 
@@ -26,7 +25,7 @@ const props = defineProps<{
     contentsBounds: number[],
     unitScale: number,
     dpiScale: number,
-    parentEventBus: Event_Bus,
+    parentEventBus: Core.Event_Bus,
 }>();
 
 const emit = defineEmits(['tool-selected', 'nav-changed', 'set-hotkey-tool']);
@@ -149,6 +148,7 @@ function scroll(event: WheelEvent): void {
     let zoomDir = (event.deltaY < 0) ? 1 : -1;
     zoomDir *= ZOOM_WHEEL_AMT * (props.navState.zoomFac / props.maxZoom);
     setZoom(props.navState.zoomFac + zoomDir);
+    emit('nav-changed', props.navState);
 }
 
 function setContainerDimensions({width, height}: {width: number, height: number}): void {
@@ -159,7 +159,6 @@ function setContainerDimensions({width, height}: {width: number, height: number}
 function setZoom(newZoom: number): void {
     newZoom = Math.min(Math.max(newZoom, 0.5), props.maxZoom);
     props.navState.zoomFac = Math.round(newZoom * PRECISION) / PRECISION;
-    emit('nav-changed', props.navState);
 }
 
 function pan(): void {

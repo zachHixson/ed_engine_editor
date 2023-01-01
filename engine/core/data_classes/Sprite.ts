@@ -9,6 +9,8 @@ export class Sprite extends Asset_Base {
     frames: ImageData[] = [];
     frameIDs: string[] = [];
 
+    _frameEmptyCache: Map<number, boolean> = new Map();
+
     constructor(){
         super();
 
@@ -52,6 +54,7 @@ export class Sprite extends Asset_Base {
 
     updateFrame(idx: number): void {
         this.frameIDs[idx] = this.hashFrame();
+        this._frameEmptyCache.delete(idx);
     }
 
     addFrame(): number {
@@ -130,13 +133,20 @@ export class Sprite extends Asset_Base {
     }
 
     frameIsEmpty(idx: number = 0): boolean {
+        const cacheGet = this._frameEmptyCache.get(idx);
+
+        if (cacheGet !== undefined) return cacheGet;
+
+        let isEmpty = true;
+
         for (let i = 0; i < this.frames[idx].data.length; i++){
             if (this.frames[idx].data[i] != 0){
-                return false;
+                isEmpty = false;
             }
         }
 
-        return true;
+        this._frameEmptyCache.set(idx, isEmpty);
+        return isEmpty;
     }
 
     hashAllFrames(): void {
