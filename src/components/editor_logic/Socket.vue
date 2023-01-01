@@ -47,7 +47,7 @@ const hasSize = ref(false);
 
 const showLabel = computed(()=>props.socket.id.charAt(0) != '_');
 const hideSocket = computed(()=>props.socket.hideSocket);
-const hideInput = computed(()=>props.socket.hideSocket);
+const hideInput = computed(()=>props.socket.hideInput);
 const isTrigger = computed(()=>(props.socket.type == undefined));
 const isConnected = computed(()=>(!!props.parentConnections.find(c => (
     c.startSocketId == props.socket.id && c.startNode!.nodeId == props.parentId ||

@@ -67,8 +67,8 @@ export const NODE_LIST: iNodeTemplate[] = [
         id: 'compare',
         category: 'actual',
         inputs: [
-            {id: '_inp', type: SOCKET_TYPE.NUMBER, default: null},
-            {id: '_inp2', type: SOCKET_TYPE.NUMBER, default: null},
+            {id: '_inp', type: SOCKET_TYPE.NUMBER, default: 0},
+            {id: '_inp2', type: SOCKET_TYPE.NUMBER, default: 0},
         ],
         widget: {
             id: 'compare_function',
