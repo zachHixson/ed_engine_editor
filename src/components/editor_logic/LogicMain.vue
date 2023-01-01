@@ -117,9 +117,9 @@ const filteredNodes = computed(()=>{
 const nodeDraggingEnabled = computed(()=>selectedNavTool.value == null);
 const curNavState = computed(()=>{
     nextTick(()=>{
-        navChange(props.selectedAsset.navState!);
+        navChange(props.selectedAsset.graphNavState!);
     });
-    return props.selectedAsset.navState;
+    return props.selectedAsset.graphNavState;
 });
 const visibleNodes = computed(()=>props.selectedAsset.nodes.filter(n => n.graphId == props.selectedAsset.selectedGraphId));
 const visibleConnections = computed(()=>props.selectedAsset.connections.filter(n => n.graphId == props.selectedAsset.selectedGraphId));
