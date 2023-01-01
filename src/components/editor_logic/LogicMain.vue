@@ -737,10 +737,9 @@ function actionMakeConnection({connectionObj, socketOver}: ActionMakeConnectionP
     connectionObj.endNode?.onNewConnection && connectionObj.endNode.onNewConnection(connectionObj);
 
     //if connection was removed entirely by a previous undo, we need to recreate
-    console.warn("Need to come up with solution that doesn't use 'connectionComponent'")
-    // if (!connectionObj.connectionComponent){
-    //     props.selectedAsset.addConnection(connectionObj);
-    // }
+    if (!props.selectedAsset.connections.includes(connectionObj)){
+        props.selectedAsset.addConnection(connectionObj);
+    }
 
     //if this is being connected through a redo, then the socketEl reference might be deprecated and needs a relink
     if (!socketOver.socketEl){
@@ -945,7 +944,7 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
                 <Connection
                     v-for="connection in visibleConnections"
                     :key="`connection,${selectedAsset.id},${selectedAsset.selectedGraphId},${connection.id}`"
-                    ref="connectionEls"
+                    ref="connectionRefs"
                     :connectionObj="connection"
                     :clientToNavSpace="clientToNavPos"
                     :navWrapper="($refs.nodeNav as HTMLDivElement)"

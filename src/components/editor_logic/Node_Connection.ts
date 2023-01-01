@@ -1,7 +1,7 @@
 import type Node from './Node';
-import type Core from '@/core';
+import Core from '@/core';
 
-export default class Node_Connection implements Core.iNodeConnection {
+export default class Node_Connection extends Core.EventListenerMixin(class {}) implements Core.iNodeConnection {
     id: number;
     type: Core.Node_Enums.SOCKET_TYPE;
     graphId: number;
@@ -14,6 +14,7 @@ export default class Node_Connection implements Core.iNodeConnection {
     endSocketEl: HTMLElement | null;
 
     constructor(inpObj: Core.iAnyObj = {}){
+        super();
         this.id = inpObj.id;
         this.type = inpObj.type;
         this.graphId = inpObj.graphId;
@@ -55,7 +56,6 @@ export default class Node_Connection implements Core.iNodeConnection {
     }
 
     update(){
-        console.warn('Needs to emit event');
-        //emit 'needs-update' event instead of calling function directly on paired VueComponent
+        this.emit('connection-update');
     }
 };

@@ -59,6 +59,7 @@ onMounted(()=>{
 onBeforeUnmount(()=>{
     window.removeEventListener('mousemove', mouseMove);
     window.removeEventListener('mousemove', mouseDrag);
+    props.connectionObj.removeEventListener('connection-update', update);
     props.connectionObj.componentDestructor();
 });
 
@@ -68,6 +69,7 @@ function registerConnectEvents(): void {
         window.removeEventListener('mousemove', mouseMove);
         mouseOver.value = false;
     }, {once: true});
+    props.connectionObj.addEventListener('connection-update', update);
 }
 
 function relink(nodeInfoMap: Map<number, iRelinkInfo>): void {
@@ -79,6 +81,8 @@ function relink(nodeInfoMap: Map<number, iRelinkInfo>): void {
     props.connectionObj.canConnect = true;
     props.connectionObj.startSocketEl = startSocketComp!.$refs.socketConnectionRef as HTMLElement;
     props.connectionObj.endSocketEl = endSocketComp!.$refs.socketConnectionRef as HTMLElement;
+
+    registerConnectEvents();
 
     nextTick(()=>{
         update();
