@@ -462,7 +462,7 @@ function createConnection(connectionObj: Node_Connection): void {
 }
 
 function dragConnection(connectionObj: Node_Connection): void {
-    let {startNode, startSocketId, endNode, endSocketId} = connectionObj;
+    const {startNode, startSocketId, endNode, endSocketId} = connectionObj;
 
     draggingConnection.value = connectionObj;
     undoStore.cache.set('prev_socket', {startNode, startSocketId, endNode, endSocketId});
@@ -474,7 +474,7 @@ function relinkConnections(): void {
     const nodeInfo = new Map<number, iRelinkInfo>();
 
     nodeEls.forEach(nodeEl => {
-        let info = nodeEl.getRelinkInfo();
+        const info = nodeEl.getRelinkInfo();
         nodeInfo.set(info.id, info);
     });
 

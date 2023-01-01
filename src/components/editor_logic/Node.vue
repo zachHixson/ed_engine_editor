@@ -145,7 +145,7 @@ function setWidgetData(data: Core.iAnyObj): void {
 }
 
 function socketDown(connection: Node_Connection): void {
-    let isInput = !connection.startSocketEl;
+    const isInput = !connection.startSocketEl;
 
     if (isInput){
         connection.endNode = props.nodeObj;

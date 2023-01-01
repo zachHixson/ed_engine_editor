@@ -136,8 +136,8 @@ function updateHeight(): void {
 }
 
 function updateCSSPos(): void {
-    let minX = Math.min(startPoint.value.x, endPoint.value.x - HANDLE_WIDTH);
-    let minY = Math.min(startPoint.value.y, endPoint.value.y);
+    const minX = Math.min(startPoint.value.x, endPoint.value.x - HANDLE_WIDTH);
+    const minY = Math.min(startPoint.value.y, endPoint.value.y);
 
     cssOrigin.value.set(
         minX - PADDING,
@@ -222,9 +222,9 @@ function mouseDrag(event: MouseEvent): void {
 
 function updateMousePos(event: MouseEvent): void {
     const clientMousePos = new Vector(event.clientX, event.clientY);
-    const navMousePos = props.clientToNavSpace(clientMousePos);
+    const navPos = props.clientToNavSpace(clientMousePos);
 
-    navMousePos.copy(navMousePos);
+    navMousePos.value.copy(navPos);
 }
 
 function centerFromBounds(bounds: {top: number, bottom: number, left: number, right: number}): Core.Vector {

@@ -132,7 +132,7 @@ function emitValueChanged(newVal: any): void {
 }
 
 function mouseDown(event: MouseEvent): void {
-    let connection = new Node_Connection();
+    const connection = new Node_Connection();
 
     event.stopPropagation();
 
