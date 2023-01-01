@@ -12,17 +12,17 @@ export default defineConfig({
     VueI18nPlugin({}),
     filterReplace([
       {
-        filter: "core.ts",
+        filter: /core\.ts$/g,
         replace: {
           from: "export { Engine } from '@engine/Engine'",
           to: "export { Engine } from '@compiled/Engine'"
         }
       },
       {
-        filter: "core.ts",
+        filter: /core\.ts$/g,
         replace: {
-          from: "import * as Core from '@engine/core/core_filemap';",
-          to: "import {Core} from '@engine/Engine'",
+          from: "import * as Core from '@engine/core/core';",
+          to: "import {Core} from '@compiled/Engine'",
         },
       },
     ],
