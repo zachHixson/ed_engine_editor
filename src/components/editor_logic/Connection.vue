@@ -69,7 +69,6 @@ function registerConnectEvents(): void {
         window.removeEventListener('mousemove', mouseMove);
         mouseOver.value = false;
     }, {once: true});
-    props.connectionObj.addEventListener('connection-update', update);
 }
 
 function relink(nodeInfoMap: Map<number, iRelinkInfo>): void {
@@ -82,7 +81,7 @@ function relink(nodeInfoMap: Map<number, iRelinkInfo>): void {
     props.connectionObj.startSocketEl = startSocketComp!.$refs.socketConnectionRef as HTMLElement;
     props.connectionObj.endSocketEl = endSocketComp!.$refs.socketConnectionRef as HTMLElement;
 
-    registerConnectEvents();
+    props.connectionObj.addEventListener('connection-update', update);
 
     nextTick(()=>{
         update();
