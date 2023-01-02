@@ -31,18 +31,6 @@ export default defineConfig(({mode}) => {
             enforce: 'pre',
             apply: 'build',
         }),
-        filterReplace([
-            {
-                filter: /\.html$/g,
-                replace: {
-                    from: '/assets/',
-                    to: './assets/'
-                }
-            }
-        ],{
-            enforce: 'post',
-            apply: 'build',
-        }),
     ];
 
     if (mode == 'portable'){
