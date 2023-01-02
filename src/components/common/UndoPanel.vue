@@ -6,7 +6,6 @@ import redoButtonSVG from '@/assets/redo.svg';
 
 import {
     computed,
-    defineProps,
     onMounted,
     onBeforeUnmount
 } from 'vue';

@@ -19,7 +19,6 @@ import gearIcon from '@/assets/gear.svg';
 import {
     ref,
     reactive,
-    defineProps,
     computed,
     watch,
     nextTick,
