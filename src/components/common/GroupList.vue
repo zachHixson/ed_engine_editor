@@ -9,7 +9,7 @@ export interface iGroupChangedProps {
 </script>
 
 <script setup lang="ts">
-import { ref, defineProps, nextTick } from 'vue';
+import { ref, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Core from '@/core';
 

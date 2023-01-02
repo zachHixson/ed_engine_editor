@@ -5,7 +5,7 @@ import panIcon from '@/assets/navigation_hand.svg';
 import zoomIcon from '@/assets/navigation_magglass.svg';
 import centerIcon from '@/assets/navigation_center.svg';
 
-import { ref, defineProps, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { iControl } from './NavControl.vue';
 import Core from '@/core';
