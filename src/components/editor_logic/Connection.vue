@@ -54,6 +54,7 @@ onMounted(()=>{
             update();
         });
     }
+    props.connectionObj.addEventListener('connection-update', update);
 });
 
 onBeforeUnmount(()=>{
@@ -80,8 +81,6 @@ function relink(nodeInfoMap: Map<number, iRelinkInfo>): void {
     props.connectionObj.canConnect = true;
     props.connectionObj.startSocketEl = startSocketComp!.$refs.socketConnectionRef as HTMLElement;
     props.connectionObj.endSocketEl = endSocketComp!.$refs.socketConnectionRef as HTMLElement;
-
-    props.connectionObj.addEventListener('connection-update', update);
 
     nextTick(()=>{
         update();
