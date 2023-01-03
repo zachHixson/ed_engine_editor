@@ -9,7 +9,8 @@ import {
     Sprite,
     Game_Object,
     Instance_Base,
-    Interfaces,
+    iSerializedGameData,
+    iAnyObj,
     Vector,
     Object_Instance,
     Util,
@@ -21,9 +22,6 @@ import Node from './Node';
 import iGameData from './iGameData';
 
 export * as Core from '@engine/core/core';
-
-type iSerializedGameData = Interfaces.iSerializedGameData;
-type iAnyObj = Interfaces.iAnyObj;
 
 interface iEngineCallbacks {
     log?: (...args: any)=>void
@@ -335,7 +333,7 @@ export class Engine implements iEngineCallbacks {
         const {
             TO_DESTINATION,
             THROUGH_DESTINATION,
-            KEEP_POSIION,
+            KEEP_POSITION,
             TRANSITION_ONLY,
         } = Game_Object.EXIT_TYPES;
         const exitBehavior = instance.objRef.exitBehavior;
@@ -362,7 +360,7 @@ export class Engine implements iEngineCallbacks {
                     instance.pos.copy(destPos);
                     this.room.addInstance(instance);
                     break
-                case KEEP_POSIION:
+                case KEEP_POSITION:
                     this.room.addInstance(instance);
                     break;
                 case TRANSITION_ONLY:
@@ -376,7 +374,7 @@ export class Engine implements iEngineCallbacks {
             switch(exitBehavior){
                 case TO_DESTINATION:
                 case THROUGH_DESTINATION:
-                case KEEP_POSIION:
+                case KEEP_POSITION:
                     this.room.addInstance(instance);
                     break;
                 case TRANSITION_ONLY:

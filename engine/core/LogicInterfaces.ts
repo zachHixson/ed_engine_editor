@@ -114,7 +114,7 @@ export interface iEditorAPI {
     editor: iAnyObj;
     globalVariableMap: Map<string, SOCKET_TYPE>;
 
-    getGlobalVariable(name: string): SOCKET_TYPE;
+    getGlobalVariable(name: string): SOCKET_TYPE | undefined;
     setGlobalVariable(name: string, type: SOCKET_TYPE): void;
     deleteGlobalVariable(name: string): void;
     getVariableUsage(name: string, nodeType: string | null, isGlobal: boolean): iEditorNode[];

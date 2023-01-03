@@ -1,8 +1,6 @@
 import Node from './Node';
 import Engine from './Engine';
-import { Object_Instance, NODE_MAP, Interfaces, iEngineLogic, iNodeConnection } from '@engine/core/core';
-
-type iAnyObj = Interfaces.iAnyObj;
+import { Object_Instance, NODE_MAP, iAnyObj, iEngineLogic, iNodeConnection } from '@engine/core/core';
 
 export default class Logic implements iEngineLogic {
     private _nodes: Node[] = [];
@@ -52,15 +50,15 @@ export default class Logic implements iEngineLogic {
         });
 
         //create and link connections
-        logicData.connections.forEach((connection: iNodeConnection) => {
+        logicData.connections.forEach((connection: iNodeConnection & {startNodeId: number, endNodeId: number}) => {
             const {startNodeId, endNodeId, startSocketId, endSocketId} = connection;
             const startNode = nodes[startNodeId];
             const endNode = nodes[endNodeId];
             const allStartSockets = {...startNode.outTriggers, ...startNode.outputs};
             const allEndSockets = {...endNode.inTriggers, ...endNode.inputs};
 
-            allStartSockets[startSocketId].connection = allEndSockets[endSocketId];
-            allEndSockets[endSocketId].connection = allStartSockets[startSocketId];
+            allStartSockets[startSocketId!].connection = allEndSockets[endSocketId!];
+            allEndSockets[endSocketId!].connection = allStartSockets[startSocketId!];
         });
     }
 

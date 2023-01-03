@@ -104,40 +104,40 @@ export default [
         },
         methods: {
             editor_initVarNode(){
-                const {varName, type, isGlobal, isList} = this.dataCache.get('varInfo');
+                const {name, type, isGlobal, isList} = this.dataCache.get('varInfo');
                 const nameSocket = this.inputs.get('_varName');
                 const typeSocket = this.inputs.get('_varType');
                 const valSocket = this.inputs.get('initial_value');
                 const outSocket = this.outputs.get('_value');
 
-                nameSocket.value = {titleId: 'node.create_var_display_name', data: varName, translate: false};
+                nameSocket.value = {titleId: 'node.create_var_display_name', data: name, translate: false};
 
                 if (isGlobal){
                     nameSocket.decoratorIcon = 'global_variable';
                     nameSocket.decoratorText = 'node.global_variable';
                 }
 
-                typeSocket.value = {titleId: 'node.create_var_display_type', data: `node.${type.description}`, translate: true}
+                typeSocket.value = {titleId: 'node.create_var_display_type', data: `node.${SOCKET_TYPE[type]}`, translate: true}
                 
                 valSocket.type = type;
                 outSocket.type = type;
-                this.dispatchEvent(new CustomEvent('socketsChanged'));
-                this.dispatchEvent(new CustomEvent('recalcWidth'));
+                this.emit('socketsChanged');
+                this.emit('recalcWidth');
             },
             editor_setVar(){
                 const varInfo = this.dataCache.get('varInfo');
 
                 if (!varInfo) return;
-                const {varName, type, isGlobal, isList} = varInfo;
+                const {name, type, isGlobal, isList} = varInfo;
                 isGlobal ?
-                    this.editorAPI.setGlobalVariable(varName, type)
-                    : this.parentScript.setLocalVariable(varName, type);
+                    this.editorAPI.setGlobalVariable(name, type)
+                    : this.parentScript.setLocalVariable(name, type);
             },
             editor_deleteVar(){
-                const {varName, isGlobal} = this.dataCache.get('varInfo');
+                const {name, isGlobal} = this.dataCache.get('varInfo');
                 isGlobal ?
-                    this.editorAPI.deleteGlobalVariable(varName)
-                    : this.parentScript.deleteLocalVariable(varName);
+                    this.editorAPI.deleteGlobalVariable(name)
+                    : this.parentScript.deleteLocalVariable(name);
             },
             getInitialValue(){
                 return this.getInput('initial_value');
@@ -304,7 +304,7 @@ function validate(this: iEditorNode, textbox: HTMLInputElement){
     this.decoratorIcon = null;
 
     if (isValid){
-        const type = localGet ?? globalGet;
+        const type = localGet ?? globalGet!;
 
         if (!!globalGet && !!localGet){
             this.decoratorIcon = 'warning_decorator';

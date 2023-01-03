@@ -22,6 +22,7 @@ import Svg from '@/components/common/Svg.vue';
 import type Node from './Node';
 
 import { ref, computed, nextTick, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useAssetBrowserStore } from '@/stores/AssetBrowser';
 import Core from '@/core';
 import socketAnyIcon from '@/assets/socket_any.svg';
@@ -31,6 +32,7 @@ import socketObjectIcon from '@/assets/socket_object.svg';
 import socketBoolIcon from '@/assets/socket_bool.svg';
 import type Logic from './Logic';
 
+const { t, te } = useI18n();
 const assetBrowserStore = useAssetBrowserStore();
 
 const props = defineProps<{
@@ -189,11 +191,11 @@ defineExpose({socket: props.socket});
                 v-if="socket.decoratorIcon"
                 class="decorator"
                 :src="decoratorIconPath"
-                :tooltipText="$te(socket.decoratorText!) ? $t(socket.decoratorText!, socket.decoratorTextVars || {}): ''"/>
+                :tooltipText="te(socket.decoratorText!) ? t(socket.decoratorText!, socket.decoratorTextVars || {}): ''"/>
         </div>
         <div class="name-input-wrapper" :style="isInput && !socket.flipInput ? 'flex-direction: row-reverse;':''">
             <div v-if="showLabel" class="socket_name" :class="socket.hideLabel ? 'invisible':''">
-                <div>{{$t('node.' + socket.id)}}</div>
+                <div>{{t('node.' + socket.id)}}</div>
             </div>
             <div v-if="isInput && !isConnected && !hideInput" class="inputBox">
                 <input
@@ -221,7 +223,7 @@ defineExpose({socket: props.socket});
                     v-if="socket.type == Core.Node_Enums.SOCKET_TYPE.OBJECT"
                     class="selfBox"
                     :style="customStyles">
-                        {{$t('logic_editor.self')}}
+                        {{t('logic_editor.self')}}
                 </div>
                 <input
                     v-if="socket.type == Core.Node_Enums.SOCKET_TYPE.BOOL"
@@ -235,8 +237,8 @@ defineExpose({socket: props.socket});
             </div>
         </div>
         <div v-if="socket.type == Core.Node_Enums.SOCKET_TYPE.INFO && socket.value" class="infoBox">
-            <div v-html="$t(socket.value.titleId)" class="infoTitle"></div>
-            <div>{{$te(socket.value.data) && socket.value.translate ? $t(socket.value.data) : socket.value.data}}</div>
+            <div v-html="t(socket.value.titleId)" class="infoTitle"></div>
+            <div>{{te(socket.value.data) && socket.value.translate ? t(socket.value.data) : socket.value.data}}</div>
         </div>
         <div
             v-if="!(isTrigger || hideSocket)"

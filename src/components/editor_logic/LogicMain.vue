@@ -46,6 +46,8 @@ const props = defineProps<{
     selectedAsset: Logic;
 }>();
 
+const emit = defineEmits(['dialog-confirm']);
+
 const nodeViewportRef = ref<HTMLDivElement>();
 const nodeNavRef = ref<HTMLDivElement>();
 const nodeRefs = ref<InstanceType<typeof Node>[]>([]);
@@ -79,7 +81,6 @@ const searchQuery = ref('');
 const renamingGraph = ref<number | null>(null);
 const showNewVariableWindow = ref(false);
 const newVariableCallback = ref<(positive: boolean, varInfo: Core.iNewVarInfo)=>void>(()=>{});
-const apiExports: {[key: string]: any} = {};
 const navHotkeyTool = ref<Core.NAV_TOOL_TYPE | null>(null);
 
 const selectedNavTool = computed(()=>logicEditorStore.getSelectedNavTool);
@@ -148,6 +149,24 @@ watch(()=>props.selectedAsset, ()=>{
 watch(inputActive, (newState: boolean)=>hotkeyMap.enabled = !newState);
 
 onBeforeMount(()=>{
+    const apiExports = {
+        actionAddNode,
+        actionDeleteNodes,
+        revertMakeConnection,
+        dialogNewVariable,
+        undoStore,
+        emit,
+    };
+
+    Object.defineProperties(apiExports, {
+        selectedNodes: {
+            get: ()=>selectedNodes.value
+        },
+        selectedAsset: {
+            get: ()=>props.selectedAsset
+        }
+    })
+
     mainStore.getNodeAPI.setNodeEditorContext(apiExports);
 });
 

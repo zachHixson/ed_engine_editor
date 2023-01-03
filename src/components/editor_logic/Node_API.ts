@@ -19,7 +19,7 @@ export default class Node_API implements Core.iEditorAPI {
         this._editor = editorContext;
     }
 
-    getGlobalVariable(name: string): Core.Node_Enums.SOCKET_TYPE {
+    getGlobalVariable(name: string): Core.Node_Enums.SOCKET_TYPE | undefined {
         name = name.trim().toLowerCase();
         return this.globalVariableMap.get(name);
     }
@@ -140,7 +140,7 @@ export default class Node_API implements Core.iEditorAPI {
     }
 
     dialogConfirm(textInfo: TextInfo, callback: (positive: boolean)=>any){
-        this.editor.$emit('dialog-confirm', {textInfo, callback});
+        this.editor.emit('dialog-confirm', {textInfo, callback});
     }
 
     dialogNewVariable(callback: (positive: boolean, varInfo: Core.iNewVarInfo)=>void): void {

@@ -40,14 +40,14 @@ const currentEditor = computed(()=>{
 });
 const selectedAsset = computed(()=>assetBrowserStore.getSelectedAsset);
 const selectedRoom = computed(()=>assetBrowserStore.getSelectedRoom);
-const dialogConfirmText = computed((dialogTextId, dialogTextVars)=>t(dialogTextId, dialogTextVars));
+const dialogConfirmText = computed(()=>t(dialogTextId.value, dialogTextVars.value!));
 
 watch(()=>mainStore.getSelectedEditor, ()=>dialogClose(false));
 watch(selectedAsset, ()=>dialogClose(true));
 
 const dialogConfirmOpen = ref<boolean>(false);
 const dialogTextId = ref<string>('');
-const dialogTextVars = ref<{[key: string]: any}>();
+const dialogTextVars = ref<Record<string, unknown>>();
 let dialogCallback: (positive: boolean)=>void = ()=>{};
 
 function dialogConfirm({textInfo, callback}: DialogBoxProps): void {
