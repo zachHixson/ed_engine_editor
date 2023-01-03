@@ -6,6 +6,8 @@ export interface iRenameEventProps {
 </script>
 
 <script setup lang="ts">
+import Svg from '@/components/common/Svg.vue';
+
 import {
     ref,
     computed,
@@ -15,15 +17,17 @@ import {
     onBeforeUnmount
 } from 'vue';
 import { useAssetBrowserStore } from '@/stores/AssetBrowser';
-import type { Event_Bus } from '@/components/common/Event_Listener';
 import type Core from '@/core';
+
+import renameIcon from '@/assets/rename.svg';
+import trashicon from '@/assets/trash.svg';
 
 const assetBrowserStore = useAssetBrowserStore();
 
 const props = defineProps<{
     asset: Core.Asset_Base,
     defaultIcon: string,
-    assetBrowserEventBus: Event_Bus;
+    assetBrowserEventBus: Core.Event_Bus;
 }>();
 
 const emit = defineEmits(['delete-asset', 'select-asset', 'renamed']);
@@ -123,8 +127,8 @@ function drawThumbnail(): void {
 <template>
     <div ref="assetRef" class="asset" :class="{selected : isSelected}" @click="selectAsset">
         <div class="leftFloat" v-click-outside="stopRenaming">
-            <canvas v-show="thumbnail" class="thumbnail" ref="thumbnailRef" width="20" height="20" draggable="false">Error</canvas>
-            <img v-if="!thumbnail" class="thumbnail assetIcon" :src="props.defaultIcon" draggable="false"/>
+            <canvas v-show="thumbnail" class="thumbnail" ref="thumbnailRef" width="20" height="20">Error</canvas>
+            <Svg v-if="!thumbnail" class="thumbnail assetIcon" :src="props.defaultIcon"></Svg>
             <div v-show="isRenaming">
                 <input class="nameBox" ref="renameTextRef" v-model="asset.name" type="text" v-input-active/>
             </div>
@@ -132,10 +136,10 @@ function drawThumbnail(): void {
         </div>
         <div class="rightFloat">
             <button class="rightButton" @click="(event)=>{event.stopPropagation(); isRenaming ? stopRenaming() : rename();}">
-                <img class="rightIcon" style="width:30px; height:30px;" src="@/assets/rename.svg" draggable="false"/>
+                <Svg class="rightIcon" style="width:30px; height:30px;" :src="renameIcon"></Svg>
             </button>
             <button class="rightButton" @click="deleteAsset">
-                <img class="rightIcon" src="@/assets/trash.svg" draggable="false"/>
+                <Svg class="rightIcon" :src="trashicon"></Svg>
             </button>
         </div>
     </div>

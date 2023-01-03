@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Svg from '@/components/common/Svg.vue';
+
 import { computed } from 'vue';
 import { useMainStore } from '@/stores/Main';
 import type Core from '@/core';
@@ -21,7 +23,7 @@ function tabClick(): void {
 <template>
     <div class="editorTab" @click="tabClick" :class="{tabSelected : isSelected}">
         <div class="tabEl logoBox">
-            <img class="tabImg" :src="logoPath"/>
+            <Svg class="tabImg" :src="logoPath"></Svg>
         </div>
         <div class="tabEl name">
             {{tabText}}

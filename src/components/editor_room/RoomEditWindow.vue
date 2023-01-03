@@ -21,8 +21,14 @@ import {
 } from 'vue';
 import { useRoomEditorStore } from '@/stores/RoomEditor';
 import { useGameDataStore } from '@/stores/GameData';
-import Core from '@/core';
 import { RoomMainEventBus } from './RoomMain.vue';
+import Core from '@/core';
+import svgToCanvas from '@/components/common/svgToCanvas';
+
+import cameraLocIconRaw from '@/assets/camera_location.svg?raw';
+import objectIconRaw from '@/assets/object_icon.svg?raw';
+import exitIconRaw from '@/assets/exit.svg?raw';
+import endIconRaw from '@/assets/end.svg?raw';
 
 const roomEditorStore = useRoomEditorStore();
 const gameDataStore = useGameDataStore();
@@ -52,19 +58,14 @@ const RoomEditWindowEventBus = new Core.Event_Bus();
 const devicePixelRatio = window.devicePixelRatio;
 const contentsBounds = ref([0, 0, 0, 0]);
 let renderer: Room_Edit_Renderer;
-let loadedImages = 0;
 let unitWidth = 1;
 let navHotkeyTool: Core.NAV_TOOL_TYPE | null = null;
+let requiredIcons = 0;
 
 //template refs
 const canvasEl = ref<HTMLCanvasElement>();
 const editWindowRef = ref<HTMLDivElement>();
 const navControlPanel = ref();
-const canvasImages = ref();
-const camera_icon = ref();
-const noSprite_icon = ref();
-const exit_icon = ref();
-const end_icon = ref();
 
 const checkAssetDeletion = computed(()=>gameDataStore.getAllObjects.length + gameDataStore.getAllSprites.length);
 
@@ -74,11 +75,13 @@ watch(checkAssetDeletion, (newVal, oldVal)=> (newVal < oldVal) && renderer.drawO
 watch(()=>props.selectedRoom, (newRoom)=>roomChange(newRoom));
 
 onMounted(()=>{
+    const MAX_ICON_SIZE = 128;
+
     const icons = {
-        cameraIcon: camera_icon.value,
-        noSpriteSVG: noSprite_icon.value,
-        exitSVG: exit_icon.value,
-        endSVG: end_icon.value
+        cameraIcon: svgToCanvas(cameraLocIconRaw, MAX_ICON_SIZE, getIconLoadCallback()),
+        noSpriteSVG: svgToCanvas(objectIconRaw, MAX_ICON_SIZE, getIconLoadCallback()),
+        exitSVG: svgToCanvas(exitIconRaw, MAX_ICON_SIZE, getIconLoadCallback()),
+        endSVG: svgToCanvas(endIconRaw, MAX_ICON_SIZE, getIconLoadCallback())
     };
 
     renderer = new Room_Edit_Renderer(
@@ -191,17 +194,22 @@ function bgColorChanged(): void {
     renderer.bgColorChanged();
 }
 
-function checkImageLoading(): void {
-    loadedImages++;
-    
-    if (loadedImages >= canvasImages.value?.children.length){
-        renderer.fullRedraw();
-    }
-}
-
 function navToolSelected(tool: Core.NAV_TOOL_TYPE): void {
     roomEditorStore.setSelectedTool(null);
     roomEditorStore.setSelectedNavTool(tool);
+}
+
+function getIconLoadCallback(): ()=>void {
+    requiredIcons++;
+
+    return ()=>{
+        requiredIcons--;
+
+        if (requiredIcons <= 0){
+            renderer.generateMipMaps();
+            renderer.fullRedraw();
+        }
+    }
 }
 </script>
 
@@ -232,12 +240,6 @@ function navToolSelected(tool: Core.NAV_TOOL_TYPE): void {
             @mousedown="mouseDown"
             @mouseup="mouseUp"
             @mousemove="mouseMove">//Canvas Error</canvas>
-        <div ref="canvasImages" style="display: none">
-            <img ref="camera_icon" src="@/assets/camera_location.svg" @load="checkImageLoading()"/>
-            <img ref="noSprite_icon" src="@/assets/object_icon.svg" @load="checkImageLoading()"/>
-            <img ref="exit_icon" src="@/assets/exit.svg" @load="checkImageLoading()"/>
-            <img ref="end_icon" src="@/assets/end.svg" @load="checkImageLoading()"/>
-        </div>
     </div>
 </template>
 

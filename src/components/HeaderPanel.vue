@@ -1,7 +1,13 @@
 <script setup lang="ts">
+import Svg from '@/components/common/Svg.vue';
+
 import { ref, nextTick, computed, onMounted } from 'vue';
 import { useMainStore, PLAY_STATE } from '@/stores/Main';
 import { useI18n } from 'vue-i18n';
+import renameIcon from '@/assets/rename.svg';
+import packageIcon from '@/assets/package.svg';
+import debugIcon from '@/assets/debug.svg';
+import playIcon from '@/assets/play.svg';
 
 const mainStore = useMainStore();
 const { t } = useI18n();
@@ -144,13 +150,13 @@ function packageGame(): void {
             <div ref="displayEditBox" class="displayEditBox" v-click-outside="stopRenaming">
                 <div v-show="!isRenaming" ref="projNameDisplay" class="projNameDisplay">{{projName}}</div>
                 <input v-show="isRenaming" ref="projNameEdit" type="text" class="projNameEdit" v-model="projName" v-input-active/>
-                <button class="renameBtn" @click="isRenaming ? stopRenaming() : rename()"><img class="renameBtnImg" src="@/assets/rename.svg" /></button>
+                <button class="renameBtn" @click="isRenaming ? stopRenaming() : rename()"><Svg class="renameBtnImg" :src="renameIcon"></Svg></button>
             </div>
         </div>
         <div class="controls">
-            <button class="iconBtn" name="packageBtn" @click="packageGame" v-tooltip="$t('editor_main.package')"><img class="icon" src="@/assets/package.svg"/></button>
-            <button class="iconBtn" name="debugBtn" @click="playState = PLAY_STATE.DEBUGGING" v-tooltip="$t('editor_main.debug')"><img class="icon" src="@/assets/debug.svg"/></button>
-            <button class="iconBtn" name="runBtn" @click="playState = PLAY_STATE.PLAYING" v-tooltip="$t('editor_main.run')"><img class="icon" src="@/assets/play.svg"/></button>
+            <button class="iconBtn" name="packageBtn" @click="packageGame" v-tooltip="$t('editor_main.package')"><Svg class="icon" :src="packageIcon"></Svg></button>
+            <button class="iconBtn" name="debugBtn" @click="playState = PLAY_STATE.DEBUGGING" v-tooltip="$t('editor_main.debug')"><Svg class="icon" :src="debugIcon"></Svg></button>
+            <button class="iconBtn" name="runBtn" @click="playState = PLAY_STATE.PLAYING" v-tooltip="$t('editor_main.run')"><Svg class="icon" :src="playIcon"></Svg></button>
         </div>
         <input type="file" ref="fileOpen" style="display: none" accept=".html, .edproj" @change="loadProjectFile"/>
     </div>

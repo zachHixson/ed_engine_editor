@@ -2,6 +2,7 @@ import { fileURLToPath, URL } from 'node:url'
 import filterReplace from 'vite-plugin-filter-replace';
 import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
+import svgLoader from 'vite-svg-loader';
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
@@ -34,7 +35,11 @@ export default defineConfig(({mode}) => {
     ];
 
     if (mode == 'portable'){
-        plugins.push(viteSingleFile());
+        plugins.push(viteSingleFile({
+            removeViteModuleLoader: true,
+        }), svgLoader({
+            defaultImport: 'raw'
+        }));
     }
 
     return {

@@ -8,13 +8,7 @@ import RoomEditWindow from './RoomEditWindow.vue';
 import Properties from './Properties.vue';
 import Tool from '@/components/common/Tool.vue';
 import HotkeyMap from '@/components/common/HotkeyMap';
-import gridIcon from '@/assets/grid.svg';
-import selectMoveIcon from '@/assets/select_move.svg';
-import brushAddIcon from '@/assets/brush_add.svg';
-import eraserIcon from '@/assets/eraser.svg';
-import cameraIcon from '@/assets/camera.svg';
-import exitIcon from '@/assets/exit.svg';
-import gearIcon from '@/assets/gear.svg';
+import Svg from '@/components/common/Svg.vue';
 
 import {
     ref,
@@ -31,6 +25,15 @@ import { useRoomEditorStore } from '@/stores/RoomEditor';
 import { useGameDataStore } from '@/stores/GameData';
 import Core from '@/core';
 import type { imEvent } from './RoomEditWindow.vue';
+
+import arrowIcon from '@/assets/arrow_01.svg';
+import gridIcon from '@/assets/grid.svg';
+import selectMoveIcon from '@/assets/select_move.svg';
+import brushAddIcon from '@/assets/brush_add.svg';
+import eraserIcon from '@/assets/eraser.svg';
+import cameraIcon from '@/assets/camera.svg';
+import exitIcon from '@/assets/exit.svg';
+import gearIcon from '@/assets/gear.svg';
 
 const { Vector, ROOM_TOOL_TYPE } = Core;
 type Vector = Core.Vector;
@@ -741,8 +744,8 @@ function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
         <div v-if="selectedRoom" class="propertyPanel" :class="{propertiesClosed : !propertiesOpen}">
             <div class="resizeBtnWrapper">
                 <button class="resizeBtn" @click="propertiesOpen = !propertiesOpen; resize()">
-                    <img v-show="propertiesOpen" src="@/assets/arrow_01.svg" style="transform: rotate(90deg)"/>
-                    <img v-show="!propertiesOpen" src="@/assets/gear.svg" style="transform: rotate(-90deg)"/>
+                    <Svg v-show="propertiesOpen" :src="arrowIcon" style="transform: rotate(90deg)"></Svg>
+                    <Svg v-show="!propertiesOpen" :src="gearIcon" style="transform: rotate(-90deg)"></Svg>
                 </button>
             </div>
             <div v-show="propertiesOpen" class="propertiesContents">
@@ -831,7 +834,7 @@ function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
     border-radius: var(--corner-radius) 0px 0px var(--corner-radius);
 }
 
-.resizeBtn > img{
+.resizeBtn > *{
     width: 100%;
     height: 100%;
 }

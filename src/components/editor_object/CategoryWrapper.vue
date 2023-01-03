@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Svg from '@/components/common/Svg.vue';
+
 const props = defineProps<{
     heading: string,
     iconPath: string,
@@ -8,10 +10,10 @@ const props = defineProps<{
 <template>
     <div class="categoryWrapper">
         <div class="title">
-            <img class="icon" :src="iconPath"/>
+            <Svg class="icon" :src="iconPath"></Svg>
             {{heading}}
         </div>
-        <div class="contents"><slot /></div>
+        <div class="contents"><slot></slot></div>
     </div>
 </template>
 

@@ -8,14 +8,19 @@ export interface iRelinkInfo {
 <script setup lang="ts">
 import Socket from './Socket.vue';
 import Widget from './Widget.vue';
-import Decorator from '../common/Decorator.vue';
+import Decorator from '@/components/common/Decorator.vue';
+import Svg from '@/components/common/Svg.vue';
 
 import { ref, computed, nextTick, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type Node from './Node';
 import type Node_Connection from './Node_Connection';
 import type { iHoverSocket, iValueChanged } from './Socket.vue';
 import Core from '@/core';
 
+import eventIcon from '@/assets/event.svg';
+
+const { t, te } = useI18n();
 const { Vector } = Core;
 
 const props = defineProps<{
@@ -212,14 +217,14 @@ defineExpose({getRelinkInfo});
         @click="emit('node-clicked', {nodeObj, event: $event})"
         @mousedown="mouseDown">
         <div class="heading" :class="categoryClass">
-            <div v-if="nodeObj.isEvent" class="node-icon"><img src="@/assets/event.svg"/></div>
-            <div>{{$t('node.' + nodeObj.templateId)}}</div>
+            <div v-if="nodeObj.isEvent" class="node-icon"><Svg :src="eventIcon"></Svg></div>
+            <div>{{t('node.' + nodeObj.templateId)}}</div>
             <div class="decorator-wrapper">
                 <Decorator
                     v-if="nodeObj.decoratorIcon"
                     class="decorator"
                     :src="decoratorIconPath"
-                    :tooltipText="$te(nodeObj.decoratorText!) ? $t(nodeObj.decoratorText!, nodeObj.decoratorTextVars || {}): ''"/>
+                    :tooltipText="te(nodeObj.decoratorText!) ? t(nodeObj.decoratorText!, nodeObj.decoratorTextVars || {}): ''"/>
             </div>
         </div>
         <div v-if="!!nodeObj.widget" class="widgetWrapper">
@@ -328,9 +333,9 @@ defineExpose({getRelinkInfo});
     height: 20px;
 }
 
-.node-icon > img{
-    width: auto;
-    height: auto;
+.node-icon > *{
+    width: 100%;
+    height: 100%;
 }
 
 .separator{

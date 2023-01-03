@@ -13,6 +13,7 @@ import type { iHoverSocket } from './Socket.vue';
 import HotkeyMap from '@/components/common/HotkeyMap';
 import Undo_Store, { type iActionStore, useUndoHelpers } from '@/components/common/Undo_Store';
 import DialogNewVariable from './DialogNewVariable.vue';
+import Svg from '@/components/common/Svg.vue';
 
 import { ref, reactive, computed, watch, nextTick, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
 import { useMainStore } from '@/stores/Main';
@@ -20,6 +21,14 @@ import { useLogicEditorStore } from '@/stores/LogicEditor';
 import type Logic from './Logic';
 import type { default as Node_Obj } from './Node';
 import Core from '@/core';
+
+import magGlassIcon from '@/assets/navigation_magglass.svg';
+import arrowIcon from '@/assets/arrow_01.svg';
+import eventIcon from '@/assets/event.svg';
+import trashIcon from '@/assets/trash.svg';
+import plusIcon from '@/assets/plus.svg';
+import renameIcon from '@/assets/rename.svg';
+import hamburgerIcon from '@/assets/hamburger.svg';
 
 type GenericSocket = {id: string, value: any};
 type ActionAddNodeProps = {templateId: string, nodeRef?: Node_Obj};
@@ -871,13 +880,13 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
                     <div class="fade-out" :style="isSearching ? 'opacity: 0;':''">{{$t('logic_editor.node_panel_heading')}}</div>
                     <div class="search-btn-wrapper" :class="isSearching ? 'search-btn-wrapper-searching':''">
                         <button v-if="isSearching" class="cancel-search-btn" @click="isSearching = false">
-                            &lt;
+                            <Svg style="transform: rotate(-90deg); width: 20px; height: auto;" :src="arrowIcon"></Svg>
                         </button>
                         <button
                             class="search-btn"
                             :class="!isSearching ? 'search-btn-active':''"
                             @click="isSearching = true; searchQuery=''">
-                            <img style="width: 20px; height: 20px;" src="@/assets/navigation_magglass.svg" />
+                            <Svg style="width: 20px; height: 20px;" :src="magGlassIcon"></Svg>
                         </button>
                         <transition name="grow">
                             <input
@@ -897,7 +906,7 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
                     :class="selectedCategory || isSearching ? 'slide-wrapper-trans' : ''">
                     <div class="library-column">
                         <div v-if="!isSearching" class="list-item category-back-btn" @click="selectedCategory = null">
-                            <img v-show="showLibrary" src="@/assets/arrow_01.svg" />
+                            <Svg v-show="showLibrary" :src="arrowIcon"></Svg>
                         </div>
                         <div
                             v-for="node in filteredNodes"
@@ -920,8 +929,8 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
             </div>
             <div class="resizeBtn-right-wrapper">
                 <button class="resizeBtn resizeBtn-right" @click="showLibrary = !showLibrary" :style="showLibrary ? 'transform: translateX(-2px);' : ''">
-                    <img v-show="showLibrary" src="@/assets/arrow_01.svg" style="transform: rotate(-90deg)"/>
-                    <img v-show="!showLibrary" src="@/assets/event.svg"/>
+                    <Svg v-show="showLibrary" :src="arrowIcon" style="transform: rotate(-90deg)"></Svg>
+                    <Svg v-show="!showLibrary" :src="eventIcon"></Svg>
                 </button>
             </div>
             <div class="undo-panel-wrapper">
@@ -985,7 +994,7 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
             <button
                 class="trash-button"
                 @mouseup="trashMouseUp">
-                <img src="@/assets/trash.svg" />
+                <Svg :src="trashIcon"></Svg>
             </button>
         </div>
         <div class="graph-list-wrapper">
@@ -993,7 +1002,7 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
                 <div class="side-panel-heading">
                     <div>{{$t('logic_editor.graph_panel_heading')}}</div>
                     <button class="add-graph-btn" @click="addGraph">
-                        <img src="@/assets/plus.svg" />
+                        <Svg :src="plusIcon"></Svg>
                     </button>
                 </div>
                 <div ref="graphListRef" class="graph-list">
@@ -1024,10 +1033,10 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
                                 </div>
                                 <div class="graph-controls">
                                     <button class="graph-control-btn" @click="startRenamingGraph(item.id)">
-                                        <img class="graph-icon" src="@/assets/rename.svg" />
+                                        <Svg style="width: 30px; height: auto;" :src="renameIcon"></Svg>
                                     </button>
                                     <button class="graph-control-btn" @click="deleteGraph($event, item.id)">
-                                        <img class="graph-icon" src="@/assets/trash.svg" />
+                                        <Svg style="width: 20px; height: auto;" :src="trashIcon"></Svg>
                                     </button>
                                 </div>
                             </div>
@@ -1037,8 +1046,8 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
             </div>
             <div class="resizeBtn-left-wrapper">
                 <button class="resizeBtn resizeBtn-left" @click="showGraphs = !showGraphs" :style="showGraphs ? 'transform: translateX(2px);' : ''">
-                    <img v-show="showGraphs" src="@/assets/arrow_01.svg" style="transform: rotate(90deg)"/>
-                    <img v-show="!showGraphs" src="@/assets/hamburger.svg"/>
+                    <Svg v-show="showGraphs" :src="arrowIcon" style="transform: rotate(90deg)"></Svg>
+                    <Svg v-show="!showGraphs" :src="hamburgerIcon"></Svg>
                 </button>
             </div>
             <div class="nav-control-wrapper">
@@ -1162,7 +1171,7 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
     background: var(--heading) !important;
 }
 
-.category-back-btn > img{
+.category-back-btn > *{
     width: 20px;
     transform: rotate(90deg);
 }
@@ -1253,7 +1262,6 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
 
 .cancel-search-btn{
     height: 2em;
-    margin-left: 5px;
     background: var(--button-dark-norm);
     border: 2px solid var(--border);
     border-radius: 8px;
@@ -1396,7 +1404,7 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
     background: var(--button-hover);
 }
 
-.trash-button > img{
+.trash-button > *{
     width: 100%;
     height: 100%;
 }
@@ -1454,6 +1462,11 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
     border-radius: 5px;
 }
 
+.add-graph-btn > *{
+    width: 25px;
+    height: 25px;
+}
+
 .add-graph-btn:hover{
     background: var(--button-dark-hover);
 }
@@ -1476,6 +1489,7 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+    height: 50px;
     border: 2px solid gray;
     margin: 5px;
     margin-top: 0;
@@ -1497,21 +1511,24 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
 }
 
 .graph-display-name{
-    overflow: hidden;
+    overflow-x: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    height: 1em;
     width: 7em;
+    height: auto;
 }
 
 .graph-controls{
     display: flex;
     flex-direction: row;
+    justify-content: center;
+    align-items: center;
 }
 
 .graph-control-btn{
-    width: 40px;
-    height: 40px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
     background: none;
     border: none;
 }

@@ -39,6 +39,7 @@
     "vite": "^4.0.0",
     "vite-plugin-filter-replace": "^0.1.9",
     "vite-plugin-singlefile": "^0.13.2",
+    "vite-svg-loader": "^4.0.0",
     "vue-cli-plugin-i18n": "~2.3.1",
     "vue-tsc": "^1.0.12"
   }

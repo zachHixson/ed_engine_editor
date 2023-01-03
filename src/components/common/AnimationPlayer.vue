@@ -1,14 +1,18 @@
 <script setup lang="ts">
+import Svg from '@/components/common/Svg.vue';
+
 import { ref, computed, watch, nextTick, onMounted } from 'vue';
 import Core from '@/core';
-import type { Event_Bus } from './Event_Listener';
+import playIcon from '@/assets/play.svg';
+import pauseIcon from '@/assets/pause.svg';
+import boxFilledIcon from '@/assets/box_filled.svg';
 
 const props = defineProps<{
     sprite: Core.Sprite,
     fps: number,
     startFrame: number,
     loop: boolean,
-    parentEventBus: Event_Bus
+    parentEventBus: Core.Event_Bus
 }>();
 
 const curFrameIdx = ref(0);
@@ -137,11 +141,11 @@ function onFrameDelete(): void {
         </canvas>
         <div class="buttons">
             <button @click="playAnimation()">
-                <img class="btnImg" src="@/assets/play.svg" v-show="!isPlaying"/>
-                <img class="btnImg" src="@/assets/pause.svg" v-show="isPlaying"/>
+                <Svg class="btnImg" :src="playIcon" v-show="!isPlaying"></Svg>
+                <Svg class="btnImg" :src="pauseIcon" v-show="isPlaying"></Svg>
             </button>
             <button @click="stopAnimation()">
-                <img class="btnImg" src="@/assets/box_filled.svg"/>
+                <Svg class="btnImg" :src="boxFilledIcon"></Svg>
             </button>
         </div>
     </div>

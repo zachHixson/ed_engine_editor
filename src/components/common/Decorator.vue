@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Svg from '@/components/common/Svg.vue';
+
 import { ref } from 'vue';
 
 const props = defineProps<{
@@ -17,7 +19,7 @@ defineExpose({setTooltipText});
 
 <template>
     <div class="decorator">
-        <img name="decorator" class="img" :src="src" draggable="false" v-tooltip="text"/>
+        <Svg name="decorator" class="img" :src="src" v-tooltip="text"></Svg>
     </div>
 </template>
 

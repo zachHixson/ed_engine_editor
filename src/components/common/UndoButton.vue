@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Svg from '@/components/common/Svg.vue';
+
 import { ref } from 'vue';
 
 const props = defineProps<{
@@ -20,13 +22,13 @@ function onClick(){
 
 <template>
     <div class="viewportControl" @click="onClick" v-tooltip="altText">
-        <img
+        <Svg
             v-show="iconLoaded"
             class="icon"
             :class="{iconDisabled : !isActive}"
             ref="iconImg"
             :src="props.icon"
-            @error="iconLoaded = false" />
+            @error="iconLoaded = false"></Svg>
         <div v-show="!iconLoaded" class="altText" ref="altText">
             {{altText}}
         </div>

@@ -1,8 +1,13 @@
 <script setup lang='ts'>
+import Svg from '@/components/common/Svg.vue';
+
 import { ref, computed, nextTick, onMounted } from 'vue';
 import { useAssetBrowserStore } from '@/stores/AssetBrowser';
 import { useArtEditorStore } from '@/stores/ArtEditor';
 import Core from '@/core';
+import trashIcon from '@/assets/trash.svg';
+import copyIcon from '@/assets/copy.svg';
+import arrowIcon from '@/assets/arrow_01.svg';
 
 const assetBrowserStore = useAssetBrowserStore();
 const artEditorStore = useArtEditorStore();
@@ -124,25 +129,25 @@ function moveFrame(event: MouseEvent, dir: number): void {
             v-show="canDelete && hover"
             @click="deleteFrame"
             v-tooltip="$t('art_editor.delete_frame')">
-            <img class="btnIcon" src="@/assets/trash.svg" style="fill: none"/>
+            <Svg class="btnIcon" :src="trashIcon" style="fill: none"></Svg>
         </button>
         <button
             class="button copyFrame"
             v-show="hover"
             @click="copyFrame">
-            <img class="btnIcon" src="@/assets/copy.svg"/>
+            <Svg class="btnIcon" :src="copyIcon"></Svg>
         </button>
         <button
             class="button moveUp"
             v-show="hover && !isFirst"
             @click="moveFrame($event, -1)">
-            <img  class="btnIcon" src="@/assets/arrow_01.svg"/>
+            <Svg class="btnIcon" :src="arrowIcon"></Svg>
         </button>
         <button
             class="button moveDown"
             v-show="hover && !isLast"
             @click="moveFrame($event, 1)">
-            <img class="btnIcon" src="@/assets/arrow_01.svg" style="transform: rotate(-180deg)"/>
+            <Svg class="btnIcon" :src="arrowIcon" style="transform: rotate(-180deg)"></Svg>
         </button>
     </div>
 </template>

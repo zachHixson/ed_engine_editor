@@ -9,9 +9,12 @@ export interface iGroupChangedProps {
 </script>
 
 <script setup lang="ts">
+import Svg from '@/components/common/Svg.vue';
+
 import { ref, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Core from '@/core';
+import plusIcon from '@/assets/plus.svg';
 
 const { t } = useI18n();
 
@@ -87,13 +90,13 @@ function groupDeleted(group: string, idx: number, event: any): void {
                     class="item">
                     <input class="listInput" :value="group" @change="groupNameChanged(group, $event)"/>
                     <button class="deleteBtn" @click="groupDeleted(group, idx, $event)">
-                        <img src="@/assets/plus.svg" style="transform: rotate(45deg)"/>
+                        <Svg :src="plusIcon" style="transform: rotate(45deg)"></Svg>
                     </button>
                 </div>
             </div>
         </div>
         <button class="addBtn" @click="addGroup" v-tooltip="t('object_editor.tt_groups')">
-            <img name="plusBtn" src="@/assets/plus.svg" />
+            <Svg name="plusBtn" :src="plusIcon"></Svg>
         </button>
     </div>
 </template>

@@ -2,6 +2,7 @@
 import HotkeyMap from '@/components/common/HotkeyMap';
 import ColorPicker from '@/components/common/ColorPicker.vue';
 import Tool from '@/components/common/Tool.vue';
+import Svg from '@/components/common/Svg.vue';
 
 import { computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -20,6 +21,7 @@ import circleIcon from '@/assets/circle.svg';
 import circleFilledIcon from '@/assets/circle_filled.svg';
 import eraserIcon from '@/assets/eraser.svg';
 import eyeDropperIcon from '@/assets/eye_dropper.svg';
+import arrowIcon from '@/assets/arrow_01.svg';
 
 const { t } = useI18n();
 const mainStore = useMainStore();
@@ -219,8 +221,8 @@ function toolChanged(newTool: Core.ART_TOOL_TYPE): void {
             </div>
             <div class="resize-btn-wrapper">
                 <button class="resize-btn" ref="collapse-button" @click="toggleOpen">
-                    <img v-show="isOpen" src="@/assets/arrow_01.svg" style="transform: rotate(-90deg)"/>
-                    <img v-show="!isOpen" src="@/assets/brush.svg" />
+                    <Svg v-show="isOpen" :src="arrowIcon" style="transform: rotate(-90deg)"></Svg>
+                    <Svg v-show="!isOpen" :src="brushIcon"></Svg>
                 </button>
             </div>
         </div>

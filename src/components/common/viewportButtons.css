@@ -2,8 +2,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 30pt;
-    height: 30pt;
+    width: 40px;
+    height: 40px;
     background: var(--button-norm);
     border: 3px solid var(--border);
     border-radius: 1000px;
@@ -24,10 +24,8 @@
 }
 
 .icon{
-    width: 20pt;
-    height: 20pt;
-    fill: red;
-    stroke: red;
+    width: 25px;
+    height: 25px;
 }
 
 .iconDisabled{

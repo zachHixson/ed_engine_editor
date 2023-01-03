@@ -18,6 +18,7 @@ export interface iValueChanged {
 <script setup lang="ts">
 import Node_Connection from '@/components/editor_logic/Node_Connection';
 import Decorator from '@/components/common/Decorator.vue';
+import Svg from '@/components/common/Svg.vue';
 import type Node from './Node';
 
 import { ref, computed, nextTick, onMounted } from 'vue';
@@ -55,13 +56,13 @@ const isConnected = computed(()=>(!!props.parentConnections.find(c => (
 )) && !!hasSize));
 const canConnect = computed(()=>!(isConnected.value && (isTrigger.value != props.isInput)));
 const required = computed(()=>!!props.socket.required);
-const iconMap = computed(()=>new Map<Core.Node_Enums.SOCKET_TYPE, string>([
+const iconMap = new Map<Core.Node_Enums.SOCKET_TYPE, string>([
     [Core.Node_Enums.SOCKET_TYPE.ANY, socketAnyIcon],
     [Core.Node_Enums.SOCKET_TYPE.NUMBER, socketNumberIcon],
     [Core.Node_Enums.SOCKET_TYPE.STRING, socketStringIcon],
     [Core.Node_Enums.SOCKET_TYPE.OBJECT, socketObjectIcon],
     [Core.Node_Enums.SOCKET_TYPE.BOOL, socketBoolIcon],
-]));
+]);
 const customStyles = computed(()=>{
     const width = props.socket.node.inputBoxWidth;
     return width ? `width: ${width}rem` : '';
@@ -240,13 +241,12 @@ defineExpose({socket: props.socket});
         <div
             v-if="!(isTrigger || hideSocket)"
             ref="socketConnectionRef"
-            width="20" height="20"
             class="socket_icon"
             :class="socket.disabled ? 'disabled' :''"
             @mousedown="mouseDown"
             @mouseenter="mouseEnter"
             @mouseleave="mouseLeave">
-            <img :src="iconMap.get(socket.type)" draggable="false"/>
+            <Svg class="socket_icon_img" :src="iconMap.get(socket.type)!"></Svg>
         </div>
         <div v-if="hideSocket" class="hidden-socket"></div>
         <svg
@@ -322,7 +322,7 @@ defineExpose({socket: props.socket});
     align-items: center;
 }
 
-.socket_icon > img {
+.socket_icon_img {
     width: 20px;
     height: auto;
     padding: 2px;

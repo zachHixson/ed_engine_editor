@@ -1,4 +1,6 @@
 <script lang="ts">
+import Svg from '@/components/common/Svg.vue';
+
 import type Core from '@/core';
 
 export interface iControl {
@@ -33,7 +35,7 @@ function onClick(): void {
         @click="onClick"
         :class="{controlSelected : isSelected}"
         v-tooltip="control.altText">
-        <img v-show="iconLoaded" class="icon" ref="iconImg" :src="props.control.icon" @error="iconLoaded = false"/>
+        <Svg v-show="iconLoaded" class="icon" ref="iconImg" :src="props.control.icon" @error="iconLoaded = false"></Svg>
         <div v-show="!iconLoaded" class="altText" ref="altText">
             {{control.altText}}
         </div>

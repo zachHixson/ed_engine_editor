@@ -4,6 +4,13 @@ const { Vector, Draw } = Core;
 
 const NO_SPRITE_PADDING = 0.75;
 
+interface iSvgIcons {
+    cameraIcon: HTMLCanvasElement,
+    noSpriteSVG: HTMLCanvasElement,
+    exitSVG: HTMLCanvasElement,
+    endSVG: HTMLCanvasElement
+}
+
 export default class Room_Edit_Renderer{
     showGrid: boolean = true;
     roomRef: Core.Room | null = null;
@@ -19,10 +26,11 @@ export default class Room_Edit_Renderer{
     mouseCell = new Vector(0, 0);
     enableCursor = false;
     navState: {[key: string]: any};
-    cameraIcon: HTMLImageElement;
-    noSpriteSVG: HTMLImageElement;
-    exitSVG: HTMLImageElement;
-    endSVG: HTMLImageElement;
+    mipMapLevel: number;
+    cameraIcon: MipMap;
+    noSpriteSVG: MipMap;
+    exitSVG: MipMap;
+    endSVG: MipMap;
 
     //data caches
     spriteCache = new Map<string, HTMLCanvasElement>();
@@ -30,18 +38,22 @@ export default class Room_Edit_Renderer{
     scaledCellWidth: number;
     halfCanvas = new Vector(0, 0);
     
-    constructor(element: HTMLCanvasElement, navState: object, svgIcons: {[key: string]: HTMLImageElement}){
+    constructor(element: HTMLCanvasElement, navState: object, svgIcons: iSvgIcons){
+        const MIN_MIPMAP_RES = 32;
+
         this.canvas = element;
         this.navState = navState;
-        this.cameraIcon = svgIcons.cameraIcon;
-        this.noSpriteSVG = svgIcons.noSpriteSVG;
-        this.exitSVG = svgIcons.exitSVG;
-        this.endSVG = svgIcons.endSVG;
+        this.cameraIcon = new MipMap(svgIcons.cameraIcon, MIN_MIPMAP_RES, true);
+        this.noSpriteSVG = new MipMap(svgIcons.noSpriteSVG, MIN_MIPMAP_RES, true);
+        this.exitSVG = new MipMap(svgIcons.exitSVG, MIN_MIPMAP_RES, true);
+        this.endSVG = new MipMap(svgIcons.endSVG, MIN_MIPMAP_RES, true);
 
         //cached data
         this.scaledCellWidth = this.CELL_PX_WIDTH * this.navState.zoomFac;
         this.recalcRoundedCanvas();
         this.recalcHalfCanvas();
+
+        this.mipMapLevel = this.cameraIcon.calcClosest(this.scaledCellWidth * devicePixelRatio);
     }
 
     get CELL_PX_WIDTH(){return 50};
@@ -100,6 +112,7 @@ export default class Room_Edit_Renderer{
 
     navChange(){
         this.scaledCellWidth = this.CELL_PX_WIDTH * this.navState.zoomFac;
+        this.mipMapLevel = this.cameraIcon.calcClosest(this.scaledCellWidth * devicePixelRatio);
         this.recalcRoundedCanvas();
         this.fullRedraw();
     }
@@ -108,6 +121,13 @@ export default class Room_Edit_Renderer{
         this._drawObjects();
         this._drawCursor();
         this._composite();
+    }
+
+    generateMipMaps(){
+        this.cameraIcon.generateMaps();
+        this.noSpriteSVG.generateMaps();
+        this.exitSVG.generateMaps();
+        this.endSVG.generateMaps();
     }
 
     bgColorChanged(){
@@ -236,7 +256,7 @@ export default class Room_Edit_Renderer{
             }
             else if (this.noSpriteSVG){
                 ctx = this.iconBuff.getContext('2d') as CanvasRenderingContext2D;
-                spriteBuff = this.noSpriteSVG;
+                spriteBuff = this.noSpriteSVG.get(this.mipMapLevel)!;
                 scaleFac = this.scaledCellWidth / spriteBuff.width;
                 scaleFac *= NO_SPRITE_PADDING;
                 offset = paddingOffset;
@@ -260,17 +280,17 @@ export default class Room_Edit_Renderer{
         if (this.roomRef){
             this.roomRef.exitsList.forEach((exit) => {
                 const pos = Vector.fromObject(exit.pos);
-                const scaleFac = this.scaledCellWidth / this.exitSVG.width;
+                const scaleFac = this.scaledCellWidth / this.mipMapLevel;
 
                 this.worldToScreenPos(pos);
                 ctx.translate(pos.x, pos.y);
                 ctx.scale(scaleFac, scaleFac);
 
                 if (exit.isEnding){
-                    ctx.drawImage(this.endSVG, 0, 0);
+                    ctx.drawImage(this.endSVG.get(this.mipMapLevel), 0, 0);
                 }
                 else{
-                    ctx.drawImage(this.exitSVG, 0, 0);
+                    ctx.drawImage(this.exitSVG.get(this.mipMapLevel), 0, 0);
                 }
                 
                 ctx.resetTransform();
@@ -286,12 +306,12 @@ export default class Room_Edit_Renderer{
             const cameraSize = this.roomRef.camera.size;
 
             //draw camera icon
-            const scaleFac = this.scaledCellWidth / this.cameraIcon.width;
+            const scaleFac = this.scaledCellWidth / this.mipMapLevel;
             let screenPos = cameraPos.clone().subtractScalar(8);
             screenPos = this.worldToScreenPos(screenPos);
             ctx.translate(screenPos.x, screenPos.y);
             ctx.scale(scaleFac, scaleFac);
-            ctx.drawImage(this.cameraIcon, 0, 0);
+            ctx.drawImage(this.cameraIcon.get(this.mipMapLevel), 0, 0);
             ctx.resetTransform();
 
             //draw camera bounds
@@ -416,5 +436,81 @@ export default class Room_Edit_Renderer{
         pt.add(this.halfCanvas);
 
         return pt;
+    }
+}
+
+class MipMap {
+    private _maps = new Map<number, HTMLCanvasElement>();
+    private _minRes: number;
+    private _maxRes: number;
+    private _minCanvas: HTMLCanvasElement;
+    private _maxCanvas: HTMLCanvasElement;
+
+    constructor(image: HTMLCanvasElement, minRes: number = 2, delayGeneration: boolean = false){
+        const startingDim = Math.min(image.width, image.height);
+
+        if (Math.log2(startingDim) % 1 != 0){
+            console.warn('Warning: Generating MipMaps from images that are not a power of 2 can cause problems');
+        }
+
+        this._minRes = minRes;
+        this._maxRes = startingDim;
+        this._maxCanvas = image;
+        this._maps.set(startingDim, image);
+
+        if (!delayGeneration){
+            this._generateMaps(image, minRes);
+        }
+
+        this._minCanvas = this._getMinCanvas();
+    }
+
+    generateMaps(): void {
+        this._generateMaps(this._maxCanvas, this._minRes);
+    }
+
+    private _generateMaps(image: HTMLCanvasElement, minRes: number): void {
+        const curDim = new Core.Vector(image.width, image.height).divideScalar(2);
+        const smallSide = Math.min(curDim.x, curDim.y);
+
+        if (smallSide >= minRes){
+            const newCanvas = Core.Draw.createCanvas(curDim.x, curDim.y);
+            const ctx = newCanvas.getContext('2d')!;
+
+            ctx.scale(0.5, 0.5);
+            ctx.drawImage(image, 0, 0, image.width, image.height);
+            this._maps.set(smallSide, newCanvas);
+            this._generateMaps(newCanvas, minRes);
+        }
+    }
+
+    private _getMinCanvas(): HTMLCanvasElement {
+        let lowest = this._maps.get(this._maxRes);
+
+        this._maps.forEach((canvas) => {
+            lowest = canvas;
+        });
+
+        return lowest!;
+    }
+
+    get(res: number): HTMLCanvasElement {
+        const mapGet = this._maps.get(res);
+
+        if (mapGet) return mapGet;
+
+        return res > this._maxRes ? this._maxCanvas : this._minCanvas;
+    }
+
+    calcClosest(res: number): number {
+        let closest = this._maxRes;
+
+        this._maps.forEach((canvas, dim) => {
+            if (dim < closest && dim > res){
+                closest = dim;
+            }
+        });
+
+        return closest;
     }
 }

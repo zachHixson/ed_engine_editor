@@ -7,14 +7,20 @@ import AnimFrame from './AnimFrame.vue';
 import AnimationPlayer from '@/components/common/AnimationPlayer.vue';
 import HotkeyMap from '@/components/common/HotkeyMap';
 import DragList from '@/components/common/DragList.vue';
+import Svg from '@/components/common/Svg.vue';
 
 import {ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useMainStore } from '@/stores/Main';
 import { useArtEditorStore } from '@/stores/ArtEditor';
 import { ArtMainEventBus } from './ArtMain.vue';
 import Core from '@/core';
+import arrowIcon from '@/assets/arrow_01.svg';
+import animationIcon from '@/assets/animation.svg';
+import plusIcon from '@/assets/plus.svg';
 
 
+const { t } = useI18n();
 const mainStore = useMainStore();
 const artEditorStore = useArtEditorStore();
 
@@ -194,8 +200,8 @@ function frameOrderChanged(event: {itemIdx: number, newIdx: number}): void {
     <div class="animPanel" :class="{animPanelClosed : !isOpen}">
         <div class="resizeBtnWrapper">
             <button ref="collapseBtn" class="resizeBtn" @click="toggleOpen">
-                <img v-show="isOpen" class="arrow" src="@/assets/arrow_01.svg" style="transform: rotate(90deg)"/>
-                <img v-show="!isOpen" class="arrow" src="@/assets/animation.svg"/>
+                <Svg v-show="isOpen" class="arrow" :src="arrowIcon" style="transform: rotate(90deg)"></Svg>
+                <Svg v-show="!isOpen" class="arrow" :src="animationIcon"></Svg>
             </button>
         </div>
         <div v-show="isOpen" ref="contents" class="panelContents">
@@ -224,8 +230,8 @@ function frameOrderChanged(event: {itemIdx: number, newIdx: number}): void {
                             @frameMoved="frameMoved"/>
                     </template>
                 </DragList>
-                <button class="addFrame" @click="addFrame()" v-tooltip="$t('art_editor.add_frame')">
-                    <img class="icon" src="@/assets/plus.svg"/>
+                <button class="addFrame" @click="addFrame()" v-tooltip="t('art_editor.add_frame')">
+                    <Svg class="icon" :src="plusIcon"></Svg>
                 </button>
             </div>
         </div>
@@ -296,6 +302,7 @@ function frameOrderChanged(event: {itemIdx: number, newIdx: number}): void {
     height: 25px;
     fill: var(--button-icon);
     stroke: var(--button-icon);
+    margin: auto;
 }
 
 .resizeBtnWrapper{

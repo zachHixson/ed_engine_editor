@@ -5,6 +5,7 @@ export const AssetBrowserEventBus = new Core.Event_Bus();
 <script setup lang="ts">
 import Asset from './Asset.vue';
 import DragList from '@/components/common/DragList.vue';
+import Svg from '@/components/common/Svg.vue';
 
 import { AppEventBus } from '@/App.vue';
 import { ref, computed, nextTick, onMounted } from 'vue';
@@ -18,6 +19,8 @@ import spriteIcon from '@/assets/sprite_icon.svg';
 import objectIcon from '@/assets/object_icon.svg';
 import logicIcon from '@/assets/logic.svg';
 import roomIcon from '@/assets/room_icon.svg';
+import arrowIcon from '@/assets/arrow_01.svg';
+import plusIcon from '@/assets/plus.svg';
 
 const { t } = useI18n();
 const assetBrowserStore = useAssetBrowserStore();
@@ -192,11 +195,11 @@ function orderChanged(event: iChangeEventProps): void {
                         v-for="category in categories"
                         :key="category.cat_ID">
                         <div class="cat_title">
-                            <img class="cat_icon" :src="category.icon"/>
+                            <Svg class="cat_icon" :src="category.icon"></Svg>
                             {{category.text}}
                         </div>
                         <button class="btn" @click="openCategory(category)">
-                            <img class="btn_icon" src="@/assets/arrow_01.svg" style="transform: rotate(90deg);"/>
+                            <Svg class="btn_icon" :src="arrowIcon" style="transform: rotate(90deg);"></Svg>
                         </button>
                     </div>
                 </div>
@@ -204,14 +207,14 @@ function orderChanged(event: iChangeEventProps): void {
                     <div class="assetListHeading">
                         <div class="leftHeading">
                             <button class="btn" @click="back">
-                                <img class="btn_icon" src="@/assets/arrow_01.svg" style="transform: rotate(-90deg);"/>
+                                <Svg class="btn_icon" :src="arrowIcon" style="transform: rotate(-90deg);"></Svg>
                             </button>
-                            <img class="assetHeadingLogo" :src="selected_category.icon"/>
+                            <Svg class="assetHeadingLogo" :src="selected_category.icon"></Svg>
                             {{selected_category.text}}
                         </div>
                         <div class="rightHeading">
                             <button class="addButton btn" @click="addAsset">
-                                <img class="addButton_icon" src="@/assets/plus.svg"/>
+                                <Svg class="addButton_icon" :src="plusIcon"></Svg>
                             </button>
                         </div>
                     </div>

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Svg from '@/components/common/Svg.vue';
+
 import { ref, computed } from 'vue';
 
 const props = defineProps<{
@@ -22,7 +24,7 @@ function click(event: MouseEvent): void {
 
 <template>
     <div class="tool" :class="{toolSelected : isSelected}" @click="click" v-tooltip="name">
-        <img v-show="iconLoaded" class="icon" ref="iconImg" :src="props.icon" @error="iconLoaded = false"/>
+        <Svg v-show="iconLoaded" class="icon" ref="iconImg" :src="props.icon" @error="iconLoaded = false"></Svg>
         <div v-show="!iconLoaded" class="altText" ref="altText">
             {{name}}
         </div>
@@ -62,7 +64,5 @@ function click(event: MouseEvent): void {
 .icon {
     width: 30px;
     height: 30px;
-    fill: var(--button-icon);
-    stroke: var(--button-icon);
 }
 </style>
