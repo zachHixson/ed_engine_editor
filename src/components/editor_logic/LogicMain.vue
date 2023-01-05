@@ -479,8 +479,8 @@ function clientToNavPos(pos: Core.Vector): Core.Vector {
 }
 
 function resize(): void {
-    const dim = new Vector(nodeViewportRef.value!.clientWidth, nodeViewportRef.value!.clientHeight);
-    LogicMainEventBus.emit('set-container-dimensions', dim);
+    const dim = {width: nodeViewportRef.value!.clientWidth, height: nodeViewportRef.value!.clientHeight};
+    LogicMainEventBus.emit('nav-set-container-dimensions', dim);
 }
 
 function createConnection(connectionObj: Node_Connection): void {
