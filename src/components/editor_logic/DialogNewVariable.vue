@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Decorator from '@/components/common/Decorator.vue';
+import Svg from '@/components/common/Svg.vue';
 
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -21,13 +21,15 @@ const props = defineProps<{
 
 const emit = defineEmits(['close']);
 
-const errorRef = ref<InstanceType<typeof Decorator>>();
-const warningRef = ref<InstanceType<typeof Decorator>>();
+const errorRef = ref<InstanceType<typeof Svg>>();
+const warningRef = ref<InstanceType<typeof Svg>>();
 
 const varName = ref('');
 const type = ref(Core.Node_Enums.SOCKET_TYPE.NUMBER);
 const isGlobal = ref(false);
 const isList = ref(false);
+const errorText = ref('');
+const warningText = ref('');
 
 const globalVariableMap = computed(()=>logicEditorStore.getGlobalVariableMap);
 const error = computed(()=>{
@@ -37,8 +39,8 @@ const error = computed(()=>{
     const containsSpace = /\s/.test(name);
     const isError = nameCollision || containsSpace;
 
-    nameCollision && errorRef.value!.setTooltipText(t('logic_editor.variable_name_collision'));
-    containsSpace && errorRef.value!.setTooltipText(t('logic_editor.variable_name_spaces'));
+    if (nameCollision) errorText.value = t('logic_editor.variable_name_collision');
+    if (containsSpace) errorText.value = t('logic_editor.variable_name_spaces');
 
     return isError;
 });
@@ -48,12 +50,12 @@ const warning = computed(()=>{
 
     if (!isGlobal.value && globalVariableMap.value.get(name)){
         shouldWarn = true;
-        warningRef.value!.setTooltipText(t('logic_editor.local_global_name_warning'));
+        warningText.value = t('logic_editor.local_global_name_warning');
     }
 
     if (name.length == CHAR_LIMIT){
         shouldWarn = true;
-        warningRef.value!.setTooltipText(t('logic_editor.variable_length_warning', {limit: CHAR_LIMIT}));
+        warningText.value = t('logic_editor.variable_length_warning', {limit: CHAR_LIMIT});
     }
 
     return shouldWarn && !error.value;
@@ -95,8 +97,8 @@ function close(): void {
                     <label for="name">Name: </label>
                     <input id="name" type="text" v-model="varName" :maxlength="CHAR_LIMIT" autocomplete="off"/>
                     <div class="decorator-wrapper">
-                        <Decorator v-show="error" ref="errorRef" class="decorator" :src="errorIcon" />
-                        <Decorator v-show="warning" ref="warningRef" class="decorator" :src="warningIcon" />
+                        <Svg v-show="error" ref="errorRef" class="decorator" :src="errorIcon" v-tooltip="()=>errorText"></Svg>
+                        <Svg v-show="warning" ref="warningRef" class="decorator" :src="warningIcon" v-tooltip="()=>warningText"></Svg>
                     </div>
                 </div>
                 <div class="control">

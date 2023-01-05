@@ -55,9 +55,12 @@ export const vInputActive = {
 export const vTooltip = {
     beforeMount: function(el: ExpandedEl, binding: DirectiveBinding){
         el.mouseOverHandler = function(){
+            const isGetter = typeof binding.value == 'function';
+            const value = isGetter ? binding.value() : binding.value;
+
             TooltipEventBus.emit('activate-tooltip', {
                 el,
-                text: binding.value,
+                text: value,
             })
         };
         el.mouseOutHandler = function(){

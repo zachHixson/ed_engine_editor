@@ -17,7 +17,6 @@ export interface iValueChanged {
 
 <script setup lang="ts">
 import Node_Connection from '@/components/editor_logic/Node_Connection';
-import Decorator from '@/components/common/Decorator.vue';
 import Svg from '@/components/common/Svg.vue';
 import type Node from './Node';
 
@@ -47,7 +46,9 @@ const emit = defineEmits(['on-input', 'value-changed', 'mouse-down', 'socket-ove
 const boolCheckboxRef = ref<HTMLInputElement>();
 const socketConnectionRef = ref<HTMLDivElement>();
 const hasSize = ref(false);
+const forceUpdateKey = ref(0);
 
+const socketType = computed(()=>props.socket.type);
 const showLabel = computed(()=>props.socket.id.charAt(0) != '_');
 const hideSocket = computed(()=>props.socket.hideSocket);
 const hideInput = computed(()=>props.socket.hideInput);
@@ -69,6 +70,7 @@ const customStyles = computed(()=>{
     const width = props.socket.node.inputBoxWidth;
     return width ? `width: ${width}rem` : '';
 });
+const decoratorIcon = computed(()=>props.socket.decoratorIcon);
 const decoratorIconPath = computed(()=>new URL(`../../assets/${props.socket.decoratorIcon}.svg`, import.meta.url).href);
 
 onMounted(()=>{
@@ -83,13 +85,19 @@ onMounted(()=>{
     });
 });
 
-function forceSocketUpdate(): void {
-    nextTick(()=>{
-        props.socket.value = props.socket.value;
-    });
+function forceSocketUpdate(socketId: string): void {
+    if (socketId == props.socket.id){
+        forceUpdateKey.value++;
+    }
 }
 
 function onInput(event: InputEvent): void {
+    const target = event.target as HTMLInputElement;
+    
+    if (target.type != 'checkbox') {
+        props.socket.value = target.value;
+    }
+
     emit('on-input', event);
 }
 
@@ -185,20 +193,20 @@ defineExpose({socket: props.socket});
 
 <template>
     <div class="dataSocket" :class="isInput ? 'isInput' : ''">
-        <div v-if="socket.enableDecorators" class="decorator-wrapper">
-            <Decorator
-                v-if="socket.decoratorIcon"
+        <div v-if="socket.enableDecorators" class="decorator-wrapper" :key="forceUpdateKey">
+            <Svg
+                v-if="!!decoratorIcon"
                 class="decorator"
                 :src="decoratorIconPath"
-                :tooltipText="te(socket.decoratorText!) ? t(socket.decoratorText!, socket.decoratorTextVars || {}): ''"/>
+                v-tooltip="te(socket.decoratorText!) ? t(socket.decoratorText!, socket.decoratorTextVars || {}): ''"></Svg>
         </div>
-        <div class="name-input-wrapper" :style="isInput && !socket.flipInput ? 'flex-direction: row-reverse;':''">
+        <div class="name-input-wrapper" :style="isInput && !socket.flipInput ? 'flex-direction: row-reverse;':''" :key="forceUpdateKey">
             <div v-if="showLabel" class="socket_name" :class="socket.hideLabel ? 'invisible':''">
                 <div>{{t('node.' + socket.id)}}</div>
             </div>
             <div v-if="isInput && !isConnected && !hideInput" class="inputBox">
                 <input
-                    v-if="socket.type == Core.Node_Enums.SOCKET_TYPE.NUMBER"
+                    v-if="socketType == Core.Node_Enums.SOCKET_TYPE.NUMBER"
                     type="number"
                     :style="customStyles"
                     :value="getValue()"
@@ -207,7 +215,7 @@ defineExpose({socket: props.socket});
                     :disabled="socket.disabled"
                     v-input-active/>
                 <input
-                    v-if="socket.type == Core.Node_Enums.SOCKET_TYPE.STRING"
+                    v-if="socketType == Core.Node_Enums.SOCKET_TYPE.STRING"
                     name="textInput"
                     type="text"
                     :style="customStyles"
@@ -219,13 +227,13 @@ defineExpose({socket: props.socket});
                     v-input-active
                     v-tooltip="socket.disabled && socket.value.length > 8 ? socket.value : ''" />
                 <div
-                    v-if="socket.type == Core.Node_Enums.SOCKET_TYPE.OBJECT"
+                    v-if="socketType == Core.Node_Enums.SOCKET_TYPE.OBJECT"
                     class="selfBox"
                     :style="customStyles">
                         {{t('logic_editor.self')}}
                 </div>
                 <input
-                    v-if="socket.type == Core.Node_Enums.SOCKET_TYPE.BOOL"
+                    v-if="socketType == Core.Node_Enums.SOCKET_TYPE.BOOL"
                     type="checkbox"
                     :style="customStyles"
                     :checked="getValue()"
@@ -235,7 +243,7 @@ defineExpose({socket: props.socket});
                     ref="boolCheckboxRef"/>
             </div>
         </div>
-        <div v-if="socket.type == Core.Node_Enums.SOCKET_TYPE.INFO && socket.value" class="infoBox">
+        <div v-if="socketType == Core.Node_Enums.SOCKET_TYPE.INFO && socket.value" class="infoBox" :key="forceUpdateKey">
             <div v-html="t(socket.value.titleId)" class="infoTitle"></div>
             <div>{{te(socket.value.data) && socket.value.translate ? t(socket.value.data) : socket.value.data}}</div>
         </div>
@@ -244,6 +252,7 @@ defineExpose({socket: props.socket});
             ref="socketConnectionRef"
             class="socket_icon"
             :class="socket.disabled ? 'disabled' :''"
+            :key="forceUpdateKey"
             @mousedown="mouseDown"
             @mouseenter="mouseEnter"
             @mouseleave="mouseLeave">
@@ -256,6 +265,7 @@ defineExpose({socket: props.socket});
             width="20"
             height="20"
             class="trigger_icon"
+            :key="forceUpdateKey"
             @mousedown="mouseDown"
             @mouseenter="mouseEnter"
             @mouseleave="mouseLeave">

@@ -8,10 +8,9 @@ export interface iRelinkInfo {
 <script setup lang="ts">
 import Socket from './Socket.vue';
 import Widget from './Widget.vue';
-import Decorator from '@/components/common/Decorator.vue';
 import Svg from '@/components/common/Svg.vue';
 
-import { ref, computed, nextTick, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
+import { ref, reactive, computed, nextTick, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type Node from './Node';
 import type Node_Connection from './Node_Connection';
@@ -45,6 +44,7 @@ const inTriggerRefs = ref<InstanceType<typeof Socket>[]>([]);
 const outTriggerRefs = ref<InstanceType<typeof Socket>[]>([]);
 const inputRefs = ref<InstanceType<typeof Socket>[]>([]);
 const outputRefs = ref<InstanceType<typeof Socket>[]>([]);
+const nodeObjRef = reactive(props.nodeObj);
 
 const dragOffset = new Vector();
 const inTriggerList = ref<Core.iEditorNodeInTrigger[]>([]);
@@ -52,6 +52,7 @@ const outTriggerList = ref<{id: string, node: Core.iEditorNode}[]>([]);
 const inputList = ref<Core.iEditorNodeInput[]>([]);
 const outputList = ref<Core.iEditorNodeOutput[]>([]);
 const isDragging = ref(false);
+const forceUpdateKey = ref(0);
 
 const widgetData = computed(()=>props.nodeObj.widgetData);
 const showTriggers = computed(()=>inTriggerList.value.length > 0 || outTriggerList.value.length > 0);
@@ -177,6 +178,7 @@ function socketValueChanged(event: iValueChanged): void {
 
 function onInput(event: InputEvent): void {
     props.nodeObj.onInput && props.nodeObj.onInput(event);
+    forceUpdate();
 }
 
 function updateConnections(): void {
@@ -186,9 +188,7 @@ function updateConnections(): void {
 }
 
 function forceUpdate(): void {
-    //this is a snub left during vue 3 upgrade.
-    //vue 3 says it shouldn't need forceUpdate anymore, so if something breaks that leads to this function
-    //we'll know if they were telling the truth or not.
+    forceUpdateKey.value++;
 }
 
 function getRelinkInfo(): iRelinkInfo {
@@ -213,18 +213,20 @@ defineExpose({getRelinkInfo});
 </script>
 
 <template>
-    <div ref="rootRef" class="node" :style="isSelected ? 'border-color: var(--button-norm)' : ''"
+    <div ref="rootRef"
+        class="node"
+        :style="isSelected ? 'border-color: var(--button-norm)' : ''"
         @click="emit('node-clicked', {nodeObj, event: $event})"
         @mousedown="mouseDown">
         <div class="heading" :class="categoryClass">
             <div v-if="nodeObj.isEvent" class="node-icon"><Svg :src="eventIcon"></Svg></div>
             <div>{{t('node.' + nodeObj.templateId)}}</div>
-            <div class="decorator-wrapper">
-                <Decorator
-                    v-if="nodeObj.decoratorIcon"
+            <div class="decorator-wrapper" :key="forceUpdateKey">
+                <Svg
+                    v-if="!!nodeObjRef.decoratorIcon"
                     class="decorator"
                     :src="decoratorIconPath"
-                    :tooltipText="te(nodeObj.decoratorText!) ? t(nodeObj.decoratorText!, nodeObj.decoratorTextVars || {}): ''"/>
+                    v-tooltip="te(nodeObj.decoratorText!) ? t(nodeObj.decoratorText!, nodeObj.decoratorTextVars || {}): ''"></Svg>
             </div>
         </div>
         <div v-if="!!nodeObj.widget" class="widgetWrapper">

@@ -30,7 +30,7 @@ export function EventListenerMixin<T extends Constructor>(superclass: T){
         }
         
         emit(name: string, parameters?: any){
-            const lName = name.toLocaleLowerCase();
+            const lName = name.toLowerCase();
             const callbackList = this.events.get(lName);
         
             callbackList?.forEach(({callback, options}) => {

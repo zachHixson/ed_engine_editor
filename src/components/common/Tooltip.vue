@@ -114,7 +114,7 @@ function getInvertedState(el: HTMLDivElement){
     position: absolute;
     flex-direction: column;
     pointer-events: none;
-    z-index: 1000;
+    z-index: 99999;
 }
 
 .tooltip > *{

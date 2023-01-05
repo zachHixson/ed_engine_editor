@@ -170,13 +170,13 @@ export default [
             determineConnected.call(this);
             this.method('validate');
         },
-        onNewVariable(){
+        onNewVariable(this: iEditorNode){
             this.method('validate');
-            this.dispatchEvent(new CustomEvent('forceUpdate'));
+            this.emit('forceUpdate');
         },
         onNewConnection: determineConnected,
         onRemoveConnection: determineConnected,
-        onBeforeDelete(){
+        onBeforeDelete(this: iEditorNode){
             document.removeEventListener('onNewVariable', this.onNewVariable as EventListener);
         },
         methods: {
@@ -322,5 +322,5 @@ function validate(this: iEditorNode, textbox: HTMLInputElement){
     }
 
     this.dataCache.set('isValid', isValid);
-    this.emit('socketsChanged');
+    this.emit('forceSocketUpdate', 'data');
 }
