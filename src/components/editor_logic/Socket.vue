@@ -30,6 +30,7 @@ import socketStringIcon from '@/assets/socket_string.svg';
 import socketObjectIcon from '@/assets/socket_object.svg';
 import socketBoolIcon from '@/assets/socket_bool.svg';
 import type Logic from './Logic';
+import decoratorMap from './decoratorMap';
 
 const { t, te } = useI18n();
 const assetBrowserStore = useAssetBrowserStore();
@@ -81,8 +82,10 @@ const customStyles = computed(()=>{
     const width = props.socket.node.inputBoxWidth;
     return width ? `width: ${width}rem` : '';
 });
-const decoratorIcon = computed(()=>props.socket.decoratorIcon);
-const decoratorIconPath = computed(()=>new URL(`../../assets/${props.socket.decoratorIcon}.svg`, import.meta.url).href);
+const decoratorIcon = computed(()=>{
+    return props.socket.decoratorIcon
+});
+const decoratorIconPath = computed(()=>decoratorMap.get(decoratorIcon.value!)!);
 
 onMounted(()=>{
     props.socket.node.addEventListener('force-socket-update', forceSocketUpdate);

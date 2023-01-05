@@ -15,6 +15,7 @@ import { useI18n } from 'vue-i18n';
 import type Node from './Node';
 import type Node_Connection from './Node_Connection';
 import type { iHoverSocket, iValueChanged } from './Socket.vue';
+import decoratorMap from './decoratorMap';
 import Core from '@/core';
 
 import eventIcon from '@/assets/event.svg';
@@ -68,7 +69,7 @@ const categoryClass = computed(()=>{
 
     return 'category-default';
 });
-const decoratorIconPath = computed(()=>new URL(`../../assets/${props.nodeObj.decoratorIcon}.svg`, import.meta.url).href);
+const decoratorIconPath = computed(()=>decoratorMap.get(props.nodeObj.decoratorIcon!)!);
 
 onBeforeMount(()=>{
     updateAllSockets();
