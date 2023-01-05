@@ -42,6 +42,7 @@ function updateAfterDeletion(): void {
 
 function newProject(): void {
     mainStore.newProject();
+    resetUI();
 }
 
 function openProject(data: any): void {

@@ -70,8 +70,10 @@ export const useMainStore = defineStore({
             gameDataStore.setSpriteList([]);
             gameDataStore.setObjectList([]);
             gameDataStore.setRoomList([]);
+            gameDataStore.setLogicList([]);
             Core.ID_Generator.reset();
             gameDataStore.addAsset(Core.CATEGORY_ID.ROOM);
+            assetBrowserStore.deselectAllAssets();
             assetBrowserStore.selectRoom(gameDataStore.getAllRooms[0]);
         },
         loadSaveData(projString: string){
