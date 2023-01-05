@@ -32,7 +32,7 @@ export const HTMLTemplate = \`
 ${templateFile}\`;
 
 export const {Engine, Core} = (()=>{
-    eval(EngineRawText);
+    eval?.(EngineRawText);
     const {Engine, Core} = window.Exports;
     delete window.Exports;
     return {Engine, Core};

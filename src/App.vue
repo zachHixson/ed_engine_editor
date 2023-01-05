@@ -16,7 +16,7 @@ import {saveAs} from 'file-saver';
 import { useMainStore, PLAY_STATE } from './stores/Main';
 import { useGameDataStore } from './stores/GameData';
 import { useAssetBrowserStore } from './stores/AssetBrowser';
-import Core, { HTMLTemplate } from '@/core';
+import Core, { HTMLTemplate, EngineRawText } from '@/core';
 
 //stores
 const mainStore = useMainStore();
@@ -55,14 +55,13 @@ function saveProject(): void {
 }
 
 function packageGame(): void {
-    let projectName = mainStore.getProjectName;
-    let engine = (document.getElementById('engine') as HTMLElement).innerHTML;
-    let gameData = mainStore.getSaveData;
-    let compiled = HTMLTemplate
+    const projectName = mainStore.getProjectName;
+    const gameData = mainStore.getSaveData;
+    const compiled = HTMLTemplate
         .replace('[title]', projectName)
-        .replace('[engine]', engine)
+        .replace('[engine]', EngineRawText)
         .replace('[gameData]', gameData);
-    let blob = new Blob([compiled]);
+    const blob = new Blob([compiled]);
     saveAs(blob, `${projectName}.html`);
 }
 
