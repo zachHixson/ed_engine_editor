@@ -1,4 +1,13 @@
-import { iEngineInput, iEngineLogic, iEngineNode, iNodeTemplate, Object_Instance, convertSocketType } from "@engine/core/core";
+import {
+    iEngineInput,
+    iEngineLogic,
+    iEngineNode,
+    iNodeTemplate,
+    Object_Instance,
+    convertSocketType,
+    NODE_MAP,
+    iNodeSaveData
+} from "@engine/core/core";
 import { iAnyObj } from "./core/interfaces";
 import Engine from "./Engine";
 import Logic from "./Logic";
@@ -22,14 +31,18 @@ export default class Node implements iEngineNode {
     execute: ((...args: any)=>void) | null = null;
     methods: Map<string, (...args: any)=>any> = new Map();
 
+    constructor(nodeData: iNodeSaveData, logic: Logic, engine: Engine){
+        const template = NODE_MAP.get(nodeData.templateId)!;
 
-    constructor(template: iNodeTemplate, id: number, logic: Logic, engine: Engine){
+        template.beforeLoad?.call(this, nodeData);
+        
         this.template = template;
-        this.nodeId = id;
+        this.nodeId = nodeData.nodeId;
         this.parentScript = logic;
         this.engine = engine;
         this.isEvent = template.isEvent ?? false;
-        this._stackTrace = {parentScriptId: this.parentScript.id, nodeId: id};
+        this.widgetData = nodeData.widgetData ? JSON.parse(nodeData.widgetData) : null;
+        this._stackTrace = {parentScriptId: this.parentScript.id, nodeId: this.nodeId};
 
         template.inTriggers?.forEach(trigger => {
             const {execute} = trigger;
@@ -66,6 +79,10 @@ export default class Node implements iEngineNode {
             });
         })
 
+        nodeData.inputs.forEach(srcInput => {
+            this.inputs.get(srcInput.id)!.value = srcInput.value;
+        });
+
         if (template.outTriggers && template.outTriggers.length > 0){
             this.defaultTriggerId = template.outTriggers[0];
         }
@@ -78,6 +95,7 @@ export default class Node implements iEngineNode {
             this.methods.set(method, template.methods[method]);
         }
 
+        this.template.afterLoad?.call(this);
         this.template.init?.call(this);
     }
 

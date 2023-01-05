@@ -7,10 +7,10 @@ import type Node_API from './Node_API';
 const { Vector } = Core;
 const { t } = i18n.global;
 
-interface iGraph {
+interface iGraphSaveData {
     id: number;
     name: string;
-    navState: Core.iNavState;
+    navState: Core.iNavSaveData;
 }
 
 export default class Logic extends Core.Asset_Base implements Core.iEditorLogic {
@@ -20,7 +20,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
 
     id: number;
     name: string;
-    graphs: iGraph[] = [];
+    graphs: Graph[] = [];
     nodes: Node[] = [];
     connections: Node_Connection[] = [];
     selectedGraphId: number = 0;
@@ -37,7 +37,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
     get category_ID(){return Core.CATEGORY_ID.LOGIC}
     get nextGraphId(){return this._nextGraphId++}
     get nextNodeId(){return this._nextNodeId++}
-    get graphNavState(){
+    get graphNavState(): Core.NavState {
         return this.graphs.find(graph => graph.id == this.selectedGraphId)!.navState;
     }
     get defaultNavState(){return {
@@ -45,52 +45,45 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
         zoomFac: 1,
     }}
 
-    set graphNavState(newState: Core.iNavState){
-        this.graphs[this.selectedGraphId].navState = newState!;
+    set graphNavState(newState: Core.NavState | Core.iNavState | Core.iNavSaveData){
+        this.graphs[this.selectedGraphId].navState.copy(newState);
     }
 
-    toSaveData(){
-        const logic = {
-            id: this.id,
-            name: this.name,
+    toSaveData(): Core.iLogicSaveData {
+        return {
+            ...this.getBaseAssetData(),
             selectedGraphId: this.selectedGraphId,
-            graphs: this.graphs,
+            graphs: this.graphs.map(g => g.toSaveData()),
             nodes: this.nodes.map(n => n.toSaveData()),
             connections: this.connections.map(c => c.toSaveData()),
-        }
-
-        return logic;
+        };
     }
 
-    fromSaveData(data: Core.iAnyObj, nodeAPI: Node_API){
-        const nodeMap: {[key: string]: Node} = {};
+    static fromSaveData(data: Core.iLogicSaveData, nodeAPI: Node_API): Logic {
+        return new Logic()._loadSaveData(data, nodeAPI);
+    }
 
-        Object.assign(this, data);
+    private _loadSaveData(data: Core.iLogicSaveData, nodeAPI: Node_API): Logic {
+        const nodeMap = new Map<number, Node>();
 
-        this.graphs = this.graphs.map(graph => {
+        this.loadBaseAssetData(data);
+
+        this.graphs = data.graphs.map(graph => {
             this._nextGraphId = Math.max(this._nextGraphId, graph.id + 1);
-            graph.navState.offset = Vector.fromObject(this.graphNavState.offset);
-            return graph;
+            return Graph.fromSaveData(graph);
         });
-        this.nodes = this.nodes.map(node => {
-            this._nextNodeId = Math.max(this._nextNodeId, node.nodeId + 1);
-            return new Node(
-                Core.NODE_MAP[node.templateId],
-                node.nodeId,
-                Vector.fromObject(node.pos),
-                this,
-                node.graphId,
-                nodeAPI
-            ).fromSaveData(node);
+        this.nodes = data.nodes.map(nodeData => {
+            this._nextNodeId = Math.max(this._nextNodeId, nodeData.nodeId + 1);
+            return Node.fromSaveData(nodeData, this, nodeAPI);
         });
 
         this.nodes.forEach(node => {
-            nodeMap[node.nodeId] = node;
+            nodeMap.set(node.nodeId, node);
         });
 
-        this.connections = this.connections.map(connection => {
-            this._nextConnectionId = Math.max(this._nextConnectionId, connection.id + 1);
-            return new Node_Connection(connection).fromSaveData(connection, nodeMap);
+        this.connections = data.connections.map(connectionData => {
+            this._nextConnectionId = Math.max(this._nextConnectionId, connectionData.id + 1);
+            return Node_Connection.fromSaveData(connectionData, nodeMap);
         });
 
         //dispatch node event
@@ -103,11 +96,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
 
     addGraph(){
         const id = this.nextGraphId;
-        const newGraph = {
-            id,
-            name: t('logic_editor.graph_prefix') + id,
-            navState: this.defaultNavState
-        };
+        const newGraph = new Graph(id);
 
         this.graphs.push(newGraph);
 
@@ -147,8 +136,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
     }
 
     addNode(templateId: string, pos: Core.Vector, nodeAPI: Node_API, nodeRef?: Node): Node {
-        const nodeTemplate = Core.NODE_MAP[templateId];
-        const newNode = nodeRef ?? new Node(nodeTemplate, this.nextNodeId, pos, this, this.selectedGraphId, nodeAPI);
+        const newNode = nodeRef ?? new Node(templateId, this.nextNodeId, pos, this, this.selectedGraphId, nodeAPI);
         
         newNode.onScriptAdd && newNode.onScriptAdd();
         this.nodes.push(newNode);
@@ -206,3 +194,30 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
         this.localVariables.delete(name);
     }
 };
+
+class Graph {
+    id: number;
+    name: string;
+    navState: Core.NavState;
+
+    constructor(id: number){
+        this.id = id;
+        this.name =  t('logic_editor.graph_prefix') + this.id;
+        this.navState =  new Core.NavState();
+    }
+
+    toSaveData(): iGraphSaveData {
+        return {
+            id: this.id,
+            name: this.name,
+            navState: Core.getNavSaveData(this.navState),
+        }
+    }
+
+    static fromSaveData(data: iGraphSaveData): Graph {
+        const newGraph = new Graph(data.id);
+        newGraph.name = data.name;
+        newGraph.navState = Core.parseNavSaveData(data.navState);
+        return newGraph;
+    }
+}

@@ -1,19 +1,32 @@
-import { Asset_Base } from './Asset_Base';
-import { Camera } from './Camera';
+import { Asset_Base, iAssetSaveData } from './Asset_Base';
+import { NavState, getNavSaveData, parseNavSaveData, iNavSaveData } from '../NavState';
+import { Camera, iCameraSaveData } from './Camera';
 import { Spacial_Collection } from '../Spacial_Collection';
 import { CATEGORY_ID } from '../Enums';
 import { Color } from '../Draw';
-import { Instance_Base } from './Instance_Base';
-import { Exit } from './Exit';
-import { iAnyObj } from '../interfaces';
+import { Exit, iExitSaveData } from './Exit';
 import { Game_Object } from './Game_Object';
-import { Object_Instance } from './Object_Instance';
+import { iObjectInstanceSaveData, Object_Instance } from './Object_Instance';
 import { Vector } from '../Vector';
+
+export interface iRoomSaveData extends iAssetSaveData {
+    _curInstId: number,
+    _curExitId: number,
+    cameraProps: iCameraSaveData;
+    instancesSerial: iObjectInstanceSaveData[],
+    exitsSerial: iExitSaveData[],
+    bgColor: string,
+    persist: boolean,
+    useGravity: boolean,
+    gravity: number,
+    navState: iNavSaveData,
+}
 
 export class Room extends Asset_Base {
     private _curInstId: number = 0;
     private _curExitId: number = 0;
 
+    navState: NavState = new NavState();
     camera: Camera = new Camera();
     instances: Spacial_Collection<Object_Instance> = new Spacial_Collection(2000, 64);
     exits: Spacial_Collection<Exit> = new Spacial_Collection(2000, 64);
@@ -37,45 +50,51 @@ export class Room extends Asset_Base {
         return clone;
     }
 
-    toSaveData(): iAnyObj {
-        let sanitized = Object.assign({}, this) as any;
-        
-        sanitized.cameraProps = Object.assign({}, this.camera);
-        sanitized.instancesSerial = this.instances.toSaveData();
-        sanitized.exitsSerial = this.exits.toSaveData();
-        sanitized.bgColor = this.bgColor.toHex().replace('#', '');
-
-        delete sanitized.camera;
-        delete sanitized.instances;
-        delete sanitized.exits;
-
-        return sanitized;
+    toSaveData(): iRoomSaveData {
+        return {
+            ...this.getBaseAssetData(),
+            _curInstId: this._curInstId,
+            _curExitId: this._curExitId,
+            cameraProps: this.camera.toSaveData(),
+            instancesSerial: this.instances.toSaveData() as iObjectInstanceSaveData[],
+            exitsSerial: this.exits.toSaveData() as iExitSaveData[],
+            bgColor: this.bgColor.toHex().replace('#', ''),
+            persist: this.persist,
+            useGravity: this.useGravity,
+            gravity: this.gravity,
+            navState: getNavSaveData(this.navState),
+        } satisfies iRoomSaveData;
     }
 
-    fromSaveData(room: iAnyObj, objectList: Game_Object[]){
-        this.navState = this.parseNavData(room.navState);
-        this.camera = new Camera().fromSaveData(room.cameraProps);
-        this.bgColor = new Color().fromHex(room.bgColor);
+    static fromSaveData(data: iRoomSaveData, objectMap: Map<number, Game_Object>): Room {
+        return new Room()._loadSaveData(data, objectMap);
+    }
 
-        delete room.cameraProps;
-        delete room.instancesSerial;
-        delete room.exitsSerial;
+    private _loadSaveData(data: iRoomSaveData, objectMap: Map<number, Game_Object>){
+        const instancesSerial = data.instancesSerial;
+        const exitsSerial = data.exitsSerial;
 
-        Object.assign(this, room);
+        this.loadBaseAssetData(data);
+        this._curInstId = data._curInstId;
+        this._curExitId = data._curExitId;
+        this.camera = Camera.fromSaveData(data.cameraProps);
+        this.navState = parseNavSaveData(data.navState);
+        this.bgColor = new Color().fromHex(data.bgColor);
+        this.persist = data.persist;
+        this.useGravity = data.useGravity;
+        this.gravity = data.gravity;
 
-        for (let i = 0; i < room.instancesSerial.length; i++){
-            const curInstance = room.instancesSerial[i];
-            const objRef = objectList.find(o => o.id == curInstance.objId)!;
-            const newInstance = new Object_Instance(curInstance.id, Vector.fromObject(curInstance.pos), objRef)
-                .fromSaveData(curInstance);
+        for (let i = 0; i < instancesSerial.length; i++){
+            const newInstance = Object_Instance.fromSaveData(instancesSerial[i], objectMap);
             
             this.addInstance(newInstance)
             this._curInstId = Math.max(newInstance.id + 1, this._curInstId);
         }
 
-        for (let i = 0; i < room.exitsSerial.length; i++){
-            let curExitData = room.exitsSerial[i];
-            let newExit = new Exit(curExitData.id).fromSaveData(curExitData);
+        for (let i = 0; i < exitsSerial.length; i++){
+            const curExitData = exitsSerial[i];
+            const newExit = Exit.fromSaveData(curExitData);
+
             this._curExitId = Math.max(newExit.id + 1, this._curExitId);
             this.exits.add(newExit);
         }

@@ -1,15 +1,16 @@
 import Core from '@/core';
+import MipMap from './MipMap';
+import svgToCanvas from '@/components/common/svgToCanvas';
+
+import cameraLocIconRaw from '@/assets/camera_location.svg?raw';
+import objectIconRaw from '@/assets/object_icon.svg?raw';
+import exitIconRaw from '@/assets/exit.svg?raw';
+import endIconRaw from '@/assets/end.svg?raw';
 
 const { Vector, Draw } = Core;
 
-const NO_SPRITE_PADDING = 0.75;
-
-interface iSvgIcons {
-    cameraIcon: HTMLCanvasElement,
-    noSpriteSVG: HTMLCanvasElement,
-    exitSVG: HTMLCanvasElement,
-    endSVG: HTMLCanvasElement
-}
+const NO_SPRITE_PADDING = 0.85;
+let iconsLoaded = false;
 
 export default class Room_Edit_Renderer{
     showGrid: boolean = true;
@@ -27,10 +28,10 @@ export default class Room_Edit_Renderer{
     enableCursor = false;
     navState: {[key: string]: any};
     mipMapLevel: number;
-    cameraIcon: MipMap;
-    noSpriteSVG: MipMap;
-    exitSVG: MipMap;
-    endSVG: MipMap;
+    cameraIcon: MipMap = icons.cameraIcon;
+    noSpriteSVG: MipMap = icons.noSpriteSVG;
+    exitSVG: MipMap = icons.exitSVG;
+    endSVG: MipMap = icons.endSVG;
 
     //data caches
     spriteCache = new Map<string, HTMLCanvasElement>();
@@ -38,22 +39,24 @@ export default class Room_Edit_Renderer{
     scaledCellWidth: number;
     halfCanvas = new Vector(0, 0);
     
-    constructor(element: HTMLCanvasElement, navState: object, svgIcons: iSvgIcons){
-        const MIN_MIPMAP_RES = 32;
-
+    constructor(element: HTMLCanvasElement, navState: object){
         this.canvas = element;
         this.navState = navState;
-        this.cameraIcon = new MipMap(svgIcons.cameraIcon, MIN_MIPMAP_RES, true);
-        this.noSpriteSVG = new MipMap(svgIcons.noSpriteSVG, MIN_MIPMAP_RES, true);
-        this.exitSVG = new MipMap(svgIcons.exitSVG, MIN_MIPMAP_RES, true);
-        this.endSVG = new MipMap(svgIcons.endSVG, MIN_MIPMAP_RES, true);
 
         //cached data
         this.scaledCellWidth = this.CELL_PX_WIDTH * this.navState.zoomFac;
         this.recalcRoundedCanvas();
         this.recalcHalfCanvas();
 
-        this.mipMapLevel = this.cameraIcon.calcClosest(this.scaledCellWidth * devicePixelRatio);
+        this.mipMapLevel = this.cameraIcon.calcClosest(0);
+
+        //bind one time icon load event
+        if (!iconsLoaded){
+            document.addEventListener('icons-loaded', ()=>{
+                this.mipMapLevel = this.cameraIcon.calcClosest(this.scaledCellWidth * devicePixelRatio);
+                this.fullRedraw();
+            }, {once: true});
+        }
     }
 
     get CELL_PX_WIDTH(){return 50};
@@ -439,78 +442,41 @@ export default class Room_Edit_Renderer{
     }
 }
 
-class MipMap {
-    private _maps = new Map<number, HTMLCanvasElement>();
-    private _minRes: number;
-    private _maxRes: number;
-    private _minCanvas: HTMLCanvasElement;
-    private _maxCanvas: HTMLCanvasElement;
+const icons = (()=>{
+    const MAX_MIPMAP_RES = 128;
+    const MIN_MIPMAP_RES = 32;
+    let iconsLoading = 0;
 
-    constructor(image: HTMLCanvasElement, minRes: number = 2, delayGeneration: boolean = false){
-        const startingDim = Math.min(image.width, image.height);
-
-        if (Math.log2(startingDim) % 1 != 0){
-            console.warn('Warning: Generating MipMaps from images that are not a power of 2 can cause problems');
+    const getMipMap = (iconRaw: string, allLoadCallback: ()=>void)=>{
+        iconsLoading++;
+        const mipMap: {[key: string]: MipMap | null} = {
+            value: null
         }
 
-        this._minRes = minRes;
-        this._maxRes = startingDim;
-        this._maxCanvas = image;
-        this._maps.set(startingDim, image);
+        const iconLoadingCallback = ()=>{
+            iconsLoading--;
+            mipMap.value!.generateMaps();
 
-        if (!delayGeneration){
-            this._generateMaps(image, minRes);
-        }
-
-        this._minCanvas = this._getMinCanvas();
-    }
-
-    generateMaps(): void {
-        this._generateMaps(this._maxCanvas, this._minRes);
-    }
-
-    private _generateMaps(image: HTMLCanvasElement, minRes: number): void {
-        const curDim = new Core.Vector(image.width, image.height).divideScalar(2);
-        const smallSide = Math.min(curDim.x, curDim.y);
-
-        if (smallSide >= minRes){
-            const newCanvas = Core.Draw.createCanvas(curDim.x, curDim.y);
-            const ctx = newCanvas.getContext('2d')!;
-
-            ctx.scale(0.5, 0.5);
-            ctx.drawImage(image, 0, 0, image.width, image.height);
-            this._maps.set(smallSide, newCanvas);
-            this._generateMaps(newCanvas, minRes);
-        }
-    }
-
-    private _getMinCanvas(): HTMLCanvasElement {
-        let lowest = this._maps.get(this._maxRes);
-
-        this._maps.forEach((canvas) => {
-            lowest = canvas;
-        });
-
-        return lowest!;
-    }
-
-    get(res: number): HTMLCanvasElement {
-        const mapGet = this._maps.get(res);
-
-        if (mapGet) return mapGet;
-
-        return res > this._maxRes ? this._maxCanvas : this._minCanvas;
-    }
-
-    calcClosest(res: number): number {
-        let closest = this._maxRes;
-
-        this._maps.forEach((canvas, dim) => {
-            if (dim < closest && dim > res){
-                closest = dim;
+            if (iconsLoading <= 0){
+                allLoadCallback();
+                iconsLoaded = true;
             }
-        });
+        };
+        const canvas = svgToCanvas(iconRaw, MAX_MIPMAP_RES, iconLoadingCallback);
 
-        return closest;
+        mipMap.value = new MipMap(canvas, MIN_MIPMAP_RES, true);
+
+        return mipMap.value;
     }
-}
+
+    const allLoaded = ()=>{
+        document.dispatchEvent(new CustomEvent('icons-loaded'));
+    }
+
+    return {
+        cameraIcon: getMipMap(cameraLocIconRaw, allLoaded),
+        noSpriteSVG: getMipMap(objectIconRaw, allLoaded),
+        exitSVG: getMipMap(exitIconRaw, allLoaded),
+        endSVG: getMipMap(endIconRaw, allLoaded)
+    }
+})();

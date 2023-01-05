@@ -1,7 +1,15 @@
 import { iAnyObj } from '../interfaces';
 import { Vector } from '../Vector';
-import { Instance_Base } from './Instance_Base';
+import { iInstanceBaseSaveData, Instance_Base } from './Instance_Base';
 import {ENTITY_TYPE} from '../Enums';
+
+export interface iExitSaveData extends iInstanceBaseSaveData {
+    isEnding: boolean;
+    destinationRoom: number | null;
+    destinationExit: number | null;
+    transition: TRANSITION;
+    endingDialog: string;
+}
 
 enum TRANSITION {
     NONE = 'N',
@@ -26,19 +34,28 @@ export class Exit extends Instance_Base {
         return clone;
     }
 
-    toSaveData(): iAnyObj {
-        const sanitized = {} as iAnyObj;
-
-        Object.assign(sanitized, this);
-        sanitized.destinationRoom = this.destinationRoom;
-        sanitized.destinationExit = this.destinationExit;
-
-        return sanitized;
+    toSaveData(): iExitSaveData {
+        return {
+            ...this.getBaseSaveData(),
+            isEnding: this.isEnding,
+            destinationRoom: this.destinationRoom,
+            destinationExit: this.destinationExit,
+            transition: this.transition,
+            endingDialog: this.endingDialog,
+        };
     }
 
-    fromSaveData(data: iAnyObj): Exit {
-        Object.assign(this, data);
-        this.pos = Vector.fromObject(data.pos);
+    static fromSaveData(data: iExitSaveData): Exit {
+        return new Exit(data.id, Vector.fromObject(data.pos))._loadSaveData(data);
+    }
+
+    private _loadSaveData(data: iExitSaveData): Exit {
+        this.loadBaseSaveData(data);
+        this.isEnding = data.isEnding;
+        this.destinationRoom = data.destinationRoom;
+        this.destinationExit = data.destinationExit;
+        this.transition = data.transition;
+        this.endingDialog = data.endingDialog;
 
         return this;
     }

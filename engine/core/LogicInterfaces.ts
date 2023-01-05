@@ -2,7 +2,7 @@ import { iAnyObj } from "./interfaces";
 import { SOCKET_TYPE } from "./nodes/Node_Enums";
 import { Vector } from "./Vector";
 import Engine from "@engine/Engine";
-import { iInput, iInTrigger, iNodeTemplate, iOutput, Object_Instance } from "./core";
+import { iAssetSaveData, iInput, iInTrigger, iNavSaveData, iNodeTemplate, iOutput, Node_Enums, Object_Instance } from "./core";
 
 type Graph = {};
 type Connection = {};
@@ -134,15 +134,21 @@ export interface iEditorAPI {
 export interface iEngineLogic {
     id: number;
     events: Map<string, iEngineNode[]>;
+    localVariableDefaults: Map<string, any>;
 
     setLocalVariableDefault(name: string, data: iAnyObj): void;
+    executeEvent(eventName: string, instance: Object_Instance, data: any): void;
 }
 
 export interface iEngineInTrigger {
     execute: string,
     node: iEngineNode,
-    connection: iEngineInTrigger | null,
+    connection: iEngineOutTrigger | null,
 };
+
+export interface iEngineOutTrigger {
+    connection: iEngineInTrigger | null,
+}
 
 export interface iEngineInput {
     value: any,
@@ -160,9 +166,7 @@ export interface iEngineOuput {
 
 export interface iEngineNode extends iNode_Base {
     inTriggers: Map<string, iEngineInTrigger>;
-    outTriggers: Map<string, {
-        connection: iEngineInTrigger | null,
-    }>;
+    outTriggers: Map<string, iEngineOutTrigger>;
     inputs: Map<string, iEngineInput>;
     outputs: Map<string, iEngineOuput>;
 
@@ -174,4 +178,32 @@ export interface iEngineNode extends iNode_Base {
     getWidgetData(): any;
     getInput(inputName: string): any;
     triggerOutput(outputId: string): void;
+}
+
+type iEditorConnectionSaveData = any;
+
+export interface iLogicSaveData extends iAssetSaveData {
+    selectedGraphId: number,
+    graphs: Array<{id: number, name: string, navState: iNavSaveData}>,
+    nodes: iNodeSaveData[],
+    connections: iEditorConnectionSaveData[],
+}
+
+export interface iNodeSaveData {
+    templateId: string,
+    nodeId: number,
+    graphId: number,
+    pos: { x: number, y: number },
+    inputs: { id: string, value: any }[],
+    widgetData: any,
+}
+
+export interface iConnectionSaveData {
+    id: number,
+    type: Node_Enums.SOCKET_TYPE,
+    graphId: number,
+    startSocketId: string,
+    endSocketId: string,
+    startNodeId: number,
+    endNodeId: number,
 }

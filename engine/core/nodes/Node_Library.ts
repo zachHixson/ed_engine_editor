@@ -375,8 +375,8 @@ export const NODE_LIST: iNodeTemplate[] = [
     ...Cat_Variables,
 ];
 
-export const NODE_MAP = {} as iAnyObj;
+export const NODE_MAP = new Map<string, iNodeTemplate>();
 
 NODE_LIST.forEach(node => {
-    NODE_MAP[node.id] = node;
+    NODE_MAP.set(node.id, node);
 });

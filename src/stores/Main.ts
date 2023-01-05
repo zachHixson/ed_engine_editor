@@ -35,18 +35,20 @@ export const useMainStore = defineStore({
 
     getters: {
         getProjectName: (state): string => state.projectName,
-        getSaveData: (state): any => {
+        getSaveData: (state): string => {
+            const assetBrowserStore = useAssetBrowserStore();
             const gameDataStore = useGameDataStore();
             const saveObj = {
                 projectName: state.projectName,
                 editor_version: EDITOR_VERSION,
                 newestID: Core.ID_Generator.getCurrentID(),
+                selectedRoomId: assetBrowserStore.selectedRoom?.id ?? null,
                 startRoom: gameDataStore.getStartRoom,
                 sprites: gameDataStore.getSpriteSaveData,
                 objects: gameDataStore.getObjectSaveData,
                 rooms: gameDataStore.getRoomSaveData,
                 logic: gameDataStore.getLogicSaveData,
-            }
+            } satisfies Core.iSerializedGameData;
 
             return JSON.stringify(saveObj);
         },

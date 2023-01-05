@@ -50,7 +50,9 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
     decoratorText?: string;
     decoratorTextVars?: any;
 
-    constructor(template: Core.iNodeTemplate, id: number, pos: Core.Vector, parentScript: Logic, graphId: number, editorAPI: Node_API){
+    constructor(templateId: string, id: number, pos: Core.Vector, parentScript: Logic, graphId: number, editorAPI: Node_API){
+        const template = Core.NODE_MAP.get(templateId)!;
+        
         super();
         this._template = template;
         this.nodeId = id;
@@ -133,25 +135,22 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
     get templateId(){return this._template.id}
     get editorAPI(){return this._editorAPI}
 
-    toSaveData(): Core.iAnyObj {
+    toSaveData(): Core.iNodeSaveData {
         this.beforeSave && this.beforeSave();
 
-        const roundedPos = new Vector(
-            Math.floor(this.pos.x * 100) / 100,
-            Math.floor(this.pos.y * 100) / 100
-        );
-        const outObj: Core.iAnyObj = {
+        const outObj: Core.iNodeSaveData = {
             templateId: this.templateId,
             nodeId: this.nodeId,
             graphId: this.graphId,
-            pos: roundedPos.toObject(),
+            pos: this.pos.clone().multiplyScalar(100).divideScalar(100).floor(),
             inputs: [],
+            widgetData: {},
         };
 
         this.inputs.forEach(({id, value}) => outObj.inputs.push({id, value}));
 
         if (this.widget){
-            outObj.widgetData = JSON.stringify(this.widgetData);
+            outObj.widgetData = JSON.parse(JSON.stringify(this.widgetData));
         }
 
         this.afterSave && this.afterSave(outObj);
@@ -159,14 +158,19 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
         return outObj;
     }
 
-    fromSaveData(data: Core.iAnyObj): Node {
+    static fromSaveData(data: Core.iNodeSaveData, parentScript: Logic, nodeAPI: Node_API): Node {
+        const node = new Node(data.templateId, data.nodeId, Vector.fromObject(data.pos), parentScript, data.graphId, nodeAPI);
+        return node._loadSaveData(data);
+    }
+
+    private _loadSaveData(data: Core.iNodeSaveData): Node {
         this.beforeLoad && this.beforeLoad(data);
 
         if (data.widgetData){
-            this.widgetData = JSON.parse(data.widgetData);
+            this.widgetData = data.widgetData;
         }
 
-        data.inputs.forEach((input: Core.iAnyObj) => {
+        data.inputs.forEach(input => {
             const nodeInput = this.inputs.get(input.id);
             if (!nodeInput) return;
             nodeInput.value = input.value;

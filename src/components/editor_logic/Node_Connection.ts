@@ -40,17 +40,23 @@ export default class Node_Connection extends Core.EventListenerMixin(class {}) i
         this.endSocketEl = null;
     }
 
-    toSaveData(){
-        let {id, type, graphId, startNode, startSocketId, endNode, endSocketId} = this;
-        let startNodeId = startNode!.nodeId;
-        let endNodeId = endNode!.nodeId;
+    toSaveData(): Core.iConnectionSaveData {
+        const {id, type, graphId, startNode, endNode} = this;
+        const startSocketId = this.startSocketId!;
+        const endSocketId = this.endSocketId!;
+        const startNodeId = startNode!.nodeId;
+        const endNodeId = endNode!.nodeId;
 
         return {id, type, graphId, startNodeId, startSocketId, endNodeId, endSocketId};
     }
 
-    fromSaveData(data: Core.iAnyObj, nodeMap: {[key: string]: Node}){
-        this.startNode = nodeMap[data.startNodeId];
-        this.endNode = nodeMap[data.endNodeId];
+    static fromSaveData(data: Core.iConnectionSaveData, nodeMap: Map<number, Node>): Node_Connection {
+        return new Node_Connection(data)._loadSaveData(data, nodeMap);
+    }
+
+    private _loadSaveData(data: Core.iAnyObj, nodeMap: Map<number, Node>){
+        this.startNode = nodeMap.get(data.startNodeId)!;
+        this.endNode = nodeMap.get(data.endNodeId)!;
 
         return this;
     }

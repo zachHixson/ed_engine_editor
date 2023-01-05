@@ -183,7 +183,7 @@ onMounted(()=>{
     bindHotkeys();
     bindActions();
     bindReversions();
-    navChange(props.selectedAsset.navState!);
+    navChange(props.selectedAsset.graphNavState);
     relinkConnections();
     updateNodeBounds();
 
@@ -380,7 +380,7 @@ function mouseMove(event: MouseEvent): void {
     }
 }
 
-function navChange(newState: Core.iNavState): void {
+function navChange(newState: Core.NavState): void {
     const TILE_SIZE = 100;
 
     const vpEl = nodeViewportRef.value!;
@@ -418,7 +418,7 @@ function addGraph(): void {
 
 function switchGraph(id: number): void {
     props.selectedAsset.selectedGraphId = id;
-    navChange(props.selectedAsset.navState!);
+    navChange(props.selectedAsset.graphNavState);
 
     nextTick(()=>{
         deselectAllNodes();
@@ -541,7 +541,7 @@ function nodeMoveEnd(): void {
 }
 
 function selectNodesInBox(): void {
-    props.selectedAsset.nodes.forEach(node => {
+    visibleNodes.value.forEach(node => {
         const selectionBounds = selectionBoxRef.value!.getBoundingClientRect();
         const nodeBounds = node.domRef!.getBoundingClientRect();
         const overlapX = selectionBounds.right >= nodeBounds.left && nodeBounds.right >= selectionBounds.left;
@@ -555,7 +555,7 @@ function selectNodesInBox(): void {
 }
 
 function updateNodeBounds(): void {
-    const nodes = props.selectedAsset.nodes;
+    const nodes = visibleNodes.value;
 
     if (nodes.length == 0){
         contentsBounds.forEach((i, idx) => contentsBounds[idx] = 0);
@@ -569,11 +569,11 @@ function updateNodeBounds(): void {
     const vpBounds = nodeViewportRef.value!.getBoundingClientRect();
     const vpSize = new Vector(vpBounds.right - vpBounds.left, vpBounds.bottom - vpBounds.top);
     const vpOrigin = new Vector(vpBounds.left, vpBounds.top);
-    const navZoom = props.selectedAsset.navState!.zoomFac;
-    const navOrigin = props.selectedAsset.navState!.offset.clone().multiplyScalar(navZoom);
+    const navZoom = props.selectedAsset.graphNavState.zoomFac;
+    const navOrigin = props.selectedAsset.graphNavState.offset.clone().multiplyScalar(navZoom);
 
     for (let i = 1; i < nodes.length; i++){
-        let curNodeBounds = nodes[i].domRef!.getBoundingClientRect();
+        const curNodeBounds = nodes[i].domRef!.getBoundingClientRect();
         ul.x = Math.min(ul.x, curNodeBounds.left);
         ul.y = Math.min(ul.y, curNodeBounds.top);
         br.x = Math.max(br.x, curNodeBounds.right);

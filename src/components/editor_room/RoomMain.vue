@@ -50,7 +50,6 @@ type ExitChangeProps = {newState: Partial<Core.Exit>, oldState?: object, exitRef
 type ExitDeleteProps = {exitId: number, exitRef?: Core.Exit};
 type RoomPropChangeProps = {newState: object, oldState?: object};
 
-
 //define stores
 const { t } = useI18n();
 const mainStore = useMainStore();
@@ -609,7 +608,7 @@ function actionRoomPropChange({newState}: RoomPropChangeProps, makeCommit = true
 
     Object.assign(props.selectedRoom, newState);
 
-    if (oldState.bgColor != props.selectedRoom.bgColor){
+    if (!oldState.bgColor.compare(props.selectedRoom.bgColor)){
         bgColorChanged();
     }
 
@@ -698,11 +697,11 @@ function revertExitChange({oldState, exitRef}: ExitChangeProps): void {
 }
 
 function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
-    let oldBG = props.selectedRoom.bgColor;
+    const oldBG = props.selectedRoom.bgColor;
 
     Object.assign(props.selectedRoom, oldState);
 
-    if (oldBG != props.selectedRoom.bgColor){
+    if (!oldBG.compare(props.selectedRoom.bgColor)){
         bgColorChanged();
     }
 }

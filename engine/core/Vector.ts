@@ -76,7 +76,7 @@ export class Vector {
         return this.scale(1/magnitude);
     }
 
-    copy(vec: Vector): Vector {
+    copy(vec: { x: number, y: number }): Vector {
         this.x = vec.x;
         this.y = vec.y;
         return this;

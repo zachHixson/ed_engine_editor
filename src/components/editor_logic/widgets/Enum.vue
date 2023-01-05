@@ -42,7 +42,7 @@ onMounted(()=>{
             <option
                 v-for="option in enumOptions"
                 :key="option"
-                :value="option">{{$t('node.' + option)}}</option>
+                :value="option">{{t('node.' + option)}}</option>
         </select>
     </div>
 </template>

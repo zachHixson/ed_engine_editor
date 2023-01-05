@@ -1,9 +1,26 @@
-import { Asset_Base } from './Asset_Base';
+import { Asset_Base, iAssetSaveData } from './Asset_Base';
 import {CATEGORY_ID} from '../Enums';
 import { Sprite } from './Sprite';
 import { iAnyObj } from '../interfaces';
+import { iEditorLogic, iEngineLogic } from '../LogicInterfaces';
 
-type Logic = {[key: string]: any};
+export interface iGameObjectSaveData extends iAssetSaveData {
+    _startFrame: number
+    spriteId: number | null;
+    fps: number;
+    animLoop: boolean;
+    animPlaying: boolean;
+    zDepth: number;
+    isSolid: boolean;
+    applyGravity: boolean;
+    triggerExits: boolean;
+    exitBehavior: EXIT_TYPES;
+    keepCameraSettings: boolean;
+    customLogic: boolean;
+    logicPresetId: number | null;
+    logicScriptId: number | null;
+    groups: string[];
+}
 
 enum EXIT_TYPES {
     TO_DESTINATION = 'TD',
@@ -28,14 +45,10 @@ export class Game_Object extends Asset_Base {
     exitBehavior: EXIT_TYPES = EXIT_TYPES.TO_DESTINATION;
     keepCameraSettings: boolean = true;
     customLogic: boolean = false;
-    logicPreset: number | null = null;
-    logicScript: Logic | null = null;
+    logicPresetId: number | null = null;
+    logicScriptId: number | null = null;
+    logicScript: iEngineLogic | null = null;
     groups: string[] = [];
-
-    constructor(){
-        super();
-        delete this.navState;
-    }
 
     get thumbnail(){
         const thumbFrame = this.sprite?.frames[this._startFrame];
@@ -47,21 +60,55 @@ export class Game_Object extends Asset_Base {
         return this.sprite.frameIsEmpty(this._startFrame) ? null : this.sprite.drawToCanvas(this._startFrame);
     }
 
-    clone(){
+    clone(): Game_Object {
         const clone = new Game_Object();
         Object.assign(clone, this);
         return clone;
     }
 
-    toSaveData(){
-        const sanitized = Object.assign({}, this) as any;
-        sanitized.sprite = this.sprite?.id ?? null;
-        return sanitized;
+    toSaveData(): iGameObjectSaveData {
+        return {
+            ...this.getBaseAssetData(),
+            _startFrame: this._startFrame,
+            spriteId: this.sprite?.id ?? null,
+            fps: this.fps,
+            animLoop: this.animLoop,
+            animPlaying: this.animPlaying,
+            zDepth: this.zDepth,
+            isSolid: this.isSolid,
+            applyGravity: this.applyGravity,
+            triggerExits: this.triggerExits,
+            exitBehavior: this.exitBehavior,
+            keepCameraSettings: this.keepCameraSettings,
+            customLogic: this.customLogic,
+            logicPresetId: this.logicPresetId,
+            logicScriptId: this.logicScriptId,
+            groups: this.groups,
+        };
     }
 
-    fromSaveData(object: iAnyObj, spriteList: Sprite[]): Game_Object {
-        Object.assign(this, object);
-        this.sprite = spriteList.find(s => s.id == this.sprite?.id) ?? null;
+    static fromSaveData(data: iGameObjectSaveData, spriteMap: Map<number, Sprite>): Game_Object {
+        return new Game_Object()._loadSaveData(data, spriteMap);
+    }
+
+    private _loadSaveData(data: iGameObjectSaveData, spriteMap: Map<number, Sprite>, logicMap?: Map<number, iEngineLogic>): Game_Object {
+        this.loadBaseAssetData(data);
+        this._startFrame = data._startFrame;
+        this.sprite = data.spriteId ? spriteMap.get(data.spriteId)! : null;
+        this.fps = data.fps;
+        this.animLoop = data.animLoop;
+        this.animPlaying = data.animPlaying;
+        this.zDepth = data.zDepth;
+        this.isSolid = data.isSolid;
+        this.applyGravity = data.applyGravity;
+        this.triggerExits = data.triggerExits;
+        this.exitBehavior = data.exitBehavior;
+        this.keepCameraSettings = data.keepCameraSettings;
+        this.customLogic = data.customLogic;
+        this.logicPresetId = data.logicPresetId;
+        this.logicScriptId = data.logicScriptId;
+        this.logicScript = logicMap?.get(data.logicScriptId!) ?? null;
+        this.groups = data.groups;
         return this;
     }
 

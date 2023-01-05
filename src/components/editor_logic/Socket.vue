@@ -90,7 +90,6 @@ function forceSocketUpdate(): void {
 }
 
 function onInput(event: InputEvent): void {
-    props.socket.value = (event.target as HTMLInputElement).value;
     emit('on-input', event);
 }
 

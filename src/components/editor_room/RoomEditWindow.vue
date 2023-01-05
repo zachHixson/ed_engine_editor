@@ -23,12 +23,6 @@ import { useRoomEditorStore } from '@/stores/RoomEditor';
 import { useGameDataStore } from '@/stores/GameData';
 import { RoomMainEventBus } from './RoomMain.vue';
 import Core from '@/core';
-import svgToCanvas from '@/components/common/svgToCanvas';
-
-import cameraLocIconRaw from '@/assets/camera_location.svg?raw';
-import objectIconRaw from '@/assets/object_icon.svg?raw';
-import exitIconRaw from '@/assets/exit.svg?raw';
-import endIconRaw from '@/assets/end.svg?raw';
 
 const roomEditorStore = useRoomEditorStore();
 const gameDataStore = useGameDataStore();
@@ -60,7 +54,6 @@ const contentsBounds = ref([0, 0, 0, 0]);
 let renderer: Room_Edit_Renderer;
 let unitWidth = 1;
 let navHotkeyTool: Core.NAV_TOOL_TYPE | null = null;
-let requiredIcons = 0;
 
 //template refs
 const canvasEl = ref<HTMLCanvasElement>();
@@ -75,19 +68,9 @@ watch(checkAssetDeletion, (newVal, oldVal)=> (newVal < oldVal) && renderer.drawO
 watch(()=>props.selectedRoom, (newRoom)=>roomChange(newRoom));
 
 onMounted(()=>{
-    const MAX_ICON_SIZE = 128;
-
-    const icons = {
-        cameraIcon: svgToCanvas(cameraLocIconRaw, MAX_ICON_SIZE, getIconLoadCallback()),
-        noSpriteSVG: svgToCanvas(objectIconRaw, MAX_ICON_SIZE, getIconLoadCallback()),
-        exitSVG: svgToCanvas(exitIconRaw, MAX_ICON_SIZE, getIconLoadCallback()),
-        endSVG: svgToCanvas(endIconRaw, MAX_ICON_SIZE, getIconLoadCallback())
-    };
-
     renderer = new Room_Edit_Renderer(
         canvasEl.value ?? document.createElement('canvas'),
-        props.selectedRoom.navState!,
-        icons
+        props.selectedRoom.navState!
     );
     contentsBounds.value = props.selectedRoom.getContentsBounds();
     unitWidth = renderer.UNIT_WIDTH;
@@ -197,19 +180,6 @@ function bgColorChanged(): void {
 function navToolSelected(tool: Core.NAV_TOOL_TYPE): void {
     roomEditorStore.setSelectedTool(null);
     roomEditorStore.setSelectedNavTool(tool);
-}
-
-function getIconLoadCallback(): ()=>void {
-    requiredIcons++;
-
-    return ()=>{
-        requiredIcons--;
-
-        if (requiredIcons <= 0){
-            renderer.generateMipMaps();
-            renderer.fullRedraw();
-        }
-    }
 }
 </script>
 

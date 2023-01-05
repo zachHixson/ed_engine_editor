@@ -7,7 +7,7 @@ import AnimationPlayer from '@/components/common/AnimationPlayer.vue';
 import GroupList from '@/components/common/GroupList.vue';
 import CategoryWrapper from './CategoryWrapper.vue';
 
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed, nextTick, onMounted } from 'vue';
 import { useGameDataStore } from '@/stores/GameData';
 import Core from '@/core';
 import spriteIcon from '@/assets/sprite_icon.svg';
@@ -27,7 +27,7 @@ const spriteSelectorRef = ref<HTMLSelectElement>();
 
 const spriteChoices = computed(()=>gameDataStore.getAllSprites);
 const logicScripts = computed(()=>gameDataStore.getAllLogic);
-const selectedLogic = computed(()=>props.selectedAsset.logicScript as unknown as number);
+const selectedLogic = computed(()=>props.selectedAsset.logicScriptId);
 const startFrame = computed({
     get(){
         return props.selectedAsset.startFrame;
@@ -98,13 +98,13 @@ function logicScriptChanged(event: Event): void {
         scriptId = newScript.id;
     }
     else{
-        scriptId = value;
+        scriptId = parseInt(value);
     }
 
-    props.selectedAsset.logicScript = (scriptId as any);
+    props.selectedAsset.logicScriptId = scriptId;
 
     nextTick(()=>{
-        target.value = (props.selectedAsset.logicScript as any);
+        target.value = (props.selectedAsset.logicScriptId as any);
     });
 }
 </script>

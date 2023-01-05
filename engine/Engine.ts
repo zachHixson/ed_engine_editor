@@ -401,7 +401,10 @@ export class Engine implements iEngineCallbacks {
         type serialObject = iSerializedGameData["objects"][number];
         type serialRoom = iSerializedGameData["rooms"][number];
         type serialLogic = iSerializedGameData["logic"][number];
+
         const loadedData = {} as iGameData;
+        const spriteMap = new Map<number, Sprite>();
+        const objectMap = new Map<number, Game_Object>();
         let parsedJson;
 
         try {
@@ -413,9 +416,14 @@ export class Engine implements iEngineCallbacks {
         }
 
         loadedData.startRoom = parsedJson.startRoom;
-        loadedData.sprites = parsedJson.sprites.map((s: serialSprite) => new Sprite().fromSaveData(s));
-        loadedData.objects = parsedJson.objects.map((o: serialObject) => new Game_Object().fromSaveData(o, loadedData.sprites));
-        loadedData.rooms = parsedJson.rooms.map((r: serialRoom) => new Room().fromSaveData(r, loadedData.objects));
+
+        loadedData.sprites = parsedJson.sprites.map((s: serialSprite) => Sprite.fromSaveData(s));
+        loadedData.sprites.forEach(sprite => spriteMap.set(sprite.id, sprite));
+
+        loadedData.objects = parsedJson.objects.map((o: serialObject) => Game_Object.fromSaveData(o, spriteMap));
+        loadedData.objects.forEach(object => objectMap.set(object.id, object));
+
+        loadedData.rooms = parsedJson.rooms.map((r: serialRoom) => Room.fromSaveData(r, objectMap));
         loadedData.logic = parsedJson.logic.map((l: serialLogic) => new Logic(l, this));
 
         loadedData.logic.forEach(logic => logic.dispatchLifecycleEvent('afterGameDataLoaded'));

@@ -16,8 +16,7 @@ export const useAssetBrowserStore = defineStore({
 
     getters: {
         getSelectedAsset: (state): Core.Asset_Base | null => state.selectedAsset,
-        //@ts-ignore
-        getSelectedRoom: (state): Core.Room | null => state.selectedRoom,
+        getSelectedRoom: (state): Core.Room | null => state.selectedRoom as Core.Room | null,
     },
 
     actions: {

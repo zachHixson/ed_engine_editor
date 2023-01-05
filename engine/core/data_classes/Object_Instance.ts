@@ -2,7 +2,13 @@ import {ENTITY_TYPE} from '../Enums';
 import { iAnyObj } from '../interfaces';
 import { Vector } from '../Vector';
 import { Game_Object } from './Game_Object';
-import { Instance_Base } from './Instance_Base';
+import { iInstanceBaseSaveData, Instance_Base } from './Instance_Base';
+
+export interface iObjectInstanceSaveData extends iInstanceBaseSaveData {
+    objId: number;
+    zDepthOverride: number | null;
+    collisionOverride: COLLISION_OVERRIDE;
+}
 
 enum COLLISION_OVERRIDE {
     KEEP = 'K',
@@ -101,25 +107,28 @@ export class Object_Instance extends Instance_Base{
         return clone;
     }
 
-    toSaveData(): iAnyObj {
-        let sanitized = Object.assign({}, this) as iAnyObj;
+    toSaveData(): iObjectInstanceSaveData {
+        const baseData = this.getBaseSaveData();
 
-        sanitized.objId = this.objRef.id;
-        sanitized.pos = this.pos.toObject();
-        
-        delete sanitized.objRef;
-        delete sanitized.localVariables;
-
-        return sanitized;
+        return {
+            ...baseData,
+            objId: this.objRef.id,
+            zDepthOverride: this.zDepthOverride,
+            collisionOverride: this.collisionOverride,
+        };
     }
 
-    fromSaveData(data: iAnyObj): Object_Instance {
-        delete data.pos;
-        delete data.objId;
+    static fromSaveData(data: iObjectInstanceSaveData, objMap: Map<number, Game_Object>): Object_Instance {
+        const newObj = new Object_Instance(data.id, Vector.fromObject(data.pos), objMap.get(data.id)!);
+        newObj._loadSaveData(data);
 
-        Object.assign(this, data);
+        return newObj;
+    }
 
-        return this;
+    private _loadSaveData(data: iObjectInstanceSaveData): void {
+        this.loadBaseSaveData(data);
+        this.zDepthOverride = data.zDepthOverride;
+        this.collisionOverride = data.collisionOverride;
     }
 
     executeNodeEvent(eventName: string, data?: iAnyObj): void {

@@ -1,13 +1,19 @@
 import {CATEGORY_ID} from '../Enums';
 import {createCanvas, hexToRGBA, RGBAToHex} from '../Draw';
-import { Asset_Base } from './Asset_Base';
-import { iAnyObj } from '../interfaces';
+import { Asset_Base, iAssetSaveData } from './Asset_Base';
+import { NavState, getNavSaveData, parseNavSaveData, iNavSaveData } from '../NavState';
+
+export interface iSpriteSaveData extends iAssetSaveData {
+    frames: string[][],
+    navState: iNavSaveData,
+}
 
 export class Sprite extends Asset_Base {
     static get DIMENSIONS(){return 16}
 
     frames: ImageData[] = [];
     frameIDs: string[] = [];
+    navState: NavState = new NavState();
 
     _frameEmptyCache: Map<number, boolean> = new Map();
 
@@ -23,27 +29,27 @@ export class Sprite extends Asset_Base {
         return this.frameIsEmpty(0) ? null : this.drawToCanvas(0);
     }
     
-    toSaveData(): iAnyObj {
-        const stripped = Object.assign({}, this) as any;
-        stripped.frames = this.getFramesCopy();
-        stripped.frames = this.compressFrames(stripped.frames);
-        delete stripped.frameIDs;
-
-        return stripped;
+    toSaveData(): iSpriteSaveData {
+        return {
+            ...this.getBaseAssetData(),
+            frames: this.compressFrames(this.getFramesCopy()),
+            navState: getNavSaveData(this.navState),
+        } satisfies iSpriteSaveData;
     }
 
-    fromSaveData(data: iAnyObj): Sprite {
-        let imgDataFrames;
-        let hexFrames;
+    static fromSaveData(data: iSpriteSaveData): Sprite {
+        return new Sprite()._loadSaveData(data);
+    }
 
-        Object.assign(this, data);
-        this.navState = this.parseNavData(data.navState);
-        hexFrames = this.decompressFrames(data.frames);
+    private _loadSaveData(data: iSpriteSaveData): Sprite {
+        const hexFrames = this.decompressFrames(data.frames);
+        const imgDataFrames = new Array(hexFrames.length);
+
+        this.loadBaseAssetData(data);
+        this.navState = parseNavSaveData(data.navState);
         this.hashAllFrames();
 
-        imgDataFrames = new Array(hexFrames.length);
-
-        for (let i = 0; i < this.frames.length; i++){
+        for (let i = 0; i < hexFrames.length; i++){
             imgDataFrames[i] = this._hexToImageData(data.frames[i]);
         }
 

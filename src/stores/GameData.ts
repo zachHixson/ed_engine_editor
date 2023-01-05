@@ -31,10 +31,10 @@ export const useGameDataStore = defineStore({
         getAllObjects: (state): Core.Game_Object[] => state.objects as Core.Game_Object[],
         getAllLogic: (state): Logic[] => state.logic as Logic[],
         getAllRooms: (state): Core.Room[] => state.rooms as Core.Room[],
-        getSpriteSaveData: (state): object => state.sprites.map(s => s.toSaveData()),
-        getObjectSaveData: (state): object => state.objects.map(o => o.toSaveData()),
-        getRoomSaveData: (state): object => state.rooms.map(r => r.toSaveData()),
-        getLogicSaveData: (state): object => state.logic.map(r => r.toSaveData()),
+        getSpriteSaveData: (state): Core.iSpriteSaveData[] => state.sprites.map(s => s.toSaveData()),
+        getObjectSaveData: (state): Core.iGameObjectSaveData[] => state.objects.map(o => o.toSaveData()),
+        getRoomSaveData: (state): Core.iRoomSaveData[] => state.rooms.map(r => r.toSaveData()),
+        getLogicSaveData: (state): any => state.logic.map(r => r.toSaveData()),
     },
 
     actions: {
@@ -115,11 +115,19 @@ export const useGameDataStore = defineStore({
             }
         },
         loadSaveData(loadObj: Core.iSerializedGameData, nodeAPI: Node_API){
+            const spriteMap = new Map<number, Core.Sprite>();
+            const objectMap = new Map<number, Core.Game_Object>();
+
             this.startRoomId = loadObj.startRoom;
-            this.sprites = loadObj.sprites.map(s => new Core.Sprite().fromSaveData(s));
-            this.objects = loadObj.objects.map(o => new Core.Game_Object().fromSaveData(o, this.sprites as Core.Sprite[]));
-            this.rooms = loadObj.rooms.map(r => new Core.Room().fromSaveData(r, this.objects as Core.Game_Object[]));
-            this.logic = loadObj.logic.map(l => new Logic().fromSaveData(l, nodeAPI));
+
+            this.sprites = loadObj.sprites.map(s => Core.Sprite.fromSaveData(s));
+            this.sprites.forEach(sprite => spriteMap.set(sprite.id, sprite as Core.Sprite));
+
+            this.objects = loadObj.objects.map(o => Core.Game_Object.fromSaveData(o, spriteMap));
+            this.objects.forEach(object => objectMap.set(object.id, object as Core.Game_Object));
+
+            this.rooms = loadObj.rooms.map(r => Core.Room.fromSaveData(r, objectMap));
+            this.logic = loadObj.logic.map(l => Logic.fromSaveData(l, nodeAPI));
         },
         purgeMissingReferences(){
             this.objects.forEach(o => o.purgeMissingReferences(this.sprites as Core.Sprite[]));
