@@ -42,14 +42,14 @@ export interface iEditorLogic {
     name: string;
     graphs: Graph[];
     nodes: iEditorNode[];
-    connections: Connection[];
+    connections: iNodeConnection[];
     selectedGraphId: number | null;
     selectedNodes: iEditorNode[];
     localVariables: Map<string, SOCKET_TYPE>;
 
     addNode(templateId: string, pos: Vector, nodeAPI: iNodeAPI, nodeRef?: iEditorNode): iEditorNode;
     deleteNode(nodeRef: iEditorNode): void;
-    addConnection(connectionObj: Connection): void;
+    addConnection(connectionObj: iNodeConnection): void;
     removeConnection(id: number, connectionObj?: Connection): boolean;
     setLocalVariable(name: string, type: SOCKET_TYPE): void;
     getLocalVariable(name: string): SOCKET_TYPE | undefined;

@@ -86,6 +86,10 @@ const decoratorIcon = computed(()=>{
     return props.socket.decoratorIcon
 });
 const decoratorIconPath = computed(()=>decoratorMap.get(decoratorIcon.value!)!);
+const disabled = computed(()=>{
+    forceRefreshkey.value;
+    return props.socket.disabled;
+});
 
 onMounted(()=>{
     props.socket.node.addEventListener('force-socket-update', forceSocketUpdate);
@@ -226,7 +230,7 @@ defineExpose({socket: props.socket});
                     :value="getValue()"
                     @change="numValueChanged($event.target as HTMLInputElement)"
                     @input="onInput($event as InputEvent)"
-                    :disabled="socket.disabled"
+                    :disabled="disabled"
                     v-input-active/>
                 <input
                     v-if="socketType == Core.Node_Enums.SOCKET_TYPE.STRING"
@@ -237,9 +241,9 @@ defineExpose({socket: props.socket});
                     @change="valueChanged($event.target as HTMLInputElement)"
                     @input="onInput($event as InputEvent)"
                     @blur="onTextBlur($event as FocusEvent)"
-                    :disabled="socket.disabled"
+                    :disabled="disabled"
                     v-input-active
-                    v-tooltip="socket.disabled && socket.value.length > 8 ? socket.value : ''" />
+                    v-tooltip="disabled && socket.value.length > 8 ? socket.value : ''" />
                 <div
                     v-if="socketType == Core.Node_Enums.SOCKET_TYPE.OBJECT"
                     class="selfBox"
@@ -253,7 +257,7 @@ defineExpose({socket: props.socket});
                     :checked="getValue()"
                     @change="boolValueChanged($event.target as HTMLInputElement)"
                     @input="onInput($event as InputEvent)"
-                    :disabled="socket.disabled"
+                    :disabled="disabled"
                     ref="boolCheckboxRef"/>
             </div>
         </div>
@@ -265,7 +269,7 @@ defineExpose({socket: props.socket});
             v-if="!(isTrigger || hideSocket)"
             ref="socketConnectionRef"
             class="socket_icon"
-            :class="socket.disabled ? 'disabled' :''"
+            :class="disabled ? 'disabled' :''"
             @mousedown="mouseDown"
             @mouseenter="mouseEnter"
             @mouseleave="mouseLeave">

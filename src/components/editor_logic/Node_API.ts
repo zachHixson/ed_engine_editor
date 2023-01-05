@@ -54,31 +54,21 @@ export default class Node_API implements Core.iEditorAPI {
     }
 
     getConnection(node: Core.iEditorNode, socketId: string): Node_Connection | null {
-        const gameDataStore = useGameDataStore();
-        const allLogic = gameDataStore.getAllLogic;
-        const logic = allLogic.find(logic => {
-            const nodes = logic.nodes;
-
-            for (let n = 0; n < nodes.length; n++){
-                if (nodes[n] == node){
-                    return logic;
-                }
-            }
-        });
+        const logic = node.parentScript;
 
         if (!logic) return null;
 
         //find correct connection
         for (let i = 0; i < logic.connections.length; i++){
             const curConnection = logic.connections[i];
-            const isStart = curConnection.startNode == node;
-            const isEnd = curConnection.endNode == node;
+            const isStart = curConnection.startNode?.nodeId == node.nodeId;
+            const isEnd = curConnection.endNode?.nodeId == node.nodeId;
             const connectedToNode =  isStart || isEnd;
             const thisSocket = isStart ? curConnection.startSocketId : curConnection.endSocketId;
             const connectedToSocket = thisSocket == socketId;
 
             if (connectedToNode && connectedToSocket){
-                return curConnection;
+                return curConnection as Node_Connection;
             }
         }
 

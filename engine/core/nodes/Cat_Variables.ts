@@ -290,8 +290,8 @@ export default [
 function determineConnected(this: iEditorNode){
     const connection = this.editorAPI.getConnection(this, 'data');
     const nameSocket = this.inputs.get('name')!;
-    const isDataConnected = !!connection;
-    nameSocket.disabled = isDataConnected;
+    nameSocket.disabled = !!connection;
+    this.emit('force-socket-update', 'name');
 }
 
 function validate(this: iEditorNode, textbox: HTMLInputElement){
