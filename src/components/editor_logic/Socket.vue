@@ -46,13 +46,22 @@ const emit = defineEmits(['on-input', 'value-changed', 'mouse-down', 'socket-ove
 const boolCheckboxRef = ref<HTMLInputElement>();
 const socketConnectionRef = ref<HTMLDivElement>();
 const hasSize = ref(false);
-const forceUpdateKey = ref(0);
+const forceRefreshkey = ref(0);
 
-const socketType = computed(()=>props.socket.type);
+const socketType = computed(()=>{
+    forceRefreshkey.value;
+    return props.socket.type;
+});
 const showLabel = computed(()=>props.socket.id.charAt(0) != '_');
-const hideSocket = computed(()=>props.socket.hideSocket);
-const hideInput = computed(()=>props.socket.hideInput);
-const isTrigger = computed(()=>(props.socket.type == undefined));
+const hideSocket = computed(()=>{
+    forceRefreshkey.value;
+    return props.socket.hideSocket
+});
+const hideInput = computed(()=>{
+    forceRefreshkey.value;
+    return props.socket.hideInput
+});
+const isTrigger = computed(()=>(socketType.value == undefined));
 const isConnected = computed(()=>(!!props.parentConnections.find(c => (
     c.startSocketId == props.socket.id && c.startNode!.nodeId == props.parentId ||
     c.endSocketId == props.socket.id && c.endNode!.nodeId == props.parentId
@@ -66,7 +75,9 @@ const iconMap = new Map<Core.Node_Enums.SOCKET_TYPE, string>([
     [Core.Node_Enums.SOCKET_TYPE.OBJECT, socketObjectIcon],
     [Core.Node_Enums.SOCKET_TYPE.BOOL, socketBoolIcon],
 ]);
+const socketIcon = computed(()=>iconMap.get(socketType.value)!);
 const customStyles = computed(()=>{
+    forceRefreshkey.value;
     const width = props.socket.node.inputBoxWidth;
     return width ? `width: ${width}rem` : '';
 });
@@ -74,7 +85,7 @@ const decoratorIcon = computed(()=>props.socket.decoratorIcon);
 const decoratorIconPath = computed(()=>new URL(`../../assets/${props.socket.decoratorIcon}.svg`, import.meta.url).href);
 
 onMounted(()=>{
-    props.socket.node.addEventListener('forceSocketUpdate', forceSocketUpdate);
+    props.socket.node.addEventListener('force-socket-update', forceSocketUpdate);
 
     nextTick(()=>{
         hasSize.value = true;
@@ -85,9 +96,9 @@ onMounted(()=>{
     });
 });
 
-function forceSocketUpdate(socketId: string): void {
-    if (socketId == props.socket.id){
-        forceUpdateKey.value++;
+function forceSocketUpdate(socketId: string | undefined): void {
+    if (socketId == props.socket.id || !socketId){
+        forceRefreshkey.value++;
     }
 }
 
@@ -193,14 +204,14 @@ defineExpose({socket: props.socket});
 
 <template>
     <div class="dataSocket" :class="isInput ? 'isInput' : ''">
-        <div v-if="socket.enableDecorators" class="decorator-wrapper" :key="forceUpdateKey">
+        <div v-if="socket.enableDecorators" class="decorator-wrapper">
             <Svg
                 v-if="!!decoratorIcon"
                 class="decorator"
                 :src="decoratorIconPath"
                 v-tooltip="te(socket.decoratorText!) ? t(socket.decoratorText!, socket.decoratorTextVars || {}): ''"></Svg>
         </div>
-        <div class="name-input-wrapper" :style="isInput && !socket.flipInput ? 'flex-direction: row-reverse;':''" :key="forceUpdateKey">
+        <div class="name-input-wrapper" :style="isInput && !socket.flipInput ? 'flex-direction: row-reverse;':''">
             <div v-if="showLabel" class="socket_name" :class="socket.hideLabel ? 'invisible':''">
                 <div>{{t('node.' + socket.id)}}</div>
             </div>
@@ -243,7 +254,7 @@ defineExpose({socket: props.socket});
                     ref="boolCheckboxRef"/>
             </div>
         </div>
-        <div v-if="socketType == Core.Node_Enums.SOCKET_TYPE.INFO && socket.value" class="infoBox" :key="forceUpdateKey">
+        <div v-if="socketType == Core.Node_Enums.SOCKET_TYPE.INFO && socket.value" class="infoBox">
             <div v-html="t(socket.value.titleId)" class="infoTitle"></div>
             <div>{{te(socket.value.data) && socket.value.translate ? t(socket.value.data) : socket.value.data}}</div>
         </div>
@@ -252,11 +263,10 @@ defineExpose({socket: props.socket});
             ref="socketConnectionRef"
             class="socket_icon"
             :class="socket.disabled ? 'disabled' :''"
-            :key="forceUpdateKey"
             @mousedown="mouseDown"
             @mouseenter="mouseEnter"
             @mouseleave="mouseLeave">
-            <Svg class="socket_icon_img" :src="iconMap.get(socket.type)!"></Svg>
+            <Svg class="socket_icon_img" :src="socketIcon"></Svg>
         </div>
         <div v-if="hideSocket" class="hidden-socket"></div>
         <svg
@@ -265,7 +275,6 @@ defineExpose({socket: props.socket});
             width="20"
             height="20"
             class="trigger_icon"
-            :key="forceUpdateKey"
             @mousedown="mouseDown"
             @mouseenter="mouseEnter"
             @mouseleave="mouseLeave">

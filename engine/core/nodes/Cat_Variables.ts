@@ -58,14 +58,14 @@ export default [
             const valueInput = saveData.inputs.find((input: iAnyObj) => input.id == 'initial_value');
             const varInfo = Object.assign({}, this.dataCache.get('varInfo'));
             
-            varInfo.type = varInfo.type.description;
+            varInfo.type = varInfo.type;
             saveData.details = varInfo;
             saveData.inputs = [valueInput];
         },
         beforeLoad(saveData){
             const varInfo = saveData.details;
 
-            varInfo.type = Symbol.for(varInfo.type);
+            varInfo.type = varInfo.type;
             this.dataCache.set('varInfo', varInfo);
         },
         afterLoad(){
@@ -121,7 +121,7 @@ export default [
                 
                 valSocket.type = type;
                 outSocket.type = type;
-                this.emit('socketsChanged');
+                this.emit('force-socket-update');
                 this.emit('recalcWidth');
             },
             editor_setVar(){
@@ -322,5 +322,5 @@ function validate(this: iEditorNode, textbox: HTMLInputElement){
     }
 
     this.dataCache.set('isValid', isValid);
-    this.emit('forceSocketUpdate', 'data');
+    this.emit('force-socket-update', 'data');
 }
