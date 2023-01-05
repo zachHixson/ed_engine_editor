@@ -230,7 +230,7 @@ defineExpose({socket: props.socket});
                     v-if="socketType == Core.Node_Enums.SOCKET_TYPE.OBJECT"
                     class="selfBox"
                     :style="customStyles">
-                        {{t('logic_editor.self')}}
+                        <div>{{t('logic_editor.self')}}</div>
                 </div>
                 <input
                     v-if="socketType == Core.Node_Enums.SOCKET_TYPE.BOOL"
@@ -376,10 +376,13 @@ defineExpose({socket: props.socket});
 }
 
 .selfBox{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
     background: var(--tool-panel-bg);
     filter: brightness(0.7);
     border-radius: 4px;
-    text-align: center;
 }
 
 input[type="checkbox"]{

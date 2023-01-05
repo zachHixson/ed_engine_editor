@@ -86,6 +86,15 @@ function resetUI(): void {
         <PlayWindow v-if="mainStore.getPlayState != PLAY_STATE.NOT_PLAYING" class="playWindow" />
     </transition>
     <Tooltip />
+    <div name="preloadedIcons" hidden>
+        <img src="@/assets/error_decorator.svg" />
+        <img src="@/assets/warning_decorator.svg" />
+        <img src="@/assets/socket_any.svg" />
+        <img src="@/assets/socket_number.svg" />
+        <img src="@/assets/socket_string.svg" />
+        <img src="@/assets/socket_object.svg" />
+        <img src="@/assets/socket_bool.svg" />
+    </div>
 </template>
 
 <style>
