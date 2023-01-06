@@ -23,32 +23,32 @@ const choices = [
     {
         id: enumID++,
         text: t('file_menu.new'),
-        method: newProject
+        method: getMenuAction(newProject),
     },
     {
         id: enumID++,
         text: t('file_menu.open'),
-        method: open
+        method: getMenuAction(open),
     },
     {
         id: enumID++,
         text: t('file_menu.save'),
-        method: save
+        method: getMenuAction(save),
     },
     {
         id: enumID++,
         text: t('file_menu.export'),
-        method: packageGame
+        method: getMenuAction(packageGame),
     },
     {
         id: enumID++,
         text: t('file_menu.prefs'),
-        method: () => {console.log("Preferences")}
+        method: getMenuAction(() => {console.log("Preferences")}),
     },
     {
         id: enumID++,
         text: t('file_menu.about'),
-        method: () => {console.log("About")}
+        method: getMenuAction(() => {console.log("About")}),
     }
 ];
 
@@ -98,6 +98,14 @@ function stopRenaming(): void {
     isRenaming.value = false;
 }
 
+function getMenuAction(callback: ()=>void): (e: MouseEvent)=>void {
+    return (event: MouseEvent) => {
+        event.stopPropagation();
+        closeFileMenu();
+        callback();
+    }
+}
+
 function newProject(): void {
     emit('new-project');
 }
@@ -141,7 +149,7 @@ function packageGame(): void {
                 <button
                     v-for="choice in choices"
                     :key="choice.id"
-                    @click="choice.method()"
+                    @click="choice.method"
                     class="choice">{{choice.text}}</button>
             </div>
         </button>
