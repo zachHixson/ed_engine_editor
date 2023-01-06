@@ -94,6 +94,7 @@ function resetUI(): void {
         <img src="@/assets/socket_string.svg" />
         <img src="@/assets/socket_object.svg" />
         <img src="@/assets/socket_bool.svg" />
+        <img src="@/assets/checkmark.svg" />
     </div>
 </template>
 

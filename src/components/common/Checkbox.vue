@@ -46,7 +46,7 @@ defineExpose({value: state.value, checked: state.value});
     <div class="checkbox" :class="styles" @click="onClick">
         <img v-if="showCheck" style="margin: 2px;" :src="checkIcon" draggable="false"/>
         <svg v-if="showInt" width="20px" height="20px">
-            <path d="M4 9 L14 9" stroke="#333333" stroke-width="4px" stroke-linecap="round"/>
+            <path d="M4 10 L14 10" stroke="#333333" stroke-width="3px" stroke-linecap="round"/>
         </svg>
     </div>
 </template>

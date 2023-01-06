@@ -20,6 +20,7 @@ import Node_Connection from '@/components/editor_logic/Node_Connection';
 import Svg from '@/components/common/Svg.vue';
 import type Node from './Node';
 import Checkbox from '@/components/common/Checkbox.vue';
+import Input from '@/components/common/Input.vue';
 
 import { ref, computed, nextTick, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -45,6 +46,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['on-input', 'value-changed', 'mouse-down', 'socket-over']);
 
+const numInputRef = ref<InstanceType<typeof Input>>();
 const boolCheckboxRef = ref<HTMLInputElement>();
 const socketConnectionRef = ref<HTMLDivElement>();
 const hasSize = ref(false);
@@ -54,6 +56,10 @@ let lastValue: any = 0;
 const socketType = computed(()=>{
     forceRefreshkey.value;
     return props.socket.type;
+});
+const socketValue = computed(()=>{
+    forceRefreshkey.value;
+    return props.socket.value;
 });
 const showLabel = computed(()=>props.socket.id.charAt(0) != '_');
 const hideSocket = computed(()=>{
@@ -113,9 +119,6 @@ function forceSocketUpdate(socketId: string | undefined): void {
 }
 
 function onInput(event: InputEvent): void {
-    const target = event.target as HTMLInputElement;
-
-    props.socket.value = target.value;
     emit('on-input', event);
 }
 
@@ -123,16 +126,8 @@ function valueChanged(target: HTMLInputElement): void {
     emitValueChanged(target.value);
 }
 
-function numValueChanged(target: HTMLInputElement): void {
-    const inputValNum = parseFloat(target.value);
-    let validated = inputValNum;
-
-    if (isNaN(inputValNum) && props.socket.required){
-        validated = parseFloat(props.socket.value);
-    }
-    
-    target.value = validated.toString();
-    emitValueChanged(validated);
+function numValueChanged({value}:{value: number}): void {
+    emitValueChanged(value);
 }
 
 function boolValueChanged(newVal: boolean | null): void {
@@ -191,10 +186,6 @@ function onTextBlur(event: FocusEvent): void {
     target.selectionStart = target.selectionEnd = 0;
 }
 
-function getValue(): any {
-    return props.socket.value;
-}
-
 defineExpose({socket: props.socket});
 </script>
 
@@ -212,25 +203,26 @@ defineExpose({socket: props.socket});
                 <div>{{t('node.' + socket.id)}}</div>
             </div>
             <div v-if="isInput && !isConnected && !hideInput" class="inputBox">
-                <input
+                <Input
                     v-if="socketType == Core.Node_Enums.SOCKET_TYPE.NUMBER"
                     type="number"
+                    ref="numInputRef"
                     :style="customStyles"
-                    :value="getValue()"
-                    @change="numValueChanged($event.target as HTMLInputElement)"
-                    @input="onInput($event as InputEvent)"
+                    :value="socketValue"
+                    :required="required"
                     :disabled="disabled"
-                    v-input-active/>
-                <input
+                    @change="numValueChanged"
+                    @input="onInput($event as InputEvent)" />
+                <Input
                     v-if="socketType == Core.Node_Enums.SOCKET_TYPE.STRING"
                     name="textInput"
                     type="text"
                     :style="customStyles"
-                    :value="getValue()"
+                    :value="socketValue"
+                    :disabled="disabled"
                     @change="valueChanged($event.target as HTMLInputElement)"
                     @input="onInput($event as InputEvent)"
                     @blur="onTextBlur($event as FocusEvent)"
-                    :disabled="disabled"
                     v-input-active
                     v-tooltip="disabled && socket.value.length > 8 ? socket.value : ''" />
                 <div
@@ -245,7 +237,7 @@ defineExpose({socket: props.socket});
                     :triple="props.socket.triple"
                     style="width: 20px"
                     :style="customStyles"
-                    :value="getValue()"
+                    :value="socketValue"
                     :disabled="disabled"
                     @change="boolValueChanged"
                     @input="onInput($event as InputEvent)"></Checkbox>

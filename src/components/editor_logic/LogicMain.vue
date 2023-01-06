@@ -811,6 +811,7 @@ function actionRemoveConnection({connectionObj}: ActionRemoveConnectionProps, ma
 
 function actionChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProps, makeCommit = true): void {
     socket.value = newVal;
+    !makeCommit && node.emit('force-socket-update', socket.id);
 
     node.onValueChange && node.onValueChange({
         socketId: socket.id,
@@ -878,6 +879,7 @@ function revertRemoveConnection({connectionObj}: ActionRemoveConnectionProps): v
 
 function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProps): void {
     socket.value = oldVal;
+    node.emit('force-socket-update', socket.id);
     node.onValueChange && node.onValueChange({
         socketId: socket.id,
         newVal,

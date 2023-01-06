@@ -91,7 +91,7 @@ export interface iEditorNode extends iNode_Base {
     decoratorText?: string | null;
 
     method(methodName: string): any;
-    getInput(inputName: string): iEditorNodeInput | null;
+    getInput(inputName: string): any | null;
     emit(eventName: string, data?: any): void;
 }
 

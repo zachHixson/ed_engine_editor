@@ -209,7 +209,7 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
         return method.call(this, ...data);
     }
 
-    getInput(inputName: string ): Core.iEditorNodeInput | null {
+    getInput(inputName: string ): any | null {
         const input = this.inputs.get(inputName);
 
         if (!input){

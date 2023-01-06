@@ -162,8 +162,8 @@ export default [
                 document.addEventListener('onNewVariable', this.onNewVariable as EventListener);
             }
         },
-        onInput(event: {detail: InputEvent}){
-            this.method('validate', [event.detail.target]);
+        onInput(event: InputEvent){
+            this.method('validate', [event.target]);
         },
         afterGameDataLoaded(this: iEditorNode & iEngineNode){
             if (this.engine) return;
@@ -294,7 +294,7 @@ function determineConnected(this: iEditorNode){
     this.emit('force-socket-update', 'name');
 }
 
-function validate(this: iEditorNode, textbox: HTMLInputElement){
+function validate(this: iEditorNode, textbox?: HTMLInputElement){
     const dataSocket = this.inputs.get('data') || this.outputs.get('data')!;
     const varName = textbox?.value ?? this.getInput('name');
     const globalGet = this.editorAPI.getGlobalVariable(varName);
