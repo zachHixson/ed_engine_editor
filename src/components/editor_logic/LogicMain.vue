@@ -174,10 +174,10 @@ onMounted(()=>{
     window.addEventListener('keydown', keyDown);
     window.addEventListener('keyup', keyUp);
     window.addEventListener('mouseup', mouseUp);
+    window.addEventListener('resize', resize);
     nodeViewportRef.value!.addEventListener('wheel', navControlPanelScroll);
     nodeViewportRef.value!.addEventListener ('mouseenter', mouseEnter);
     nodeViewportRef.value!.addEventListener ('mouseleave', mouseLeave);
-    window.addEventListener('resize', resize);
     resize();
 
     bindHotkeys();
@@ -194,7 +194,10 @@ onBeforeUnmount(()=>{
     window.removeEventListener('keydown', keyDown);
     window.removeEventListener('keyUp', keyUp as EventListener);
     window.removeEventListener('mouseup', mouseUp);
+    window.removeEventListener('resize', resize);
     nodeViewportRef.value!.removeEventListener('wheel', navControlPanelScroll);
+    nodeViewportRef.value!.removeEventListener('mouseenter', mouseEnter);
+    nodeViewportRef.value!.removeEventListener('mouseleave', mouseLeave);
 });
 
 const { stepForward, stepBackward } = useUndoHelpers(undoStore, actionMap, revertMap);

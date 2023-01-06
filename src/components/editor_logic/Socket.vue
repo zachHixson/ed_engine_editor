@@ -22,7 +22,7 @@ import type Node from './Node';
 import Checkbox from '@/components/common/Checkbox.vue';
 import Input from '@/components/common/Input.vue';
 
-import { ref, computed, nextTick, onMounted } from 'vue';
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAssetBrowserStore } from '@/stores/AssetBrowser';
 import Core from '@/core';
@@ -111,6 +111,10 @@ onMounted(()=>{
         }
     });
 });
+
+onBeforeUnmount(()=>{
+    props.socket.node.removeEventListener('force-socket-update', forceSocketUpdate);
+})
 
 function forceSocketUpdate(socketId: string | undefined): void {
     if (socketId == props.socket.id || !socketId){
