@@ -20,8 +20,6 @@ const styles = computed(()=>{
     if (state.value) outStyles.push('checked');
     if (props.disabled) outStyles.push('disabled');
 
-    console.log(props.disabled, outStyles.join(' '));
-
     return outStyles.join(' ');
 });
 
@@ -56,6 +54,8 @@ defineExpose({value: state.value, checked: state.value});
 <style scoped>
 .checkbox{
     display: flex;
+    justify-content: center;
+    align-items: center;
     width: 20px;
     height: 20px;
     background: white;

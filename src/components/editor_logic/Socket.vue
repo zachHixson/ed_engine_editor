@@ -49,6 +49,7 @@ const boolCheckboxRef = ref<HTMLInputElement>();
 const socketConnectionRef = ref<HTMLDivElement>();
 const hasSize = ref(false);
 const forceRefreshkey = ref(0);
+let lastValue: any = 0;
 
 const socketType = computed(()=>{
     forceRefreshkey.value;
@@ -69,7 +70,7 @@ const isConnected = computed(()=>(!!props.parentConnections.find(c => (
     c.endSocketId == props.socket.id && c.endNode!.nodeId == props.parentId
 )) && !!hasSize));
 const canConnect = computed(()=>!(isConnected.value && (isTrigger.value != props.isInput)));
-const required = computed(()=>!!props.socket.required);
+const required = computed(()=>!!props.socket.required ?? true);
 const iconMap = new Map<Core.Node_Enums.SOCKET_TYPE, string>([
     [Core.Node_Enums.SOCKET_TYPE.ANY, socketAnyIcon],
     [Core.Node_Enums.SOCKET_TYPE.NUMBER, socketNumberIcon],
@@ -94,6 +95,7 @@ const disabled = computed(()=>{
 
 onMounted(()=>{
     props.socket.node.addEventListener('force-socket-update', forceSocketUpdate);
+    lastValue = props.socket.value;
 
     nextTick(()=>{
         hasSize.value = true;
@@ -171,7 +173,7 @@ function mouseDown(event: MouseEvent): void {
     emit('mouse-down', connection);
 }
 
-function mouseEnter(event: MouseEvent): void {
+function mouseEnter(): void {
     emit('socket-over', {
         socketData: props.socket,
         isInput: props.isInput,
@@ -180,7 +182,7 @@ function mouseEnter(event: MouseEvent): void {
     });
 }
 
-function mouseLeave(event: MouseEvent): void {
+function mouseLeave(): void {
     emit('socket-over', null);
 }
 
@@ -387,12 +389,6 @@ defineExpose({socket: props.socket});
     background: var(--tool-panel-bg);
     filter: brightness(0.7);
     border-radius: 4px;
-}
-
-input[type="checkbox"]{
-    width: min-content;
-    padding: 0px;
-    margin: 0px;
 }
 
 .decorator-wrapper{
