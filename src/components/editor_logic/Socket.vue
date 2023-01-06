@@ -19,6 +19,7 @@ export interface iValueChanged {
 import Node_Connection from '@/components/editor_logic/Node_Connection';
 import Svg from '@/components/common/Svg.vue';
 import type Node from './Node';
+import Checkbox from '@/components/common/Checkbox.vue';
 
 import { ref, computed, nextTick, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -111,11 +112,8 @@ function forceSocketUpdate(socketId: string | undefined): void {
 
 function onInput(event: InputEvent): void {
     const target = event.target as HTMLInputElement;
-    
-    if (target.type != 'checkbox') {
-        props.socket.value = target.value;
-    }
 
+    props.socket.value = target.value;
     emit('on-input', event);
 }
 
@@ -124,7 +122,7 @@ function valueChanged(target: HTMLInputElement): void {
 }
 
 function numValueChanged(target: HTMLInputElement): void {
-    let inputValNum = parseFloat(target.value);
+    const inputValNum = parseFloat(target.value);
     let validated = inputValNum;
 
     if (isNaN(inputValNum) && props.socket.required){
@@ -135,28 +133,17 @@ function numValueChanged(target: HTMLInputElement): void {
     emitValueChanged(validated);
 }
 
-function boolValueChanged(target: HTMLInputElement): void {
-    let value: boolean | null = target.checked;
-
-    if (props.socket.triple && props.socket.value){
-        value = null;
-        target.indeterminate = true;
-    }
-
-    if (props.socket.value == null){
-        target.checked = false;
-        value = false;
-    }
-
-    emitValueChanged(value);
+function boolValueChanged(newVal: boolean | null): void {
+    emitValueChanged(newVal);
 }
 
 function emitValueChanged(newVal: any): void {
     emit('value-changed', {
         socket: props.socket,
-        oldVal: props.socket.value,
+        oldVal: lastValue,
         newVal: newVal,
     });
+    lastValue = newVal;
 }
 
 function mouseDown(event: MouseEvent): void {
@@ -250,15 +237,16 @@ defineExpose({socket: props.socket});
                     :style="customStyles">
                         <div>{{t('logic_editor.self')}}</div>
                 </div>
-                <input
+                <Checkbox
                     v-if="socketType == Core.Node_Enums.SOCKET_TYPE.BOOL"
-                    type="checkbox"
+                    ref="boolCheckboxRef"
+                    :triple="props.socket.triple"
+                    style="width: 20px"
                     :style="customStyles"
-                    :checked="getValue()"
-                    @change="boolValueChanged($event.target as HTMLInputElement)"
-                    @input="onInput($event as InputEvent)"
+                    :value="getValue()"
                     :disabled="disabled"
-                    ref="boolCheckboxRef"/>
+                    @change="boolValueChanged"
+                    @input="onInput($event as InputEvent)"></Checkbox>
             </div>
         </div>
         <div v-if="socketType == Core.Node_Enums.SOCKET_TYPE.INFO && socket.value" class="infoBox">
