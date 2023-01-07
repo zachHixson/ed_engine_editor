@@ -46,11 +46,6 @@ const assembled = computed(()=>{
 const isSamePos = computed(()=>hoverIdx.value! == dragIdx.value! || hoverIdx.value == dragIdx.value! - 1 || hoverIdx == null);
 const keys = computed(()=>props.keylist ?? props.items.map(i => i.id));
 
-onMounted(()=>{
-    document.addEventListener('mousemove', mouseMove);
-    document.addEventListener('mouseup', mouseUp);
-});
-
 onBeforeUnmount(()=>{
     document.removeEventListener('mousemove', mouseMove);
     document.removeEventListener('mouseup', mouseMove);
@@ -61,6 +56,8 @@ function mouseDown(event: MouseEvent): void {
     const elBounds = topLevelEl.getBoundingClientRect();
 
     event.preventDefault();
+    document.addEventListener('mousemove', mouseMove);
+    document.addEventListener('mouseup', mouseUp);
     mouseDownPos = new Vector(event.clientX, event.clientY);
     downEl.value = topLevelEl;
     dragOffset.copy(mouseDownPos).subtract(new Vector(elBounds.left, elBounds.top));
@@ -117,6 +114,9 @@ function mouseMove(event: MouseEvent): void {
 function mouseUp(): void {
     mouseDownPos = null;
     hasMoved.value = false;
+
+    document.removeEventListener('mousemove', mouseMove);
+    document.removeEventListener('mouseup', mouseMove);
 
     if (isDragging.value){
         dragEnd();
