@@ -176,8 +176,8 @@ onMounted(()=>{
     window.addEventListener('mouseup', mouseUp);
     window.addEventListener('resize', resize);
     nodeViewportRef.value!.addEventListener('wheel', navControlPanelScroll);
-    nodeViewportRef.value!.addEventListener ('mouseenter', mouseEnter);
-    nodeViewportRef.value!.addEventListener ('mouseleave', mouseLeave);
+    nodeViewportRef.value!.addEventListener('mouseenter', mouseEnter);
+    nodeViewportRef.value!.addEventListener('mouseleave', mouseLeave);
     resize();
 
     bindHotkeys();

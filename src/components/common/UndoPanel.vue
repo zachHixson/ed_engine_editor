@@ -9,6 +9,9 @@ import {
     onMounted,
     onBeforeUnmount
 } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     undoLength: number,
@@ -41,8 +44,8 @@ onBeforeUnmount(()=>{
 
 <template>
     <div class="undoPanel">
-        <UndoButton :icon="undoButtonSVG" :altText="$t('undo.undo')" :isActive="undoActive" @click="$emit('undo')"/>
-        <UndoButton :icon="redoButtonSVG" :altText="$t('undo.redo')" :isActive="redoActive" @click="$emit('redo')"/>
+        <UndoButton :icon="undoButtonSVG" :altText="t('undo.undo')" :isActive="undoActive" @click="emit('undo')"/>
+        <UndoButton :icon="redoButtonSVG" :altText="t('undo.redo')" :isActive="redoActive" @click="emit('redo')"/>
     </div>
 </template>
 
