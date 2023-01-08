@@ -18,9 +18,9 @@ const sliderRef = ref<HTMLElement>();
 const cursorRef = ref<HTMLElement>();
 const valueCursorRef = ref<HTMLElement>();
 const valueCursorBGRef = ref<HTMLElement>();
-const wheelBuffer = Draw.createHDPICanvas(props.width, props.width) as HTMLCanvasElement;
-const valueBuffer = Draw.createHDPICanvas(props.width, props.width) as HTMLCanvasElement;
-const circleBuffer = Draw.createHDPICanvas(props.width, props.width) as HTMLCanvasElement;
+const wheelBuffer = Draw.createCanvas(props.width, props.width) as HTMLCanvasElement;
+const valueBuffer = Draw.createCanvas(props.width, props.width) as HTMLCanvasElement;
+const circleBuffer = Draw.createCanvas(props.width, props.width) as HTMLCanvasElement;
 const cursorPos = new Vector(0, 0);
 const valuePos = ref(1);
 let selectedColor: Core.Draw.Color = props.color ?? new Draw.Color(255, 255, 255, 255);
@@ -51,28 +51,29 @@ onBeforeUnmount(()=>{
 });
 
 function drawWheel(): void {
-    const canvas = canvasRef.value!;
     const ctx = wheelBuffer.getContext('2d')!;
-    const colors = new Uint8ClampedArray(canvas.width * canvas.height * 4);
-    let imgData;
+    const colors = ctx.getImageData(0, 0, wheelBuffer.width, wheelBuffer.height);
 
-    for (let i = 0; i < colors.length; i += 4){
+    const pos = new Vector();
+    const relPos = new Vector();
+    const rgb = {r: 0, g: 0, b: 0};
+
+    for (let i = 0; i < colors.data.length; i += 4){
         const posIdx = i / 4;
-        const pos = new Vector(posIdx % canvas.width, Math.floor(posIdx / canvas.width));
-        const relPos = new Vector(pos.x / canvas.width, pos.y / canvas.height).subtractScalar(0.5).multiplyScalar(2);
+        pos.set(posIdx % wheelBuffer.width, Math.floor(posIdx / wheelBuffer.width));
+        relPos.set(pos.x / wheelBuffer.width, pos.y / wheelBuffer.height).subtractScalar(0.5).multiplyScalar(2);
         const hue = (Math.atan2(relPos.y, relPos.x) + Math.PI) * (180 / Math.PI);
         const sat = relPos.length() * EXPAND;
         const val = 1;
-        const rgb = Draw.HSVToRGB(hue, sat, val);
+        Draw.FastHSVToRGB(hue, sat, val, rgb);
 
-        colors[i + 0] = rgb.r;
-        colors[i + 1] = rgb.g;
-        colors[i + 2] = rgb.b;
-        colors[i + 3] = 255;
+        colors.data[i + 0] = rgb.r;
+        colors.data[i + 1] = rgb.g;
+        colors.data[i + 2] = rgb.b;
+        colors.data[i + 3] = 255;
     }
 
-    imgData = new ImageData(colors, canvas.width);
-    ctx.putImageData(imgData, 0, 0);
+    ctx.putImageData(colors, 0, 0);
 }
 
 function drawCircleBuff(): void {

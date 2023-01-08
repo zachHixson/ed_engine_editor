@@ -62,47 +62,61 @@ export function RGBAToHex(r: number = 0, g: number = 0, b: number = 0, a: number
     return '#' + hexR + hexG + hexB + hexA;
 };
 
-export function HSVToRGB(h: number, s: number, v: number): {r: number, g: number, b: number} {
+export function FastHSVToRGB(h: number, s: number, v: number, rgbObj: any): void {
     let c = v * s;
     let x = c * (1 - Math.abs(((h / 60) % 2) - 1));
     let m = v - c;
-    let out;
+    let o1, o2, o3;
 
     if (0 <= h && h < 60){
-        out = [c, x, 0];
+        o1 = c;
+        o2 = x;
+        o3 = 0;
     }
     else if (h < 120){
-        out = [x, c, 0];
+        o1 = x;
+        o2 = c;
+        o3 = 0;
     }
     else if (h < 180){
-        out = [0, c, x];
+        o1 = 0;
+        o2 = c;
+        o3 = x;
     }
     else if (h < 240){
-        out = [0, x, c];
+        o1 = 0;
+        o2 = x;
+        o3 = c;
     }
     else if (h < 300){
-        out = [x, 0, c];
+        o1 = x;
+        o2 = 0;
+        o3 = c;
     }
     else if (h <= 360){
-        out = [c, 0, x];
+        o1 = c;
+        o2 = 0;
+        o3 = x;
     }
     else{
         console.trace("Error: Hue is not 0-360 [" + h + "]");
-        out = [0, 0, 0];
+        o1 = 0;
+        o2 = 0;
+        o3 = 0;
     }
 
-    for (let i = 0; i < out.length; i++){
-        out[i] = Math.floor((out[i] + m) * 255);
-    }
-
-    return {
-        r: out[0],
-        g: out[1],
-        b: out[2]
-    }
+    rgbObj.r = (o1 + m) * 255,
+    rgbObj.g = (o2 + m) * 255,
+    rgbObj.b = (o3 + m) * 255
 };
 
-export function RGBToHSV(r: number, g: number, b: number): {hue: number, sat: number, val: number} {
+export function HSVToRGB(h: number, s: number, v: number): {r: number, g: number, b: number} {
+    const rgb = {r: 0, g: 0, b: 0};
+    FastHSVToRGB(h, s, v, rgb)
+    return rgb;
+}
+
+export function FastRGBToHSV(r: number, g: number, b: number, outObj: {hue: number, sat: number, val: number}): void {
     let rp = r / 255;
     let gp = g / 255;
     let bp = b / 255;
@@ -133,8 +147,16 @@ export function RGBToHSV(r: number, g: number, b: number): {hue: number, sat: nu
     sat = (cmax == 0) ? 0 : delta / cmax;
     val = cmax;
 
-    return {hue, sat, val};
+    outObj.hue = hue;
+    outObj.sat = sat;
+    outObj.val = val;
 };
+
+export function RGBToHSV(r: number, g: number, b: number): {hue: number, sat: number, val: number} {
+    const hsv = {hue: 0, sat: 0, val: 0};
+    FastRGBToHSV(r, g, b, hsv);
+    return hsv;
+}
 
 export function createCanvas(width: number, height: number): HTMLCanvasElement {
     const canvas = document.createElement('canvas');

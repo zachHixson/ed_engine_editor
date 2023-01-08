@@ -66,7 +66,7 @@ export class Vector {
     }
 
     magnitude(): number {
-        return Math.sqrt(this.dot(this));
+        return Math.sqrt(this.x * this.x + this.y * this.y);
     }
 
     length = this.magnitude;
