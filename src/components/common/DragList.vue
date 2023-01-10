@@ -6,50 +6,102 @@ export interface iChangeEventProps {
 </script>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { ref, shallowRef, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import Core from '@/core';
 
 const DRAG_DIST = 20;
 
 const { Vector } = Core;
 
-const props = defineProps<{
-    items: any[],
-    keylist: string[] | number[] | null,
-}>();
-
 const emit = defineEmits(['order-changed']);
 
-const rootEl = ref<HTMLDivElement>();
-const elHeight = ref(0);
-const hoverIdx = ref<number | null>(null);
-const isDragging = ref(false);
-const hasMoved = ref(false);
-const overY = ref(0);
-const downEl = ref<HTMLDivElement | null>(null);
-const dragEl = ref<HTMLDivElement | null>(null);
-const dragIdx = ref<number | null>(null);
-let mouseDownPos: Core.Vector | null;
-let mousePos = new Vector(-5, -5);
-let dragOffset = new Vector(0, 0);
+const rootEl = shallowRef<HTMLDivElement>();
+const dragLineRef = shallowRef<HTMLDivElement>();
+const observer = new MutationObserver(onContentsChange);
+const mousePos = new Vector(-5, -5);
+const dragOffset = new Vector(0, 0);
+const mouseDownPos = new Vector(0, 0);
+let downEl: HTMLDivElement | null;
+let dragEl: HTMLDivElement | null;
+let elHeight: number = 0;
+let hoverIdx: number | null;
+let overY: number = 0;
+let dragIdx: number | null;
+let isDragging = false;
+let hasMoved = false;
 
-const assembled = computed(()=>{
-    nextTick(()=>{
-        const root = rootEl.value!;
-        const children = [...root.childNodes!].filter((node: any) => node.getAttribute && node.getAttribute('name'));
-        const listEl = children[0] as HTMLElement;
-        elHeight.value = listEl ? listEl.clientHeight : 0;
-    });
-
-    return props.items.map((item, idx) => {return {item, index: idx}});
+onMounted(()=>{
+    onContentsChange();
 });
-const isSamePos = computed(()=>hoverIdx.value! == dragIdx.value! || hoverIdx.value == dragIdx.value! - 1 || hoverIdx == null);
-const keys = computed(()=>props.keylist ?? props.items.map(i => i.id));
 
 onBeforeUnmount(()=>{
     document.removeEventListener('mousemove', mouseMove);
     document.removeEventListener('mouseup', mouseMove);
 });
+
+function enableObserver(): void {
+    const observerConfig = {childList: true};
+    observer.observe(rootEl.value!, observerConfig);
+}
+
+function onContentsChange(): void {
+    const root = rootEl.value!;
+    const dragLine = dragLineRef.value!;
+    const children = [...root.children];
+    let idx = 0;
+
+    observer.disconnect();
+
+    //add new draglines and event listeners
+    children.forEach((node) => {
+        const isDragLine = node.getAttribute('name') == 'dragLine'
+        const isDraggableEl = node.tagName == 'DIV' && !isDragLine;
+        const isNew = node.getAttribute('instanced-item') == null;
+
+        if (isDraggableEl){
+            if (isNew){
+                const newDragLine = dragLine.cloneNode(true) as HTMLDivElement;
+
+                newDragLine.setAttribute('idx', idx.toString());
+                node.after(newDragLine);
+                node.setAttribute('instanced-item', '1');
+                node.addEventListener('mousedown', mouseDown as EventListener);
+            }
+
+            node.setAttribute('idx', idx.toString());
+            idx++;
+        }
+        else if (isDragLine){
+            //if dragLines are doubled up (such as after an asset has been removed) remove it.
+            if (node.nextElementSibling?.getAttribute('name') == 'dragLine'){
+                node.nextElementSibling.remove();
+            }
+
+            node.setAttribute('idx', idx.toString());
+        }
+        
+    });
+
+    enableObserver();
+}
+
+function activateHoverBoundaries(): void {
+    const root = rootEl.value!;
+    const boundaries = root.querySelectorAll<HTMLDivElement>('.hover-boundary');
+
+    boundaries.forEach(boundary => {
+        boundary.style.height= elHeight + 'px';
+    });
+}
+
+function deactivateHoverBoundaries(): void {
+    const root = rootEl.value!;
+    const boundaries = root.querySelectorAll<HTMLDivElement>('.hover-boundary');
+
+    boundaries.forEach(boundary => {
+        boundary.style.height= '0px';
+    });
+}
 
 function mouseDown(event: MouseEvent): void {
     const topLevelEl = getItemParent(event.target as HTMLDivElement);
@@ -58,9 +110,10 @@ function mouseDown(event: MouseEvent): void {
     event.preventDefault();
     document.addEventListener('mousemove', mouseMove);
     document.addEventListener('mouseup', mouseUp);
-    mouseDownPos = new Vector(event.clientX, event.clientY);
-    downEl.value = topLevelEl;
+    mouseDownPos.set(event.clientX, event.clientY);
+    downEl = topLevelEl;
     dragOffset.copy(mouseDownPos).subtract(new Vector(elBounds.left, elBounds.top));
+    elHeight = elBounds.bottom - elBounds.top;
 }
 
 function mouseMove(event: MouseEvent): void {
@@ -81,15 +134,15 @@ function mouseMove(event: MouseEvent): void {
         const overTop = -Math.max(listBounds.top - mousePos.y, 0);
         const underBottom = Math.max(mousePos.y - listBounds.bottom, 0);
 
-        overY.value = overTop + underBottom;
-        hoverIdx.value = null;
+        overY = overTop + underBottom;
+        hoverIdx = null;
     }
     else{
-        overY.value = 0;
+        overY = 0;
     }
 
     //check which separator item is being dragged over
-    if (isDragging.value){
+    if (isDragging){
         handleScroll();
         updateDragIdx();
     }
@@ -98,71 +151,73 @@ function mouseMove(event: MouseEvent): void {
     if (mouseDownPos){
         const distance = mouseDownPos.distanceTo(mousePos);
         
-        if (distance > DRAG_DIST && !isDragging.value){
+        if (distance > DRAG_DIST && !isDragging){
             dragStart();
         }
     }
 
     //if mouse is already dragging update dragEl position
-    if (dragEl.value){
+    if (dragEl){
         const newPos = mousePos.clone().subtract(dragOffset);
-        dragEl.value.style.left = newPos.x + 'px';
-        dragEl.value.style.top = newPos.y + 'px';
+        dragEl.style.left = newPos.x + 'px';
+        dragEl.style.top = newPos.y + 'px';
     }
 }
 
 function mouseUp(): void {
-    mouseDownPos = null;
-    hasMoved.value = false;
+    hasMoved = false;
 
     document.removeEventListener('mousemove', mouseMove);
     document.removeEventListener('mouseup', mouseMove);
 
-    if (isDragging.value){
+    if (isDragging){
         dragEnd();
     }
 }
 
 function dragStart(): void {
-    isDragging.value = true;
-    dragEl.value = cloneEl(downEl.value!);
-    dragIdx.value = parseInt(dragEl.value!.getAttribute('idx')!);
-    hoverIdx.value = dragIdx.value;
+    isDragging = true;
+    dragEl = cloneEl(downEl!);
+    dragIdx = parseInt(dragEl!.getAttribute('idx')!);
+    hoverIdx = dragIdx;
 
-    dragEl.value!.style.position = 'absolute';
-    dragEl.value!.style.top = '0px';
-    dragEl.value!.style.left = '0px';
-    dragEl.value!.style.zIndex = '2000';
-    document.body.append(dragEl.value);
+    dragEl.style.position = 'absolute';
+    dragEl.style.top = '0px';
+    dragEl.style.left = '0px';
+    dragEl.style.zIndex = '2000';
+    document.body.append(dragEl);
+
+    activateHoverBoundaries();
 }
 
 function dragEnd(): void {
-    const newIdx = dragIdx.value! < hoverIdx.value! ? hoverIdx.value! : hoverIdx.value! + 1;
+    const newIdx = hoverIdx;
 
-    if (hoverIdx.value != null && !isSamePos.value){
+    if (hoverIdx != null && !isSamePos()){
         emit('order-changed', {
-            itemIdx: dragIdx.value,
+            itemIdx: dragIdx,
             newIdx
         });
     }
 
-    hoverIdx.value = null;
-    downEl.value = null;
-    dragIdx.value = null;
-    isDragging.value = false;
-    dragEl.value!.parentNode!.removeChild(dragEl.value!);
+    hoverIdx = null;
+    downEl = null;
+    dragIdx = null;
+    isDragging = false;
+    dragEl!.parentNode!.removeChild(dragEl!);
+    deactivateHoverBoundaries();
 }
 
 function handleScroll(): void {
-    if (overY.value != 0 && isDragging.value){
-        const scrollAmt = overY.value * devicePixelRatio * 0.1;
+    if (overY != 0 && isDragging){
+        const scrollAmt = overY * devicePixelRatio * 0.1;
         rootEl.value!.parentElement!.scrollBy(0, scrollAmt);
         requestAnimationFrame(handleScroll);
     }
 }
 
 function updateDragIdx(): void {
-    const separators = getSeparatorChildren(rootEl.value!);
+    const separators = rootEl.value!.querySelectorAll('.hover-boundary');
     
     for (let i = 0; i < separators.length; i++){
         const bounds = separators[i].getBoundingClientRect();
@@ -174,36 +229,21 @@ function updateDragIdx(): void {
             y > bounds.top &&
             y < bounds.bottom
         ){
-            hoverIdx.value = parseInt(separators[i].getAttribute('idx')!);
-            hasMoved.value ||= hoverIdx.value != dragIdx.value;
+            const boundaryParent = separators[i].parentElement!;
+            hoverIdx = parseInt(boundaryParent.getAttribute('idx')!);
+            hasMoved ||= hoverIdx != dragIdx;
+            console.log(dragIdx, hoverIdx);
         }
     }
 }
 
 function getItemParent(item: HTMLDivElement): HTMLDivElement {
-    if (item.getAttribute('name') == 'instancedItem'){
+    if (item.getAttribute('instanced-item') == '1'){
         return item;
     }
     else{
         return getItemParent(item.parentNode as HTMLDivElement);
     }
-}
-
-function getSeparatorChildren(el: HTMLDivElement): HTMLDivElement[] {
-    const separators = [];
-
-    for (let i = 0; i < el.childNodes.length; i++){
-        const child = el.childNodes[i] as HTMLDivElement;
-
-        if (child.className == 'hover-boundary'){
-            separators.push(child);
-        }
-        else{
-            separators.push(...getSeparatorChildren(child));
-        }
-    }
-
-    return separators;
 }
 
 function getCanvasChildren(el: HTMLDivElement): HTMLCanvasElement[] {
@@ -237,43 +277,18 @@ function cloneEl(el: HTMLDivElement): HTMLDivElement {
 
     return clone;
 }
+
+function isSamePos(): boolean {
+    return hoverIdx! == dragIdx! || hoverIdx == dragIdx! - 1 || hoverIdx == null;
+}
 </script>
 
 <template>
     <div ref="rootEl">
-        <div
-            class="drag-line"
-            :class="hasMoved ? 'drag-line-animation':''"
-            :style="`
-                ${dragIdx == -1 ? 'display: none;':''}
-                height: ${hoverIdx == -1 ? elHeight : 0}px;
-            `">
-            <div :idx="-1" :style="`height: ${elHeight}px`" class="hover-boundary"></div>
+        <div ref="dragLineRef" name="dragLine" class="drag-line">
+            <div name="hoverBoundary" class="hover-boundary"></div>
         </div>
-        <div
-            v-for="(item, idx) in assembled"
-            name="instancedItem"
-            :key="keys[idx]"
-            :idx="idx"
-            @mousedown="mouseDown">
-            <div
-                :style="`
-                    transition: height 0.1s;
-                    ${dragIdx == idx ? 'opacity: 0; height:' + elHeight +'px;':''}
-                    ${dragIdx == idx && hasMoved ? 'height: 0px;':''}
-                `">
-                <slot name="item" v-bind="item"></slot>
-            </div>
-            <div
-                class="drag-line"
-                :class="hasMoved ? 'drag-line-animation':''"
-                :style="`
-                    ${dragIdx == idx ? 'display: none;':''}
-                    height: ${hoverIdx == idx ? elHeight : 0}px;
-                `">
-                <div :idx="idx" :style="`height: ${elHeight}px`" class="hover-boundary"></div>
-            </div>
-        </div>
+        <slot ref="slotEl"></slot>
     </div>
 </template>
 
@@ -283,6 +298,8 @@ function cloneEl(el: HTMLDivElement): HTMLDivElement {
     position: relative;
     width: 100%;
     pointer-events: none;
+    height: 1px;
+    background: black;
 }
 
 .drag-line-animation{
@@ -294,5 +311,6 @@ function cloneEl(el: HTMLDivElement): HTMLDivElement {
     width: 100%;
     transform: translateY(-50%);
     pointer-events: none;
+    border: 1px solid red;
 }
 </style>
