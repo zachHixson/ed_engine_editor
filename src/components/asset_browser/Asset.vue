@@ -153,7 +153,8 @@ function drawThumbnail(): void {
     width: 100%;
     padding: 5px;
     border-radius: var(--corner-radius);
-    background: var(--main-bg)
+    background: var(--main-bg);
+    border: 1px solid black;
 }
 
 .nameBox{

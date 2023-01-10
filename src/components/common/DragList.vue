@@ -25,6 +25,8 @@ let downEl: HTMLDivElement | null;
 let dragEl: HTMLDivElement | null;
 let elHeight: number = 0;
 let hoverIdx: number | null;
+let hoverEl: HTMLDivElement | null;
+let originalDisplay: string;
 let overY: number = 0;
 let dragIdx: number | null;
 let isDragging = false;
@@ -100,6 +102,8 @@ function deactivateHoverBoundaries(): void {
 
     boundaries.forEach(boundary => {
         boundary.style.height= '0px';
+        boundary.parentElement!.style.height = '1px';
+        boundary.parentElement?.classList.remove('drag-line-animation');
     });
 }
 
@@ -187,11 +191,19 @@ function dragStart(): void {
     dragEl.style.zIndex = '2000';
     document.body.append(dragEl);
 
+    originalDisplay = downEl!.style.display;
+    downEl!.style.display = 'none';
+
+    if (downEl!.nextElementSibling){
+        hoverEl = downEl!.nextElementSibling as HTMLDivElement;
+        hoverEl.style.height = elHeight + 'px';
+    }
+    
     activateHoverBoundaries();
 }
 
 function dragEnd(): void {
-    const newIdx = hoverIdx;
+    const newIdx = dragIdx! < hoverIdx! ? hoverIdx : hoverIdx! + 1;
 
     if (hoverIdx != null && !isSamePos()){
         emit('order-changed', {
@@ -200,12 +212,16 @@ function dragEnd(): void {
         });
     }
 
+    deactivateHoverBoundaries();
+
+    downEl!.style.display = originalDisplay;
+
     hoverIdx = null;
+    hoverEl = null;
     downEl = null;
     dragIdx = null;
     isDragging = false;
     dragEl!.parentNode!.removeChild(dragEl!);
-    deactivateHoverBoundaries();
 }
 
 function handleScroll(): void {
@@ -229,21 +245,29 @@ function updateDragIdx(): void {
             y > bounds.top &&
             y < bounds.bottom
         ){
-            const boundaryParent = separators[i].parentElement!;
+            const hoverBoundary = separators[i] as HTMLDivElement;
+            const boundaryParent = hoverBoundary.parentElement as HTMLDivElement;
             hoverIdx = parseInt(boundaryParent.getAttribute('idx')!);
+            setHoverEl(boundaryParent);
             hasMoved ||= hoverIdx != dragIdx;
-            console.log(dragIdx, hoverIdx);
         }
     }
 }
 
+function setHoverEl(el: HTMLDivElement): void {
+    if (hoverEl) {
+        hoverEl.style.height = '1px';
+        hoverEl.classList.add('drag-line-animation');
+    }
+
+    hoverEl = el;
+    hoverEl.classList.add('drag-line-animation');
+    hoverEl.style.height = elHeight + 'px';
+}
+
 function getItemParent(item: HTMLDivElement): HTMLDivElement {
-    if (item.getAttribute('instanced-item') == '1'){
-        return item;
-    }
-    else{
-        return getItemParent(item.parentNode as HTMLDivElement);
-    }
+    const isInstanceItem = item.getAttribute('instanced-item') == '1';
+    return isInstanceItem ? item : getItemParent(item.parentNode as HTMLDivElement);
 }
 
 function getCanvasChildren(el: HTMLDivElement): HTMLCanvasElement[] {
@@ -309,6 +333,7 @@ function isSamePos(): boolean {
 .hover-boundary{
     position: absolute;
     width: 100%;
+    top: 50%;
     transform: translateY(-50%);
     pointer-events: none;
     border: 1px solid red;
