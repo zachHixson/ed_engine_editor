@@ -54,35 +54,42 @@ function onContentsChange(): void {
 
     observer.disconnect();
 
-    //add new draglines and event listeners
+    //add new draglines as necessary
     children.forEach((node) => {
-        const isDragLine = node.getAttribute('name') == 'dragLine'
-        const isDraggableEl = node.tagName == 'DIV' && !isDragLine;
-        const isNew = node.getAttribute('instanced-item') == null;
+        const el = node as HTMLDivElement;
+        const isDragLine = el.getAttribute('name') == 'dragLine';
+        const isDraggableEl = el.tagName == 'DIV' && el.style.display != 'none' && !isDragLine;
+        const isNew = el.getAttribute('instanced-item') == null;
+        const nextIsDragline = el.nextElementSibling?.getAttribute('name') == 'dragLine';
 
         if (isDraggableEl){
             if (isNew){
+                el.setAttribute('instanced-item', '1');
+                el.addEventListener('mousedown', mouseDown as EventListener);
+                el.addEventListener('mouseover', debugHover as EventListener);
+            }
+
+            if (!nextIsDragline){
                 const newDragLine = dragLine.cloneNode(true) as HTMLDivElement;
 
-                newDragLine.setAttribute('idx', idx.toString());
-                node.after(newDragLine);
-                node.setAttribute('instanced-item', '1');
-                node.addEventListener('mousedown', mouseDown as EventListener);
+                el.after(newDragLine);
+                newDragLine.addEventListener('mouseover', debugHover);
             }
-
-            node.setAttribute('idx', idx.toString());
-            idx++;
         }
-        else if (isDragLine){
+        else if (nextIsDragline){
             //if dragLines are doubled up (such as after an asset has been removed) remove it.
-            if (node.nextElementSibling?.getAttribute('name') == 'dragLine'){
-                node.nextElementSibling.remove();
-            }
-
-            node.setAttribute('idx', idx.toString());
+            el.nextElementSibling.remove();
         }
-        
     });
+
+    //re-index list
+    for (let i = 0; i < root.children.length; i++){
+        const curChild = root.children[i] as HTMLDivElement;
+        const isDraggable = curChild.getAttribute('name') != 'dragLine';
+
+        curChild.setAttribute('idx', idx.toString());
+        if (isDraggable) idx++;
+    }
 
     enableObserver();
 }
@@ -139,6 +146,7 @@ function mouseMove(event: MouseEvent): void {
         const underBottom = Math.max(mousePos.y - listBounds.bottom, 0);
 
         overY = overTop + underBottom;
+        console.log("OOB")
         hoverIdx = null;
     }
     else{
@@ -185,6 +193,8 @@ function dragStart(): void {
     dragIdx = parseInt(dragEl!.getAttribute('idx')!);
     hoverIdx = dragIdx;
 
+    console.warn(dragIdx);
+
     dragEl.style.position = 'absolute';
     dragEl.style.top = '0px';
     dragEl.style.left = '0px';
@@ -194,22 +204,28 @@ function dragStart(): void {
     originalDisplay = downEl!.style.display;
     downEl!.style.display = 'none';
 
-    if (downEl!.nextElementSibling){
-        hoverEl = downEl!.nextElementSibling as HTMLDivElement;
-        hoverEl.style.height = elHeight + 'px';
+    onContentsChange();
+
+    if (downEl!.previousElementSibling){
+        const prevDragLine = downEl!.previousElementSibling as HTMLDivElement;
+        hoverEl = prevDragLine.children[0] as HTMLDivElement;
+        prevDragLine.style.height = (elHeight) + 'px';
     }
     
     activateHoverBoundaries();
 }
 
 function dragEnd(): void {
-    const newIdx = dragIdx! < hoverIdx! ? hoverIdx : hoverIdx! + 1;
+    const newIdx = hoverIdx! > dragIdx! ? hoverIdx! - 1 : hoverIdx;
 
-    if (hoverIdx != null && !isSamePos()){
+    console.warn(newIdx);
+
+    if (hoverIdx != null){
         emit('order-changed', {
             itemIdx: dragIdx,
             newIdx
         });
+        console.log(dragIdx, newIdx);
     }
 
     deactivateHoverBoundaries();
@@ -222,6 +238,8 @@ function dragEnd(): void {
     dragIdx = null;
     isDragging = false;
     dragEl!.parentNode!.removeChild(dragEl!);
+
+    onContentsChange();
 }
 
 function handleScroll(): void {
@@ -236,7 +254,8 @@ function updateDragIdx(): void {
     const separators = rootEl.value!.querySelectorAll('.hover-boundary');
     
     for (let i = 0; i < separators.length; i++){
-        const bounds = separators[i].getBoundingClientRect();
+        const hoverBoundary = separators[i] as HTMLDivElement;
+        const bounds = hoverBoundary.getBoundingClientRect();
         const {x, y} = mousePos;
 
         if (
@@ -245,11 +264,15 @@ function updateDragIdx(): void {
             y > bounds.top &&
             y < bounds.bottom
         ){
-            const hoverBoundary = separators[i] as HTMLDivElement;
             const boundaryParent = hoverBoundary.parentElement as HTMLDivElement;
             hoverIdx = parseInt(boundaryParent.getAttribute('idx')!);
+            hoverBoundary.style.height = (2 * elHeight) + 'px';
             setHoverEl(boundaryParent);
             hasMoved ||= hoverIdx != dragIdx;
+            console.log(hoverIdx);
+        }
+        else{
+            hoverBoundary.style.height = elHeight + 'px';
         }
     }
 }
@@ -302,8 +325,9 @@ function cloneEl(el: HTMLDivElement): HTMLDivElement {
     return clone;
 }
 
-function isSamePos(): boolean {
-    return hoverIdx! == dragIdx! || hoverIdx == dragIdx! - 1 || hoverIdx == null;
+function debugHover(e: MouseEvent){
+    //@ts-ignore
+    console.log(e.target.getAttribute('idx'));
 }
 </script>
 
