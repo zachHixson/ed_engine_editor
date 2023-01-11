@@ -216,19 +216,16 @@ function frameOrderChanged(event: {itemIdx: number, newIdx: number}): void {
             </div>
             <div v-if="isOpen" ref="frameListRef" class="scrollWrapper">
                 <DragList
-                    :items="animFrames"
-                    :keylist="animFrameKeys"
                     @order-changed="frameOrderChanged">
-                    <template #item="{index}">
-                        <AnimFrame
-                            class="animFrame"
-                            :index="index"
-                            :sprite="sprite"
-                            @selectedFrameChanged="selectedFrameChanged"
-                            @frameDeleted="deleteFrame"
-                            @frameCopied="frameCopied"
-                            @frameMoved="frameMoved"/>
-                    </template>
+                    <AnimFrame
+                        v-for="(frame, idx) in animFrames"
+                        class="animFrame"
+                        :index="idx"
+                        :sprite="sprite"
+                        @selectedFrameChanged="selectedFrameChanged"
+                        @frameDeleted="deleteFrame"
+                        @frameCopied="frameCopied"
+                        @frameMoved="frameMoved"/>
                 </DragList>
                 <button class="addFrame" @click="addFrame()" v-tooltip="t('art_editor.add_frame')">
                     <Svg class="icon" :src="plusIcon"></Svg>
@@ -277,6 +274,7 @@ function frameOrderChanged(event: {itemIdx: number, newIdx: number}): void {
     padding: 5px;
     overflow-y: auto;
     overflow-anchor: none;
+    scrollbar-gutter: stable both-edges;
 }
 
 .animFrame{

@@ -179,8 +179,6 @@ function orderChanged(event: iChangeEventProps): void {
     const selectedListCopy = [...selectedList.value];
     const movedAsset = selectedListCopy.splice(event.itemIdx, 1);
     selectedListCopy.splice(event.newIdx, 0, ...movedAsset);
-
-    //console.log(selectedListCopy[event.itemIdx].name);
     
     for (let i = 0; i < selectedListCopy.length; i++){
         selectedListCopy[i].sortOrder = i;
