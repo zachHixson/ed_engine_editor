@@ -1031,40 +1031,37 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
                 </div>
                 <div ref="graphListRef" class="graph-list">
                     <DragList
-                        :items="graphs"
-                        :keylist="graphKeys"
                         @order-changed="graphOrderChanged">
-                        <template #item="{item}">
-                            <div
-                                class="graph"
-                                :class="selectedAsset.selectedGraphId == item.id ? 'graph-selected' : ''"
-                                @click="switchGraph(item.id)"
-                                v-click-outside="stopRenamingGraph">
-                                <div class="graph-name">
-                                    <div
-                                        v-show="renamingGraph != item.id"
-                                        class="graph-display-name"
-                                        @dblclick="startRenamingGraph(item.id)">
-                                            {{item.name}}
-                                        </div>
-                                    <div v-show="renamingGraph == item.id">
-                                        <input
-                                            :ref="el => graphRenameRefs.set(item.id, el as HTMLInputElement)"
-                                            style="width: 90%" type="text"
-                                            v-model="item.name" v-input-active
-                                            @keyup.enter="stopRenamingGraph"/>
+                        <div
+                            v-for="graph in graphs"
+                            class="graph"
+                            :class="selectedAsset.selectedGraphId == graph.id ? 'graph-selected' : ''"
+                            @click="switchGraph(graph.id)"
+                            v-click-outside="stopRenamingGraph">
+                            <div class="graph-name">
+                                <div
+                                    v-show="renamingGraph != graph.id"
+                                    class="graph-display-name"
+                                    @dblclick="startRenamingGraph(graph.id)">
+                                        {{graph.name}}
                                     </div>
-                                </div>
-                                <div class="graph-controls">
-                                    <button class="graph-control-btn" @click="startRenamingGraph(item.id)">
-                                        <Svg style="width: 30px; height: auto;" :src="renameIcon"></Svg>
-                                    </button>
-                                    <button class="graph-control-btn" @click="deleteGraph($event, item.id)">
-                                        <Svg style="width: 20px; height: auto;" :src="trashIcon"></Svg>
-                                    </button>
+                                <div v-show="renamingGraph == graph.id">
+                                    <input
+                                        :ref="el => graphRenameRefs.set(graph.id, el as HTMLInputElement)"
+                                        style="width: 90%" type="text"
+                                        v-model="graph.name" v-input-active
+                                        @keyup.enter="stopRenamingGraph"/>
                                 </div>
                             </div>
-                        </template>
+                            <div class="graph-controls">
+                                <button class="graph-control-btn" @click="startRenamingGraph(graph.id)">
+                                    <Svg style="width: 30px; height: auto;" :src="renameIcon"></Svg>
+                                </button>
+                                <button class="graph-control-btn" @click="deleteGraph($event, graph.id)">
+                                    <Svg style="width: 20px; height: auto;" :src="trashIcon"></Svg>
+                                </button>
+                            </div>
+                        </div>
                     </DragList>
                 </div>
             </div>
