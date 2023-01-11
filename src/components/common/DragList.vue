@@ -189,8 +189,6 @@ function dragStart(): void {
     dragIdx = parseInt(dragEl!.getAttribute('idx')!);
     hoverIdx = dragIdx;
 
-    console.warn(dragIdx);
-
     dragEl.style.position = 'absolute';
     dragEl.style.top = '0px';
     dragEl.style.left = '0px';
@@ -212,8 +210,6 @@ function dragStart(): void {
 
 function dragEnd(): void {
     const newIdx = hoverIdx! > dragIdx! ? hoverIdx! - 1 : hoverIdx;
-
-    console.warn(newIdx);
 
     if (hoverIdx != null){
         emit('order-changed', {
@@ -272,8 +268,6 @@ function updateDragIdx(): void {
 
 function setHoverEl(el: HTMLDivElement): void {
     if (hoverEl) {
-        const parent = hoverEl.parentElement as HTMLDivElement
-        parent.style.height = '0px';
         hoverEl.style.height = '0px';
         hoverEl.classList.add('drag-line-animation');
     }
