@@ -66,14 +66,11 @@ function onContentsChange(): void {
             if (isNew){
                 el.setAttribute('instanced-item', '1');
                 el.addEventListener('mousedown', mouseDown as EventListener);
-                el.addEventListener('mouseover', debugHover as EventListener);
             }
 
             if (!nextIsDragline){
                 const newDragLine = dragLine.cloneNode(true) as HTMLDivElement;
-
                 el.after(newDragLine);
-                newDragLine.addEventListener('mouseover', debugHover);
             }
         }
         else if (nextIsDragline){
@@ -109,7 +106,7 @@ function deactivateHoverBoundaries(): void {
 
     boundaries.forEach(boundary => {
         boundary.style.height= '0px';
-        boundary.parentElement!.style.height = '1px';
+        boundary.parentElement!.style.height = '0px';
         boundary.parentElement?.classList.remove('drag-line-animation');
     });
 }
@@ -146,7 +143,6 @@ function mouseMove(event: MouseEvent): void {
         const underBottom = Math.max(mousePos.y - listBounds.bottom, 0);
 
         overY = overTop + underBottom;
-        console.log("OOB")
         hoverIdx = null;
     }
     else{
@@ -207,9 +203,8 @@ function dragStart(): void {
     onContentsChange();
 
     if (downEl!.previousElementSibling){
-        const prevDragLine = downEl!.previousElementSibling as HTMLDivElement;
-        hoverEl = prevDragLine.children[0] as HTMLDivElement;
-        prevDragLine.style.height = (elHeight) + 'px';
+        hoverEl = downEl!.previousElementSibling as HTMLDivElement;
+        hoverEl.style.height = (elHeight) + 'px';
     }
     
     activateHoverBoundaries();
@@ -225,7 +220,6 @@ function dragEnd(): void {
             itemIdx: dragIdx,
             newIdx
         });
-        console.log(dragIdx, newIdx);
     }
 
     deactivateHoverBoundaries();
@@ -269,7 +263,6 @@ function updateDragIdx(): void {
             hoverBoundary.style.height = (2 * elHeight) + 'px';
             setHoverEl(boundaryParent);
             hasMoved ||= hoverIdx != dragIdx;
-            console.log(hoverIdx);
         }
         else{
             hoverBoundary.style.height = elHeight + 'px';
@@ -279,7 +272,9 @@ function updateDragIdx(): void {
 
 function setHoverEl(el: HTMLDivElement): void {
     if (hoverEl) {
-        hoverEl.style.height = '1px';
+        const parent = hoverEl.parentElement as HTMLDivElement
+        parent.style.height = '0px';
+        hoverEl.style.height = '0px';
         hoverEl.classList.add('drag-line-animation');
     }
 
@@ -324,11 +319,6 @@ function cloneEl(el: HTMLDivElement): HTMLDivElement {
 
     return clone;
 }
-
-function debugHover(e: MouseEvent){
-    //@ts-ignore
-    console.log(e.target.getAttribute('idx'));
-}
 </script>
 
 <template>
@@ -346,8 +336,6 @@ function debugHover(e: MouseEvent){
     position: relative;
     width: 100%;
     pointer-events: none;
-    height: 1px;
-    background: black;
 }
 
 .drag-line-animation{
@@ -360,6 +348,5 @@ function debugHover(e: MouseEvent){
     top: 50%;
     transform: translateY(-50%);
     pointer-events: none;
-    border: 1px solid red;
 }
 </style>
