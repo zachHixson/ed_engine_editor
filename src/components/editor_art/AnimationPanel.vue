@@ -70,6 +70,8 @@ onMounted(()=>{
 onBeforeUnmount(()=>{
     window.removeEventListener('keydown', hotkeyDown);
     window.removeEventListener('keyup', hotkeyUp);
+
+    ArtMainEventBus.removeEventListener('update-frame-previews', updateFramePreviews);
     
     artEditorStore.setAnimPanelState(isOpen.value);
 });

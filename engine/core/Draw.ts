@@ -165,7 +165,8 @@ export function createCanvas(width: number, height: number): HTMLCanvasElement {
 }
 
 export function resizeCanvas(canvas: HTMLCanvasElement, width: number, height: number): void {
-    Object.assign(canvas, {width, height});
+    canvas.width = width;
+    canvas.height = height;
 }
 
 export function createHDPICanvas(width: number, height: number): HTMLCanvasElement {

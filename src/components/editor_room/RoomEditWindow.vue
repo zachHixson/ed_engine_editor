@@ -94,10 +94,14 @@ onMounted(()=>{
 
 onBeforeUnmount(()=>{
     window.removeEventListener('resize', resize);
+    canvasEl.value!.removeEventListener('wheel', mouseWheel);
+    canvasEl.value!.removeEventListener('mouseenter', mouseEnter);
+    canvasEl.value!.removeEventListener('mouseleave', mouseLeave);
     RoomMainEventBus.removeEventListener('resize', resize);
     RoomMainEventBus.removeEventListener('bgColorChanged', bgColorChanged);
     RoomMainEventBus.removeEventListener('instances-changed', instancesChanged);
     RoomMainEventBus.removeEventListener('camera-changed', cameraChanged);
+    RoomMainEventBus.removeEventListener('room-changed', roomChange);
 });
 
 function mouseDown(event: MouseEvent): void {

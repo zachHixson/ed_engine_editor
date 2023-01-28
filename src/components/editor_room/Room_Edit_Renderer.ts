@@ -139,13 +139,13 @@ export default class Room_Edit_Renderer{
     }
 
     resize(){
-        const {clientWidth, clientHeight} = this.canvas;
-        Draw.resizeHDPICanvas(this.objBuff, clientWidth, clientHeight);
-        Draw.resizeHDPICanvas(this.iconBuff, clientWidth, clientHeight);
-        Draw.resizeHDPICanvas(this.iconColor, clientWidth, clientHeight);
-        Draw.resizeHDPICanvas(this.cursorBuff, clientWidth, clientHeight);
-        Draw.resizeHDPICanvas(this.gridBuff, clientWidth, clientHeight);
-        Draw.resizeHDPICanvas(this.selectionBuff, clientWidth, clientHeight);
+        const {width, height} = this.canvas;
+        Draw.resizeCanvas(this.objBuff, width, height);
+        Draw.resizeCanvas(this.iconBuff, width, height);
+        Draw.resizeCanvas(this.iconColor, width, height);
+        Draw.resizeCanvas(this.cursorBuff, width, height);
+        Draw.resizeCanvas(this.gridBuff, width, height);
+        Draw.resizeCanvas(this.selectionBuff, width, height);
         this.recalcRoundedCanvas();
         this.recalcHalfCanvas();
         this.fullRedraw();
