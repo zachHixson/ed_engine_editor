@@ -219,19 +219,15 @@ function orderChanged(event: iChangeEventProps): void {
                         </div>
                     </div>
                     <div ref="assetList" class="assetList">
-                        <DragList
-                            :items="selectedList"
-                            :keylist="keylist"
-                            @order-changed="orderChanged">
-                            <template #item="{item}">
-                                <Asset
-                                    :asset="item"
-                                    :defaultIcon="selected_category.icon"
-                                    :assetBrowserEventBus="AssetBrowserEventBus"
-                                    @delete-asset="deleteAsset"
-                                    @select-asset="selectAsset"
-                                    @renamed="assetRenamed" />
-                            </template>
+                        <DragList @order-changed="orderChanged">
+                            <Asset
+                                v-for="item in selectedList"
+                                :asset="item"
+                                :defaultIcon="selected_category.icon"
+                                :assetBrowserEventBus="AssetBrowserEventBus"
+                                @delete-asset="deleteAsset"
+                                @select-asset="selectAsset"
+                                @renamed="assetRenamed" />
                         </DragList>
                         <div v-if="selectedList.length <= 0">{{$t('asset_browser.no_assets')}}</div>
                     </div>
