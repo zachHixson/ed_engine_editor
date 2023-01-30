@@ -108,13 +108,9 @@ function toggleOpen(): void {
     })
 }
 
-function updateFramePreviews(range: number[] = [0, -1]): void {
-    if (range[1] == -1){
-        range[1] = props.sprite.frames.length - 1;
-    }
-
+function updateFramePreviews(range: number[] = [0, props.sprite.frames.length - 1]): void {
     if (isOpen.value){
-        AnimationPanelEventBus.emit('frame-data-changed');
+        AnimationPanelEventBus.emit('frame-data-changed', range);
 
         if (range.length == 1){
             range = [range[0], range[0] + 1];

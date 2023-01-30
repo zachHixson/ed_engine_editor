@@ -1,15 +1,14 @@
 <script setup lang='ts'>
 import Svg from '@/components/common/Svg.vue';
 
-import { ref, computed, nextTick, onMounted } from 'vue';
-import { useAssetBrowserStore } from '@/stores/AssetBrowser';
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { useArtEditorStore } from '@/stores/ArtEditor';
+import { AnimationPanelEventBus } from './AnimationPanel.vue';
 import Core from '@/core';
 import trashIcon from '@/assets/trash.svg';
 import copyIcon from '@/assets/copy.svg';
 import arrowIcon from '@/assets/arrow_01.svg';
 
-const assetBrowserStore = useAssetBrowserStore();
 const artEditorStore = useArtEditorStore();
 
 const props = defineProps<{
@@ -37,6 +36,8 @@ const isFirst = computed(()=>props.index == 0);
 const isLast = computed(()=>props.index >= props.sprite.frames.length - 1);
 
 onMounted(()=>{
+    AnimationPanelEventBus.addEventListener('frame-data-changed', checkRange);
+
     nextTick(()=>{
         const canvas = canvasRef.value!;
         const {clientWidth, clientHeight} = wrapperRef.value!;
@@ -49,6 +50,18 @@ onMounted(()=>{
         drawCanvas();
     });
 });
+
+onBeforeUnmount(()=>{
+    AnimationPanelEventBus.removeEventListener('frame-data-changed', checkRange);
+});
+
+function checkRange(range?: number[]): void {
+    range = range ?? [props.index, props.index];
+
+    if (props.index >= range[0] || props.index <= range[1]){
+        drawCanvas();
+    }
+}
 
 function drawCanvas(): void {
     const canvas = canvasRef.value!;
@@ -67,10 +80,6 @@ function drawCanvas(): void {
         ctx.drawImage(pixelBuff, 0, 0, pixelBuff.width, pixelBuff.height);
         ctx.resetTransform();
     }
-}
-
-function updateCanvas(): void {
-    drawCanvas();
 }
 
 function selectFrame(idx: number = props.index): void {
