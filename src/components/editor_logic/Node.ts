@@ -119,16 +119,6 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
             this.outputs.set(output.id, Object.assign({node: this}, output));
         });
 
-        //bind template events
-        for (let prop in template){
-            const value = template[prop];
-
-            if (prop[0] == '$' && typeof value == 'function'){
-                const eventName = prop.substring(1);
-                this.addEventListener(eventName, value.bind(this));
-            }
-        }
-
         this.init && this.init();
     }
 
