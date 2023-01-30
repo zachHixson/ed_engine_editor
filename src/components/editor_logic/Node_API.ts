@@ -15,6 +15,10 @@ export default class Node_API implements Core.iEditorAPI {
         return logicEditorStore.globalVariableMap;
     };
 
+    unMount(): void {
+        this._editor = null;
+    }
+
     setNodeEditorContext(editorContext: any): void {
         this._editor = editorContext;
     }

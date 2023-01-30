@@ -42,6 +42,7 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
     onValueChange: Core.iNodeLifecycleEvents['onValueChange'];
     onDeleteStopped: Core.iNodeLifecycleEvents['onDeleteStopped'];
     onBeforeDelete: Core.iNodeLifecycleEvents['onBeforeDelete'];
+    onBeforeUnmount: Core.iNodeLifecycleEvents['onBeforeUnmount'];
 
     reverseInputs?: boolean;
     reverseOutputs?: boolean;

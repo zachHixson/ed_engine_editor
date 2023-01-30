@@ -67,8 +67,6 @@ const currentSocketOver = ref<iHoverSocket | null>(null);
 const isDraggingNode = ref(false);
 const draggingConnection = ref<Node_Connection | null>(null);
 const hotkeyMap = new HotkeyMap();
-const hotkeyDownHandler = hotkeyMap.keyDown.bind(hotkeyMap);
-const hotkeyUpHandler = hotkeyMap.keyUp.bind(hotkeyMap);
 const navControlPanelScroll = (event: WheelEvent)=>LogicMainEventBus.emit('mouse-wheel', event);
 const selectionBox = reactive({
     active: false,
@@ -192,12 +190,14 @@ onMounted(()=>{
 
 onBeforeUnmount(()=>{
     window.removeEventListener('keydown', keyDown);
-    window.removeEventListener('keyUp', keyUp as EventListener);
+    window.removeEventListener('keyup', keyUp as EventListener);
     window.removeEventListener('mouseup', mouseUp);
     window.removeEventListener('resize', resize);
     nodeViewportRef.value!.removeEventListener('wheel', navControlPanelScroll);
     nodeViewportRef.value!.removeEventListener('mouseenter', mouseEnter);
     nodeViewportRef.value!.removeEventListener('mouseleave', mouseLeave);
+    mainStore.getNodeAPI.unMount();
+    undoStore.destroy();
 });
 
 const { stepForward, stepBackward } = useUndoHelpers(undoStore, actionMap, revertMap);

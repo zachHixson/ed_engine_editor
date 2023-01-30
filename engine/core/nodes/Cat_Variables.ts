@@ -179,6 +179,9 @@ export default [
         onBeforeDelete(this: iEditorNode){
             document.removeEventListener('onNewVariable', this.onNewVariable as EventListener);
         },
+        onBeforeUnmount(this: iEditorNode){
+            document.removeEventListener('onNewVariable', this.onNewVariable as EventListener);
+        },
         methods: {
             setVar(){
                 const varName = this.getInput('name');
@@ -223,7 +226,10 @@ export default [
         onNewConnection: determineConnected,
         onRemoveConnection: determineConnected,
         onBeforeDelete(){
-            document.removeEventListener('onNewVariable', this.onNewVariable as unknown as EventListener);
+            document.removeEventListener('onNewVariable', this.onNewVariable as EventListener);
+        },
+        onBeforeUnmount(){
+            document.removeEventListener('onNewVariable', this.onNewVariable as EventListener);
         },
         methods: {
             getVar(){

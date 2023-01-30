@@ -35,6 +35,7 @@ export interface iNodeLifecycleEvents {
     onValueChange?: (value: any)=>void;
     onDeleteStopped?: (protectedNodes: iEditorNode[])=>void;
     onBeforeDelete?: ()=>void;
+    onBeforeUnmount?: ()=>void;
 }
 
 export interface iEditorLogic {

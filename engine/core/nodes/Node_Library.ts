@@ -3,7 +3,6 @@ import { iNodeTemplate } from './iNodeTemplate';
 import Cat_Events from './Cat_Events';
 import Cat_Variables from './Cat_Variables';
 import { Vector } from '../Vector';
-import { iAnyObj } from '../interfaces';
 import { iEngineNode } from '../LogicInterfaces';
 import { Object_Instance } from '../core';
 

@@ -92,6 +92,7 @@ onBeforeUnmount(()=>{
     props.nodeObj.removeEventListener('onMove', updateConnections);
     props.nodeObj.removeEventListener('recalcWidth', updateNodeSize);
     props.nodeObj.removeEventListener('forceUpdate', forceUpdate);
+    props.nodeObj.onBeforeUnmount && props.nodeObj.onBeforeUnmount();
 });
 
 function updateAllSockets(): void {

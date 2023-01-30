@@ -60,16 +60,14 @@ onMounted(()=>{
 onBeforeUnmount(()=>{
     window.removeEventListener('mousemove', mouseMove);
     window.removeEventListener('mousemove', mouseDrag);
+    window.removeEventListener('mouseup', mouseUp);
     props.connectionObj.removeEventListener('connection-update', update);
     props.connectionObj.componentDestructor();
 });
 
 function registerConnectEvents(): void {
     window.addEventListener('mousemove', mouseMove);
-    window.addEventListener('mouseup', ()=>{
-        window.removeEventListener('mousemove', mouseMove);
-        mouseOver.value = false;
-    }, {once: true});
+    window.addEventListener('mouseup', mouseUp, {once: true});
 }
 
 function relink(nodeInfoMap: Map<number, iRelinkInfo>): void {
@@ -192,6 +190,11 @@ function mouseDown(event: MouseEvent): void {
             window.removeEventListener('mousemove', mouseDrag);
         }, {once: true});
     }
+}
+
+function mouseUp(): void {
+    window.removeEventListener('mousemove', mouseMove);
+    mouseOver.value = false;
 }
 
 function mouseMove(event: MouseEvent): void {

@@ -21,6 +21,13 @@ class Undo_Store<T>{
     get undoLength(){return this.undoStore.length}
     get redoLength(){return this.redoStore.length}
 
+    destroy(): void {
+        this.undoStore.clear();
+        this.redoStore.clear();
+        this.initialState = null;
+        this.cache.clear();
+    }
+
     setInitialState(data: T): void {
         this.initialState = data;
     }

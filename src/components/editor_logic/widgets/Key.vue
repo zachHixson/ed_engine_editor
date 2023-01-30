@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onBeforeMount, onMounted } from 'vue';
+import { ref, computed, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
 
 const props = defineProps<{
     widget: any,
@@ -30,6 +30,10 @@ onMounted(()=>{
         key.value = props.widgetData.key;
         code.value = props.widgetData.code;
     }
+});
+
+onBeforeUnmount(()=>{
+    document.removeEventListener('keydown', onKey);
 });
 
 function setActive(): void {

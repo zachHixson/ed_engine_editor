@@ -365,10 +365,9 @@ function toolEraser(mEvent: imEvent): void {
             }
 
             if (!removedFromCell && mouse.down){
-                let instances: Core.Instance_Base[] = props.selectedRoom.getInstancesInRadius(mEvent.worldCell, 0);
+                let instances = props.selectedRoom.getInstancesInRadius(mEvent.worldCell, 0);
                 instances = instances.filter((i) => i.pos.equalTo(mEvent.worldCell));
-                //@ts-ignore
-                instances.sort((a, b) => a.zDepth > b.zDepth);
+                instances.sort((a, b) => a.zDepth - b.zDepth);
 
                 if (instances.length > 0){
                     actionDelete({instId: instances[0].id}, false);
