@@ -2,7 +2,9 @@ const fs = require('fs');
 const {execSync} = require('child_process');
 const outputPath = './_compiled/';
 
-process.argv.includes('--build-font') && execSync('npm run build-font');
+if (!fs.existsSync('./_compiled/FontData.js') || process.argv.includes('--build-font')){
+    execSync('npm run build-font');
+}
 
 require("esbuild").build({
     entryPoints: ['..\\engine\\Engine.ts'],
