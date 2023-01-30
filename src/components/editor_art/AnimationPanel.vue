@@ -143,18 +143,18 @@ function deleteFrame(idx: number): void {
 }
 
 function frameMoved({idx, dir}: {idx: number, dir: number}): void {
+    let start = idx;
+    let endMin = idx + 1;
+
     if (dir < 0){
-        updateFramePreviews([
-            Math.max(idx - 1, 0),
-            Math.min(idx + 1, props.sprite.frames.length - 1)
-        ]);
+        start = Math.max(idx - 1, 0);
+        endMin = idx + 1;
     }
-    else{
-        updateFramePreviews([
-            idx,
-            Math.min(idx + 2, props.sprite.frames.length - 1)
-        ]);
-    }
+
+    updateFramePreviews([
+        start,
+        Math.min(endMin, props.sprite.frames.length - 1)
+    ]);
     
     emit('frame-moved');
 }
@@ -191,6 +191,13 @@ function frameOrderChanged(event: {itemIdx: number, newIdx: number}): void {
             selectedFrameIdx.value = newIdx;
         });
     }
+
+    updateFramePreviews([
+        0,
+        props.sprite.frames.length - 1
+    ]);
+
+    emit('frame-moved');
 }
 </script>
 

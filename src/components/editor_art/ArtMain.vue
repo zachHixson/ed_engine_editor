@@ -100,6 +100,11 @@ function spriteDataChanged(): void {
     emit('asset-changed', props.selectedAsset.id);
 }
 
+function framesMoved(): void {
+    commitFullState();
+    emit('asset-changed', props.selectedAsset.id);
+}
+
 function selectedFrameChanged(): void {
     updateFrameIDs();
 }
@@ -237,7 +242,7 @@ function updateFrameIDs(): void {
             @selected-frame-changed="selectedFrameChanged()"
             @frame-added="frameAdded()"
             @frame-deleted="commitFullState()"
-            @frame-moved="commitFullState()"
+            @frame-moved="framesMoved"
             @frame-copied="commitFullState()" />
     </div>
 </template>

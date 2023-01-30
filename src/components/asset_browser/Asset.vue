@@ -57,7 +57,6 @@ onMounted(()=>{
     props.assetBrowserEventBus.addEventListener('scroll', calculateVisibility);
     props.assetBrowserEventBus.addEventListener('draw-thumbnail', drawThumbnail);
     calculateVisibility();
-    drawThumbnail();
 });
 
 onBeforeUnmount(()=>{
@@ -114,8 +113,7 @@ function onEnterPress(event: KeyboardEvent): void {
 }
 
 function drawThumbnail(id?: number): void {
-    const idMatch = (id ?? props.asset.id) == props.asset.id;
-    const needsDraw = !drawn && idMatch;
+    const needsDraw = !drawn || id == props.asset.id;
 
     thumbnail.value = props.asset.thumbnail;
 
