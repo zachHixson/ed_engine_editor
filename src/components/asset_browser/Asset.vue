@@ -12,7 +12,6 @@ import {
     ref,
     computed,
     nextTick,
-    getCurrentInstance,
     onMounted,
     onBeforeUnmount
 } from 'vue';
@@ -28,6 +27,7 @@ const props = defineProps<{
     asset: Core.Asset_Base,
     defaultIcon: string,
     assetBrowserEventBus: Core.Event_Bus;
+    wrapperElement: HTMLDivElement;
 }>();
 
 const emit = defineEmits(['delete-asset', 'select-asset', 'renamed']);
@@ -39,7 +39,7 @@ const isRenaming = ref(false);
 const oldName = ref<string | null>(null);
 const thumbnail = ref<HTMLCanvasElement | null>(null);
 const isVisible = ref(false);
-let observer: IntersectionObserver | null = null;
+let drawn = false;
 
 const isSelected = computed(()=>{
     const selectedAsset = assetBrowserStore.getSelectedAsset;
@@ -53,24 +53,30 @@ const isSelected = computed(()=>{
 });
 
 onMounted(()=>{
-    const thisEl = getCurrentInstance()?.subTree.el as HTMLElement;
-    const { parentElement } = thisEl;
-    const observableOptions = {
-        root: parentElement,
-        rootMargin: '0px',
-        threshold: 1.0
-    };
-
-    observer = new IntersectionObserver((entry)=>{
-        isVisible.value = entry[0].isIntersecting;
-        drawThumbnail();
-    }, observableOptions);
-    observer.observe(thisEl);
     assetRef.value!.addEventListener('dblclick', rename);
+    props.assetBrowserEventBus.addEventListener('scroll', calculateVisibility);
+    props.assetBrowserEventBus.addEventListener('draw-thumbnail', drawThumbnail);
+    calculateVisibility();
     drawThumbnail();
 });
 
-onBeforeUnmount(()=>document.removeEventListener('keydown', onEnterPress));
+onBeforeUnmount(()=>{
+    document.removeEventListener('keydown', onEnterPress);
+    props.assetBrowserEventBus.addEventListener('scroll', calculateVisibility);
+    props.assetBrowserEventBus.addEventListener('draw-thumbnail', drawThumbnail);
+});
+
+function calculateVisibility(): void {
+    const wrapperBounds = props.wrapperElement.getBoundingClientRect();
+    const thisBounds = assetRef.value!.getBoundingClientRect();
+    const oldVisible = isVisible.value;
+
+    isVisible.value = (wrapperBounds.top < thisBounds.bottom) && (wrapperBounds.bottom > thisBounds.top);
+
+    if (!oldVisible && isVisible.value){
+        drawThumbnail();
+    }
+}
 
 function deleteAsset(event: MouseEvent): void {
     event.stopPropagation();
@@ -107,12 +113,14 @@ function onEnterPress(event: KeyboardEvent): void {
     }
 }
 
-function drawThumbnail(): void {
+function drawThumbnail(id?: number): void {
+    const idMatch = (id ?? props.asset.id) == props.asset.id;
+    const needsDraw = !drawn && idMatch;
+
     thumbnail.value = props.asset.thumbnail;
 
-    if (thumbnail.value && isVisible.value){
-        const thumbnailCanvas = thumbnailRef.value!;
-        const canvas = thumbnailCanvas;
+    if (needsDraw && thumbnail.value && isVisible.value){
+        const canvas = thumbnailRef.value!;
         const ctx = canvas.getContext('2d')!;
         const scaleFac = canvas.width / thumbnail.value.width;
 
@@ -120,6 +128,7 @@ function drawThumbnail(): void {
         ctx.scale(scaleFac, scaleFac);
         ctx.drawImage(thumbnail.value, 0, 0, thumbnail.value.width, thumbnail.value.height);
         ctx.resetTransform();
+        drawn = true;
     }
 }
 </script>

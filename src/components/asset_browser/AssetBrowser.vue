@@ -28,8 +28,8 @@ const gameDataStore = useGameDataStore();
 
 const emit = defineEmits(['asset-deleted', 'asset-selected']);
 
-const slideWrapperRef = ref<HTMLElement>();
-const assetListRef = ref<HTMLElement>();
+const slideWrapperRef = ref<HTMLDivElement>();
+const assetListRef = ref<HTMLDivElement>();
 const categories = [
     {
         cat_ID: Core.CATEGORY_ID.SPRITE,
@@ -184,6 +184,10 @@ function orderChanged(event: iChangeEventProps): void {
         selectedListCopy[i].sortOrder = i;
     }
 }
+
+function scrollHandler(event: Event): void {
+    AssetBrowserEventBus.emit('scroll');
+}
 </script>
 
 <template>
@@ -218,13 +222,14 @@ function orderChanged(event: iChangeEventProps): void {
                             </button>
                         </div>
                     </div>
-                    <div ref="assetList" class="assetList">
+                    <div ref="assetListRef" class="assetList" @scroll="scrollHandler">
                         <DragList @order-changed="orderChanged">
                             <Asset
                                 v-for="item in selectedList"
                                 :asset="item"
                                 :defaultIcon="selected_category.icon"
                                 :assetBrowserEventBus="AssetBrowserEventBus"
+                                :wrapperElement="slideWrapperRef!"
                                 @delete-asset="deleteAsset"
                                 @select-asset="selectAsset"
                                 @renamed="assetRenamed" />
