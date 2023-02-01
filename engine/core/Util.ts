@@ -1,9 +1,11 @@
 export function getHighestEndingNumber(list: string[]): number {
+    const pattern = /\d+$/;
     let highest = -1;
-    let pattern = /\d+$/;
 
     for (let i = 0; i < list.length; i++){
-        const number = parseInt(list[i].match(pattern)![0] ?? '') as number;
+        const match = list[i].match(pattern) ?? [];
+        const str = match[0] ?? '';
+        const number = parseInt(str) as number;
 
         if (!isNaN(number) && number > highest){
             highest = number;
