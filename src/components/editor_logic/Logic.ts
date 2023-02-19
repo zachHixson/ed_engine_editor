@@ -125,13 +125,17 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
                 this.deleteNode(node);
             }
         });
-        
-        this.graphs.splice(idx, 1);
 
-        //select next graph
-        if (id == this.selectedGraphId){
+        this.graphs.splice(idx, 1);
+        
+        if (this.graphs.length > 1 && id == this.selectedGraphId){
+            //select next graph
             const nextIdx = Math.min(this.graphs.length - 1, idx);
             this.selectedGraphId = this.graphs[nextIdx].id;
+        }
+        else{
+            this.addGraph();
+            this.selectedGraphId = this.graphs[0].id;
         }
     }
 

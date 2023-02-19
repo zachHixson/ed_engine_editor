@@ -6,7 +6,7 @@ type ExpandedEl = HTMLElement & {[key: string | number | symbol]: any};
 
 //Run code when clicking outside of an element
 export const vClickOutside = {
-    beforeMount: function (el: ExpandedEl, binding: DirectiveBinding, vnode: VNode) {
+    beforeMount: function (el: ExpandedEl, binding: DirectiveBinding) {
         el.checkOutside = (event: Event) => {
             if (!(el == event.target || el.contains(event.target as HTMLElement))) {
                 const instance = binding.instance as any;

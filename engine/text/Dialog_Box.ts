@@ -93,6 +93,7 @@ export default class Dialog_Box{
         this.text = text;
         this._asyncTag = asyncTag;
         this.active = true;
+        this._setProgress(0);
     }
 
     close(): void {

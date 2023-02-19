@@ -64,9 +64,9 @@ export class Object_Instance extends Instance_Base{
     get hasCollisionEvent(){
         let hasCollisionEvent = false;
 
-        for (const eventKey in this.logic?.events){
-            hasCollisionEvent ||= eventKey == 'e_collision';
-        }
+        this.logic?.events.forEach((event, key) => {
+            hasCollisionEvent ||= key == 'e_collision';
+        });
 
         return !!hasCollisionEvent;
     }
@@ -119,7 +119,7 @@ export class Object_Instance extends Instance_Base{
     }
 
     static fromSaveData(data: iObjectInstanceSaveData, objMap: Map<number, Game_Object>): Object_Instance {
-        const newObj = new Object_Instance(data.id, Vector.fromObject(data.pos), objMap.get(data.id)!);
+        const newObj = new Object_Instance(data.id, Vector.fromObject(data.pos), objMap.get(data.objId)!);
         newObj._loadSaveData(data);
 
         return newObj;

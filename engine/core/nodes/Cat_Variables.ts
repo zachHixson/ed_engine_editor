@@ -1,7 +1,13 @@
 import { iNodeTemplate } from './iNodeTemplate';
 import {SOCKET_TYPE, SOCKET_DEFAULT} from './Node_Enums';
-import { iEditorNode, iEngineNode } from '../LogicInterfaces';
+import { iEditorNode, iEngineNode, iNodeSaveData } from '../LogicInterfaces';
 import { iAnyObj } from '../interfaces';
+
+type Node = iEditorNode | iEngineNode;
+
+function isEngineNode(node: any): node is iEngineNode {
+    return !!node.engine;
+}
 
 export default [
     {// Create Variable
@@ -15,8 +21,8 @@ export default [
         outputs: [
             {id: '_value', type: SOCKET_TYPE.ANY, execute: 'getInitialValue'}
         ],
-        init(this: iEditorNode & iEngineNode){
-            if (!this.engine){
+        init(this: Node){
+            if (!isEngineNode(this)){
                 this.editorCanDelete = false;
                 this.reverseOutputs = true;
                 this.inputs.get('_varName')!.enableDecorators = true;
@@ -24,20 +30,22 @@ export default [
                 this.inputs.get('initial_value')!.flipInput = true;
             }
         },
-        onScriptAdd(){
-            if (this.engine){
-                const {varName, isGlobal} = this.dataCache.get('varInfo');
+        onScriptAdd(this: Node){
+            if (isEngineNode(this)){
+                const {name, isGlobal} = this.dataCache.get('varInfo');
                 const initialValue = this.getInput('initial_value');
 
                 isGlobal ?
-                    this.engine.setGlobalVariable(varName, initialValue)
-                    : this.parentScript.setLocalVariableDefault(varName, initialValue);
+                    this.engine.setGlobalVariable(name, initialValue)
+                    : this.parentScript.setLocalVariableDefault(name, initialValue);
             }
             else{
                 this.method('editor_setVar');
             }
         },
-        onCreate(this: iEditorNode){
+        onCreate(this: Node){
+            if (isEngineNode(this)) return;
+            
             this.editorAPI.deleteNodes([this], false);
             this.editorAPI.popLastCommit();
 
@@ -49,29 +57,33 @@ export default [
                     this.method('editor_initVarNode');
                     valSocket.value = SOCKET_DEFAULT.get(varInfo.type);
                     this.method('editor_setVar');
-                    this.editorAPI.addNode(this, true);
+                    !isEngineNode(this) && this.editorAPI.addNode(this, true);
                     document.dispatchEvent(new CustomEvent('onNewVariable'));
                 }
             });
         },
-        afterSave(saveData){
-            const valueInput = saveData.inputs.find((input: iAnyObj) => input.id == 'initial_value');
+        afterSave(this: iEditorNode, saveData: iNodeSaveData){
+            const valueInput = saveData.inputs.find((input: iAnyObj) => input.id == 'initial_value')!;
             const varInfo = Object.assign({}, this.dataCache.get('varInfo'));
             
             varInfo.type = varInfo.type;
             saveData.details = varInfo;
             saveData.inputs = [valueInput];
         },
-        beforeLoad(saveData){
+        beforeLoad(this: Node, saveData){
             const varInfo = saveData.details;
 
             varInfo.type = varInfo.type;
             this.dataCache.set('varInfo', varInfo);
+
+            if (!isEngineNode(this)){
+                this.method('editor_initVarNode');
+            }
         },
-        afterLoad(){
-            if (!this.engine) this.method('editor_setVar');
+        afterLoad(this: Node){
+            if (!isEngineNode(this)) this.method('editor_setVar');
         },
-        onMount(){
+        onMount(this: iEditorNode){
             const varInfo = this.dataCache.get('varInfo');
             
             if (!varInfo) return;
@@ -155,8 +167,8 @@ export default [
             {id: 'name', type: SOCKET_TYPE.STRING, default: '', hideSocket: true},
             {id: 'data', type: SOCKET_TYPE.ANY, default: null, disabled: true, hideInput: true},
         ],
-        init(this: iEditorNode & iEngineNode){
-            if (!this.engine){
+        init(this: Node){
+            if (!isEngineNode(this)){
                 this.inputBoxWidth = 6;
                 this.inputs.get('name')!.enableDecorators = true;
                 document.addEventListener('onNewVariable', this.onNewVariable as EventListener);
@@ -165,8 +177,8 @@ export default [
         onInput(event: InputEvent){
             this.method('validate', [event.target]);
         },
-        afterGameDataLoaded(this: iEditorNode & iEngineNode){
-            if (this.engine) return;
+        afterGameDataLoaded(this: Node){
+            if (isEngineNode(this)) return;
             determineConnected.call(this);
             this.method('validate');
         },
@@ -183,10 +195,10 @@ export default [
             document.removeEventListener('onNewVariable', this.onNewVariable as EventListener);
         },
         methods: {
-            setVar(){
+            setVar(this: iEngineNode){
                 const varName = this.getInput('name');
                 const data = this.getInput('data');
-                const isGlobal = this.engine.getGlobalVariable(varName);
+                const isGlobal = this.engine.getGlobalVariable(varName) !== undefined;
 
                 isGlobal ? this.engine.setGlobalVariable(varName, data) : this.instance.setLocalVariable(varName, data);
                 this.triggerOutput('_o');
@@ -203,8 +215,8 @@ export default [
         outputs: [
             {id: 'data', type: SOCKET_TYPE.ANY, disabled: true, execute: 'getVar'},
         ],
-        init(this: iEditorNode & iEngineNode){
-            if (!this.engine){
+        init(this: Node){
+            if (!isEngineNode(this)){
                 const nameInput = this.inputs.get('name')!;
                 nameInput.flipInput = true;
                 this.inputBoxWidth = 6;
@@ -214,25 +226,25 @@ export default [
         onInput(event){
             this.method('validate', [event.target]);
         },
-        afterGameDataLoaded(this: iEditorNode & iEngineNode){
-            if (this.engine) return;
+        afterGameDataLoaded(this: Node){
+            if (isEngineNode(this)) return;
             determineConnected.call(this);
             this.method('validate');
         },
         onNewVariable(){
             this.method('validate');
-            this.dispatchEvent(new CustomEvent('forceUpdate'));
+            this.emit('forceUpdate');
         },
         onNewConnection: determineConnected,
         onRemoveConnection: determineConnected,
-        onBeforeDelete(){
+        onBeforeDelete(this: iEditorNode){
             document.removeEventListener('onNewVariable', this.onNewVariable as EventListener);
         },
-        onBeforeUnmount(){
+        onBeforeUnmount(this: iEditorNode){
             document.removeEventListener('onNewVariable', this.onNewVariable as EventListener);
         },
         methods: {
-            getVar(){
+            getVar(this: iEngineNode){
                 const varName = this.getInput('name');
                 const isGlobal = this.engine.getGlobalVariable(varName);
                 const value = isGlobal ? this.engine.getGlobalVariable(varName) : this.instance.getLocalVariable(varName);

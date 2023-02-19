@@ -61,8 +61,8 @@ onMounted(()=>{
 
 onBeforeUnmount(()=>{
     document.removeEventListener('keydown', onEnterPress);
-    props.assetBrowserEventBus.addEventListener('scroll', calculateVisibility);
-    props.assetBrowserEventBus.addEventListener('draw-thumbnail', drawThumbnail);
+    props.assetBrowserEventBus.removeEventListener('scroll', calculateVisibility);
+    props.assetBrowserEventBus.removeEventListener('draw-thumbnail', drawThumbnail);
 });
 
 function calculateVisibility(): void {

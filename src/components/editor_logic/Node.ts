@@ -7,6 +7,7 @@ const { Vector } = Core;
 export default class Node extends Core.EventListenerMixin(class {}) implements Core.iEditorNode {
     private _template: Core.iNodeTemplate;
     private _editorAPI: Node_API;
+    private _dataCache: Map<string, any> = new Map();
 
     nodeId: number;
     isEvent: boolean;
@@ -20,7 +21,6 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
     graphId: number;
     domRef: HTMLDivElement | null = null;
     pos: Core.Vector;
-    dataCache: Map<string, any> = new Map();
     editorCanDelete: boolean = true;
 
     init: Core.iNodeLifecycleEvents['init'];
@@ -125,6 +125,7 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
     get template(){return this._template}
     get templateId(){return this._template.id}
     get editorAPI(){return this._editorAPI}
+    get dataCache(){return this._dataCache}
 
     toSaveData(): Core.iNodeSaveData {
         this.beforeSave && this.beforeSave();

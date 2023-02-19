@@ -41,7 +41,7 @@ export default class Node implements iEngineNode {
         this.parentScript = logic;
         this.engine = engine;
         this.isEvent = template.isEvent ?? false;
-        this.widgetData = nodeData.widgetData ? JSON.parse(nodeData.widgetData) : null;
+        this.widgetData = nodeData.widgetData ?? null;
         this._stackTrace = {parentScriptId: this.parentScript.id, nodeId: this.nodeId};
 
         template.inTriggers?.forEach(trigger => {
@@ -100,7 +100,7 @@ export default class Node implements iEngineNode {
     }
 
     get instance(){return this._getInstanceCallback!()}
-    get data(){return this._dataCache ?? {}};
+    get dataCache(){return this._dataCache ?? {}};
 
     setInstanceCallback(callback: ()=>Object_Instance): void {
         this._getInstanceCallback = callback;

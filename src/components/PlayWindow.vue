@@ -31,6 +31,7 @@ onBeforeUnmount(()=>{
 
 function start(): void {
     const restart = ()=>{
+        clearInterval(resizeInterval);
         start();
     };
 

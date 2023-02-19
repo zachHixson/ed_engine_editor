@@ -141,6 +141,7 @@ function nanToNull(inp: number): number | null {
 
 <template>
     <div class="properties">
+
         <div v-if="showInstProps" class="propContents">
             <div class="heading">{{$t('room_editor.object_properties_heading')}}</div>
             <div class="info" style="margin: var(--margin); margin-left: 0px;">
@@ -171,6 +172,7 @@ function nanToNull(inp: number): number | null {
                 :readOnlyList="(selectedEntity as Core.Object_Instance).objRef.groups"
                 @group-changed="$emit('inst-group-changed', $event)"/>
         </div>
+
         <div v-if="showCameraProps" class="propContents">
             <div class="heading">{{$t('room_editor.camera_properties_heading')}}</div>
             <div class="control">
@@ -216,6 +218,7 @@ function nanToNull(inp: number): number | null {
                     @click="setFollowObj()" :disabled="!selectedEntity" />
             </div>
         </div>
+
         <div v-if="showExitProps" class="propContents">
             <div class="heading">{{$t('room_editor.exit_properties_heading')}}</div>
             <div class="control">
@@ -268,6 +271,7 @@ function nanToNull(inp: number): number | null {
                     @click="emit('exit-delete', selectedEntity)" />
             </div>
         </div>
+
         <div v-show="showRoomProps" class="propContents">
             <div class="heading">{{$t('room_editor.room_properties_heading')}}</div>
             <div class="control">
@@ -306,6 +310,7 @@ function nanToNull(inp: number): number | null {
                     @click="gameDataStore.setStartRoomId(room.id)" />
             </div>
         </div>
+
         <div v-show="showPlaceHolder" class="noProps">{{$t('room_editor.no_props')}}</div>
     </div>
 </template>

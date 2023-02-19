@@ -109,6 +109,14 @@ export class Engine implements iEngineCallbacks {
 
         //setup instances
         this._loadedRoom.instances.forEach(instance => {
+            const triggersExits = instance.objRef.triggerExits;
+            const exitBehavior = instance.objRef.exitBehavior;
+
+            //if the object triggers exits, it persists between rooms and we need to remove duplicates
+            if (triggersExits && exitBehavior != Game_Object.EXIT_TYPES.TRANSITION_ONLY){
+                room.removeInstance(instance.id);
+            }
+            
             instance.initLocalVariables();
             this._registerInstanceEvents(instance);
         });
@@ -340,7 +348,7 @@ export class Engine implements iEngineCallbacks {
         const prevRoom = this.room;
         const prevInstId = instance.id;
 
-        if (exit.destinationRoom) this._loadRoom(exit.destinationRoom);
+        if (exit.destinationRoom != null) this._loadRoom(exit.destinationRoom);
 
         if (exit.destinationExit != null){
             const destExit = this.room.exits.find(e => e.id == exit.destinationExit)!;
@@ -434,10 +442,13 @@ export class Engine implements iEngineCallbacks {
     private _linkLogic = (): void =>{
         const objects = this._gameData.objects;
         const logicScripts = this._gameData.logic;
+        const logicMap = new Map<number, Logic>();
+
+        logicScripts.forEach(l => logicMap.set(l.id, l));
 
         for (let i = 0; i < objects.length; i++){
             const curObj = objects[i];
-            curObj.logicScript = logicScripts.find(l => l.id == (curObj.logicScript as unknown as number))!;
+            curObj.logicScript = logicMap.get(curObj.logicScriptId ?? -1) ?? null;
         }
     }
 
@@ -482,9 +493,9 @@ export class Engine implements iEngineCallbacks {
     private _registerInstanceEvents = (instance: Object_Instance): void =>{
         const logicEvents = instance.logic?.events;
 
-        for (const event in logicEvents){
-            this._registerNodeEvent(event, instance);
-        }
+        logicEvents?.forEach((event, key) => {
+            this._registerNodeEvent(key, instance);
+        });
 
         instance.initAnimProps();
     }

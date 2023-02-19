@@ -13,6 +13,7 @@ interface iNode_Base extends iNodeLifecycleEvents {
     nodeId: number;
     isEvent: boolean;
     widgetData?: iAnyObj | null;
+    dataCache: Map<string, any>;
 }
 
 export interface iNodeLifecycleEvents {
@@ -80,7 +81,6 @@ export interface iEditorNode extends iNode_Base {
     inputs: Map<string, iEditorNodeInput>;
     outputs: Map<string, iEditorNodeOutput>;
     parentScript: iEditorLogic;
-    dataCache: Map<string, any>;
     editorCanDelete: boolean;
     editorAPI: iEditorAPI;
 
@@ -170,10 +170,10 @@ export interface iEngineNode extends iNode_Base {
     outTriggers: Map<string, iEngineOutTrigger>;
     inputs: Map<string, iEngineInput>;
     outputs: Map<string, iEngineOuput>;
+    parentScript: iEngineLogic;
 
     engine: Engine;
     instance: Object_Instance;
-    data: any;
 
     method(methodName: string, data?: any): any;
     getWidgetData(): any;
@@ -197,6 +197,7 @@ export interface iNodeSaveData {
     pos: { x: number, y: number },
     inputs: { id: string, value: any }[],
     widgetData: any,
+    details?: any,
 }
 
 export interface iConnectionSaveData {

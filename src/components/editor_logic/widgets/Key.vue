@@ -16,7 +16,11 @@ const keyDisplay = computed(()=>{
         return code.value;
     }
 
-    return key.value!.length > 1 ? key.value : key.value!.toUpperCase();
+    if (!key.value){
+        return '';
+    }
+
+    return key.value.length > 1 ? key.value : key.value.toUpperCase();
 });
 
 onBeforeMount(()=>{
@@ -66,14 +70,15 @@ function deactivateSpace(event: KeyboardEvent): void {
     <div class="key-main">
         <button
             class="button"
+            name="debug"
             :class="active ? 'button-active':''"
             @click="setActive"
             @mousedown="$event.stopPropagation()"
             @keyup.space="deactivateSpace"
             v-click-outside="deactivate">
-                <div v-if="!key && !active">No Key Set</div>
-                <div v-if="active">Press any key</div>
-                <div v-if="key && !active">{{keyDisplay}}</div>
+                <div v-show="!key && !active">No Key Set</div>
+                <div v-show="active">Press any key</div>
+                <div v-show="key && !active">{{keyDisplay}}</div>
         </button>
     </div>
 </template>
