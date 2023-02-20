@@ -48,6 +48,8 @@ onMounted(()=>{
 </template>
 
 <style scoped>
+@import '@/components/common/formStyles.css';
+
 .enum{
     padding: 5px;
 }

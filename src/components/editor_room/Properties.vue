@@ -316,6 +316,8 @@ function nanToNull(inp: number): number | null {
 </template>
 
 <style scoped>
+@import '@/components/common/formStyles.css';
+
 .properties{
     display: flex;
     flex-direction: column;
