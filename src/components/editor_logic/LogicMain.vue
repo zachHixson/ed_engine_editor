@@ -59,7 +59,7 @@ const selectionBoxRef = ref<HTMLDivElement>();
 const selectedCategory = ref<string | null>(null);
 const actionMap = new Map<Core.LOGIC_ACTION, (data?: any | object, commit?: boolean)=>void>();
 const revertMap = new Map<Core.LOGIC_ACTION, (data?: any | object, commit?: boolean)=>void>();
-const undoStore = new Undo_Store<iActionStore>(32, false);
+const undoStore = reactive(new Undo_Store<iActionStore>(32, false)) as Undo_Store<iActionStore>;
 const mouseDownPos = new Vector();
 const lastMouseDragPos = new Vector();
 const contentsBounds = [0, 0, 0, 0];
@@ -81,6 +81,8 @@ const showNewVariableWindow = ref(false);
 const newVariableCallback = ref<(positive: boolean, varInfo: Core.iNewVarInfo)=>void>(()=>{});
 const navHotkeyTool = ref<Core.NAV_TOOL_TYPE | null>(null);
 
+const undoLength = computed(()=>undoStore.undoLength);
+const redoLength = computed(()=>undoStore.redoLength);
 const selectedNavTool = computed(()=>logicEditorStore.getSelectedNavTool);
 const showLibrary = computed({
     get(){
@@ -960,8 +962,8 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
             <div class="undo-panel-wrapper">
                 <UndoPanel
                     class="undo-panel"
-                    :undoLength="undoStore.undoLength"
-                    :redoLength="undoStore.redoLength"
+                    :undoLength="undoLength"
+                    :redoLength="redoLength"
                     @undo="stepBackward"
                     @redo="stepForward"/>
             </div>
