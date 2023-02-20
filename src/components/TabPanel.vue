@@ -44,10 +44,9 @@ const editorTabs: {[key: string]: iEditorTab} = {
         text: t('editor_main.logic_tab')
     },
 }
-const contextTabs = ref<iEditorTab[]>([]);
+const contextTabs = ref<iEditorTab[]>([editorTabs.room]);
 
 onMounted(()=>{
-    contextTabs.value = [editorTabs.room];
     updateEditorTabs();
     mainStore.setSelectedEditor(Core.EDITOR_ID.ROOM);
     AppEventBus.addEventListener('update-editor-tabs', updateEditorTabs);
@@ -123,18 +122,19 @@ function updateEditorTabs(){
 .tabContainer{
     display: flex;
     flex-direction: row;
-    flex-grow: 1;
+    height: 100%;
 }
 
 .tabs-enter-active{
     transition: transform 200ms;
 }
 
-.tabs-enter{
-    transform: translateY(100px);
+.tabs-leave-active{
+    display: none;
 }
 
-.tabs-leave{
-    display: none;
+.tabs-leave-to,
+.tabs-enter-from{
+    transform: translateY(100px);
 }
 </style>

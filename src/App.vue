@@ -150,8 +150,8 @@ html, body{
     z-index: 1000;
 }
 
-.playWindow-enter,
-.playWindow-leave-active{
+.playWindow-enter-from,
+.playWindow-leave-to{
     top: 100%;
 }
 </style>
