@@ -11,8 +11,6 @@ import PlayWindow from './components/PlayWindow.vue';
 import Tooltip from './components/common/Tooltip.vue';
 
 import { onMounted } from 'vue';
-//@ts-ignore
-import {saveAs} from 'file-saver';
 import { useMainStore, PLAY_STATE } from './stores/Main';
 import { useGameDataStore } from './stores/GameData';
 import { useAssetBrowserStore } from './stores/AssetBrowser';
@@ -51,8 +49,7 @@ function openProject(data: any): void {
 }
 
 function saveProject(): void {
-    let blob = new Blob([mainStore.getSaveData]);
-    saveAs(blob, `${mainStore.getProjectName}.edproj`);
+    saveAs(mainStore.getSaveData, `${mainStore.getProjectName}.edproj`);
 }
 
 function packageGame(): void {
@@ -62,14 +59,23 @@ function packageGame(): void {
         .replace('[title]', projectName)
         .replace('[engine]', EngineRawText)
         .replace('[gameData]', gameData);
-    const blob = new Blob([compiled]);
-    saveAs(blob, `${projectName}.html`);
+    saveAs(compiled, `${projectName}.html`);
 }
 
 function resetUI(): void {
     assetBrowserStore.deselectAssets();
     mainStore.setSelectedEditor(Core.EDITOR_ID.ROOM);
     updateEditorAsset();
+}
+
+function saveAs(data: string, fileName: string){
+    const link = document.createElement('a');
+    const file = new Blob([data], {type: 'text/plain'});
+
+    link.href = URL.createObjectURL(file);
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(link.href);
 }
 </script>
 
