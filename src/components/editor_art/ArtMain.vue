@@ -185,6 +185,7 @@ function undo(): void {
     
     nextTick(()=>{
         ArtMainEventBus.emit('update-frame-previews');
+        emit('asset-changed', props.selectedAsset.id);
     });
 }
 
@@ -199,6 +200,7 @@ function redo(): void {
 
     nextTick(()=>{
         ArtMainEventBus.emit('update-frame-previews');
+        emit('asset-changed', props.selectedAsset.id);
     });
 }
 

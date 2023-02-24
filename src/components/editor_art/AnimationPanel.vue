@@ -225,6 +225,7 @@ function frameOrderChanged(event: {itemIdx: number, newIdx: number}): void {
                     <AnimFrame
                         v-for="(frame, idx) in animFrames"
                         class="animFrame"
+                        :key="sprite.id + idx"
                         :index="idx"
                         :sprite="sprite"
                         @selectedFrameChanged="selectedFrameChanged"
