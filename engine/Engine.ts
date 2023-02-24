@@ -73,7 +73,7 @@ export class Engine implements iEngineCallbacks {
     restart: ()=>void = function(){location.reload()};
 
 
-    constructor(canvas: HTMLCanvasElement, gameData: string, callbacks: iEngineCallbacks){
+    constructor(canvas: HTMLCanvasElement, gameData: string, callbacks?: iEngineCallbacks){
         window.IS_ENGINE = true;
 
         this._canvas = canvas;
@@ -83,11 +83,13 @@ export class Engine implements iEngineCallbacks {
         this._gameData = this._parseGameData(gameData);
 
         //integrate callbacks
-        if (callbacks.log) this.log = callbacks.log;
-        if (callbacks.warn) this.warn = callbacks.warn;
-        if (callbacks.error) this.error = callbacks.error;
-        if (callbacks.nodeException) this.nodeException = callbacks.nodeException;
-        if (callbacks.restart) this.restart = callbacks.restart;
+        if (callbacks){
+            if (callbacks.log) this.log = callbacks.log;
+            if (callbacks.warn) this.warn = callbacks.warn;
+            if (callbacks.error) this.error = callbacks.error;
+            if (callbacks.nodeException) this.nodeException = callbacks.nodeException;
+            if (callbacks.restart) this.restart = callbacks.restart;
+        }
 
         this._linkLogic();
         this._dialogBox.onCloseCallback = this._onDialogBoxClose;

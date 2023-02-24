@@ -68,7 +68,8 @@ function packageGame(): void {
     const gameData = mainStore.getSaveData;
     const compiled = HTMLTemplate
         .replace('[title]', projectName)
-        .replace('[engine]', engineLicense + EngineRawText)
+        .replace('[engineLicense]', engineLicense)
+        .replace('[engine]', EngineRawText)
         .replace('[gameData]', gameData);
     saveAs(compiled, `${projectName}.html`);
 }
