@@ -1,3 +1,5 @@
+import { Mat3 } from "./Mat3";
+
 export class Vector {
     x: number;
     y: number;
@@ -40,6 +42,16 @@ export class Vector {
     scale(scalar: number): Vector {
         this.x *= scalar;
         this.y *= scalar;
+        return this;
+    }
+
+    multiplyMat3(mat: Mat3): Vector {
+        const x = this.x;
+        const y = this.y;
+
+        this.x = x * mat.data[0] + y * mat.data[3] + mat.data[6];
+        this.y = x * mat.data[1] + y * mat.data[4] + mat.data[7];
+
         return this;
     }
 

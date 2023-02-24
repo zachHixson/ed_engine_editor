@@ -22,5 +22,6 @@ export * from './NavState';
 export * from './Spacial_Collection';
 export * as Util from './Util';
 export * from './Vector';
+export * from './Mat3';
 
 export * from './interfaces';
