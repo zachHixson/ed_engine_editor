@@ -50,6 +50,14 @@ export class NavState implements iNavState {
         this._needsUpdate = false;
     }
 
+    getInverse(): Mat3 {
+        if (this._needsUpdate){
+            this.updateMatrix();
+        }
+
+        return this._matrix.clone().inverse();
+    }
+
     reset(): void {
         this._offset.set(0, 0);
         this._zoomFac = 1;
