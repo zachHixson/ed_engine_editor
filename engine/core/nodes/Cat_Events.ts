@@ -44,7 +44,7 @@ export default [
         methods: {
             which(this: iEngineNode){
                 const eventData = this.dataCache.get('lastData');
-                return eventData?.which ?? 0;
+                return eventData?.button ?? 0;
             },
             x(this: iEngineNode){
                 const eventData = this.dataCache.get('lastData');
