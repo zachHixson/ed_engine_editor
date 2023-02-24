@@ -18,7 +18,7 @@ export default [
             {id: 'delta_time', type: SOCKET_TYPE.NUMBER, execute: 'getDelta'},
         ],
         methods: {
-            getDelta(){
+            getDelta(this: iEngineNode){
                 return this.engine.deltaTime;
             },
         },
@@ -38,25 +38,25 @@ export default [
             {id: 'y', type: SOCKET_TYPE.NUMBER, execute: 'y'},
             {id: 'object', type: SOCKET_TYPE.OBJECT, execute: 'object'},
         ],
-        execute(data){
-            this.engine.cacheNodeEventData('mouse_button', data);
+        execute(this: iEngineNode, data: MouseEvent){
+            this.dataCache.set('lastData', data);
         },
         methods: {
-            which(){
-                const eventData = this.engine.getCachedNodeEventData('mouse_button');
-                return eventData.which;
+            which(this: iEngineNode){
+                const eventData = this.dataCache.get('lastData');
+                return eventData?.which ?? 0;
             },
-            x(){
-                const eventData = this.engine.getCachedNodeEventData('mouse_button');
-                return eventData.x;
+            x(this: iEngineNode){
+                const eventData = this.dataCache.get('lastData');
+                return eventData?.x ?? 0;
             },
-            y(){
-                const eventData = this.engine.getCachedNodeEventData('mouse_button');
-                return eventData.y;
+            y(this: iEngineNode){
+                const eventData = this.dataCache.get('lastData');
+                return eventData?.y ?? 0;
             },
-            object(){
-                const eventData = this.engine.getCachedNodeEventData('mouse_button');
-                return eventData.object;
+            object(this: iEngineNode){
+                const eventData = this.dataCache.get('lastData');
+                return eventData?.object ?? null;
             },
         },
     },
@@ -70,10 +70,10 @@ export default [
             {id: 'e_mouse_move_out_y', type: SOCKET_TYPE.NUMBER, execute: 'y'},
         ],
         methods: {
-            x(){
+            x(this: iEngineNode){
                 return this.engine.mouse.x;
             },
-            y(){
+            y(this: iEngineNode){
                 return this.engine.mouse.y;
             },
         },
@@ -87,13 +87,8 @@ export default [
             type: WIDGET.KEY,
         },
         outTriggers: ['key_down', 'key_up'],
-        outputs: [
-            {id: 'which_key', type: SOCKET_TYPE.STRING, execute: 'which'},
-        ],
-        execute(data){
+        execute(this: iEngineNode, data: KeyboardEvent){
             const {code} = this.getWidgetData();
-
-            this.engine.cacheNodeEventData('keyboard', data);
 
             if (data.code == code){
                 if (data.type == 'down'){
@@ -104,12 +99,6 @@ export default [
                 }
             }
         },
-        methods: {
-            which(){
-                const data = this.engine.getCachedNodeEventData('keyboard');
-                return data.which;
-            },
-        },
     },
     {// Collision
         id: 'e_collision',
@@ -119,10 +108,10 @@ export default [
         outputs: [
             {id: 'object', type: SOCKET_TYPE.OBJECT, execute: 'object'},
         ],
-        execute(data){
+        execute(this: iEngineNode, data){
             const cacheKey = this.method('getCacheKey');
 
-            this.engine.cacheNodeEventData(cacheKey, data);
+            this.dataCache.set(cacheKey, data);
 
             switch (data.type){
                 case COLLISION_EVENT.START:
@@ -137,13 +126,13 @@ export default [
             }
         },
         methods: {
-            getCacheKey(){
+            getCacheKey(this: iEngineNode){
                 return `${this.nodeId}/${this.instance.id.toString()}`;
             },
-            object(){
+            object(this: iEngineNode){
                 const cacheKey = this.method('getCacheKey');
-                const cacheData = this.engine.getCachedNodeEventData(cacheKey);
-                return cacheData.instance;
+                const cacheData = this.dataCache.get(cacheKey);
+                return cacheData?.instance ?? null;
             },
         },
     },
@@ -155,12 +144,12 @@ export default [
         outputs: [
             {id: 'name', type: SOCKET_TYPE.STRING, execute: 'name'},
         ],
-        execute(data){
-            this.engine.cacheNodeEventData('timer', data);
+        execute(this: iEngineNode, data){
+            this.dataCache.set('timer', data);
         },
         methods: {
             name(this: iEngineNode){
-                const data = this.engine.getCachedNodeEventData('timer');
+                const data = this.dataCache.get('timer');
                 return data.name;
             }
         },
@@ -175,15 +164,15 @@ export default [
             {id: 'data', type: SOCKET_TYPE.ANY, execute: 'data'},
         ],
         execute(this: iEngineNode, data: any){
-            this.engine.cacheNodeEventData('message', data);
+            this.dataCache.set(data.name, data);
         },
         methods: {
             name(this: iEngineNode){
-                const data = this.engine.getCachedNodeEventData('message');
+                const data = this.dataCache.get('message');
                 return data.name;
             },
             data(this: iEngineNode){
-                const data = this.engine.getCachedNodeEventData('message');
+                const data = this.dataCache.get('message');
                 return data.data;
             },
         },

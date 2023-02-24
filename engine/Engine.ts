@@ -59,12 +59,15 @@ export class Engine implements iEngineCallbacks {
     private _keymap: Map<string, boolean> = new Map();
     private _nodeEventMap: Map<string, Map<number, Object_Instance>> = new Map();
     private _nodeAsyncEventMap: Map<string, any> = new Map();
-    private _nodeEventCache: Map<string, any> = new Map();
     private _collisionMap: Map<number, iCollisionMapping> = new Map();
     private _globalVariables: Map<string, any> = new Map();
     private _errorLogs: Map<string, boolean> = new Map();
     private _gameData: iGameData;
     private _previousTransition: {exit: Exit | null, instance: Instance_Base | null} = {exit: null, instance: null};
+    private _mouse = {
+        x: 0,
+        y: 0,
+    };
 
     log: (...args: any)=>void = function(){console.log(...arguments)};
     warn: (...args: any)=>void = function(){console.warn(...arguments)};
@@ -100,6 +103,7 @@ export class Engine implements iEngineCallbacks {
     get room(){return this._loadedRoom}
     get currentTime(){return this._curTime}
     get deltaTime(){return this._deltaTime}
+    get mouse(){return this._mouse}
 
     private _loadRoom = (roomId: number): void =>{
         const room = this._gameData.rooms.find((r: Room) => r.id == roomId)!;
@@ -545,7 +549,6 @@ export class Engine implements iEngineCallbacks {
 
     private _clearNodeEvents = (): void =>{
         this._nodeEventMap = new Map();
-        this._nodeEventCache = new Map();
     }
 
     private _filterOverlapping = <T extends Instance_Base>(entityList: Spacial_Collection<T>, {id, pos, TYPE}: {id: number, pos: Vector, TYPE: ENTITY_TYPE}): Instance_Base[] =>{
@@ -624,7 +627,6 @@ export class Engine implements iEngineCallbacks {
         this._keymap = new Map();
         this._nodeEventMap = new Map();
         this._nodeAsyncEventMap = new Map();
-        this._nodeEventCache = new Map();
         this._collisionMap = new Map();
         this._globalVariables = new Map();
         window.IS_ENGINE = false;
@@ -707,14 +709,6 @@ export class Engine implements iEngineCallbacks {
     openDialogBox = (text: string, node: Node, methodName: string): void =>{
         const asyncTag = node ? this._registerAsyncNodeEvent(node, methodName) : null;
         this._dialogBox.open(text, asyncTag);
-    }
-
-    cacheNodeEventData = (tag: string, data: any): void =>{
-        this._nodeEventCache.set(tag, data);
-    }
-
-    getCachedNodeEventData = (tag: string): any =>{
-        return this._nodeEventCache.get(tag);
     }
 }
 
