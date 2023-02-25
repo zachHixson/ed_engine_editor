@@ -65,7 +65,7 @@ void main(){
     float grad = length(vPos);
     float circleMask = smoothstep(1.0, 0.98, grad);
     float angle = ((atan(vPos.y, vPos.x) + PI) / PI) * 180.0;
-    vec3 HSV = HSVToRGB(angle, grad, 1.0);
+    vec3 HSV = HSVToRGB(angle, grad  * ${EXPAND.toFixed(2)}, 1.0);
     gl_FragColor = vec4(HSV * u_value, 1.0) * circleMask;
 }
 `;
