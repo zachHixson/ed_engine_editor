@@ -62,9 +62,10 @@ vec3 HSVToRGB(float h, float s, float v){
 }
 
 void main(){
-    float grad = length(vPos);
+    vec2 pos = vec2(vPos.x, -vPos.y);
+    float grad = length(pos);
     float circleMask = smoothstep(1.0, 0.98, grad);
-    float angle = ((atan(vPos.y, vPos.x) + PI) / PI) * 180.0;
+    float angle = ((atan(pos.y, pos.x) + PI) / PI) * 180.0;
     vec3 HSV = HSVToRGB(angle, grad  * ${EXPAND.toFixed(2)}, 1.0);
     gl_FragColor = vec4(HSV * u_value, 1.0) * circleMask;
 }
@@ -185,19 +186,21 @@ function updateValuePos(x: number): void {
 
 function updateCursorColors(): void {
     const canvas = canvasRef.value!;
-    const imgData = canvasRef.value!.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data;
-    const dpiCorrectCursor = cursorPos.clone().multiplyScalar(devicePixelRatio).round();
-    const baseIdx = Math.round(dpiCorrectCursor.y * canvas.width * 4 + dpiCorrectCursor.x * 4);
-    const rgbArr = [
-        imgData[baseIdx + 0],
-        imgData[baseIdx + 1],
-        imgData[baseIdx + 2],
-    ];
-    const hs = new Draw.Color().fromArray([...rgbArr, 255]);
-    const hsv = new Draw.Color().fromArray([...rgbArr.map(i => Math.round(i * valuePos.value)), 255]);
+    const cursor = cursorRef.value!;
+    const canvasBounds = canvas.getBoundingClientRect();
+    const cursorBounds = cursor.getBoundingClientRect();
+    const canvasCenter = new Vector(canvasBounds.right + canvasBounds.left, canvasBounds.bottom + canvasBounds.top).divideScalar(2);
+    const cursorCenter = new Vector(cursorBounds.right + cursorBounds.left, cursorBounds.bottom + cursorBounds.top).divideScalar(2);
+    const dirVector = cursorCenter.clone().subtract(canvasCenter);
+    const h = ((Math.atan2(dirVector.y, dirVector.x) + Math.PI) / Math.PI) * 180;
+    const s = dirVector.length() * EXPAND;
+    const v = valuePos.value;
+    const rgb = Draw.HSVToRGB(h, s / (canvas.width / 2), 1.0);
+    const hs = new Draw.Color(rgb.r, rgb.g, rgb.b);
+    const hsv = new Draw.Color(Math.round(rgb.r * v), Math.round(rgb.g * v), Math.round(rgb.b * v));
     
     selectedColor = hsv;
-    cursorRef.value!.style.background = selectedColor.toCSS();
+    cursor.style.background = selectedColor.toCSS();
     valueCursorBGRef.value!.style.background = selectedColor.toCSS();
     sliderRef.value!.style.backgroundImage = `linear-gradient(to right, black, ${hs.toCSS()})`;
 }
