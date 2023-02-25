@@ -10,6 +10,7 @@
     "build-font": "node scripts/build_font.js",
     "build-engine": "node scripts/build_engine.js",
     "dev": "npm run build-engine && vite",
+    "dev-network": "npm run build-engine && vite --host",
     "i18n:report": "vue-cli-service i18n:report --src \"./src/**/*.?(js|vue)\" --locales \"./src/locales/**/*.json\"",
     "preview": "vite preview",
     "type-check": "vue-tsc --noEmit"

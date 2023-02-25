@@ -24,4 +24,6 @@ export * as Util from './Util';
 export * from './Vector';
 export * from './Mat3';
 
+export * as WGL from './wgl/wgl';
+
 export * from './interfaces';

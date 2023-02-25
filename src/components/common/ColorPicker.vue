@@ -4,7 +4,7 @@ import Core from '@/core';
 
 const EXPAND = 1.15;
 
-const { Draw, Vector } = Core;
+const { Draw, Vector, WGL } = Core;
 
 const props = defineProps<{
     color: Core.Draw.Color,
@@ -13,17 +13,98 @@ const props = defineProps<{
 
 const emit = defineEmits(['change-start', 'change', 'change-end']);
 
+const vertexSource = `
+attribute vec4 a_position;
+
+varying vec2 vPos;
+
+void main(){
+    vPos = a_position.xy;
+    gl_Position = a_position;
+}
+`;
+
+const fragmentSource = `
+precision highp float;
+
+uniform float u_value;
+
+varying vec2 vPos;
+
+const float PI = 3.141;
+
+vec3 HSVToRGB(float h, float s, float v){
+    float c = v * s;
+    float x = c * (1.0 - abs(mod((h / 60.0), 2.0) - 1.0));
+    float m = v - c;
+    vec3 col;
+
+    if (0.0 <= h && h < 60.0){
+        col = vec3(c, x, 0);
+    }
+    else if (h < 120.0){
+        col = vec3(x, c, 0);
+    }
+    else if (h < 180.0){
+        col = vec3(0, c, x);
+    }
+    else if (h < 240.0){
+        col = vec3(0, x, c);
+    }
+    else if (h < 300.0){
+        col = vec3(x, 0, c);
+    }
+    else{
+        col = vec3(c, 0, x);
+    }
+
+    return col + m;
+}
+
+void main(){
+    float grad = length(vPos);
+    float circleMask = smoothstep(1.0, 0.98, grad);
+    float angle = ((atan(vPos.y, vPos.x) + PI) / PI) * 180.0;
+    vec3 HSV = HSVToRGB(angle, grad, 1.0);
+    gl_FragColor = vec4(HSV * u_value, 1.0) * circleMask;
+}
+`;
+
 const canvasRef = ref<HTMLCanvasElement>();
 const sliderRef = ref<HTMLElement>();
 const cursorRef = ref<HTMLElement>();
 const valueCursorRef = ref<HTMLElement>();
 const valueCursorBGRef = ref<HTMLElement>();
-const wheelBuffer = Draw.createCanvas(props.width, props.width) as HTMLCanvasElement;
-const valueBuffer = Draw.createCanvas(props.width, props.width) as HTMLCanvasElement;
-const circleBuffer = Draw.createCanvas(props.width, props.width) as HTMLCanvasElement;
+const wheelBuffer = Draw.createHDPICanvas(props.width, props.width) as HTMLCanvasElement;
 const cursorPos = new Vector(0, 0);
 const valuePos = ref(1);
 let selectedColor: Core.Draw.Color = props.color ?? new Draw.Color(255, 255, 255, 255);
+
+//wgl setup
+const wheelCtx = WGL.getGLContext(wheelBuffer)!;
+const vertexShader = WGL.createShader(wheelCtx, wheelCtx.VERTEX_SHADER, vertexSource)!;
+const fragmentShader = WGL.createShader(wheelCtx, wheelCtx.FRAGMENT_SHADER, fragmentSource)!;
+const wheelProgram = WGL.createProgram(wheelCtx, vertexShader, fragmentShader)!;
+const valueUniformLocation = wheelCtx.getUniformLocation(wheelProgram, 'u_value')!;
+const positionAttributeLocation = wheelCtx.getAttribLocation(wheelProgram, 'a_position')!;
+const positionBuffer = wheelCtx.createBuffer()!;
+const planeGeo = [
+    -1, 1,
+    1, 1,
+    1, -1,
+    1, -1,
+    -1, -1,
+    -1, 1
+];
+const vao = wheelCtx.createVertexArray();
+
+wheelCtx.bindBuffer(wheelCtx.ARRAY_BUFFER, positionBuffer);
+wheelCtx.bufferData(wheelCtx.ARRAY_BUFFER, new Float32Array(planeGeo), wheelCtx.STATIC_DRAW);
+wheelCtx.bindVertexArray(vao);
+wheelCtx.enableVertexAttribArray(positionAttributeLocation);
+wheelCtx.vertexAttribPointer(positionAttributeLocation, 2, wheelCtx.FLOAT, false, 0, 0);
+wheelCtx.viewport(0, 0, wheelBuffer.width, wheelBuffer.height);
+wheelCtx.clearColor(0, 0, 0, 0);
 
 watch(()=>props.color, newVal => {
     if (!newVal.compare(selectedColor)){
@@ -31,15 +112,13 @@ watch(()=>props.color, newVal => {
         moveCursorToColor(selectedColor);
     }
 });
-watch(valuePos, ()=>composite());
+watch(valuePos, ()=>drawWheel());
 
 onMounted(()=>{
     Draw.resizeHDPICanvas(canvasRef.value!, props.width, props.width);
 
     nextTick(()=>{
         drawWheel();
-        drawCircleBuff();
-        composite();
         moveCursorToColor(selectedColor);
     })
 });
@@ -51,57 +130,16 @@ onBeforeUnmount(()=>{
 });
 
 function drawWheel(): void {
-    const ctx = wheelBuffer.getContext('2d')!;
-    const colors = ctx.getImageData(0, 0, wheelBuffer.width, wheelBuffer.height);
+    const canvasCtx = canvasRef.value!.getContext('2d')!;
 
-    const pos = new Vector();
-    const relPos = new Vector();
-    const rgb = {r: 0, g: 0, b: 0};
+    wheelCtx.clear(wheelCtx.COLOR_BUFFER_BIT);
+    wheelCtx.useProgram(wheelProgram);
+    wheelCtx.bindVertexArray(vao);
+    wheelCtx.uniform1f(valueUniformLocation, valuePos.value);
+    wheelCtx.drawArrays(wheelCtx.TRIANGLES, 0, 6);
 
-    for (let i = 0; i < colors.data.length; i += 4){
-        const posIdx = i / 4;
-        pos.set(posIdx % wheelBuffer.width, Math.floor(posIdx / wheelBuffer.width));
-        relPos.set(pos.x / wheelBuffer.width, pos.y / wheelBuffer.height).subtractScalar(0.5).multiplyScalar(2);
-        const hue = (Math.atan2(relPos.y, relPos.x) + Math.PI) * (180 / Math.PI);
-        const sat = relPos.length() * EXPAND;
-        const val = 1;
-        Draw.FastHSVToRGB(hue, sat, val, rgb);
-
-        colors.data[i + 0] = rgb.r;
-        colors.data[i + 1] = rgb.g;
-        colors.data[i + 2] = rgb.b;
-        colors.data[i + 3] = 255;
-    }
-
-    ctx.putImageData(colors, 0, 0);
-}
-
-function drawCircleBuff(): void {
-    const canvas = canvasRef.value!;
-    const ctx = circleBuffer.getContext('2d')!;
-    ctx.fillStyle = 'white';
-    ctx.beginPath();
-    ctx.arc(canvas.width / 2, canvas.height / 2, canvas.width / 2, 0, Math.PI * 2);
-    ctx.fill();
-}
-
-function composite(): void {
-    const canvas = canvasRef.value!;
-    const ctx = canvas.getContext('2d')!;
-    const valueCtx = valueBuffer.getContext('2d')!;
-    const value = Math.round(valuePos.value * 255);
-
-    //draw value canvas
-    valueCtx.fillStyle = `rgb(${value},${value},${value})`;
-    valueCtx.fillRect(0, 0, valueBuffer.width, valueBuffer.height);
-
-    //composite
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.drawImage(wheelBuffer, 0, 0);
-    ctx.globalCompositeOperation = 'multiply';
-    ctx.drawImage(valueBuffer, 0, 0);
-    ctx.globalCompositeOperation = 'destination-in';
-    ctx.drawImage(circleBuffer, 0, 0);
+    canvasCtx.clearRect(0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
+    canvasCtx.drawImage(wheelBuffer, 0, 0);
 }
 
 function updateCursorPos(x: number, y: number): void {
@@ -147,7 +185,7 @@ function updateValuePos(x: number): void {
 
 function updateCursorColors(): void {
     const canvas = canvasRef.value!;
-    const imgData = wheelBuffer.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data;
+    const imgData = canvasRef.value!.getContext('2d')!.getImageData(0, 0, canvas.width, canvas.height).data;
     const dpiCorrectCursor = cursorPos.clone().multiplyScalar(devicePixelRatio).round();
     const baseIdx = Math.round(dpiCorrectCursor.y * canvas.width * 4 + dpiCorrectCursor.x * 4);
     const rgbArr = [
