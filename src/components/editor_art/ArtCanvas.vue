@@ -17,7 +17,7 @@ const DEFAULT_CELL_SIZE = 20;
 
 const props = defineProps<{
     tool: Tool_Base | null,
-    navState: Core.iNavState,
+    navState: Core.NavState,
     spriteFrame: ImageData,
     undoLength: number,
     redoLength: number,

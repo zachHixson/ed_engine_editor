@@ -1,5 +1,7 @@
 import Core from '@/core';
+import { toRaw } from 'vue';
 
+const CANVAS_SIZE = 300;
 const { WGL } = Core;
 
 let test = 0;
@@ -9,35 +11,38 @@ export default class Art_Canvas_Renderer{
         uniform vec2 u_dimensions;
         uniform mat3 u_viewMatrix;
 
-        attribute vec4 a_position;
+        attribute vec2 a_position;
+        attribute vec2 a_uv;
         
         varying vec2 vUv;
-        varying vec2 vScreenCoord;
+        varying vec2 vScreenUv;
         
         void main(){
+            float minDim = min(u_dimensions.x, u_dimensions.y);
+
             vec2 aspect = vec2(u_dimensions.y / u_dimensions.x, 1.0);
-            vec4 aspPos = vec4(a_position.xy * aspect, 1.0, 1.0);
+            vec2 aspPos = a_position * aspect;
 
-            vUv = (a_position.xy + 1.0) / 2.0;
-            gl_Position = vec4(aspPos.xyz * u_viewMatrix, 1.0);
+            vUv = a_uv;
+            gl_Position = vec4((vec3(aspPos, 1.0) * u_viewMatrix) / minDim, 1.0);
 
-            vScreenCoord = gl_Position.xy * aspect;
+            vScreenUv = gl_Position.xy * aspect;
         }
     `;
     private static readonly _fragmentSource = `
         precision highp float;
 
-        const float GRID_SCALE = 30.0;
+        const float CHECKER_SCALE = 20.0;
 
         varying vec2 vUv;
-        varying vec2 vScreenCoord;
+        varying vec2 vScreenUv;
 
         void main(){
             //checker bg
-            float x = vScreenCoord.x;
-            x = floor(mod(x * GRID_SCALE, 2.0));
-            float y = vScreenCoord.y + (x * (1.0 / GRID_SCALE));
-            y = floor(mod(y * GRID_SCALE, 2.0));
+            float x = vScreenUv.x;
+            x = floor(mod(x * CHECKER_SCALE, 2.0));
+            float y = vScreenUv.y + (x * (1.0 / CHECKER_SCALE));
+            y = floor(mod(y * CHECKER_SCALE, 2.0));
             float bg = mix(0.75, 0.8, y);
 
             //grid
@@ -58,6 +63,14 @@ export default class Art_Canvas_Renderer{
         1, -1,
         -1, -1,
         -1, 1
+    ].map(i => i * 320);
+    private static readonly _planeUVs = [
+        0, 1,
+        1, 1,
+        1, 0,
+        1, 0,
+        0, 0,
+        0, 1,
     ];
 
     private readonly GRID_DIV = Core.Sprite.DIMENSIONS;
@@ -71,7 +84,9 @@ export default class Art_Canvas_Renderer{
     private _dimensionUniformLoc: WebGLUniformLocation;
     private _viewMatrixUniformLoc: WebGLUniformLocation;
     private _positionAttribLoc: number;
+    private _uvAttribLoc: number;
     private _positionBuffer: WebGLBuffer;
+    private _uvBuffer: WebGLBuffer;
     private _vao: WebGLVertexArrayObject;
 
     constructor(element: HTMLCanvasElement, spriteData: ImageData, previewData: ImageData, navState: Core.iNavState){
@@ -89,25 +104,36 @@ export default class Art_Canvas_Renderer{
         this._dimensionUniformLoc = this._gl.getUniformLocation(this._program, 'u_dimensions')!;
         this._viewMatrixUniformLoc = this._gl.getUniformLocation(this._program, 'u_viewMatrix')!;
         this._positionAttribLoc = this._gl.getAttribLocation(this._program, 'a_position');
+        this._uvAttribLoc = this._gl.getAttribLocation(this._program, 'a_uv');
 
         this._positionBuffer = this._gl.createBuffer()!;
+        this._uvBuffer = this._gl.createBuffer()!;
         this._vao = this._gl.createVertexArray()!;
 
+        this._gl.bindVertexArray(this._vao);
         this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._positionBuffer);
         this._gl.bufferData(this._gl.ARRAY_BUFFER, new Float32Array(Art_Canvas_Renderer._planeGeo), this._gl.STATIC_DRAW);
-        this._gl.bindVertexArray(this._vao);
         this._gl.enableVertexAttribArray(this._positionAttribLoc);
         this._gl.vertexAttribPointer(this._positionAttribLoc, 2, this._gl.FLOAT, false, 0, 0);
+        this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._uvBuffer);
+        this._gl.bufferData(this._gl.ARRAY_BUFFER, new Float32Array(Art_Canvas_Renderer._planeUVs), this._gl.STATIC_DRAW);
+        this._gl.enableVertexAttribArray(this._uvAttribLoc);
+        this._gl.vertexAttribPointer(this._uvAttribLoc, 2, this._gl.FLOAT, false, 0, 0);
+
         this._gl.clearColor(1, 1, 1, 1);
         this._gl.useProgram(this._program);
-        this._gl.uniformMatrix3fv(this._viewMatrixUniformLoc, false, [
-            .5, 0, 0,
-            0, .5, 0,
-            0, 0, 1
-        ]);
+        this._gl.uniformMatrix3fv(this._viewMatrixUniformLoc, false, this.getCanvasXfrm().data);
 
         this.resize();
         this.queueRender();
+    }
+
+    getCanvasXfrm(): Core.Mat3 {
+        const zoom = this._navState.zoomFac;
+        const { x, y } = this._navState.offset;
+        const zoomMat = new Core.Mat3([zoom, 0, 0, 0, zoom, 0, 0, 0, 1]);
+        const tranMat = new Core.Mat3([1, 0, x * 2, 0, 1, y * 2, 0, 0, 1]);
+        return zoomMat.multiply(tranMat);
     }
 
     queueRender(){
@@ -124,11 +150,6 @@ export default class Art_Canvas_Renderer{
         this._gl.useProgram(this._program);
         this._gl.bindVertexArray(this._vao);
         this._gl.uniform2f(this._dimensionUniformLoc, this._gl.canvas.width, this._gl.canvas.height);
-        this._gl.uniformMatrix3fv(this._viewMatrixUniformLoc, false, [
-            .5, 0, Math.sin((test++) * 0.05) * 0.5,
-            0, .5, 0,
-            0, 0, 1
-        ]);
         this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
     }
 
@@ -137,8 +158,8 @@ export default class Art_Canvas_Renderer{
     }
 
     navChanged(): void {
-        //this._gl.uniformMatrix3fv(this._viewMatrixUniformLoc, false, this._navState.matrix.data);
-        //this.queueRender();
+        this._gl.uniformMatrix3fv(this._viewMatrixUniformLoc, false, this.getCanvasXfrm().data);
+        this.queueRender();
     }
 
     setSprite(newSprite: ImageData, navRef: Core.iNavState): void {

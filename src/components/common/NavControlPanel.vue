@@ -5,21 +5,20 @@ import panIcon from '@/assets/navigation_hand.svg';
 import zoomIcon from '@/assets/navigation_magglass.svg';
 import centerIcon from '@/assets/navigation_center.svg';
 
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { iControl } from './NavControl.vue';
 import Core from '@/core';
 
 const ZOOM_SENSITIVITY = 0.03;
 const ZOOM_WHEEL_AMT = 0.8;
-const PRECISION = 100;
 
 const { NAV_TOOL_TYPE, Vector } = Core;
 
 const { t } = useI18n();
 
 const props = defineProps<{
-    navState: Core.iNavState,
+    navState: Core.NavState,
     selectedNavTool: Core.NAV_TOOL_TYPE | null,
     maxZoom: number,
     contentsBounds: number[],
@@ -158,20 +157,20 @@ function setContainerDimensions({width, height}: {width: number, height: number}
 
 function setZoom(newZoom: number): void {
     newZoom = Math.min(Math.max(newZoom, 0.5), props.maxZoom);
-    props.navState.zoomFac = Math.round(newZoom * PRECISION) / PRECISION;
+    props.navState.setZoom(newZoom);
 }
 
 function pan(): void {
-    const curMouse = new Vector(0,0).copy(mouse.position);
-    const downPos = new Vector(0,0).copy(mouse.lastPosition);
+    const curMouse = mouse.position.clone();
+    const downPos = mouse.lastPosition.clone();
     const difference = curMouse.subtract(downPos);
+
+    difference.y *= -1;
 
     difference.divideScalar(props.navState.zoomFac).multiplyScalar(devicePixelRatio);
     props.navState.offset.add(difference);
 
-    props.navState.offset.multiplyScalar(PRECISION);
-    props.navState.offset.round();
-    props.navState.offset.divideScalar(PRECISION);
+    props.navState.setOffset(props.navState.offset);
 
     emit('nav-changed', props.navState);
 }
@@ -214,7 +213,7 @@ function centerView(): void {
     midPoint.multiplyScalar(props.unitScale);
 
     setZoom((minContainerDim / maxContentsDim) * dpiScale);
-    props.navState.offset.copy(midPoint);
+    props.navState.setOffset(midPoint);
     emit('nav-changed', props.navState);
 }
 </script>

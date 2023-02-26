@@ -1,6 +1,8 @@
 import { Vector } from "./Vector";
 import { Mat3 } from "./Mat3";
 
+const PRECISION = 100;
+
 export interface iNavState {
     offset: Vector;
     zoomFac: number;
@@ -13,7 +15,7 @@ export interface iNavSaveData {
 }
 
 export class NavState implements iNavState {
-    private static _defaultMatrix = [1, 0, 0, 0, 1, 0, 1, 1, 1];
+    private static _defaultMatrix = [1, 0, 0, 0, 1, 0, 0, 0, 1];
 
     private _offset: Vector = new Vector();
     private _zoomFac: number = 1;
@@ -39,7 +41,7 @@ export class NavState implements iNavState {
         this._zoomFac = zoom;
         this._needsUpdate = true;
     }
-
+    
     updateMatrix(): void {
         this._matrix.data[0] = this._zoomFac;
         this._matrix.data[4] = this._zoomFac;
@@ -73,8 +75,8 @@ export class NavState implements iNavState {
 
 export function getNavSaveData(navState: NavState){
     return {
-        offset: navState.offset.toObject(),
-        zoomFac: navState.zoomFac,
+        offset: navState.offset.clone().multiplyScalar(PRECISION).round().divideScalar(PRECISION),
+        zoomFac: Math.round(navState.zoomFac * PRECISION) / PRECISION,
     }
 }
 
