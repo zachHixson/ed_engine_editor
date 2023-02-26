@@ -21,21 +21,20 @@ export default class Art_Canvas_Renderer{
         varying vec2 vScreenUv;
         
         void main(){
-            float minDim = min(u_dimensions.x, u_dimensions.y);
-
             vec2 aspect = vec2(u_dimensions.y / u_dimensions.x, 1.0);
-            vec2 aspPos = a_position * aspect;
+            vec3 aspPos = vec3(a_position, 1.0) * u_viewMatrix;
+            aspPos.xy /= u_dimensions;
+            
+            gl_Position = vec4(aspPos, 1.0);
 
             vUv = a_uv;
-            gl_Position = vec4((vec3(aspPos, 1.0) * u_viewMatrix) / minDim, 1.0);
-
-            vScreenUv = gl_Position.xy * aspect;
+            vScreenUv = gl_Position.xy * u_dimensions;
         }
     `;
     private static readonly _fragmentSource = `
         precision highp float;
 
-        const float CHECKER_SCALE = 20.0;
+        const float CHECKER_SCALE = 32.0;
 
         varying vec2 vUv;
         varying vec2 vScreenUv;
@@ -43,9 +42,9 @@ export default class Art_Canvas_Renderer{
         void main(){
             //checker bg
             float x = vScreenUv.x;
-            x = floor(mod(x * CHECKER_SCALE, 2.0));
-            float y = vScreenUv.y + (x * (1.0 / CHECKER_SCALE));
-            y = floor(mod(y * CHECKER_SCALE, 2.0));
+            x = floor(mod(x / CHECKER_SCALE, 2.0));
+            float y = vScreenUv.y + (x * CHECKER_SCALE);
+            y = floor(mod(y / CHECKER_SCALE, 2.0));
             float bg = mix(0.75, 0.8, y);
 
             //grid
@@ -57,6 +56,7 @@ export default class Art_Canvas_Renderer{
             vec3 col = vec3(mix(grid, bg, grid));
             
             gl_FragColor = vec4(col, 1.0);
+            //gl_FragColor = vec4(vec3(bg), 1.0);
         }
     `;
     private static readonly _planeGeo = WGL.createPlaneGeo().map(i => i * Art_Canvas_Renderer.CANVAS_WIDTH);
