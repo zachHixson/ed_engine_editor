@@ -59,22 +59,8 @@ export default class Art_Canvas_Renderer{
             gl_FragColor = vec4(col, 1.0);
         }
     `;
-    private static readonly _planeGeo = [
-        -1, 1,
-        1, 1,
-        1, -1,
-        1, -1,
-        -1, -1,
-        -1, 1
-    ].map(i => i * Art_Canvas_Renderer.CANVAS_WIDTH);
-    private static readonly _planeUVs = [
-        0, 1,
-        1, 1,
-        1, 0,
-        1, 0,
-        0, 0,
-        0, 1,
-    ];
+    private static readonly _planeGeo = WGL.createPlaneGeo().map(i => i * Art_Canvas_Renderer.CANVAS_WIDTH);
+    private static readonly _planeUVs = WGL.createPlaneGeo().map(i => (i + 1) / 2);
 
     private _nextDrawCall: number | null = null;
     private _navState: Core.iNavState;

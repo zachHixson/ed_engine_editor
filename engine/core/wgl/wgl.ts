@@ -87,6 +87,17 @@ export function createProgram(gl: WebGL2RenderingContext, vertexShader: WebGLSha
     return program;
 }
 
+export function createPlaneGeo(){
+    return [
+        -1, 1,
+        1, 1,
+        1, -1,
+        1, -1,
+        -1, -1,
+        -1, 1
+    ];
+}
+
 export class Uniform_Object {
     private _ctx: WebGL2RenderingContext;
     private _name: string;

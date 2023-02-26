@@ -90,14 +90,7 @@ const wheelProgram = WGL.createProgram(
 )!;
 const valueUniform = new WGL.Uniform_Object(wheelCtx, wheelProgram, 'u_value', WGL.Uniform_Types.FLOAT)!;
 const positionAttribute = new WGL.Attribute_Object(wheelCtx, wheelProgram, 'a_position');
-const planeGeo = [
-    -1, 1,
-    1, 1,
-    1, -1,
-    1, -1,
-    -1, -1,
-    -1, 1
-];
+const planeGeo = WGL.createPlaneGeo();
 const vao = wheelCtx.createVertexArray();
 
 wheelCtx.bindVertexArray(vao);
