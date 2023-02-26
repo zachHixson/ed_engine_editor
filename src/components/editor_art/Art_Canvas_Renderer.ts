@@ -1,10 +1,6 @@
 import Core from '@/core';
-import { toRaw } from 'vue';
 
-const CANVAS_SIZE = 300;
 const { WGL } = Core;
-
-let test = 0;
 
 export default class Art_Canvas_Renderer{
     private static readonly GRID_DIV = Core.Sprite.DIMENSIONS;
@@ -34,7 +30,7 @@ export default class Art_Canvas_Renderer{
     private static readonly _fragmentSource = `
         precision highp float;
 
-        const float CHECKER_SCALE = 32.0;
+        const float CHECKER_SCALE = 16.0;
 
         varying vec2 vUv;
         varying vec2 vScreenUv;
@@ -56,10 +52,9 @@ export default class Art_Canvas_Renderer{
             vec3 col = vec3(mix(grid, bg, grid));
             
             gl_FragColor = vec4(col, 1.0);
-            //gl_FragColor = vec4(vec3(bg), 1.0);
         }
     `;
-    private static readonly _planeGeo = WGL.createPlaneGeo().map(i => i * Art_Canvas_Renderer.CANVAS_WIDTH);
+    private static readonly _planeGeo = WGL.createPlaneGeo().map(i => i * Art_Canvas_Renderer.CANVAS_WIDTH * 0.5);
     private static readonly _planeUVs = WGL.createPlaneGeo().map(i => (i + 1) / 2);
 
     private _nextDrawCall: number | null = null;
@@ -109,7 +104,7 @@ export default class Art_Canvas_Renderer{
         const zoom = this._navState.zoomFac;
         const { x, y } = this._navState.offset;
         const zoomMat = new Core.Mat3([zoom, 0, 0, 0, zoom, 0, 0, 0, 1]);
-        const tranMat = new Core.Mat3([1, 0, x * 2, 0, 1, y * 2, 0, 0, 1]);
+        const tranMat = new Core.Mat3([1, 0, x, 0, 1, y, 0, 0, 1]);
         return zoomMat.multiply(tranMat);
     }
 
@@ -126,7 +121,7 @@ export default class Art_Canvas_Renderer{
         this._gl.clear(this._gl.COLOR_BUFFER_BIT);
         this._gl.useProgram(this._program);
         this._gl.bindVertexArray(this._vao);
-        this._dimensionUniform.set(this._gl.canvas.width, this._gl.canvas.height);
+        this._dimensionUniform.set(this._gl.canvas.width / 2, this._gl.canvas.height / 2);
         this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
     }
 

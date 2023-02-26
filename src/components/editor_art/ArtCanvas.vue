@@ -55,10 +55,6 @@ const contentsBounds = (()=>{
     return [-halfCanvas, -halfCanvas, halfCanvas, halfCanvas];
 })();
 
-//const tool = computed();
-//const toolSize = computed();
-//const spriteFrame = computed();
-
 watch(()=>props.tool, (newTool)=>{
     if (newTool){
         newTool.beforeDestroy();
