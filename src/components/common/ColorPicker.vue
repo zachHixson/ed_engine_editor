@@ -83,12 +83,13 @@ let selectedColor: Core.Draw.Color = props.color ?? new Draw.Color(255, 255, 255
 
 //wgl setup
 const wheelCtx = WGL.getGLContext(wheelBuffer)!;
-const vertexShader = WGL.createShader(wheelCtx, wheelCtx.VERTEX_SHADER, vertexSource)!;
-const fragmentShader = WGL.createShader(wheelCtx, wheelCtx.FRAGMENT_SHADER, fragmentSource)!;
-const wheelProgram = WGL.createProgram(wheelCtx, vertexShader, fragmentShader)!;
-const valueUniformLocation = wheelCtx.getUniformLocation(wheelProgram, 'u_value')!;
-const positionAttributeLocation = wheelCtx.getAttribLocation(wheelProgram, 'a_position')!;
-const positionBuffer = wheelCtx.createBuffer()!;
+const wheelProgram = WGL.createProgram(
+    wheelCtx,
+    WGL.createShader(wheelCtx, wheelCtx.VERTEX_SHADER, vertexSource)!,
+    WGL.createShader(wheelCtx, wheelCtx.FRAGMENT_SHADER, fragmentSource)!
+)!;
+const valueUniform = new WGL.Uniform_Object(wheelCtx, wheelProgram, 'u_value', WGL.Uniform_Types.FLOAT)!;
+const positionAttribute = new WGL.Attribute_Object(wheelCtx, wheelProgram, 'a_position');
 const planeGeo = [
     -1, 1,
     1, 1,
@@ -99,11 +100,9 @@ const planeGeo = [
 ];
 const vao = wheelCtx.createVertexArray();
 
-wheelCtx.bindBuffer(wheelCtx.ARRAY_BUFFER, positionBuffer);
-wheelCtx.bufferData(wheelCtx.ARRAY_BUFFER, new Float32Array(planeGeo), wheelCtx.STATIC_DRAW);
 wheelCtx.bindVertexArray(vao);
-wheelCtx.enableVertexAttribArray(positionAttributeLocation);
-wheelCtx.vertexAttribPointer(positionAttributeLocation, 2, wheelCtx.FLOAT, false, 0, 0);
+positionAttribute.set(new Float32Array(planeGeo), 2);
+
 wheelCtx.viewport(0, 0, wheelBuffer.width, wheelBuffer.height);
 wheelCtx.clearColor(0, 0, 0, 0);
 
@@ -136,7 +135,7 @@ function drawWheel(): void {
     wheelCtx.clear(wheelCtx.COLOR_BUFFER_BIT);
     wheelCtx.useProgram(wheelProgram);
     wheelCtx.bindVertexArray(vao);
-    wheelCtx.uniform1f(valueUniformLocation, valuePos.value);
+    valueUniform.set(valuePos.value);
     wheelCtx.drawArrays(wheelCtx.TRIANGLES, 0, 6);
 
     canvasCtx.clearRect(0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);

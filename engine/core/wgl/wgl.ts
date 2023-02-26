@@ -1,3 +1,10 @@
+export enum Uniform_Types {
+    FLOAT,
+    VEC2,
+    VEC3,
+    MAT3,
+}
+
 export function getGLContext(canvas: HTMLCanvasElement): WebGL2RenderingContext | null {
     const ctx = canvas.getContext('webgl2') ?? getPolyfill(canvas);
 
@@ -78,4 +85,58 @@ export function createProgram(gl: WebGL2RenderingContext, vertexShader: WebGLSha
     }
 
     return program;
+}
+
+export class Uniform_Object {
+    private _ctx: WebGL2RenderingContext;
+    private _name: string;
+    private _type: Uniform_Types;
+    private _loc: WebGLUniformLocation;
+
+    constructor(ctx: WebGL2RenderingContext, program: WebGLProgram, name: string, type: Uniform_Types){
+        this._ctx = ctx;
+        this._name = name;
+        this._type = type;
+        this._loc = this._ctx.getUniformLocation(program, this._name)!;
+    }
+
+    set(...args: any[]): void {
+        switch(this._type){
+            case Uniform_Types.FLOAT:
+                this._ctx.uniform1f(this._loc, args[0]);
+                break;
+            case Uniform_Types.VEC2:
+                this._ctx.uniform2f(this._loc, args[0], args[1]);
+                break;
+            case Uniform_Types.VEC3:
+                this._ctx.uniform3f(this._loc, args[0], args[1], args[2]);
+            case Uniform_Types.MAT3:
+                this._ctx.uniformMatrix3fv(this._loc, args[0], args[1]);
+                break;
+        }
+    }
+}
+
+export class Attribute_Object {
+    private _ctx: WebGL2RenderingContext;
+    private _name: string;
+    private _loc: number;
+    private _buffer: WebGLBuffer;
+
+    constructor(ctx: WebGL2RenderingContext, program: WebGLProgram, name: string){
+        this._ctx = ctx;
+        this._name = name;
+        this._loc = this._ctx.getAttribLocation(program, this._name);
+        this._buffer = this._ctx.createBuffer()!;
+
+        this._ctx.bindBuffer(this._ctx.ARRAY_BUFFER, this._buffer);
+        this._ctx.enableVertexAttribArray(this._loc);
+    }
+
+    set(data: Float32Array, size = 1, type = this._ctx.FLOAT, normalize = false, offset = 0, stride = 0, hint = this._ctx.STATIC_DRAW): void {
+        this._ctx.bindBuffer(this._ctx.ARRAY_BUFFER, this._buffer);
+        this._ctx.bufferData(this._ctx.ARRAY_BUFFER, data, hint);
+        this._ctx.enableVertexAttribArray(this._loc);
+        this._ctx.vertexAttribPointer(this._loc, size, type, normalize, offset, stride);
+    }
 }
