@@ -148,6 +148,7 @@ export default class Art_Canvas_Renderer{
 
     resize(): void {
         this._gl.viewport(0, 0, this._canvas.width, this._canvas.height);
+        this.queueRender();
     }
 
     navChanged(): void {
