@@ -151,3 +151,81 @@ export class Attribute_Object {
         this._ctx.vertexAttribPointer(this._loc, size, type, normalize, offset, stride);
     }
 }
+
+export class Texture_Object {
+    private static _textureUnitMap: boolean[];
+
+    private _ctx: WebGL2RenderingContext;
+    private _name: string;
+    private _loc: WebGLUniformLocation;
+    private _texture: WebGLTexture;
+    private _slot: number = -1;
+
+    constructor(ctx: WebGL2RenderingContext, program: WebGLProgram, name: string){
+        this._ctx = ctx;
+        this._name = name;
+        this._loc = this._ctx.getUniformLocation(program, this._name)!;
+        this._texture = this._ctx.createTexture()!;
+
+        if (!Texture_Object._textureUnitMap){
+            Texture_Object._textureUnitMap = new Array(this._ctx.getParameter(this._ctx.MAX_COMBINED_TEXTURE_IMAGE_UNITS));
+            Texture_Object._textureUnitMap.fill(false);
+        }
+    }
+
+    set(imgData: ImageData, generateMipmap = false): void {
+        this._ctx.bindTexture(this._ctx.TEXTURE_2D, this._texture);
+        this._ctx.texImage2D(
+            this._ctx.TEXTURE_2D,
+            0,
+            this._ctx.RGBA,
+            imgData.width,
+            imgData.height,
+            0,
+            this._ctx.RGBA,
+            this._ctx.UNSIGNED_BYTE,
+            imgData
+        );
+
+        if (generateMipmap){
+            this._ctx.generateMipmap(this._ctx.TEXTURE_2D);
+        }
+        else{
+            this._ctx.texParameteri(this._ctx.TEXTURE_2D, this._ctx.TEXTURE_MIN_FILTER, this._ctx.NEAREST);
+            this._ctx.texParameteri(this._ctx.TEXTURE_2D, this._ctx.TEXTURE_MAG_FILTER, this._ctx.NEAREST);
+        }
+    }
+
+    private _getTextureSlot(): number {
+        let thisSlot = this._slot;
+
+        //find first available slot
+        for (let i = 0; thisSlot < 0 && i < Texture_Object._textureUnitMap.length; i++){
+            if (!Texture_Object._textureUnitMap[i]){
+                thisSlot = i;
+                Texture_Object._textureUnitMap[i] = true;
+            }
+        }
+
+        if (thisSlot < 0){
+            console.error('ERROR: Out of texture slots');
+            return -1;
+        }
+
+        return thisSlot;
+    }
+
+    activate(): void {
+        this._slot = this._slot < 0 ? this._getTextureSlot() : this._slot;
+
+        //activate
+        this._ctx.activeTexture(this._ctx.TEXTURE0 + this._slot);
+        this._ctx.bindTexture(this._ctx.TEXTURE_2D, this._texture);
+        this._ctx.uniform1i(this._loc, this._slot);
+    }
+
+    deactivate(): void {
+        Texture_Object._textureUnitMap[this._slot] = false;
+        this._slot = -1;
+    }
+}

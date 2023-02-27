@@ -91,12 +91,15 @@ onMounted(()=>{
     canvasRef.value!.addEventListener('mouseenter', mouseEnter);
     canvasRef.value!.addEventListener('mouseleave', mouseLeave);
 
+    ArtMainEventBus.addEventListener('update-frame-previews', updateSpriteTexture);
+
     maxZoom.value = getZoomBounds().max;
     resize();
 });
 
 onBeforeUnmount(()=>{
     ArtMainEventBus.removeEventListener('resize', resize);
+    ArtMainEventBus.removeEventListener('update-frame-previews', updateSpriteTexture);
     renderer = null;
 });
 
@@ -180,6 +183,15 @@ function undo(): void {
 
 function redo(): void {
     emit('redo');
+}
+
+function render(): void {
+    renderer!.queueRender();
+}
+
+function updateSpriteTexture(): void {
+    renderer!.updateSpriteTexture();
+    render();
 }
 
 function updateMouseCell(event: MouseEvent): void {

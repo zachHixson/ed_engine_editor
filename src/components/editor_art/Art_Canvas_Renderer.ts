@@ -23,7 +23,7 @@ export default class Art_Canvas_Renderer{
             
             gl_Position = vec4(aspPos, 1.0);
 
-            vUv = a_uv;
+            vUv = a_uv * vec2(1.0, -1.0);
             vScreenUv = gl_Position.xy * u_dimensions;
         }
     `;
@@ -31,6 +31,9 @@ export default class Art_Canvas_Renderer{
         precision highp float;
 
         const float CHECKER_SCALE = 16.0;
+
+        uniform sampler2D u_spriteTexture;
+        uniform sampler2D u_previewTexture;
 
         varying vec2 vUv;
         varying vec2 vScreenUv;
@@ -46,10 +49,16 @@ export default class Art_Canvas_Renderer{
             //grid
             vec2 gUv = abs(fract(vUv * 16.0) - 0.5) * 2.0;
             float grid = max(gUv.x, gUv.y);
-            grid = smoothstep(1.0, 0.90, grid);
+            grid = smoothstep(1.0, 0.93, grid);
+
+            //sprite and preview textures
+            vec4 sprite = texture2D(u_spriteTexture, vUv);
+            vec4 preview = texture2D(u_previewTexture, vUv);
 
             //composite
-            vec3 col = vec3(mix(grid, bg, grid));
+            vec3 col = mix(vec3(bg), sprite.rgb, sprite.a);
+            col = mix(col, preview.rgb, preview.a);
+            col = mix(vec3(0.3), col, grid);
             
             gl_FragColor = vec4(col, 1.0);
         }
@@ -60,17 +69,23 @@ export default class Art_Canvas_Renderer{
     private _nextDrawCall: number | null = null;
     private _navState: Core.iNavState;
     private _canvas: HTMLCanvasElement;
+    private _spriteData: ImageData;
+    private _previewData: ImageData;
     private _gl: WebGL2RenderingContext;
     private _program: WebGLProgram;
     private _positionAttribute: Core.WGL.Attribute_Object;
     private _uvAttribute: Core.WGL.Attribute_Object;
     private _dimensionUniform: Core.WGL.Uniform_Object;
     private _viewMatrixUniform: Core.WGL.Uniform_Object;
+    private _spriteTexUniform: Core.WGL.Texture_Object;
+    private _previewTexUniform: Core.WGL.Texture_Object;
     private _vao: WebGLVertexArrayObject;
 
     constructor(element: HTMLCanvasElement, spriteData: ImageData, previewData: ImageData, navState: Core.iNavState){
         this._navState = navState;
         this._canvas = element;
+        this._spriteData = spriteData;
+        this._previewData = previewData;
 
         //Setup webGL context
         this._gl = WGL.getGLContext(this._canvas)!;
@@ -84,6 +99,8 @@ export default class Art_Canvas_Renderer{
         this._uvAttribute = new WGL.Attribute_Object(this._gl, this._program, 'a_uv');
         this._dimensionUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_dimensions', WGL.Uniform_Types.VEC2);
         this._viewMatrixUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_viewMatrix', WGL.Uniform_Types.MAT3);
+        this._spriteTexUniform = new WGL.Texture_Object(this._gl, this._program, 'u_spriteTexture');
+        this._previewTexUniform = new WGL.Texture_Object(this._gl, this._program, 'u_previewTexture');
 
         this._vao = this._gl.createVertexArray()!;
 
@@ -95,6 +112,8 @@ export default class Art_Canvas_Renderer{
         this._gl.clearColor(1, 1, 1, 1);
         this._gl.useProgram(this._program);
         this._viewMatrixUniform.set(false, this.getCanvasXfrm().data);
+
+        this.updateSpriteTexture();
 
         this.resize();
         this.queueRender();
@@ -122,6 +141,8 @@ export default class Art_Canvas_Renderer{
         this._gl.useProgram(this._program);
         this._gl.bindVertexArray(this._vao);
         this._dimensionUniform.set(this._gl.canvas.width / 2, this._gl.canvas.height / 2);
+        this._spriteTexUniform.activate();
+        this._previewTexUniform.activate();
         this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
     }
 
@@ -136,7 +157,17 @@ export default class Art_Canvas_Renderer{
 
     setSprite(newSprite: ImageData, navRef: Core.iNavState): void {
         this._navState = navRef;
+        this._spriteData = newSprite;
+        this.updateSpriteTexture();
+    }
 
+    updateSpriteTexture(): void {
+        this._spriteTexUniform.set(this._spriteData);
+        this.queueRender();
+    }
+
+    private _updatePreviewTexture(): void {
+        this._previewTexUniform.set(this._previewData);
         this.queueRender();
     }
 
@@ -149,6 +180,7 @@ export default class Art_Canvas_Renderer{
     }
 
     mouseMove(): void {
+        this._updatePreviewTexture();
         this.queueRender();
     }
 }
