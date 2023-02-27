@@ -183,4 +183,9 @@ export default class Art_Canvas_Renderer{
         this._updatePreviewTexture();
         this.queueRender();
     }
+
+    destroy(): void {
+        this._spriteTexUniform.destroy();
+        this._previewTexUniform.destroy();
+    }
 }

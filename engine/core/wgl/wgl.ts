@@ -228,4 +228,10 @@ export class Texture_Object {
         Texture_Object._textureUnitMap[this._slot] = false;
         this._slot = -1;
     }
+
+    destroy(): void {
+        Texture_Object._textureUnitMap[this._slot] = false;
+        this._slot = -1;
+        this._ctx.deleteTexture(this._texture);
+    }
 }

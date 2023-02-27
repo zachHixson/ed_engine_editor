@@ -100,6 +100,7 @@ onMounted(()=>{
 onBeforeUnmount(()=>{
     ArtMainEventBus.removeEventListener('resize', resize);
     ArtMainEventBus.removeEventListener('update-frame-previews', updateSpriteTexture);
+    renderer!.destroy();
     renderer = null;
 });
 
