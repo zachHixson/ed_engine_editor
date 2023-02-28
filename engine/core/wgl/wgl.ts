@@ -184,7 +184,7 @@ export class Texture_Object {
             0,
             this._ctx.RGBA,
             this._ctx.UNSIGNED_BYTE,
-            imgData
+            imgData.data
         );
 
         if (generateMipmap){
