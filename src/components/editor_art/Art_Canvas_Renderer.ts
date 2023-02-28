@@ -17,9 +17,7 @@ export default class Art_Canvas_Renderer{
         varying vec2 vScreenUv;
         
         void main(){
-            vec2 aspect = vec2(u_dimensions.y / u_dimensions.x, 1.0);
             vec3 aspPos = vec3(a_position, 1.0) * u_viewMatrix;
-            aspPos.xy /= u_dimensions;
             
             gl_Position = vec4(aspPos, 1.0);
 
@@ -80,6 +78,8 @@ export default class Art_Canvas_Renderer{
     private _spriteTexUniform: Core.WGL.Texture_Object;
     private _previewTexUniform: Core.WGL.Texture_Object;
     private _vao: WebGLVertexArrayObject;
+    private _viewMatrix = new Core.Mat3();
+    private _viewMatrixNeedsUpdate = true;
 
     constructor(element: HTMLCanvasElement, spriteData: ImageData, previewData: ImageData, navState: Core.iNavState){
         this._navState = navState;
@@ -111,20 +111,34 @@ export default class Art_Canvas_Renderer{
 
         this._gl.clearColor(1, 1, 1, 1);
         this._gl.useProgram(this._program);
-        this._viewMatrixUniform.set(false, this.getCanvasXfrm().data);
 
         this.updateSpriteTexture();
-
         this.resize();
         this.queueRender();
     }
 
-    getCanvasXfrm(): Core.Mat3 {
+    private _updateViewMatrix(): void {
         const zoom = this._navState.zoomFac;
         const { x, y } = this._navState.offset;
+        const dimensions = new Core.Vector(this._canvas.width / 2, this._canvas.height / 2);
         const zoomMat = new Core.Mat3([zoom, 0, 0, 0, zoom, 0, 0, 0, 1]);
         const tranMat = new Core.Mat3([1, 0, x, 0, 1, y, 0, 0, 1]);
-        return zoomMat.multiply(tranMat);
+        const aspectMat = new Core.Mat3([
+            1.0 / dimensions.x, 0, 0,
+            0, 1.0 / dimensions.y, 0,
+            0, 0, 1.0
+        ]);
+        this._viewMatrix.copy(zoomMat.multiply(aspectMat).multiply(tranMat));
+        this._viewMatrixUniform.set(false, this._viewMatrix.data);
+        this._viewMatrixNeedsUpdate = false;
+    }
+
+    getViewMatrix(): Core.Mat3 {
+        if (this._viewMatrixNeedsUpdate){
+            this._updateViewMatrix();
+        }
+
+        return this._viewMatrix;
     }
 
     queueRender(): void {
@@ -137,10 +151,11 @@ export default class Art_Canvas_Renderer{
     }
 
     render(): void {
+        this._updateViewMatrix();
+
         this._gl.clear(this._gl.COLOR_BUFFER_BIT);
         this._gl.useProgram(this._program);
         this._gl.bindVertexArray(this._vao);
-        this._dimensionUniform.set(this._gl.canvas.width / 2, this._gl.canvas.height / 2);
         this._spriteTexUniform.activate();
         this._previewTexUniform.activate();
         this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
@@ -148,11 +163,13 @@ export default class Art_Canvas_Renderer{
 
     resize(): void {
         this._gl.viewport(0, 0, this._canvas.width, this._canvas.height);
+        this._dimensionUniform.set(this._gl.canvas.width / 2, this._gl.canvas.height / 2);
+        this._viewMatrixNeedsUpdate = true;
         this.queueRender();
     }
 
     navChanged(): void {
-        this._viewMatrixUniform.set(false, this.getCanvasXfrm().data);
+        this._viewMatrixNeedsUpdate = true;
         this.queueRender();
     }
 
