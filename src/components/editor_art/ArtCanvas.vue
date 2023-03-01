@@ -196,22 +196,23 @@ function updateSpriteTexture(): void {
 }
 
 function updateMouseCell(event: MouseEvent): void {
-    const CELL_SIZE = (CANVAS_WIDTH / Core.Sprite.DIMENSIONS) * props.navState.zoomFac;
-    const newMCell = new Vector(event.offsetX, event.offsetY).multiplyScalar(devicePixelRatio.value);
-    const windowHalfWidth = new Vector(canvasRef.value!.width / 2, canvasRef.value!.height / 2);
-    const canvasHalfWidth = new Vector(CANVAS_WIDTH / 2, CANVAS_WIDTH / 2);
-    const scaledOffset = props.navState.offset.clone().multiplyScalar(props.navState.zoomFac);
+    const mousePos = new Vector(event.offsetX, event.offsetY).multiplyScalar(devicePixelRatio.value);
+    const windowDimensions = new Vector(canvasRef.value!.width, canvasRef.value!.height);
 
-    canvasHalfWidth.multiplyScalar(props.navState.zoomFac);
+    //convert from pixels to clip space
+    mousePos.divide(windowDimensions).subtractScalar(0.5).multiplyScalar(2);
+    mousePos.y *= -1;
 
-    newMCell.subtract(windowHalfWidth);
-    newMCell.add(canvasHalfWidth);
-    newMCell.subtract(scaledOffset);
-    newMCell.divideScalar(CELL_SIZE);
+    //convert from clip space to world space
+    mousePos.multiplyMat3(renderer!.getViewMatrix().clone().inverse().transpose());
 
-    newMCell.floor();
+    //convert to sprite space
+    mousePos.addScalar(CANVAS_WIDTH / 2).divideScalar(CANVAS_WIDTH);
+    mousePos.y = 1 - mousePos.y;
+    mousePos.multiplyScalar(Core.Sprite.DIMENSIONS);
+    mousePos.floor();
 
-    mouseCell.copy(newMCell);
+    mouseCell.copy(mousePos);
 }
 </script>
 

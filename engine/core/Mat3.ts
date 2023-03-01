@@ -108,6 +108,21 @@ export class Mat3 {
         return this;
     }
 
+    transpose(): Mat3 {
+        const swap = this._copyToDest(this._data, Mat3._buffer1);
+
+        this._data[1] = swap[3];
+        this._data[3] = swap[1];
+
+        this._data[2] = swap[6];
+        this._data[6] = swap[2];
+
+        this._data[5] = swap[7];
+        this._data[7] = swap[5];
+
+        return this;
+    }
+
     copy(mat: Mat3): Mat3 {
         this.set(mat._data);
         return this;
