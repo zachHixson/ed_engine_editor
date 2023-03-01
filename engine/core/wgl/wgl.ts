@@ -121,6 +121,7 @@ export class Uniform_Object {
                 break;
             case Uniform_Types.VEC3:
                 this._ctx.uniform3f(this._loc, args[0], args[1], args[2]);
+                break;
             case Uniform_Types.MAT3:
                 this._ctx.uniformMatrix3fv(this._loc, args[0], args[1]);
                 break;
