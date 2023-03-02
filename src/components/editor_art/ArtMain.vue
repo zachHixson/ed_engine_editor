@@ -93,11 +93,15 @@ function resize(): void {
 }
 
 function spriteDataChanged(): void {
-    ArtMainEventBus.emit('update-frame-previews');
+    render();
     commitFullState();
     props.selectedAsset.updateFrame(selectedFrameIdx.value);
     updateFrameIDs();
     emit('asset-changed', props.selectedAsset.id);
+}
+
+function render(): void {
+    ArtMainEventBus.emit('update-frame-previews');
 }
 
 function framesMoved(): void {
@@ -121,6 +125,7 @@ function toolSelected(newTool: Core.ART_TOOL_TYPE): void {
         tool.value.setToolSize(artEditorStore.getSelectedSize);
         tool.value.setToolColor(artEditorStore.getSelectedColor);
         tool.value.setCommitCallback(spriteDataChanged);
+        tool.value.setRenderCallback(render);
     }
     else{
         tool.value = null;

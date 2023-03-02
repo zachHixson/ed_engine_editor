@@ -56,6 +56,8 @@ export default class Eraser extends Tool_Base {
                     break;
             }
         }
+
+        this.renderCallback();
     }
 
     commitResult(): void {

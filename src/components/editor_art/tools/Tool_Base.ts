@@ -8,9 +8,10 @@ export default abstract class Tool_Base {
     protected color: Core.Draw.Color = new Core.Draw.Color(255, 255, 255, 255);
     protected _mouseDown: boolean = false;
     protected brushSize : Core.ART_TOOL_SIZE = Core.ART_TOOL_SIZE.SMALL;
+    protected commitCallback: ()=>void = ()=>{};
+    protected renderCallback: ()=>void = ()=>{};
 
     canDraw: boolean = true;
-    commitCallback: ()=>void = ()=>{};
 
     get brushPxSize(){
         switch(this.brushSize){
@@ -75,6 +76,10 @@ export default abstract class Tool_Base {
 
     setCommitCallback(callback: ()=>void): void {
         this.commitCallback = callback;
+    }
+
+    setRenderCallback(callback: ()=>void): void {
+        this.renderCallback = callback;
     }
 
     setToolColor(color: Core.Draw.Color): void {
