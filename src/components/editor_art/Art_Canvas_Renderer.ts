@@ -15,26 +15,36 @@ export default class Art_Canvas_Renderer{
         
         varying vec2 vUv;
         varying vec2 vScreenUv;
+        varying float vPixelWidth;
         
         void main(){
-            vec3 aspPos = vec3(a_position, 1.0) * u_viewMatrix;
-            
-            gl_Position = vec4(aspPos, 1.0);
+            //calculate vertex position
+            vec3 vertPos = vec3(a_position, 1.0) * u_viewMatrix;
+            gl_Position = vec4(vertPos, 1.0);
 
+            //calculate UVs
             vUv = a_uv * vec2(1.0, -1.0);
             vScreenUv = gl_Position.xy * u_dimensions;
+
+            //calculate pixel width
+            vec3 p1 = vec3(0.0, 0.0, 1.0) * u_viewMatrix;
+            vec3 p2 = vec3(1.0, 0.0, 1.0) * u_viewMatrix;
+            vPixelWidth = (p2.x - p1.x) * u_dimensions.x;
         }
     `;
     private static readonly _fragmentSource = `
         precision highp float;
 
         const float CHECKER_SCALE = 16.0;
+        const float CANVAS_WIDTH = ${Art_Canvas_Renderer.CANVAS_WIDTH.toFixed(2)};
+        const float SPRITE_DIM = ${Core.Sprite.DIMENSIONS.toFixed(2)};
 
         uniform sampler2D u_spriteTexture;
         uniform sampler2D u_previewTexture;
 
         varying vec2 vUv;
         varying vec2 vScreenUv;
+        varying float vPixelWidth;
 
         void main(){
             //checker bg
@@ -45,9 +55,10 @@ export default class Art_Canvas_Renderer{
             float bg = mix(0.75, 0.8, y);
 
             //grid
-            vec2 gUv = abs(fract(vUv * 16.0) - 0.5) * 2.0;
-            float grid = max(gUv.x, gUv.y);
-            grid = smoothstep(1.0, 0.93, grid);
+            float gridMax = (CANVAS_WIDTH / SPRITE_DIM) * vPixelWidth;
+            vec2 gUv = abs(fract(vUv * SPRITE_DIM) - 0.5) * 2.0;
+            float grid = max(gUv.x, gUv.y) * gridMax;
+            grid = smoothstep(gridMax, gridMax - 2.0, grid);
 
             //sprite and preview textures
             vec4 sprite = texture2D(u_spriteTexture, vUv);
