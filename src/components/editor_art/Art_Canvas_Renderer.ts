@@ -3,8 +3,7 @@ import Core from '@/core';
 const { WGL } = Core;
 
 export default class Art_Canvas_Renderer{
-    private static readonly GRID_DIV = Core.Sprite.DIMENSIONS;
-    private static readonly CANVAS_WIDTH = this.GRID_DIV * 20;
+    private static readonly CANVAS_WIDTH = Core.Sprite.DIMENSIONS * 20;
 
     private static readonly _vertexSource = `
         uniform vec2 u_dimensions;
