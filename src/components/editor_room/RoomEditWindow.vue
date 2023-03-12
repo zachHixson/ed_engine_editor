@@ -205,7 +205,7 @@ function navToolSelected(tool: Core.NAV_TOOL_TYPE): void {
             :dpiScale="devicePixelRatio"
             :maxZoom="2"
             :parentEventBus="RoomEditWindowEventBus"
-            @nav-changed="renderer.navChange()"
+            @nav-changed="renderer.navChanged()"
             @tool-selected="navToolSelected"
             @hotkey-tool-selected="navHotkeyTool = $event"/>
         <canvas

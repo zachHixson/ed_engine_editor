@@ -35,11 +35,12 @@ function getPolyfill(canvas: HTMLCanvasElement): WebGL2RenderingContext | null {
     //bind VBO ext
     ctx.createVertexArray = makeCallable(vboExt, vboExt.createVertexArrayOES);
     ctx.bindVertexArray = makeCallable(vboExt, vboExt.bindVertexArrayOES);
-    ctx.delecteVertexArray = makeCallable(vboExt, vboExt.deleteVertexArrayOES);
+    ctx.deleteVertexArray = makeCallable(vboExt, vboExt.deleteVertexArrayOES);
 
     //bind instancing ext
     ctx.drawArraysInstanced = makeCallable(instanceExt, instanceExt.drawArraysInstancedANGLE);
     ctx.drawElementsInstanced = makeCallable(instanceExt, instanceExt.drawArraysInstancedANGLE);
+    ctx.vertexAttribDivisor = makeCallable(instanceExt, instanceExt.vertexAttribDivisorANGLE);
 
     console.warn('WARNING: WebGL -> WebGL2 polyfill is being used. Some functionality may be unavailable');
 
@@ -150,6 +151,10 @@ export class Attribute_Object {
         this._ctx.bufferData(this._ctx.ARRAY_BUFFER, data, hint);
         this._ctx.enableVertexAttribArray(this._loc);
         this._ctx.vertexAttribPointer(this._loc, size, type, normalize, offset, stride);
+    }
+
+    setDivisor(num: number): void {
+        this._ctx.vertexAttribDivisor(this._loc, num);
     }
 }
 

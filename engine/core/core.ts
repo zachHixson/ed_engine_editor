@@ -25,5 +25,6 @@ export * from './Vector';
 export * from './Mat3';
 
 export * as WGL from './wgl/wgl';
+export * from './wgl/Instance_Renderer';
 
 export * from './interfaces';
