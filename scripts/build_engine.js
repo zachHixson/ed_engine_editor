@@ -28,6 +28,8 @@ const formatted =
     .replace(/'/g, "\\'")
     .replace(/"/g, "\\\"")
     .replace(/`/g, "\\\`")
+    .replace(/\n/g, '')
+    .replace(/\s+/g, ' ')
 }\`;
 
 export const HTMLTemplate = \`
