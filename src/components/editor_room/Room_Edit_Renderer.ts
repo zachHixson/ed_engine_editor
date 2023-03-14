@@ -63,7 +63,9 @@ export default class Room_Edit_Renderer {
     private _uvAttribute: Core.WGL.Attribute_Object;
     private _vao: WebGLVertexArrayObject;
     private _viewMatrix = new Mat3();
+    private _viewMatrixInv = new Mat3();
     private _viewMatrixNeedsUpdate = true;
+    private _mouseCell = new Vector(0, 0);
 
     constructor(canvas: HTMLCanvasElement, navState: Core.NavState){
         this._canvas = canvas;
@@ -109,8 +111,9 @@ export default class Room_Edit_Renderer {
             0, 0, 1.0
         ]);
         this._viewMatrix.copy(zoomMat.multiply(aspectMat).multiply(tranMat));
+        this._viewMatrixInv.copy(this._viewMatrix).inverse();
         this._instanceRenderer.updateViewMatrix(this._viewMatrix);
-        this._uiRenderer.updateViewMatrix(this._viewMatrix);
+        this._uiRenderer.updateViewMatrix(this._viewMatrixInv);
         this._viewMatrixNeedsUpdate = false;
     }
 
@@ -229,14 +232,21 @@ class UI_Renderer {
         varying vec2 v_uv;
 
         void main(){
-            //grid
+            //world grid
             vec2 tUv = fract(v_uv / 16.0);
             tUv = abs(tUv - 0.5) * 2.0;
             float grid = max(tUv.x, tUv.y);
-            grid = step(grid, 0.95);
+            grid = step(0.95, grid);
+
+            //xy grid
+            vec2 absUv = abs(v_uv);
+            float xAxis = 1.0 - step(0.5, absUv.y);
+            float yAxis = 1.0 - step(0.5, absUv.x);
 
             //composite
-            gl_FragColor = vec4(vec3(grid), 1.0 - grid);
+            gl_FragColor = vec4(mix(vec3(1.0), vec3(0.6), grid), grid);
+            gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(1.0, 0.3, 0.0), xAxis);
+            gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.3, 1.0, 0.0), yAxis);
         }
     `;
 
@@ -276,9 +286,9 @@ class UI_Renderer {
         this._outputTexture.resize(this._gl.canvas.width, this._gl.canvas.height);
     }
 
-    updateViewMatrix(viewMat: Core.Mat3): void {
+    updateViewMatrix(viewMatInv: Core.Mat3): void {
         this._gl.useProgram(this._program);
-        this._invViewMatrixUniform.set(false, viewMat.clone().inverse().data);
+        this._invViewMatrixUniform.set(false, viewMatInv.data);
     }
 
     render(): void {
