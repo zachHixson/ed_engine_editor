@@ -38,6 +38,7 @@ export class Instance_Renderer {
     private _positionAttribute: WGL.Attribute_Object;
     private _uvAttribute: WGL.Attribute_Object;
     private _instanceVAO: WebGLVertexArrayObject;
+    private _outputTexture: WGL.Render_Texture;
 
     constructor(gl: WebGL2RenderingContext){
         //setup webGL context
@@ -52,6 +53,7 @@ export class Instance_Renderer {
         this._positionAttribute = new WGL.Attribute_Object(this._gl, this._instanceProgram, 'a_position');
         this._uvAttribute = new WGL.Attribute_Object(this._gl, this._instanceProgram, 'a_uv');
         this._instanceVAO = this._gl.createVertexArray()!;
+        this._outputTexture = new WGL.Render_Texture(this._gl, this._gl.canvas.width, this._gl.canvas.height);
 
         this._gl.bindVertexArray(this._instanceVAO);
 
@@ -66,19 +68,46 @@ export class Instance_Renderer {
         this._uvAttribute.set(new Float32Array(Instance_Renderer._planeUVs), 2);
     }
 
+    get texture(){return this._outputTexture.texture}
+
     updateViewMatrix(viewMat: Mat3): void {
         this._gl.useProgram(this._instanceProgram);
         this._viewMatrixUniform.set(false, viewMat.data);
     }
 
+    resize(): void {
+        this._outputTexture.resize(this._gl.canvas.width, this._gl.canvas.height);
+    }
+
     render(): void {
+        //setup render
         this._gl.bindVertexArray(this._instanceVAO);
         this._gl.useProgram(this._instanceProgram);
+
+        //enable attributes and set render target
+        this._planeVertsAttribute.enable();
+        this._positionAttribute.enable();
+        this._uvAttribute.enable();
+        this._outputTexture.setAsRenderTarget();
+
+        //set render target and draw
+        this._gl.clear(this._gl.COLOR_BUFFER_BIT);
+        this._gl.viewport(0, 0, this._gl.canvas.width, this._gl.canvas.height);
         this._gl.drawArraysInstanced(
             this._gl.TRIANGLES,
             0,
             6,
             4
         );
+
+        //disable attributes and unset render target
+        this._planeVertsAttribute.disable();
+        this._positionAttribute.disable();
+        this._uvAttribute.disable();
+        this._outputTexture.unsetRenderTarget();
+    }
+
+    destroy(): void {
+        this._outputTexture.destroy();
     }
 }

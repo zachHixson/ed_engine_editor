@@ -1,4 +1,5 @@
 export enum Uniform_Types {
+    INT,
     FLOAT,
     VEC2,
     VEC3,
@@ -114,6 +115,9 @@ export class Uniform_Object {
 
     set(...args: any[]): void {
         switch(this._type){
+            case Uniform_Types.INT:
+                this._ctx.uniform1i(this._loc, args[0]);
+                break;
             case Uniform_Types.FLOAT:
                 this._ctx.uniform1f(this._loc, args[0]);
                 break;
@@ -131,89 +135,68 @@ export class Uniform_Object {
 }
 
 export class Attribute_Object {
-    private _ctx: WebGL2RenderingContext;
+    private _gl: WebGL2RenderingContext;
     private _name: string;
+    private _program: WebGLProgram;
     private _loc: number;
     private _buffer: WebGLBuffer;
 
-    constructor(ctx: WebGL2RenderingContext, program: WebGLProgram, name: string){
-        this._ctx = ctx;
+    constructor(gl: WebGL2RenderingContext, program: WebGLProgram, name: string){
+        this._gl = gl;
         this._name = name;
-        this._loc = this._ctx.getAttribLocation(program, this._name);
-        this._buffer = this._ctx.createBuffer()!;
+        this._program = program;
+        this._loc = this._gl.getAttribLocation(this._program, this._name);
+        this._buffer = this._gl.createBuffer()!;
 
-        this._ctx.bindBuffer(this._ctx.ARRAY_BUFFER, this._buffer);
-        this._ctx.enableVertexAttribArray(this._loc);
+        this._gl.useProgram(this._program);
+        this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._buffer);
+        //this._gl.enableVertexAttribArray(this._loc);
     }
 
-    set(data: Float32Array, size = 1, type = this._ctx.FLOAT, normalize = false, offset = 0, stride = 0, hint = this._ctx.STATIC_DRAW): void {
-        this._ctx.bindBuffer(this._ctx.ARRAY_BUFFER, this._buffer);
-        this._ctx.bufferData(this._ctx.ARRAY_BUFFER, data, hint);
-        this._ctx.enableVertexAttribArray(this._loc);
-        this._ctx.vertexAttribPointer(this._loc, size, type, normalize, offset, stride);
+    set(data: Float32Array, size = 1, type = this._gl.FLOAT, normalize = false, offset = 0, stride = 0, hint = this._gl.STATIC_DRAW): void {
+        this._gl.useProgram(this._program);
+        this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._buffer);
+        this._gl.bufferData(this._gl.ARRAY_BUFFER, data, hint);
+        //this._gl.enableVertexAttribArray(this._loc);
+        this._gl.vertexAttribPointer(this._loc, size, type, normalize, offset, stride);
+    }
+
+    enable(): void {
+        this._gl.useProgram(this._program);
+        this._gl.enableVertexAttribArray(this._loc);
+    }
+
+    disable(): void {
+        this._gl.useProgram(this._program);
+        this._gl.disableVertexAttribArray(this._loc);
     }
 
     setDivisor(num: number): void {
-        this._ctx.vertexAttribDivisor(this._loc, num);
+        this._gl.vertexAttribDivisor(this._loc, num);
     }
 }
 
-export class Texture_Object {
+export class Texture_Slots {
     private static _textureUnitMap: boolean[];
 
-    private _ctx: WebGL2RenderingContext;
-    private _name: string;
-    private _loc: WebGLUniformLocation;
-    private _texture: WebGLTexture;
-    private _slot: number = -1;
-
-    constructor(ctx: WebGL2RenderingContext, program: WebGLProgram, name: string){
-        this._ctx = ctx;
-        this._name = name;
-        this._loc = this._ctx.getUniformLocation(program, this._name)!;
-        this._texture = this._ctx.createTexture()!;
-
-        if (!Texture_Object._textureUnitMap){
-            Texture_Object._textureUnitMap = new Array(this._ctx.getParameter(this._ctx.MAX_COMBINED_TEXTURE_IMAGE_UNITS));
-            Texture_Object._textureUnitMap.fill(false);
-        }
+    static {
+        const gl = getGLContext(document.createElement('canvas'))!;
+        this._textureUnitMap = new Array(gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS));
+        this._textureUnitMap.fill(false);
     }
 
-    set(imgData: ImageData, generateMipmap = false): void {
-        this._ctx.bindTexture(this._ctx.TEXTURE_2D, this._texture);
-        this._ctx.texImage2D(
-            this._ctx.TEXTURE_2D,
-            0,
-            this._ctx.RGBA,
-            imgData.width,
-            imgData.height,
-            0,
-            this._ctx.RGBA,
-            this._ctx.UNSIGNED_BYTE,
-            imgData.data
-        );
-
-        if (generateMipmap){
-            this._ctx.generateMipmap(this._ctx.TEXTURE_2D);
-        }
-        else{
-            this._ctx.texParameteri(this._ctx.TEXTURE_2D, this._ctx.TEXTURE_MIN_FILTER, this._ctx.NEAREST);
-            this._ctx.texParameteri(this._ctx.TEXTURE_2D, this._ctx.TEXTURE_MAG_FILTER, this._ctx.NEAREST);
-        }
-    }
-
-    private _getTextureSlot(): number {
-        let thisSlot = this._slot;
+    static getSlot(): number {
+        let thisSlot = null;
 
         //find first available slot
-        for (let i = 0; thisSlot < 0 && i < Texture_Object._textureUnitMap.length; i++){
-            if (!Texture_Object._textureUnitMap[i]){
+        for (let i = 0; thisSlot == null && i < this._textureUnitMap.length; i++){
+            if (!this._textureUnitMap[i]){
                 thisSlot = i;
-                Texture_Object._textureUnitMap[i] = true;
+                this._textureUnitMap[i] = true;
             }
         }
 
-        if (thisSlot < 0){
+        if (thisSlot == null){
             console.error('ERROR: Out of texture slots');
             return -1;
         }
@@ -221,23 +204,118 @@ export class Texture_Object {
         return thisSlot;
     }
 
+    static freeSlot(slot: number): void {
+        this._textureUnitMap[slot] = false;
+    }
+}
+
+export class Texture_Object {
+    private _gl: WebGL2RenderingContext;
+    private _name: string;
+    private _loc: WebGLUniformLocation;
+    private _texture: WebGLTexture;
+    private _slot: number = -1;
+
+    constructor(ctx: WebGL2RenderingContext, program: WebGLProgram, name: string, existingTexture?: WebGLTexture){
+        this._gl = ctx;
+        this._name = name;
+        this._loc = this._gl.getUniformLocation(program, this._name)!;
+        this._texture = existingTexture ?? this._gl.createTexture()!;
+    }
+
+    get texture(){return this._texture}
+
+    private _defaultParameters = ()=>{
+        this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MIN_FILTER, this._gl.NEAREST);
+        this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MAG_FILTER, this._gl.NEAREST);
+    }
+
+    set(imgData: ImageData, textureParameterCallback = this._defaultParameters): void {
+        this._gl.bindTexture(this._gl.TEXTURE_2D, this._texture);
+        this._gl.texImage2D(
+            this._gl.TEXTURE_2D,
+            0,
+            this._gl.RGBA,
+            imgData.width,
+            imgData.height,
+            0,
+            this._gl.RGBA,
+            this._gl.UNSIGNED_BYTE,
+            imgData.data
+        );
+
+        textureParameterCallback();
+    }
+
     activate(): void {
-        this._slot = this._slot < 0 ? this._getTextureSlot() : this._slot;
+        this._slot = this._slot < 0 ? Texture_Slots.getSlot() : this._slot;
 
         //activate
-        this._ctx.activeTexture(this._ctx.TEXTURE0 + this._slot);
-        this._ctx.bindTexture(this._ctx.TEXTURE_2D, this._texture);
-        this._ctx.uniform1i(this._loc, this._slot);
+        this._gl.activeTexture(this._gl.TEXTURE0 + this._slot);
+        this._gl.bindTexture(this._gl.TEXTURE_2D, this._texture);
+        this._gl.uniform1i(this._loc, this._slot);
     }
 
     deactivate(): void {
-        Texture_Object._textureUnitMap[this._slot] = false;
+        if (this._slot < 0) return;
+        Texture_Slots.freeSlot(this._slot);
         this._slot = -1;
     }
 
     destroy(): void {
-        Texture_Object._textureUnitMap[this._slot] = false;
-        this._slot = -1;
-        this._ctx.deleteTexture(this._texture);
+        this.deactivate();
+        this._gl.deleteTexture(this._texture);
+    }
+}
+
+export class Render_Texture {
+    private _gl: WebGL2RenderingContext;
+    private _texture: WebGLTexture;
+    private _frameBuffer: WebGLFramebuffer;
+
+    constructor(gl: WebGL2RenderingContext, width: number, height: number){
+        this._gl = gl;
+        this._texture = this._gl.createTexture()!;
+        this._frameBuffer = this._gl.createFramebuffer()!;
+
+        this._gl.bindTexture(this._gl.TEXTURE_2D, this._texture);
+        this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this._frameBuffer);
+        this._gl.framebufferTexture2D(this._gl.FRAMEBUFFER, this._gl.COLOR_ATTACHMENT0, this._gl.TEXTURE_2D, this._texture, 0);
+
+        this.resize(width, height);
+        this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MIN_FILTER, this._gl.LINEAR);
+        this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_WRAP_S, this._gl.CLAMP_TO_EDGE);
+        this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_WRAP_T, this._gl.CLAMP_TO_EDGE);
+
+        this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
+    }
+
+    get texture(){return this._texture}
+
+    resize(width: number, height: number): void {
+        this._gl.bindTexture(this._gl.TEXTURE_2D, this._texture);
+        this._gl.texImage2D(
+            this._gl.TEXTURE_2D,
+            0,
+            this._gl.RGBA,
+            width,
+            height,
+            0,
+            this._gl.RGBA,
+            this._gl.UNSIGNED_BYTE,
+            null
+        );
+    }
+
+    setAsRenderTarget(): void {
+        this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this._frameBuffer);
+    }
+
+    unsetRenderTarget(): void {
+        this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
+    }
+
+    destroy(): void {
+        this._gl.deleteTexture(this._texture);
     }
 }
