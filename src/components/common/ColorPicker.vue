@@ -95,6 +95,7 @@ const vao = wheelCtx.createVertexArray();
 
 wheelCtx.bindVertexArray(vao);
 positionAttribute.set(new Float32Array(planeGeo), 2);
+positionAttribute.enable();
 
 wheelCtx.viewport(0, 0, wheelBuffer.width, wheelBuffer.height);
 wheelCtx.clearColor(0, 0, 0, 0);

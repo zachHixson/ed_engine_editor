@@ -119,6 +119,9 @@ export default class Art_Canvas_Renderer{
         this._positionAttribute.set(new Float32Array(Art_Canvas_Renderer._planeGeo), 2);
         this._uvAttribute.set(new Float32Array(Art_Canvas_Renderer._planeUVs), 2);
 
+        this._positionAttribute.enable();
+        this._uvAttribute.enable();
+
         this._gl.clearColor(1, 1, 1, 1);
         this._gl.useProgram(this._program);
 
