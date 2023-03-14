@@ -6,7 +6,6 @@ export class Instance_Renderer {
     private static readonly _planeUVs = WGL.createPlaneGeo().map(i => (i + 1) * 0.5);
     private static readonly _vertexSource = `
         uniform mat3 u_viewMatrix;
-        uniform vec2 u_dimensions;
 
         attribute vec2 a_planeVerts;
         attribute vec2 a_position;
@@ -35,7 +34,6 @@ export class Instance_Renderer {
     private _gl: WebGL2RenderingContext;
     private _instanceProgram: WebGLProgram;
     private _viewMatrixUniform: WGL.Uniform_Object;
-    private _dimensionUniform: WGL.Uniform_Object;
     private _planeVertsAttribute: WGL.Attribute_Object;
     private _positionAttribute: WGL.Attribute_Object;
     private _uvAttribute: WGL.Attribute_Object;
@@ -50,7 +48,6 @@ export class Instance_Renderer {
             WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, Instance_Renderer._fragmentSource)!    
         )!;
         this._viewMatrixUniform = new WGL.Uniform_Object(this._gl, this._instanceProgram, 'u_viewMatrix', WGL.Uniform_Types.MAT3);
-        this._dimensionUniform = new WGL.Uniform_Object(this._gl, this._instanceProgram, 'u_dimensions', WGL.Uniform_Types.VEC2);
         this._planeVertsAttribute = new WGL.Attribute_Object(this._gl, this._instanceProgram, 'a_planeVerts');
         this._positionAttribute = new WGL.Attribute_Object(this._gl, this._instanceProgram, 'a_position');
         this._uvAttribute = new WGL.Attribute_Object(this._gl, this._instanceProgram, 'a_uv');
@@ -67,11 +64,6 @@ export class Instance_Renderer {
         ]), 2, this._gl.FLOAT, false, 0, 0, this._gl.DYNAMIC_DRAW);
         this._positionAttribute.setDivisor(1);
         this._uvAttribute.set(new Float32Array(Instance_Renderer._planeUVs), 2);
-    }
-
-    resize(): void {
-        this._gl.useProgram(this._instanceProgram);
-        this._dimensionUniform.set(this._gl.canvas.width / 2, this._gl.canvas.height / 2);
     }
 
     updateViewMatrix(viewMat: Mat3): void {

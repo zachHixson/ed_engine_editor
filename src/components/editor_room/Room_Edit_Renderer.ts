@@ -17,6 +17,7 @@ export default class Room_Edit_Renderer {
     private _navState: Core.NavState;
     private _gl: WebGL2RenderingContext;
     private _instanceRenderer: Core.Instance_Renderer;
+    private _uiRenderer: UI_Renderer;
     private _viewMatrix = new Mat3();
     private _viewMatrixNeedsUpdate = true;
 
@@ -25,8 +26,9 @@ export default class Room_Edit_Renderer {
         this._navState = navState;
         this._gl = WGL.getGLContext(this._canvas)!;
         this._instanceRenderer = new Core.Instance_Renderer(this._gl);
+        this._uiRenderer = new UI_Renderer(this._gl);
 
-        this._gl.clearColor(0, 0, 0, 1);
+        this._gl.clearColor(1, 1, 1, 1);
     }
 
     get CELL_PX_WIDTH(){return 50};
@@ -47,6 +49,7 @@ export default class Room_Edit_Renderer {
         ]);
         this._viewMatrix.copy(zoomMat.multiply(aspectMat).multiply(tranMat));
         this._instanceRenderer.updateViewMatrix(this._viewMatrix);
+        this._uiRenderer.updateViewMatrix(this._viewMatrix);
         this._viewMatrixNeedsUpdate = false;
     }
 
@@ -89,7 +92,6 @@ export default class Room_Edit_Renderer {
 
     resize(){
         this._gl.viewport(0, 0, this._gl.canvas.width, this._gl.canvas.height);
-        this._instanceRenderer.resize();
         this.queueRender();
     }
 
@@ -106,6 +108,8 @@ export default class Room_Edit_Renderer {
         this._updateViewMatrix();
         this._gl.clear(this._gl.COLOR_BUFFER_BIT);
         this._instanceRenderer.render();
+        this._uiRenderer.render();
+        
     }
 
     screenToWorldPos(pt: Core.Vector){
@@ -114,5 +118,83 @@ export default class Room_Edit_Renderer {
 
     worldToScreenPos(pt: Core.Vector){
         //
+    }
+}
+
+class UI_Renderer {
+    private static readonly _planeGeo = WGL.createPlaneGeo();
+    private static readonly _vertexSource = `
+        attribute vec2 a_position;
+
+        uniform mat3 u_viewMatrix;
+
+        varying vec2 v_uv;
+
+        void main(){
+            v_uv = (vec3(a_position, 1.0) * u_viewMatrix).xy;
+            gl_Position = vec4(a_position, 0.0, 1.0);
+        }
+    `;
+    private static readonly _fragmentSource = `
+        precision highp float;
+
+        varying vec2 v_uv;
+
+        void main(){
+            //grid
+            vec2 tUv = fract(v_uv / 16.0);
+            tUv = abs(tUv - 0.5) * 2.0;
+            float grid = max(tUv.x, tUv.y);
+            grid = step(grid, 0.95);
+
+            //composite
+            gl_FragColor = vec4(vec3(grid), 1.0);
+
+            if (grid > 0.0){
+                discard;
+            }
+        }
+    `;
+
+    private _gl: WebGL2RenderingContext;
+    private _program: WebGLProgram;
+    private _invViewMatrixUniform: Core.WGL.Uniform_Object;
+    private _dimensionUniform: Core.WGL.Uniform_Object;
+    private _cursorUniform: Core.WGL.Uniform_Object;
+    private _positionAttribute: Core.WGL.Attribute_Object;
+    private _vao: WebGLVertexArrayObject;
+
+    constructor(gl: WebGL2RenderingContext){
+        this._gl = gl;
+        this._program = WGL.createProgram(
+            this._gl,
+            WGL.createShader(this._gl, this._gl.VERTEX_SHADER, UI_Renderer._vertexSource)!,
+            WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, UI_Renderer._fragmentSource)!
+        )!;
+        this._invViewMatrixUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_viewMatrix', WGL.Uniform_Types.MAT3);
+        this._dimensionUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_dimensions', WGL.Uniform_Types.VEC2);
+        this._cursorUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_cursor', WGL.Uniform_Types.VEC2);
+        this._positionAttribute = new WGL.Attribute_Object(this._gl, this._program, 'a_position');
+        this._vao = this._gl.createVertexArray()!;
+
+        this._gl.bindVertexArray(this._vao);
+        
+        this._positionAttribute.set(new Float32Array(UI_Renderer._planeGeo), 2, this._gl.FLOAT, false);
+    }
+
+    resize(): void {
+        this._gl.useProgram(this._program);
+        this._dimensionUniform.set(this._gl.canvas.width / 2, this._gl.canvas.height / 2);
+    }
+
+    updateViewMatrix(viewMat: Core.Mat3): void {
+        this._gl.useProgram(this._program);
+        this._invViewMatrixUniform.set(false, viewMat.clone().inverse().data);
+    }
+
+    render(): void {
+        this._gl.bindVertexArray(this._vao);
+        this._gl.useProgram(this._program);
+        this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
     }
 }
