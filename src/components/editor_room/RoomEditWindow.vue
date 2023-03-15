@@ -157,10 +157,9 @@ function resize(): void {
 function emitMouseEvent(event: MouseEvent, type: Core.MOUSE_EVENT): void {
     if (event.button == 0 && roomEditorStore.getSelectedNavTool == null && navHotkeyTool == null){
         const canvasPos = new Core.Vector(event.offsetX, event.offsetY);
-        const cell = renderer.getMouseCell();
         const worldCell = renderer.getMouseWorldCell();
         
-        emit('mouse-event', {type, canvasPos, cell, worldCell} satisfies imEvent);
+        emit('mouse-event', {type, canvasPos, worldCell} satisfies imEvent);
     }
 }
 

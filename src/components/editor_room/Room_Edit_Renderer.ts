@@ -116,13 +116,9 @@ export default class Room_Edit_Renderer {
         this._uiRenderer.updateViewMatrix(this._viewMatrixInv);
         this._viewMatrixNeedsUpdate = false;
     }
-
-    getMouseCell(){
-        return //this.mouseCell;
-    }
-
+    
     getMouseWorldCell(){
-        return //this.mouseCell.clone().multiplyScalar(16);
+        this._mouseCell.clone();
     }
 
     setRoomRef(roomObj: Core.Room){
@@ -138,7 +134,20 @@ export default class Room_Edit_Renderer {
     }
 
     mouseMove(event: MouseEvent){
-        //
+        //convert to clip space
+        const mousePos = new Vector(event.offsetX, event.offsetY).multiplyScalar(devicePixelRatio);
+        const windowDimensions = new Vector(this._canvas.width, this._canvas.height);
+        mousePos.divide(windowDimensions).subtractScalar(0.5).multiplyScalar(2);
+        mousePos.y *= -1;
+
+        const mouseCell = mousePos.clone().multiplyMat3(this._viewMatrixInv.clone().transpose());
+        mouseCell.divideScalar(16);
+        mouseCell.floor();
+        mouseCell.multiplyScalar(16);
+        this._mouseCell.copy(mouseCell);
+
+        this._uiRenderer.updateMousePos(this._mouseCell);
+        this.queueRender();
     }
 
     navChanged(): void {
@@ -198,14 +207,6 @@ export default class Room_Edit_Renderer {
         this._uiBuffer.deactivate();
     }
 
-    screenToWorldPos(pt: Core.Vector){
-        //
-    }
-
-    worldToScreenPos(pt: Core.Vector){
-        //
-    }
-
     destroy(): void {
         this._instanceRenderer.destroy();
         this._instanceBuffer.destroy();
@@ -229,6 +230,8 @@ class UI_Renderer {
     private static readonly _fragmentSource = `
         precision highp float;
 
+        uniform vec2 u_cursor;
+
         varying vec2 v_uv;
 
         void main(){
@@ -243,8 +246,13 @@ class UI_Renderer {
             float xAxis = 1.0 - step(0.5, absUv.y);
             float yAxis = 1.0 - step(0.5, absUv.x);
 
+            //cursor
+            vec2 cursorUv = abs(v_uv - u_cursor - 8.0) - 8.0;
+            float cursor = step(max(cursorUv.x, cursorUv.y), 0.01);
+
             //composite
-            gl_FragColor = vec4(mix(vec3(1.0), vec3(0.6), grid), grid);
+            gl_FragColor = vec4(vec3(0.5), 0.3 * cursor);
+            gl_FragColor = mix(gl_FragColor, vec4(vec3(0.6), 0.5), grid);
             gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(1.0, 0.3, 0.0), xAxis);
             gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.3, 1.0, 0.0), yAxis);
         }
@@ -289,6 +297,11 @@ class UI_Renderer {
     updateViewMatrix(viewMatInv: Core.Mat3): void {
         this._gl.useProgram(this._program);
         this._invViewMatrixUniform.set(false, viewMatInv.data);
+    }
+
+    updateMousePos(mouseCell: Core.Vector): void {
+        this._gl.useProgram(this._program);
+        this._cursorUniform.set(mouseCell.x, mouseCell.y);
     }
 
     render(): void {
