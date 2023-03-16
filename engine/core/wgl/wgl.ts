@@ -177,13 +177,7 @@ export class Attribute_Object {
 }
 
 export class Texture_Slots {
-    private static _textureUnitMap: boolean[];
-
-    static {
-        const gl = getGLContext(document.createElement('canvas'))!;
-        this._textureUnitMap = new Array(gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS));
-        this._textureUnitMap.fill(false);
-    }
+    private static _textureUnitMap = new Array(WebGLRenderingContext.MAX_COMBINED_TEXTURE_IMAGE_UNITS).fill(false);
 
     static getSlot(): number {
         let thisSlot = null;
