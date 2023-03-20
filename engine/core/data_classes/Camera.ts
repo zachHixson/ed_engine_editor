@@ -32,9 +32,9 @@ enum FOLLOW_TYPES {
 };
 
 export class Camera{
-    private _size: number = 1;
+    private _size: number = 15;
 
-    pos: Vector = new Vector(8, -8);
+    pos: Vector = new Vector(8, 8);
     velocity: Vector = new Vector(0, 0);
     moveType: MOVE_TYPES = MOVE_TYPES.LOCKED;
     scrollDir: SCROLL_DIRS = SCROLL_DIRS.RIGHT;

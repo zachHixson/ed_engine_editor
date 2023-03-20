@@ -1,6 +1,7 @@
-import {ENTITY_TYPE} from '../Enums';
+import {INSTANCE_TYPE} from '../Enums';
 import { iAnyObj } from '../interfaces';
 import { Vector } from '../Vector';
+import { Sprite } from './Sprite';
 import { Game_Object } from './Game_Object';
 import { iInstanceBaseSaveData, Instance_Base } from './Instance_Base';
 
@@ -17,6 +18,9 @@ enum COLLISION_OVERRIDE {
 };
 
 export class Object_Instance extends Instance_Base{
+    static DEFAULT_INSTANCE_ICON_ID = 'INSTANCE_ICON';
+    static DEFAULT_INSTANCE_ICON = [new ImageData(Sprite.DIMENSIONS, Sprite.DIMENSIONS)];
+
     private _animProgress: number = 0;
 
     objRef: Game_Object;
@@ -45,13 +49,14 @@ export class Object_Instance extends Instance_Base{
         }
     }
 
-    get TYPE(){return ENTITY_TYPE.INSTANCE}
+    get TYPE(){return INSTANCE_TYPE.INSTANCE}
     get COLLISION_OVERRIDES(){return COLLISION_OVERRIDE};
 
     get zDepth(){return (this.zDepthOverride) ? this.zDepthOverride : this.objRef.zDepth}
     get hasEditorFrame(){return this.objRef.hasEditorFrame};
-    get editorFrame(){return this.objRef.editorFrame};
-    get editorFrameID(){return this.objRef.editorFrameID};
+    get editorFrameNum(){return this.objRef.editorFrameNum};
+    get frameDataId(){return this.objRef?.sprite?.id ?? Object_Instance.DEFAULT_INSTANCE_ICON_ID};
+    get frameData(){return this.objRef?.sprite?.frames ?? Object_Instance.DEFAULT_INSTANCE_ICON};
     get sprite(){return this.objRef?.sprite};
     get logic(){return this.objRef.logicScript};
     get isSolid(){

@@ -70,7 +70,7 @@ export enum MOUSE_EVENT {
     ENTER,
 };
 
-export enum ENTITY_TYPE {
+export enum INSTANCE_TYPE {
     INSTANCE = 1,
     EXIT,
 };

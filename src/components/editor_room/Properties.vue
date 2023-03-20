@@ -34,21 +34,21 @@ const bgColorBtn = ref<HTMLElement>();
 //computed
 const showInstProps = computed(()=>(
     props.selectedEntity &&
-    props.selectedEntity?.TYPE == Core.ENTITY_TYPE.INSTANCE &&
+    props.selectedEntity?.TYPE == Core.INSTANCE_TYPE.INSTANCE &&
     !showCameraProps.value &&
     !showRoomProps.value
 ));
 const showCameraProps = computed(()=>props.selectedTool == Core.ROOM_TOOL_TYPE.CAMERA);
 const showExitProps = computed(()=>(
     props.selectedEntity &&
-    props.selectedEntity.TYPE == Core.ENTITY_TYPE.EXIT &&
+    props.selectedEntity.TYPE == Core.INSTANCE_TYPE.EXIT &&
     !showCameraProps.value &&
     !showRoomProps.value
 ));
 const showRoomProps = computed(()=>props.selectedTool == Core.ROOM_TOOL_TYPE.ROOM_PROPERTIES);
 const showPlaceHolder = computed(()=>!(showInstProps.value || showCameraProps.value || showExitProps.value || showRoomProps.value));
 const destinationRoomExits = computed(()=>{
-    if (props.selectedEntity?.TYPE != Core.ENTITY_TYPE.EXIT) return null;
+    if (props.selectedEntity?.TYPE != Core.INSTANCE_TYPE.EXIT) return null;
     
     const allRooms = gameDataStore.getAllRooms;
     const destRoom = allRooms.find(r => r.id == (props.selectedEntity as Core.Exit).destinationRoom);
@@ -100,7 +100,7 @@ function setRoomProp(propObj: AnyObj): void {
 }
 
 function setFollowObj(): void {
-    if (props.selectedEntity?.TYPE == Core.ENTITY_TYPE.INSTANCE){
+    if (props.selectedEntity?.TYPE == Core.INSTANCE_TYPE.INSTANCE){
         props.camera.followObjId = props.selectedEntity!.id;
     }
 }

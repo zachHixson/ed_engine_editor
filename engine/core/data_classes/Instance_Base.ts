@@ -1,4 +1,4 @@
-import { ENTITY_TYPE } from "../Enums";
+import { INSTANCE_TYPE } from "../Enums";
 import { iAnyObj } from "../interfaces";
 import { Vector } from "../Vector";
 
@@ -24,11 +24,12 @@ export abstract class Instance_Base{
     get zDepth(){return 0};
     set zDepth(val){};
 
-    get hasEditorFrame(): boolean {return false}
-    get editorFrame(): HTMLCanvasElement | null {return null}
-    get editorFrameID(): string | undefined {return undefined}
+    get hasEditorFrame(): boolean {return true};
+    get editorFrameNum(){return 0};
+    abstract get frameDataId(): number | string;
+    abstract get frameData(): Array<ImageData>;
     
-    abstract get TYPE(): ENTITY_TYPE;
+    abstract get TYPE(): INSTANCE_TYPE;
     abstract clone(): any;
     abstract toSaveData(): iAnyObj;
 

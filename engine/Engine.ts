@@ -15,7 +15,7 @@ import {
     Object_Instance,
     Util,
     Spacial_Collection,
-    ENTITY_TYPE,
+    INSTANCE_TYPE,
     Node_Enums,
 } from '@engine/core/core';
 import Node from './Node';
@@ -551,7 +551,7 @@ export class Engine implements iEngineCallbacks {
         this._nodeEventMap = new Map();
     }
 
-    private _filterOverlapping = <T extends Instance_Base>(entityList: Spacial_Collection<T>, {id, pos, TYPE}: {id: number, pos: Vector, TYPE: ENTITY_TYPE}): Instance_Base[] =>{
+    private _filterOverlapping = <T extends Instance_Base>(entityList: Spacial_Collection<T>, {id, pos, TYPE}: {id: number, pos: Vector, TYPE: INSTANCE_TYPE}): Instance_Base[] =>{
         const broadCheck = entityList.getByRadius(pos, 32);
         return broadCheck.filter(checkEntity => (
                 checkEntity.pos.x + 16 > pos.x &&

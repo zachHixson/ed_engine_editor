@@ -43,9 +43,37 @@ function getPolyfill(canvas: HTMLCanvasElement): WebGL2RenderingContext | null {
     ctx.drawElementsInstanced = makeCallable(instanceExt, instanceExt.drawArraysInstancedANGLE);
     ctx.vertexAttribDivisor = makeCallable(instanceExt, instanceExt.vertexAttribDivisorANGLE);
 
+    //bind texture function
+    ctx.texStorage2D = makeCallable(ctx, substitute_texStorage2D);
+
+    //bind buffer function
+    ctx.bufferSubData = substitute_bufferSubData(ctx);
+
     console.warn('WARNING: WebGL -> WebGL2 polyfill is being used. Some functionality may be unavailable');
 
     return ctx;
+}
+
+function substitute_texStorage2D(this: WebGLRenderingContext, target: number, levels: number, internalFormat: number, width: number, height: number){
+    this.texImage2D(
+        target,
+        levels - 1,
+        this.RGBA,
+        width,
+        height,
+        0,
+        this.RGBA,
+        this.UNSIGNED_BYTE,
+        new Uint8ClampedArray(width * height * 4).fill(0)
+    );
+}
+
+function substitute_bufferSubData(ctx: WebGLRenderingContext){
+    const oldSubData = ctx.bufferSubData;
+
+    return function (this: WebGLRenderingContext, target: number, dstByteOffset: number, srcData: ArrayBuffer, srcOffset: number) {
+        oldSubData.call(ctx, target, dstByteOffset, srcData);
+    }
 }
 
 export function createShader(gl: WebGL2RenderingContext, type: number, source: string): WebGLShader | null {
@@ -101,34 +129,36 @@ export function createPlaneGeo(){
 }
 
 export class Uniform_Object {
-    private _ctx: WebGL2RenderingContext;
+    private _gl: WebGL2RenderingContext;
+    private _program: WebGLProgram;
     private _name: string;
     private _type: Uniform_Types;
     private _loc: WebGLUniformLocation;
 
-    constructor(ctx: WebGL2RenderingContext, program: WebGLProgram, name: string, type: Uniform_Types){
-        this._ctx = ctx;
+    constructor(gl: WebGL2RenderingContext, program: WebGLProgram, name: string, type: Uniform_Types){
+        this._gl = gl;
+        this._program = program;
         this._name = name;
         this._type = type;
-        this._loc = this._ctx.getUniformLocation(program, this._name)!;
+        this._loc = this._gl.getUniformLocation(program, this._name)!;
     }
 
     set(...args: any[]): void {
         switch(this._type){
             case Uniform_Types.INT:
-                this._ctx.uniform1i(this._loc, args[0]);
+                this._gl.uniform1i(this._loc, args[0]);
                 break;
             case Uniform_Types.FLOAT:
-                this._ctx.uniform1f(this._loc, args[0]);
+                this._gl.uniform1f(this._loc, args[0]);
                 break;
             case Uniform_Types.VEC2:
-                this._ctx.uniform2f(this._loc, args[0], args[1]);
+                this._gl.uniform2f(this._loc, args[0], args[1]);
                 break;
             case Uniform_Types.VEC3:
-                this._ctx.uniform3f(this._loc, args[0], args[1], args[2]);
+                this._gl.uniform3f(this._loc, args[0], args[1], args[2]);
                 break;
             case Uniform_Types.MAT3:
-                this._ctx.uniformMatrix3fv(this._loc, args[0], args[1]);
+                this._gl.uniformMatrix3fv(this._loc, args[0], args[1]);
                 break;
         }
     }
@@ -150,15 +180,18 @@ export class Attribute_Object {
 
         this._gl.useProgram(this._program);
         this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._buffer);
-        //this._gl.enableVertexAttribArray(this._loc);
     }
 
-    set(data: Float32Array, size = 1, type = this._gl.FLOAT, normalize = false, offset = 0, stride = 0, hint = this._gl.STATIC_DRAW): void {
+    set(data: ArrayBuffer, size = 1, type = this._gl.FLOAT, normalize = false, offset = 0, stride = 0, hint = this._gl.STATIC_DRAW): void {
         this._gl.useProgram(this._program);
         this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._buffer);
         this._gl.bufferData(this._gl.ARRAY_BUFFER, data, hint);
-        //this._gl.enableVertexAttribArray(this._loc);
         this._gl.vertexAttribPointer(this._loc, size, type, normalize, offset, stride);
+    }
+
+    setSubData(data: ArrayBufferView, dstOffset: number, srcOffset = 0): void {
+        this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._buffer);
+        this._gl.bufferSubData(this._gl.ARRAY_BUFFER, dstOffset, data, srcOffset);
     }
 
     enable(): void {
@@ -218,6 +251,7 @@ export class Texture_Object {
     }
 
     get texture(){return this._texture}
+    set texture(tex: WebGLTexture){this._texture = tex}
 
     private _defaultParameters = ()=>{
         this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MIN_FILTER, this._gl.NEAREST);

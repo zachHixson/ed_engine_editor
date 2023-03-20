@@ -8,7 +8,7 @@ import endIconRaw from '@/assets/end.svg?raw';
 
 const { Vector, Mat3, WGL } = Core;
 
-const NO_SPRITE_PADDING = 0.85;
+const ICON_PADDING = 0.85;
 let iconsLoaded = false;
 
 export default class Room_Edit_Renderer {
@@ -29,6 +29,7 @@ export default class Room_Edit_Renderer {
         precision highp float;
 
         uniform sampler2D u_instanceBuffer;
+        uniform sampler2D u_iconBuffer;
         uniform sampler2D u_uiBuffer;
         uniform vec3 u_bgColor;
         uniform int u_drawGrid;
@@ -39,9 +40,11 @@ export default class Room_Edit_Renderer {
             vec3 outCol = u_bgColor;
 
             vec4 instanceBuffer = texture2D(u_instanceBuffer, v_uv);
+            vec4 iconBuffer = texture2D(u_iconBuffer, v_uv);
             vec4 uiBuffer = texture2D(u_uiBuffer, v_uv);
 
             outCol = mix(outCol, instanceBuffer.rgb, instanceBuffer.a);
+            outCol = mix(outCol, iconBuffer.rgb, iconBuffer.a);
             outCol = mix(outCol, uiBuffer.rgb, uiBuffer.a);
 
             gl_FragColor = vec4(outCol, 1.0);
@@ -51,11 +54,14 @@ export default class Room_Edit_Renderer {
     private _nextDrawCall: number | null = null;
     private _canvas: HTMLCanvasElement;
     private _navState: Core.NavState;
+    private _roomRef: Core.Room | null = null;
     private _gl: WebGL2RenderingContext;
     private _program: WebGLProgram;
     private _instanceRenderer: Core.Instance_Renderer;
+    private _iconRenderer: Core.Instance_Renderer;
     private _uiRenderer: UI_Renderer;
     private _instanceBuffer: Core.WGL.Texture_Object;
+    private _iconBuffer: Core.WGL.Texture_Object;
     private _uiBuffer: Core.WGL.Texture_Object;
     private _bgColorUniform: Core.WGL.Uniform_Object;
     private _drawGridUniform: Core.WGL.Uniform_Object;
@@ -76,9 +82,11 @@ export default class Room_Edit_Renderer {
             WGL.createShader(this._gl, this._gl.VERTEX_SHADER, Room_Edit_Renderer._vertexSource)!,
             WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, Room_Edit_Renderer._fragmentSource)!
         )!;
-        this._instanceRenderer = new Core.Instance_Renderer(this._gl);
+        this._instanceRenderer = new Core.Instance_Renderer(this._gl, Core.Sprite.DIMENSIONS, 1024, false);
+        this._iconRenderer = new Core.Instance_Renderer(this._gl, 128, 512, true);
         this._uiRenderer = new UI_Renderer(this._gl);
         this._instanceBuffer = new WGL.Texture_Object(this._gl, this._program, 'u_instanceBuffer', this._instanceRenderer.texture);
+        this._iconBuffer = new WGL.Texture_Object(this._gl, this._program, 'u_iconBuffer', this._iconRenderer.texture);
         this._uiBuffer = new WGL.Texture_Object(this._gl, this._program, 'u_uiBuffer', this._uiRenderer.texture);
         this._drawGridUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_drawGrid', WGL.Uniform_Types.INT);
         this._bgColorUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_bgColor', WGL.Uniform_Types.VEC3);
@@ -92,6 +100,12 @@ export default class Room_Edit_Renderer {
         this._uvAttribute.set(new Float32Array(Room_Edit_Renderer._planeUVs), 2);
 
         this._gl.clearColor(0, 0, 0, 0);
+
+        if (!iconsLoaded){
+            document.addEventListener('icons-loaded', this._iconsLoaded as EventListener, {once: true});
+        }
+
+        this._iconRenderer.setInstanceScale(ICON_PADDING);
     }
 
     get CELL_PX_WIDTH(){return 50};
@@ -100,7 +114,7 @@ export default class Room_Edit_Renderer {
     private _updateViewMatrix(): void {
         if (!this._viewMatrixNeedsUpdate) return;
 
-        const zoom = this._navState.zoomFac;
+        const zoom = this._navState.zoomFac * this.UNIT_WIDTH;
         const { x, y } = this._navState.offset;
         const dimensions = new Vector(this._gl.canvas.width / 2, this._gl.canvas.height / 2);
         const zoomMat = new Mat3([zoom, 0, 0, 0, zoom, 0, 0, 0, 1]);
@@ -113,16 +127,31 @@ export default class Room_Edit_Renderer {
         this._viewMatrix.copy(zoomMat.multiply(aspectMat).multiply(tranMat));
         this._viewMatrixInv.copy(this._viewMatrix).inverse();
         this._instanceRenderer.updateViewMatrix(this._viewMatrix);
+        this._iconRenderer.updateViewMatrix(this._viewMatrix);
         this._uiRenderer.updateViewMatrix(this._viewMatrixInv);
         this._viewMatrixNeedsUpdate = false;
     }
+
+    private _iconsLoaded = (event: CustomEvent): void => {
+        const ids = event.detail as string[];
+
+        for (let i = 0; i < ids.length; i++){
+            this._iconRenderer.updateSprite(ids[i]);
+        }
+
+        this.queueRender();
+    }
     
     getMouseWorldCell(){
-        this._mouseCell.clone();
+        return this._mouseCell.clone();
     }
 
     setRoomRef(roomObj: Core.Room){
-        //
+        this._roomRef = roomObj;
+        this._navState = this._roomRef.navState;
+        this.navChanged();
+        this.initInstances();
+        this._uiRenderer.updateCamera(this._roomRef.camera.pos, this._roomRef.camera.size);
     }
 
     setSelection(instRef: Core.Instance_Base){
@@ -155,8 +184,44 @@ export default class Room_Edit_Renderer {
         this.queueRender();
     }
 
-    instancesChanged(){
-        //
+    cameraChanged(): void {
+        const camera = this._roomRef!.camera;
+
+        this._uiRenderer.updateCamera(camera.pos, camera.size);
+        this.queueRender();
+    }
+
+    private _addInstanceToRenderer(instance: Core.Instance_Base): void {
+        const renderer = instance.hasEditorFrame ? this._instanceRenderer : this._iconRenderer;
+        renderer.addInstance(instance, instance.editorFrameNum);
+    }
+
+    private _removeInstanceFromRenderer(instance: Core.Instance_Base): void {
+        const renderer = instance.hasEditorFrame ? this._instanceRenderer : this._iconRenderer;
+        renderer.removeInstance(instance);
+    }
+
+    initInstances(): void {
+        if (!this._roomRef) return;
+
+        this._instanceRenderer.clear();
+        this._iconRenderer.clear();
+
+        this._roomRef.instanceList.forEach(instance => {
+            this._addInstanceToRenderer(instance);
+        });
+
+        this.queueRender();
+    }
+
+    addInstance(instance: Core.Instance_Base): void {
+        this._addInstanceToRenderer(instance);
+        this.queueRender();
+    }
+
+    removeInstance(instance: Core.Instance_Base): void {
+        this._removeInstanceFromRenderer(instance);
+        this.queueRender();
     }
 
     bgColorChanged(){
@@ -166,6 +231,7 @@ export default class Room_Edit_Renderer {
     resize(){
         this._gl.viewport(0, 0, this._gl.canvas.width, this._gl.canvas.height);
         this._instanceRenderer.resize();
+        this._iconRenderer.resize();
         this._uiRenderer.resize();
         this.queueRender();
     }
@@ -183,6 +249,7 @@ export default class Room_Edit_Renderer {
         //update matrix and buffers
         this._updateViewMatrix();
         this._instanceRenderer.render();
+        this._iconRenderer.render();
         this._uiRenderer.render();
 
         //setup render
@@ -195,6 +262,7 @@ export default class Room_Edit_Renderer {
         this._positionAttribute.enable();
         this._uvAttribute.enable();
         this._instanceBuffer.activate();
+        this._iconBuffer.activate();
         this._uiBuffer.activate();
 
         //draw
@@ -204,16 +272,20 @@ export default class Room_Edit_Renderer {
         this._positionAttribute.disable();
         this._uvAttribute.disable();
         this._instanceBuffer.deactivate();
+        this._iconBuffer.deactivate();
         this._uiBuffer.deactivate();
     }
 
     destroy(): void {
         this._instanceRenderer.destroy();
+        this._iconRenderer.destroy();
         this._instanceBuffer.destroy();
+        this._iconBuffer.destroy();
     }
 }
 
 class UI_Renderer {
+    static CAMERA_ICON = new ImageData(128, 128);
     private static readonly _planeGeo = WGL.createPlaneGeo();
     private static readonly _vertexSource = `
         attribute vec2 a_position;
@@ -231,6 +303,8 @@ class UI_Renderer {
         precision highp float;
 
         uniform vec2 u_cursor;
+        uniform vec3 u_camera;
+        uniform sampler2D u_cameraIcon;
 
         varying vec2 v_uv;
 
@@ -250,11 +324,22 @@ class UI_Renderer {
             vec2 cursorUv = abs(v_uv - u_cursor - 8.0) - 8.0;
             float cursor = step(max(cursorUv.x, cursorUv.y), 0.01);
 
+            //camera
+            vec2 cameraUv = (v_uv - u_camera.xy) / 16.0;
+            cameraUv.y = 1.0 - cameraUv.y;
+            vec4 cameraIcon = texture2D(u_cameraIcon, cameraUv);
+            vec2 cameraGradUv = abs(cameraUv - 0.5) * 2.0;
+            float cameraGrad = max(cameraGradUv.x, cameraGradUv.y);
+            float cameraMask = step(cameraGrad, 1.0);
+            float cameraBounds = step(abs(cameraGrad - u_camera.z) - 0.05, 0.0);
+
             //composite
             gl_FragColor = vec4(vec3(0.5), 0.3 * cursor);
             gl_FragColor = mix(gl_FragColor, vec4(vec3(0.6), 0.5), grid);
             gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(1.0, 0.3, 0.0), xAxis);
             gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.3, 1.0, 0.0), yAxis);
+            gl_FragColor = mix(gl_FragColor, vec4(vec3(0.0), 1.0), cameraIcon.a * cameraMask);
+            gl_FragColor = mix(gl_FragColor, vec4(vec3(0.3), 1.0), cameraBounds);
         }
     `;
 
@@ -263,6 +348,8 @@ class UI_Renderer {
     private _invViewMatrixUniform: Core.WGL.Uniform_Object;
     private _dimensionUniform: Core.WGL.Uniform_Object;
     private _cursorUniform: Core.WGL.Uniform_Object;
+    private _cameraUniform: Core.WGL.Uniform_Object;
+    private _cameraIconUniform: Core.WGL.Texture_Object;
     private _positionAttribute: Core.WGL.Attribute_Object;
     private _vao: WebGLVertexArrayObject;
     private _outputTexture: Core.WGL.Render_Texture;
@@ -277,6 +364,8 @@ class UI_Renderer {
         this._invViewMatrixUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_invViewMatrix', WGL.Uniform_Types.MAT3);
         this._dimensionUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_dimensions', WGL.Uniform_Types.VEC2);
         this._cursorUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_cursor', WGL.Uniform_Types.VEC2);
+        this._cameraUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_camera', WGL.Uniform_Types.VEC3);
+        this._cameraIconUniform = new WGL.Texture_Object(this._gl, this._program, 'u_cameraIcon');
         this._positionAttribute = new WGL.Attribute_Object(this._gl, this._program, 'a_position');
         this._vao = this._gl.createVertexArray()!;
         this._outputTexture = new WGL.Render_Texture(this._gl, this._gl.canvas.width, this._gl.canvas.height);
@@ -284,6 +373,13 @@ class UI_Renderer {
         this._gl.bindVertexArray(this._vao);
         
         this._positionAttribute.set(new Float32Array(UI_Renderer._planeGeo), 2, this._gl.FLOAT);
+
+        if (!iconsLoaded){
+            document.addEventListener('icons-loaded', this.iconsLoaded, {once: true});
+        }
+        else{
+            this.iconsLoaded();
+        }
     }
 
     get texture(){return this._outputTexture.texture}
@@ -292,6 +388,15 @@ class UI_Renderer {
         this._gl.useProgram(this._program);
         this._dimensionUniform.set(this._gl.canvas.width / 2, this._gl.canvas.height / 2);
         this._outputTexture.resize(this._gl.canvas.width, this._gl.canvas.height);
+    }
+
+    iconsLoaded = (): void => {
+        this._gl.useProgram(this._program);
+        this._cameraIconUniform.set(UI_Renderer.CAMERA_ICON, ()=>{
+            this._gl.generateMipmap(this._gl.TEXTURE_2D);
+            this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MIN_FILTER, this._gl.LINEAR_MIPMAP_LINEAR);
+            this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MAG_FILTER, this._gl.NEAREST);
+        });
     }
 
     updateViewMatrix(viewMatInv: Core.Mat3): void {
@@ -304,6 +409,11 @@ class UI_Renderer {
         this._cursorUniform.set(mouseCell.x, mouseCell.y);
     }
 
+    updateCamera(pos: Core.Vector, size: number): void {
+        this._gl.useProgram(this._program);
+        this._cameraUniform.set(pos.x - 8, pos.y - 8, size);
+    }
+
     render(): void {
         //setup render
         this._gl.bindVertexArray(this._vao);
@@ -311,6 +421,7 @@ class UI_Renderer {
 
         //enable attributes and render target
         this._positionAttribute.enable();
+        this._cameraIconUniform.activate();
         this._outputTexture.setAsRenderTarget();
 
         //draw
@@ -320,6 +431,46 @@ class UI_Renderer {
 
         //disable attributes and render target
         this._positionAttribute.disable();
+        this._cameraIconUniform.deactivate();
         this._outputTexture.unsetRenderTarget();
     }
 }
+
+//load icons
+(()=>{
+    const DIM = 128;
+    const LOAD_ARRAY = [
+        svgToCanvas(cameraLocIconRaw, DIM, canvas => {
+            UI_Renderer.CAMERA_ICON = getImageData(canvas!);
+            loaded('CAMERA_ICON');
+        }),
+        svgToCanvas(objectIconRaw, DIM, canvas => {
+            Core.Object_Instance.DEFAULT_INSTANCE_ICON = [getImageData(canvas!)];
+            loaded(Core.Object_Instance.DEFAULT_INSTANCE_ICON_ID);
+        }),
+        svgToCanvas(exitIconRaw, DIM, canvas => {
+            Core.Exit.EXIT_ICON = [getImageData(canvas!)];
+            loaded(Core.Exit.EXIT_ICON_ID);
+        }),
+        svgToCanvas(endIconRaw, DIM, canvas => {
+            Core.Exit.ENDING_ICON = [getImageData(canvas!)];
+            loaded(Core.Exit.ENDING_ICON_ID);
+        })
+    ];
+    const loadedIDs = new Array<string>();
+    let toLoad = LOAD_ARRAY.length;
+
+    function getImageData(canvas: HTMLCanvasElement): ImageData {
+        return canvas.getContext('2d')!.getImageData(0, 0, DIM, DIM);
+    }
+
+    function loaded(id: string){
+        toLoad--;
+        loadedIDs.push(id);
+
+        if (toLoad <= 0){
+            iconsLoaded = true;
+            document.dispatchEvent(new CustomEvent('icons-loaded', {detail: loadedIDs}));
+        }
+    }
+})();

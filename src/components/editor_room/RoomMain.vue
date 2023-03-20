@@ -168,10 +168,10 @@ function bindHotkeys(): void {
         const type = editorSelection.value?.TYPE;
         const id = editorSelection.value?.id;
 
-        if (type == Core.ENTITY_TYPE.INSTANCE){
+        if (type == Core.INSTANCE_TYPE.INSTANCE){
             actionDelete({instId: id});
         }
-        else if (type == Core.ENTITY_TYPE.EXIT){
+        else if (type == Core.INSTANCE_TYPE.EXIT){
             actionExitDelete({exitId: id!});
         }
     }
@@ -448,7 +448,7 @@ function actionAdd({objId, instRefList = [], pos}: AddProps, makeCommit = true):
         props.selectedRoom.addInstance(instRefList[i]);
     }
 
-    RoomMainEventBus.emit('instances-changed');
+    RoomMainEventBus.emit('instance-added', newInst);
 
     if (cacheList){
         cacheList.push(newInst);
@@ -483,7 +483,7 @@ function actionDelete({instId, instRefList = []}: DeleteProps, makeCommit = true
         props.selectedRoom.removeInstance(inst.id);
     }
 
-    RoomMainEventBus.emit('instances-changed');
+    RoomMainEventBus.emit('instance-removed', instRef);
 
     if (cacheList){
         cacheList.push(instRef);

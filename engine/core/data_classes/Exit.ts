@@ -1,7 +1,7 @@
 import { iAnyObj } from '../interfaces';
 import { Vector } from '../Vector';
 import { iInstanceBaseSaveData, Instance_Base } from './Instance_Base';
-import {ENTITY_TYPE} from '../Enums';
+import {INSTANCE_TYPE} from '../Enums';
 
 export interface iExitSaveData extends iInstanceBaseSaveData {
     isEnding: boolean;
@@ -17,15 +17,23 @@ enum TRANSITION {
 };
 
 export class Exit extends Instance_Base {
+    static EXIT_ICON_ID = 'INSTANCE_ICON';
+    static ENDING_ICON_ID = 'ENDING_ICON';
+    static EXIT_ICON = [new ImageData(1, 1)];
+    static ENDING_ICON = [new ImageData(1, 1)];
+
     isEnding: boolean = false;
     destinationRoom: number | null = null;
     destinationExit: number | null = null;
     transition: TRANSITION = TRANSITION.NONE;
     endingDialog: string = '';
 
-    static get TRANSITION_TYPES(){return TRANSITION};
+    static get TRANSITION_TYPES(){return TRANSITION}
 
-    get TYPE(){return ENTITY_TYPE.EXIT}
+    get TYPE(){return INSTANCE_TYPE.EXIT}
+
+    get frameDataId(){return this.isEnding ? Exit.ENDING_ICON_ID : Exit.EXIT_ICON_ID}
+    get frameData(){return this.isEnding ? Exit.ENDING_ICON : Exit.EXIT_ICON}
 
     clone(): Exit {
         const clone = new Exit(this.id, this.pos);

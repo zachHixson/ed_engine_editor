@@ -2,7 +2,6 @@
 export interface imEvent{
     type: Core.MOUSE_EVENT,
     canvasPos: Core.Vector,
-    cell: Core.Vector,
     worldCell: Core.Vector,
 }
 </script>
@@ -23,6 +22,7 @@ import { useRoomEditorStore } from '@/stores/RoomEditor';
 import { useGameDataStore } from '@/stores/GameData';
 import { RoomMainEventBus } from './RoomMain.vue';
 import Core from '@/core';
+import type { Instance_Base } from '@engine/core/core';
 
 const roomEditorStore = useRoomEditorStore();
 const gameDataStore = useGameDataStore();
@@ -64,7 +64,6 @@ const checkAssetDeletion = computed(()=>gameDataStore.getAllObjects.length + gam
 
 watch(()=>props.editorSelection, ()=>setSelection());
 watch(()=>roomEditorStore.getGridState, (newVal)=>renderer.setGridVisibility(newVal));
-watch(checkAssetDeletion, (newVal, oldVal)=> (newVal < oldVal) && renderer.drawObjects());
 watch(()=>props.selectedRoom, (newRoom)=>roomChange(newRoom));
 
 onMounted(()=>{
@@ -83,7 +82,8 @@ onMounted(()=>{
     canvasEl.value!.addEventListener('mouseleave', mouseLeave);
     RoomMainEventBus.addEventListener('resize', resize);
     RoomMainEventBus.addEventListener('bgColorChanged', bgColorChanged);
-    RoomMainEventBus.addEventListener('instances-changed', instancesChanged);
+    RoomMainEventBus.addEventListener('instance-added', instanceAdded);
+    RoomMainEventBus.addEventListener('instance-removed', instanceRemoved);
     RoomMainEventBus.addEventListener('camera-changed', cameraChanged);
     RoomMainEventBus.addEventListener('room-changed', roomChange);
 
@@ -99,7 +99,8 @@ onBeforeUnmount(()=>{
     canvasEl.value!.removeEventListener('mouseleave', mouseLeave);
     RoomMainEventBus.removeEventListener('resize', resize);
     RoomMainEventBus.removeEventListener('bgColorChanged', bgColorChanged);
-    RoomMainEventBus.removeEventListener('instances-changed', instancesChanged);
+    RoomMainEventBus.removeEventListener('instance-added', instanceAdded);
+    RoomMainEventBus.removeEventListener('instance-removed', instanceRemoved);
     RoomMainEventBus.removeEventListener('camera-changed', cameraChanged);
     RoomMainEventBus.removeEventListener('room-changed', roomChange);
     renderer.destroy();
@@ -127,13 +128,13 @@ function mouseWheel(event: MouseEvent): void {
 
 function mouseEnter(event: MouseEvent): void {
     RoomEditWindowEventBus.emit('mouse-enter', event);
-    renderer.enableCursor = true;
+    //renderer.enableCursor = true;
 }
 
 function mouseLeave(event: MouseEvent): void {
     RoomEditWindowEventBus.emit('mouse-leave');
     emitMouseEvent(event, Core.MOUSE_EVENT.LEAVE);
-    renderer.enableCursor = false;
+    //renderer.enableCursor = false;
     renderer.mouseMove(event);
 }
 
@@ -163,18 +164,23 @@ function emitMouseEvent(event: MouseEvent, type: Core.MOUSE_EVENT): void {
     }
 }
 
-function instancesChanged(): void {
+function instanceAdded(instance: Instance_Base): void {
     contentsBounds.value = props.selectedRoom.getContentsBounds();
-    renderer.instancesChanged();
+    renderer.addInstance(instance);
+}
+
+function instanceRemoved(instance: Instance_Base): void {
+    contentsBounds.value = props.selectedRoom.getContentsBounds();
+    renderer.removeInstance(instance);
 }
 
 function setSelection(): void {
-    renderer.setSelection(props.editorSelection!);
+    //renderer.setSelection(props.editorSelection!);
 }
 
 function cameraChanged(): void {
     contentsBounds.value = props.selectedRoom.getContentsBounds();
-    renderer.instancesChanged();
+    renderer.cameraChanged();
 }
 
 function bgColorChanged(): void {
