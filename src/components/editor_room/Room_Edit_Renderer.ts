@@ -356,8 +356,10 @@ class UI_Renderer {
 
             //selection
             vec2 selectionUv = abs(((v_uv - u_selection.xy) / 16.0) - 0.5) * 2.0;
-            float selectionBox = max(selectionUv.x, selectionUv.y);
-            selectionBox = step(abs(selectionBox - 1.0) - 0.1, 0.0) * u_selection.z;
+            float selectionBox = max(selectionUv.x, selectionUv.y) * 16.0;
+            selectionBox = abs(selectionBox - 16.0);
+            selectionBox -= u_pixelWidth * 3.5;
+            selectionBox = (1.0 - smoothstep(0.0, u_pixelWidth * 2.0, selectionBox)) * u_selection.z;
 
             //composite
             gl_FragColor = vec4(vec3(0.5), 0.3 * cursor);
