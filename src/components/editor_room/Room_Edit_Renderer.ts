@@ -65,7 +65,6 @@ export default class Room_Edit_Renderer {
     private _iconBuffer: Core.WGL.Texture_Object;
     private _uiBuffer: Core.WGL.Texture_Object;
     private _bgColorUniform: Core.WGL.Uniform_Object;
-    private _drawGridUniform: Core.WGL.Uniform_Object;
     private _positionAttribute: Core.WGL.Attribute_Object;
     private _uvAttribute: Core.WGL.Attribute_Object;
     private _vao: WebGLVertexArrayObject;
@@ -89,7 +88,6 @@ export default class Room_Edit_Renderer {
         this._instanceBuffer = new WGL.Texture_Object(this._gl, this._program, 'u_instanceBuffer', this._instanceRenderer.texture);
         this._iconBuffer = new WGL.Texture_Object(this._gl, this._program, 'u_iconBuffer', this._iconRenderer.texture);
         this._uiBuffer = new WGL.Texture_Object(this._gl, this._program, 'u_uiBuffer', this._uiRenderer.texture);
-        this._drawGridUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_drawGrid', WGL.Uniform_Types.INT);
         this._bgColorUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_bgColor', WGL.Uniform_Types.VEC3);
         this._positionAttribute = new WGL.Attribute_Object(this._gl, this._program, 'a_position');
         this._uvAttribute = new WGL.Attribute_Object(this._gl, this._program, 'a_uv');
@@ -154,6 +152,7 @@ export default class Room_Edit_Renderer {
         this.navChanged();
         this.initInstances();
         this._uiRenderer.updateCamera(this._roomRef.camera.pos, this._roomRef.camera.size);
+        this.bgColorChanged();
     }
 
     setSelection(instRef: Core.Instance_Base | null){
@@ -237,6 +236,18 @@ export default class Room_Edit_Renderer {
     }
 
     bgColorChanged(){
+        if (!this._roomRef) return;
+
+        const bgColor = this._roomRef.bgColor;
+        const normalized = new Core.Draw.Color();
+
+        const luma = Math.max(bgColor.r, bgColor.g, bgColor.b);
+        const iconColor = luma > 100 ? new Core.Draw.Color(0,0,0) : new Core.Draw.Color(0.8, 0.8, 0.8);
+
+        this._gl.useProgram(this._program);
+        this._bgColorUniform.set(bgColor.r / 255, bgColor.g / 255, bgColor.b / 255);
+        this._iconRenderer.setColorOverride(iconColor);
+        this._uiRenderer.setIconColor(iconColor);
         this.queueRender();
     }
 
@@ -267,7 +278,6 @@ export default class Room_Edit_Renderer {
         //setup render
         this._gl.clear(this._gl.COLOR_BUFFER_BIT);
         this._gl.useProgram(this._program);
-        this._bgColorUniform.set(1, 1, 1);
         this._gl.bindVertexArray(this._vao);
 
         //enable attributes and textures 
@@ -319,6 +329,7 @@ class UI_Renderer {
         uniform vec2 u_cursor;
         uniform vec3 u_selection;
         uniform vec3 u_camera;
+        uniform vec3 u_iconColor;
         uniform sampler2D u_cameraIcon;
 
         varying vec2 v_uv;
@@ -370,8 +381,8 @@ class UI_Renderer {
                 gl_FragColor = mix(gl_FragColor, vec4(0.5, 1.0, 0.0, 1.0), yAxis);
             }
             
-            gl_FragColor = mix(gl_FragColor, vec4(vec3(0.0), 1.0), cameraIcon.a * cameraMask);
-            gl_FragColor = mix(gl_FragColor, vec4(vec3(0.3), 1.0), cameraBounds);
+            gl_FragColor = mix(gl_FragColor, vec4(vec3(u_iconColor), 1.0), cameraIcon.a * cameraMask);
+            gl_FragColor = mix(gl_FragColor, vec4(vec3((u_iconColor + 0.5) * 0.4), 1.0), cameraBounds);
             gl_FragColor = mix(gl_FragColor, vec4(0.0, 0.5, 1.0, 1.0), selectionBox);
         }
     `;
@@ -384,6 +395,7 @@ class UI_Renderer {
     private _dimensionUniform: Core.WGL.Uniform_Object;
     private _cursorUniform: Core.WGL.Uniform_Object;
     private _cameraUniform: Core.WGL.Uniform_Object;
+    private _iconColorUniform: Core.WGL.Uniform_Object;
     private _selectionUniform: Core.WGL.Uniform_Object;
     private _cameraIconUniform: Core.WGL.Texture_Object;
     private _positionAttribute: Core.WGL.Attribute_Object;
@@ -403,6 +415,7 @@ class UI_Renderer {
         this._dimensionUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_dimensions', WGL.Uniform_Types.VEC2);
         this._cursorUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_cursor', WGL.Uniform_Types.VEC2);
         this._cameraUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_camera', WGL.Uniform_Types.VEC3);
+        this._iconColorUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_iconColor', WGL.Uniform_Types.VEC3);
         this._selectionUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_selection', WGL.Uniform_Types.VEC3);
         this._cameraIconUniform = new WGL.Texture_Object(this._gl, this._program, 'u_cameraIcon');
         this._positionAttribute = new WGL.Attribute_Object(this._gl, this._program, 'a_position');
@@ -469,6 +482,11 @@ class UI_Renderer {
     setGridState(state: boolean): void {
         this._gl.useProgram(this._program);
         this._showGridUniform.set(state);
+    }
+
+    setIconColor(newColor: Core.Draw.Color): void {
+        this._gl.useProgram(this._program);
+        this._iconColorUniform.set(newColor.r, newColor.g, newColor.b);
     }
 
     render(): void {

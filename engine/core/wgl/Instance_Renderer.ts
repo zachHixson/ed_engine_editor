@@ -1,6 +1,7 @@
 import { Instance_Base, WGL, Sprite } from "../core";
 import { Mat3 } from "../Mat3";
 import { Vector } from '../Vector';
+import { Color } from "../Draw";
 
 interface iInstanceData {
     instance: Instance_Base,
@@ -50,6 +51,7 @@ export class Instance_Renderer {
         uniform int u_tileSize;
         uniform int u_atlasSize;
         uniform float u_instanceScale;
+        uniform vec4 u_colorOverride;
         uniform sampler2D u_atlasTexture;
 
         varying vec2 v_uv;
@@ -75,6 +77,9 @@ export class Instance_Renderer {
             vec4 tex = texture2D(u_atlasTexture, uv);
             tex.a *= mask;
 
+            //color override
+            tex = mix(tex, vec4(u_colorOverride.rgb, 1.0), u_colorOverride.a * tex.a);
+
             gl_FragColor = tex;
         }
     `;
@@ -91,6 +96,7 @@ export class Instance_Renderer {
     private _tileSizeUniform: WGL.Uniform_Object;
     private _atlasSizeUniform: WGL.Uniform_Object;
     private _instanceScaleUniform: WGL.Uniform_Object;
+    private _colorOverrideUniform: WGL.Uniform_Object;
     private _atlasTextureUniform: WGL.Texture_Object;
     private _outputTexture: WGL.Render_Texture;
 
@@ -114,6 +120,7 @@ export class Instance_Renderer {
         this._tileSizeUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_tileSize', WGL.Uniform_Types.INT);
         this._atlasSizeUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_atlasSize', WGL.Uniform_Types.INT);
         this._instanceScaleUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_instanceScale', WGL.Uniform_Types.FLOAT);
+        this._colorOverrideUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_colorOverride', WGL.Uniform_Types.VEC4);
         this._atlasTextureUniform = new WGL.Texture_Object(this._gl, this._program, 'u_atlasTexture');
         this._outputTexture = new WGL.Render_Texture(this._gl, this._gl.canvas.width, this._gl.canvas.height);
 
@@ -172,6 +179,11 @@ export class Instance_Renderer {
     setInstanceScale(scale: number): void {
         this._gl.useProgram(this._program);
         this._instanceScaleUniform.set(scale);
+    }
+
+    setColorOverride(color: Color): void {
+        this._gl.useProgram(this._program);
+        this._colorOverrideUniform.set(color.r, color.g, color.b, 1.0);
     }
 
     addInstance(instance: Instance_Base, startFrame = 0): void {
