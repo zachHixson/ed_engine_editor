@@ -350,7 +350,9 @@ class UI_Renderer {
             vec2 cameraGradUv = abs(cameraUv - 0.5) * 2.0;
             float cameraGrad = max(cameraGradUv.x, cameraGradUv.y);
             float cameraMask = step(cameraGrad, 1.0);
-            float cameraBounds = step(abs(cameraGrad - u_camera.z) - 0.05, 0.0);
+            float cameraBounds = abs(cameraGrad - u_camera.z) * 16.0;
+            cameraBounds -= u_pixelWidth * 1.5;
+            cameraBounds = 1.0 - smoothstep(0.0, u_pixelWidth, cameraBounds);
 
             //selection
             vec2 selectionUv = abs(((v_uv - u_selection.xy) / 16.0) - 0.5) * 2.0;
@@ -440,8 +442,6 @@ class UI_Renderer {
         const p1 = new Vector(0, 0).multiplyMat3(transposed);
         const p2 = new Vector(1/(screenWidth/2), 0).multiplyMat3(transposed);
         const pixelWidth = (p2.x - p1.x);
-
-        console.log(pixelWidth);
 
         //update uniforms
         this._gl.useProgram(this._program);
