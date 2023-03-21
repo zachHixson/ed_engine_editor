@@ -130,7 +130,7 @@ export default class Room_Edit_Renderer {
         this._viewMatrixInv.copy(this._viewMatrix).inverse();
         this._instanceRenderer.updateViewMatrix(this._viewMatrix);
         this._iconRenderer.updateViewMatrix(this._viewMatrix);
-        this._uiRenderer.updateViewMatrix(this._viewMatrixInv);
+        this._uiRenderer.updateViewMatrix(this._viewMatrix, this._viewMatrixInv);
         this._viewMatrixNeedsUpdate = false;
     }
 
@@ -315,6 +315,7 @@ class UI_Renderer {
         precision highp float;
 
         uniform bool u_showGrid;
+        uniform float u_pixelWidth;
         uniform vec2 u_cursor;
         uniform vec3 u_selection;
         uniform vec3 u_camera;
@@ -326,8 +327,9 @@ class UI_Renderer {
             //world grid
             vec2 tUv = fract(v_uv / 16.0);
             tUv = abs(tUv - 0.5) * 2.0;
-            float grid = max(tUv.x, tUv.y);
-            grid = step(0.95, grid);
+            float grid = max(tUv.x, tUv.y) * 16.0;
+            float invPWidth = 1.0 - u_pixelWidth;
+            grid = smoothstep(invPWidth + 14.6, invPWidth + 15.2, grid);
 
             //xy grid
             vec2 absUv = abs(v_uv);
@@ -358,13 +360,14 @@ class UI_Renderer {
 
             if (u_showGrid){
                 gl_FragColor = mix(gl_FragColor, vec4(vec3(0.6), 0.5), grid);
-                gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(1.0, 0.3, 0.0), xAxis);
-                gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.3, 1.0, 0.0), yAxis);
+                gl_FragColor = mix(gl_FragColor, vec4(1.0, 0.3, 0.0, 1.0), xAxis);
+                gl_FragColor = mix(gl_FragColor, vec4(0.3, 1.0, 0.0, 1.0), yAxis);
             }
             
             gl_FragColor = mix(gl_FragColor, vec4(vec3(0.0), 1.0), cameraIcon.a * cameraMask);
             gl_FragColor = mix(gl_FragColor, vec4(vec3(0.3), 1.0), cameraBounds);
             gl_FragColor = mix(gl_FragColor, vec4(0.0, 0.5, 1.0, 1.0), selectionBox);
+            //gl_FragColor = vec4(vec3(xAxis), 1.0);
         }
     `;
 
@@ -372,6 +375,7 @@ class UI_Renderer {
     private _program: WebGLProgram;
     private _invViewMatrixUniform: Core.WGL.Uniform_Object;
     private _showGridUniform: Core.WGL.Uniform_Object;
+    private _pixelWidthUniform: Core.WGL.Uniform_Object;
     private _dimensionUniform: Core.WGL.Uniform_Object;
     private _cursorUniform: Core.WGL.Uniform_Object;
     private _cameraUniform: Core.WGL.Uniform_Object;
@@ -390,6 +394,7 @@ class UI_Renderer {
         )!;
         this._invViewMatrixUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_invViewMatrix', WGL.Uniform_Types.MAT3);
         this._showGridUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_showGrid', WGL.Uniform_Types.BOOL);
+        this._pixelWidthUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_pixelWidth', WGL.Uniform_Types.FLOAT);
         this._dimensionUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_dimensions', WGL.Uniform_Types.VEC2);
         this._cursorUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_cursor', WGL.Uniform_Types.VEC2);
         this._cameraUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_camera', WGL.Uniform_Types.VEC3);
@@ -428,9 +433,19 @@ class UI_Renderer {
         });
     }
 
-    updateViewMatrix(viewMatInv: Core.Mat3): void {
+    updateViewMatrix(viewMat: Core.Mat3, viewMatInv: Core.Mat3): void {
+        const screenWidth = this._gl.canvas.width;
+        const transposed = viewMatInv.clone().transpose();
+        const p1 = new Vector(0, 0).multiplyMat3(transposed);
+        const p2 = new Vector(1/(screenWidth/2), 0).multiplyMat3(transposed);
+        const pixelWidth = (p2.x - p1.x);
+
+        console.log(pixelWidth * 16.0);
+
+        //update uniforms
         this._gl.useProgram(this._program);
         this._invViewMatrixUniform.set(false, viewMatInv.data);
+        this._pixelWidthUniform.set(pixelWidth);
     }
 
     updateMousePos(mouseCell: Core.Vector): void {
