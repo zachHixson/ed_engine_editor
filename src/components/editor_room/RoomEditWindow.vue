@@ -86,10 +86,13 @@ onMounted(()=>{
     RoomMainEventBus.addEventListener('instance-removed', instanceRemoved);
     RoomMainEventBus.addEventListener('camera-changed', cameraChanged);
     RoomMainEventBus.addEventListener('room-changed', roomChange);
+    RoomMainEventBus.addEventListener('grid-state-changed', toggleGrid);
 
     if (props.selectedRoom){
         roomChange();
     }
+
+    renderer.setGridVisibility(roomEditorStore.getGridState);
 });
 
 onBeforeUnmount(()=>{
@@ -103,6 +106,7 @@ onBeforeUnmount(()=>{
     RoomMainEventBus.removeEventListener('instance-removed', instanceRemoved);
     RoomMainEventBus.removeEventListener('camera-changed', cameraChanged);
     RoomMainEventBus.removeEventListener('room-changed', roomChange);
+    RoomMainEventBus.removeEventListener('grid-state-changed', toggleGrid);
     renderer.destroy();
 });
 
@@ -141,6 +145,10 @@ function mouseLeave(event: MouseEvent): void {
 function roomChange(newRoom?: Core.Room): void {
     renderer.setRoomRef(props.selectedRoom);
     contentsBounds.value = props.selectedRoom.getContentsBounds();
+}
+
+function toggleGrid(state: boolean): void {
+    renderer!.setGridVisibility(state);
 }
 
 function resize(): void {

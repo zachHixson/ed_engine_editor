@@ -170,7 +170,8 @@ export default class Room_Edit_Renderer {
     }
 
     setGridVisibility(newVisibility: boolean){
-        //
+        this._uiRenderer.setGridState(newVisibility);
+        this.queueRender();
     }
 
     mouseMove(event: MouseEvent){
@@ -313,6 +314,7 @@ class UI_Renderer {
     private static readonly _fragmentSource = `
         precision highp float;
 
+        uniform bool u_showGrid;
         uniform vec2 u_cursor;
         uniform vec3 u_selection;
         uniform vec3 u_camera;
@@ -353,9 +355,13 @@ class UI_Renderer {
 
             //composite
             gl_FragColor = vec4(vec3(0.5), 0.3 * cursor);
-            gl_FragColor = mix(gl_FragColor, vec4(vec3(0.6), 0.5), grid);
-            gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(1.0, 0.3, 0.0), xAxis);
-            gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.3, 1.0, 0.0), yAxis);
+
+            if (u_showGrid){
+                gl_FragColor = mix(gl_FragColor, vec4(vec3(0.6), 0.5), grid);
+                gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(1.0, 0.3, 0.0), xAxis);
+                gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.3, 1.0, 0.0), yAxis);
+            }
+            
             gl_FragColor = mix(gl_FragColor, vec4(vec3(0.0), 1.0), cameraIcon.a * cameraMask);
             gl_FragColor = mix(gl_FragColor, vec4(vec3(0.3), 1.0), cameraBounds);
             gl_FragColor = mix(gl_FragColor, vec4(0.0, 0.5, 1.0, 1.0), selectionBox);
@@ -365,6 +371,7 @@ class UI_Renderer {
     private _gl: WebGL2RenderingContext;
     private _program: WebGLProgram;
     private _invViewMatrixUniform: Core.WGL.Uniform_Object;
+    private _showGridUniform: Core.WGL.Uniform_Object;
     private _dimensionUniform: Core.WGL.Uniform_Object;
     private _cursorUniform: Core.WGL.Uniform_Object;
     private _cameraUniform: Core.WGL.Uniform_Object;
@@ -382,6 +389,7 @@ class UI_Renderer {
             WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, UI_Renderer._fragmentSource)!
         )!;
         this._invViewMatrixUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_invViewMatrix', WGL.Uniform_Types.MAT3);
+        this._showGridUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_showGrid', WGL.Uniform_Types.BOOL);
         this._dimensionUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_dimensions', WGL.Uniform_Types.VEC2);
         this._cursorUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_cursor', WGL.Uniform_Types.VEC2);
         this._cameraUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_camera', WGL.Uniform_Types.VEC3);
@@ -436,9 +444,13 @@ class UI_Renderer {
     }
 
     updateSelection(pos: Core.Vector, enabled: boolean): void {
-        console.log("set")
         this._gl.useProgram(this._program);
         this._selectionUniform.set(pos.x, pos.y, enabled);
+    }
+
+    setGridState(state: boolean): void {
+        this._gl.useProgram(this._program);
+        this._showGridUniform.set(state);
     }
 
     render(): void {

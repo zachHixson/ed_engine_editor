@@ -406,6 +406,12 @@ function toolExit(mEvent: imEvent): void {
     }
 }
 
+function toggleGrid(): void {
+    const newState = !roomEditorStore.getGridState;
+    roomEditorStore.setGridState(newState);
+    RoomMainEventBus.emit('grid-state-changed', newState);
+}
+
 function actionMove({instId, instRef, newPos}: MoveProps, makeCommit = true): void {
     if (makeCommit){
         const {instRef, oldPos} = undoStore.cache.get('move_start');
@@ -723,7 +729,7 @@ function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
                 :icon="gridIcon"
                 :name="$t('room_editor.toggle_grid')"
                 :toggled="roomEditorStore.getGridState"
-                @tool-clicked="roomEditorStore.setGridState(!roomEditorStore.getGridState)"/>
+                @tool-clicked="toggleGrid"/>
         </div>
         <RoomEditWindow
             v-if="isRoomSelected"

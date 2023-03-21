@@ -1,4 +1,5 @@
 export enum Uniform_Types {
+    BOOL,
     INT,
     FLOAT,
     VEC2,
@@ -145,6 +146,7 @@ export class Uniform_Object {
 
     set(...args: any[]): void {
         switch(this._type){
+            case Uniform_Types.BOOL:
             case Uniform_Types.INT:
                 this._gl.uniform1i(this._loc, args[0]);
                 break;
