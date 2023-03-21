@@ -22,7 +22,7 @@ interface iAtlasData {
 }
 
 export class Instance_Renderer {
-    private static readonly DEFAULT_BUFFER_SIZE = 4096;
+    private static readonly DEFAULT_BUFFER_SIZE = 64;
     private static readonly _planeGeo = WGL.createPlaneGeo().map(i => (i + 1) * 8);
     private static readonly _planeUVs = WGL.createPlaneGeo().map(i => (i + 1) * 0.5);
     private static readonly _vertexSource = `
@@ -142,25 +142,24 @@ export class Instance_Renderer {
         this._outputTexture.resize(this._gl.canvas.width, this._gl.canvas.height);
     }
 
-    private _createAtlasData(){
-        const atlas = new Atlas(this._gl, this._tileSize, this._atlasSize, this._generateMipmaps);
-        const bufferLocations = new Array(Instance_Renderer.DEFAULT_BUFFER_SIZE);
+    private _createAtlasData(bufferSize = Instance_Renderer.DEFAULT_BUFFER_SIZE){
+        const buffersize = Math.round(bufferSize);
         const atlasData = {
-            atlas,
+            atlas: new Atlas(this._gl, this._tileSize, this._atlasSize, this._generateMipmaps),
             vao: this._gl.createVertexArray()!,
             planeGeoBuffer: new WGL.Attribute_Object(this._gl, this._program, 'a_planeVerts'),
             planeUVBuffer: new WGL.Attribute_Object(this._gl, this._program, 'a_uv'),
             positionBuffer: new WGL.Attribute_Object(this._gl, this._program, 'a_position'),
             spriteOffsetBuffer: new WGL.Attribute_Object(this._gl, this._program, 'a_spriteOffset'),
-            bufferLocations,
+            bufferLocations: new Array(buffersize),
             renderLength: 0,
         };
 
         this._gl.bindVertexArray(atlasData.vao);
         atlasData.planeGeoBuffer.set(new Float32Array(Instance_Renderer._planeGeo), 2, this._gl.FLOAT);
         atlasData.planeUVBuffer.set(new Float32Array(Instance_Renderer._planeUVs), 2, this._gl.FLOAT);
-        atlasData.positionBuffer.set(new Float32Array(Instance_Renderer.DEFAULT_BUFFER_SIZE * 2), 2, this._gl.FLOAT);
-        atlasData.spriteOffsetBuffer.set(new Uint8Array(Instance_Renderer.DEFAULT_BUFFER_SIZE * 2), 2, this._gl.UNSIGNED_BYTE);
+        atlasData.positionBuffer.set(new Float32Array(buffersize * 2), 2, this._gl.FLOAT);
+        atlasData.spriteOffsetBuffer.set(new Uint8Array(buffersize * 2), 2, this._gl.UNSIGNED_BYTE);
         atlasData.positionBuffer.setDivisor(1);
         atlasData.spriteOffsetBuffer.setDivisor(1);
 
@@ -174,6 +173,25 @@ export class Instance_Renderer {
         atlasData.positionBuffer.setSubData(new Float32Array([instance.pos.x, instance.pos.y]), bufferLocation * 4 * 2);
         atlasData.spriteOffsetBuffer.setSubData(new Int8Array([spriteoffset.x, spriteoffset.y]), bufferLocation * 2);
         atlasData.bufferLocations[bufferLocation] = instance.id;
+    }
+
+    private _growBuffer(atlasData: iAtlasData): void {
+        const instanceData = atlasData.bufferLocations.map(id => this._instanceMap.get(id));
+        const newBufferSize = atlasData.bufferLocations.length + Instance_Renderer.DEFAULT_BUFFER_SIZE;
+
+        //create new buffers
+        this._gl.bindVertexArray(atlasData.vao);
+        atlasData.positionBuffer.set(new Float32Array(newBufferSize * 2), 2, this._gl.FLOAT);
+        atlasData.spriteOffsetBuffer.set(new Uint8Array(newBufferSize * 2), 2, this._gl.UNSIGNED_BYTE);
+        atlasData.positionBuffer.setDivisor(1);
+        atlasData.spriteOffsetBuffer.setDivisor(1);
+        atlasData.bufferLocations = new Array(newBufferSize);
+
+        //fill old data
+        for (let i = 0; i < instanceData.length; i++){
+            const instance = instanceData[i]!;
+            this._setInstanceData(atlasData, i, instance.instance, instance.frameNumber);
+        }
     }
 
     setInstanceScale(scale: number): void {
@@ -212,6 +230,11 @@ export class Instance_Renderer {
         }
         else{
             atlasData.atlas.addImage(instance.frameDataId, image);
+        }
+
+        //setup instance data
+        if (atlasData.renderLength + 1 > atlasData.bufferLocations.length){
+            this._growBuffer(atlasData);
         }
 
         this._instanceMap.set(instance.id, {
