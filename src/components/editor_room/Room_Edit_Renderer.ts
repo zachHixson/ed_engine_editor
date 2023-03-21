@@ -329,7 +329,8 @@ class UI_Renderer {
             tUv = abs(tUv - 0.5) * 2.0;
             float grid = max(tUv.x, tUv.y) * 16.0;
             float invPWidth = 1.0 - u_pixelWidth;
-            grid = smoothstep(invPWidth + 14.6, invPWidth + 15.2, grid);
+            grid -= 16.0 - (u_pixelWidth * 1.5);
+            grid = smoothstep(0.0, u_pixelWidth, grid);
 
             //xy grid
             vec2 absUv = abs(v_uv);
@@ -367,7 +368,6 @@ class UI_Renderer {
             gl_FragColor = mix(gl_FragColor, vec4(vec3(0.0), 1.0), cameraIcon.a * cameraMask);
             gl_FragColor = mix(gl_FragColor, vec4(vec3(0.3), 1.0), cameraBounds);
             gl_FragColor = mix(gl_FragColor, vec4(0.0, 0.5, 1.0, 1.0), selectionBox);
-            //gl_FragColor = vec4(vec3(xAxis), 1.0);
         }
     `;
 
@@ -440,7 +440,7 @@ class UI_Renderer {
         const p2 = new Vector(1/(screenWidth/2), 0).multiplyMat3(transposed);
         const pixelWidth = (p2.x - p1.x);
 
-        console.log(pixelWidth * 16.0);
+        console.log(pixelWidth);
 
         //update uniforms
         this._gl.useProgram(this._program);
