@@ -328,14 +328,15 @@ class UI_Renderer {
             vec2 tUv = fract(v_uv / 16.0);
             tUv = abs(tUv - 0.5) * 2.0;
             float grid = max(tUv.x, tUv.y) * 16.0;
-            float invPWidth = 1.0 - u_pixelWidth;
             grid -= 16.0 - (u_pixelWidth * 1.5);
             grid = smoothstep(0.0, u_pixelWidth, grid);
 
             //xy grid
-            vec2 absUv = abs(v_uv);
-            float xAxis = 1.0 - step(0.5, absUv.y);
-            float yAxis = 1.0 - step(0.5, absUv.x);
+            vec2 absUv = abs(v_uv) * 2.0;
+            absUv -= (u_pixelWidth * 2.0) * .75;
+            absUv = 1.0 - smoothstep(0.0, u_pixelWidth * 2.0, absUv);
+            float xAxis = absUv.y;
+            float yAxis = absUv.x;
 
             //cursor
             vec2 cursorUv = abs(v_uv - u_cursor - 8.0) - 8.0;
@@ -361,8 +362,8 @@ class UI_Renderer {
 
             if (u_showGrid){
                 gl_FragColor = mix(gl_FragColor, vec4(vec3(0.6), 0.5), grid);
-                gl_FragColor = mix(gl_FragColor, vec4(1.0, 0.3, 0.0, 1.0), xAxis);
-                gl_FragColor = mix(gl_FragColor, vec4(0.3, 1.0, 0.0, 1.0), yAxis);
+                gl_FragColor = mix(gl_FragColor, vec4(1.0, 0.5, 0.0, 1.0), xAxis);
+                gl_FragColor = mix(gl_FragColor, vec4(0.5, 1.0, 0.0, 1.0), yAxis);
             }
             
             gl_FragColor = mix(gl_FragColor, vec4(vec3(0.0), 1.0), cameraIcon.a * cameraMask);
