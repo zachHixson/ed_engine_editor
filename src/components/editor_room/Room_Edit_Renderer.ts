@@ -55,6 +55,7 @@ export default class Room_Edit_Renderer {
     private _canvas: HTMLCanvasElement;
     private _navState: Core.NavState;
     private _roomRef: Core.Room | null = null;
+    private _selectedInstance: Core.Instance_Base | null = null;
     private _gl: WebGL2RenderingContext;
     private _program: WebGLProgram;
     private _instanceRenderer: Core.Instance_Renderer;
@@ -106,6 +107,7 @@ export default class Room_Edit_Renderer {
         }
 
         this._iconRenderer.setInstanceScale(ICON_PADDING);
+        this.setSelection(null);
     }
 
     get CELL_PX_WIDTH(){return 50};
@@ -154,8 +156,17 @@ export default class Room_Edit_Renderer {
         this._uiRenderer.updateCamera(this._roomRef.camera.pos, this._roomRef.camera.size);
     }
 
-    setSelection(instRef: Core.Instance_Base){
-        //
+    setSelection(instRef: Core.Instance_Base | null){
+        this._selectedInstance = instRef;
+
+        if (this._selectedInstance){
+            this._uiRenderer.updateSelection(this._selectedInstance.pos, true);
+        }
+        else{
+            this._uiRenderer.updateSelection(new Vector(0,0), false);
+        }
+        
+        this.queueRender();
     }
 
     setGridVisibility(newVisibility: boolean){
@@ -303,6 +314,7 @@ class UI_Renderer {
         precision highp float;
 
         uniform vec2 u_cursor;
+        uniform vec3 u_selection;
         uniform vec3 u_camera;
         uniform sampler2D u_cameraIcon;
 
@@ -328,10 +340,16 @@ class UI_Renderer {
             vec2 cameraUv = (v_uv - u_camera.xy) / 16.0;
             cameraUv.y = 1.0 - cameraUv.y;
             vec4 cameraIcon = texture2D(u_cameraIcon, cameraUv);
+
             vec2 cameraGradUv = abs(cameraUv - 0.5) * 2.0;
             float cameraGrad = max(cameraGradUv.x, cameraGradUv.y);
             float cameraMask = step(cameraGrad, 1.0);
             float cameraBounds = step(abs(cameraGrad - u_camera.z) - 0.05, 0.0);
+
+            //selection
+            vec2 selectionUv = abs(((v_uv - u_selection.xy) / 16.0) - 0.5) * 2.0;
+            float selectionBox = max(selectionUv.x, selectionUv.y);
+            selectionBox = step(abs(selectionBox - 1.0) - 0.1, 0.0) * u_selection.z;
 
             //composite
             gl_FragColor = vec4(vec3(0.5), 0.3 * cursor);
@@ -340,6 +358,7 @@ class UI_Renderer {
             gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.3, 1.0, 0.0), yAxis);
             gl_FragColor = mix(gl_FragColor, vec4(vec3(0.0), 1.0), cameraIcon.a * cameraMask);
             gl_FragColor = mix(gl_FragColor, vec4(vec3(0.3), 1.0), cameraBounds);
+            gl_FragColor = mix(gl_FragColor, vec4(0.0, 0.5, 1.0, 1.0), selectionBox);
         }
     `;
 
@@ -349,6 +368,7 @@ class UI_Renderer {
     private _dimensionUniform: Core.WGL.Uniform_Object;
     private _cursorUniform: Core.WGL.Uniform_Object;
     private _cameraUniform: Core.WGL.Uniform_Object;
+    private _selectionUniform: Core.WGL.Uniform_Object;
     private _cameraIconUniform: Core.WGL.Texture_Object;
     private _positionAttribute: Core.WGL.Attribute_Object;
     private _vao: WebGLVertexArrayObject;
@@ -365,6 +385,7 @@ class UI_Renderer {
         this._dimensionUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_dimensions', WGL.Uniform_Types.VEC2);
         this._cursorUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_cursor', WGL.Uniform_Types.VEC2);
         this._cameraUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_camera', WGL.Uniform_Types.VEC3);
+        this._selectionUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_selection', WGL.Uniform_Types.VEC3);
         this._cameraIconUniform = new WGL.Texture_Object(this._gl, this._program, 'u_cameraIcon');
         this._positionAttribute = new WGL.Attribute_Object(this._gl, this._program, 'a_position');
         this._vao = this._gl.createVertexArray()!;
@@ -412,6 +433,12 @@ class UI_Renderer {
     updateCamera(pos: Core.Vector, size: number): void {
         this._gl.useProgram(this._program);
         this._cameraUniform.set(pos.x - 8, pos.y - 8, size);
+    }
+
+    updateSelection(pos: Core.Vector, enabled: boolean): void {
+        console.log("set")
+        this._gl.useProgram(this._program);
+        this._selectionUniform.set(pos.x, pos.y, enabled);
     }
 
     render(): void {

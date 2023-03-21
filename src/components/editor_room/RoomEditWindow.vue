@@ -175,7 +175,7 @@ function instanceRemoved(instance: Instance_Base): void {
 }
 
 function setSelection(): void {
-    //renderer.setSelection(props.editorSelection!);
+    renderer.setSelection(props.editorSelection!);
 }
 
 function cameraChanged(): void {
