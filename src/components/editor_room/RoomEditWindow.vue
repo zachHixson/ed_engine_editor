@@ -84,6 +84,7 @@ onMounted(()=>{
     RoomMainEventBus.addEventListener('bgColorChanged', bgColorChanged);
     RoomMainEventBus.addEventListener('instance-added', instanceAdded);
     RoomMainEventBus.addEventListener('instance-removed', instanceRemoved);
+    RoomMainEventBus.addEventListener('instance-changed', instanceChanged);
     RoomMainEventBus.addEventListener('camera-changed', cameraChanged);
     RoomMainEventBus.addEventListener('room-changed', roomChange);
     RoomMainEventBus.addEventListener('grid-state-changed', toggleGrid);
@@ -104,6 +105,7 @@ onBeforeUnmount(()=>{
     RoomMainEventBus.removeEventListener('bgColorChanged', bgColorChanged);
     RoomMainEventBus.removeEventListener('instance-added', instanceAdded);
     RoomMainEventBus.removeEventListener('instance-removed', instanceRemoved);
+    RoomMainEventBus.removeEventListener('instance-changed', instanceChanged);
     RoomMainEventBus.removeEventListener('camera-changed', cameraChanged);
     RoomMainEventBus.removeEventListener('room-changed', roomChange);
     RoomMainEventBus.removeEventListener('grid-state-changed', toggleGrid);
@@ -180,6 +182,12 @@ function instanceAdded(instance: Instance_Base): void {
 function instanceRemoved(instance: Instance_Base): void {
     contentsBounds.value = props.selectedRoom.getContentsBounds();
     renderer.removeInstance(instance);
+}
+
+function instanceChanged(instance: Instance_Base): void {
+    contentsBounds.value = props.selectedRoom.getContentsBounds();
+    renderer.updateInstance(instance);
+    setSelection();
 }
 
 function setSelection(): void {

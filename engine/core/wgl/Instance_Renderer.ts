@@ -258,12 +258,23 @@ export class Instance_Renderer {
         }
 
         const atlasData = this._atlasPool[instanceData.pool];
-        const instanceLocation = instanceData.bufferLocation;
         const lastInstanceId = atlasData.bufferLocations[atlasData.renderLength - 1];
         const lastInstance = this._instanceMap.get(lastInstanceId)!;
 
-        this._setInstanceData(atlasData, instanceLocation, lastInstance.instance, lastInstance.frameNumber);
+        this._setInstanceData(atlasData, instanceData.bufferLocation, lastInstance.instance, lastInstance.frameNumber);
         atlasData.renderLength--;
+    }
+
+    updateInstance(instance: Instance_Base): void {
+        const instanceData = this._instanceMap.get(instance.id);
+
+        if (!instanceData) {
+            console.warn(`Warning: Attempting to update instance ID '${instance.id}' that does not exist in renderer`);
+            return;
+        }
+
+        const atlasData = this._atlasPool[instanceData.pool];
+        this._setInstanceData(atlasData, instanceData.bufferLocation, instance, instanceData.frameNumber);
     }
 
     clear(): void {

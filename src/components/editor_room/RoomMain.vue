@@ -430,7 +430,7 @@ function actionMove({instId, instRef, newPos}: MoveProps, makeCommit = true): vo
     }
 
     props.selectedRoom.setInstancePosition(instRef, newPos!);
-    RoomMainEventBus.emit('instances-changed');
+    RoomMainEventBus.emit('instance-changed', instRef);
 }
 
 function actionAdd({objId, instRefList = [], pos}: AddProps, makeCommit = true): void {
@@ -509,7 +509,7 @@ function actionInstanceChange({newState, instRef}: InstanceChangeProps, makeComm
 
     Object.assign(curInstance, newState);
     
-    RoomMainEventBus.emit('instances-changed');
+    RoomMainEventBus.emit('instance-changed', curInstance);
 
     if (makeCommit){
         let data = {newState, oldState, instRef: curInstance} satisfies InstanceChangeProps;
@@ -572,7 +572,7 @@ function actionExitAdd({exitRef, pos}: ExitAddProps, makeCommit = true): Core.Ex
 
     newExit.name = newExitName;
     
-    RoomMainEventBus.emit('instances-changed');
+    RoomMainEventBus.emit('instance-added', newExit);
 
     if (makeCommit){
         const data = {exitRef: newExit, pos: pos.clone()} satisfies ExitAddProps;
@@ -588,7 +588,7 @@ function actionExitChange({newState}: ExitChangeProps, makeCommit = true): void 
 
     Object.assign(selected, newState);
 
-    RoomMainEventBus.emit('instances-changed');
+    RoomMainEventBus.emit('instance-changed', editorSelection);
 
     if (makeCommit){
         const data = {newState, oldState, exitRef: selected} satisfies ExitChangeProps;
@@ -597,10 +597,10 @@ function actionExitChange({newState}: ExitChangeProps, makeCommit = true): void 
 }
 
 function actionExitDelete({exitId}: ExitDeleteProps, makeCommit = true): void {
-    let exitRef = props.selectedRoom.removeExit(exitId)!;
+    const exitRef = props.selectedRoom.removeExit(exitId)!;
     editorSelection.value = null;
 
-    RoomMainEventBus.emit('instances-changed');
+    RoomMainEventBus.emit('instance-removed', exitRef);
 
     if (makeCommit){
         let data = {exitId, exitRef} satisfies ExitDeleteProps;
@@ -625,7 +625,7 @@ function actionRoomPropChange({newState}: RoomPropChangeProps, makeCommit = true
 
 function revertMove({instRef, oldPos}: MoveProps): void {
     props.selectedRoom.setInstancePosition(instRef!, oldPos!);
-    RoomMainEventBus.emit('instances-changed');
+    RoomMainEventBus.emit('instance-changed', instRef);
 }
 
 function revertAdd({instRefList = []}: AddProps): void {
@@ -637,22 +637,21 @@ function revertAdd({instRefList = []}: AddProps): void {
         }
 
         props.selectedRoom.removeInstance(instRef.id);
+        RoomMainEventBus.emit('instance-removed', instRef);
     }
-
-    RoomMainEventBus.emit('instances-changed');
 }
 
 function revertDelete({instRefList = []}: DeleteProps): void {
     for (let i = 0; i < instRefList.length; i++){
-        props.selectedRoom.addInstance(instRefList[i]);
+        const instRef = instRefList[i];
+        props.selectedRoom.addInstance(instRef);
+        RoomMainEventBus.emit('instance-added', instRef);
     }
-
-    RoomMainEventBus.emit('instances-changed');
 }
 
 function revertInstanceChange({oldState, instRef}: InstanceChangeProps): void {
     Object.assign(instRef!, oldState);
-    RoomMainEventBus.emit('instances-changed');
+    RoomMainEventBus.emit('instance-changed', instRef);
 }
 
 function revertInstanceGroupChange({add, groupName, newName, remove, oldIdx, instRef}: InstanceGroupChangeProps): void {
@@ -686,19 +685,19 @@ function revertExitAdd({exitRef}: ExitAddProps): void {
     }
 
     props.selectedRoom.removeExit(exitRef!.id);
-    RoomMainEventBus.emit('instances-changed');
+    RoomMainEventBus.emit('instance-changed', exitRef);
 }
 
 function revertExitDelete({exitRef}: ExitDeleteProps): void {
     const exit = new Core.Exit(-1);
     Object.assign(exit, exitRef);
     props.selectedRoom.addExit(exit);
-    RoomMainEventBus.emit('instances-changed');
+    RoomMainEventBus.emit('instance-changed', exitRef);
 }
 
 function revertExitChange({oldState, exitRef}: ExitChangeProps): void {
     Object.assign(exitRef!, oldState);
-    RoomMainEventBus.emit('instances-changed');
+    RoomMainEventBus.emit('instance-changed', exitRef);
 }
 
 function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
