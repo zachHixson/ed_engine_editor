@@ -52,7 +52,8 @@ export class Object_Instance extends Instance_Base{
     get TYPE(){return INSTANCE_TYPE.INSTANCE}
     get COLLISION_OVERRIDES(){return COLLISION_OVERRIDE};
 
-    get zDepth(){return (this.zDepthOverride) ? this.zDepthOverride : this.objRef.zDepth}
+    get userDepth(){return (this.zDepthOverride) ? this.zDepthOverride : this.objRef.zDepth};
+    get zDepth(){return this.userDepth - this.depthOffset};
     get hasEditorFrame(){return this.objRef.hasEditorFrame};
     get editorFrameNum(){return this.objRef.editorFrameNum};
     get frameDataId(){return this.objRef?.sprite?.id ?? Object_Instance.DEFAULT_INSTANCE_ICON_ID};

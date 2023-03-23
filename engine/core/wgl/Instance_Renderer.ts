@@ -21,8 +21,7 @@ interface iAtlasData {
     renderLength: number,
 }
 
-const DEPTH_INCREMENT = 0.0001;
-let tempDepth = 0 - DEPTH_INCREMENT;
+const DEPTH_OFFSET_INCREMENT = Math.pow(10, -10);
 
 export class Instance_Renderer {
     private static readonly DEFAULT_BUFFER_SIZE = 64;
@@ -97,6 +96,7 @@ export class Instance_Renderer {
     //renderer properties
     private _tileSize: number;
     private _atlasSize: number;
+    private _depthOffsets = new Map<number, number>();
 
     //webGL properties
     private _gl: WebGL2RenderingContext;
@@ -181,11 +181,9 @@ export class Instance_Renderer {
         const spriteoffset = atlasData.atlas.getImageOffset(instance.frameDataId, imageFrame).divideScalar(this._tileSize);
         this._gl.bindVertexArray(atlasData.vao);
 
-        atlasData.positionBuffer.setSubData(new Float32Array([instance.pos.x, instance.pos.y, tempDepth]), bufferLocation * 4 * 3);
+        atlasData.positionBuffer.setSubData(new Float32Array([instance.pos.x, instance.pos.y, instance.zDepth]), bufferLocation * 4 * 3);
         atlasData.spriteOffsetBuffer.setSubData(new Int8Array([spriteoffset.x, spriteoffset.y]), bufferLocation * 2);
         atlasData.bufferLocations[bufferLocation] = instance.id;
-        console.log(tempDepth);
-        tempDepth -= DEPTH_INCREMENT;
     }
 
     private _growBuffer(atlasData: iAtlasData): void {
@@ -207,6 +205,14 @@ export class Instance_Renderer {
         }
     }
 
+    private _getNextDepthOffset(userDepth: number): number {
+        const currentOffset = this._depthOffsets.get(userDepth) ?? 0;
+        const nextOffset = currentOffset + DEPTH_OFFSET_INCREMENT;
+
+        this._depthOffsets.set(userDepth, nextOffset);
+        return nextOffset;
+    }
+
     setInstanceScale(scale: number): void {
         this._gl.useProgram(this._program);
         this._instanceScaleUniform.set(scale);
@@ -219,6 +225,7 @@ export class Instance_Renderer {
 
     addInstance(instance: Instance_Base, startFrame = 0): void {
         const image = instance.frameData;
+        const depthOffset = instance.depthOffset == 0 ? this._getNextDepthOffset(instance.userDepth) : instance.depthOffset;
         let availableAtlas = 0;
         let atlasData: iAtlasData | null = null;
 
@@ -249,6 +256,8 @@ export class Instance_Renderer {
         if (atlasData.renderLength + 1 > atlasData.bufferLocations.length){
             this._growBuffer(atlasData);
         }
+
+        instance.depthOffset = depthOffset;
 
         this._instanceMap.set(instance.id, {
             instance,

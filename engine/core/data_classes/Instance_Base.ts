@@ -14,6 +14,7 @@ export abstract class Instance_Base{
     name: string;
     pos: Vector;
     groups: string[] = [];
+    depthOffset: number = 0;
 
     constructor(id: number, pos: Vector = new Vector()){
         this.id = id;
@@ -21,6 +22,7 @@ export abstract class Instance_Base{
         this.pos = pos;
     }
 
+    get userDepth(){return 0};
     get zDepth(){return 0};
     set zDepth(val){};
 
