@@ -322,7 +322,6 @@ export class Render_Texture {
         this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_WRAP_T, this._gl.CLAMP_TO_EDGE);
 
         if (depthBuffer){
-            console.log("This logs out, so I know it gets created")
             this._depthBuffer = this._gl.createRenderbuffer();
             this._gl.bindRenderbuffer(this._gl.RENDERBUFFER, this._depthBuffer);
             this._gl.renderbufferStorage(this._gl.RENDERBUFFER, this._gl.DEPTH_COMPONENT16, width, height);
@@ -353,7 +352,6 @@ export class Render_Texture {
         if (this._depthBuffer != null){
             this._gl.bindRenderbuffer(this._gl.RENDERBUFFER, this._depthBuffer);
             this._gl.renderbufferStorage(this._gl.RENDERBUFFER, this._gl.DEPTH_COMPONENT16, width, height);
-            console.log(width, height);
             this._gl.bindRenderbuffer(this._gl.RENDERBUFFER, null);
         }
     }

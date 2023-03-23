@@ -149,7 +149,6 @@ export class Instance_Renderer {
     }
 
     resize(): void {
-        console.log("Renderer Resize Event")
         this._gl.viewport(0, 0, this._gl.canvas.width, this._gl.canvas.height);
         this._outputTexture.resize(this._gl.canvas.width, this._gl.canvas.height);
     }
