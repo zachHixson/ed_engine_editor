@@ -21,7 +21,7 @@ interface iAtlasData {
     renderLength: number,
 }
 
-const DEPTH_OFFSET_INCREMENT = Math.pow(10, -10);
+const DEPTH_OFFSET_INCREMENT = Math.pow(10, -7);
 
 export class Instance_Renderer {
     private static readonly DEFAULT_BUFFER_SIZE = 64;
