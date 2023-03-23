@@ -82,7 +82,7 @@ export default class Room_Edit_Renderer {
             WGL.createShader(this._gl, this._gl.VERTEX_SHADER, Room_Edit_Renderer._vertexSource)!,
             WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, Room_Edit_Renderer._fragmentSource)!
         )!;
-        this._instanceRenderer = new Core.Instance_Renderer(this._gl, Core.Sprite.DIMENSIONS, 1024, false);
+        this._instanceRenderer = new Core.Instance_Renderer(this._gl, Core.Sprite.DIMENSIONS, 1024, false, true);
         this._iconRenderer = new Core.Instance_Renderer(this._gl, 128, 512, true);
         this._uiRenderer = new UI_Renderer(this._gl);
         this._instanceBuffer = new WGL.Texture_Object(this._gl, this._program, 'u_instanceBuffer', this._instanceRenderer.texture);

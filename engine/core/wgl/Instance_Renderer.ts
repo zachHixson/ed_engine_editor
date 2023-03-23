@@ -21,6 +21,9 @@ interface iAtlasData {
     renderLength: number,
 }
 
+const DEPTH_INCREMENT = 0.0001;
+let tempDepth = 0 - DEPTH_INCREMENT;
+
 export class Instance_Renderer {
     private static readonly DEFAULT_BUFFER_SIZE = 64;
     private static readonly _planeGeo = WGL.createPlaneGeo().map(i => (i + 1) * 8);
@@ -29,7 +32,7 @@ export class Instance_Renderer {
         uniform mat3 u_viewMatrix;
 
         attribute vec2 a_planeVerts;
-        attribute vec2 a_position;
+        attribute vec3 a_position;
         attribute vec2 a_spriteOffset;
         attribute vec2 a_uv;
 
@@ -40,12 +43,12 @@ export class Instance_Renderer {
             v_uv = a_uv;
             v_spriteOffset = a_spriteOffset;
 
-            vec2 worldPos = (a_planeVerts + a_position);
+            vec2 worldPos = (a_planeVerts + a_position.xy);
             vec3 clipPos = vec3(worldPos, 1.0) * u_viewMatrix;
-            gl_Position = vec4(clipPos, 1.0);
+            gl_Position = vec4(clipPos.xy, a_position.z, 1.0);
         }
     `;
-    private static readonly _fragmentSource = `
+    private static _getFragmentSource(discardTransparent: boolean): string {return `
         precision highp float;
 
         uniform int u_tileSize;
@@ -80,9 +83,16 @@ export class Instance_Renderer {
             //color override
             tex = mix(tex, vec4(u_colorOverride.rgb, 1.0), u_colorOverride.a * tex.a);
 
+            ${
+                discardTransparent ?
+                `if (tex.a <= 0.0){
+                    discard;
+                }`:''
+            }
+
             gl_FragColor = tex;
         }
-    `;
+    `}
 
     //renderer properties
     private _tileSize: number;
@@ -104,7 +114,7 @@ export class Instance_Renderer {
     private _instanceMap = new Map<number, iInstanceData>();
     private _atlasPool = new Array<iAtlasData>();
 
-    constructor(gl: WebGL2RenderingContext, tileSize: number, atlasSize: number, generateMipmaps = false){
+    constructor(gl: WebGL2RenderingContext, tileSize: number, atlasSize: number, generateMipmaps = false, useDepth = false){
         this._tileSize = tileSize;
         this._atlasSize = atlasSize;
 
@@ -113,7 +123,7 @@ export class Instance_Renderer {
         this._program = WGL.createProgram(
             this._gl,
             WGL.createShader(this._gl, this._gl.VERTEX_SHADER, Instance_Renderer._vertexSource)!,
-            WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, Instance_Renderer._fragmentSource)!    
+            WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, Instance_Renderer._getFragmentSource(useDepth))!    
         )!;
         this._generateMipmaps = generateMipmaps;
         this._viewMatrixUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_viewMatrix', WGL.Uniform_Types.MAT3);
@@ -122,7 +132,7 @@ export class Instance_Renderer {
         this._instanceScaleUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_instanceScale', WGL.Uniform_Types.FLOAT);
         this._colorOverrideUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_colorOverride', WGL.Uniform_Types.VEC4);
         this._atlasTextureUniform = new WGL.Texture_Object(this._gl, this._program, 'u_atlasTexture');
-        this._outputTexture = new WGL.Render_Texture(this._gl, this._gl.canvas.width, this._gl.canvas.height);
+        this._outputTexture = new WGL.Render_Texture(this._gl, this._gl.canvas.width, this._gl.canvas.height, useDepth);
 
         this._gl.useProgram(this._program);
         this._tileSizeUniform.set(this._tileSize);
@@ -139,6 +149,8 @@ export class Instance_Renderer {
     }
 
     resize(): void {
+        console.log("Renderer Resize Event")
+        this._gl.viewport(0, 0, this._gl.canvas.width, this._gl.canvas.height);
         this._outputTexture.resize(this._gl.canvas.width, this._gl.canvas.height);
     }
 
@@ -158,7 +170,7 @@ export class Instance_Renderer {
         this._gl.bindVertexArray(atlasData.vao);
         atlasData.planeGeoBuffer.set(new Float32Array(Instance_Renderer._planeGeo), 2, this._gl.FLOAT);
         atlasData.planeUVBuffer.set(new Float32Array(Instance_Renderer._planeUVs), 2, this._gl.FLOAT);
-        atlasData.positionBuffer.set(new Float32Array(buffersize * 2), 2, this._gl.FLOAT);
+        atlasData.positionBuffer.set(new Float32Array(buffersize * 3), 3, this._gl.FLOAT);
         atlasData.spriteOffsetBuffer.set(new Uint8Array(buffersize * 2), 2, this._gl.UNSIGNED_BYTE);
         atlasData.positionBuffer.setDivisor(1);
         atlasData.spriteOffsetBuffer.setDivisor(1);
@@ -170,9 +182,11 @@ export class Instance_Renderer {
         const spriteoffset = atlasData.atlas.getImageOffset(instance.frameDataId, imageFrame).divideScalar(this._tileSize);
         this._gl.bindVertexArray(atlasData.vao);
 
-        atlasData.positionBuffer.setSubData(new Float32Array([instance.pos.x, instance.pos.y]), bufferLocation * 4 * 2);
+        atlasData.positionBuffer.setSubData(new Float32Array([instance.pos.x, instance.pos.y, tempDepth]), bufferLocation * 4 * 3);
         atlasData.spriteOffsetBuffer.setSubData(new Int8Array([spriteoffset.x, spriteoffset.y]), bufferLocation * 2);
         atlasData.bufferLocations[bufferLocation] = instance.id;
+        console.log(tempDepth);
+        tempDepth -= DEPTH_INCREMENT;
     }
 
     private _growBuffer(atlasData: iAtlasData): void {
@@ -181,7 +195,7 @@ export class Instance_Renderer {
 
         //create new buffers
         this._gl.bindVertexArray(atlasData.vao);
-        atlasData.positionBuffer.set(new Float32Array(newBufferSize * 2), 2, this._gl.FLOAT);
+        atlasData.positionBuffer.set(new Float32Array(newBufferSize * 3), 3, this._gl.FLOAT);
         atlasData.spriteOffsetBuffer.set(new Uint8Array(newBufferSize * 2), 2, this._gl.UNSIGNED_BYTE);
         atlasData.positionBuffer.setDivisor(1);
         atlasData.spriteOffsetBuffer.setDivisor(1);
@@ -207,7 +221,7 @@ export class Instance_Renderer {
     addInstance(instance: Instance_Base, startFrame = 0): void {
         const image = instance.frameData;
         let availableAtlas = 0;
-        let atlasData: typeof this._atlasPool[number] | null = null;
+        let atlasData: iAtlasData | null = null;
 
         while (!atlasData){
             if (!this._atlasPool[availableAtlas]){
@@ -291,9 +305,14 @@ export class Instance_Renderer {
     render(): void {
         this._gl.useProgram(this._program);
         this._outputTexture.setAsRenderTarget();
+        
         this._gl.viewport(0, 0, this._gl.canvas.width, this._gl.canvas.height);
+        
+        this._gl.enable(this._gl.DEPTH_TEST);
+        this._gl.depthMask(true);
+        this._gl.depthFunc(this._gl.LEQUAL);
         this._gl.clearColor(0, 0, 0, 0);
-        this._gl.clear(this._gl.COLOR_BUFFER_BIT);
+        this._gl.clear(this._gl.COLOR_BUFFER_BIT | this._gl.DEPTH_BUFFER_BIT);
 
         //render each atlas as a draw call
         for (let i = 0; i < this._atlasPool.length; i++){
@@ -323,6 +342,9 @@ export class Instance_Renderer {
 
             this._atlasTextureUniform.deactivate();
         }
+
+        this._gl.disable(this._gl.DEPTH_TEST);
+        this._gl.depthMask(false);
 
         this._outputTexture.unsetRenderTarget();
     }

@@ -305,9 +305,10 @@ export class Texture_Object {
 export class Render_Texture {
     private _gl: WebGL2RenderingContext;
     private _texture: WebGLTexture;
+    private _depthBuffer: WebGLRenderbuffer | null = null;
     private _frameBuffer: WebGLFramebuffer;
 
-    constructor(gl: WebGL2RenderingContext, width: number, height: number){
+    constructor(gl: WebGL2RenderingContext, width: number, height: number, depthBuffer = false){
         this._gl = gl;
         this._texture = this._gl.createTexture()!;
         this._frameBuffer = this._gl.createFramebuffer()!;
@@ -316,12 +317,21 @@ export class Render_Texture {
         this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, this._frameBuffer);
         this._gl.framebufferTexture2D(this._gl.FRAMEBUFFER, this._gl.COLOR_ATTACHMENT0, this._gl.TEXTURE_2D, this._texture, 0);
 
-        this.resize(width, height);
         this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MIN_FILTER, this._gl.LINEAR);
         this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_WRAP_S, this._gl.CLAMP_TO_EDGE);
         this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_WRAP_T, this._gl.CLAMP_TO_EDGE);
 
+        if (depthBuffer){
+            console.log("This logs out, so I know it gets created")
+            this._depthBuffer = this._gl.createRenderbuffer();
+            this._gl.bindRenderbuffer(this._gl.RENDERBUFFER, this._depthBuffer);
+            this._gl.renderbufferStorage(this._gl.RENDERBUFFER, this._gl.DEPTH_COMPONENT16, width, height);
+            this._gl.framebufferRenderbuffer(this._gl.FRAMEBUFFER, this._gl.DEPTH_ATTACHMENT, this._gl.RENDERBUFFER, this._depthBuffer);
+            this._gl.bindRenderbuffer(this._gl.RENDERBUFFER, null);
+        }
+
         this._gl.bindFramebuffer(this._gl.FRAMEBUFFER, null);
+        this.resize(width, height);
     }
 
     get texture(){return this._texture}
@@ -339,6 +349,13 @@ export class Render_Texture {
             this._gl.UNSIGNED_BYTE,
             null
         );
+
+        if (this._depthBuffer != null){
+            this._gl.bindRenderbuffer(this._gl.RENDERBUFFER, this._depthBuffer);
+            this._gl.renderbufferStorage(this._gl.RENDERBUFFER, this._gl.DEPTH_COMPONENT16, width, height);
+            console.log(width, height);
+            this._gl.bindRenderbuffer(this._gl.RENDERBUFFER, null);
+        }
     }
 
     setAsRenderTarget(): void {
