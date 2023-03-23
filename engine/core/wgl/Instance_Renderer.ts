@@ -284,6 +284,7 @@ export class Instance_Renderer {
         const lastInstance = this._instanceMap.get(lastInstanceId)!;
 
         this._setInstanceData(atlasData, instanceData.bufferLocation, lastInstance.instance, lastInstance.frameNumber);
+        lastInstance.bufferLocation = instanceData.bufferLocation;
         atlasData.renderLength--;
     }
 
