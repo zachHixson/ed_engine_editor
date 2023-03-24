@@ -47,7 +47,7 @@ export class Instance_Renderer {
             gl_Position = vec4(clipPos.xy, a_position.z, 1.0);
         }
     `;
-    private static _getFragmentSource(discardTransparent: boolean): string {return `
+    private static _getFragmentSource(repeatEdges: boolean, discardTransparent: boolean): string {return `
         precision highp float;
 
         uniform int u_tileSize;
@@ -59,6 +59,13 @@ export class Instance_Renderer {
         varying vec2 v_uv;
         varying vec2 v_spriteOffset;
 
+        vec4 atlasMap(vec4 uv, float tileScaleFac, float scale){
+            uv = (uv - 0.5) * scale + 0.5;
+            uv += v_spriteOffset.xyxy;
+            uv /= tileScaleFac;
+            return uv;
+        }
+
         void main(){
             float tileSize = float(u_tileSize);
             float atlasSize = float(u_atlasSize);
@@ -67,26 +74,42 @@ export class Instance_Renderer {
 
             //main atlas mapping
             vec2 uv = vec2(v_uv.x, 1.0 - v_uv.y);
-            uv = (uv - 0.5) * invInstanceScale + 0.5;
-            uv += v_spriteOffset;
-            uv /= scaleFac;
+            uv = atlasMap(vec4(uv, 0.0, 0.0), scaleFac, invInstanceScale).xy;
 
-            //scale mask
-            vec2 maskUv = abs(v_uv - 0.5) * 2.0;
-            float mask = max(maskUv.x, maskUv.y);
-            mask = 1.0 - step(u_instanceScale, mask);
+            ${
+                //eliminate pixel gap between atlased sprites
+                repeatEdges ?
+                `
+                float clipScale = 1.0 - (1.0 / scaleFac / 2.0);
+                vec4 bounds = vec4(1.0, 1.0, 0.0, 0.0);
+                bounds = atlasMap(bounds, scaleFac, 0.98);
+                uv = max(min(uv, bounds.xy), bounds.zw);
+                `:``
+            }
 
             vec4 tex = texture2D(u_atlasTexture, uv);
-            tex.a *= mask;
+            
+            ${
+                //apply "scale mask" if repeatEdges is disabled to crop out bordering atlas sprites
+                !repeatEdges ?
+                `
+                vec2 maskUv = abs(v_uv - 0.5) * 2.0;
+                float mask = max(maskUv.x, maskUv.y);
+                mask = 1.0 - step(u_instanceScale, mask);
+                tex.a *= mask;
+                ` :''
+            }
 
             //color override
             tex = mix(tex, vec4(u_colorOverride.rgb, 1.0), u_colorOverride.a * tex.a);
 
             ${
                 discardTransparent ?
-                `if (tex.a <= 0.0){
+                `
+                if (tex.a <= 0.0){
                     discard;
-                }`:''
+                }
+                `:''
             }
 
             gl_FragColor = tex;
@@ -108,7 +131,6 @@ export class Instance_Renderer {
     private _instanceScaleUniform: WGL.Uniform_Object;
     private _colorOverrideUniform: WGL.Uniform_Object;
     private _atlasTextureUniform: WGL.Texture_Object;
-    private _outputTexture: WGL.Render_Texture;
 
     //instance properties
     private _instanceMap = new Map<number, iInstanceData>();
@@ -123,7 +145,7 @@ export class Instance_Renderer {
         this._program = WGL.createProgram(
             this._gl,
             WGL.createShader(this._gl, this._gl.VERTEX_SHADER, Instance_Renderer._vertexSource)!,
-            WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, Instance_Renderer._getFragmentSource(useDepth))!    
+            WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, Instance_Renderer._getFragmentSource(!generateMipmaps, useDepth))!    
         )!;
         this._generateMipmaps = generateMipmaps;
         this._viewMatrixUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_viewMatrix', WGL.Uniform_Types.MAT3);
@@ -132,7 +154,6 @@ export class Instance_Renderer {
         this._instanceScaleUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_instanceScale', WGL.Uniform_Types.FLOAT);
         this._colorOverrideUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_colorOverride', WGL.Uniform_Types.VEC4);
         this._atlasTextureUniform = new WGL.Texture_Object(this._gl, this._program, 'u_atlasTexture');
-        this._outputTexture = new WGL.Render_Texture(this._gl, this._gl.canvas.width, this._gl.canvas.height, useDepth);
 
         this._gl.useProgram(this._program);
         this._tileSizeUniform.set(this._tileSize);
@@ -141,8 +162,6 @@ export class Instance_Renderer {
         this._instanceScaleUniform.set(1);
     }
 
-    get texture(){return this._outputTexture.texture}
-
     updateViewMatrix(viewMat: Mat3): void {
         this._gl.useProgram(this._program);
         this._viewMatrixUniform.set(false, viewMat.data);
@@ -150,7 +169,6 @@ export class Instance_Renderer {
 
     resize(): void {
         this._gl.viewport(0, 0, this._gl.canvas.width, this._gl.canvas.height);
-        this._outputTexture.resize(this._gl.canvas.width, this._gl.canvas.height);
     }
 
     private _createAtlasData(bufferSize = Instance_Renderer.DEFAULT_BUFFER_SIZE){
@@ -313,15 +331,12 @@ export class Instance_Renderer {
 
     render(): void {
         this._gl.useProgram(this._program);
-        this._outputTexture.setAsRenderTarget();
         
         this._gl.viewport(0, 0, this._gl.canvas.width, this._gl.canvas.height);
         
         this._gl.enable(this._gl.DEPTH_TEST);
         this._gl.depthMask(true);
         this._gl.depthFunc(this._gl.LEQUAL);
-        this._gl.clearColor(0, 0, 0, 0);
-        this._gl.clear(this._gl.COLOR_BUFFER_BIT | this._gl.DEPTH_BUFFER_BIT);
 
         //render each atlas as a draw call
         for (let i = 0; i < this._atlasPool.length; i++){
@@ -354,12 +369,6 @@ export class Instance_Renderer {
 
         this._gl.disable(this._gl.DEPTH_TEST);
         this._gl.depthMask(false);
-
-        this._outputTexture.unsetRenderTarget();
-    }
-
-    destroy(): void {
-        this._outputTexture.destroy();
     }
 }
 

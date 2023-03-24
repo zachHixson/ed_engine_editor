@@ -109,7 +109,6 @@ onBeforeUnmount(()=>{
     RoomMainEventBus.removeEventListener('camera-changed', cameraChanged);
     RoomMainEventBus.removeEventListener('room-changed', roomChange);
     RoomMainEventBus.removeEventListener('grid-state-changed', toggleGrid);
-    renderer.destroy();
 });
 
 function mouseDown(event: MouseEvent): void {

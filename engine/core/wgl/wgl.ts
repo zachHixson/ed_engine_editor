@@ -9,18 +9,21 @@ export enum Uniform_Types {
 }
 
 export function getGLContext(canvas: HTMLCanvasElement): WebGL2RenderingContext | null {
-    const ctx = canvas.getContext('webgl2') ?? getPolyfill(canvas);
+    const settings = {
+        alpha: false
+    };
+    const ctx = canvas.getContext('webgl2', settings) ?? getPolyfill(canvas, settings);
 
     if (!ctx){
         console.error('Could not create webgl context');
         return null;
     }
 
-    return ctx;
+    return ctx as WebGL2RenderingContext;
 }
 
-function getPolyfill(canvas: HTMLCanvasElement): WebGL2RenderingContext | null {
-    const ctx = canvas.getContext('webgl') as any;
+function getPolyfill(canvas: HTMLCanvasElement, settings: any): WebGL2RenderingContext | null {
+    const ctx = canvas.getContext('webgl', settings) as any;
     const vboExt = ctx.getExtension('OES_vertex_array_object');
     const instanceExt = ctx.getExtension('ANGLE_instanced_arrays');
 

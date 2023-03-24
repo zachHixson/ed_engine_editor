@@ -12,62 +12,15 @@ const ICON_PADDING = 0.85;
 let iconsLoaded = false;
 
 export default class Room_Edit_Renderer {
-    private static readonly _planeGeo = WGL.createPlaneGeo();
-    private static readonly _planeUVs = WGL.createPlaneGeo().map(i => (i + 1) * 0.5);
-    private static readonly _vertexSource = `
-        attribute vec2 a_position;
-        attribute vec2 a_uv;
-
-        varying vec2 v_uv;
-
-        void main(){
-            v_uv = a_uv;
-            gl_Position = vec4(a_position, 1.0, 1.0);
-        }
-    `;
-    private static readonly _fragmentSource = `
-        precision highp float;
-
-        uniform sampler2D u_instanceBuffer;
-        uniform sampler2D u_iconBuffer;
-        uniform sampler2D u_uiBuffer;
-        uniform vec3 u_bgColor;
-        uniform int u_drawGrid;
-
-        varying vec2 v_uv;
-
-        void main(){
-            vec3 outCol = u_bgColor;
-
-            vec4 instanceBuffer = texture2D(u_instanceBuffer, v_uv);
-            vec4 iconBuffer = texture2D(u_iconBuffer, v_uv);
-            vec4 uiBuffer = texture2D(u_uiBuffer, v_uv);
-
-            outCol = mix(outCol, instanceBuffer.rgb, instanceBuffer.a);
-            outCol = mix(outCol, iconBuffer.rgb, iconBuffer.a);
-            outCol = mix(outCol, uiBuffer.rgb, uiBuffer.a);
-
-            gl_FragColor = vec4(outCol, 1.0);
-        }
-    `;
-
     private _nextDrawCall: number | null = null;
     private _canvas: HTMLCanvasElement;
     private _navState: Core.NavState;
     private _roomRef: Core.Room | null = null;
     private _selectedInstance: Core.Instance_Base | null = null;
     private _gl: WebGL2RenderingContext;
-    private _program: WebGLProgram;
     private _instanceRenderer: Core.Instance_Renderer;
     private _iconRenderer: Core.Instance_Renderer;
     private _uiRenderer: UI_Renderer;
-    private _instanceBuffer: Core.WGL.Texture_Object;
-    private _iconBuffer: Core.WGL.Texture_Object;
-    private _uiBuffer: Core.WGL.Texture_Object;
-    private _bgColorUniform: Core.WGL.Uniform_Object;
-    private _positionAttribute: Core.WGL.Attribute_Object;
-    private _uvAttribute: Core.WGL.Attribute_Object;
-    private _vao: WebGLVertexArrayObject;
     private _viewMatrix = new Mat3();
     private _viewMatrixInv = new Mat3();
     private _viewMatrixNeedsUpdate = true;
@@ -77,28 +30,13 @@ export default class Room_Edit_Renderer {
         this._canvas = canvas;
         this._navState = navState;
         this._gl = WGL.getGLContext(this._canvas)!;
-        this._program = WGL.createProgram(
-            this._gl,
-            WGL.createShader(this._gl, this._gl.VERTEX_SHADER, Room_Edit_Renderer._vertexSource)!,
-            WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, Room_Edit_Renderer._fragmentSource)!
-        )!;
         this._instanceRenderer = new Core.Instance_Renderer(this._gl, Core.Sprite.DIMENSIONS, 1024, false, true);
         this._iconRenderer = new Core.Instance_Renderer(this._gl, 128, 512, true);
         this._uiRenderer = new UI_Renderer(this._gl);
-        this._instanceBuffer = new WGL.Texture_Object(this._gl, this._program, 'u_instanceBuffer', this._instanceRenderer.texture);
-        this._iconBuffer = new WGL.Texture_Object(this._gl, this._program, 'u_iconBuffer', this._iconRenderer.texture);
-        this._uiBuffer = new WGL.Texture_Object(this._gl, this._program, 'u_uiBuffer', this._uiRenderer.texture);
-        this._bgColorUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_bgColor', WGL.Uniform_Types.VEC3);
-        this._positionAttribute = new WGL.Attribute_Object(this._gl, this._program, 'a_position');
-        this._uvAttribute = new WGL.Attribute_Object(this._gl, this._program, 'a_uv');
-        this._vao = this._gl.createVertexArray()!;
-
-        this._gl.bindVertexArray(this._vao);
-
-        this._positionAttribute.set(new Float32Array(Room_Edit_Renderer._planeGeo), 2);
-        this._uvAttribute.set(new Float32Array(Room_Edit_Renderer._planeUVs), 2);
 
         this._gl.clearColor(0, 0, 0, 0);
+        this._gl.enable(this._gl.BLEND);
+        this._gl.blendFunc(this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA);
 
         if (!iconsLoaded){
             document.addEventListener('icons-loaded', this._iconsLoaded as EventListener, {once: true});
@@ -246,8 +184,7 @@ export default class Room_Edit_Renderer {
         const luma = Math.max(bgColor.r, bgColor.g, bgColor.b);
         const iconColor = luma > 100 ? new Core.Draw.Color(0,0,0) : new Core.Draw.Color(0.8, 0.8, 0.8);
 
-        this._gl.useProgram(this._program);
-        this._bgColorUniform.set(bgColor.r / 255, bgColor.g / 255, bgColor.b / 255);
+        this._gl.clearColor(bgColor.r / 255, bgColor.g / 255, bgColor.b / 255, 1);
         this._iconRenderer.setColorOverride(iconColor);
         this._uiRenderer.setIconColor(iconColor);
         this.queueRender();
@@ -271,40 +208,13 @@ export default class Room_Edit_Renderer {
     }
 
     render(): void {
-        //update matrix and buffers
         this._updateViewMatrix();
+        this._gl.depthMask(true);
+        this._gl.clear(this._gl.COLOR_BUFFER_BIT | this._gl.DEPTH_BUFFER_BIT);
+        this._gl.depthMask(false);
         this._instanceRenderer.render();
         this._iconRenderer.render();
         this._uiRenderer.render();
-
-        //setup render
-        this._gl.clear(this._gl.COLOR_BUFFER_BIT);
-        this._gl.useProgram(this._program);
-        this._gl.bindVertexArray(this._vao);
-
-        //enable attributes and textures 
-        this._positionAttribute.enable();
-        this._uvAttribute.enable();
-        this._instanceBuffer.activate();
-        this._iconBuffer.activate();
-        this._uiBuffer.activate();
-
-        //draw
-        this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
-
-        //disable attributes and textures
-        this._positionAttribute.disable();
-        this._uvAttribute.disable();
-        this._instanceBuffer.deactivate();
-        this._iconBuffer.deactivate();
-        this._uiBuffer.deactivate();
-    }
-
-    destroy(): void {
-        this._instanceRenderer.destroy();
-        this._iconRenderer.destroy();
-        this._instanceBuffer.destroy();
-        this._iconBuffer.destroy();
     }
 }
 
@@ -402,7 +312,6 @@ class UI_Renderer {
     private _cameraIconUniform: Core.WGL.Texture_Object;
     private _positionAttribute: Core.WGL.Attribute_Object;
     private _vao: WebGLVertexArrayObject;
-    private _outputTexture: Core.WGL.Render_Texture;
 
     constructor(gl: WebGL2RenderingContext){
         this._gl = gl;
@@ -422,7 +331,6 @@ class UI_Renderer {
         this._cameraIconUniform = new WGL.Texture_Object(this._gl, this._program, 'u_cameraIcon');
         this._positionAttribute = new WGL.Attribute_Object(this._gl, this._program, 'a_position');
         this._vao = this._gl.createVertexArray()!;
-        this._outputTexture = new WGL.Render_Texture(this._gl, this._gl.canvas.width, this._gl.canvas.height);
 
         this._gl.bindVertexArray(this._vao);
         
@@ -436,12 +344,9 @@ class UI_Renderer {
         }
     }
 
-    get texture(){return this._outputTexture.texture}
-
     resize(): void {
         this._gl.useProgram(this._program);
         this._dimensionUniform.set(this._gl.canvas.width / 2, this._gl.canvas.height / 2);
-        this._outputTexture.resize(this._gl.canvas.width, this._gl.canvas.height);
     }
 
     iconsLoaded = (): void => {
@@ -499,17 +404,14 @@ class UI_Renderer {
         //enable attributes and render target
         this._positionAttribute.enable();
         this._cameraIconUniform.activate();
-        this._outputTexture.setAsRenderTarget();
 
         //draw
         this._gl.viewport(0, 0, this._gl.canvas.width, this._gl.canvas.height);
-        this._gl.clear(this._gl.COLOR_BUFFER_BIT);
         this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
 
         //disable attributes and render target
         this._positionAttribute.disable();
         this._cameraIconUniform.deactivate();
-        this._outputTexture.unsetRenderTarget();
     }
 }
 
