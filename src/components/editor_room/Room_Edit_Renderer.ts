@@ -262,7 +262,7 @@ export default class Room_Edit_Renderer {
     }
 
     queueRender(): void {
-        if (!this._nextDrawCall){
+        if (this._nextDrawCall == null){
             this._nextDrawCall = requestAnimationFrame(()=>{
                 this.render();
                 this._nextDrawCall = null;
