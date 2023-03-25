@@ -15,6 +15,7 @@ export abstract class Instance_Base{
     pos: Vector;
     groups: string[] = [];
     depthOffset: number = 0;
+    needsRenderUpdate = false;
 
     constructor(id: number, pos: Vector = new Vector()){
         this.id = id;

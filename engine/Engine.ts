@@ -151,6 +151,7 @@ export class Engine implements iEngineCallbacks {
         window.IS_ENGINE = true;
         try{
             this._processDebugNav();
+            this._updateAnimations();
             this._processCollisions();
             this._updateCamera();
         }
@@ -179,6 +180,17 @@ export class Engine implements iEngineCallbacks {
 
         camera.velocity.copy(controlVelocity);
         camera.size += zoom;
+    }
+
+    private _updateAnimations = (): void => {
+        this._loadedRoom.instances.forEach(instance => {
+            instance.advanceAnimation(this._deltaTime);
+
+            if (instance.needsRenderUpdate){
+                this._renderer.updateInstance(instance, instance.animFrame);
+                instance.needsRenderUpdate = false;
+            }
+        });
     }
 
     private _updateCamera = (): void =>{

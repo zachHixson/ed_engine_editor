@@ -23,7 +23,7 @@ export default class Renderer{
 
     get isTransitioning(){return this._transition.active}
 
-    setRoom = (room: Room): void =>{
+    setRoom = (room: Room): void => {
         this._room = room;
         this._gl.clearColor(this._room.bgColor.r / 255, this._room.bgColor.g / 255, this._room.bgColor.b / 255, 1);
     }
@@ -49,15 +49,15 @@ export default class Renderer{
         this._instanceRenderer.removeInstance(instance);
     }
 
-    updateInstance = (instance: Instance_Base): void => {
-        this._instanceRenderer.updateInstance(instance);
+    updateInstance = (instance: Instance_Base, newFrame?: number): void => {
+        this._instanceRenderer.updateInstance(instance, newFrame);
     }
 
-    startTransition = (type: any, duration: number, switchCallback: ()=>void, completeCallback?: ()=>void): void =>{
+    startTransition = (type: any, duration: number, switchCallback: ()=>void, completeCallback?: ()=>void): void => {
         this._transition.start(type, duration, switchCallback, completeCallback ?? (()=>{}));
     }
 
-    render = (): void =>{
+    render = (): void => {
         if (!this._room){
             console.error('Cannot render scene without room being set');
             return;

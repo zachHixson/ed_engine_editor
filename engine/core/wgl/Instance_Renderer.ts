@@ -306,12 +306,16 @@ export class Instance_Renderer {
         atlasData.renderLength--;
     }
 
-    updateInstance(instance: Instance_Base): void {
+    updateInstance(instance: Instance_Base, newFrame?: number): void {
         const instanceData = this._instanceMap.get(instance.id);
 
         if (!instanceData) {
             console.warn(`Warning: Attempting to update instance ID '${instance.id}' that does not exist in renderer`);
             return;
+        }
+
+        if (newFrame != undefined){
+            instanceData.frameNumber = newFrame;
         }
 
         const atlasData = this._atlasPool[instanceData.pool];

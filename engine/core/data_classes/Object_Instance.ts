@@ -157,6 +157,7 @@ export class Object_Instance extends Instance_Base{
     advanceAnimation(deltaTime: number): void {
         if (this.animPlaying){
             this._animProgress += deltaTime;
+            this.needsRenderUpdate = true;
         }
     }
     
