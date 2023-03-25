@@ -29,7 +29,7 @@ export default class Room_Edit_Renderer {
     constructor(canvas: HTMLCanvasElement, navState: Core.NavState){
         this._canvas = canvas;
         this._navState = navState;
-        this._gl = WGL.getGLContext(this._canvas)!;
+        this._gl = WGL.getGLContext(this._canvas, {alpha: false})!;
         this._instanceRenderer = new Core.Instance_Renderer(this._gl, Core.Sprite.DIMENSIONS, 1024, false, true);
         this._iconRenderer = new Core.Instance_Renderer(this._gl, 128, 512, true);
         this._uiRenderer = new UI_Renderer(this._gl);

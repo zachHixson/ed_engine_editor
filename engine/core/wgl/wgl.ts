@@ -8,10 +8,7 @@ export enum Uniform_Types {
     MAT3,
 }
 
-export function getGLContext(canvas: HTMLCanvasElement): WebGL2RenderingContext | null {
-    const settings = {
-        alpha: false
-    };
+export function getGLContext(canvas: HTMLCanvasElement, settings = {}): WebGL2RenderingContext | null {
     const ctx = canvas.getContext('webgl2', settings) ?? getPolyfill(canvas, settings);
 
     if (!ctx){
