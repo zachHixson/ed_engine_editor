@@ -32,9 +32,9 @@ interface iEngineCallbacks {
 }
 
 interface iCollisionMapping {
-    sourceInstance: Object_Instance,
+    sourceInstance: Instance_Base,
     collisions: Map<number, {
-        instance: Object_Instance,
+        instance: Instance_Base,
         startCollision: number,
         lastChecked: number,
         active: boolean,
@@ -115,16 +115,23 @@ export class Engine implements iEngineCallbacks {
 
         //setup instances
         this._loadedRoom.instances.forEach(instance => {
-            const triggersExits = instance.objRef.triggerExits;
-            const exitBehavior = instance.objRef.exitBehavior;
+            if (instance.TYPE != INSTANCE_TYPE.OBJECT) return;
+
+            if (instance.renderable){
+                this._renderer.addInstance(instance);
+            }
+
+            const objInstance = instance as Object_Instance;
+            const triggersExits = objInstance.objRef.triggerExits;
+            const exitBehavior = objInstance.objRef.exitBehavior;
 
             //if the object triggers exits, it persists between rooms and we need to remove duplicates
             if (triggersExits && exitBehavior != Game_Object.EXIT_TYPES.TRANSITION_ONLY){
                 room.removeInstance(instance.id);
             }
             
-            instance.initLocalVariables();
-            this._registerInstanceEvents(instance);
+            objInstance.initLocalVariables();
+            this._registerInstanceEvents(objInstance);
         });
 
         this._dispatchLogicEvent('e_create');
@@ -153,7 +160,7 @@ export class Engine implements iEngineCallbacks {
             return;
         }
 
-        this._renderer.render(this.deltaTime);
+        this._renderer.render();
         this._dialogBox.render(this.deltaTime);
         this._dialogFullscreen.render(this.deltaTime);
         window.IS_ENGINE = false;
@@ -240,12 +247,14 @@ export class Engine implements iEngineCallbacks {
         const prevExit = this._previousTransition!.exit;
         const prevInst = this._previousTransition!.instance;
         let overlappedExit: Exit | null = null;
-        let triggeredInstance: Object_Instance | null = null;
+        let triggeredInstance: Instance_Base | null = null;
         let doubleTriggerExit;
 
         this._loadedRoom!.instances.forEach(instance => {
-            const overlappingInstances = instance.hasCollisionEvent ? this.getInstancesOverlapping(instance) : [];
-            const overlappingExits = instance.triggerExits ? this.getExitsOverlapping(instance) : [];
+            if (instance.TYPE != INSTANCE_TYPE.OBJECT) return;
+            const objInstance = instance as Object_Instance;
+            const overlappingInstances = objInstance.hasCollisionEvent ? this.getInstancesOverlapping(instance) : [];
+            const overlappingExits = objInstance.triggerExits ? this.getExitsOverlapping(instance) : [];
 
             //iterate over overlapped instances and make collision entries
             for (let i = 0; i < overlappingInstances.length; i++){
@@ -277,13 +286,17 @@ export class Engine implements iEngineCallbacks {
             this._triggerEnding(overlappedExit['endingDialog']);
         }
         else{
-            this._triggerExit(overlappedExit, triggeredInstance!);
+            this._triggerExit(overlappedExit, triggeredInstance! as Object_Instance);
         }
     }
 
     private _dispatchCollisionEvents = (): void =>{
-        this._collisionMap.forEach((instanceEntry)=>{
+        this._collisionMap.forEach(instanceEntry => {
             const sourceInstance = instanceEntry.sourceInstance;
+
+            if (sourceInstance.TYPE != INSTANCE_TYPE.OBJECT) return;
+
+            const sourceObj = sourceInstance as Object_Instance;
 
             instanceEntry.collisions.forEach(collision => {
 
@@ -303,9 +316,9 @@ export class Engine implements iEngineCallbacks {
 
                     collision.force = false;
 
-                    sourceInstance.logic!.executeEvent('e_collision', sourceInstance, {
+                    sourceObj.logic!.executeEvent('e_collision', sourceObj, {
                         type: eventType,
-                        instance: sourceInstance
+                        instance: sourceObj
                     });
                 }
             });
@@ -362,7 +375,7 @@ export class Engine implements iEngineCallbacks {
             switch(exitBehavior){
                 case TO_DESTINATION:
                     instance.pos.copy(destExit.pos);
-                    this.room.addInstance(instance);
+                    this.addInstance(instance);
                     break;
                 case THROUGH_DESTINATION:
                     const velocity = instance.pos.clone().subtract(instance.lastPos);
@@ -372,10 +385,10 @@ export class Engine implements iEngineCallbacks {
                     normDir.y = +(Math.abs(normDir.y) > 0) * Math.sign(normDir.y) * 16;
                     destPos.add(normDir);
                     instance.pos.copy(destPos);
-                    this.room.addInstance(instance);
+                    this.addInstance(instance);
                     break
                 case KEEP_POSITION:
-                    this.room.addInstance(instance);
+                    this.addInstance(instance);
                     break;
                 case TRANSITION_ONLY:
                     break;
@@ -632,7 +645,7 @@ export class Engine implements iEngineCallbacks {
         window.IS_ENGINE = false;
     }
 
-    registerCollision = (sourceInstance: Object_Instance, collisionInstance: Object_Instance, force = false): void =>{
+    registerCollision = (sourceInstance: Instance_Base, collisionInstance: Instance_Base, force = false): void =>{
         let sourceInstanceEntry;
 
         //create entry for source instance if it does not already exist
@@ -664,7 +677,7 @@ export class Engine implements iEngineCallbacks {
         }
     }
 
-    getInstancesAtPosition = (pos: Vector): Object_Instance[] =>{
+    getInstancesAtPosition = (pos: Vector): Instance_Base[] =>{
         const broadCheck = this.room!.instances.getByRadius(pos, 32);
         return broadCheck.filter(instance => 
             Util.isInBounds(
@@ -678,22 +691,37 @@ export class Engine implements iEngineCallbacks {
         );
     }
 
-    getInstancesOverlapping = (instance: Object_Instance): Object_Instance[] =>{
+    getInstancesOverlapping = (instance: Instance_Base): Object_Instance[] =>{
         return this._filterOverlapping(this.room!.instances, instance) as Object_Instance[];
     }
 
-    getExitsOverlapping = (instance: Object_Instance): Exit[] =>{
+    getExitsOverlapping = (instance: Instance_Base): Exit[] =>{
         return this._filterOverlapping(this.room!.exits, instance) as Exit[];
     }
 
-    setInstancePosition = (instance: Object_Instance, pos: Vector): void =>{
-        instance.lastPos.copy(instance.pos);
-        instance.pos.copy(pos);
-        this.room!.instances.updatePosition(instance.id);
+    addInstance = (instance: Instance_Base): void => {
+        this.room!.addInstance(instance);
+
+        if (instance.renderable){
+            this._renderer.addInstance(instance);
+        }
     }
 
-    removeInstance = (instance: Object_Instance): void =>{
+    removeInstance = (instance: Instance_Base): void =>{
         this.room!.removeInstance(instance.id);
+
+        if (instance.renderable){
+            this._renderer.removeInstance(instance);
+        }
+    }
+
+    setInstancePosition = (instance: Instance_Base, pos: Vector): void =>{
+        instance.setPosition(pos);
+        this.room!.instances.updatePosition(instance.id);
+
+        if (instance.renderable){
+            this._renderer.updateInstance(instance);
+        }
     }
 
     setGlobalVariable = (name: string, data: any): void =>{

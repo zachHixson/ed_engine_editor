@@ -335,10 +335,10 @@ export const NODE_LIST: iNodeTemplate[] = [
             moveTiled(this: iEngineNode){
                 const newPos = new Vector(
                     Math.round(this.getInput('x')),
-                    -Math.round(this.getInput('y'))
+                    Math.round(this.getInput('y'))
                 ).add(this.instance.pos);
-                let instancesInSpace;
-                let spaceEmpty;
+                let instancesInSpace: Object_Instance[];
+                let spaceEmpty: boolean;
 
                 instancesInSpace = this.engine.getInstancesOverlapping({
                     id: this.instance.id,

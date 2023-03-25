@@ -8,6 +8,7 @@ import { Exit, iExitSaveData } from './Exit';
 import { Game_Object } from './Game_Object';
 import { iObjectInstanceSaveData, Object_Instance } from './Object_Instance';
 import { Vector } from '../Vector';
+import { Instance_Base } from './Instance_Base';
 
 export interface iRoomSaveData extends iAssetSaveData {
     _curInstId: number,
@@ -28,7 +29,7 @@ export class Room extends Asset_Base {
 
     navState: NavState = new NavState();
     camera: Camera = new Camera();
-    instances: Spacial_Collection<Object_Instance> = new Spacial_Collection(2000, 64);
+    instances: Spacial_Collection<Instance_Base> = new Spacial_Collection(2000, 64);
     exits: Spacial_Collection<Exit> = new Spacial_Collection(2000, 64);
     bgColor: Color = new Color(255, 255, 255);
     persist: boolean = false;
@@ -103,41 +104,41 @@ export class Room extends Asset_Base {
     }
 
     purgeMissingReferences(objects: Game_Object[], rooms: Room[]){
-        this.instances.forEach(i => {
-            const foundObj = objects.find(o => o.id == i.objRef.id);
+        // this.instances.forEach(i => {
+        //     const foundObj = objects.find(o => o.id == i.objRef.id);
 
-            if (!foundObj){
-                this.removeInstance(i.id);
-            }
-        });
+        //     if (!foundObj){
+        //         this.removeInstance(i.id);
+        //     }
+        // });
 
-        this.exits.forEach(e => {
-            const foundRoom = rooms.find(r => r.id == e.destinationRoom);
+        // this.exits.forEach(e => {
+        //     const foundRoom = rooms.find(r => r.id == e.destinationRoom);
 
-            if (!foundRoom){
-                e.destinationRoom = null;
-                e.destinationExit = null;
-            }
-        });
+        //     if (!foundRoom){
+        //         e.destinationRoom = null;
+        //         e.destinationExit = null;
+        //     }
+        // });
     }
 
-    addInstance(newInstance: Object_Instance): void {
+    addInstance(newInstance: Instance_Base): void {
         this.instances.add(newInstance);
     }
 
-    getInstanceById(instId: number): Object_Instance | null {
+    getInstanceById(instId: number): Instance_Base | null {
         return this.instances.getById(instId);
     }
 
-    getInstancesInRadius(pos: Vector, radius: number): Object_Instance[] {
+    getInstancesInRadius(pos: Vector, radius: number): Instance_Base[] {
         return this.instances.getByRadius(pos, radius);
     }
 
-    getAllInstances(): Object_Instance[] {
+    getAllInstances(): Instance_Base[] {
         return this.instances.toArray();
     }
 
-    removeInstance(instId: number): Object_Instance | null {
+    removeInstance(instId: number): Instance_Base | null {
         return this.instances.remove(instId);
     }
 

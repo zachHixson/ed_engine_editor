@@ -71,7 +71,7 @@ export enum MOUSE_EVENT {
 };
 
 export enum INSTANCE_TYPE {
-    INSTANCE = 1,
+    OBJECT = 1,
     EXIT,
 };
 

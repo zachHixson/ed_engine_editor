@@ -46,14 +46,19 @@ export class Object_Instance extends Instance_Base{
         if (window.IS_ENGINE){
             this.lastPos = this.pos.clone();
             this.localVariables = new Map(this.logic?.localVariableDefaults);
+
+            if (this.objRef){
+                this.animFrame = this.objRef.startFrame;
+            }
         }
     }
 
-    get TYPE(){return INSTANCE_TYPE.INSTANCE}
+    get TYPE(){return INSTANCE_TYPE.OBJECT};
     get COLLISION_OVERRIDES(){return COLLISION_OVERRIDE};
 
     get userDepth(){return (this.zDepthOverride) ? this.zDepthOverride : this.objRef.zDepth};
     get zDepth(){return this.userDepth - this.depthOffset};
+    get renderable(){return !!this.objRef?.sprite ?? false};
     get hasEditorFrame(){return this.objRef.hasEditorFrame};
     get editorFrameNum(){return this.objRef.editorFrameNum};
     get frameDataId(){return this.objRef?.sprite?.id ?? Object_Instance.DEFAULT_INSTANCE_ICON_ID};
@@ -153,6 +158,11 @@ export class Object_Instance extends Instance_Base{
         if (this.animPlaying){
             this._animProgress += deltaTime;
         }
+    }
+    
+    setPosition(newPos: Vector): void {
+        this.lastPos.copy(this.pos);
+        this.pos.copy(newPos);
     }
 
     initLocalVariables(): void {
