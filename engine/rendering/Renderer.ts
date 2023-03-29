@@ -26,6 +26,7 @@ export default class Renderer{
     setRoom = (room: Room): void => {
         this._room = room;
         this._gl.clearColor(this._room.bgColor.r / 255, this._room.bgColor.g / 255, this._room.bgColor.b / 255, 1);
+        this._instanceRenderer.clear();
     }
 
     private _updateViewMatrix = (): void => {

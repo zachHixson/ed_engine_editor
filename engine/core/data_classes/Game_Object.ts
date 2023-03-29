@@ -24,7 +24,6 @@ export interface iGameObjectSaveData extends iAssetSaveData {
 
 enum EXIT_TYPES {
     TO_DESTINATION = 'TD',
-    THROUGH_DESTINATION = 'TH',
     KEEP_POSITION = 'KP',
     TRANSITION_ONLY = 'TO',
 };

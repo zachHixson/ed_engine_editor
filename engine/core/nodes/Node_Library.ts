@@ -340,6 +340,10 @@ export const NODE_LIST: iNodeTemplate[] = [
                 let instancesInSpace: Object_Instance[];
                 let spaceEmpty: boolean;
 
+                if (this.method('checkExitBacktrack', newPos)){
+                    return;
+                }
+
                 instancesInSpace = this.engine.getInstancesOverlapping({
                     id: this.instance.id,
                     pos: newPos
@@ -369,6 +373,19 @@ export const NODE_LIST: iNodeTemplate[] = [
                 
                 this.triggerOutput('_o');
             },
+            checkExitBacktrack(this: iEngineNode, newPos: Vector): boolean {
+                if (!this.instance.prevExit) return false;
+
+                const direction = newPos.clone().subtract(this.instance.pos).normalize();
+                const dot = direction.dot(this.instance.prevExit.direction.multiplyScalar(-1));
+
+                if (dot > 0.75) {
+                    this.instance.prevExit.exit.triggerExit(this.instance, direction);
+                    return true;
+                }
+
+                return false;
+            }
         },
     },
     ...Cat_Variables,

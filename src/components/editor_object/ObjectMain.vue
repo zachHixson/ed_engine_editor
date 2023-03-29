@@ -171,7 +171,6 @@ function logicScriptChanged(event: Event): void {
                     <label for="exit_behavior">{{$t('object_editor.exit_behavior')}}:</label>
                     <select id="exit_behavior" v-model="props.selectedAsset.exitBehavior" v-tooltip="$t('object_editor.tt_exit_behavior')">
                         <option :value="Core.Game_Object.EXIT_TYPES.TO_DESTINATION">{{$t('object_editor.to_destination')}}</option>
-                        <option :value="Core.Game_Object.EXIT_TYPES.THROUGH_DESTINATION">{{$t('object_editor.through_destination')}}</option>
                         <option :value="Core.Game_Object.EXIT_TYPES.KEEP_POSITION">{{$t('object_editor.keep_position')}}</option>
                         <option :value="Core.Game_Object.EXIT_TYPES.TRANSITION_ONLY">{{$t('object_editor.transition_only')}}</option>
                     </select>

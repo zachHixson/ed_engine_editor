@@ -85,6 +85,7 @@ export class Vector {
 
     normalize(): Vector {
         const magnitude = this.magnitude();
+        if (magnitude == 0) return this;
         return this.scale(1/magnitude);
     }
 

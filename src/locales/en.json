@@ -78,7 +78,6 @@
         "trigger_exits": "Trigger Exits",
         "exit_behavior": "Exit Behavior",
         "to_destination": "To Destination",
-        "through_destination": "Through Destination",
         "keep_position": "Keep Position",
         "transition_only": "Transition Only",
         "keep_camera_settings": "Keep Camera Settings",

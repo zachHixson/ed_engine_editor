@@ -35,19 +35,20 @@ import cameraIcon from '@/assets/camera.svg';
 import exitIcon from '@/assets/exit.svg';
 import gearIcon from '@/assets/gear.svg';
 
-const { Vector, ROOM_TOOL_TYPE } = Core;
+const { Vector, Instance_Base, ROOM_TOOL_TYPE } = Core;
 type Vector = Core.Vector;
+type Instance_Base = Core.Instance_Base;
 
-type MoveProps = {instId?: number, instRef?: Core.Object_Instance, newPos?: Vector, oldPos?: Vector};
-type AddProps = {objId?: number, instRefList?: Core.Object_Instance[], pos?: Vector};
-type DeleteProps = {instId?: number, instRefList?: Core.Object_Instance[]};
-type InstanceChangeProps = {newState: Partial<Core.Object_Instance>, oldState?: object, instRef?: Core.Instance_Base};
-type InstanceGroupChangeProps = {add?: boolean, groupName: string, newName?: string, remove?: boolean, oldIdx?: number, instRef: Core.Instance_Base};
+type MoveProps = {instId?: number, instRef?: Instance_Base, newPos?: Vector, oldPos?: Vector};
+type AddProps = {objId?: number, instRefList?: Instance_Base[], pos?: Vector};
+type DeleteProps = {instId?: number, instRefList?: Instance_Base[]};
+type InstanceChangeProps = {newState: Partial<Core.Object_Instance>, oldState?: object, instRef?: Instance_Base};
+type InstanceGroupChangeProps = {add?: boolean, groupName: string, newName?: string, remove?: boolean, oldIdx?: number, instRef: Core.Object_Instance};
 type InstanceVarChangeProps = {changeObj: any, instRef?: Core.Object_Instance};
 type CameraChangeProps = {newState?: object, oldState?: object};
 type ExitAddProps = {exitRef?: Core.Exit, pos: Vector};
 type ExitChangeProps = {newState: Partial<Core.Exit>, oldState?: object, exitRef?: Core.Exit};
-type ExitDeleteProps = {exitId: number, exitRef?: Core.Exit};
+type ExitDeleteProps = {exitId: number, exitRef?: Core.Instance_Base};
 type RoomPropChangeProps = {newState: object, oldState?: object};
 
 //define stores
@@ -112,7 +113,7 @@ const mouse = reactive({
     cellCache: new Array<Vector>(),
     inWindow: false,
 });
-const editorSelection = ref<Core.Object_Instance | Core.Exit | null>();
+const editorSelection = ref<Instance_Base | Core.Exit | null>();
 
 //computed properties
 const propertiesOpen = computed<boolean>({
@@ -168,7 +169,7 @@ function bindHotkeys(): void {
         const type = editorSelection.value?.TYPE;
         const id = editorSelection.value?.id;
 
-        if (type == Core.INSTANCE_TYPE.INSTANCE){
+        if (type == Core.INSTANCE_TYPE.OBJECT){
             actionDelete({instId: id});
         }
         else if (type == Core.INSTANCE_TYPE.EXIT){
@@ -394,8 +395,8 @@ function toolCamera(mEvent: imEvent): void {
 
 function toolExit(mEvent: imEvent): void {
     if (mEvent.type == Core.MOUSE_EVENT.DOWN){
-        const exitAtCursor = props.selectedRoom.getExitsAtPosition(mEvent.worldCell)
-            .find((e: Core.Exit) => e.pos.equalTo(mEvent.worldCell));
+        const exitAtCursor = props.selectedRoom.getInstancesInRadius(mEvent.worldCell, 0)
+            .find(e => e.pos.equalTo(mEvent.worldCell) && e.TYPE == Core.INSTANCE_TYPE.EXIT);
 
         if (exitAtCursor){
             editorSelection.value = exitAtCursor;
@@ -436,7 +437,6 @@ function actionMove({instId, instRef, newPos}: MoveProps, makeCommit = true): vo
 function actionAdd({objId, instRefList = [], pos}: AddProps, makeCommit = true): void {
     const object = gameDataStore.getAllObjects.find((o) => o.id == objId);
     const cacheList = undoStore.cache.get('add_list');
-    let newInst;
 
     if (makeCommit){
         const data = {instRefList: cacheList};
@@ -446,28 +446,27 @@ function actionAdd({objId, instRefList = [], pos}: AddProps, makeCommit = true):
     }
 
     if (objId){
-        newInst = new Core.Object_Instance(props.selectedRoom.curInstId, pos!, object!);
+        const newInst = new Core.Object_Instance(props.selectedRoom.curInstId, pos!, object!);
+
         instRefList.push(newInst);
+
+        if (cacheList){
+            cacheList.push(newInst);
+        }
+        else if (newInst){
+            undoStore.cache.set('add_list', [newInst]);
+        }
     }
 
     for (let i = 0; i < instRefList.length; i++){
         props.selectedRoom.addInstance(instRefList[i]);
-    }
-
-    RoomMainEventBus.emit('instance-added', newInst);
-
-    if (cacheList){
-        cacheList.push(newInst);
-    }
-    else if (newInst){
-        undoStore.cache.set('add_list', [newInst]);
+        RoomMainEventBus.emit('instance-added', instRefList[i]);
     }
 }
 
 function actionDelete({instId, instRefList = []}: DeleteProps, makeCommit = true): void {
     const cacheList = undoStore.cache.get('delete_list');
     const singleInstance = !cacheList && makeCommit;
-    let instRef;
 
     if (makeCommit && !singleInstance){
         const data = {instRefList: cacheList};
@@ -477,25 +476,26 @@ function actionDelete({instId, instRefList = []}: DeleteProps, makeCommit = true
     }
 
     if (instId != undefined){
-        instRef = props.selectedRoom.removeInstance(instId);
+        const instRef = props.selectedRoom.removeInstance(instId);
 
         if (instRef == editorSelection.value){
             editorSelection.value = null;
         }
+
+        if (cacheList){
+            cacheList.push(instRef);
+        }
+        else if (instRef){
+            undoStore.cache.set('delete_list', [instRef]);
+        }
+
+        RoomMainEventBus.emit('instance-removed', instRef);
     }
 
     for (let i = 0; i < instRefList.length; i++){
-        let inst = instRefList[i]
+        const inst = instRefList[i]
         props.selectedRoom.removeInstance(inst.id);
-    }
-
-    RoomMainEventBus.emit('instance-removed', instRef);
-
-    if (cacheList){
-        cacheList.push(instRef);
-    }
-    else if (instRef){
-        undoStore.cache.set('delete_list', [instRef]);
+        RoomMainEventBus.emit('instance-removed', inst);
     }
 
     if (singleInstance){
@@ -516,7 +516,6 @@ function actionInstanceChange({newState, instRef}: InstanceChangeProps, makeComm
         undoStore.commit({action: Core.ROOM_ACTION.INSTANCE_CHANGE, data});
     }
 }
-
 
 function actionInstanceGroupChange(
     {add, groupName, newName, remove, oldIdx, instRef}: InstanceGroupChangeProps, makeCommit = true
@@ -543,7 +542,7 @@ function actionInstanceGroupChange(
     }
 
     if (makeCommit){
-        const data = {add, groupName, newName, remove, oldIdx, instRef: editorSelection.value!} satisfies InstanceGroupChangeProps;
+        const data = {add, groupName, newName, remove, oldIdx, instRef: editorSelection.value! as Core.Object_Instance} satisfies InstanceGroupChangeProps;
         undoStore.commit({action: Core.ROOM_ACTION.INSTANCE_GROUP_CHANGE, data});
     }
 }
@@ -566,9 +565,9 @@ function actionCameraChange({newState}: CameraChangeProps, makeCommit = true): v
 }
 
 function actionExitAdd({exitRef, pos}: ExitAddProps, makeCommit = true): Core.Exit {
-    const newExit = exitRef ?? new Core.Exit(props.selectedRoom.curExitId, pos);
+    const newExit = exitRef ?? new Core.Exit(props.selectedRoom.curInstId, pos);
     const newExitName = t('room_editor.new_exit_prefix') + newExit.id;
-    props.selectedRoom.addExit(newExit);
+    props.selectedRoom.addInstance(newExit);
 
     newExit.name = newExitName;
     
@@ -588,7 +587,7 @@ function actionExitChange({newState}: ExitChangeProps, makeCommit = true): void 
 
     Object.assign(selected, newState);
 
-    RoomMainEventBus.emit('instance-changed', editorSelection);
+    RoomMainEventBus.emit('instance-changed', selected);
 
     if (makeCommit){
         const data = {newState, oldState, exitRef: selected} satisfies ExitChangeProps;
@@ -597,7 +596,7 @@ function actionExitChange({newState}: ExitChangeProps, makeCommit = true): void 
 }
 
 function actionExitDelete({exitId}: ExitDeleteProps, makeCommit = true): void {
-    const exitRef = props.selectedRoom.removeExit(exitId)!;
+    const exitRef = props.selectedRoom.removeInstance(exitId)!;
     editorSelection.value = null;
 
     RoomMainEventBus.emit('instance-removed', exitRef);
@@ -684,15 +683,15 @@ function revertExitAdd({exitRef}: ExitAddProps): void {
         editorSelection.value = null;
     }
 
-    props.selectedRoom.removeExit(exitRef!.id);
-    RoomMainEventBus.emit('instance-changed', exitRef);
+    props.selectedRoom.removeInstance(exitRef!.id);
+    RoomMainEventBus.emit('instance-removed', exitRef);
 }
 
 function revertExitDelete({exitRef}: ExitDeleteProps): void {
     const exit = new Core.Exit(-1);
     Object.assign(exit, exitRef);
-    props.selectedRoom.addExit(exit);
-    RoomMainEventBus.emit('instance-changed', exitRef);
+    props.selectedRoom.addInstance(exit);
+    RoomMainEventBus.emit('instance-added', exitRef);
 }
 
 function revertExitChange({oldState, exitRef}: ExitChangeProps): void {

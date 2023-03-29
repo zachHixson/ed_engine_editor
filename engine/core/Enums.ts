@@ -71,8 +71,8 @@ export enum MOUSE_EVENT {
 };
 
 export enum INSTANCE_TYPE {
-    OBJECT = 1,
-    EXIT,
+    OBJECT = 'O',
+    EXIT = 'E',
 };
 
 export enum LOGIC_ACTION {

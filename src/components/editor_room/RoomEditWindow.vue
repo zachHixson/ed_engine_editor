@@ -29,7 +29,7 @@ const gameDataStore = useGameDataStore();
 
 const props = defineProps<{
     selectedRoom: Core.Room,
-    editorSelection: Core.Object_Instance | Core.Exit | null,
+    editorSelection: Core.Instance_Base | null,
     undoLength: number,
     redoLength: number
 }>();

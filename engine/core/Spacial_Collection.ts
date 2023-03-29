@@ -73,8 +73,8 @@ export class Spacial_Collection<T extends iSpacialObject> {
         return clone;
     }
 
-    toSaveData(): iAnyObj {
-        const sanitizedInstances: iAnyObj[] = [];
+    toSaveData(): any {
+        const sanitizedInstances: any[] = [];
 
         this._list.forEach(spacialRef => {
             const data = spacialRef.data;

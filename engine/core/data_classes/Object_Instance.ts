@@ -1,7 +1,7 @@
 import {INSTANCE_TYPE} from '../Enums';
-import { iAnyObj } from '../interfaces';
 import { Vector } from '../Vector';
 import { Sprite } from './Sprite';
+import { Exit } from './Exit';
 import { Game_Object } from './Game_Object';
 import { iInstanceBaseSaveData, Instance_Base } from './Instance_Base';
 
@@ -22,6 +22,11 @@ export class Object_Instance extends Instance_Base{
     static DEFAULT_INSTANCE_ICON = [new ImageData(Sprite.DIMENSIONS, Sprite.DIMENSIONS)];
 
     private _animProgress: number = 0;
+    private _hasCollisionEvent: boolean | null = null;
+    private _prevExit: {
+        exit: Exit,
+        direction: Vector,
+    } | null = null;
 
     objRef: Game_Object;
     zDepthOverride: number | null = null;
@@ -72,15 +77,19 @@ export class Object_Instance extends Instance_Base{
             case COLLISION_OVERRIDE.IGNORE: return false;
         }
     }
+
     get hasCollisionEvent(){
-        let hasCollisionEvent = false;
+        if (this._hasCollisionEvent != null) return this._hasCollisionEvent;
+
+        this._hasCollisionEvent = false;
 
         this.logic?.events.forEach((event, key) => {
-            hasCollisionEvent ||= key == 'e_collision';
+            this._hasCollisionEvent ||= key == 'e_collision';
         });
 
-        return !!hasCollisionEvent;
+        return !!this._hasCollisionEvent;
     }
+
     get triggerExits(){
         return this.objRef.triggerExits;
     }
@@ -108,6 +117,8 @@ export class Object_Instance extends Instance_Base{
         const animDur = Math.floor(this.sprite.frames.length * this.fps) * 1000;
         this._animProgress = Math.floor(frame / this.sprite.frames.length * animDur);
     }
+
+    get prevExit(){return this._prevExit}
 
     clone(): Object_Instance {
         const clone = new Object_Instance(this.id, this.pos, this.objRef);
@@ -142,7 +153,7 @@ export class Object_Instance extends Instance_Base{
         this.collisionOverride = data.collisionOverride;
     }
 
-    executeNodeEvent(eventName: string, data?: iAnyObj): void {
+    executeNodeEvent(eventName: string, data?: any): void {
         this.logic?.executeEvent(eventName, this, data);
     }
 
@@ -164,6 +175,17 @@ export class Object_Instance extends Instance_Base{
     setPosition(newPos: Vector): void {
         this.lastPos.copy(this.pos);
         this.pos.copy(newPos);
+    }
+
+    setPrevExit(exit: Exit, direction: Vector): void {
+        this._prevExit = {
+            exit,
+            direction,
+        };
+    }
+
+    clearPrevExit(): void {
+        this._prevExit = null;
     }
 
     initLocalVariables(): void {

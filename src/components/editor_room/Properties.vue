@@ -34,7 +34,7 @@ const bgColorBtn = ref<HTMLElement>();
 //computed
 const showInstProps = computed(()=>(
     props.selectedEntity &&
-    props.selectedEntity?.TYPE == Core.INSTANCE_TYPE.INSTANCE &&
+    props.selectedEntity?.TYPE == Core.INSTANCE_TYPE.OBJECT &&
     !showCameraProps.value &&
     !showRoomProps.value
 ));
@@ -53,7 +53,7 @@ const destinationRoomExits = computed(()=>{
     const allRooms = gameDataStore.getAllRooms;
     const destRoom = allRooms.find(r => r.id == (props.selectedEntity as Core.Exit).destinationRoom);
 
-    return destRoom?.getAllExits()!;
+    return destRoom?.getAllInstances()!.filter(instance => instance.TYPE == Core.INSTANCE_TYPE.EXIT);
 });
 
 //lifecycle
@@ -100,7 +100,7 @@ function setRoomProp(propObj: AnyObj): void {
 }
 
 function setFollowObj(): void {
-    if (props.selectedEntity?.TYPE == Core.INSTANCE_TYPE.INSTANCE){
+    if (props.selectedEntity?.TYPE == Core.INSTANCE_TYPE.OBJECT){
         props.camera.followObjId = props.selectedEntity!.id;
     }
 }
@@ -120,8 +120,8 @@ function setInstanceName(newName: string): void {
 }
 
 function setExitName(newName: string): void {
-    const exitList = props.room.getAllExits();
-    newName = checkNameCollisions(newName, exitList);
+    const instanceList = props.room.getAllInstances();
+    newName = checkNameCollisions(newName, instanceList);
 
     setExitProp({name: newName});
 }

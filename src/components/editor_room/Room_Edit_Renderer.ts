@@ -31,7 +31,7 @@ export default class Room_Edit_Renderer {
         this._navState = navState;
         this._gl = WGL.getGLContext(this._canvas, {alpha: false})!;
         this._instanceRenderer = new Core.Instance_Renderer(this._gl, Core.Sprite.DIMENSIONS, 1024, false, true);
-        this._iconRenderer = new Core.Instance_Renderer(this._gl, 128, 512, true);
+        this._iconRenderer = new Core.Instance_Renderer(this._gl, 128, 256, true);
         this._uiRenderer = new UI_Renderer(this._gl);
 
         this._gl.clearColor(0, 0, 0, 0);
@@ -179,7 +179,6 @@ export default class Room_Edit_Renderer {
         if (!this._roomRef) return;
 
         const bgColor = this._roomRef.bgColor;
-        const normalized = new Core.Draw.Color();
 
         const luma = Math.max(bgColor.r, bgColor.g, bgColor.b);
         const iconColor = luma > 100 ? new Core.Draw.Color(0,0,0) : new Core.Draw.Color(0.8, 0.8, 0.8);
