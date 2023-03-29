@@ -254,6 +254,7 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             startDialog(){
+                console.log("Triggered")
                 const textArea = this.getWidgetData();
                 const textBox = this.getInput('text');
                 const text = textBox ? textBox : textArea;

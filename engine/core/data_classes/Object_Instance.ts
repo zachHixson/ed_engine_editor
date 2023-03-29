@@ -120,6 +120,10 @@ export class Object_Instance extends Instance_Base{
 
     get prevExit(){return this._prevExit}
 
+    onCreate(): void {
+        this.executeNodeEvent('e_create');
+    }
+
     clone(): Object_Instance {
         const clone = new Object_Instance(this.id, this.pos, this.objRef);
         Object.assign(clone, this);
