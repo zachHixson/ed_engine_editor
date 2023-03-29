@@ -68,8 +68,12 @@ export default class Logic implements iEngineLogic {
     get localVariableDefaults(){return this._localVariableDefaults};
 
     executeEvent(eventName: string, instance: Object_Instance, data: any): void {
+        const event = this.events.get(eventName);
+
+        if (!event) return;
+
         this._instance = instance;
-        this.events.get(eventName)!.forEach(event => event.executeEvent(data));
+        event.forEach(event => event.executeEvent(data));
         this._instance = null;
     }
 
