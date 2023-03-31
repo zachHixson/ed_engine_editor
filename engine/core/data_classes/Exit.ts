@@ -57,10 +57,13 @@ export class Exit extends Instance_Base {
     }
 
     onCollision(event: iCollisionEvent): void {
-        if (event.type != COLLISION_EVENT.START) return;
-        if (this.isEnding) Exit.engine!.triggerEnding(this.endingDialog);
-        if (this.destinationRoom == null || event.instance.TYPE != INSTANCE_TYPE.OBJECT) return;
         if (Exit.exitInstance) return;
+        if (event.type != COLLISION_EVENT.START) return;
+        if (this.isEnding) {
+            Exit.engine!.triggerEnding(this.endingDialog);
+            return;
+        }
+        if (this.destinationRoom == null || event.instance.TYPE != INSTANCE_TYPE.OBJECT) return;
         this.triggerExit(event.instance as Object_Instance);
     }
 

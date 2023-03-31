@@ -1,180 +1,174 @@
-import Renderer from "@engine/rendering/Renderer";
+import Renderer from "@engine/Renderer";
 import Font_Renderer from "./Font_Renderer";
-import { Draw, Vector } from "@engine/core/core";
+import { Vector, WGL } from "@engine/core/core";
+import Dialog_Base from "./Dialog_Base";
 
-const MARGIN = 5;
+const MARGIN = 0.016;
 const LINES = 4;
 const LETTERS_PER_SEC = 20;
-const BORDER_WIDTH = 2;
+const BOX_WIDTH = 0.9;
+const BOX_HEIGHT = 0.2;
+const BORDER_WIDTH = 0.015;
+const SEPARATOR_WIDTH = 0.005;
 
 enum ALIGN {
     TOP,
     BOTTOM,
 }
 
-const ARROW_CANVAS = (()=>{
-    const canvas = Draw.createCanvas(8, 8);
-    const ctx = canvas.getContext('2d')!;
-    const imgData = ctx.createImageData(canvas.width, canvas.height);
-    const bitmap = [
-        -1, -1, -1, -1, -1, -1, -1, -1,
-        -1, 1, 1, 1, 1, 1, 1, -1,
-        0, -1, 1, 1, 1, 1, -1, 0,
-        0, 0, -1, 1, 1, -1, 0, 0,
-        0, 0, 0, -1, -1, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0
-    ];
+export default class Dialog_Box extends Dialog_Base {
+    private static readonly _planeGeo = WGL.createPlaneGeo();
+    private static readonly _planeUVs = WGL.createPlaneGeo().map(i => (i + 1) * 0.5);
+    private static readonly _vertexSource  = `
+        attribute vec2 a_geo;
+        attribute vec2 a_uv;
 
-    for (let i = 0; i < bitmap.length; i++){
-        const idx = i * 4;
-        const white = +(bitmap[i] > 0);
-        const filled = +(bitmap[i] != 0);
-        imgData.data[idx + 0] = white * 255;
-        imgData.data[idx + 1] = white * 255;
-        imgData.data[idx + 2] = white * 255;
-        imgData.data[idx + 3] = filled * 255;
-    }
+        varying vec2 v_uv;
 
-    ctx.putImageData(imgData, 0, 0);
+        void main(){
+            v_uv = a_uv;
+            v_uv.y = 1.0 - v_uv.y;
+            gl_Position = vec4(a_geo, 0.0, 1.0);
+        }
+    `;
+    private static readonly _fragmentSource = `
+        precision mediump float;
 
-    return canvas;
-})();
+        const vec2 DIMENSIONS = vec2(${BOX_WIDTH.toFixed(2)}, ${BOX_HEIGHT.toFixed(2)});
+        const float PIXEL_SIZE = ${(1.0 / Renderer.SCREEN_RES).toFixed(7)};
 
-export default class Dialog_Box{
+        uniform float u_yOffset;
+        uniform float u_arrowAnim;
+        uniform sampler2D u_arrowTexture;
+
+        varying vec2 v_uv;
+
+        void main(){
+            //Main box
+            vec2 boxUv = v_uv - vec2(0.5, u_yOffset);
+            boxUv = abs(boxUv) * 2.0;
+            boxUv -= DIMENSIONS;
+
+            float grad = max(boxUv.x, boxUv.y);
+
+            float mask = smoothstep(${(BORDER_WIDTH + SEPARATOR_WIDTH).toFixed(3)}, ${(BORDER_WIDTH + SEPARATOR_WIDTH - 0.005).toFixed(3)}, grad);
+            float border = step(grad, ${BORDER_WIDTH.toFixed(3)}) - step(grad, 0.001);
+
+            //arrow
+            float arrowDriver = floor(abs(mod(u_arrowAnim * 5.0, 6.0)-3.0)) * PIXEL_SIZE;
+            vec2 arrowUv = v_uv + vec2(0.0, 0.5 - u_yOffset - ${(BOX_HEIGHT / 2).toFixed(2)} - arrowDriver);
+            arrowUv = ((arrowUv - 0.5) * 30.0) + 0.5;
+            vec4 arrowTex = texture2D(u_arrowTexture, arrowUv);
+            vec2 arrowMaskUv = step(0.0, arrowUv) - step(1.0, arrowUv);
+            float arrowMask = arrowMaskUv.x * arrowMaskUv.y;
+
+            arrowTex.a *= arrowMask;
+
+            vec4 outCol = vec4(vec3(border), mask);
+
+            if (u_arrowAnim >= 0.0){
+                outCol = mix(outCol, arrowTex, arrowTex.a);
+            }
+
+            gl_FragColor = outCol;
+        }
+    `;
     static get ALIGN(){return ALIGN}
-    static get DIALOG_ARROW_CANVAS(){return ARROW_CANVAS}
 
-    protected _canvas: HTMLCanvasElement;
-    protected _arrowBuff: typeof ARROW_CANVAS = ARROW_CANVAS;
-    protected _progress: number = 0;
-    protected _arrowAnim: number = 0;
-    protected _asyncTag: string | null = null;
+    private _program: WebGLProgram;
+    private _geoAttrib: WGL.Attribute_Object;
+    private _uvAttrib: WGL.Attribute_Object;
+    private _yOffsetUniform: WGL.Uniform_Object;
+    private _arrowAnimUniform: WGL.Uniform_Object;
+    private _arrowTexture: WGL.Texture_Object;
+    private _vao: WebGLVertexArrayObject;
+
+    private _alignment: ALIGN = ALIGN.TOP;
     
-    align: ALIGN = ALIGN.TOP;
     fontRenderer: Font_Renderer;
-    active: boolean = false;
     onCloseCallback: (tag: string | null)=>any = ()=>{};
 
-    constructor(canvas: HTMLCanvasElement){
-        const textMargin = MARGIN + 2;
-        const backMargin = Renderer.SCREEN_RES - MARGIN * 2 - 4;
+    constructor(gl: WebGL2RenderingContext){
+        super(gl);
 
-        this._canvas = canvas;
-        this._progress = 0;
-        this._arrowAnim = 0;
+        const textMargin = (1.0 - BOX_WIDTH + MARGIN) * Renderer.SCREEN_RES;
+        const backMargin = Renderer.SCREEN_RES * (BOX_WIDTH - MARGIN) * 2;
+
+        //setup webGL props
+        this._program = WGL.createProgram(
+            this._gl,
+            WGL.createShader(this._gl, this._gl.VERTEX_SHADER, Dialog_Box._vertexSource)!,
+            WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, Dialog_Box._fragmentSource)!
+        )!;
+        this._geoAttrib = new WGL.Attribute_Object(this._gl, this._program, 'a_geo');
+        this._uvAttrib = new WGL.Attribute_Object(this._gl, this._program, 'a_uv');
+        this._yOffsetUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_yOffset', WGL.Uniform_Types.FLOAT);
+        this._arrowAnimUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_arrowAnim', WGL.Uniform_Types.FLOAT);
+        this._arrowTexture = new WGL.Texture_Object(this._gl, this._program, 'u_arrowTexture', this._getArrowTexture());
+        this._vao = this._gl.createVertexArray()!;
+
+        this._gl.bindVertexArray(this._vao);
+        this._gl.useProgram(this._program);
+
+        this._geoAttrib.set(new Float32Array(Dialog_Box._planeGeo), 2, this._gl.FLOAT);
+        this._uvAttrib.set(new Float32Array(Dialog_Box._planeUVs), 2, this._gl.FLOAT);
+
+        this._yOffsetUniform.set(0.15);
+
+        //setup font renderer
         this.fontRenderer = new Font_Renderer(
-            this._canvas,
+            this._gl,
             new Vector(textMargin, textMargin),
             backMargin
         );
 
+        this.fontRenderer.fontSize = 2.4;
         this.fontRenderer.setHeightFromLineCount(LINES);
     }
 
-    get text() {return this.fontRenderer.text}
-    set text(txt: string){
-        this.fontRenderer.text = txt
-        this._progress = 0;
-    }
-
-    _setProgress(val: number): void {
-        const pageLength = this.fontRenderer.pageText.length;
-        this._progress = Math.max(Math.min(val, pageLength), 0);
-        this.fontRenderer.reveal = Math.floor(this._progress);
-    }
-
-    open(text: string, asyncTag: string | null = null): void {
-        if (this.active){
-            this.close();
-        }
-
-        this.text = text;
-        this._asyncTag = asyncTag;
-        this.active = true;
-        this._setProgress(0);
+    get alignment(){return this._alignment};
+    set alignment(val: ALIGN){
+        this._alignment;
+        this._yOffsetUniform.set(0.15);
     }
 
     close(): void {
-        this.active = false;
+        this._active = false;
         this.onCloseCallback(this._asyncTag);
     }
 
-    nextPage(): void {
-        if (!this.fontRenderer.pageText){
-            return;
-        }
-
-        const pageLength = this.fontRenderer.pageText.length;
-        const pageFinished = this._progress >= pageLength;
-        const lastPage = this.fontRenderer.isLastPage;
-
-        if (pageFinished){
-            if (lastPage){
-                this.close();
-            }
-            else{
-                this._setProgress(0);
-                this.fontRenderer.page++;
-            }
-        }
-        else{
-            this._setProgress(pageLength);
-        }
-    }
-
     render(delta: number): void {
-        if (!this.active){
+        if (!this._active){
             return;
         }
 
-        const ctx = this._canvas.getContext('2d')!;
-        const scaleFac = this._canvas.width / Renderer.SCREEN_RES;
-        const lineWidth = scaleFac * BORDER_WIDTH;
-        const arrowX = Math.floor((Renderer.SCREEN_RES / 2) - (this._arrowBuff.width / 2));
-        const bottomEdge = this.fontRenderer.height + lineWidth * 2;
-        const p1 = new Vector(scaleFac * MARGIN, 0);
-        const p2 = new Vector(scaleFac * (Renderer.SCREEN_RES - MARGIN * 2), scaleFac * bottomEdge);
-
-        if (this.align == Dialog_Box.ALIGN.TOP){
-            this.fontRenderer.pos.y = MARGIN + 2;
-            p1.y = scaleFac * MARGIN;
+        if (this.fontRenderer.isLastPage){
+            this._arrowAnim = -1;
         }
         else{
-            const bottom = this._canvas.height - lineWidth - scaleFac * MARGIN;
-            this.fontRenderer.pos.y = Renderer.SCREEN_RES - 4 * 9 - lineWidth;
-            p1.y = bottom - scaleFac * this.fontRenderer.height;
+            this._arrowAnim += delta;
         }
 
-        ctx.imageSmoothingEnabled = false;
+        this._gl.bindVertexArray(this._vao);
+        this._gl.useProgram(this._program);
+        
+        this._arrowAnimUniform.set(this._arrowAnim);
 
-        ctx.fillStyle = "black";
-        ctx.fillRect(p1.x, p1.y, p2.x, p2.y);
+        this._geoAttrib.enable();
+        this._uvAttrib.enable();
+        this._arrowTexture.activate();
 
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = lineWidth + 1;
-        ctx.strokeRect(p1.x, p1.y, p2.x, p2.y);
-        ctx.strokeStyle = "white";
-        ctx.lineWidth = lineWidth;
-        ctx.strokeRect(p1.x, p1.y, p2.x, p2.y);
+        this._gl.enable(this._gl.BLEND);
+        this._gl.blendFunc(this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA);
+        this._gl.drawArrays(this._gl.TRIANGLES, 0, 6);
+        this._gl.disable(this._gl.BLEND);
 
-        this.fontRenderer.render();
-
-        //draw arrow
-        if (!this.fontRenderer.isLastPage){
-            const yMod = Math.sin(this._arrowAnim * 5);
-
-            ctx.scale(scaleFac, scaleFac)
-            ctx.drawImage(
-                this._arrowBuff,
-                arrowX,
-                Math.floor(bottomEdge + yMod) + 2
-            );
-            ctx.resetTransform();
-        }
+        this._geoAttrib.disable();
+        this._uvAttrib.disable();
+        this._arrowTexture.deactivate();
 
         this._setProgress(this._progress + (delta * LETTERS_PER_SEC));
-        this._arrowAnim += delta;
+
+        this.fontRenderer.render();
     }
 }

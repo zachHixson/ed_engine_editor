@@ -1,27 +1,18 @@
 import { Room, Instance_Renderer, WGL, Instance_Base, Mat3 } from "@engine/core/core";
-import Transition from "./Transition";
 
 export default class Renderer{
     static get SCREEN_RES(){return 240}
 
     private _gl: WebGL2RenderingContext;
     private _instanceRenderer: Instance_Renderer;
-    private _canvas: HTMLCanvasElement;
     private _room: Room | null = null;
-    private _transition: Transition;
     private _viewMatrix = new Mat3();
     private _viewMatrixNeedsUpdate = true;
 
-    constructor(canvas: HTMLCanvasElement){
-        this._canvas = canvas;
-        this._transition = new Transition(this._canvas);
-
-        //setup webgl
-        this._gl = WGL.getGLContext(this._canvas)!;
+    constructor(gl: WebGL2RenderingContext){
+        this._gl = gl;
         this._instanceRenderer = new Instance_Renderer(this._gl, 16, 1024, false, true);
     }
-
-    get isTransitioning(){return this._transition.active}
 
     setRoom = (room: Room): void => {
         this._room = room;
@@ -55,7 +46,7 @@ export default class Renderer{
     }
 
     startTransition = (type: any, duration: number, switchCallback: ()=>void, completeCallback?: ()=>void): void => {
-        this._transition.start(type, duration, switchCallback, completeCallback ?? (()=>{}));
+        //
     }
 
     render = (): void => {

@@ -1,36 +1,28 @@
-//@ts-ignore
-import loadFontData, {decode, bitmapToCanvas} from "@compiled/FontData";
-import { Draw } from "@engine/core/core";
+//@ts-nocheck
+import loadFontData, { decode } from "@compiled/FontData";
 
-export type FontObj = {[key: string]: HTMLCanvasElement};
-
-function getCharacterObject(charList: string, canvas: HTMLCanvasElement, charWidth: number, charHeight: number): FontObj {
-    const ctx = canvas.getContext('2d')!;
-    const charObj = {} as FontObj;
-    const rows = canvas.width / charWidth;
-
-    for (let i = 0; i < charList.length; i++){
-        const x = (i % rows) * charWidth;
-        const y = Math.floor(i / rows) * charHeight;
-        const char = ctx.getImageData(x, y, charWidth, charHeight);
-        const newCanvas = Draw.createCanvas(charWidth, charHeight);
-        const newCtx = newCanvas.getContext('2d')!;
-
-        newCtx.putImageData(char, 0, 0);
-        charObj[charList[i]] = newCanvas;
-    }
-
-    return charObj;
+export interface FontData {
+    width: number;
+    height: number;
+    charWidth: number;
+    charHeight: number;
+    charKey: string;
+    data: number[];
 }
 
-function renderCharacters(): FontObj {
+function decodeFont(): FontData {
     const fontData = loadFontData();
-    const canvas = Draw.createCanvas(fontData.width, fontData.height);
     const decoded = decode(fontData);
-    const bitmapCanvas = bitmapToCanvas(decoded, canvas);
-    const characters = getCharacterObject(fontData.charKey, bitmapCanvas, fontData.charWidth, fontData.charHeight);
+    const { width, height, charWidth, charHeight, charKey } = fontData;
 
-    return characters;
+    return {
+        width,
+        height,
+        charWidth,
+        charHeight,
+        charKey,
+        data: decoded.map(i => i * 255),
+    };
 }
 
-export default renderCharacters();
+export default decodeFont();

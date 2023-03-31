@@ -201,7 +201,7 @@ export class Instance_Renderer {
         this._gl.bindVertexArray(atlasData.vao);
 
         atlasData.positionBuffer.setSubData(new Float32Array([instance.pos.x, instance.pos.y, instance.zDepth]), bufferLocation * 4 * 3);
-        atlasData.spriteOffsetBuffer.setSubData(new Int8Array([spriteoffset.x, spriteoffset.y]), bufferLocation * 2);
+        atlasData.spriteOffsetBuffer.setSubData(new Uint8Array([spriteoffset.x, spriteoffset.y]), bufferLocation * 2);
         atlasData.bufferLocations[bufferLocation] = instance.id;
     }
 

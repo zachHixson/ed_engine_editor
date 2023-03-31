@@ -1,4 +1,4 @@
-import Renderer from './rendering/Renderer';
+import Renderer from './Renderer';
 import Logic from './Logic';
 import Dialog_Box from './text/Dialog_Box';
 import Dialog_Fullscreen from './text/Dialog_Fullscreen';
@@ -17,6 +17,7 @@ import {
     Spacial_Collection,
     INSTANCE_TYPE,
     Node_Enums,
+    WGL,
 } from '@engine/core/core';
 import Node from './Node';
 import iGameData from './iGameData';
@@ -47,6 +48,7 @@ export class Engine implements iEngineCallbacks {
     static get ACTION_KEY(){return 'Space'}
 
     private _canvas: HTMLCanvasElement;
+    private _gl: WebGL2RenderingContext;
     private _timeStart: number = 0;
     private _curTime: number = 0;
     private _deltaTime: number = 0;
@@ -68,6 +70,9 @@ export class Engine implements iEngineCallbacks {
         y: 0,
     };
 
+    enableInput = true;
+    enableUpdate = true;
+
     log: (...args: any)=>void = function(){console.log(...arguments)};
     warn: (...args: any)=>void = function(){console.warn(...arguments)};
     error: (...args: any)=>void = function(){console.error(...arguments)};
@@ -79,9 +84,10 @@ export class Engine implements iEngineCallbacks {
         window.IS_ENGINE = true;
 
         this._canvas = canvas;
-        this._renderer = new Renderer(this._canvas);
-        this._dialogBox = new Dialog_Box(this._canvas);
-        this._dialogFullscreen = new Dialog_Fullscreen(this._canvas);
+        this._gl = WGL.getGLContext(this._canvas)!;
+        this._renderer = new Renderer(this._gl);
+        this._dialogBox = new Dialog_Box(this._gl);
+        this._dialogFullscreen = new Dialog_Fullscreen(this._gl);
         this._gameData = this._parseGameData(gameData);
 
         //integrate callbacks
@@ -143,17 +149,20 @@ export class Engine implements iEngineCallbacks {
 
     private _update = (): void =>{
         window.IS_ENGINE = true;
-        try{
-            this._processDebugNav();
-            this._updateInstances();
-            this._updateAnimations();
-            this._processCollisions();
-            this._updateCamera();
-        }
-        catch(e){
-            this.error(e);
-            this.stop();
-            return;
+
+        if (this.enableUpdate){
+            try{
+                this._processDebugNav();
+                this._updateInstances();
+                this._updateAnimations();
+                this._processCollisions();
+                this._updateCamera();
+            }
+            catch(e){
+                this.error(e);
+                this.stop();
+                return;
+            }
         }
 
         this._renderer.render();
@@ -303,9 +312,9 @@ export class Engine implements iEngineCallbacks {
     }
 
     triggerEnding = (endingText: string): void =>{
-        if (!this._dialogFullscreen.active){
-            this._dialogFullscreen.open(endingText);
-        }
+        this.enableInput = false;
+        this.enableUpdate = false;
+        this._dialogFullscreen.open(endingText);
     }
 
     private _parseGameData = (gameData: string): iGameData => {
@@ -362,11 +371,7 @@ export class Engine implements iEngineCallbacks {
     }
 
     private _keyDown = (e: KeyboardEvent): void =>{
-        if (this._renderer.isTransitioning){
-            return;
-        }
-
-        if (!this._keymap.get(e.code) && !this._dialogBox.active && !this._dialogFullscreen.active){
+        if (!this._keymap.get(e.code) && this.enableInput){
             this._keymap.set(e.code, true);
             this._dispatchLogicEvent('e_keyboard', {
                 which_key: e.key.toUpperCase(),
@@ -475,6 +480,8 @@ export class Engine implements iEngineCallbacks {
     private _onDialogBoxClose = (tag: string | null): void =>{
         if (!tag) return;
         this._dispatchAsyncLogicEvent(tag, true);
+        this.enableInput = true;
+        this.enableUpdate = true;
     }
 
     private _onFullScreenClose = (tag: string | null, restart?: boolean): void =>{
@@ -485,6 +492,9 @@ export class Engine implements iEngineCallbacks {
         else if (tag){
             this._dispatchAsyncLogicEvent(tag, true);
         }
+
+        this.enableInput = true;
+        this.enableUpdate = true;
     }
 
     public start = (): void =>{
@@ -626,6 +636,8 @@ export class Engine implements iEngineCallbacks {
 
     openDialogBox = (text: string, node: Node, methodName: string): void =>{
         const asyncTag = node ? this._registerAsyncNodeEvent(node, methodName) : null;
+        this.enableInput = false;
+        this.enableUpdate = false;
         this._dialogBox.open(text, asyncTag);
     }
 }
