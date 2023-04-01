@@ -226,6 +226,7 @@ function navToolSelected(tool: Core.NAV_TOOL_TYPE): void {
             :dpiScale="devicePixelRatio"
             :maxZoom="2"
             :parentEventBus="RoomEditWindowEventBus"
+            :invert-y-axis="true"
             @nav-changed="renderer.navChanged()"
             @tool-selected="navToolSelected"
             @hotkey-tool-selected="navHotkeyTool = $event"/>

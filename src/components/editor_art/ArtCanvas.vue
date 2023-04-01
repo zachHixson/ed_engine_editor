@@ -232,6 +232,7 @@ function updateMouseCell(event: MouseEvent): void {
             :unitScale="UNIT_WIDTH"
             :dpiScale="devicePixelRatio"
             :parentEventBus="ArtCanvasEventBus"
+            :invert-y-axis="true"
             @nav-changed="renderer!.navChanged()"
             @tool-selected="enableNav"
             @set-hotkey-tool="navHotkeyTool = $event"/>

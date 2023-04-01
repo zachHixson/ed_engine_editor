@@ -25,6 +25,7 @@ const props = defineProps<{
     unitScale: number,
     dpiScale: number,
     parentEventBus: Core.Event_Bus,
+    invertYAxis?: boolean,
 }>();
 
 const emit = defineEmits(['tool-selected', 'nav-changed', 'set-hotkey-tool']);
@@ -165,7 +166,9 @@ function pan(): void {
     const downPos = mouse.lastPosition.clone();
     const difference = curMouse.subtract(downPos);
 
-    difference.y *= -1;
+    if (props.invertYAxis){
+        difference.y *= -1;
+    }
 
     difference.divideScalar(props.navState.zoomFac * props.unitScale).multiplyScalar(devicePixelRatio);
     props.navState.offset.add(difference);
