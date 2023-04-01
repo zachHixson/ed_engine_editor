@@ -24,6 +24,6 @@ export default abstract class Transition_Base {
         this._renderer = renderer;
     }
 
-    abstract start(roomId: number, loadRoomCallback: (roomId: number)=>void): void;
+    abstract start(roomId: number, loadRoomCallback: (roomId: number)=>void, onFinishCallback: ()=>void): void;
     abstract render(deltaTime: number): void;
 }

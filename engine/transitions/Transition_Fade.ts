@@ -27,6 +27,7 @@ export default class Transition_Fade extends Transition_Base {
     private _progress: number = 0;
     private _transitioned = false;
     private _loadRoom: ((roomId: number)=>void) | null = null;
+    private _onFinish: (()=>void) | null = null;
 
     private _program: WebGLProgram;
     private _geoAttrib: WGL.Attribute_Object;
@@ -51,10 +52,11 @@ export default class Transition_Fade extends Transition_Base {
         this._geoAttrib.set(new Float32Array(Transition_Fade._planeGeo), 2, this._gl.FLOAT);
     }
 
-    start(roomId: number, loadRoomCallback: (roomId: number)=>void): void {
+    start(roomId: number, loadRoomCallback: (roomId: number)=>void, onFinishCallback: ()=>void): void {
         this._active = true;
         this._roomId = roomId;
         this._loadRoom = loadRoomCallback;
+        this._onFinish = onFinishCallback;
         this._progress = 0;
         this._transitioned = false;
     }
@@ -88,6 +90,7 @@ export default class Transition_Fade extends Transition_Base {
         if (this._progress > DURATION){
             this._active = false;
             this._opacityUniform.set(0);
+            this._onFinish && this._onFinish();
         }
     }
 }

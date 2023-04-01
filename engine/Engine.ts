@@ -548,8 +548,11 @@ export class Engine implements iEngineCallbacks {
     }
 
     transitionRoom = (roomId: number, transitionType: TRANSITION, loadRoomCallback: (roomId: number)=>void): void => {
+        this.enableInput = false;
         this._transition = this._transitionMap.get(transitionType) ?? this._transitionMap.get(TRANSITION.NONE)!;
-        this._transition.start(roomId, loadRoomCallback);
+        this._transition.start(roomId, loadRoomCallback, ()=>{
+            this.enableInput = true;
+        });
     }
 
     triggerEnding = (endingText: string): void =>{
