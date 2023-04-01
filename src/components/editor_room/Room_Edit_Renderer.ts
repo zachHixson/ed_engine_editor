@@ -71,10 +71,11 @@ export default class Room_Edit_Renderer {
     }
 
     private _iconsLoaded = (event: CustomEvent): void => {
-        const ids = event.detail as string[];
+        const images = event.detail as {id: string, image: ImageData[]}[];
 
-        for (let i = 0; i < ids.length; i++){
-            this._iconRenderer.updateSprite(ids[i]);
+        for (let i = 0; i < images.length; i++){
+            const image = images[i];
+            this._iconRenderer.updateSprite(image.id, image.image);
         }
 
         this.queueRender();
@@ -218,7 +219,7 @@ export default class Room_Edit_Renderer {
 }
 
 class UI_Renderer {
-    static CAMERA_ICON = new ImageData(128, 128);
+    static CAMERA_ICON = new ImageData(1, 1);
     private static readonly _planeGeo = WGL.createPlaneGeo();
     private static readonly _vertexSource = `
         attribute vec2 a_position;
@@ -420,35 +421,35 @@ class UI_Renderer {
     const LOAD_ARRAY = [
         svgToCanvas(cameraLocIconRaw, DIM, canvas => {
             UI_Renderer.CAMERA_ICON = getImageData(canvas!);
-            loaded('CAMERA_ICON');
+            loaded('CAMERA_ICON', [UI_Renderer.CAMERA_ICON]);
         }),
         svgToCanvas(objectIconRaw, DIM, canvas => {
             Core.Object_Instance.DEFAULT_INSTANCE_ICON = [getImageData(canvas!)];
-            loaded(Core.Object_Instance.DEFAULT_INSTANCE_ICON_ID);
+            loaded(Core.Object_Instance.DEFAULT_INSTANCE_ICON_ID, Core.Object_Instance.DEFAULT_INSTANCE_ICON);
         }),
         svgToCanvas(exitIconRaw, DIM, canvas => {
             Core.Exit.EXIT_ICON = [getImageData(canvas!)];
-            loaded(Core.Exit.EXIT_ICON_ID);
+            loaded(Core.Exit.EXIT_ICON_ID, Core.Exit.EXIT_ICON);
         }),
         svgToCanvas(endIconRaw, DIM, canvas => {
             Core.Exit.ENDING_ICON = [getImageData(canvas!)];
-            loaded(Core.Exit.ENDING_ICON_ID);
+            loaded(Core.Exit.ENDING_ICON_ID, Core.Exit.ENDING_ICON);
         })
     ];
-    const loadedIDs = new Array<string>();
+    const loadedImages = new Array<{id: string, image: ImageData[]}>();
     let toLoad = LOAD_ARRAY.length;
 
     function getImageData(canvas: HTMLCanvasElement): ImageData {
         return canvas.getContext('2d')!.getImageData(0, 0, DIM, DIM);
     }
 
-    function loaded(id: string){
+    function loaded(id: string, image: ImageData[]){
         toLoad--;
-        loadedIDs.push(id);
+        loadedImages.push({id, image});
 
         if (toLoad <= 0){
             iconsLoaded = true;
-            document.dispatchEvent(new CustomEvent('icons-loaded', {detail: loadedIDs}));
+            document.dispatchEvent(new CustomEvent('icons-loaded', {detail: loadedImages}));
         }
     }
 })();
