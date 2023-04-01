@@ -4,6 +4,9 @@ import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 import svgLoader from 'vite-svg-loader';
 
+//@ts-ignore
+import licenseText from './LICENSE.txt?raw';
+
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
@@ -24,6 +27,13 @@ export default defineConfig(({mode}) => {
                 to: "import {Core} from '@compiled/Engine'",
             },
         },
+        {
+            filter: /\.html$/g,
+            replace: {
+                from: "[license]",
+                to: licenseText,
+            }
+        }
     ];
     const plugins = [
         vue(),
