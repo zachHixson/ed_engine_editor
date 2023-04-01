@@ -505,7 +505,6 @@ function actionInstanceChange({newState, instRef}: InstanceChangeProps, makeComm
     RoomMainEventBus.emit('instance-changed', curInstance);
 
     if (makeCommit){
-        console.log(curInstance)
         let data = {newState, oldState, instRef: curInstance} satisfies InstanceChangeProps;
         undoStore.commit({action: Core.ROOM_ACTION.INSTANCE_CHANGE, data});
     }
