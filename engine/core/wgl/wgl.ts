@@ -130,7 +130,7 @@ export function createPlaneGeo(){
     ];
 }
 
-export class Uniform_Object {
+export class Uniform {
     private _gl: WebGL2RenderingContext;
     private _program: WebGLProgram;
     private _name: string;
@@ -170,7 +170,7 @@ export class Uniform_Object {
     }
 }
 
-export class Attribute_Object {
+export class Attribute {
     private _gl: WebGL2RenderingContext;
     private _name: string;
     private _program: WebGLProgram;
@@ -242,7 +242,7 @@ export class Texture_Slots {
     }
 }
 
-export class Texture_Object {
+export class Texture_Uniform {
     private _gl: WebGL2RenderingContext;
     private _name: string;
     private _loc: WebGLUniformLocation;

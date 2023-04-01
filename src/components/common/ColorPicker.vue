@@ -88,8 +88,8 @@ const wheelProgram = WGL.createProgram(
     WGL.createShader(wheelCtx, wheelCtx.VERTEX_SHADER, vertexSource)!,
     WGL.createShader(wheelCtx, wheelCtx.FRAGMENT_SHADER, fragmentSource)!
 )!;
-const valueUniform = new WGL.Uniform_Object(wheelCtx, wheelProgram, 'u_value', WGL.Uniform_Types.FLOAT)!;
-const positionAttribute = new WGL.Attribute_Object(wheelCtx, wheelProgram, 'a_position');
+const valueUniform = new WGL.Uniform(wheelCtx, wheelProgram, 'u_value', WGL.Uniform_Types.FLOAT)!;
+const positionAttribute = new WGL.Attribute(wheelCtx, wheelProgram, 'a_position');
 const planeGeo = WGL.createPlaneGeo();
 const vao = wheelCtx.createVertexArray();
 

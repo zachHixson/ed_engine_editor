@@ -76,11 +76,11 @@ export default class Dialog_Box extends Dialog_Base {
     static get ALIGN(){return ALIGN}
 
     private _program: WebGLProgram;
-    private _geoAttrib: WGL.Attribute_Object;
-    private _uvAttrib: WGL.Attribute_Object;
-    private _yOffsetUniform: WGL.Uniform_Object;
-    private _arrowAnimUniform: WGL.Uniform_Object;
-    private _arrowTexture: WGL.Texture_Object;
+    private _geoAttrib: WGL.Attribute;
+    private _uvAttrib: WGL.Attribute;
+    private _yOffsetUniform: WGL.Uniform;
+    private _arrowAnimUniform: WGL.Uniform;
+    private _arrowTexture: WGL.Texture_Uniform;
     private _vao: WebGLVertexArrayObject;
 
     private _alignment: ALIGN = ALIGN.TOP;
@@ -100,11 +100,11 @@ export default class Dialog_Box extends Dialog_Base {
             WGL.createShader(this._gl, this._gl.VERTEX_SHADER, Dialog_Box._vertexSource)!,
             WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, Dialog_Box._fragmentSource)!
         )!;
-        this._geoAttrib = new WGL.Attribute_Object(this._gl, this._program, 'a_geo');
-        this._uvAttrib = new WGL.Attribute_Object(this._gl, this._program, 'a_uv');
-        this._yOffsetUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_yOffset', WGL.Uniform_Types.FLOAT);
-        this._arrowAnimUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_arrowAnim', WGL.Uniform_Types.FLOAT);
-        this._arrowTexture = new WGL.Texture_Object(this._gl, this._program, 'u_arrowTexture', this._getArrowTexture());
+        this._geoAttrib = new WGL.Attribute(this._gl, this._program, 'a_geo');
+        this._uvAttrib = new WGL.Attribute(this._gl, this._program, 'a_uv');
+        this._yOffsetUniform = new WGL.Uniform(this._gl, this._program, 'u_yOffset', WGL.Uniform_Types.FLOAT);
+        this._arrowAnimUniform = new WGL.Uniform(this._gl, this._program, 'u_arrowAnim', WGL.Uniform_Types.FLOAT);
+        this._arrowTexture = new WGL.Texture_Uniform(this._gl, this._program, 'u_arrowTexture', this._getArrowTexture());
         this._vao = this._gl.createVertexArray()!;
 
         this._gl.bindVertexArray(this._vao);

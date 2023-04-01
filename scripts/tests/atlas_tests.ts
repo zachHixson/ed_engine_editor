@@ -221,8 +221,8 @@ function debug(...args: any[]){
         WGL.createShader(gl, gl.VERTEX_SHADER, vs)!,
         WGL.createShader(gl, gl.FRAGMENT_SHADER, fs)!
     )!;
-    const textureUniform = new WGL.Texture_Object(gl, program, 'u_texture', atlas.texture);
-    const positionAttribute = new WGL.Attribute_Object(gl, program, 'a_position');
+    const textureUniform = new WGL.Texture_Uniform(gl, program, 'u_texture', atlas.texture);
+    const positionAttribute = new WGL.Uniform(gl, program, 'a_position');
     const vao = gl.createVertexArray();
 
     gl.bindVertexArray(vao);

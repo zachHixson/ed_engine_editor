@@ -62,12 +62,12 @@ export default class Font_Renderer{
     //webGL props
     private _gl: WebGL2RenderingContext;
     private _program: WebGLProgram;
-    private _planeGeoAttrib: WGL.Attribute_Object;
-    private _positionAttrib: WGL.Attribute_Object;
-    private _charOffsetAttrib: WGL.Attribute_Object;
-    private _dimensionUniform: WGL.Uniform_Object;
-    private _fontSizeUniform: WGL.Uniform_Object;
-    private _atlasUniform: WGL.Texture_Object;
+    private _planeGeoAttrib: WGL.Attribute;
+    private _positionAttrib: WGL.Attribute;
+    private _charOffsetAttrib: WGL.Attribute;
+    private _dimensionUniform: WGL.Uniform;
+    private _fontSizeUniform: WGL.Uniform;
+    private _atlasUniform: WGL.Texture_Uniform;
     private _vao: WebGLVertexArrayObject;
 
     //Renderer props
@@ -90,12 +90,12 @@ export default class Font_Renderer{
             WGL.createShader(this._gl, this._gl.VERTEX_SHADER, Font_Renderer._vertexSource)!,
             WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, Font_Renderer._fragmentSource)!,
         )!;
-        this._planeGeoAttrib = new WGL.Attribute_Object(this._gl, this._program, 'a_planeGeo');
-        this._positionAttrib = new WGL.Attribute_Object(this._gl, this._program, 'a_position');
-        this._charOffsetAttrib = new WGL.Attribute_Object(this._gl, this._program, 'a_charOffset');
-        this._dimensionUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_dimensions', WGL.Uniform_Types.VEC2);
-        this._fontSizeUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_fontSize', WGL.Uniform_Types.FLOAT);
-        this._atlasUniform = new WGL.Texture_Object(this._gl, this._program, 'u_atlas');
+        this._planeGeoAttrib = new WGL.Attribute(this._gl, this._program, 'a_planeGeo');
+        this._positionAttrib = new WGL.Attribute(this._gl, this._program, 'a_position');
+        this._charOffsetAttrib = new WGL.Attribute(this._gl, this._program, 'a_charOffset');
+        this._dimensionUniform = new WGL.Uniform(this._gl, this._program, 'u_dimensions', WGL.Uniform_Types.VEC2);
+        this._fontSizeUniform = new WGL.Uniform(this._gl, this._program, 'u_fontSize', WGL.Uniform_Types.FLOAT);
+        this._atlasUniform = new WGL.Texture_Uniform(this._gl, this._program, 'u_atlas');
         this._vao = this._gl.createVertexArray()!;
 
         this._gl.bindVertexArray(this._vao);

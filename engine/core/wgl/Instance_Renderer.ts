@@ -14,10 +14,10 @@ interface iInstanceData {
 interface iAtlasData {
     atlas: Atlas,
     vao: WebGLVertexArrayObject,
-    planeGeoBuffer: WGL.Attribute_Object,
-    planeUVBuffer: WGL.Attribute_Object,
-    positionBuffer: WGL.Attribute_Object,
-    spriteOffsetBuffer: WGL.Attribute_Object,
+    planeGeoBuffer: WGL.Attribute,
+    planeUVBuffer: WGL.Attribute,
+    positionBuffer: WGL.Attribute,
+    spriteOffsetBuffer: WGL.Attribute,
     bufferLocations: Array<number>,
     renderLength: number,
 }
@@ -126,12 +126,12 @@ export class Instance_Renderer {
     private _gl: WebGL2RenderingContext;
     private _program: WebGLProgram;
     private _generateMipmaps: boolean;
-    private _viewMatrixUniform: WGL.Uniform_Object;
-    private _tileSizeUniform: WGL.Uniform_Object;
-    private _atlasSizeUniform: WGL.Uniform_Object;
-    private _instanceScaleUniform: WGL.Uniform_Object;
-    private _colorOverrideUniform: WGL.Uniform_Object;
-    private _atlasTextureUniform: WGL.Texture_Object;
+    private _viewMatrixUniform: WGL.Uniform;
+    private _tileSizeUniform: WGL.Uniform;
+    private _atlasSizeUniform: WGL.Uniform;
+    private _instanceScaleUniform: WGL.Uniform;
+    private _colorOverrideUniform: WGL.Uniform;
+    private _atlasTextureUniform: WGL.Texture_Uniform;
 
     //instance properties
     private _instanceMap = new Map<number, iInstanceData>();
@@ -149,12 +149,12 @@ export class Instance_Renderer {
             WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, Instance_Renderer._getFragmentSource(!generateMipmaps, useDepth))!    
         )!;
         this._generateMipmaps = generateMipmaps;
-        this._viewMatrixUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_viewMatrix', WGL.Uniform_Types.MAT3);
-        this._tileSizeUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_tileSize', WGL.Uniform_Types.INT);
-        this._atlasSizeUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_atlasSize', WGL.Uniform_Types.INT);
-        this._instanceScaleUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_instanceScale', WGL.Uniform_Types.FLOAT);
-        this._colorOverrideUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_colorOverride', WGL.Uniform_Types.VEC4);
-        this._atlasTextureUniform = new WGL.Texture_Object(this._gl, this._program, 'u_atlasTexture');
+        this._viewMatrixUniform = new WGL.Uniform(this._gl, this._program, 'u_viewMatrix', WGL.Uniform_Types.MAT3);
+        this._tileSizeUniform = new WGL.Uniform(this._gl, this._program, 'u_tileSize', WGL.Uniform_Types.INT);
+        this._atlasSizeUniform = new WGL.Uniform(this._gl, this._program, 'u_atlasSize', WGL.Uniform_Types.INT);
+        this._instanceScaleUniform = new WGL.Uniform(this._gl, this._program, 'u_instanceScale', WGL.Uniform_Types.FLOAT);
+        this._colorOverrideUniform = new WGL.Uniform(this._gl, this._program, 'u_colorOverride', WGL.Uniform_Types.VEC4);
+        this._atlasTextureUniform = new WGL.Texture_Uniform(this._gl, this._program, 'u_atlasTexture');
 
         this._gl.useProgram(this._program);
         this._tileSizeUniform.set(this._tileSize);
@@ -177,10 +177,10 @@ export class Instance_Renderer {
         const atlasData = {
             atlas: new Atlas(this._gl, this._tileSize, this._atlasSize, this._generateMipmaps),
             vao: this._gl.createVertexArray()!,
-            planeGeoBuffer: new WGL.Attribute_Object(this._gl, this._program, 'a_planeVerts'),
-            planeUVBuffer: new WGL.Attribute_Object(this._gl, this._program, 'a_uv'),
-            positionBuffer: new WGL.Attribute_Object(this._gl, this._program, 'a_position'),
-            spriteOffsetBuffer: new WGL.Attribute_Object(this._gl, this._program, 'a_spriteOffset'),
+            planeGeoBuffer: new WGL.Attribute(this._gl, this._program, 'a_planeVerts'),
+            planeUVBuffer: new WGL.Attribute(this._gl, this._program, 'a_uv'),
+            positionBuffer: new WGL.Attribute(this._gl, this._program, 'a_position'),
+            spriteOffsetBuffer: new WGL.Attribute(this._gl, this._program, 'a_spriteOffset'),
             bufferLocations: new Array(buffersize),
             renderLength: 0,
         };

@@ -31,8 +31,8 @@ export default class Transition_Fade extends Transition_Base {
     private _transitioned = false;
 
     private _program: WebGLProgram;
-    private _geoAttrib: WGL.Attribute_Object;
-    private _opacityUniform: WGL.Uniform_Object;
+    private _geoAttrib: WGL.Attribute;
+    private _opacityUniform: WGL.Uniform;
     private _vao: WebGLVertexArrayObject;
 
     constructor(gl: WebGL2RenderingContext, renderer: Renderer){
@@ -43,8 +43,8 @@ export default class Transition_Fade extends Transition_Base {
             WGL.createShader(this._gl, this._gl.VERTEX_SHADER, Transition_Fade._vertexSource)!,
             WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, Transition_Fade._fragmentSource)!
         )!;
-        this._geoAttrib = new WGL.Attribute_Object(this._gl, this._program, 'a_pos');
-        this._opacityUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_opacity', WGL.Uniform_Types.FLOAT);
+        this._geoAttrib = new WGL.Attribute(this._gl, this._program, 'a_pos');
+        this._opacityUniform = new WGL.Uniform(this._gl, this._program, 'u_opacity', WGL.Uniform_Types.FLOAT);
         this._vao = this._gl.createVertexArray()!;
 
         this._gl.useProgram(this._program);

@@ -81,12 +81,12 @@ export default class Art_Canvas_Renderer{
     private _previewData: ImageData;
     private _gl: WebGL2RenderingContext;
     private _program: WebGLProgram;
-    private _positionAttribute: Core.WGL.Attribute_Object;
-    private _uvAttribute: Core.WGL.Attribute_Object;
-    private _dimensionUniform: Core.WGL.Uniform_Object;
-    private _viewMatrixUniform: Core.WGL.Uniform_Object;
-    private _spriteTexUniform: Core.WGL.Texture_Object;
-    private _previewTexUniform: Core.WGL.Texture_Object;
+    private _positionAttribute: Core.WGL.Attribute;
+    private _uvAttribute: Core.WGL.Attribute;
+    private _dimensionUniform: Core.WGL.Uniform;
+    private _viewMatrixUniform: Core.WGL.Uniform;
+    private _spriteTexUniform: Core.WGL.Texture_Uniform;
+    private _previewTexUniform: Core.WGL.Texture_Uniform;
     private _vao: WebGLVertexArrayObject;
     private _viewMatrix = new Core.Mat3();
     private _viewMatrixNeedsUpdate = true;
@@ -105,12 +105,12 @@ export default class Art_Canvas_Renderer{
             WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, Art_Canvas_Renderer._fragmentSource)!
         )!;
 
-        this._positionAttribute = new WGL.Attribute_Object(this._gl, this._program, 'a_position');
-        this._uvAttribute = new WGL.Attribute_Object(this._gl, this._program, 'a_uv');
-        this._dimensionUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_dimensions', WGL.Uniform_Types.VEC2);
-        this._viewMatrixUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_viewMatrix', WGL.Uniform_Types.MAT3);
-        this._spriteTexUniform = new WGL.Texture_Object(this._gl, this._program, 'u_spriteTexture');
-        this._previewTexUniform = new WGL.Texture_Object(this._gl, this._program, 'u_previewTexture');
+        this._positionAttribute = new WGL.Attribute(this._gl, this._program, 'a_position');
+        this._uvAttribute = new WGL.Attribute(this._gl, this._program, 'a_uv');
+        this._dimensionUniform = new WGL.Uniform(this._gl, this._program, 'u_dimensions', WGL.Uniform_Types.VEC2);
+        this._viewMatrixUniform = new WGL.Uniform(this._gl, this._program, 'u_viewMatrix', WGL.Uniform_Types.MAT3);
+        this._spriteTexUniform = new WGL.Texture_Uniform(this._gl, this._program, 'u_spriteTexture');
+        this._previewTexUniform = new WGL.Texture_Uniform(this._gl, this._program, 'u_previewTexture');
 
         this._vao = this._gl.createVertexArray()!;
 

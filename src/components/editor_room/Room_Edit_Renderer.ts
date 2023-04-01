@@ -300,16 +300,16 @@ class UI_Renderer {
 
     private _gl: WebGL2RenderingContext;
     private _program: WebGLProgram;
-    private _invViewMatrixUniform: Core.WGL.Uniform_Object;
-    private _showGridUniform: Core.WGL.Uniform_Object;
-    private _pixelWidthUniform: Core.WGL.Uniform_Object;
-    private _dimensionUniform: Core.WGL.Uniform_Object;
-    private _cursorUniform: Core.WGL.Uniform_Object;
-    private _cameraUniform: Core.WGL.Uniform_Object;
-    private _iconColorUniform: Core.WGL.Uniform_Object;
-    private _selectionUniform: Core.WGL.Uniform_Object;
-    private _cameraIconUniform: Core.WGL.Texture_Object;
-    private _positionAttribute: Core.WGL.Attribute_Object;
+    private _invViewMatrixUniform: Core.WGL.Uniform;
+    private _showGridUniform: Core.WGL.Uniform;
+    private _pixelWidthUniform: Core.WGL.Uniform;
+    private _dimensionUniform: Core.WGL.Uniform;
+    private _cursorUniform: Core.WGL.Uniform;
+    private _cameraUniform: Core.WGL.Uniform;
+    private _iconColorUniform: Core.WGL.Uniform;
+    private _selectionUniform: Core.WGL.Uniform;
+    private _cameraIconUniform: Core.WGL.Texture_Uniform;
+    private _positionAttribute: Core.WGL.Attribute;
     private _vao: WebGLVertexArrayObject;
 
     constructor(gl: WebGL2RenderingContext){
@@ -319,16 +319,16 @@ class UI_Renderer {
             WGL.createShader(this._gl, this._gl.VERTEX_SHADER, UI_Renderer._vertexSource)!,
             WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, UI_Renderer._fragmentSource)!
         )!;
-        this._invViewMatrixUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_invViewMatrix', WGL.Uniform_Types.MAT3);
-        this._showGridUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_showGrid', WGL.Uniform_Types.BOOL);
-        this._pixelWidthUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_pixelWidth', WGL.Uniform_Types.FLOAT);
-        this._dimensionUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_dimensions', WGL.Uniform_Types.VEC2);
-        this._cursorUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_cursor', WGL.Uniform_Types.VEC2);
-        this._cameraUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_camera', WGL.Uniform_Types.VEC3);
-        this._iconColorUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_iconColor', WGL.Uniform_Types.VEC3);
-        this._selectionUniform = new WGL.Uniform_Object(this._gl, this._program, 'u_selection', WGL.Uniform_Types.VEC3);
-        this._cameraIconUniform = new WGL.Texture_Object(this._gl, this._program, 'u_cameraIcon');
-        this._positionAttribute = new WGL.Attribute_Object(this._gl, this._program, 'a_position');
+        this._invViewMatrixUniform = new WGL.Uniform(this._gl, this._program, 'u_invViewMatrix', WGL.Uniform_Types.MAT3);
+        this._showGridUniform = new WGL.Uniform(this._gl, this._program, 'u_showGrid', WGL.Uniform_Types.BOOL);
+        this._pixelWidthUniform = new WGL.Uniform(this._gl, this._program, 'u_pixelWidth', WGL.Uniform_Types.FLOAT);
+        this._dimensionUniform = new WGL.Uniform(this._gl, this._program, 'u_dimensions', WGL.Uniform_Types.VEC2);
+        this._cursorUniform = new WGL.Uniform(this._gl, this._program, 'u_cursor', WGL.Uniform_Types.VEC2);
+        this._cameraUniform = new WGL.Uniform(this._gl, this._program, 'u_camera', WGL.Uniform_Types.VEC3);
+        this._iconColorUniform = new WGL.Uniform(this._gl, this._program, 'u_iconColor', WGL.Uniform_Types.VEC3);
+        this._selectionUniform = new WGL.Uniform(this._gl, this._program, 'u_selection', WGL.Uniform_Types.VEC3);
+        this._cameraIconUniform = new WGL.Texture_Uniform(this._gl, this._program, 'u_cameraIcon');
+        this._positionAttribute = new WGL.Attribute(this._gl, this._program, 'a_position');
         this._vao = this._gl.createVertexArray()!;
 
         this._gl.bindVertexArray(this._vao);
