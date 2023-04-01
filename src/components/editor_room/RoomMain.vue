@@ -42,7 +42,7 @@ type Instance_Base = Core.Instance_Base;
 type MoveProps = {instId?: number, instRef?: Instance_Base, newPos?: Vector, oldPos?: Vector};
 type AddProps = {objId?: number, instRefList?: Instance_Base[], pos?: Vector};
 type DeleteProps = {instId?: number, instRefList?: Instance_Base[]};
-type InstanceChangeProps = {newState: Partial<Core.Object_Instance>, oldState?: object, instRef?: Instance_Base};
+type InstanceChangeProps = {newState: Partial<Core.Instance_Base>, oldState?: object, instRef?: Instance_Base};
 type InstanceGroupChangeProps = {add?: boolean, groupName: string, newName?: string, remove?: boolean, oldIdx?: number, instRef: Core.Object_Instance};
 type InstanceVarChangeProps = {changeObj: any, instRef?: Core.Object_Instance};
 type CameraChangeProps = {newState?: object, oldState?: object};
@@ -165,16 +165,9 @@ onBeforeUnmount(()=>{
 const { stepForward, stepBackward } = useUndoHelpers(undoStore, actionMap, revertMap);
 
 function bindHotkeys(): void {
-    const deleteEntity = () => {
-        const type = editorSelection.value?.TYPE;
+    const deleteInstance = () => {
         const id = editorSelection.value?.id;
-
-        if (type == Core.INSTANCE_TYPE.OBJECT){
-            actionDelete({instId: id});
-        }
-        else if (type == Core.INSTANCE_TYPE.EXIT){
-            actionExitDelete({exitId: id!});
-        }
+        actionDelete({instId: id});
     }
 
     hotkeyMap.bindKey(['s'], toolClicked, [ROOM_TOOL_TYPE.SELECT_MOVE]);
@@ -185,8 +178,8 @@ function bindHotkeys(): void {
     hotkeyMap.bindKey(['r'], toolClicked, [ROOM_TOOL_TYPE.ROOM_PROPERTIES]);
     hotkeyMap.bindKey(['g'], ()=>{roomEditorStore.setGridState(!roomEditorStore.getGridState)});
     hotkeyMap.bindKey(['n'], ()=>{propertiesOpen.value = !propertiesOpen.value; resize()});
-    hotkeyMap.bindKey(['delete'], deleteEntity);
-    hotkeyMap.bindKey(['backspace'], deleteEntity);
+    hotkeyMap.bindKey(['delete'], deleteInstance);
+    hotkeyMap.bindKey(['backspace'], deleteInstance);
 }
 
 function bindTools(): void {
@@ -205,8 +198,8 @@ function bindActions(): void {
     actionMap.set(Core.ROOM_ACTION.INSTANCE_GROUP_CHANGE, actionInstanceGroupChange);
     actionMap.set(Core.ROOM_ACTION.INSTANCE_VAR_CHANGE, actionInstanceVarChange);
     actionMap.set(Core.ROOM_ACTION.EXIT_ADD, actionExitAdd);
-    actionMap.set(Core.ROOM_ACTION.EXIT_CHANGE, actionExitChange);
-    actionMap.set(Core.ROOM_ACTION.EXIT_DELETE, actionExitDelete);
+    actionMap.set(Core.ROOM_ACTION.EXIT_CHANGE, actionInstanceChange);
+    actionMap.set(Core.ROOM_ACTION.EXIT_DELETE, actionDelete);
     actionMap.set(Core.ROOM_ACTION.CAMERA_CHANGE, actionCameraChange);
     actionMap.set(Core.ROOM_ACTION.ROOM_PROP_CHANGE, actionRoomPropChange);
 }
@@ -219,8 +212,8 @@ function bindReversions(): void {
     revertMap.set(Core.ROOM_ACTION.INSTANCE_GROUP_CHANGE, revertInstanceGroupChange);
     revertMap.set(Core.ROOM_ACTION.INSTANCE_VAR_CHANGE, revertInstanceVarChange);
     revertMap.set(Core.ROOM_ACTION.EXIT_ADD, revertExitAdd);
-    revertMap.set(Core.ROOM_ACTION.EXIT_CHANGE, revertExitChange);
-    revertMap.set(Core.ROOM_ACTION.EXIT_DELETE, revertExitDelete);
+    revertMap.set(Core.ROOM_ACTION.EXIT_CHANGE, revertInstanceChange);
+    revertMap.set(Core.ROOM_ACTION.EXIT_DELETE, revertDelete);
     revertMap.set(Core.ROOM_ACTION.CAMERA_CHANGE, revertCameraChange);
     revertMap.set(Core.ROOM_ACTION.ROOM_PROP_CHANGE, revertRoomPropChange);
 }
@@ -512,6 +505,7 @@ function actionInstanceChange({newState, instRef}: InstanceChangeProps, makeComm
     RoomMainEventBus.emit('instance-changed', curInstance);
 
     if (makeCommit){
+        console.log(curInstance)
         let data = {newState, oldState, instRef: curInstance} satisfies InstanceChangeProps;
         undoStore.commit({action: Core.ROOM_ACTION.INSTANCE_CHANGE, data});
     }
@@ -579,32 +573,6 @@ function actionExitAdd({exitRef, pos}: ExitAddProps, makeCommit = true): Core.Ex
     }
 
     return newExit;
-}
-
-function actionExitChange({newState}: ExitChangeProps, makeCommit = true): void {
-    const selected = editorSelection.value! as Core.Exit;
-    const oldState = Object.assign({}, editorSelection.value);
-
-    Object.assign(selected, newState);
-
-    RoomMainEventBus.emit('instance-changed', selected);
-
-    if (makeCommit){
-        const data = {newState, oldState, exitRef: selected} satisfies ExitChangeProps;
-        undoStore.commit({action: Core.ROOM_ACTION.EXIT_CHANGE, data});
-    }
-}
-
-function actionExitDelete({exitId}: ExitDeleteProps, makeCommit = true): void {
-    const exitRef = props.selectedRoom.removeInstance(exitId)!;
-    editorSelection.value = null;
-
-    RoomMainEventBus.emit('instance-removed', exitRef);
-
-    if (makeCommit){
-        let data = {exitId, exitRef} satisfies ExitDeleteProps;
-        undoStore.commit({action: Core.ROOM_ACTION.EXIT_DELETE, data});
-    }
 }
 
 function actionRoomPropChange({newState}: RoomPropChangeProps, makeCommit = true): void {
@@ -687,18 +655,6 @@ function revertExitAdd({exitRef}: ExitAddProps): void {
     RoomMainEventBus.emit('instance-removed', exitRef);
 }
 
-function revertExitDelete({exitRef}: ExitDeleteProps): void {
-    const exit = new Core.Exit(-1);
-    Object.assign(exit, exitRef);
-    props.selectedRoom.addInstance(exit);
-    RoomMainEventBus.emit('instance-added', exitRef);
-}
-
-function revertExitChange({oldState, exitRef}: ExitChangeProps): void {
-    Object.assign(exitRef!, oldState);
-    RoomMainEventBus.emit('instance-changed', exitRef);
-}
-
 function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
     const oldBG = props.selectedRoom.bgColor;
 
@@ -761,8 +717,8 @@ function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
                     @inst-group-changed="actionInstanceGroupChange($event)"
                     @inst-var-changed="actionInstanceVarChange({changeObj: $event})"
                     @cam-prop-set="actionCameraChange({newState: $event})"
-                    @exit-prop-set="actionExitChange({newState: ($event as Partial<Core.Exit>)})"
-                    @exit-delete="actionExitDelete({exitId: ($event.id as number)})"
+                    @exit-prop-set="actionInstanceChange({newState: ($event as Partial<Core.Instance_Base>)})"
+                    @exit-delete="actionDelete({instId: ($event.id as number)})"
                     @room-prop-set="actionRoomPropChange({newState: $event})"/>
             </div>
         </div>
