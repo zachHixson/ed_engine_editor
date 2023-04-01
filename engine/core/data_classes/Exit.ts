@@ -98,10 +98,13 @@ export class Exit extends Instance_Base {
     }
 
     triggerExit(objInstance: Object_Instance, instDirection?: Vector): void {
-        Exit.exitInstance = objInstance;
-
         if (this.destinationRoom != null){
-            Exit.engine!.transitionRoom(this.destinationRoom, this.transition, ()=>this._loadRoom(objInstance, instDirection));
+            const transition = Exit.engine!.setTransition(this.transition);
+            Exit.exitInstance = objInstance;
+            Exit.engine!.enableInput = false;
+            transition.addEventListener('load-room', ()=>this._loadRoom(objInstance, instDirection), {once:true});
+            transition.addEventListener('complete', ()=>Exit.engine!.enableInput = true, {once: true});
+            transition.start(this.destinationRoom);
         }
     }
 

@@ -8,9 +8,9 @@ export default class Transition_Fade extends Transition_Base {
         super(gl, renderer);
     }
 
-    start(roomId: number, loadRoomCallback: (roomId: number)=>void, onFinishCallback: ()=>void): void {
-        loadRoomCallback(roomId);
-        onFinishCallback();
+    start(roomId: number): void {
+        this.emit('load-room', roomId);
+        this.emit('complete');
     }
 
     render(): void {}
