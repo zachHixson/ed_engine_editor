@@ -188,7 +188,7 @@ function zoom(): void {
 }
 
 function centerView(): void {
-    const dpiScale = props.dpiScale ?? 1;
+    const dpiScale = props.dpiScale;
 
     const cornerUL = new Vector(
         props.contentsBounds[0],
@@ -213,7 +213,6 @@ function centerView(): void {
     );
 
     minContainerDim /= props.unitScale;
-    midPoint.multiplyScalar(props.unitScale);
 
     setZoom((minContainerDim / maxContentsDim) * dpiScale);
     props.navState.setOffset(midPoint);
