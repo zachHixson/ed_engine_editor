@@ -253,8 +253,8 @@ class UI_Renderer {
             vec2 tUv = fract(v_uv / 16.0);
             tUv = abs(tUv - 0.5) * 2.0;
             float grid = max(tUv.x, tUv.y) * 16.0;
-            grid -= 16.0 - (u_pixelWidth * 1.5);
-            grid = smoothstep(0.0, u_pixelWidth, grid);
+            grid -= 16.0 - (u_pixelWidth * 2.0);
+            grid = smoothstep(0.0, u_pixelWidth / 4.0, grid) * 0.5;
 
             //xy grid
             vec2 absUv = abs(v_uv) * 2.0;
@@ -276,8 +276,8 @@ class UI_Renderer {
             float cameraGrad = max(cameraGradUv.x, cameraGradUv.y);
             float cameraMask = step(cameraGrad, 1.0);
             float cameraBounds = abs(cameraGrad - u_camera.z) * 16.0;
-            cameraBounds -= u_pixelWidth * 1.5;
-            cameraBounds = 1.0 - smoothstep(0.0, u_pixelWidth, cameraBounds);
+            cameraBounds -= u_pixelWidth * 2.0;
+            cameraBounds = (1.0 - smoothstep(0.0, u_pixelWidth * 2.0, cameraBounds)) * 0.6;
 
             //selection
             vec2 selectionUv = abs(((v_uv - u_selection.xy) / 16.0) - 0.5) * 2.0;
