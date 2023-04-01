@@ -227,7 +227,7 @@ function bindReversions(): void {
 
 function resize(): void {
     nextTick(()=>{
-        RoomMainEventBus.emit('resized');
+        RoomMainEventBus.emit('resize');
     });
 }
 

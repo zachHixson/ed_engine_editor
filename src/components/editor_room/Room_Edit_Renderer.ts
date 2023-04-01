@@ -119,6 +119,7 @@ export default class Room_Edit_Renderer {
         mousePos.divide(windowDimensions).subtractScalar(0.5).multiplyScalar(2);
         mousePos.y *= -1;
 
+        //convert to world space
         const mouseCell = mousePos.clone().multiplyMat3(this._viewMatrixInv.clone().transpose());
         mouseCell.divideScalar(16);
         mouseCell.floor();
@@ -195,6 +196,7 @@ export default class Room_Edit_Renderer {
         this._instanceRenderer.resize();
         this._iconRenderer.resize();
         this._uiRenderer.resize();
+        this._viewMatrixNeedsUpdate = true;
         this.queueRender();
     }
 
