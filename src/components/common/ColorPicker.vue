@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import Core from '@/core';
 
 const EXPAND = 1.15;
@@ -188,7 +188,7 @@ function updateCursorColors(): void {
     const h = ((Math.atan2(dirVector.y, dirVector.x) + Math.PI) / Math.PI) * 180;
     const s = dirVector.length() * EXPAND;
     const v = valuePos.value;
-    const rgb = Draw.HSVToRGB(h, s / (canvas.width / 2), 1.0);
+    const rgb = Draw.HSVToRGB(h, Math.min(s / (canvas.width / 2), 1), 1.0);
     const hs = new Draw.Color(rgb.r, rgb.g, rgb.b);
     const hsv = new Draw.Color(Math.round(rgb.r * v), Math.round(rgb.g * v), Math.round(rgb.b * v));
     
