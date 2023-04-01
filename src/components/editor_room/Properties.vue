@@ -208,7 +208,8 @@ function nanToNull(inp: number): number | null {
                 <label for="camFollowType">{{$t('room_editor.follow_type')}}: </label>
                 <select id="camFollowType" :value="camera.followType" v-tooltip="$t('room_editor.tt_camera_follow_type')"
                     @change="setCamProp({followType: ($event.target as AnyObj).value})">
-                    <option :value="Core.Camera.FOLLOW_TYPES.SMOOTH">{{$t('room_editor.smooth')}}</option>
+                    <option :value="Core.Camera.FOLLOW_TYPES.SMART">{{$t('room_editor.smart')}}</option>
+                    <option :value="Core.Camera.FOLLOW_TYPES.CENTERED">{{$t('room_editor.centered')}}</option>
                     <option :value="Core.Camera.FOLLOW_TYPES.TILED">{{$t('room_editor.tiled')}}</option>
                 </select>
             </div>

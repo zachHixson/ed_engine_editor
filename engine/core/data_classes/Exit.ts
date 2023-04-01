@@ -79,7 +79,7 @@ export class Exit extends Instance_Base {
         }
 
         if (Exit.exitCamera){
-            Object.assign(engine.room.camera, Exit.exitCamera);
+            engine.room.camera.copyCameraSettings(Exit.exitCamera);
         }
     }
 

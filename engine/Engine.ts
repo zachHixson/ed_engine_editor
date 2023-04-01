@@ -212,64 +212,7 @@ export class Engine implements iEngineCallbacks {
     }
 
     private _updateCamera = (): void =>{
-        const camera = this._loadedRoom!.camera;
-        const {MOVE_TYPES, SCROLL_DIRS, FOLLOW_TYPES} = Camera;
-
-        camera.pos.add(camera.velocity.clone().multiplyScalar(this._deltaTime));
-
-        switch(camera.moveType){
-            case MOVE_TYPES.LOCKED:
-                camera.velocity.x = 0;
-                camera.velocity.y = 0;
-                break;
-
-            case MOVE_TYPES.FOLLOW:
-                const target = this._loadedRoom!.instances.find(
-                    instance => instance.id == camera.followObjId
-                )!;
-                const targetPos = target.pos.clone().addScalar(8)
-
-                switch(camera.followType){
-                    case FOLLOW_TYPES.SMOOTH:
-                        camera.pos.copy(targetPos);
-                        break;
-                    case FOLLOW_TYPES.TILED:
-                        const width = Sprite.DIMENSIONS * camera.size;
-                        
-                        if (!camera.tiledOrigin){
-                            camera.tiledOrigin = camera.pos.clone();
-                        }
-
-                        camera.pos.x = Math.floor((targetPos.x - camera.tiledOrigin.x + (width / 2)) / width) * width;
-                        camera.pos.y = Math.floor((targetPos.y - camera.tiledOrigin.y + (width / 2)) / width) * width;
-                        camera.pos.x += camera.tiledOrigin.x;
-                        camera.pos.y += camera.tiledOrigin.y;
-                }
-
-                this._renderer.updateViewMatrix();
-
-                break;
-            
-            case MOVE_TYPES.SCROLL:
-                const speed = camera.scrollSpeed * this._deltaTime;
-
-                switch(camera.scrollDir){
-                    case SCROLL_DIRS.UP:
-                        camera.pos.y += speed;
-                        break;
-                    case SCROLL_DIRS.DOWN:
-                        camera.pos.y -= speed;
-                        break;
-                    case SCROLL_DIRS.RIGHT:
-                        camera.pos.x += speed;
-                        break;
-                    case SCROLL_DIRS.LEFT:
-                        camera.pos.x -= speed;
-                        break;
-                }
-
-                this._renderer.updateViewMatrix();
-        }
+        this._loadedRoom.camera.update(this.deltaTime, this._loadedRoom!, this._renderer.updateViewMatrix);
     }
 
     private _processCollisions = (): void =>{

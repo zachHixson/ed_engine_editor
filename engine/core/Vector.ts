@@ -55,7 +55,9 @@ export class Vector {
         return this;
     }
 
-    multiplyScalar = this.scale;
+    multiplyScalar(scalar: number): Vector {
+        return this.scale(scalar);
+    }
 
     divide(vec: Vector): Vector {
         this.x /= vec.x;
@@ -81,7 +83,9 @@ export class Vector {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
 
-    length = this.magnitude;
+    length(): number {
+        return this.magnitude();
+    }
 
     normalize(): Vector {
         const magnitude = this.magnitude();
@@ -174,6 +178,18 @@ export class Vector {
 
     zero(): Vector {
         this.x = this.y = 0;
+        return this;
+    }
+
+    clampLength(maxLength: number): Vector {
+        const curLength = this.length();
+        const scaleFac = maxLength / curLength;
+
+        if (curLength > maxLength){
+            this.x *= scaleFac;
+            this.y *= scaleFac;
+        }
+
         return this;
     }
 }

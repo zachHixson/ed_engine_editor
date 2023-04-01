@@ -45,7 +45,7 @@ export default class Renderer{
         this._instanceRenderer.updateInstance(instance, newFrame);
     }
     
-    updateViewMatrix(): void {
+    updateViewMatrix = (): void => {
         this._viewMatrixNeedsUpdate = true;
     }
 
