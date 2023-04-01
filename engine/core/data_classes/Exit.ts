@@ -5,6 +5,7 @@ import { Object_Instance } from './Object_Instance';
 import { Game_Object } from './Game_Object';
 import Engine from '@engine/Engine';
 import { COLLISION_EVENT } from '../nodes/Node_Enums';
+import { TRANSITION } from '@engine/transitions/Transition_Base';
 
 export interface iExitSaveData extends iInstanceBaseSaveData {
     isEnding: boolean;
@@ -13,11 +14,6 @@ export interface iExitSaveData extends iInstanceBaseSaveData {
     transition: TRANSITION;
     endingDialog: string;
 }
-
-enum TRANSITION {
-    NONE = 'N',
-    FADE = 'F',
-};
 
 export class Exit extends Instance_Base {
     static EXIT_ICON_ID = 'EXIT_ICON';
@@ -48,37 +44,14 @@ export class Exit extends Instance_Base {
 
     get hasCollisionEvent(){return true};
 
-    onUpdate(): void {
-        if (Exit.destExit != this) return;
-        
-        const overlapping = Exit.engine!.getInstancesOverlapping(this).filter(i => i.id == Exit.exitInstance?.id);
-
-        if (!overlapping.length) Exit.resetState();
-    }
-
-    onCollision(event: iCollisionEvent): void {
-        if (Exit.exitInstance) return;
-        if (event.type != COLLISION_EVENT.START) return;
-        if (this.isEnding) {
-            Exit.engine!.triggerEnding(this.endingDialog);
-            return;
-        }
-        if (this.destinationRoom == null || event.instance.TYPE != INSTANCE_TYPE.OBJECT) return;
-        this.triggerExit(event.instance as Object_Instance);
-    }
-
-    triggerExit(objInstance: Object_Instance, instDirection?: Vector): void {
+    private _loadRoom(objInstance: Object_Instance, instDirection?: Vector){
         const EXIT_TYPES = Game_Object.EXIT_TYPES;
         const engine = Exit.engine!;
         const exitBehavior = objInstance.objRef.exitBehavior;
         const prevRoom = engine.room;
         const direction = instDirection ?? objInstance.pos.clone().subtract(objInstance.lastPos).normalize();
 
-        Exit.exitInstance = objInstance;
-
-        if (this.destinationRoom != null){
-            engine.loadRoom(this.destinationRoom);
-        }
+        engine.loadRoom(this.destinationRoom!);
 
         //remove object from room so it doesn't respawn on re-enter
         if (exitBehavior != EXIT_TYPES.TRANSITION_ONLY) {
@@ -100,6 +73,35 @@ export class Exit extends Instance_Base {
                 objInstance.setPrevExit(Exit.destExit, direction);
             case EXIT_TYPES.KEEP_POSITION:
                 engine.addInstance(objInstance);
+        }
+    }
+
+    onUpdate(): void {
+        if (Exit.destExit != this) return;
+        
+        const overlapping = Exit.engine!.getInstancesOverlapping(this).filter(i => i.id == Exit.exitInstance?.id);
+
+        if (!overlapping.length) {
+            Exit.resetState();
+        }
+    }
+
+    onCollision(event: iCollisionEvent): void {
+        if (Exit.exitInstance) return;
+        if (event.type != COLLISION_EVENT.START) return;
+        if (this.isEnding) {
+            Exit.engine!.triggerEnding(this.endingDialog);
+            return;
+        }
+        if (this.destinationRoom == null || event.instance.TYPE != INSTANCE_TYPE.OBJECT) return;
+        this.triggerExit(event.instance as Object_Instance);
+    }
+
+    triggerExit(objInstance: Object_Instance, instDirection?: Vector): void {
+        Exit.exitInstance = objInstance;
+
+        if (this.destinationRoom != null){
+            Exit.engine!.transitionRoom(this.destinationRoom, this.transition, ()=>this._loadRoom(objInstance, instDirection));
         }
     }
 

@@ -21,6 +21,8 @@ import {
 } from '@engine/core/core';
 import Node from './Node';
 import iGameData from './iGameData';
+import getTransitions from './transitions/getTransitions';
+import Transition_Base, { TRANSITION } from './transitions/Transition_Base';
 
 export * as Core from '@engine/core/core';
 
@@ -69,6 +71,8 @@ export class Engine implements iEngineCallbacks {
         x: 0,
         y: 0,
     };
+    private _transitionMap: Map<TRANSITION, Transition_Base>;
+    private _transition: Transition_Base;
 
     enableInput = true;
     enableUpdate = true;
@@ -84,11 +88,13 @@ export class Engine implements iEngineCallbacks {
         window.IS_ENGINE = true;
 
         this._canvas = canvas;
-        this._gl = WGL.getGLContext(this._canvas)!;
+        this._gl = WGL.getGLContext(this._canvas, {alpha: false})!;
         this._renderer = new Renderer(this._gl);
         this._dialogBox = new Dialog_Box(this._gl);
         this._dialogFullscreen = new Dialog_Fullscreen(this._gl);
         this._gameData = this._parseGameData(gameData);
+        this._transitionMap = getTransitions(this._gl, this._renderer);
+        this._transition = this._transitionMap.get(TRANSITION.NONE)!;
 
         //integrate callbacks
         if (callbacks){
@@ -166,8 +172,10 @@ export class Engine implements iEngineCallbacks {
         }
 
         this._renderer.render();
+        this._transition.render(this.deltaTime);
         this._dialogBox.render(this.deltaTime);
         this._dialogFullscreen.render(this.deltaTime);
+
         window.IS_ENGINE = false;
     }
 
@@ -309,12 +317,6 @@ export class Engine implements iEngineCallbacks {
                 }
             });
         });
-    }
-
-    triggerEnding = (endingText: string): void =>{
-        this.enableInput = false;
-        this.enableUpdate = false;
-        this._dialogFullscreen.open(endingText);
     }
 
     private _parseGameData = (gameData: string): iGameData => {
@@ -543,6 +545,17 @@ export class Engine implements iEngineCallbacks {
 
     getRoomData = (roomId: number): Room | undefined => {
         return this._gameData.rooms.find(room => room.id == roomId);
+    }
+
+    transitionRoom = (roomId: number, transitionType: TRANSITION, loadRoomCallback: (roomId: number)=>void): void => {
+        this._transition = this._transitionMap.get(transitionType) ?? this._transitionMap.get(TRANSITION.NONE)!;
+        this._transition.start(roomId, loadRoomCallback);
+    }
+
+    triggerEnding = (endingText: string): void =>{
+        this.enableInput = false;
+        this.enableUpdate = false;
+        this._dialogFullscreen.open(endingText);
     }
 
     registerCollision = (sourceInstance: Instance_Base, collisionInstance: Instance_Base, force = false): void =>{
