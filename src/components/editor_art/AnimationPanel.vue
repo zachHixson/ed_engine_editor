@@ -53,7 +53,6 @@ const selectedFrameIdx = computed({
     }
 });
 const animFrames = computed(()=>props.sprite.frames);
-const animFrameKeys = computed(()=>props.sprite.frameIDs);
 
 watch(()=>mainStore.getInputActive, (newState: boolean)=>hotkeyMap.enabled = !newState);
 
@@ -225,7 +224,7 @@ function frameOrderChanged(event: {itemIdx: number, newIdx: number}): void {
                     <AnimFrame
                         v-for="(frame, idx) in animFrames"
                         class="animFrame"
-                        :key="sprite.id + idx"
+                        :key="sprite.id.toString() + idx"
                         :index="idx"
                         :sprite="sprite"
                         @selectedFrameChanged="selectedFrameChanged"
