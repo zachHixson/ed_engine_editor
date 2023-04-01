@@ -5,6 +5,9 @@ import Transition_Base, {TRANSITION} from "./Transition_Base";
 const DURATION = 1;
 
 export default class Transition_Fade extends Transition_Base {
+    protected static readonly _planeGeo = WGL.createPlaneGeo();
+    protected static readonly _planeUVs = WGL.createPlaneGeo().map(i => (i + 1) * 0.5);
+
     private static readonly _vertexSource = `
         attribute vec2 a_pos;
 

@@ -1,4 +1,4 @@
-import { WGL, EventListenerMixin } from "@engine/core/core";
+import { EventListenerMixin } from "@engine/core/core";
 import Renderer from "@engine/Renderer";
 
 export enum TRANSITION {
@@ -7,9 +7,6 @@ export enum TRANSITION {
 };
 
 export default abstract class Transition_Base extends EventListenerMixin(class{}) {
-    protected static readonly _planeGeo = WGL.createPlaneGeo();
-    protected static readonly _planeUVs = WGL.createPlaneGeo().map(i => (i + 1) * 0.5);
-
     protected _gl: WebGL2RenderingContext;
     protected _renderer: Renderer;
 
