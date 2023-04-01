@@ -167,7 +167,7 @@ function pan(): void {
 
     difference.y *= -1;
 
-    difference.divideScalar(props.navState.zoomFac).multiplyScalar(devicePixelRatio);
+    difference.divideScalar(props.navState.zoomFac * props.unitScale).multiplyScalar(devicePixelRatio);
     props.navState.offset.add(difference);
 
     props.navState.setOffset(props.navState.offset);
