@@ -227,14 +227,14 @@ export class Engine implements iEngineCallbacks {
                 const target = this._loadedRoom!.instances.find(
                     instance => instance.id == camera.followObjId
                 )!;
-                const targetPos = target.pos.clone().addScalar(8);
+                const targetPos = target.pos.clone().addScalar(8)
 
                 switch(camera.followType){
                     case FOLLOW_TYPES.SMOOTH:
                         camera.pos.copy(targetPos);
                         break;
                     case FOLLOW_TYPES.TILED:
-                        const width = 240 * camera.size;
+                        const width = Sprite.DIMENSIONS * camera.size;
                         
                         if (!camera.tiledOrigin){
                             camera.tiledOrigin = camera.pos.clone();
@@ -246,6 +246,8 @@ export class Engine implements iEngineCallbacks {
                         camera.pos.y += camera.tiledOrigin.y;
                 }
 
+                this._renderer.updateViewMatrix();
+
                 break;
             
             case MOVE_TYPES.SCROLL:
@@ -253,10 +255,10 @@ export class Engine implements iEngineCallbacks {
 
                 switch(camera.scrollDir){
                     case SCROLL_DIRS.UP:
-                        camera.pos.y -= speed;
+                        camera.pos.y += speed;
                         break;
                     case SCROLL_DIRS.DOWN:
-                        camera.pos.y += speed;
+                        camera.pos.y -= speed;
                         break;
                     case SCROLL_DIRS.RIGHT:
                         camera.pos.x += speed;
@@ -265,6 +267,8 @@ export class Engine implements iEngineCallbacks {
                         camera.pos.x -= speed;
                         break;
                 }
+
+                this._renderer.updateViewMatrix();
         }
     }
 

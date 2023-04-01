@@ -3,6 +3,7 @@ import { iCollisionEvent, iInstanceBaseSaveData, Instance_Base } from './Instanc
 import {INSTANCE_TYPE} from '../Enums';
 import { Object_Instance } from './Object_Instance';
 import { Game_Object } from './Game_Object';
+import { Camera } from './Camera';
 import Engine from '@engine/Engine';
 import { COLLISION_EVENT } from '../nodes/Node_Enums';
 import { TRANSITION } from '@engine/transitions/Transition_Base';
@@ -22,10 +23,12 @@ export class Exit extends Instance_Base {
     static ENDING_ICON = [new ImageData(1, 1)];
     static engine: Engine | null;
     static exitInstance: Object_Instance | null;
+    static exitCamera: Camera | null;
     static destExit: Exit | null;
     static resetState(): void {
         Exit.exitInstance?.clearPrevExit();
         Exit.exitInstance = null;
+        Exit.exitCamera = null;
         Exit.destExit = null;
     }
 
@@ -74,6 +77,10 @@ export class Exit extends Instance_Base {
             case EXIT_TYPES.KEEP_POSITION:
                 engine.addInstance(objInstance);
         }
+
+        if (Exit.exitCamera){
+            Object.assign(engine.room.camera, Exit.exitCamera);
+        }
     }
 
     onUpdate(): void {
@@ -104,6 +111,11 @@ export class Exit extends Instance_Base {
             Exit.engine!.enableInput = false;
             transition.addEventListener('load-room', ()=>this._loadRoom(objInstance, instDirection), {once:true});
             transition.addEventListener('complete', ()=>Exit.engine!.enableInput = true, {once: true});
+
+            if (Exit.exitInstance.objRef.keepCameraSettings){
+                Exit.exitCamera = Exit.engine!.room.camera;
+            }
+
             transition.start(this.destinationRoom);
         }
     }

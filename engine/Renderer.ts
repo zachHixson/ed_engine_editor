@@ -44,9 +44,9 @@ export default class Renderer{
     updateInstance = (instance: Instance_Base, newFrame?: number): void => {
         this._instanceRenderer.updateInstance(instance, newFrame);
     }
-
-    startTransition = (type: any, duration: number, switchCallback: ()=>void, completeCallback?: ()=>void): void => {
-        //
+    
+    updateViewMatrix(): void {
+        this._viewMatrixNeedsUpdate = true;
     }
 
     render = (): void => {
