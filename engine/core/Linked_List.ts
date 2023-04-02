@@ -240,6 +240,14 @@ export class Linked_List<T>{
         this._end = tail;
     }
 
+    remove(callback: (value: T) => boolean): T | null {
+        const ref = this.findRef(callback);
+
+        ref && this.removeByNodeRef(ref);
+
+        return ref?.val ?? null;
+    }
+
     removeByNodeRef(nodeRef: Node<T>): void {
         this._removeNode(nodeRef);
     }
@@ -308,13 +316,16 @@ export class Linked_List<T>{
         }
     }
 
-    map(func: (e: T)=>T): void {
+    map(func: (e: T)=>T): Linked_List<T> {
+        const newList = new Linked_List<T>();
         let curNode = this._start;
 
         while (curNode){
-            curNode.val = func(curNode.val);
+            newList.push(func(curNode.val));
             curNode = curNode.next;
         }
+
+        return newList;
     }
 };
 

@@ -51,14 +51,11 @@ export class Exit extends Instance_Base {
         const EXIT_TYPES = Game_Object.EXIT_TYPES;
         const engine = Exit.engine!;
         const exitBehavior = objInstance.objRef.exitBehavior;
-        const prevRoom = engine.room;
         const direction = instDirection ?? objInstance.pos.clone().subtract(objInstance.lastPos).normalize();
-
-        engine.loadRoom(this.destinationRoom!);
 
         //remove object from room so it doesn't respawn on re-enter
         if (exitBehavior != EXIT_TYPES.TRANSITION_ONLY) {
-            const prevRoomData = engine.getRoomData(prevRoom.id)!;
+            const prevRoomData = engine.getRoomData(engine.room.id)!;
             
             if (prevRoomData.hasInstance(objInstance.id)){
                 prevRoomData.removeInstance(objInstance.id);
@@ -66,6 +63,8 @@ export class Exit extends Instance_Base {
             
             objInstance.lastPos.copy(objInstance.pos);
         }
+
+        engine.loadRoom(this.destinationRoom!);
 
         Exit.destExit = engine.room.instances.find(e => e.id == this.destinationExit)! as Exit;
 

@@ -33,7 +33,7 @@ export abstract class Instance_Base{
     //Basic data getters
     abstract get TYPE(): INSTANCE_TYPE;
     abstract clone(): any;
-    abstract toSaveData(): iAnyObj;
+    abstract toSaveData(): any;
 
     //Rendering getters
     get renderable() {return false};

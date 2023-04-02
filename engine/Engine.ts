@@ -122,7 +122,9 @@ export class Engine implements iEngineCallbacks {
     loadRoom = (roomId: number): void =>{
         const room = this._gameData.rooms.find((r: Room) => r.id == roomId)!;
         this._dispatchLogicEvent('e_before_destroy');
+        this._loadedRoom && this._loadedRoom.clearSpacialData();
         this._loadedRoom = room.persist ? room : room.clone();
+        this._loadedRoom.initSpacialData();
         this._collisionMap = new Map();
         this._renderer.setRoom(this._loadedRoom);
         this._clearNodeEvents();
@@ -403,8 +405,8 @@ export class Engine implements iEngineCallbacks {
         this._nodeEventMap = new Map();
     }
 
-    private _filterOverlapping = <T extends Instance_Base>(entityList: Spacial_Collection<T>, {id, pos, TYPE}: {id: number, pos: Vector, TYPE: INSTANCE_TYPE}): Instance_Base[] =>{
-        const broadCheck = entityList.getByRadius(pos, 32);
+    private _filterOverlapping = ({id, pos, TYPE}: {id: number, pos: Vector, TYPE: INSTANCE_TYPE}): Instance_Base[] =>{
+        const broadCheck = this.room!.getInstancesInRadius(pos, 32);
         return broadCheck.filter(checkEntity => (
                 checkEntity.pos.x + 16 > pos.x &&
                 checkEntity.pos.x < pos.x + 16 &&
@@ -538,7 +540,7 @@ export class Engine implements iEngineCallbacks {
     }
 
     getInstancesAtPosition = (pos: Vector): Instance_Base[] =>{
-        const broadCheck = this.room!.instances.getByRadius(pos, 32);
+        const broadCheck = this.room!.getInstancesInRadius(pos, 32);
         return broadCheck.filter(instance => 
             Util.isInBounds(
                 pos.x,
@@ -552,7 +554,7 @@ export class Engine implements iEngineCallbacks {
     }
 
     getInstancesOverlapping = (instance: Instance_Base): Object_Instance[] =>{
-        return this._filterOverlapping(this.room!.instances, instance) as Object_Instance[];
+        return this._filterOverlapping(instance) as Object_Instance[];
     }
 
     addInstance = (instance: Instance_Base): void => {
@@ -576,8 +578,7 @@ export class Engine implements iEngineCallbacks {
     }
 
     setInstancePosition = (instance: Instance_Base, pos: Vector): void =>{
-        instance.setPosition(pos);
-        this.room!.instances.updatePosition(instance.id);
+        this.room!.setInstancePosition(instance, pos);
 
         if (instance.renderable){
             this._renderer.updateInstance(instance);

@@ -9,6 +9,7 @@ import { Game_Object } from './Game_Object';
 import { iObjectInstanceSaveData, Object_Instance } from './Object_Instance';
 import { Vector } from '../Vector';
 import { Instance_Base } from './Instance_Base';
+import { Linked_List } from '../Linked_List';
 
 export interface iRoomSaveData extends iAssetSaveData {
     cameraProps: iCameraSaveData;
@@ -23,31 +24,35 @@ export interface iRoomSaveData extends iAssetSaveData {
 export class Room extends Asset_Base {
     private static _curInstId: number = 0;
 
+    private _instances: Linked_List<Instance_Base> = new Linked_List();
+    private _spacialCollection: Spacial_Collection<Instance_Base> | null = null;
+
     navState: NavState = new NavState();
     camera: Camera = new Camera();
-    instances: Spacial_Collection<Instance_Base> = new Spacial_Collection(2000, 64);
     bgColor: Color = new Color(255, 255, 255);
     persist: boolean = false;
     useGravity: boolean = false;
     gravity: number = 9.81;
     
     get category_ID(){return CATEGORY_ID.ROOM}
-    get instanceList(){return this.instances}
-    get curInstId(){return Room._curInstId++};
+    get curInstId(){return Room._curInstId++}
+    get instances(){return this._instances}
 
     clone(): Room {
-        let clone = Object.assign(new Room(), this);
+        let clone = Object.assign(new Room(), this) as Room;
         clone.camera = this.camera.clone();
-        clone.instances = this.instances.clone(true);
+        clone._instances = this.instances.map(i => i.clone());
         clone.bgColor = Object.assign(new Color(), this.bgColor);
         return clone;
     }
 
     toSaveData(): iRoomSaveData {
+        this._instances.sort((a, b) => a.zDepth < b.zDepth);
+
         return {
             ...this.getBaseAssetData(),
             cameraProps: this.camera.toSaveData(),
-            instancesSerial: this.instances.toSaveData(),
+            instancesSerial: this.instances.toArray().map(i => i.toSaveData()),
             bgColor: this.bgColor.toHex().replace('#', ''),
             persist: this.persist,
             useGravity: this.useGravity,
@@ -90,48 +95,83 @@ export class Room extends Asset_Base {
         return this;
     }
 
+    private _noSpacialDataError(): void {
+        console.error('ERROR: Cannot perform spacial operations without initializing spacial data');
+    }
+
     purgeMissingReferences(objects: Game_Object[], rooms: Room[]){
-        // this.instances.forEach(i => {
-        //     const foundObj = objects.find(o => o.id == i.objRef.id);
+        const objectInstances: Object_Instance[] = [];
+        const exitInstances: Exit[] = [];
 
-        //     if (!foundObj){
-        //         this.removeInstance(i.id);
-        //     }
-        // });
+        this._instances.forEach(instance => {
+            switch (instance.TYPE){
+                case INSTANCE_TYPE.OBJECT:
+                    objectInstances.push(instance as Object_Instance);
+                    break;
+                case INSTANCE_TYPE.EXIT:
+                    exitInstances.push(instance as Exit);
+                    break;
+            }
+        })
 
-        // this.exits.forEach(e => {
-        //     const foundRoom = rooms.find(r => r.id == e.destinationRoom);
+        objectInstances.forEach(i => {
+            const foundObj = objects.find(o => o.id == i.objRef.id);
 
-        //     if (!foundRoom){
-        //         e.destinationRoom = null;
-        //         e.destinationExit = null;
-        //     }
-        // });
+            if (!foundObj){
+                this.removeInstance(i.id);
+            }
+        });
+
+        exitInstances.forEach(e => {
+            const foundRoom = rooms.find(r => r.id == e.destinationRoom);
+
+            if (!foundRoom){
+                e.destinationRoom = null;
+                e.destinationExit = null;
+            }
+        });
+    }
+
+    initSpacialData(): void {
+        this._spacialCollection = new Spacial_Collection(2000, 64);
+        this._instances.forEach(i => this._spacialCollection!.add(i));
+    }
+
+    clearSpacialData(): void {
+        if (!this._spacialCollection) return;
+        this._spacialCollection = null;
     }
 
     addInstance(newInstance: Instance_Base): void {
-        this.instances.add(newInstance);
+        this.instances.push(newInstance);
+        this._spacialCollection?.add(newInstance);
     }
 
     getInstanceById(instId: number): Instance_Base | null {
-        return this.instances.getById(instId);
+        return this.instances.find(i => i.id == instId) ?? null;
     }
 
     getInstancesInRadius(pos: Vector, radius: number): Instance_Base[] {
-        return this.instances.getByRadius(pos, radius);
-    }
+        if (!this._spacialCollection) {
+            this._noSpacialDataError();
+            return [];
+        }
 
-    getAllInstances(): Instance_Base[] {
-        return this.instances.toArray();
+        return this._spacialCollection.getByRadius(pos, radius);
     }
 
     removeInstance(instId: number): Instance_Base | null {
-        return this.instances.remove(instId);
+        let instance: Instance_Base | null = null;
+
+        this._instances.remove(i => i.id == instId);
+        this._spacialCollection?.remove(instId);
+
+        return instance;
     }
 
     setInstancePosition(instRef: Instance_Base, newPos: Vector): void {
-        instRef.pos.copy(newPos);
-        this.instances.updatePosition(instRef.id);
+        instRef.setPosition(newPos);
+        this._spacialCollection?.updatePosition(instRef.id);
     }
 
     hasInstance(instanceId: number): boolean {

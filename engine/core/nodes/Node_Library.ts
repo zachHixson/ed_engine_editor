@@ -377,7 +377,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                 if (!this.instance.prevExit) return false;
 
                 const direction = newPos.clone().subtract(this.instance.pos).normalize();
-                const dot = direction.dot(this.instance.prevExit.direction.multiplyScalar(-1));
+                const dot = direction.dot(this.instance.prevExit.direction.clone().multiplyScalar(-1));
 
                 if (dot > 0.75) {
                     this.instance.prevExit.exit.triggerExit(this.instance, direction);

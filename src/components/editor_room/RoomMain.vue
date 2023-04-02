@@ -135,8 +135,11 @@ const redoLength = computed<number>(()=>undoStore.redoLength);
 
 //watchers
 watch(()=>props.selectedRoom, (newRoom, oldRoom)=>{
+    newRoom.initSpacialData();
+
     if (newRoom && oldRoom && newRoom.id != oldRoom.id){
         editorSelection.value = null;
+        oldRoom.clearSpacialData();
     }
 });
 watch(isInputActive, (newVal: boolean)=>hotkeyMap.enabled = !newVal && mouse.inWindow);
@@ -152,6 +155,10 @@ onMounted(()=>{
     bindTools();
     bindActions();
     bindReversions();
+
+    if (props.selectedRoom){
+        props.selectedRoom.initSpacialData();
+    }
 });
 
 onBeforeUnmount(()=>{
@@ -159,6 +166,8 @@ onBeforeUnmount(()=>{
 
     window.removeEventListener('keydown', hotkeyDown as (e: Event)=>void);
     window.removeEventListener('keydown', hotkeyUp as (e: Event)=>void);
+
+    props.selectedRoom.clearSpacialData();
 });
 
 //Methods

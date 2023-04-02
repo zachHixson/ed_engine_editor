@@ -16,7 +16,6 @@ export class Spacial_Collection<T extends iSpacialObject> {
     private _divisions: number;
     private _cellDimensions: number;
     private _map: Map<number, Spacial_Reference<T>> = new Map();
-    private _list: Linked_List<Spacial_Reference<T>> = new Linked_List();
     private _spacialGrid: Linked_List<Spacial_Reference<T>>[];
 
     constructor(size: number, divisions: number) {
@@ -35,11 +34,9 @@ export class Spacial_Collection<T extends iSpacialObject> {
         const cellIdx = this._posToCellIdx(data.pos);
         const cell = this._spacialGrid[cellIdx];
 
-        this._list.insertSorted(spacialReference, (a, b) => a.data.zDepth <= b.data.zDepth);
         this._map.set(data.id, spacialReference);
         cell.push(spacialReference);
 
-        spacialReference.listNode = this._list.getLastInsertedRef()!;
         spacialReference.gridNode = cell.getLastInsertedRef()!;
         spacialReference.gridCell = cell;
     }
@@ -48,58 +45,25 @@ export class Spacial_Collection<T extends iSpacialObject> {
         const spacialRef = this._map.get(id);
 
         spacialRef?.gridCell?.removeByNodeRef(spacialRef.gridNode!);
-        this._list.removeByNodeRef(spacialRef?.listNode!);
         this._map.delete(id);
 
         return spacialRef?.data ?? null;
     }
 
-    forEach(callback: (data: T)=>void): void {
-        this._list.forEach(spacialRef => {
-            callback(spacialRef.data);
-        });
-    }
-
-    find(callback: (data: T)=>boolean): T | null {
-        return this._list.find(spacialRef => callback(spacialRef.data))?.data ?? null;
-    }
-
     clone(recursive: boolean = false): Spacial_Collection<T> {
         const clone = new Spacial_Collection<T>(this._size, this._divisions);
-        this._list.forEach(spacialRef => {
+        this._map.forEach(spacialRef => {
             const newData = recursive ? spacialRef.data.clone() : spacialRef.data;
             clone.add(newData)
         });
         return clone;
     }
 
-    toSaveData(): any {
-        const sanitizedInstances: any[] = [];
-
-        this._list.forEach(spacialRef => {
-            const data = spacialRef.data;
-
-            if (data.toSaveData){
-                sanitizedInstances.push(data.toSaveData());
-            }
-            else{
-                sanitizedInstances.push({id: data.id, pos: data.pos.toObject()});
-            }
-        });
-
-        return sanitizedInstances;
-    }
-
     toArray(): T[] {
-        const outArr = new Array(this._list.length);
-        let idx = 0;
-        this._list.forEach(spacialRef => outArr[idx++] = spacialRef.data);
+        const outArr = new Array(this._map.size);
+        this._map.forEach((spacialRef, idx) => outArr[idx] = spacialRef.data);
 
         return outArr;
-    }
-
-    resortZ(): void {
-        this._list.sort((a, b) => a.data.zDepth < b.data.zDepth);
     }
 
     getById(id: number): T | null {
@@ -155,7 +119,6 @@ export class Spacial_Collection<T extends iSpacialObject> {
 class Spacial_Reference<T> {
     data: T;
     pos: Vector;
-    listNode?: LL_Node<Spacial_Reference<T>>;
     gridNode?: LL_Node<Spacial_Reference<T>>;
     gridCell?: Linked_List<Spacial_Reference<T>>;
 

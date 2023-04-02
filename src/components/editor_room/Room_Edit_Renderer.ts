@@ -152,7 +152,7 @@ export default class Room_Edit_Renderer {
         this._instanceRenderer.clear();
         this._iconRenderer.clear();
 
-        this._roomRef.instanceList.forEach(instance => {
+        this._roomRef.instances.forEach(instance => {
             this.addInstance(instance);
         });
 
