@@ -33,7 +33,17 @@ export class Atlas {
         this._atlasTexture = this._gl.createTexture()!;
 
         this._gl.bindTexture(gl.TEXTURE_2D, this._atlasTexture);
-        this._gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, atlasSizeRounded, atlasSizeRounded);
+        this._gl.texImage2D(
+            this._gl.TEXTURE_2D,
+            0,
+            this._gl.RGBA,
+            this._atlasSize,
+            this._atlasSize,
+            0,
+            this._gl.RGBA,
+            this._gl.UNSIGNED_BYTE,
+            new Uint8ClampedArray(this._atlasSize * this._atlasSize * 4)
+        );
 
         if (!generateMipmaps){
             this._gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
