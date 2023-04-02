@@ -28,6 +28,8 @@ const engineLicensePreamble = `
 # The following license pertains only to the engine code.         #
 # Game content and assets that are bundled with the engine remain #
 #     the sole property of the individual(s) who created them.    #
+#     and can be licensed, distributed, and sold however the      #
+#     user sees fit.                                              #
 ###################################################################
 `;
 
