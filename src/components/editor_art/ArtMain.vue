@@ -231,7 +231,6 @@ function updateFrameIDs(): void {
             :tool="(tool as Tool_Base | null)"
             :navState="selectedAsset.navState!"
             :spriteFrame="selectedAsset.frames[selectedFrameIdx]"
-            :debugSprite="selectedAsset"
             :undoLength="undoLength"
             :redoLength="redoLength"
             @mouse-down="mouseDown"

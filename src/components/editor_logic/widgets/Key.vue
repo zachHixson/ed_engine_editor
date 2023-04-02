@@ -70,7 +70,6 @@ function deactivateSpace(event: KeyboardEvent): void {
     <div class="key-main">
         <button
             class="button"
-            name="debug"
             :class="active ? 'button-active':''"
             @click="setActive"
             @mousedown="$event.stopPropagation()"

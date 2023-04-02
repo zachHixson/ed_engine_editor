@@ -9,6 +9,7 @@ import Properties from './Properties.vue';
 import Tool from '@/components/common/Tool.vue';
 import HotkeyMap from '@/components/common/HotkeyMap';
 import Svg from '@/components/common/Svg.vue';
+import { AppEventBus } from '@/App.vue';
 
 import {
     ref,
@@ -149,6 +150,7 @@ watch(()=>mouse.inWindow, (newVal)=>hotkeyMap.enabled = newVal && !isInputActive
 onMounted(()=>{
     window.addEventListener('keydown', hotkeyDown as EventListener);
     window.addEventListener('keyup', hotkeyUp as EventListener);
+    AppEventBus.addEventListener('asset-deleted', refreshRoom as EventListener);
 
     resize();
     bindHotkeys();
@@ -225,6 +227,12 @@ function bindReversions(): void {
     revertMap.set(Core.ROOM_ACTION.EXIT_DELETE, revertDelete);
     revertMap.set(Core.ROOM_ACTION.CAMERA_CHANGE, revertCameraChange);
     revertMap.set(Core.ROOM_ACTION.ROOM_PROP_CHANGE, revertRoomPropChange);
+}
+
+function refreshRoom(): void {
+    props.selectedRoom.clearSpacialData();
+    props.selectedRoom.initSpacialData();
+    RoomMainEventBus.emit('room-changed');
 }
 
 function resize(): void {

@@ -162,9 +162,9 @@ function packageGame(): void {
             </div>
         </div>
         <div class="controls">
-            <button class="iconBtn" name="packageBtn" @click="packageGame" v-tooltip="$t('editor_main.package')"><Svg class="icon" :src="packageIcon"></Svg></button>
-            <button class="iconBtn" name="debugBtn" @click="playState = PLAY_STATE.DEBUGGING" v-tooltip="$t('editor_main.debug')"><Svg class="icon" :src="debugIcon"></Svg></button>
-            <button class="iconBtn" name="runBtn" @click="playState = PLAY_STATE.PLAYING" v-tooltip="$t('editor_main.run')"><Svg class="icon" :src="playIcon"></Svg></button>
+            <button class="iconBtn" @click="packageGame" v-tooltip="$t('editor_main.package')"><Svg class="icon" :src="packageIcon"></Svg></button>
+            <button class="iconBtn" @click="playState = PLAY_STATE.DEBUGGING" v-tooltip="$t('editor_main.debug')"><Svg class="icon" :src="debugIcon"></Svg></button>
+            <button class="iconBtn" @click="playState = PLAY_STATE.PLAYING" v-tooltip="$t('editor_main.run')"><Svg class="icon" :src="playIcon"></Svg></button>
         </div>
         <input type="file" ref="fileOpen" style="display: none" accept=".html, .edproj" @change="loadProjectFile"/>
     </div>

@@ -17,7 +17,7 @@ const iconLoaded = ref(true);
 
 const isSelected = computed(()=>(props.curSelection == props.tool) || (props.toggled));
 
-function click(event: MouseEvent): void {
+function click(): void {
     emit('tool-clicked', props.tool);
 }
 </script>

@@ -9,11 +9,14 @@ import CategoryWrapper from './CategoryWrapper.vue';
 
 import { ref, computed, nextTick, onMounted } from 'vue';
 import { useGameDataStore } from '@/stores/GameData';
+import { useI18n } from 'vue-i18n';
 import Core from '@/core';
+
 import spriteIcon from '@/assets/sprite_icon.svg';
 import physicsIcon from '@/assets/physics.svg';
 import logicIcon from '@/assets/logic.svg';
 
+const { t } = useI18n();
 const gameDataStore = useGameDataStore();
 
 const props = defineProps<{
@@ -111,7 +114,7 @@ function logicScriptChanged(event: Event): void {
 
 <template>
     <div class="objMain">
-        <CategoryWrapper :iconPath="spriteIcon" :heading="$t('object_editor.heading_sprite')">
+        <CategoryWrapper :iconPath="spriteIcon" :heading="t('object_editor.heading_sprite')">
             <div class="options">
                 <div class="control">
                     <label for="drawing_select">{{$t('object_editor.sprite_selector')}}:</label>
@@ -149,7 +152,7 @@ function logicScriptChanged(event: Event): void {
                 :loop="props.selectedAsset.animLoop"
                 :parent-event-bus="ObjectMainEventBus"/>
         </CategoryWrapper>
-        <CategoryWrapper :iconPath="physicsIcon" :heading="$t('object_editor.heading_physics')">
+        <CategoryWrapper :iconPath="physicsIcon" :heading="t('object_editor.heading_physics')">
             <div class="options">
                 <div class="control">
                     <label for="isSolid">{{$t('object_editor.is_solid')}}:</label>
@@ -161,7 +164,7 @@ function logicScriptChanged(event: Event): void {
                 </div>
             </div>
         </CategoryWrapper>
-        <CategoryWrapper :iconPath="logicIcon" :heading="$t('object_editor.heading_logic')">
+        <CategoryWrapper :iconPath="logicIcon" :heading="t('object_editor.heading_logic')">
             <div class="options">
                 <div class="control">
                     <label for="trigger_exits">{{$t('object_editor.trigger_exits')}}:</label>

@@ -219,7 +219,6 @@ defineExpose({socket: props.socket});
                     @input="onInput($event as InputEvent)" />
                 <Input
                     v-if="socketType == Core.Node_Enums.SOCKET_TYPE.STRING"
-                    name="textInput"
                     type="text"
                     :style="customStyles"
                     :value="socketValue"

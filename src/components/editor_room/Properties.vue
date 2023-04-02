@@ -53,7 +53,7 @@ const destinationRoomExits = computed(()=>{
     const allRooms = gameDataStore.getAllRooms;
     const destRoom = allRooms.find(r => r.id == (props.selectedEntity as Core.Exit).destinationRoom);
 
-    return destRoom?.getAllInstances()!.filter(instance => instance.TYPE == Core.INSTANCE_TYPE.EXIT);
+    return destRoom?.instances.toArray().filter(instance => instance.TYPE == Core.INSTANCE_TYPE.EXIT);
 });
 
 //lifecycle
@@ -63,17 +63,17 @@ onMounted(()=>{
     }
 });
 
-function checkNameCollisions(name: string, list: any[]): string {
+function checkNameCollisions(name: string, list: Core.Linked_List<Core.Instance_Base>): string {
     let nameExists;
 
     do{
         nameExists = false;
 
-        for (let i = 0; i < list.length && !nameExists; i++){
-            let nameMatch = (list[i].name == name);
-            let idMatch = (list[i].id == props.selectedEntity?.id);
-            nameExists ||=  nameMatch && !idMatch;
-        }
+        list.forEach(instance => {
+            const nameMatch = instance.name == name;
+            const idMatch = instance.id == props.selectedEntity?.id;
+            nameExists ||= nameMatch && !idMatch;
+        })
 
         if (nameExists){
             name += '_' + t('room_editor.duplicate_name_suffix');
@@ -113,14 +113,14 @@ function setRoomBgColor(color: Core.Draw.Color): void {
 }
 
 function setInstanceName(newName: string): void {
-    const instanceList = props.room.getAllInstances();
+    const instanceList = props.room.instances;
     newName = checkNameCollisions(newName, instanceList);
 
     setInstProp({name: newName});
 }
 
 function setExitName(newName: string): void {
-    const instanceList = props.room.getAllInstances();
+    const instanceList = props.room.instances;
     newName = checkNameCollisions(newName, instanceList);
 
     setExitProp({name: newName});

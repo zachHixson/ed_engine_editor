@@ -96,7 +96,7 @@ function groupDeleted(group: string, idx: number, event: any): void {
             </div>
         </div>
         <button class="addBtn" @click="addGroup" v-tooltip="t('object_editor.tt_groups')">
-            <Svg name="plusBtn" :src="plusIcon"></Svg>
+            <Svg :src="plusIcon"></Svg>
         </button>
     </div>
 </template>

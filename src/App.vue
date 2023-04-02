@@ -48,6 +48,7 @@ function updateEditorAsset(): void {
 
 function updateAfterDeletion(): void {
     gameDataStore.purgeMissingReferences();
+    AppEventBus.emit('asset-deleted');
 }
 
 function newProject(): void {
@@ -106,7 +107,8 @@ function saveAs(data: string, fileName: string){
         <PlayWindow v-if="mainStore.getPlayState != PLAY_STATE.NOT_PLAYING" class="playWindow" />
     </transition>
     <Tooltip />
-    <div name="preloadedIcons" hidden>
+    <!--Preloaded icons-->
+    <div hidden>
         <img src="@/assets/error_decorator.svg" />
         <img src="@/assets/warning_decorator.svg" />
         <img src="@/assets/socket_any.svg" />
