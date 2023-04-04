@@ -274,7 +274,6 @@ class UI_Renderer {
 
             vec2 cameraGradUv = abs(cameraUv - 0.5) * 2.0;
             float cameraGrad = max(cameraGradUv.x, cameraGradUv.y);
-            float cameraMask = step(cameraGrad, 1.0);
             float cameraBounds = abs(cameraGrad - u_camera.z) * 16.0;
             cameraBounds -= u_pixelWidth * 2.0;
             cameraBounds = (1.0 - smoothstep(0.0, u_pixelWidth * 2.0, cameraBounds)) * 0.6;
@@ -295,7 +294,7 @@ class UI_Renderer {
                 gl_FragColor = mix(gl_FragColor, vec4(0.5, 1.0, 0.0, 1.0), yAxis);
             }
             
-            gl_FragColor = mix(gl_FragColor, vec4(vec3(u_iconColor), 1.0), cameraIcon.a * cameraMask);
+            gl_FragColor = mix(gl_FragColor, vec4(vec3(u_iconColor), 1.0), cameraIcon.a);
             gl_FragColor = mix(gl_FragColor, vec4(vec3((u_iconColor + 0.5) * 0.4), 1.0), cameraBounds);
             gl_FragColor = mix(gl_FragColor, vec4(0.0, 0.5, 1.0, 1.0), selectionBox);
         }
@@ -337,6 +336,7 @@ class UI_Renderer {
         this._gl.bindVertexArray(this._vao);
         
         this._positionAttribute.set(new Float32Array(UI_Renderer._planeGeo), 2, this._gl.FLOAT);
+        this._cameraIconUniform.set(UI_Renderer.CAMERA_ICON);
 
         if (!iconsLoaded){
             document.addEventListener('icons-loaded', this.iconsLoaded, {once: true});
@@ -356,7 +356,9 @@ class UI_Renderer {
         this._cameraIconUniform.set(UI_Renderer.CAMERA_ICON, ()=>{
             this._gl.generateMipmap(this._gl.TEXTURE_2D);
             this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MIN_FILTER, this._gl.LINEAR_MIPMAP_LINEAR);
-            this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MAG_FILTER, this._gl.NEAREST);
+            this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MAG_FILTER, this._gl.LINEAR);
+            this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_WRAP_S, this._gl.CLAMP_TO_EDGE);
+            this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_WRAP_T, this._gl.CLAMP_TO_EDGE);
         });
     }
 
