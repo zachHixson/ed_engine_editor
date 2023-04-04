@@ -200,7 +200,7 @@ export class Instance_Renderer {
         const spriteoffset = atlasData.atlas.getImageOffset(instance.frameDataId, imageFrame).divideScalar(this._tileSize);
         this._gl.bindVertexArray(atlasData.vao);
 
-        atlasData.positionBuffer.setSubData(new Float32Array([instance.pos.x, instance.pos.y, instance.zDepth]), bufferLocation * 4 * 3);
+        atlasData.positionBuffer.setSubData(new Float32Array([instance.pos.x, instance.pos.y, -instance.zDepth]), bufferLocation * 4 * 3);
         atlasData.spriteOffsetBuffer.setSubData(new Uint8Array([spriteoffset.x, spriteoffset.y]), bufferLocation * 2);
         atlasData.bufferLocations[bufferLocation] = instance.id;
     }
@@ -225,7 +225,7 @@ export class Instance_Renderer {
     }
 
     private _getNextDepthOffset(userDepth: number): number {
-        const currentOffset = this._depthOffsets.get(userDepth) ?? 0;
+        const currentOffset = Math.min(this._depthOffsets.get(userDepth) ?? 0, 0.01);
         const nextOffset = currentOffset + DEPTH_OFFSET_INCREMENT;
 
         this._depthOffsets.set(userDepth, nextOffset);

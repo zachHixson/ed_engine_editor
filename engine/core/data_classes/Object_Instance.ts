@@ -27,9 +27,9 @@ export class Object_Instance extends Instance_Base{
         exit: Exit,
         direction: Vector,
     } | null = null;
+    private _zDepthOverride: number | null = null;
 
     objRef: Game_Object;
-    zDepthOverride: number | null = null;
     collisionOverride: COLLISION_OVERRIDE = COLLISION_OVERRIDE.KEEP;
     startFrame: number = 0;
     fps: number = 0;
@@ -44,7 +44,6 @@ export class Object_Instance extends Instance_Base{
 
         this.objRef = objRef;
         this.name = this.objRef.name + '_' + this.id;
-        this.zDepthOverride = null;
         this.collisionOverride = COLLISION_OVERRIDE.KEEP;
 
         //engine props
@@ -62,7 +61,7 @@ export class Object_Instance extends Instance_Base{
     get COLLISION_OVERRIDES(){return COLLISION_OVERRIDE};
 
     get userDepth(){return (this.zDepthOverride) ? this.zDepthOverride : this.objRef.zDepth};
-    get zDepth(){return this.userDepth - this.depthOffset};
+    get zDepth(){return (this.userDepth / 100) + this.depthOffset};
     get renderable(){return !!this.objRef?.sprite ?? false};
     get hasEditorFrame(){return this.objRef.hasEditorFrame};
     get editorFrameNum(){return this.objRef.editorFrameNum};
@@ -119,6 +118,16 @@ export class Object_Instance extends Instance_Base{
     }
 
     get prevExit(){return this._prevExit}
+
+    get zDepthOverride(){return this._zDepthOverride}
+    set zDepthOverride(newDepth: number | null){
+        if (newDepth == null){
+            this._zDepthOverride = null;
+        }
+        else{
+            this._zDepthOverride = Math.max(Math.min(newDepth, 99), -99);
+        }
+    }
 
     onCreate(): void {
         this.executeNodeEvent('e_create');

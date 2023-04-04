@@ -1,5 +1,4 @@
 import { INSTANCE_TYPE } from "../Enums";
-import { iAnyObj } from "../interfaces";
 import { Vector } from "../Vector";
 import { Node_Enums } from "../core";
 

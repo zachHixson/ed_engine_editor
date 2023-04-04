@@ -52,6 +52,7 @@ const props = defineProps<{
 
 .contents{
     display: flex;
+    flex-direction: row;
     justify-content: flex-end;
     flex-grow: 1;
 }

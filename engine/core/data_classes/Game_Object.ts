@@ -32,12 +32,12 @@ export class Game_Object extends Asset_Base {
     static get EXIT_TYPES(){return EXIT_TYPES}
 
     private _startFrame: number = 0;
+    private _zDepth: number = 0;
 
     sprite: Sprite | null = null;
     fps = 6;
     animLoop: boolean = true;
     animPlaying: boolean = false;
-    zDepth: number = 0;
     isSolid: boolean = false;
     applyGravity: boolean = false;
     triggerExits: boolean = false;
@@ -57,6 +57,11 @@ export class Game_Object extends Asset_Base {
         }
 
         return this.sprite.frameIsEmpty(this._startFrame) ? null : this.sprite.drawToCanvas(this._startFrame);
+    }
+
+    get zDepth(){return this._zDepth};
+    set zDepth(newDepth: number){
+        this._zDepth = Math.max(Math.min(newDepth, 99), -99);
     }
 
     clone(): Game_Object {

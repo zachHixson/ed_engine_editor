@@ -144,13 +144,19 @@ function logicScriptChanged(event: Event): void {
                     <label for="isPlaying">{{$t('object_editor.is_playing')}}:</label>
                     <input type="checkbox" id="isPlaying" v-model="props.selectedAsset.animPlaying" v-tooltip="$t('object_editor.tt_is_playing')"/>
                 </div>
+                <div v-if="props.selectedAsset.sprite" class="control">
+                    <label for="depth">{{$t('object_editor.depth')}}:</label>
+                    <input type="number" id="depth" v-model.lazy="props.selectedAsset.zDepth" v-tooltip="$t('object_editor.tt_depth')"/>
+                </div>
             </div>
-            <AnimationPlayer
-                :sprite="props.selectedAsset.sprite!"
-                :fps="props.selectedAsset.fps"
-                :startFrame="startFrame"
-                :loop="props.selectedAsset.animLoop"
-                :parent-event-bus="ObjectMainEventBus"/>
+            <div>
+                <AnimationPlayer
+                    :sprite="props.selectedAsset.sprite!"
+                    :fps="props.selectedAsset.fps"
+                    :startFrame="startFrame"
+                    :loop="props.selectedAsset.animLoop"
+                    :parent-event-bus="ObjectMainEventBus"/>
+            </div>
         </CategoryWrapper>
         <CategoryWrapper :iconPath="physicsIcon" :heading="t('object_editor.heading_physics')">
             <div class="options">
