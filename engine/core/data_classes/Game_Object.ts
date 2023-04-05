@@ -127,7 +127,6 @@ export class Game_Object extends Asset_Base {
     }
 
     get category_ID(){return CATEGORY_ID.OBJECT}
-    get hasEditorFrame(){return this.sprite ? !this.sprite.frameIsEmpty(this._startFrame) : false}
     get editorFrameNum(){return this._startFrame}
     get editorFrameID(){return this.sprite?.frameIDs[this._startFrame]}
 

@@ -104,7 +104,7 @@ export class Atlas {
 
         for (let i = 0; i < image.length; i++){
             const frame = image[i];
-            const [x, y] = this._calculateOffsetPosition(location);
+            const [x, y] = this._calculateOffsetPosition(location + i);
 
             this._gl.texSubImage2D(
                 this._gl.TEXTURE_2D,

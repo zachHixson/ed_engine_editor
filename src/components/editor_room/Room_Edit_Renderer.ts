@@ -161,7 +161,7 @@ export default class Room_Edit_Renderer {
 
     addInstance(instance: Core.Instance_Base): void {
         const renderer = this._getRenderer(instance);
-        renderer.addInstance(instance, instance.editorFrameNum);
+        renderer.addInstance(instance, instance.startFrame);
         this.queueRender();
     }
 

@@ -37,7 +37,7 @@ export abstract class Instance_Base{
     //Rendering getters
     get renderable() {return false};
     get hasEditorFrame(): boolean {return false};
-    get editorFrameNum(){return 0};
+    get startFrame(){return 0};
     get animFrame(){return 0};
     set animFrame(val: number){};
     get userDepth(){return 0};

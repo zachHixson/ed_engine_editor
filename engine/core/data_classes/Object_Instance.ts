@@ -28,10 +28,11 @@ export class Object_Instance extends Instance_Base{
         direction: Vector,
     } | null = null;
     private _zDepthOverride: number | null = null;
+    private _useIcon = false;
 
     objRef: Game_Object;
     collisionOverride: COLLISION_OVERRIDE = COLLISION_OVERRIDE.KEEP;
-    startFrame: number = 0;
+    startFrameOverride: number | null = null;
     fps: number = 0;
     animLoop: boolean = false;
     animPlaying: boolean = false;
@@ -62,11 +63,14 @@ export class Object_Instance extends Instance_Base{
 
     get userDepth(){return (this.zDepthOverride) ? this.zDepthOverride : this.objRef.zDepth};
     get zDepth(){return (this.userDepth / 100) + this.depthOffset};
-    get renderable(){return !!this.objRef?.sprite ?? false};
-    get hasEditorFrame(){return this.objRef.hasEditorFrame};
-    get editorFrameNum(){return this.objRef.editorFrameNum};
-    get frameDataId(){return this.objRef?.sprite?.id ?? Object_Instance.DEFAULT_INSTANCE_ICON_ID};
-    get frameData(){return this.objRef?.sprite?.frames ?? Object_Instance.DEFAULT_INSTANCE_ICON};
+    get renderable(){return !!this.objRef?.sprite};
+    get hasEditorFrame(){
+        this._useIcon = this.objRef?.sprite?.frameIsEmpty(this.startFrame) ?? true;
+        return !this._useIcon;
+    };
+    get startFrame(){return this.startFrameOverride ?? this.objRef.startFrame};
+    get frameDataId(){return this._useIcon || !this.renderable ? Object_Instance.DEFAULT_INSTANCE_ICON_ID : this.objRef!.sprite!.id};
+    get frameData(){return this._useIcon || !this.renderable ? Object_Instance.DEFAULT_INSTANCE_ICON : this.objRef!.sprite!.frames};
     get sprite(){return this.objRef?.sprite};
     get logic(){return this.objRef.logicScript};
     get isSolid(){
@@ -171,7 +175,6 @@ export class Object_Instance extends Instance_Base{
     }
 
     initAnimProps(): void {
-        this.startFrame = this.objRef.startFrame;
         this.fps = this.objRef.fps;
         this.animLoop = this.objRef.animLoop;
         this.animPlaying = this.objRef.animPlaying;
