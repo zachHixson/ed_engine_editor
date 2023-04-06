@@ -4,7 +4,6 @@ const { WGL } = Core;
 
 export default class Art_Canvas_Renderer{
     private static readonly CANVAS_WIDTH = Core.Sprite.DIMENSIONS * 20;
-
     private static readonly _vertexSource = `
         uniform vec2 u_dimensions;
         uniform mat3 u_viewMatrix;
@@ -74,6 +73,9 @@ export default class Art_Canvas_Renderer{
     private static readonly _planeGeo = WGL.createPlaneGeo().map(i => i * Art_Canvas_Renderer.CANVAS_WIDTH * 0.5);
     private static readonly _planeUVs = WGL.createPlaneGeo().map(i => (i + 1) / 2);
 
+    static readonly DEFAULT_CELL_SIZE = 20;
+    static readonly UNIT_WIDTH = Art_Canvas_Renderer.DEFAULT_CELL_SIZE / Core.Sprite.DIMENSIONS;
+
     private _nextDrawCall: number | null = null;
     private _navState: Core.iNavState;
     private _canvas: HTMLCanvasElement;
@@ -131,7 +133,7 @@ export default class Art_Canvas_Renderer{
     }
 
     private _updateViewMatrix(): void {
-        const zoom = this._navState.zoomFac;
+        const zoom = this._navState.zoomFac * Art_Canvas_Renderer.UNIT_WIDTH;
         const { x, y } = this._navState.offset;
         const dimensions = new Core.Vector(this._canvas.width / 2, this._canvas.height / 2);
         const zoomMat = new Core.Mat3([zoom, 0, 0, 0, zoom, 0, 0, 0, 1]);

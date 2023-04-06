@@ -13,8 +13,6 @@ import { useArtEditorStore } from '@/stores/ArtEditor';
 import { ArtMainEventBus } from './ArtMain.vue';
 import Core from '@/core';
 
-const DEFAULT_CELL_SIZE = 20;
-
 const props = defineProps<{
     tool: Tool_Base | null,
     navState: Core.NavState,
@@ -48,8 +46,7 @@ const unitScale = ref(1);
 const devicePixelRatio = ref(window.devicePixelRatio);
 let renderer: Art_Canvas_Renderer | null = null;
 
-const CANVAS_WIDTH = Core.Sprite.DIMENSIONS * DEFAULT_CELL_SIZE;
-const UNIT_WIDTH = DEFAULT_CELL_SIZE / Core.Sprite.DIMENSIONS;
+const CANVAS_WIDTH = Core.Sprite.DIMENSIONS * Art_Canvas_Renderer.DEFAULT_CELL_SIZE;
 const contentsBounds = (()=>{
     const halfCanvas = (CANVAS_WIDTH / 2);
     return [-halfCanvas, -halfCanvas, halfCanvas, halfCanvas];
@@ -229,7 +226,7 @@ function updateMouseCell(event: MouseEvent): void {
             :selectedNavTool="artEditorStore.getSelectedNavTool"
             :maxZoom="maxZoom"
             :contentsBounds="contentsBounds"
-            :unitScale="UNIT_WIDTH"
+            :unitScale="Art_Canvas_Renderer.UNIT_WIDTH"
             :dpiScale="devicePixelRatio"
             :parentEventBus="ArtCanvasEventBus"
             :invert-y-axis="true"
