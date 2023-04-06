@@ -114,63 +114,68 @@ function logicScriptChanged(event: Event): void {
 
 <template>
     <div class="objMain">
-        <CategoryWrapper :iconPath="spriteIcon" :heading="t('object_editor.heading_sprite')">
-            <div class="options">
-                <div class="control">
-                    <label for="drawing_select">{{$t('object_editor.sprite_selector')}}:</label>
-                    <select ref="spriteSelectorRef" id="drawing_select" :value="props.selectedAsset.sprite ? props.selectedAsset.sprite.id : ''" @change="setObjectSprite" v-tooltip="$t('object_editor.tt_sprite')">
-                        <option :value="''">{{$t('generic.no_option')}}</option>
-                        <option
-                            v-for="sprite in spriteChoices"
-                            :key="sprite.id"
-                            :value="sprite.id">
-                            {{sprite.name}}
-                        </option>
-                    </select>
+        <div class="top-row">
+            <CategoryWrapper :iconPath="spriteIcon" :heading="t('object_editor.heading_sprite')">
+                <div class="options">
+                    <div class="control">
+                        <label for="drawing_select">{{$t('object_editor.sprite_selector')}}:</label>
+                        <select ref="spriteSelectorRef" id="drawing_select" :value="props.selectedAsset.sprite ? props.selectedAsset.sprite.id : ''" @change="setObjectSprite" v-tooltip="$t('object_editor.tt_sprite')">
+                            <option :value="''">{{$t('generic.no_option')}}</option>
+                            <option
+                                v-for="sprite in spriteChoices"
+                                :key="sprite.id"
+                                :value="sprite.id">
+                                {{sprite.name}}
+                            </option>
+                        </select>
+                    </div>
+                    <div v-if="props.selectedAsset.sprite" class="control">
+                        <label for="frameStart">{{$t('object_editor.start_frame')}}:</label>
+                        <input type="number" ref="frameStartRef" id="frameStart"  v-model="startFrame" v-tooltip="$t('object_editor.tt_start_frame')"/>
+                    </div>
+                    <div v-if="props.selectedAsset.sprite" class="control">
+                        <label for="fps">{{$t('object_editor.fps')}}:</label>
+                        <input type="number" id="fps" v-model="props.selectedAsset.fps" @change="validateFPS" v-tooltip="$t('object_editor.tt_fps')"/>
+                    </div>
+                    <div v-if="props.selectedAsset.sprite" class="control">
+                        <label for="loop">{{$t('object_editor.loop')}}:</label>
+                        <input type="checkbox" id="loop" v-model="props.selectedAsset.animLoop" v-tooltip="$t('object_editor.tt_loop')"/>
+                    </div>
+                    <div v-if="props.selectedAsset.sprite" class="control">
+                        <label for="isPlaying">{{$t('object_editor.is_playing')}}:</label>
+                        <input type="checkbox" id="isPlaying" v-model="props.selectedAsset.animPlaying" v-tooltip="$t('object_editor.tt_is_playing')"/>
+                    </div>
+                    <div v-if="props.selectedAsset.sprite" class="control">
+                        <label for="depth">{{$t('object_editor.depth')}}:</label>
+                        <input type="number" id="depth" v-model.lazy="props.selectedAsset.zDepth" v-tooltip="$t('object_editor.tt_depth')"/>
+                    </div>
                 </div>
-                <div v-if="props.selectedAsset.sprite" class="control">
-                    <label for="frameStart">{{$t('object_editor.start_frame')}}:</label>
-                    <input type="number" ref="frameStartRef" id="frameStart"  v-model="startFrame" v-tooltip="$t('object_editor.tt_start_frame')"/>
+                <div class="v-divider"></div>
+                <div class="options">
+                    <div class="control">
+                        <AnimationPlayer
+                            :sprite="props.selectedAsset.sprite!"
+                            :fps="props.selectedAsset.fps"
+                            :startFrame="startFrame"
+                            :loop="props.selectedAsset.animLoop"
+                            :parent-event-bus="ObjectMainEventBus"/>
+                    </div>
                 </div>
-                <div v-if="props.selectedAsset.sprite" class="control">
-                    <label for="fps">{{$t('object_editor.fps')}}:</label>
-                    <input type="number" id="fps" v-model="props.selectedAsset.fps" @change="validateFPS" v-tooltip="$t('object_editor.tt_fps')"/>
+            </CategoryWrapper>
+            <CategoryWrapper :iconPath="physicsIcon" :heading="t('object_editor.heading_physics')">
+                <div class="options">
+                    <div class="control">
+                        <label for="isSolid">{{$t('object_editor.is_solid')}}:</label>
+                        <input type="checkbox" id="isSolid" v-model="props.selectedAsset.isSolid" v-tooltip="$t('object_editor.tt_solid')"/>
+                    </div>
+                    <div class="control">
+                        <label for="useGravity">{{$t('object_editor.apply_gravity')}}:</label>
+                        <input type="checkbox" id="useGravity" v-model="props.selectedAsset.applyGravity" v-tooltip="$t('object_editor.tt_gravity')"/>
+                    </div>
                 </div>
-                <div v-if="props.selectedAsset.sprite" class="control">
-                    <label for="loop">{{$t('object_editor.loop')}}:</label>
-                    <input type="checkbox" id="loop" v-model="props.selectedAsset.animLoop" v-tooltip="$t('object_editor.tt_loop')"/>
-                </div>
-                <div v-if="props.selectedAsset.sprite" class="control">
-                    <label for="isPlaying">{{$t('object_editor.is_playing')}}:</label>
-                    <input type="checkbox" id="isPlaying" v-model="props.selectedAsset.animPlaying" v-tooltip="$t('object_editor.tt_is_playing')"/>
-                </div>
-                <div v-if="props.selectedAsset.sprite" class="control">
-                    <label for="depth">{{$t('object_editor.depth')}}:</label>
-                    <input type="number" id="depth" v-model.lazy="props.selectedAsset.zDepth" v-tooltip="$t('object_editor.tt_depth')"/>
-                </div>
-            </div>
-            <div>
-                <AnimationPlayer
-                    :sprite="props.selectedAsset.sprite!"
-                    :fps="props.selectedAsset.fps"
-                    :startFrame="startFrame"
-                    :loop="props.selectedAsset.animLoop"
-                    :parent-event-bus="ObjectMainEventBus"/>
-            </div>
-        </CategoryWrapper>
-        <CategoryWrapper :iconPath="physicsIcon" :heading="t('object_editor.heading_physics')">
-            <div class="options">
-                <div class="control">
-                    <label for="isSolid">{{$t('object_editor.is_solid')}}:</label>
-                    <input type="checkbox" id="isSolid" v-model="props.selectedAsset.isSolid" v-tooltip="$t('object_editor.tt_solid')"/>
-                </div>
-                <div class="control">
-                    <label for="useGravity">{{$t('object_editor.apply_gravity')}}:</label>
-                    <input type="checkbox" id="useGravity" v-model="props.selectedAsset.applyGravity" v-tooltip="$t('object_editor.tt_gravity')"/>
-                </div>
-            </div>
-        </CategoryWrapper>
-        <CategoryWrapper :iconPath="logicIcon" :heading="t('object_editor.heading_logic')">
+            </CategoryWrapper>
+        </div>
+        <CategoryWrapper class="logic" :iconPath="logicIcon" :heading="t('object_editor.heading_logic')">
             <div class="options">
                 <div class="control">
                     <label for="trigger_exits">{{$t('object_editor.trigger_exits')}}:</label>
@@ -189,6 +194,9 @@ function logicScriptChanged(event: Event): void {
                     <input type="checkbox" id="keep_camera_settings" v-model="props.selectedAsset.keepCameraSettings" v-tooltip="$t('object_editor.tt_keep_camera_settings')" />
                 </div>
                 <div v-if="props.selectedAsset.triggerExits" class="spacer"></div>
+            </div>
+            <div class="v-divider"></div>
+            <div class="options">
                 <div v-if="!props.selectedAsset.customLogic" class="control">
                     <label for="logic_preset_select">{{$t('object_editor.logic_preset')}}:</label>
                     <select id="logic_preset_select" v-tooltip="$t('object_editor.tt_logic_preset')">
@@ -208,9 +216,15 @@ function logicScriptChanged(event: Event): void {
                         <option :value="'new'">{{$t('generic.new')}}</option>
                     </select>
                 </div>
-                <GroupList
-                    :editList="props.selectedAsset.groups"
-                    @group-changed="groupChanged"/>
+            </div>
+            <div class="v-divider"></div>
+            <div class="options">
+                <div class="control">
+                    <GroupList
+                        style="min-width: 200px"
+                        :editList="props.selectedAsset.groups"
+                        @group-changed="groupChanged"/>
+                </div>
             </div>
         </CategoryWrapper>
     </div>
@@ -222,7 +236,9 @@ function logicScriptChanged(event: Event): void {
 .objMain{
     display: flex;
     flex-direction: column;
-    align-items: stretch;
+    justify-content: stretch;
+    align-items: center;
+    gap: 10px;
     box-sizing: border-box;
     background: white;
     padding: 20px;
@@ -235,7 +251,10 @@ function logicScriptChanged(event: Event): void {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    margin-right: 5px;
+}
+
+.v-divider{
+    border-right: 1px solid rgba(0.0, 0.0, 0.0, 0.2);
 }
 
 .control{
@@ -243,6 +262,8 @@ function logicScriptChanged(event: Event): void {
     flex-direction: row;
     align-items: center;
     margin: 3px;
+    margin-left: none;
+    margin-right: none;
 }
 
 .control > *:last-child{
@@ -252,5 +273,23 @@ function logicScriptChanged(event: Event): void {
 .spacer{
     display: block;
     height: 10px;
+}
+
+.top-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: stretch;
+    gap: 10px;
+    width: 100%;
+    max-width: 1200px;
+}
+
+.top-row > * {
+    flex-grow: 1;
+}
+
+.logic {
+    width: 100%;
+    max-width: 1200px;
 }
 </style>

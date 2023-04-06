@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Svg from '@/components/common/Svg.vue';
 
-const props = defineProps<{
+defineProps<{
     heading: string,
     iconPath: string,
 }>();
@@ -21,15 +21,16 @@ const props = defineProps<{
 .categoryWrapper{
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: flex-start;
     flex-wrap: wrap;
     background: var(--tool-panel-bg);
     padding: 10px;
-    margin-bottom: 10px;
+    box-sizing: border-box;
     border: 2px solid var(--border);
     border-radius: 10px;
     user-select: none;
+    overflow: hidden;
 }
 
 .icon{
@@ -55,6 +56,8 @@ const props = defineProps<{
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
+    height: 100%;
+    gap: 10px;
     flex-grow: 1;
 }
 </style>
