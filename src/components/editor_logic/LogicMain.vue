@@ -1107,6 +1107,7 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
     flex-direction: column;
     justify-content: center;
     height: 100%;
+    user-select: none;
 }
 
 .side-panel{
@@ -1320,6 +1321,7 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
     flex-direction: column;
     justify-content: center;
     height: 100%;
+    user-select: none;
 }
 
 .graph-list-library{

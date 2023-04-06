@@ -46,6 +46,7 @@ function tabClick(): void {
     max-width: 50%;
     border-radius: var(--corner-radius) var(--corner-radius) 0px 0px;
     color: var(--text-dark);
+    user-select: none;
 }
 
 .editorTab:not(:last-child){

@@ -253,6 +253,7 @@ function scrollHandler(event: Event): void {
 .assetBrowser{
     overflow: hidden;
     height: 100%;
+    user-select: none;
 }
 
 .slideWrapper{

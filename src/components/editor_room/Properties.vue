@@ -323,6 +323,7 @@ function nanToNull(inp: number): number | null {
     display: flex;
     flex-direction: column;
     padding: 10px;
+    user-select: none;
 }
 
 .propContents{

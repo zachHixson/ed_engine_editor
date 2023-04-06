@@ -8,6 +8,7 @@
     border: 3px solid var(--border);
     border-radius: 1000px;
     margin: 5px;
+    user-select: none;
 }
 
 .viewportControl:hover:not(.controlSelected){

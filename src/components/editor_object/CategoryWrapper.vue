@@ -29,6 +29,7 @@ const props = defineProps<{
     margin-bottom: 10px;
     border: 2px solid var(--border);
     border-radius: 10px;
+    user-select: none;
 }
 
 .icon{

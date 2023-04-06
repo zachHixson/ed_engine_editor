@@ -235,6 +235,7 @@ function packageGame(): void {
     flex-direction: row;
     justify-content: center;
     align-items: center;
+    user-select: none;
 }
 
 .projTitle{
