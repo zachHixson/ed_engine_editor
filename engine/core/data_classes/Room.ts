@@ -162,9 +162,8 @@ export class Room extends Asset_Base {
     }
 
     removeInstance(instId: number): Instance_Base | null {
-        let instance: Instance_Base | null = null;
+        const instance = this._instances.remove(i => i.id == instId);
 
-        this._instances.remove(i => i.id == instId);
         this._spacialCollection?.remove(instId);
 
         return instance;
