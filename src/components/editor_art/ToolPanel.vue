@@ -191,7 +191,7 @@ function toolChanged(newTool: Core.ART_TOOL_TYPE): void {
 <template>
     <div class="toolPanel">
         <div class="tool-panel-wrapper" :class="{toolPanelWrapperClosed : !isOpen}">
-            <div v-show="isOpen" class="panel-contents">
+            <div v-if="isOpen" class="panel-contents">
                 <div class="picker-wrapper">
                     <ColorPicker
                         :width="200"

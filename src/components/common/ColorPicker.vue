@@ -244,6 +244,13 @@ function mouseUp(): void {
     document.removeEventListener('mouseup', mouseUp);
     emit('change-end', selectedColor);
 }
+
+function doubleClick(): void {
+    const white = new Core.Draw.Color(255, 255, 255);
+    selectedColor = white;
+    moveCursorToColor(white);
+    emit('change-end', selectedColor);
+}
 </script>
 
 <template>
@@ -252,6 +259,7 @@ function mouseUp(): void {
             <canvas
                 ref="canvasRef"
                 class="canvas"
+                @dblclick="doubleClick"
                 @mousedown="wheelDown">
                 //Error loading canvas
             </canvas>
@@ -274,6 +282,10 @@ function mouseUp(): void {
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+.colorPicker > * {
+    user-select: none;
 }
 
 .wheelWrapper{

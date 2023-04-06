@@ -42,6 +42,7 @@ function click(): void {
     margin: 5px;
     border-radius: 8pt;
     border: 2px solid var(--border);
+    user-select: none;
 }
 
 .tool:hover:not(.toolSelected){
