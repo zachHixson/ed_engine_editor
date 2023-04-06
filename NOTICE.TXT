@@ -1,0 +1,8 @@
+Vue 3 Framework
+Copyright (c) 2018-present, Yuxi (Evan) You
+
+Pinia Store
+Copyright (c) 2019-present Eduardo San Martin Morote
+
+Vue i18n
+Copyright (c) 2016 kazuya kawaguchi

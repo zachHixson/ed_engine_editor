@@ -16,8 +16,6 @@ import { useGameDataStore } from './stores/GameData';
 import { useAssetBrowserStore } from './stores/AssetBrowser';
 import Core, { HTMLTemplate, EngineRawText } from '@/core';
 
-import licenseText from '@/../LICENSE.TXT?raw';
-
 //stores
 const mainStore = useMainStore();
 const gameDataStore = useGameDataStore();
@@ -26,10 +24,10 @@ const assetBrowserStore = useAssetBrowserStore();
 const engineLicensePreamble = `
 ###################################################################
 # The following license pertains only to the engine code.         #
-# Game content and assets that are bundled with the engine remain #
-#     the sole property of the individual(s) who created them.    #
-#     and can be licensed, distributed, and sold however the      #
-#     user sees fit.                                              #
+# The game, game contents, and assets that are bundled with the   #
+#     engine remain the sole property of the individual(s) who    #
+#     created them, and can be licensed, distributed,             #
+#     and sold however the individual(s) see fit.                 #
 ###################################################################
 `;
 
@@ -66,6 +64,7 @@ function saveProject(): void {
 }
 
 function packageGame(): void {
+    const licenseText = document.getElementById('license')?.innerHTML;
     const engineLicense = engineLicensePreamble + licenseText;
     const projectName = mainStore.getProjectName;
     const gameData = mainStore.getSaveData;
