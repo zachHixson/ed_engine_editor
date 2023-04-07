@@ -14,6 +14,7 @@ import HotkeyMap from '@/components/common/HotkeyMap';
 import Undo_Store, { type iActionStore, useUndoHelpers } from '@/components/common/Undo_Store';
 import DialogNewVariable from './DialogNewVariable.vue';
 import Svg from '@/components/common/Svg.vue';
+import NodeLibrary from './NodeLibrary.vue';
 
 import { ref, reactive, computed, watch, nextTick, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
 import { useMainStore } from '@/stores/Main';
@@ -22,9 +23,7 @@ import type Logic from './Logic';
 import type { default as Node_Obj } from './Node';
 import Core from '@/core';
 
-import magGlassIcon from '@/assets/navigation_magglass.svg';
 import arrowIcon from '@/assets/arrow_01.svg';
-import eventIcon from '@/assets/event.svg';
 import trashIcon from '@/assets/trash.svg';
 import plusIcon from '@/assets/plus.svg';
 import renameIcon from '@/assets/rename.svg';
@@ -84,14 +83,6 @@ const navHotkeyTool = ref<Core.NAV_TOOL_TYPE | null>(null);
 const undoLength = computed(()=>undoStore.undoLength);
 const redoLength = computed(()=>undoStore.redoLength);
 const selectedNavTool = computed(()=>logicEditorStore.getSelectedNavTool);
-const showLibrary = computed({
-    get(){
-        return logicEditorStore.isLibraryPanelOpen;
-    },
-    set(newState){
-        logicEditorStore.setLibraryPanelState(newState);
-    }
-});
 const showGraphs = computed({
     get(){
         return logicEditorStore.isGraphPanelOpen;
@@ -99,30 +90,6 @@ const showGraphs = computed({
     set(newState){
         logicEditorStore.setGraphPanelState(newState);
     }
-});
-const nodeCategories = computed(()=>{
-    const categories: string[] = [];
-
-    for (let i = 0; i < Core.NODE_LIST.length; i++){
-        let curNode = Core.NODE_LIST[i];
-
-        if (!categories.includes(curNode.category)){
-            categories.push(curNode.category);
-        }
-    }
-
-    return categories;
-});
-const filteredNodes = computed(()=>{
-    if (isSearching.value){
-        if (searchQuery.value.trim().length > 0){
-            return Core.NODE_LIST.filter(node => node.id.includes(searchQuery.value.toLowerCase()));
-        }
-
-        return Core.NODE_LIST;
-    }
-
-    return Core.NODE_LIST.filter(node => node.category == selectedCategory.value);
 });
 const nodeDraggingEnabled = computed(()=>selectedNavTool.value == null);
 const curNavState = computed(()=>{
@@ -207,7 +174,7 @@ const { stepForward, stepBackward } = useUndoHelpers(undoStore, actionMap, rever
 function bindHotkeys(): void {
     hotkeyMap.bindKey(['delete'], deleteSelectedNodes);
     hotkeyMap.bindKey(['backspace'], deleteSelectedNodes);
-    hotkeyMap.bindKey(['t'], ()=>{showLibrary.value = !showLibrary.value});
+    hotkeyMap.bindKey(['t'], ()=>{/*showLibrary.value = !showLibrary.value*/});
     hotkeyMap.bindKey(['n'], ()=>{showGraphs.value = !showGraphs.value});
     hotkeyMap.bindKey(['control', 'a'], selectAllNodes);
 }
@@ -898,67 +865,11 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
         <DialogNewVariable
             v-show="showNewVariableWindow"
             :selectedAsset="selectedAsset"
-            :callback="newVariableCallback" 
+            :callback="newVariableCallback"
             @close="dialogNewVariableClose"/>
         <div class="node-panel-wrapper">
-            <div v-show="showLibrary" class="side-panel node-panel">
-                <div class="side-panel-heading">
-                    <div class="fade-out" :style="isSearching ? 'opacity: 0;':''">{{$t('logic_editor.node_panel_heading')}}</div>
-                    <div class="search-btn-wrapper" :class="isSearching ? 'search-btn-wrapper-searching':''">
-                        <button v-if="isSearching" class="cancel-search-btn" @click="isSearching = false">
-                            <Svg style="transform: rotate(-90deg); width: 20px; height: auto;" :src="arrowIcon"></Svg>
-                        </button>
-                        <button
-                            class="search-btn"
-                            :class="!isSearching ? 'search-btn-active':''"
-                            @click="isSearching = true; searchQuery=''">
-                            <Svg style="width: 20px; height: 20px;" :src="magGlassIcon"></Svg>
-                        </button>
-                        <transition name="grow">
-                            <input
-                                v-if="isSearching"
-                                class="search-box"
-                                :class="isSearching ? 'search-box-show':''"
-                                v-model="searchQuery"
-                                type="text"
-                                v-input-active/>
-                        </transition>
-                    </div>
-                </div>
-                <div v-if="selectedAsset.selectedGraphId == null">{{$t('logic_editor.node_panel_empty_warning')}}</div>
-                <div
-                    v-if="selectedAsset.selectedGraphId != null"
-                    class="slide-wrapper"
-                    :class="selectedCategory || isSearching ? 'slide-wrapper-trans' : ''">
-                    <div class="library-column">
-                        <div v-if="!isSearching" class="list-item category-back-btn" @click="selectedCategory = null">
-                            <Svg v-show="showLibrary" :src="arrowIcon"></Svg>
-                        </div>
-                        <div
-                            v-for="node in filteredNodes"
-                            :key="node.id"
-                            class="list-item"
-                            @click="actionAddNode({templateId: node.id})">
-                            {{node.id}}
-                        </div>
-                    </div>
-                    <div class="library-column">
-                        <div
-                            v-for="(category, idx) in nodeCategories"
-                            :key="idx"
-                            class="node-category"
-                            @click="selectedCategory = category">
-                            {{category}}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="resizeBtn-right-wrapper">
-                <button class="resizeBtn resizeBtn-right" @click="showLibrary = !showLibrary" :style="showLibrary ? 'transform: translateX(-2px);' : ''">
-                    <Svg v-show="showLibrary" :src="arrowIcon" style="transform: rotate(-90deg)"></Svg>
-                    <Svg v-show="!showLibrary" :src="eventIcon"></Svg>
-                </button>
-            </div>
+            <NodeLibrary
+                @node-clicked="actionAddNode({templateId: $event})"/>
             <div class="undo-panel-wrapper">
                 <UndoPanel
                     class="undo-panel"
@@ -1130,187 +1041,10 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
     border-bottom: 2px solid var(--border);
 }
 
-.node-panel{
-    min-width: 200px;
-    border-left: none;
-    border-radius: 0px var(--corner-radius) var(--corner-radius) 0px;
-}
-
 .node-wrapper{
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-}
-
-.slide-wrapper{
-    position: relative;
-    display: flex;
-    flex-direction: row;
-    width: 200%;
-    height: 100%;
-    right: 100%;
-    transition-property: right;
-    transition-duration: 100ms;
-    transition-timing-function: ease-out;
-    overflow: hidden;
-}
-
-.slide-wrapper-trans{
-    right: 0%;
-    transition-property: right;
-    transition-duration: 100ms;
-    transition-timing-function: ease-out;
-}
-
-.library-column{
-    display: flex;
-    flex-direction: column;
-    width: 50%;
-    height: 100%;
-    overflow-y: auto;
-}
-
-.node-category{
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    height: 40px;
-    padding-right: 10px;
-    margin-right: 10px;
-    background: var(--tool-panel-bg);
-    border-bottom: 2px solid var(--border);
-    border-right: 2px solid var(--border);
-}
-
-.node-category:last-child{
-    border-radius: 0px 0px var(--corner-radius) 0px;
-}
-
-.category-back-btn{
-    display: flex;
-    flex-direction: row;
-    align-self: flex-end;
-    width: min-content;
-    background: var(--heading) !important;
-}
-
-.category-back-btn > *{
-    width: 20px;
-    transform: rotate(90deg);
-}
-
-.node-category:hover{
-    filter: brightness(1.1);
-}
-
-.open-close-btn{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 30px;
-    height: 30px;
-    background: var(--button-dark-norm);
-    border: 2px solid var(--border);
-    border-radius: var(--corner-radius);
-}
-
-.open-close-btn:hover{
-    background: var(--button-dark-hover);
-}
-
-.open-close-btn:active{
-    background: var(--button-dark-norm);
-}
-
-.list-item{
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    margin: 8px;
-    margin-bottom: 0;
-    padding: 10px;
-    background: var(--tool-panel-bg);
-    border-radius: var(--corner-radius);
-    border: 2px solid var(--border);
-    user-select: none;
-}
-
-.list-item > div:not(:last-child){
-    margin-right: 10px;
-}
-
-.list-item:hover{
-    filter: brightness(1.1);
-}
-
-.list-item > .buttons{
-    white-space: nowrap;
-}
-
-.search-btn-wrapper{
-    position: absolute;
-    left: 100%;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    transform: translateX(-130%);
-    transition: all 0.3s ease-out;
-}
-
-.search-btn-wrapper-searching{
-    transform: translateX(0);
-    left: 5px;
-}
-
-.search-btn{
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    width: 2em;
-    height: 2em;
-    border: none;
-    background: var(--tool-panel-bg);
-    border-radius: var(--corner-radius);
-    overflow: hidden;
-}
-
-.search-btn-active:hover{
-    filter: brightness(1.2);
-}
-
-.search-btn-active:active{
-    filter: brightness(0.8);
-}
-
-.cancel-search-btn{
-    height: 2em;
-    background: var(--button-dark-norm);
-    border: 2px solid var(--border);
-    border-radius: 8px;
-}
-
-.cancel-search-btn:hover{
-    background: var(--button-dark-hover);
-}
-
-.cancel-search-btn:active{
-    background: var(--button-dark-down);
-}
-
-.search-box{
-    margin-left: 5px;
-    width: 0%;
-    flex-grow: 0;
-}
-
-.search-box-show{
-    flex-grow: 1;
-}
-
-.grow-enter-active, .grow-leave-active{
-    transition: all 0.1s ease-out;
 }
 
 .graph-list-wrapper{
@@ -1348,12 +1082,6 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
     background: var(--tool-panel-bg);
     border: 2px solid var(--border);
     z-index: 1000;
-}
-
-.resizeBtn-right{
-    right: -100%;
-    border-left: none;
-    border-radius: 0px var(--corner-radius) var(--corner-radius) 0px;
 }
 
 .resizeBtn-left{

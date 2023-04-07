@@ -16,6 +16,7 @@ import type Node from './Node';
 import type Node_Connection from './Node_Connection';
 import type { iHoverSocket, iValueChanged } from './Socket.vue';
 import decoratorMap from './decoratorMap';
+import categoryStyleMap from './categoryStyleMap';
 import Core from '@/core';
 
 import eventIcon from '@/assets/event.svg';
@@ -62,13 +63,7 @@ const isSelected = computed(()=>props.selectedNodes.find(nodeObj => nodeObj.node
 const connections = computed(()=>props.allConnections.filter(
     c => (c.startNode?.nodeId == props.nodeObj.nodeId || c.endNode?.nodeId == props.nodeObj.nodeId)
 ));
-const categoryClass = computed(()=>{
-    if (props.nodeObj.isEvent){
-        return 'category-event';
-    }
-
-    return 'category-default';
-});
+const categoryStyle = computed(()=>categoryStyleMap.get(props.nodeObj.template.category) ?? {color: 'gray', icon:null});
 const decoratorIconPath = computed(()=>decoratorMap.get(props.nodeObj.decoratorIcon!)!);
 
 onBeforeMount(()=>{
@@ -220,8 +215,10 @@ defineExpose({getRelinkInfo});
         :style="isSelected ? 'border-color: var(--button-norm)' : ''"
         @click="emit('node-clicked', {nodeObj, event: $event})"
         @mousedown="mouseDown">
-        <div class="heading" :class="categoryClass">
-            <div v-if="nodeObj.isEvent" class="node-icon"><Svg :src="eventIcon"></Svg></div>
+        <div class="heading" :style="`background: ${categoryStyle.color}`">
+            <div v-if="categoryStyle.icon" class="node-icon">
+                <Svg :src="categoryStyle.icon"></Svg>
+            </div>
             <div>{{t('node.' + nodeObj.templateId)}}</div>
             <div class="decorator-wrapper" :key="forceUpdateKey">
                 <Svg
@@ -335,6 +332,7 @@ defineExpose({getRelinkInfo});
     align-items: center;
     width: 20px;
     height: 20px;
+    flex-shrink: 0;
 }
 
 .node-icon > *{
@@ -376,9 +374,5 @@ defineExpose({getRelinkInfo});
 
 .category-default{
     background: #68ABBD;
-}
-
-.category-event{
-    background: #DF554B;
 }
 </style>

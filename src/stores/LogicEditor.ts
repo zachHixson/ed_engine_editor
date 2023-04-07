@@ -3,7 +3,7 @@ import type Core from '@/core';
 
 interface iState {
     selectedNavTool: Core.NAV_TOOL_TYPE | null,
-    libraryPanelOpen: boolean,
+    openCategory: string | null,
     graphPanelOpen: boolean,
     globalVariableMap: Map<string, Core.Node_Enums.SOCKET_TYPE>
 }
@@ -13,21 +13,21 @@ export const useLogicEditorStore = defineStore({
 
     state: (): iState => ({
         selectedNavTool: null,
-        libraryPanelOpen: true,
+        openCategory: null,
         graphPanelOpen: false,
         globalVariableMap: new Map<string, Core.Node_Enums.SOCKET_TYPE>(),
     }),
     
     getters: {
         getSelectedNavTool: (state): Core.NAV_TOOL_TYPE | null => state.selectedNavTool,
-        isLibraryPanelOpen: (state): boolean => state.libraryPanelOpen,
+        getOpenCategory: (state): string | null => state.openCategory,
         isGraphPanelOpen: (state): boolean => state.graphPanelOpen,
         getGlobalVariableMap: (state): Map<string, Core.Node_Enums.SOCKET_TYPE> => state.globalVariableMap,
     },
 
     actions: {
         selectNavTool(newTool: Core.NAV_TOOL_TYPE | null){ this.selectedNavTool = newTool },
-        setLibraryPanelState(newState: boolean){ this.libraryPanelOpen = newState },
+        setOpenCategory(category: string | null){ this.openCategory = category },
         setGraphPanelState(newState: boolean){ this.graphPanelOpen = newState },
     }
 });
