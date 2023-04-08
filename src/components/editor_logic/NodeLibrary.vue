@@ -181,6 +181,7 @@ function tabClick(category: string): void {
 .tab-list{
     display: flex;
     flex-direction: column;
+    max-height: 90%;
     gap: 10px;
 }
 
