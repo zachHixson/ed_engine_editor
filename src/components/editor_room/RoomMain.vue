@@ -65,6 +65,7 @@ const props = defineProps<{
 
 //define dom refs
 const editWindow = ref<any>();
+const overlapBox = ref<HTMLDivElement>();
 
 //define component data
 const tools = [
@@ -115,6 +116,7 @@ const mouse = reactive({
     inWindow: false,
 });
 const editorSelection = ref<Instance_Base | Core.Exit | null>();
+const overlappingInstances = ref<Instance_Base[]>([]);
 
 //computed properties
 const propertiesOpen = computed<boolean>({
@@ -251,33 +253,13 @@ function toolClicked(tool: Core.ROOM_TOOL_TYPE): void {
 }
 
 function selectInstanceByPos(pos: Vector): void {
-    const nearbyInst = props.selectedRoom.getInstancesInRadius(pos, 0);
+    const nearbyInst = props.selectedRoom
+        .getInstancesInRadius(pos, 0)
+        .filter(instance => instance.pos.equalTo(pos))
+        .sort((a, b) => b.zDepth - a.zDepth);
 
     if (nearbyInst.length > 0){
-        const instInCell = [];
-        let selectedInListIdx = -1;
-
-        //get instances in same cell
-        for (let i = 0; i < nearbyInst.length; i++){
-            if (pos.equalTo(nearbyInst[i].pos)){
-                instInCell.push(nearbyInst[i]);
-            }
-        }
-
-        //search instances in cell for selected instance
-        for (let i = 0; i < instInCell.length && selectedInListIdx < 0; i++){
-            if (editorSelection.value?.id == instInCell[i].id){
-                selectedInListIdx = i;
-            }
-        }
-
-        //if selected instance is in current cell, then select next item in cell
-        if (selectedInListIdx >= 0){
-            editorSelection.value = instInCell[++selectedInListIdx % instInCell.length];
-        }
-        else{
-            editorSelection.value = instInCell[0];
-        }
+        editorSelection.value = nearbyInst[0];
     }
     else{
         editorSelection.value = null;
@@ -320,6 +302,14 @@ function toolSelectMove(mEvent: imEvent): void {
             ){
                 actionMove({instRef: editorSelection.value as Core.Object_Instance, newPos: mEvent.worldCell}, false);
                 mouse.cellCache[0].copy(mEvent.worldCell);
+            }
+            break;
+        case Core.MOUSE_EVENT.DOUBLE_CLICK:
+            const instances = props.selectedRoom.getInstancesInRadius(mEvent.worldCell, 0)
+                .filter(instance => instance.pos.equalTo(mEvent.worldCell));
+
+            if (instances.length > 0){
+                openOverlapBox(instances, mEvent.canvasPos);
             }
             break;
         case Core.MOUSE_EVENT.UP:
@@ -421,6 +411,23 @@ function toggleGrid(): void {
     const newState = !roomEditorStore.getGridState;
     roomEditorStore.setGridState(newState);
     RoomMainEventBus.emit('grid-state-changed', newState);
+}
+
+function openOverlapBox(instances: Instance_Base[], pos: Vector): void {
+    overlappingInstances.value = instances.sort((a, b) => b.zDepth - a.zDepth);
+    
+    nextTick(()=>{
+        const parentBounds = overlapBox.value!.parentElement!.getBoundingClientRect();
+        const boxBounds = overlapBox.value!.getBoundingClientRect();
+        const parentWidth = parentBounds.right - parentBounds.left;
+        const parentHeight = parentBounds.bottom - parentBounds.top;
+        const boxWidth = boxBounds.right - boxBounds.left;
+        const boxHeight = boxBounds.bottom - boxBounds.top;
+        const x = Math.min(pos.x, parentWidth - (boxWidth * 1.5));
+        const y = Math.min(pos.y, parentHeight - boxHeight);
+        overlapBox.value!.style.left = x + 'px';
+        overlapBox.value!.style.top = y + 'px';
+    });
 }
 
 function actionMove({instId, instRef, newPos}: MoveProps, makeCommit = true): void {
@@ -701,6 +708,21 @@ function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
                 :toggled="roomEditorStore.getGridState"
                 @tool-clicked="toggleGrid"/>
         </div>
+        <div
+            v-if="overlappingInstances.length > 0"
+            ref="overlapBox"
+            class="overlap-list"
+            v-click-outside="()=>overlappingInstances = []">
+            <div
+                v-for="instance in overlappingInstances"
+                class="overlap-item"
+                @click="()=>{
+                    editorSelection = instance;
+                    overlappingInstances = [];
+                }">
+                {{ instance.name }}
+            </div>
+        </div>
         <RoomEditWindow
             v-if="isRoomSelected"
             ref="editWindow"
@@ -816,6 +838,36 @@ function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
 .toolSpacer{
     width: 100%;
     height: 10px;
+}
+
+.overlap-list{
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    max-height: 200px;
+    background: var(--tool-panel-bg);
+    border: 2px solid var(--border);
+    border-radius: var(--corner-radius);
+    transform: translateX(40%);
+    overflow: hidden;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    z-index: 99;
+}
+
+.overlap-item{
+    font-size: 1.2em;
+    background: var(--tool-panel-bg);
+    padding: 10px;
+    user-select: none;
+}
+
+.overlap-item:hover{
+    filter: brightness(1.2);
+}
+
+.overlap-item:active{
+    filter: brightness(0.8);
 }
 
 .noRoomSelected{

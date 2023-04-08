@@ -65,6 +65,7 @@ export enum MOUSE_EVENT {
     CLICK = 1,
     DOWN,
     UP,
+    DOUBLE_CLICK,
     MOVE,
     LEAVE,
     ENTER,

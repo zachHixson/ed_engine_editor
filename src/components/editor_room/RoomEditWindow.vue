@@ -127,6 +127,11 @@ function mouseMove(event: MouseEvent): void {
     renderer.mouseMove(event);
 }
 
+function mouseDblClick(event: MouseEvent): void {
+    RoomEditWindowEventBus.emit('mouse-double-click', event);
+    emitMouseEvent(event, Core.MOUSE_EVENT.DOUBLE_CLICK);
+}
+
 function mouseWheel(event: MouseEvent): void {
     RoomEditWindowEventBus.emit('mouse-wheel', event);
 }
@@ -235,7 +240,8 @@ function navToolSelected(tool: Core.NAV_TOOL_TYPE): void {
             class="canvas"
             @mousedown="mouseDown"
             @mouseup="mouseUp"
-            @mousemove="mouseMove">//Canvas Error</canvas>
+            @mousemove="mouseMove"
+            @dblclick="mouseDblClick">//Canvas Error</canvas>
     </div>
 </template>
 

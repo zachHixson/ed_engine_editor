@@ -1,4 +1,4 @@
-import type { DirectiveBinding, VNode } from 'vue';
+import type { DirectiveBinding } from 'vue';
 import { useMainStore } from './stores/Main';
 import { TooltipEventBus } from './components/common/Tooltip.vue';
 
@@ -6,7 +6,7 @@ type ExpandedEl = HTMLElement & {[key: string | number | symbol]: any};
 
 //Run code when clicking outside of an element
 export const vClickOutside = {
-    beforeMount: function (el: ExpandedEl, binding: DirectiveBinding) {
+    mounted: function (el: ExpandedEl, binding: DirectiveBinding) {
         el.checkOutside = (event: Event) => {
             if (!(el == event.target || el.contains(event.target as HTMLElement))) {
                 const instance = binding.instance as any;
