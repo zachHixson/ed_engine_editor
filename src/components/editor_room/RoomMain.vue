@@ -774,6 +774,10 @@ function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
     overflow: hidden;
 }
 
+.roomMain > * {
+    user-select: none;
+}
+
 .toolPanel{
     position: relative;
     display: flex;
@@ -828,6 +832,7 @@ function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
     border: 2px solid var(--border);
     border-right: none;
     border-radius: var(--corner-radius) 0px 0px var(--corner-radius);
+    user-select: none;
 }
 
 .resizeBtn > *{

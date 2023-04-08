@@ -266,4 +266,8 @@ function updateFrameIDs(): void {
     overflow: hidden;
     background: white;
 }
+
+.artMain > * {
+    user-select: none;
+}
 </style>

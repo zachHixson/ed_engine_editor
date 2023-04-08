@@ -1011,6 +1011,10 @@ function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProp
     overflow: hidden;
 }
 
+.logicMain > * {
+    user-select: none;
+}
+
 .node-panel-wrapper{
     position: absolute;
     top: 0;

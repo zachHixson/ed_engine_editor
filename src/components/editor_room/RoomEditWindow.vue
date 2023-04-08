@@ -254,6 +254,7 @@ function navToolSelected(tool: Core.NAV_TOOL_TYPE): void {
     margin: 0px;
     padding: 0px;
     background: #6666FF;
+    user-select: none;
 }
 
 .canvas{
