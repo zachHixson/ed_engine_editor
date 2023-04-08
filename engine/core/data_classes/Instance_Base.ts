@@ -1,6 +1,7 @@
 import { INSTANCE_TYPE } from "../Enums";
 import { Vector } from "../Vector";
 import { Node_Enums } from "../core";
+import { Draw } from "../core";
 
 export interface iInstanceBaseSaveData {
     id: number;
@@ -75,5 +76,27 @@ export abstract class Instance_Base{
             pos: this.pos.toObject(),
             groups: this.groups,
         } satisfies iInstanceBaseSaveData;
+    }
+
+    drawThumbnail(canvas: HTMLCanvasElement): void {
+        const ctx = canvas.getContext('2d')!;
+        let imageCanvas: HTMLCanvasElement;
+        let startFame = 0;
+        let imageData: ImageData;
+        let scaleFac: number;
+
+        if (this.hasEditorFrame){
+            ctx.imageSmoothingEnabled = false;
+            startFame = this.startFrame;
+        }
+
+        imageData = this.frameData[startFame];
+        imageCanvas = Draw.createCanvas(imageData.width, imageData.height);
+        scaleFac = canvas.width / imageData.width;
+
+        imageCanvas.getContext('2d')!.putImageData(imageData, 0, 0);
+
+        ctx.scale(scaleFac, scaleFac);
+        ctx.drawImage(imageCanvas, 0, 0);
     }
 }

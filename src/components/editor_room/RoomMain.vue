@@ -9,6 +9,7 @@ import Properties from './Properties.vue';
 import Tool from '@/components/common/Tool.vue';
 import HotkeyMap from '@/components/common/HotkeyMap';
 import Svg from '@/components/common/Svg.vue';
+import VueCanvas from '@/components/common/VueCanvas.vue';
 import { AppEventBus } from '@/App.vue';
 
 import {
@@ -48,8 +49,6 @@ type InstanceGroupChangeProps = {add?: boolean, groupName: string, newName?: str
 type InstanceVarChangeProps = {changeObj: any, instRef?: Core.Object_Instance};
 type CameraChangeProps = {newState?: object, oldState?: object};
 type ExitAddProps = {exitRef?: Core.Exit, pos: Vector};
-type ExitChangeProps = {newState: Partial<Core.Exit>, oldState?: object, exitRef?: Core.Exit};
-type ExitDeleteProps = {exitId: number, exitRef?: Core.Instance_Base};
 type RoomPropChangeProps = {newState: object, oldState?: object};
 
 //define stores
@@ -720,6 +719,7 @@ function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
                     editorSelection = instance;
                     overlappingInstances = [];
                 }">
+                <VueCanvas width="32" height="32" :onMounted="instance.drawThumbnail.bind(instance)" />
                 {{ instance.name }}
             </div>
         </div>
@@ -856,6 +856,10 @@ function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
 }
 
 .overlap-item{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
     font-size: 1.2em;
     background: var(--tool-panel-bg);
     padding: 10px;
