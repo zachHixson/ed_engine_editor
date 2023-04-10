@@ -4,7 +4,7 @@ import { Camera, iCameraSaveData } from './Camera';
 import { Spacial_Collection } from '../Spacial_Collection';
 import { CATEGORY_ID, INSTANCE_TYPE } from '../Enums';
 import { Color } from '../Draw';
-import { Exit, iExitSaveData } from './Exit';
+import { Exit, iExitSaveData } from './Instance_Exit';
 import { Game_Object } from './Game_Object';
 import { iObjectInstanceSaveData, Object_Instance } from './Object_Instance';
 import { Vector } from '../Vector';

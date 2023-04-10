@@ -1,6 +1,6 @@
 export * from './data_classes/Asset_Base';
 export * from './data_classes/Camera';
-export * from './data_classes/Exit';
+export * from './data_classes/Instance_Exit';
 export * from './data_classes/Game_Object';
 export * from './data_classes/Instance_Base';
 export * from './data_classes/Object_Instance';

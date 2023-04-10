@@ -1,7 +1,7 @@
 import {INSTANCE_TYPE} from '../Enums';
 import { Vector } from '../Vector';
 import { Sprite } from './Sprite';
-import { Exit } from './Exit';
+import { Exit } from './Instance_Exit';
 import { Game_Object } from './Game_Object';
 import { iInstanceBaseSaveData, Instance_Base } from './Instance_Base';
 
