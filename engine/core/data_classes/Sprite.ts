@@ -12,7 +12,6 @@ export class Sprite extends Asset_Base {
     static get DIMENSIONS(){return 16}
 
     frames: ImageData[] = [];
-    frameIDs: string[] = [];
     navState: NavState = new NavState();
 
     _frameEmptyCache: Map<number, boolean> = new Map();
@@ -21,7 +20,6 @@ export class Sprite extends Asset_Base {
         super();
 
         this.addFrame();
-        this.hashAllFrames();
     }
 
     get category_ID(){return CATEGORY_ID.SPRITE}
@@ -47,7 +45,6 @@ export class Sprite extends Asset_Base {
 
         this.loadBaseAssetData(data);
         this.navState = parseNavSaveData(data.navState);
-        this.hashAllFrames();
 
         for (let i = 0; i < hexFrames.length; i++){
             imgDataFrames[i] = this._hexToImageData(data.frames[i]);
@@ -59,7 +56,6 @@ export class Sprite extends Asset_Base {
     }
 
     updateFrame(idx: number): void {
-        this.frameIDs[idx] = this.hashFrame();
         this._frameEmptyCache.delete(idx);
     }
 
@@ -67,14 +63,12 @@ export class Sprite extends Asset_Base {
         const imgData = new ImageData(Sprite.DIMENSIONS, Sprite.DIMENSIONS);
 
         this.frames.push(imgData);
-        this.frameIDs.push(this.hashFrame());
 
         return this.frames.length - 1;
     }
 
     deleteFrame(idx: number): void {
         this.frames.splice(idx, 1);
-        this.frameIDs.splice(idx, 1);
     }
 
     copyFrame(idx: number): void {
@@ -82,7 +76,6 @@ export class Sprite extends Asset_Base {
         const dupedData = Uint8ClampedArray.from(frame.data);
         const dupedFrame = new ImageData(dupedData, frame.width, frame.height);
         this.frames.splice(idx, 0, dupedFrame);
-        this.frameIDs.splice(idx, 0, this.hashFrame());
     }
 
     moveFrame(idx: number, dir: number): void {
@@ -90,11 +83,6 @@ export class Sprite extends Asset_Base {
         const frame = this.frames[idx];
         this.frames[idx] = this.frames[idx + dir];
         this.frames[idx + dir] = frame;
-
-        //swap frame IDs
-        const id = this.frameIDs[idx];
-        this.frameIDs[idx] = this.frameIDs[idx + dir];
-        this.frameIDs[idx + dir] = id;
     }
 
     compareFrames(frame1: number[] | string[], frame2: number[] | string[]): boolean {
@@ -128,13 +116,10 @@ export class Sprite extends Asset_Base {
             const dataCopy = Uint8ClampedArray.from(data);
             this.frames[i] = new ImageData(dataCopy, width, height);
         }
-
-        this.hashAllFrames();
     }
 
     clear(): void {
         this.frames = [];
-        this.frameIDs = [];
         this.addFrame();
     }
 
@@ -153,25 +138,6 @@ export class Sprite extends Asset_Base {
 
         this._frameEmptyCache.set(idx, isEmpty);
         return isEmpty;
-    }
-
-    hashAllFrames(): void {
-        this.frameIDs = new Array(this.frames.length);
-
-        for (let f = 0; f < this.frameIDs.length; f++){
-            this.frameIDs[f] = this.hashFrame();
-        }
-    }
-
-    hashFrame(): string {
-        const LENGTH = 10;
-        let hash = '';
-
-        for (let i = 0; i < LENGTH; i++){
-            hash += Math.floor(Math.random() * 16).toString(16);
-        }
-
-        return hash;
     }
 
     static drawToCanvas(imgData: ImageData, canvas: HTMLCanvasElement): HTMLCanvasElement {

@@ -33,7 +33,6 @@ const emit = defineEmits(['asset-changed']);
 const undoStore = reactive(new Undo_Store<iSpriteUndoData>(32));
 const toolMap: Map<Core.ART_TOOL_TYPE, ()=>Tool_Base> = new Map();
 const tool = ref<Tool_Base | null>(null);
-const frameIDs = ref(props.selectedAsset.frameIDs);
 
 const selectedFrameIdx = computed({
     get(){
@@ -51,8 +50,6 @@ watch(()=>props.selectedAsset, ()=>{
 
     if (props.selectedAsset && props.selectedAsset.category_ID == Core.CATEGORY_ID.SPRITE){
         const selectedFrame = artEditorStore.getSelectedFrame;
-
-        updateFrameIDs()
 
         if (props.selectedAsset.frames.length < selectedFrame + 1){
             artEditorStore.selectFrame(0);
@@ -96,7 +93,6 @@ function spriteDataChanged(): void {
     render();
     commitFullState();
     props.selectedAsset.updateFrame(selectedFrameIdx.value);
-    updateFrameIDs();
     emit('asset-changed', props.selectedAsset.id);
 }
 
@@ -109,13 +105,8 @@ function framesMoved(): void {
     emit('asset-changed', props.selectedAsset.id);
 }
 
-function selectedFrameChanged(): void {
-    updateFrameIDs();
-}
-
 function frameAdded(): void {
     commitFullState();
-    updateFrameIDs();
 }
 
 function toolSelected(newTool: Core.ART_TOOL_TYPE): void {
@@ -185,8 +176,6 @@ function undo(): void {
     if (selectedFrameIdx.value > props.selectedAsset.frames.length - 1){
         selectedFrameIdx.value--;
     }
-
-    updateFrameIDs();
     
     nextTick(()=>{
         ArtMainEventBus.emit('update-frame-previews');
@@ -201,8 +190,6 @@ function redo(): void {
         props.selectedAsset.setFramesFromArray(nextStep.spriteData);
     }
 
-    updateFrameIDs();
-
     nextTick(()=>{
         ArtMainEventBus.emit('update-frame-previews');
         emit('asset-changed', props.selectedAsset.id);
@@ -213,10 +200,6 @@ function packageUndoData(): iSpriteUndoData {
     return {
         spriteData: props.selectedAsset.getFramesCopy()
     }
-}
-
-function updateFrameIDs(): void {
-    frameIDs.value = props.selectedAsset.frameIDs;
 }
 </script>
 
@@ -243,9 +226,7 @@ function updateFrameIDs(): void {
             class="animPanel"
             ref="animPanel"
             :sprite="selectedAsset"
-            :frameIDs="frameIDs"
             @resized="resize"
-            @selected-frame-changed="selectedFrameChanged()"
             @frame-added="frameAdded()"
             @frame-deleted="commitFullState()"
             @frame-moved="framesMoved"

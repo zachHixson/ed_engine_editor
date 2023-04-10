@@ -26,7 +26,6 @@ const artEditorStore = useArtEditorStore();
 
 const props = defineProps<{
     sprite: Core.Sprite,
-    frameIDs: string[],
 }>();
 
 const emit = defineEmits([

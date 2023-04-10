@@ -76,16 +76,6 @@ const selectedList = computed(()=>{
 
     return list;
 });
-const keylist = computed<string[] | null>(()=>{
-    switch(selected_category.value!.cat_ID){
-        case Core.CATEGORY_ID.SPRITE:
-            return (selectedList.value as Core.Sprite[]).map(s => s.frameIDs[0]) as string[];
-        case Core.CATEGORY_ID.OBJECT:
-            return (selectedList.value as Core.Game_Object[]).map(o => o.sprite?.frameIDs[o.startFrame] ?? o.id) as string[];
-        default:
-            return null;
-    }
-});
 
 onMounted(()=>{
     AppEventBus.addEventListener('update-asset', updateAsset);

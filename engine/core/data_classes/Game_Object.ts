@@ -128,7 +128,6 @@ export class Game_Object extends Asset_Base {
 
     get category_ID(){return CATEGORY_ID.OBJECT}
     get editorFrameNum(){return this._startFrame}
-    get editorFrameID(){return this.sprite?.frameIDs[this._startFrame]}
 
     get startFrame(){return this._startFrame}
     set startFrame(frame){
