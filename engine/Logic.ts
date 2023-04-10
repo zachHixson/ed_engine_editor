@@ -1,7 +1,7 @@
 import Node from './Node';
 import Engine from './Engine';
 import {
-    Object_Instance,
+    Instance_Object,
     iEngineLogic,
     iNodeConnection,
     iLogicSaveData,
@@ -14,7 +14,7 @@ import {
 
 export default class Logic implements iEngineLogic {
     private _nodes: Node[] = [];
-    private _instance: Object_Instance | null = null;
+    private _instance: Instance_Object | null = null;
     private _localVariableDefaults: Map<string, any> = new Map();
 
     id: number;
@@ -67,7 +67,7 @@ export default class Logic implements iEngineLogic {
 
     get localVariableDefaults(){return this._localVariableDefaults};
 
-    executeEvent(eventName: string, instance: Object_Instance, data: any): void {
+    executeEvent(eventName: string, instance: Instance_Object, data: any): void {
         const event = this.events.get(eventName);
 
         if (!event) return;
@@ -77,7 +77,7 @@ export default class Logic implements iEngineLogic {
         this._instance = null;
     }
 
-    executeAsyncNodeMethod(instance: Object_Instance, node: Node, methodName: string): void {
+    executeAsyncNodeMethod(instance: Instance_Object, node: Node, methodName: string): void {
         const oldInstance = this._instance;
         this._instance = instance;
         node.method(methodName);

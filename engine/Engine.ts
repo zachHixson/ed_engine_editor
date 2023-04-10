@@ -11,7 +11,7 @@ import {
     iSerializedGameData,
     iAnyObj,
     Vector,
-    Object_Instance,
+    Instance_Object,
     Util,
     INSTANCE_TYPE,
     Node_Enums,
@@ -59,7 +59,7 @@ export class Engine implements iEngineCallbacks {
     private _dialogFullscreen: Dialog_Fullscreen;
     private _nextAnimationFrame: number = -1;
     private _keymap: Map<string, boolean> = new Map();
-    private _nodeEventMap: Map<string, Map<number, Object_Instance>> = new Map();
+    private _nodeEventMap: Map<string, Map<number, Instance_Object>> = new Map();
     private _nodeAsyncEventMap: Map<string, any> = new Map();
     private _collisionMap: Map<number, iCollisionMapping> = new Map();
     private _globalVariables: Map<string, any> = new Map();
@@ -134,7 +134,7 @@ export class Engine implements iEngineCallbacks {
             }
             
             if (instance.TYPE == INSTANCE_TYPE.OBJECT){
-                const objInstance = instance as Object_Instance;
+                const objInstance = instance as Instance_Object;
                 objInstance.initLocalVariables();
                 this._registerInstanceEvents(objInstance);
             }
@@ -348,7 +348,7 @@ export class Engine implements iEngineCallbacks {
         document.removeEventListener("keyup", this._keyUp);
     }
 
-    private _registerInstanceEvents = (instance: Object_Instance): void =>{
+    private _registerInstanceEvents = (instance: Instance_Object): void =>{
         const logicEvents = instance.logic?.events;
 
         logicEvents?.forEach((event, key) => {
@@ -358,7 +358,7 @@ export class Engine implements iEngineCallbacks {
         instance.initAnimProps();
     }
 
-    private _registerNodeEvent = (eventName: string, instance: Object_Instance)=>{
+    private _registerNodeEvent = (eventName: string, instance: Instance_Object)=>{
         let eventMapGet = this._nodeEventMap.get(eventName);
 
         if (!eventMapGet){
@@ -551,8 +551,8 @@ export class Engine implements iEngineCallbacks {
         );
     }
 
-    getInstancesOverlapping = (instance: Instance_Base): Object_Instance[] =>{
-        return this._filterOverlapping(instance) as Object_Instance[];
+    getInstancesOverlapping = (instance: Instance_Base): Instance_Object[] =>{
+        return this._filterOverlapping(instance) as Instance_Object[];
     }
 
     addInstance = (instance: Instance_Base): void => {
@@ -563,7 +563,7 @@ export class Engine implements iEngineCallbacks {
         }
 
         if (instance.TYPE == INSTANCE_TYPE.OBJECT){
-            this._registerInstanceEvents(instance as Object_Instance);
+            this._registerInstanceEvents(instance as Instance_Object);
         }
     }
 

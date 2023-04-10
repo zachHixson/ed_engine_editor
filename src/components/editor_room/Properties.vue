@@ -146,7 +146,7 @@ function nanToNull(inp: number): number | null {
             <div class="heading">{{$t('room_editor.object_properties_heading')}}</div>
             <div class="info" style="margin: var(--margin); margin-left: 0px;">
                 <div>{{$t('room_editor.object_type')}}:</div>
-                <div>{{(selectedEntity as Core.Object_Instance).objRef.name}}</div>
+                <div>{{(selectedEntity as Core.Instance_Object).objRef.name}}</div>
             </div>
             <div class="control">
                 <label for="instName">{{$t('room_editor.instance_name')}}:</label>
@@ -155,21 +155,21 @@ function nanToNull(inp: number): number | null {
             </div>
             <div class="control">
                 <label for="instCollisionOvrr">{{$t('room_editor.collision')}}:</label>
-                <select id="instCollisionOvrr" :value="(selectedEntity as Core.Object_Instance).collisionOverride" v-tooltip="$t('room_editor.tt_coll_ovr')"
+                <select id="instCollisionOvrr" :value="(selectedEntity as Core.Instance_Object).collisionOverride" v-tooltip="$t('room_editor.tt_coll_ovr')"
                     @change="setInstProp({collisionOverride: ($event.target as AnyObj).value})">
-                    <option :value="(selectedEntity as Core.Object_Instance).COLLISION_OVERRIDES.KEEP">{{$t('room_editor.keep')}}</option>
-                    <option :value="(selectedEntity as Core.Object_Instance).COLLISION_OVERRIDES.FORCE">{{$t('room_editor.on')}}</option>
-                    <option :value="(selectedEntity as Core.Object_Instance).COLLISION_OVERRIDES.IGNORE">{{$t('room_editor.off')}}</option>
+                    <option :value="(selectedEntity as Core.Instance_Object).COLLISION_OVERRIDES.KEEP">{{$t('room_editor.keep')}}</option>
+                    <option :value="(selectedEntity as Core.Instance_Object).COLLISION_OVERRIDES.FORCE">{{$t('room_editor.on')}}</option>
+                    <option :value="(selectedEntity as Core.Instance_Object).COLLISION_OVERRIDES.IGNORE">{{$t('room_editor.off')}}</option>
                 </select>
             </div>
             <div class="control">
                 <label for="instCustDepth">{{$t('room_editor.custom_depth')}}:</label>
-                <input id="instCustDepth" type="number" :value="(selectedEntity as Core.Object_Instance).zDepthOverride" v-tooltip="$t('room_editor.tt_cust_depth')"
+                <input id="instCustDepth" type="number" :value="(selectedEntity as Core.Instance_Object).zDepthOverride" v-tooltip="$t('room_editor.tt_cust_depth')"
                     @change="setInstProp({zDepthOverride: nanToNull(parseInt(($event.target as AnyObj).value))})" v-input-active/>
             </div>
             <GroupList
                 :editList="selectedEntity!.groups"
-                :readOnlyList="(selectedEntity as Core.Object_Instance).objRef.groups"
+                :readOnlyList="(selectedEntity as Core.Instance_Object).objRef.groups"
                 @group-changed="$emit('inst-group-changed', $event)"/>
         </div>
 

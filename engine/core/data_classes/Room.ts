@@ -6,7 +6,7 @@ import { CATEGORY_ID, INSTANCE_TYPE } from '../Enums';
 import { Color } from '../Draw';
 import { Instance_Exit, iExitSaveData } from './Instance_Exit';
 import { Game_Object } from './Game_Object';
-import { iObjectInstanceSaveData, Object_Instance } from './Instance_Object';
+import { iObjectInstanceSaveData, Instance_Object } from './Instance_Object';
 import { Vector } from '../Vector';
 import { Instance_Base } from './Instance_Base';
 import { Linked_List } from '../Linked_List';
@@ -81,7 +81,7 @@ export class Room extends Asset_Base {
             const newInstance: Instance_Base = (()=>{
                 switch(curInstance.type){
                     case INSTANCE_TYPE.OBJECT:
-                        return Object_Instance.fromSaveData(instancesSerial[i] as iObjectInstanceSaveData, objectMap);
+                        return Instance_Object.fromSaveData(instancesSerial[i] as iObjectInstanceSaveData, objectMap);
                     case INSTANCE_TYPE.EXIT:
                     default:
                         return Instance_Exit.fromSaveData(curInstance as iExitSaveData);
@@ -100,13 +100,13 @@ export class Room extends Asset_Base {
     }
 
     purgeMissingReferences(objects: Game_Object[], rooms: Room[]){
-        const objectInstances: Object_Instance[] = [];
+        const objectInstances: Instance_Object[] = [];
         const exitInstances: Instance_Exit[] = [];
 
         this._instances.forEach(instance => {
             switch (instance.TYPE){
                 case INSTANCE_TYPE.OBJECT:
-                    objectInstances.push(instance as Object_Instance);
+                    objectInstances.push(instance as Instance_Object);
                     break;
                 case INSTANCE_TYPE.EXIT:
                     exitInstances.push(instance as Instance_Exit);

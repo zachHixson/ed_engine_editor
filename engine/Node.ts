@@ -3,7 +3,7 @@ import {
     iEngineLogic,
     iEngineNode,
     iNodeTemplate,
-    Object_Instance,
+    Instance_Object,
     convertSocketType,
     NODE_MAP,
     iNodeSaveData
@@ -13,7 +13,7 @@ import Engine from "./Engine";
 import Logic from "./Logic";
 
 export default class Node implements iEngineNode {
-    private _getInstanceCallback: (()=>Object_Instance) | null = null;
+    private _getInstanceCallback: (()=>Instance_Object) | null = null;
     private _dataCache: Map<string, any> = new Map();
     private _stackTrace: {parentScriptId: number, nodeId: number};
 
@@ -102,7 +102,7 @@ export default class Node implements iEngineNode {
     get instance(){return this._getInstanceCallback!()}
     get dataCache(){return this._dataCache ?? {}};
 
-    setInstanceCallback(callback: ()=>Object_Instance): void {
+    setInstanceCallback(callback: ()=>Instance_Object): void {
         this._getInstanceCallback = callback;
     }
 

@@ -428,8 +428,8 @@ class UI_Renderer {
             loaded('CAMERA_ICON', [UI_Renderer.CAMERA_ICON]);
         }),
         svgToCanvas(objectIconRaw, DIM, canvas => {
-            Core.Object_Instance.DEFAULT_INSTANCE_ICON = [getImageData(canvas!)];
-            loaded(Core.Object_Instance.DEFAULT_INSTANCE_ICON_ID, Core.Object_Instance.DEFAULT_INSTANCE_ICON);
+            Core.Instance_Object.DEFAULT_INSTANCE_ICON = [getImageData(canvas!)];
+            loaded(Core.Instance_Object.DEFAULT_INSTANCE_ICON_ID, Core.Instance_Object.DEFAULT_INSTANCE_ICON);
         }),
         svgToCanvas(exitIconRaw, DIM, canvas => {
             Core.Instance_Exit.EXIT_ICON = [getImageData(canvas!)];

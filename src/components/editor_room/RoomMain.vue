@@ -45,8 +45,8 @@ type MoveProps = {instId?: number, instRef?: Instance_Base, newPos?: Vector, old
 type AddProps = {objId?: number, instRefList?: Instance_Base[], pos?: Vector};
 type DeleteProps = {instId?: number, instRefList?: Instance_Base[]};
 type InstanceChangeProps = {newState: Partial<Core.Instance_Base>, oldState?: object, instRef?: Instance_Base};
-type InstanceGroupChangeProps = {add?: boolean, groupName: string, newName?: string, remove?: boolean, oldIdx?: number, instRef: Core.Object_Instance};
-type InstanceVarChangeProps = {changeObj: any, instRef?: Core.Object_Instance};
+type InstanceGroupChangeProps = {add?: boolean, groupName: string, newName?: string, remove?: boolean, oldIdx?: number, instRef: Core.Instance_Object};
+type InstanceVarChangeProps = {changeObj: any, instRef?: Core.Instance_Object};
 type CameraChangeProps = {newState?: object, oldState?: object};
 type ExitAddProps = {exitRef?: Core.Instance_Exit, pos: Vector};
 type RoomPropChangeProps = {newState: object, oldState?: object};
@@ -299,7 +299,7 @@ function toolSelectMove(mEvent: imEvent): void {
                 mouse.downOnSelection &&
                 !mouse.cellCache[0].equalTo(mEvent.worldCell)
             ){
-                actionMove({instRef: editorSelection.value as Core.Object_Instance, newPos: mEvent.worldCell}, false);
+                actionMove({instRef: editorSelection.value as Core.Instance_Object, newPos: mEvent.worldCell}, false);
                 mouse.cellCache[0].copy(mEvent.worldCell);
             }
             break;
@@ -462,7 +462,7 @@ function actionAdd({objId, instRefList = [], pos}: AddProps, makeCommit = true):
     }
 
     if (objId){
-        const newInst = new Core.Object_Instance(props.selectedRoom.curInstId, pos!, object!);
+        const newInst = new Core.Instance_Object(props.selectedRoom.curInstId, pos!, object!);
 
         instRefList.push(newInst);
 
@@ -558,7 +558,7 @@ function actionInstanceGroupChange(
     }
 
     if (makeCommit){
-        const data = {add, groupName, newName, remove, oldIdx, instRef: editorSelection.value! as Core.Object_Instance} satisfies InstanceGroupChangeProps;
+        const data = {add, groupName, newName, remove, oldIdx, instRef: editorSelection.value! as Core.Instance_Object} satisfies InstanceGroupChangeProps;
         undoStore.commit({action: Core.ROOM_ACTION.INSTANCE_GROUP_CHANGE, data});
     }
 }

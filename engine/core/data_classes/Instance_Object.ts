@@ -17,7 +17,7 @@ enum COLLISION_OVERRIDE {
     IGNORE = 'I',
 };
 
-export class Object_Instance extends Instance_Base{
+export class Instance_Object extends Instance_Base{
     static DEFAULT_INSTANCE_ICON_ID = 'INSTANCE_ICON';
     static DEFAULT_INSTANCE_ICON = [new ImageData(Sprite.DIMENSIONS, Sprite.DIMENSIONS)];
 
@@ -69,8 +69,8 @@ export class Object_Instance extends Instance_Base{
         return !this._useIcon;
     };
     get startFrame(){return this.startFrameOverride ?? this.objRef.startFrame};
-    get frameDataId(){return this._useIcon || !this.renderable ? Object_Instance.DEFAULT_INSTANCE_ICON_ID : this.objRef!.sprite!.id};
-    get frameData(){return this._useIcon || !this.renderable ? Object_Instance.DEFAULT_INSTANCE_ICON : this.objRef!.sprite!.frames};
+    get frameDataId(){return this._useIcon || !this.renderable ? Instance_Object.DEFAULT_INSTANCE_ICON_ID : this.objRef!.sprite!.id};
+    get frameData(){return this._useIcon || !this.renderable ? Instance_Object.DEFAULT_INSTANCE_ICON : this.objRef!.sprite!.frames};
     get sprite(){return this.objRef?.sprite};
     get logic(){return this.objRef.logicScript};
     get isSolid(){
@@ -137,8 +137,8 @@ export class Object_Instance extends Instance_Base{
         this.executeNodeEvent('e_create');
     }
 
-    clone(): Object_Instance {
-        const clone = new Object_Instance(this.id, this.pos, this.objRef);
+    clone(): Instance_Object {
+        const clone = new Instance_Object(this.id, this.pos, this.objRef);
         Object.assign(clone, this);
         clone.pos = this.pos.clone();
         if (this.lastPos) clone.lastPos = this.lastPos.clone();
@@ -157,8 +157,8 @@ export class Object_Instance extends Instance_Base{
         };
     }
 
-    static fromSaveData(data: iObjectInstanceSaveData, objMap: Map<number, Game_Object>): Object_Instance {
-        const newObj = new Object_Instance(data.id, Vector.fromObject(data.pos), objMap.get(data.objId)!);
+    static fromSaveData(data: iObjectInstanceSaveData, objMap: Map<number, Game_Object>): Instance_Object {
+        const newObj = new Instance_Object(data.id, Vector.fromObject(data.pos), objMap.get(data.objId)!);
         newObj._loadSaveData(data);
 
         return newObj;

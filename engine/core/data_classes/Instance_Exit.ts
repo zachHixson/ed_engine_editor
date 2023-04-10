@@ -1,7 +1,7 @@
 import { Vector } from '../Vector';
 import { iCollisionEvent, iInstanceBaseSaveData, Instance_Base } from './Instance_Base';
 import {INSTANCE_TYPE} from '../Enums';
-import { Object_Instance } from './Instance_Object';
+import { Instance_Object } from './Instance_Object';
 import { Game_Object } from './Game_Object';
 import { Camera } from './Camera';
 import Engine from '@engine/Engine';
@@ -22,7 +22,7 @@ export class Instance_Exit extends Instance_Base {
     static EXIT_ICON = [new ImageData(1, 1)];
     static ENDING_ICON = [new ImageData(1, 1)];
     static engine: Engine | null;
-    static exitInstance: Object_Instance | null;
+    static exitInstance: Instance_Object | null;
     static exitCamera: Camera | null;
     static destExit: Instance_Exit | null;
     static resetState(): void {
@@ -47,7 +47,7 @@ export class Instance_Exit extends Instance_Base {
 
     get hasCollisionEvent(){return true};
 
-    private _loadRoom(objInstance: Object_Instance, instDirection?: Vector){
+    private _loadRoom(objInstance: Instance_Object, instDirection?: Vector){
         const EXIT_TYPES = Game_Object.EXIT_TYPES;
         const engine = Instance_Exit.engine!;
         const exitBehavior = objInstance.objRef.exitBehavior;
@@ -100,10 +100,10 @@ export class Instance_Exit extends Instance_Base {
             return;
         }
         if (this.destinationRoom == null || event.instance.TYPE != INSTANCE_TYPE.OBJECT) return;
-        this.triggerExit(event.instance as Object_Instance);
+        this.triggerExit(event.instance as Instance_Object);
     }
 
-    triggerExit(objInstance: Object_Instance, instDirection?: Vector): void {
+    triggerExit(objInstance: Instance_Object, instDirection?: Vector): void {
         if (this.destinationRoom != null){
             const transition = Instance_Exit.engine!.setTransition(this.transition);
             Instance_Exit.exitInstance = objInstance;

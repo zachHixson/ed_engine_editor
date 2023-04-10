@@ -4,7 +4,7 @@ import Cat_Events from './Cat_Events';
 import Cat_Variables from './Cat_Variables';
 import { Vector } from '../Vector';
 import { iEngineNode } from '../LogicInterfaces';
-import { Object_Instance } from '../core';
+import { Instance_Object } from '../core';
 
 export const NODE_LIST: iNodeTemplate[] = [
     ...Cat_Events,
@@ -337,7 +337,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                     Math.round(this.getInput('x')),
                     Math.round(this.getInput('y'))
                 ).add(this.instance.pos);
-                let instancesInSpace: Object_Instance[];
+                let instancesInSpace: Instance_Object[];
                 let spaceEmpty: boolean;
 
                 if (this.method('checkExitBacktrack', newPos)){
@@ -347,7 +347,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                 instancesInSpace = this.engine.getInstancesOverlapping({
                     id: this.instance.id,
                     pos: newPos
-                } as Object_Instance);
+                } as Instance_Object);
                 spaceEmpty = instancesInSpace.length > 0 ? instancesInSpace.filter(i => i.isSolid).length <= 0 : true;
 
                 if (spaceEmpty || !this.instance.isSolid){

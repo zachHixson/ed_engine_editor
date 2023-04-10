@@ -2,7 +2,7 @@ import { iAnyObj } from "./interfaces";
 import { SOCKET_TYPE } from "./nodes/Node_Enums";
 import { Vector } from "./Vector";
 import Engine from "@engine/Engine";
-import { iAssetSaveData, iInput, iInTrigger, iNavSaveData, iNodeTemplate, iOutput, Node_Enums, Object_Instance } from "./core";
+import { iAssetSaveData, iInput, iInTrigger, iNavSaveData, iNodeTemplate, iOutput, Node_Enums, Instance_Object } from "./core";
 
 type Graph = {};
 type Connection = {};
@@ -138,7 +138,7 @@ export interface iEngineLogic {
     localVariableDefaults: Map<string, any>;
 
     setLocalVariableDefault(name: string, data: iAnyObj): void;
-    executeEvent(eventName: string, instance: Object_Instance, data: any): void;
+    executeEvent(eventName: string, instance: Instance_Object, data: any): void;
 }
 
 export interface iEngineInTrigger {
@@ -173,7 +173,7 @@ export interface iEngineNode extends iNode_Base {
     parentScript: iEngineLogic;
 
     engine: Engine;
-    instance: Object_Instance;
+    instance: Instance_Object;
 
     method(methodName: string, data?: any): any;
     getWidgetData(): any;
