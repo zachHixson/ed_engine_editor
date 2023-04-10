@@ -6,7 +6,7 @@ import { CATEGORY_ID, INSTANCE_TYPE } from '../Enums';
 import { Color } from '../Draw';
 import { Instance_Exit, iExitSaveData } from './Instance_Exit';
 import { Game_Object } from './Game_Object';
-import { iObjectInstanceSaveData, Object_Instance } from './Object_Instance';
+import { iObjectInstanceSaveData, Object_Instance } from './Instance_Object';
 import { Vector } from '../Vector';
 import { Instance_Base } from './Instance_Base';
 import { Linked_List } from '../Linked_List';

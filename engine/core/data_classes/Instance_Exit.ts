@@ -1,7 +1,7 @@
 import { Vector } from '../Vector';
 import { iCollisionEvent, iInstanceBaseSaveData, Instance_Base } from './Instance_Base';
 import {INSTANCE_TYPE} from '../Enums';
-import { Object_Instance } from './Object_Instance';
+import { Object_Instance } from './Instance_Object';
 import { Game_Object } from './Game_Object';
 import { Camera } from './Camera';
 import Engine from '@engine/Engine';

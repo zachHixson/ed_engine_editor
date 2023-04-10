@@ -1,4 +1,4 @@
-import { Room, Instance_Renderer, WGL, Instance_Base, Mat3 } from "@engine/core/core";
+import { Room, Instance_Renderer, Instance_Base, Mat3 } from "@engine/core/core";
 
 export default class Renderer{
     static get SCREEN_RES(){return 240}
