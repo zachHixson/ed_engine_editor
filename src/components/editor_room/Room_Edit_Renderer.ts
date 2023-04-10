@@ -432,12 +432,12 @@ class UI_Renderer {
             loaded(Core.Object_Instance.DEFAULT_INSTANCE_ICON_ID, Core.Object_Instance.DEFAULT_INSTANCE_ICON);
         }),
         svgToCanvas(exitIconRaw, DIM, canvas => {
-            Core.Exit.EXIT_ICON = [getImageData(canvas!)];
-            loaded(Core.Exit.EXIT_ICON_ID, Core.Exit.EXIT_ICON);
+            Core.Instance_Exit.EXIT_ICON = [getImageData(canvas!)];
+            loaded(Core.Instance_Exit.EXIT_ICON_ID, Core.Instance_Exit.EXIT_ICON);
         }),
         svgToCanvas(endIconRaw, DIM, canvas => {
-            Core.Exit.ENDING_ICON = [getImageData(canvas!)];
-            loaded(Core.Exit.ENDING_ICON_ID, Core.Exit.ENDING_ICON);
+            Core.Instance_Exit.ENDING_ICON = [getImageData(canvas!)];
+            loaded(Core.Instance_Exit.ENDING_ICON_ID, Core.Instance_Exit.ENDING_ICON);
         })
     ];
     const loadedImages = new Array<{id: string, image: ImageData[]}>();

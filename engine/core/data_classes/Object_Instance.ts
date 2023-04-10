@@ -1,7 +1,7 @@
 import {INSTANCE_TYPE} from '../Enums';
 import { Vector } from '../Vector';
 import { Sprite } from './Sprite';
-import { Exit } from './Instance_Exit';
+import { Instance_Exit } from './Instance_Exit';
 import { Game_Object } from './Game_Object';
 import { iInstanceBaseSaveData, Instance_Base } from './Instance_Base';
 
@@ -24,7 +24,7 @@ export class Object_Instance extends Instance_Base{
     private _animProgress: number = 0;
     private _hasCollisionEvent: boolean | null = null;
     private _prevExit: {
-        exit: Exit,
+        exit: Instance_Exit,
         direction: Vector,
     } | null = null;
     private _zDepthOverride: number | null = null;
@@ -193,7 +193,7 @@ export class Object_Instance extends Instance_Base{
         this.pos.copy(newPos);
     }
 
-    setPrevExit(exit: Exit, direction: Vector): void {
+    setPrevExit(exit: Instance_Exit, direction: Vector): void {
         this._prevExit = {
             exit,
             direction,

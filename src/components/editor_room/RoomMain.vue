@@ -48,7 +48,7 @@ type InstanceChangeProps = {newState: Partial<Core.Instance_Base>, oldState?: ob
 type InstanceGroupChangeProps = {add?: boolean, groupName: string, newName?: string, remove?: boolean, oldIdx?: number, instRef: Core.Object_Instance};
 type InstanceVarChangeProps = {changeObj: any, instRef?: Core.Object_Instance};
 type CameraChangeProps = {newState?: object, oldState?: object};
-type ExitAddProps = {exitRef?: Core.Exit, pos: Vector};
+type ExitAddProps = {exitRef?: Core.Instance_Exit, pos: Vector};
 type RoomPropChangeProps = {newState: object, oldState?: object};
 
 //define stores
@@ -114,7 +114,7 @@ const mouse = reactive({
     cellCache: new Array<Vector>(),
     inWindow: false,
 });
-const editorSelection = ref<Instance_Base | Core.Exit | null>();
+const editorSelection = ref<Instance_Base | Core.Instance_Exit | null>();
 const overlappingInstances = ref<Instance_Base[]>([]);
 
 //computed properties
@@ -580,8 +580,8 @@ function actionCameraChange({newState}: CameraChangeProps, makeCommit = true): v
     }
 }
 
-function actionExitAdd({exitRef, pos}: ExitAddProps, makeCommit = true): Core.Exit {
-    const newExit = exitRef ?? new Core.Exit(props.selectedRoom.curInstId, pos);
+function actionExitAdd({exitRef, pos}: ExitAddProps, makeCommit = true): Core.Instance_Exit {
+    const newExit = exitRef ?? new Core.Instance_Exit(props.selectedRoom.curInstId, pos);
     const newExitName = t('room_editor.new_exit_prefix') + newExit.id;
     props.selectedRoom.addInstance(newExit);
 

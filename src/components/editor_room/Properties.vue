@@ -51,7 +51,7 @@ const destinationRoomExits = computed(()=>{
     if (props.selectedEntity?.TYPE != Core.INSTANCE_TYPE.EXIT) return null;
     
     const allRooms = gameDataStore.getAllRooms;
-    const destRoom = allRooms.find(r => r.id == (props.selectedEntity as Core.Exit).destinationRoom);
+    const destRoom = allRooms.find(r => r.id == (props.selectedEntity as Core.Instance_Exit).destinationRoom);
 
     return destRoom?.instances.toArray().filter(instance => instance.TYPE == Core.INSTANCE_TYPE.EXIT);
 });
@@ -229,20 +229,20 @@ function nanToNull(inp: number): number | null {
             </div>
             <div class="control">
                 <label for="exitTrans">{{$t('room_editor.transition')}}:</label>
-                <select id="exitTrans" :value="(selectedEntity as Core.Exit).transition" v-tooltip="$t('room_editor.tt_exit_trans')"
+                <select id="exitTrans" :value="(selectedEntity as Core.Instance_Exit).transition" v-tooltip="$t('room_editor.tt_exit_trans')"
                     @change="setExitProp({transition: ($event.target! as AnyObj).value})">
-                    <option :value="Core.Exit.TRANSITION_TYPES.NONE">{{$t('generic.no_option')}}</option>
-                    <option :value="Core.Exit.TRANSITION_TYPES.FADE">{{$t('room_editor.trans_fade')}}</option>
+                    <option :value="Core.Instance_Exit.TRANSITION_TYPES.NONE">{{$t('generic.no_option')}}</option>
+                    <option :value="Core.Instance_Exit.TRANSITION_TYPES.FADE">{{$t('room_editor.trans_fade')}}</option>
                 </select>
             </div>
             <div class="control">
                 <label for="exitEnding">{{$t('room_editor.is_ending')}}:</label>
-                <input id="exitEnding" type="checkbox" :checked="(selectedEntity as Core.Exit).isEnding" v-tooltip="$t('room_editor.tt_exit_is_ending')"
+                <input id="exitEnding" type="checkbox" :checked="(selectedEntity as Core.Instance_Exit).isEnding" v-tooltip="$t('room_editor.tt_exit_is_ending')"
                     @change="setExitProp({isEnding: ($event.target as AnyObj).checked})"/>
             </div>
-            <div v-show="!(selectedEntity as Core.Exit).isEnding" class="control">
+            <div v-show="!(selectedEntity as Core.Instance_Exit).isEnding" class="control">
                 <label for="exitDestRoom">{{$t('room_editor.dest_room')}}:</label>
-                <select id="exitDestRoom" :value="(selectedEntity as Core.Exit).destinationRoom" v-tooltip="$t('room_editor.tt_exit_dest_room')"
+                <select id="exitDestRoom" :value="(selectedEntity as Core.Instance_Exit).destinationRoom" v-tooltip="$t('room_editor.tt_exit_dest_room')"
                     @change="setExitProp({destinationRoom: nanToNull(parseInt(($event.target as AnyObj).value))})">
                     <option :value="null">{{$t('generic.no_option')}}</option>
                     <option
@@ -251,9 +251,9 @@ function nanToNull(inp: number): number | null {
                         :value="room.id">{{room.name}}</option>
                 </select>
             </div>
-            <div v-show="!(selectedEntity as Core.Exit).isEnding && (selectedEntity as Core.Exit).destinationRoom != null" class="control">
+            <div v-show="!(selectedEntity as Core.Instance_Exit).isEnding && (selectedEntity as Core.Instance_Exit).destinationRoom != null" class="control">
                 <label for="exitDestExit">{{$t('room_editor.dest_exit')}}:</label>
-                <select id="exitDestExit" :value="(selectedEntity as Core.Exit).destinationExit" v-tooltip="$t('room_editor.tt_exit_dest_exit')"
+                <select id="exitDestExit" :value="(selectedEntity as Core.Instance_Exit).destinationExit" v-tooltip="$t('room_editor.tt_exit_dest_exit')"
                     @change="setExitProp({destinationExit: parseInt(($event.target as AnyObj).value)})">
                     <option
                         v-for="exit in destinationRoomExits"
@@ -261,9 +261,9 @@ function nanToNull(inp: number): number | null {
                         :value="exit.id">{{exit.name}}</option>
                 </select>
             </div>
-            <div v-show="(selectedEntity as Core.Exit).isEnding" class="control">
+            <div v-show="(selectedEntity as Core.Instance_Exit).isEnding" class="control">
                 <label for="endingDialog">{{$t('room_editor.end_dialog')}}:</label>
-                <textarea id="endingDialog" :value="(selectedEntity as Core.Exit).endingDialog" v-tooltip="$t('room_editor.tt_exit_end_dialog')"
+                <textarea id="endingDialog" :value="(selectedEntity as Core.Instance_Exit).endingDialog" v-tooltip="$t('room_editor.tt_exit_end_dialog')"
                     @change="setExitProp({endingDialog: ($event.target as AnyObj).value})"></textarea>
             </div>
             <div class="control">

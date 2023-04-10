@@ -16,7 +16,7 @@ export interface iExitSaveData extends iInstanceBaseSaveData {
     endingDialog: string;
 }
 
-export class Exit extends Instance_Base {
+export class Instance_Exit extends Instance_Base {
     static EXIT_ICON_ID = 'EXIT_ICON';
     static ENDING_ICON_ID = 'ENDING_ICON';
     static EXIT_ICON = [new ImageData(1, 1)];
@@ -24,12 +24,12 @@ export class Exit extends Instance_Base {
     static engine: Engine | null;
     static exitInstance: Object_Instance | null;
     static exitCamera: Camera | null;
-    static destExit: Exit | null;
+    static destExit: Instance_Exit | null;
     static resetState(): void {
-        Exit.exitInstance?.clearPrevExit();
-        Exit.exitInstance = null;
-        Exit.exitCamera = null;
-        Exit.destExit = null;
+        Instance_Exit.exitInstance?.clearPrevExit();
+        Instance_Exit.exitInstance = null;
+        Instance_Exit.exitCamera = null;
+        Instance_Exit.destExit = null;
     }
 
     isEnding: boolean = false;
@@ -42,14 +42,14 @@ export class Exit extends Instance_Base {
 
     get TYPE(){return INSTANCE_TYPE.EXIT}
 
-    get frameDataId(){return this.isEnding ? Exit.ENDING_ICON_ID : Exit.EXIT_ICON_ID}
-    get frameData(){return this.isEnding ? Exit.ENDING_ICON : Exit.EXIT_ICON}
+    get frameDataId(){return this.isEnding ? Instance_Exit.ENDING_ICON_ID : Instance_Exit.EXIT_ICON_ID}
+    get frameData(){return this.isEnding ? Instance_Exit.ENDING_ICON : Instance_Exit.EXIT_ICON}
 
     get hasCollisionEvent(){return true};
 
     private _loadRoom(objInstance: Object_Instance, instDirection?: Vector){
         const EXIT_TYPES = Game_Object.EXIT_TYPES;
-        const engine = Exit.engine!;
+        const engine = Instance_Exit.engine!;
         const exitBehavior = objInstance.objRef.exitBehavior;
         const direction = instDirection ?? objInstance.pos.clone().subtract(objInstance.lastPos).normalize();
 
@@ -66,37 +66,37 @@ export class Exit extends Instance_Base {
 
         engine.loadRoom(this.destinationRoom!);
 
-        Exit.destExit = engine.room.instances.find(e => e.id == this.destinationExit)! as Exit;
+        Instance_Exit.destExit = engine.room.instances.find(e => e.id == this.destinationExit)! as Instance_Exit;
 
         switch(exitBehavior) {
             case EXIT_TYPES.TO_DESTINATION:
-                objInstance.pos.copy(Exit.destExit.pos);
+                objInstance.pos.copy(Instance_Exit.destExit.pos);
                 objInstance.lastPos.copy(objInstance.pos);
-                objInstance.setPrevExit(Exit.destExit, direction);
+                objInstance.setPrevExit(Instance_Exit.destExit, direction);
             case EXIT_TYPES.KEEP_POSITION:
                 engine.addInstance(objInstance);
         }
 
-        if (Exit.exitCamera){
-            engine.room.camera.copyCameraSettings(Exit.exitCamera);
+        if (Instance_Exit.exitCamera){
+            engine.room.camera.copyCameraSettings(Instance_Exit.exitCamera);
         }
     }
 
     onUpdate(): void {
-        if (Exit.destExit != this) return;
+        if (Instance_Exit.destExit != this) return;
         
-        const overlapping = Exit.engine!.getInstancesOverlapping(this).filter(i => i.id == Exit.exitInstance?.id);
+        const overlapping = Instance_Exit.engine!.getInstancesOverlapping(this).filter(i => i.id == Instance_Exit.exitInstance?.id);
 
         if (!overlapping.length) {
-            Exit.resetState();
+            Instance_Exit.resetState();
         }
     }
 
     onCollision(event: iCollisionEvent): void {
-        if (Exit.exitInstance) return;
+        if (Instance_Exit.exitInstance) return;
         if (event.type != COLLISION_EVENT.START) return;
         if (this.isEnding) {
-            Exit.engine!.triggerEnding(this.endingDialog);
+            Instance_Exit.engine!.triggerEnding(this.endingDialog);
             return;
         }
         if (this.destinationRoom == null || event.instance.TYPE != INSTANCE_TYPE.OBJECT) return;
@@ -105,22 +105,22 @@ export class Exit extends Instance_Base {
 
     triggerExit(objInstance: Object_Instance, instDirection?: Vector): void {
         if (this.destinationRoom != null){
-            const transition = Exit.engine!.setTransition(this.transition);
-            Exit.exitInstance = objInstance;
-            Exit.engine!.enableInput = false;
+            const transition = Instance_Exit.engine!.setTransition(this.transition);
+            Instance_Exit.exitInstance = objInstance;
+            Instance_Exit.engine!.enableInput = false;
             transition.addEventListener('load-room', ()=>this._loadRoom(objInstance, instDirection), {once:true});
-            transition.addEventListener('complete', ()=>Exit.engine!.enableInput = true, {once: true});
+            transition.addEventListener('complete', ()=>Instance_Exit.engine!.enableInput = true, {once: true});
 
-            if (Exit.exitInstance.objRef.keepCameraSettings){
-                Exit.exitCamera = Exit.engine!.room.camera;
+            if (Instance_Exit.exitInstance.objRef.keepCameraSettings){
+                Instance_Exit.exitCamera = Instance_Exit.engine!.room.camera;
             }
 
             transition.start(this.destinationRoom);
         }
     }
 
-    clone(): Exit {
-        const clone = new Exit(this.id, this.pos);
+    clone(): Instance_Exit {
+        const clone = new Instance_Exit(this.id, this.pos);
         Object.assign(clone, this);
         clone.pos = this.pos.clone();
         return clone;
@@ -137,11 +137,11 @@ export class Exit extends Instance_Base {
         };
     }
 
-    static fromSaveData(data: iExitSaveData): Exit {
-        return new Exit(data.id, Vector.fromObject(data.pos))._loadSaveData(data);
+    static fromSaveData(data: iExitSaveData): Instance_Exit {
+        return new Instance_Exit(data.id, Vector.fromObject(data.pos))._loadSaveData(data);
     }
 
-    private _loadSaveData(data: iExitSaveData): Exit {
+    private _loadSaveData(data: iExitSaveData): Instance_Exit {
         this.loadBaseSaveData(data);
         this.isEnding = data.isEnding;
         this.destinationRoom = data.destinationRoom;

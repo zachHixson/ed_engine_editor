@@ -4,7 +4,7 @@ import { Camera, iCameraSaveData } from './Camera';
 import { Spacial_Collection } from '../Spacial_Collection';
 import { CATEGORY_ID, INSTANCE_TYPE } from '../Enums';
 import { Color } from '../Draw';
-import { Exit, iExitSaveData } from './Instance_Exit';
+import { Instance_Exit, iExitSaveData } from './Instance_Exit';
 import { Game_Object } from './Game_Object';
 import { iObjectInstanceSaveData, Object_Instance } from './Object_Instance';
 import { Vector } from '../Vector';
@@ -84,7 +84,7 @@ export class Room extends Asset_Base {
                         return Object_Instance.fromSaveData(instancesSerial[i] as iObjectInstanceSaveData, objectMap);
                     case INSTANCE_TYPE.EXIT:
                     default:
-                        return Exit.fromSaveData(curInstance as iExitSaveData);
+                        return Instance_Exit.fromSaveData(curInstance as iExitSaveData);
                 }
             })();
             
@@ -101,7 +101,7 @@ export class Room extends Asset_Base {
 
     purgeMissingReferences(objects: Game_Object[], rooms: Room[]){
         const objectInstances: Object_Instance[] = [];
-        const exitInstances: Exit[] = [];
+        const exitInstances: Instance_Exit[] = [];
 
         this._instances.forEach(instance => {
             switch (instance.TYPE){
@@ -109,7 +109,7 @@ export class Room extends Asset_Base {
                     objectInstances.push(instance as Object_Instance);
                     break;
                 case INSTANCE_TYPE.EXIT:
-                    exitInstances.push(instance as Exit);
+                    exitInstances.push(instance as Instance_Exit);
                     break;
             }
         })

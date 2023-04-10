@@ -3,7 +3,7 @@ import Logic from './Logic';
 import Dialog_Box from './text/Dialog_Box';
 import Dialog_Fullscreen from './text/Dialog_Fullscreen';
 import {
-    Exit,
+    Instance_Exit,
     Room,
     Sprite,
     Game_Object,
@@ -109,7 +109,7 @@ export class Engine implements iEngineCallbacks {
         window.IS_ENGINE = false;
 
         //setup static properties
-        Exit.engine = this;
+        Instance_Exit.engine = this;
     }
 
     get room(){return this._loadedRoom}
@@ -487,7 +487,7 @@ export class Engine implements iEngineCallbacks {
         this._collisionMap = new Map();
         this._globalVariables = new Map();
         window.IS_ENGINE = false;
-        Exit.engine = null;
+        Instance_Exit.engine = null;
     }
 
     getRoomData = (roomId: number): Room | undefined => {
