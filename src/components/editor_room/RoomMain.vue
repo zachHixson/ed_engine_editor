@@ -711,7 +711,8 @@ function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
             v-if="overlappingInstances.length > 0"
             ref="overlapBox"
             class="overlap-list"
-            v-click-outside="()=>overlappingInstances = []">
+            @mouseleave="()=>overlappingInstances = []"
+            v-click-outside.any="()=>overlappingInstances = []">
             <div
                 v-for="instance in overlappingInstances"
                 class="overlap-item"
@@ -877,6 +878,25 @@ function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
 
 .overlap-item:active{
     filter: brightness(0.8);
+}
+
+.overlap-list::-webkit-scrollbar {
+width: 12px;
+height: 12px;
+}
+
+.overlap-list::-webkit-scrollbar-track {
+background: #f5f5f5;
+border-radius: 10px;
+}
+
+.overlap-list::-webkit-scrollbar-thumb {
+border-radius: 10px;
+background: #AAA;
+}
+
+.overlap-list::-webkit-scrollbar-thumb:hover {
+background: #999;  
 }
 
 .noRoomSelected{

@@ -15,9 +15,14 @@ export const vClickOutside = {
         };
 
         document.body.addEventListener('click', el.checkOutside);
+
+        if (binding.modifiers.any){
+            document.body.addEventListener('mousedown', el.checkOutside);
+        }
     },
     unmounted: function (el: ExpandedEl) {
-        document.body.removeEventListener('click', el.checkOutside)
+        document.body.removeEventListener('click', el.checkOutside);
+        document.body.removeEventListener('mousedown', el.checkOutside);
     }
 };
 
