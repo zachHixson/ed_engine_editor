@@ -5,15 +5,17 @@ import { Spacial_Collection } from '../Spacial_Collection';
 import { CATEGORY_ID, INSTANCE_TYPE } from '../Enums';
 import { Color } from '../Draw';
 import { Instance_Exit, iExitSaveData } from './Instance_Exit';
+import { Sprite } from './Sprite';
 import { Game_Object } from './Game_Object';
 import { iObjectInstanceSaveData, Instance_Object } from './Instance_Object';
 import { Vector } from '../Vector';
-import { Instance_Base } from './Instance_Base';
+import { Instance_Base, iInstanceBaseSaveData } from './Instance_Base';
 import { Linked_List } from '../Linked_List';
+import { Instance_Sprite, iInstanceSpriteSaveData } from './Instance_Sprite';
 
 export interface iRoomSaveData extends iAssetSaveData {
     cameraProps: iCameraSaveData;
-    instancesSerial: (iObjectInstanceSaveData | iExitSaveData)[],
+    instancesSerial: iInstanceBaseSaveData[],
     bgColor: string,
     persist: boolean,
     useGravity: boolean,
@@ -61,11 +63,11 @@ export class Room extends Asset_Base {
         } satisfies iRoomSaveData;
     }
 
-    static fromSaveData(data: iRoomSaveData, objectMap: Map<number, Game_Object>): Room {
-        return new Room()._loadSaveData(data, objectMap);
+    static fromSaveData(data: iRoomSaveData, assetMap: Map<CATEGORY_ID, Map<number, Asset_Base>>): Room {
+        return new Room()._loadSaveData(data, assetMap);
     }
 
-    private _loadSaveData(data: iRoomSaveData, objectMap: Map<number, Game_Object>){
+    private _loadSaveData(data: iRoomSaveData, assetMap: Map<CATEGORY_ID, Map<number, Asset_Base>>){
         const instancesSerial = data.instancesSerial;
 
         this.loadBaseAssetData(data);
@@ -80,13 +82,20 @@ export class Room extends Asset_Base {
             const curInstance = instancesSerial[i];
             const newInstance: Instance_Base = (()=>{
                 switch(curInstance.type){
+                    case INSTANCE_TYPE.SPRITE:
+                        return Instance_Sprite.fromSaveData(
+                            instancesSerial[i] as iInstanceSpriteSaveData,
+                            assetMap.get(CATEGORY_ID.SPRITE) as Map<number, Sprite>
+                        );
                     case INSTANCE_TYPE.OBJECT:
-                        return Instance_Object.fromSaveData(instancesSerial[i] as iObjectInstanceSaveData, objectMap);
+                        return Instance_Object.fromSaveData(
+                            instancesSerial[i] as iObjectInstanceSaveData,
+                            assetMap.get(CATEGORY_ID.OBJECT) as Map<number, Game_Object>
+                        );
                     case INSTANCE_TYPE.EXIT:
-                    default:
                         return Instance_Exit.fromSaveData(curInstance as iExitSaveData);
                 }
-            })();
+            })()!;
             
             this.addInstance(newInstance)
             Room._curInstId = Math.max(newInstance.id + 1, Room._curInstId);
@@ -102,6 +111,7 @@ export class Room extends Asset_Base {
     purgeMissingReferences(objects: Game_Object[], rooms: Room[]){
         const objectInstances: Instance_Object[] = [];
         const exitInstances: Instance_Exit[] = [];
+        const spriteInstances: Instance_Sprite[] = [];
 
         this._instances.forEach(instance => {
             switch (instance.TYPE){
@@ -110,6 +120,9 @@ export class Room extends Asset_Base {
                     break;
                 case INSTANCE_TYPE.EXIT:
                     exitInstances.push(instance as Instance_Exit);
+                    break;
+                case INSTANCE_TYPE.SPRITE:
+                    spriteInstances.push(instance as Instance_Sprite);
                     break;
             }
         })
@@ -129,6 +142,14 @@ export class Room extends Asset_Base {
                 e.destinationRoom = null;
                 e.destinationExit = null;
             }
+        });
+
+        spriteInstances.forEach(i => {
+            //const foundObj = objects.find(o => o.id == i.objRef.id);
+
+            // if (!foundObj){
+            //     this.removeInstance(i.id);
+            // }
         });
     }
 

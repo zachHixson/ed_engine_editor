@@ -22,7 +22,6 @@ import { useRoomEditorStore } from '@/stores/RoomEditor';
 import { useGameDataStore } from '@/stores/GameData';
 import { RoomMainEventBus } from './RoomMain.vue';
 import Core from '@/core';
-import type { Instance_Base } from '@engine/core/core';
 
 const roomEditorStore = useRoomEditorStore();
 const gameDataStore = useGameDataStore();
@@ -178,17 +177,17 @@ function emitMouseEvent(event: MouseEvent, type: Core.MOUSE_EVENT): void {
     }
 }
 
-function instanceAdded(instance: Instance_Base): void {
+function instanceAdded(instance: Core.Instance_Base): void {
     contentsBounds.value = props.selectedRoom.getContentsBounds();
     renderer.addInstance(instance);
 }
 
-function instanceRemoved(instance: Instance_Base): void {
+function instanceRemoved(instance: Core.Instance_Base): void {
     contentsBounds.value = props.selectedRoom.getContentsBounds();
     renderer.removeInstance(instance);
 }
 
-function instanceChanged(instance: Instance_Base): void {
+function instanceChanged(instance: Core.Instance_Base): void {
     contentsBounds.value = props.selectedRoom.getContentsBounds();
     renderer.updateInstance(instance);
     setSelection();

@@ -16,6 +16,8 @@ import {
     INSTANCE_TYPE,
     Node_Enums,
     WGL,
+CATEGORY_ID,
+Asset_Base,
 } from '@engine/core/core';
 import Node from './Node';
 import iGameData from './iGameData';
@@ -275,6 +277,10 @@ export class Engine implements iEngineCallbacks {
         const loadedData = {} as iGameData;
         const spriteMap = new Map<number, Sprite>();
         const objectMap = new Map<number, Game_Object>();
+        const assetMap = new Map<CATEGORY_ID, Map<number, Asset_Base>>([
+            [CATEGORY_ID.SPRITE, spriteMap],
+            [CATEGORY_ID.OBJECT, objectMap],
+        ]);
         let parsedJson;
 
         try {
@@ -293,7 +299,7 @@ export class Engine implements iEngineCallbacks {
         loadedData.objects = parsedJson.objects.map((o: serialObject) => Game_Object.fromSaveData(o, spriteMap));
         loadedData.objects.forEach(object => objectMap.set(object.id, object));
 
-        loadedData.rooms = parsedJson.rooms.map((r: serialRoom) => Room.fromSaveData(r, objectMap));
+        loadedData.rooms = parsedJson.rooms.map((r: serialRoom) => Room.fromSaveData(r, assetMap));
         loadedData.logic = parsedJson.logic.map((l: serialLogic) => new Logic(l, this));
 
         loadedData.logic.forEach(logic => logic.dispatchLifecycleEvent('afterGameDataLoaded'));
@@ -556,6 +562,7 @@ export class Engine implements iEngineCallbacks {
     }
 
     addInstance = (instance: Instance_Base): void => {
+        console.log("Works?")
         this.room!.addInstance(instance);
 
         if (instance.renderable){

@@ -2,6 +2,7 @@ import Core from '@/core';
 import svgToCanvas from '@/components/common/svgToCanvas';
 
 import cameraLocIconRaw from '@/assets/camera_location.svg?raw';
+import spriteIconRaw from '@/assets/sprite_icon.svg?raw';
 import objectIconRaw from '@/assets/object_icon.svg?raw';
 import exitIconRaw from '@/assets/exit.svg?raw';
 import endIconRaw from '@/assets/end.svg?raw';
@@ -426,6 +427,10 @@ class UI_Renderer {
         svgToCanvas(cameraLocIconRaw, DIM, canvas => {
             UI_Renderer.CAMERA_ICON = getImageData(canvas!);
             loaded('CAMERA_ICON', [UI_Renderer.CAMERA_ICON]);
+        }),
+        svgToCanvas(spriteIconRaw, DIM, canvas => {
+            Core.Instance_Sprite.DEFAULT_SPRITE_ICON = [getImageData(canvas!)];
+            loaded(Core.Instance_Sprite.DEFAULT_SPRITE_ICON_ID, Core.Instance_Sprite.DEFAULT_SPRITE_ICON);
         }),
         svgToCanvas(objectIconRaw, DIM, canvas => {
             Core.Instance_Object.DEFAULT_INSTANCE_ICON = [getImageData(canvas!)];

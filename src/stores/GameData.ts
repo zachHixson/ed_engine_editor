@@ -117,6 +117,10 @@ export const useGameDataStore = defineStore({
         loadSaveData(loadObj: Core.iSerializedGameData, nodeAPI: Node_API){
             const spriteMap = new Map<number, Core.Sprite>();
             const objectMap = new Map<number, Core.Game_Object>();
+            const assetMap = new Map<Core.CATEGORY_ID, Map<number, Core.Asset_Base>>([
+                [Core.CATEGORY_ID.SPRITE, spriteMap],
+                [Core.CATEGORY_ID.OBJECT, objectMap],
+            ]);
 
             this.startRoomId = loadObj.startRoom;
 
@@ -126,7 +130,7 @@ export const useGameDataStore = defineStore({
             this.objects = loadObj.objects.map(o => Core.Game_Object.fromSaveData(o, spriteMap));
             this.objects.forEach(object => objectMap.set(object.id, object as Core.Game_Object));
 
-            this.rooms = loadObj.rooms.map(r => Core.Room.fromSaveData(r, objectMap));
+            this.rooms = loadObj.rooms.map(r => Core.Room.fromSaveData(r, assetMap));
             this.logic = loadObj.logic.map(l => Logic.fromSaveData(l, nodeAPI));
         },
         purgeMissingReferences(){

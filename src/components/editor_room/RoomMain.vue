@@ -42,7 +42,7 @@ type Vector = Core.Vector;
 type Instance_Base = Core.Instance_Base;
 
 type MoveProps = {instId?: number, instRef?: Instance_Base, newPos?: Vector, oldPos?: Vector};
-type AddProps = {objId?: number, instRefList?: Instance_Base[], pos?: Vector};
+type AddProps = {sourceId?: number, instRefList?: Instance_Base[], pos?: Vector};
 type DeleteProps = {instId?: number, instRefList?: Instance_Base[]};
 type InstanceChangeProps = {newState: Partial<Core.Instance_Base>, oldState?: object, instRef?: Instance_Base};
 type InstanceGroupChangeProps = {add?: boolean, groupName: string, newName?: string, remove?: boolean, oldIdx?: number, instRef: Core.Instance_Object};
@@ -339,10 +339,7 @@ function toolAddBrush(mEvent: imEvent): void {
             }
 
             if (!hasVisited && mouse.down){
-                if (mouse.down && props.selectedAsset?.category_ID == Core.CATEGORY_ID.OBJECT){
-                    actionAdd({objId: props.selectedAsset.id, pos: mEvent.worldCell}, false);
-                }
-                
+                actionAdd({sourceId: props.selectedAsset.id, pos: mEvent.worldCell}, false);
                 mouse.cellCache.push(mEvent.worldCell.clone());
             }
 
@@ -450,8 +447,7 @@ function actionMove({instId, instRef, newPos}: MoveProps, makeCommit = true): vo
     RoomMainEventBus.emit('instance-changed', instRef);
 }
 
-function actionAdd({objId, instRefList = [], pos}: AddProps, makeCommit = true): void {
-    const object = gameDataStore.getAllObjects.find((o) => o.id == objId);
+function actionAdd({sourceId, instRefList = [], pos}: AddProps, makeCommit = true): void {
     const cacheList = undoStore.cache.get('add_list');
 
     if (makeCommit){
@@ -461,8 +457,17 @@ function actionAdd({objId, instRefList = [], pos}: AddProps, makeCommit = true):
         return;
     }
 
-    if (objId){
-        const newInst = new Core.Instance_Object(props.selectedRoom.curInstId, pos!, object!);
+    if (sourceId){
+        const newInst = (()=>{
+            switch (props.selectedAsset.category_ID){
+                case Core.CATEGORY_ID.SPRITE:
+                    const sprite = gameDataStore.getAllSprites.find(s => s.id == sourceId)!;
+                    return new Core.Instance_Sprite(props.selectedRoom.curInstId, pos, sprite);
+                case Core.CATEGORY_ID.OBJECT:
+                    const object = gameDataStore.getAllObjects.find(o => o.id == sourceId)!;
+                    return new Core.Instance_Object(props.selectedRoom.curInstId, pos!, object);
+            }
+        })()!;
 
         instRefList.push(newInst);
 

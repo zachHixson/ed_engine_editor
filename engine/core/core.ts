@@ -4,6 +4,7 @@ export * from './data_classes/Game_Object';
 export * from './data_classes/Instance_Base';
 export * from './data_classes/Instance_Exit';
 export * from './data_classes/Instance_Object';
+export * from './data_classes/Instance_Sprite';
 export * from './data_classes/Room';
 export * from './data_classes/Sprite';
 
