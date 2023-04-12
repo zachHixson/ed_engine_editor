@@ -756,7 +756,7 @@ function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
                 <Properties
                     ref="props"
                     :selectedTool="roomEditorStore.getSelectedTool"
-                    :selectedEntity="editorSelection!"
+                    :selected-instance="editorSelection!"
                     :camera="selectedRoom.camera"
                     :room="selectedRoom"
                     @inst-prop-set="actionInstanceChange({newState: $event as object})"
@@ -764,7 +764,6 @@ function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
                     @inst-var-changed="actionInstanceVarChange({changeObj: $event})"
                     @cam-prop-set="actionCameraChange({newState: $event})"
                     @exit-prop-set="actionInstanceChange({newState: ($event as Partial<Core.Instance_Base>)})"
-                    @exit-delete="actionDelete({instId: ($event.id as number)})"
                     @room-prop-set="actionRoomPropChange({newState: $event})"/>
             </div>
         </div>
