@@ -12,6 +12,8 @@ import { Vector } from '../Vector';
 import { Instance_Base, iInstanceBaseSaveData } from './Instance_Base';
 import { Linked_List } from '../Linked_List';
 import { Instance_Sprite, iInstanceSpriteSaveData } from './Instance_Sprite';
+import { Instance_Logic, iInstanceLogicSaveData } from './Instance_Logic';
+import { iEngineLogic } from '../LogicInterfaces';
 
 export interface iRoomSaveData extends iAssetSaveData {
     cameraProps: iCameraSaveData;
@@ -63,11 +65,11 @@ export class Room extends Asset_Base {
         } satisfies iRoomSaveData;
     }
 
-    static fromSaveData(data: iRoomSaveData, assetMap: Map<CATEGORY_ID, Map<number, Asset_Base>>): Room {
+    static fromSaveData(data: iRoomSaveData, assetMap: Map<CATEGORY_ID, Map<number, Asset_Base | iEngineLogic>>): Room {
         return new Room()._loadSaveData(data, assetMap);
     }
 
-    private _loadSaveData(data: iRoomSaveData, assetMap: Map<CATEGORY_ID, Map<number, Asset_Base>>){
+    private _loadSaveData(data: iRoomSaveData, assetMap: Map<CATEGORY_ID, Map<number, Asset_Base | iEngineLogic>>){
         const instancesSerial = data.instancesSerial;
 
         this.loadBaseAssetData(data);
@@ -94,6 +96,18 @@ export class Room extends Asset_Base {
                         );
                     case INSTANCE_TYPE.EXIT:
                         return Instance_Exit.fromSaveData(curInstance as iExitSaveData);
+                    case INSTANCE_TYPE.LOGIC:
+                        const logicInstance = Instance_Logic.fromSaveData(
+                            curInstance as iInstanceLogicSaveData,
+                            assetMap.get(CATEGORY_ID.OBJECT) as Map<number, Game_Object>
+                        );
+                        const logicMap = assetMap.get(CATEGORY_ID.LOGIC);
+
+                        if (logicMap){
+                            logicInstance.setLogic(assetMap.get(CATEGORY_ID.LOGIC) as Map<number, iEngineLogic>);
+                        }
+                        
+                        return logicInstance;
                 }
             })()!;
             

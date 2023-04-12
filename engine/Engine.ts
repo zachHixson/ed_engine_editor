@@ -18,6 +18,8 @@ import {
     WGL,
 CATEGORY_ID,
 Asset_Base,
+iEngineLogic,
+Instance_Logic,
 } from '@engine/core/core';
 import Node from './Node';
 import iGameData from './iGameData';
@@ -135,8 +137,8 @@ export class Engine implements iEngineCallbacks {
                 this._renderer.addInstance(instance);
             }
             
-            if (instance.TYPE == INSTANCE_TYPE.OBJECT){
-                const objInstance = instance as Instance_Object;
+            if (instance.TYPE == INSTANCE_TYPE.OBJECT || instance.TYPE == INSTANCE_TYPE.LOGIC){
+                const objInstance = instance as Instance_Object | Instance_Logic;
                 objInstance.initLocalVariables();
                 this._registerInstanceEvents(objInstance);
             }
@@ -277,9 +279,11 @@ export class Engine implements iEngineCallbacks {
         const loadedData = {} as iGameData;
         const spriteMap = new Map<number, Sprite>();
         const objectMap = new Map<number, Game_Object>();
-        const assetMap = new Map<CATEGORY_ID, Map<number, Asset_Base>>([
+        const logicMap = new Map<number, iEngineLogic>();
+        const assetMap = new Map<CATEGORY_ID, Map<number, Asset_Base | iEngineLogic>>([
             [CATEGORY_ID.SPRITE, spriteMap],
             [CATEGORY_ID.OBJECT, objectMap],
+            [CATEGORY_ID.LOGIC, logicMap],
         ]);
         let parsedJson;
 
@@ -293,6 +297,9 @@ export class Engine implements iEngineCallbacks {
 
         loadedData.startRoom = parsedJson.startRoom;
 
+        loadedData.logic = parsedJson.logic.map((l: serialLogic) => new Logic(l, this));
+        loadedData.logic.forEach(logic => logicMap.set(logic.id, logic));
+
         loadedData.sprites = parsedJson.sprites.map((s: serialSprite) => Sprite.fromSaveData(s));
         loadedData.sprites.forEach(sprite => spriteMap.set(sprite.id, sprite));
 
@@ -300,7 +307,6 @@ export class Engine implements iEngineCallbacks {
         loadedData.objects.forEach(object => objectMap.set(object.id, object));
 
         loadedData.rooms = parsedJson.rooms.map((r: serialRoom) => Room.fromSaveData(r, assetMap));
-        loadedData.logic = parsedJson.logic.map((l: serialLogic) => new Logic(l, this));
 
         loadedData.logic.forEach(logic => logic.dispatchLifecycleEvent('afterGameDataLoaded'));
 
@@ -562,7 +568,6 @@ export class Engine implements iEngineCallbacks {
     }
 
     addInstance = (instance: Instance_Base): void => {
-        console.log("Works?")
         this.room!.addInstance(instance);
 
         if (instance.renderable){

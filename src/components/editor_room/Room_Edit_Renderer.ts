@@ -6,6 +6,7 @@ import spriteIconRaw from '@/assets/sprite_icon.svg?raw';
 import objectIconRaw from '@/assets/object_icon.svg?raw';
 import exitIconRaw from '@/assets/exit.svg?raw';
 import endIconRaw from '@/assets/end.svg?raw';
+import logicIconRaw from '@/assets/logic.svg?raw';
 
 const { Vector, Mat3, WGL } = Core;
 
@@ -32,7 +33,7 @@ export default class Room_Edit_Renderer {
         this._navState = navState;
         this._gl = WGL.getGLContext(this._canvas, {alpha: false, antialias: false})!;
         this._instanceRenderer = new Core.Instance_Renderer(this._gl, Core.Sprite.DIMENSIONS, 1024, false, true);
-        this._iconRenderer = new Core.Instance_Renderer(this._gl, 128, 256, true);
+        this._iconRenderer = new Core.Instance_Renderer(this._gl, 128, 512, true);
         this._uiRenderer = new UI_Renderer(this._gl);
 
         this._gl.clearColor(0, 0, 0, 0);
@@ -443,7 +444,11 @@ class UI_Renderer {
         svgToCanvas(endIconRaw, DIM, canvas => {
             Core.Instance_Exit.ENDING_ICON = [getImageData(canvas!)];
             loaded(Core.Instance_Exit.ENDING_ICON_ID, Core.Instance_Exit.ENDING_ICON);
-        })
+        }),
+        svgToCanvas(logicIconRaw, DIM, canvas => {
+            Core.Instance_Logic.LOGIC_ICON = [getImageData(canvas!)];
+            loaded(Core.Instance_Logic.LOGIC_ICON_ID, Core.Instance_Logic.LOGIC_ICON);
+        }),
     ];
     const loadedImages = new Array<{id: string, image: ImageData[]}>();
     let toLoad = LOAD_ARRAY.length;

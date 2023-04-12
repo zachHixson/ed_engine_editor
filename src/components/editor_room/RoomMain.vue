@@ -466,6 +466,8 @@ function actionAdd({sourceId, instRefList = [], pos}: AddProps, makeCommit = tru
                 case Core.CATEGORY_ID.OBJECT:
                     const object = gameDataStore.getAllObjects.find(o => o.id == sourceId)!;
                     return new Core.Instance_Object(props.selectedRoom.curInstId, pos!, object);
+                case Core.CATEGORY_ID.LOGIC:
+                    return new Core.Instance_Logic(props.selectedRoom.curInstId, pos, sourceId);
             }
         })()!;
 

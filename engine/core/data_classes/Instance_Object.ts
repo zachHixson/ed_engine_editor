@@ -21,6 +21,8 @@ export class Instance_Object extends Instance_Base{
     static DEFAULT_INSTANCE_ICON_ID = 'INSTANCE_ICON';
     static DEFAULT_INSTANCE_ICON = [new ImageData(Sprite.DIMENSIONS, Sprite.DIMENSIONS)];
 
+    protected  _objRef: Game_Object;
+    
     private _animProgress: number = 0;
     private _hasCollisionEvent: boolean | null = null;
     private _prevExit: {
@@ -30,7 +32,6 @@ export class Instance_Object extends Instance_Base{
     private _zDepthOverride: number | null = null;
     private _useIcon = false;
 
-    objRef: Game_Object;
     collisionOverride: COLLISION_OVERRIDE = COLLISION_OVERRIDE.KEEP;
     startFrameOverride: number | null = null;
     fps: number = 0;
@@ -43,8 +44,8 @@ export class Instance_Object extends Instance_Base{
     constructor(id: number, pos: Vector, objRef: Game_Object){
         super(id, pos);
 
-        this.objRef = objRef;
-        this.name = this.objRef.name + '_' + this.id;
+        this._objRef = objRef;
+        this.name = this._objRef.name + '_' + this.id;
         this.collisionOverride = COLLISION_OVERRIDE.KEEP;
 
         //engine props
@@ -52,8 +53,8 @@ export class Instance_Object extends Instance_Base{
             this.lastPos = this.pos.clone();
             this.localVariables = new Map(this.logic?.localVariableDefaults);
 
-            if (this.objRef){
-                this.animFrame = this.objRef.startFrame;
+            if (this._objRef){
+                this.animFrame = this._objRef.startFrame;
             }
         }
     }
@@ -61,21 +62,23 @@ export class Instance_Object extends Instance_Base{
     get TYPE(){return INSTANCE_TYPE.OBJECT};
     get COLLISION_OVERRIDES(){return COLLISION_OVERRIDE};
 
-    get userDepth(){return (this.zDepthOverride) ? this.zDepthOverride : this.objRef.zDepth};
+    get objRef(){return this._objRef};
+    set objRef(obj: Game_Object){this._objRef = obj};
+    get userDepth(){return (this.zDepthOverride) ? this.zDepthOverride : this._objRef.zDepth};
     get zDepth(){return (this.userDepth / 100) + this.depthOffset};
-    get renderable(){return !!this.objRef?.sprite};
+    get renderable(){return !!this._objRef?.sprite};
     get hasEditorFrame(){
-        this._useIcon = this.objRef?.sprite?.frameIsEmpty(this.startFrame) ?? true;
+        this._useIcon = this._objRef?.sprite?.frameIsEmpty(this.startFrame) ?? true;
         return !this._useIcon;
     };
-    get startFrame(){return this.startFrameOverride ?? this.objRef.startFrame};
-    get frameDataId(){return this._useIcon || !this.renderable ? Instance_Object.DEFAULT_INSTANCE_ICON_ID : this.objRef!.sprite!.id};
-    get frameData(){return this._useIcon || !this.renderable ? Instance_Object.DEFAULT_INSTANCE_ICON : this.objRef!.sprite!.frames};
-    get sprite(){return this.objRef?.sprite};
-    get logic(){return this.objRef.logicScript};
+    get startFrame(){return this.startFrameOverride ?? this._objRef.startFrame};
+    get frameDataId(){return this._useIcon || !this.renderable ? Instance_Object.DEFAULT_INSTANCE_ICON_ID : this._objRef!.sprite!.id};
+    get frameData(){return this._useIcon || !this.renderable ? Instance_Object.DEFAULT_INSTANCE_ICON : this._objRef!.sprite!.frames};
+    get sprite(){return this._objRef?.sprite};
+    get logic(){return this._objRef.logicScript};
     get isSolid(){
         switch(this.collisionOverride){
-            case COLLISION_OVERRIDE.KEEP: return this.objRef.isSolid;
+            case COLLISION_OVERRIDE.KEEP: return this._objRef.isSolid;
             case COLLISION_OVERRIDE.FORCE: return true;
             case COLLISION_OVERRIDE.IGNORE: return false;
         }
@@ -94,7 +97,7 @@ export class Instance_Object extends Instance_Base{
     }
 
     get triggerExits(){
-        return this.objRef.triggerExits;
+        return this._objRef.triggerExits;
     }
 
     get animFrame(){
@@ -138,7 +141,7 @@ export class Instance_Object extends Instance_Base{
     }
 
     clone(): Instance_Object {
-        const clone = new Instance_Object(this.id, this.pos, this.objRef);
+        const clone = new Instance_Object(this.id, this.pos, this._objRef);
         Object.assign(clone, this);
         clone.pos = this.pos.clone();
         if (this.lastPos) clone.lastPos = this.lastPos.clone();
@@ -151,7 +154,7 @@ export class Instance_Object extends Instance_Base{
 
         return {
             ...baseData,
-            objId: this.objRef.id,
+            objId: this._objRef.id,
             zDepthOverride: this.zDepthOverride,
             collisionOverride: this.collisionOverride,
         };
@@ -175,10 +178,10 @@ export class Instance_Object extends Instance_Base{
     }
 
     initAnimProps(): void {
-        this.fps = this.objRef.fps;
-        this.animLoop = this.objRef.animLoop;
-        this.animPlaying = this.objRef.animPlaying;
-        this.animFrame = this.objRef.startFrame;
+        this.fps = this._objRef.fps;
+        this.animLoop = this._objRef.animLoop;
+        this.animPlaying = this._objRef.animPlaying;
+        this.animFrame = this._objRef.startFrame;
     }
 
     advanceAnimation(deltaTime: number): void {
