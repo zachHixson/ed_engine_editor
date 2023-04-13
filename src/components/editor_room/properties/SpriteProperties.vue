@@ -1,12 +1,92 @@
 <script setup lang="ts">
-//
+import Collapsible from './Collapsible.vue';
+import GroupList from '@/components/common/GroupList.vue';
+
+import { checkNameCollisions, nanToNull } from '../Properties.vue';
+import { useI18n } from 'vue-i18n';
+import type Core from '@/core';
+
+const { t } = useI18n();
+
+const props = defineProps<{
+    selectedSprite: Core.Instance_Sprite;
+    selectedRoom: Core.Room;
+}>();
+
+const emit = defineEmits([
+    'inst-prop-set',
+    'inst-group-changed',
+]);
+
+function setInstanceName(newName: string): void {
+    const instanceList = props.selectedRoom.instances;
+    newName = checkNameCollisions(props.selectedSprite.id, newName, instanceList, t('room_editor.duplicate_name_suffix'));
+
+    setInstProp({name: newName});
+}
+
+function setInstProp(propObj: any): void {
+    emit('inst-prop-set', propObj);
+}
 </script>
 
 <template>
-    <div>
-        <!---->
+    <div class="propContents">
+        <div class="heading">Sprite</div>
+        <div class="info" style="margin: var(--margin); margin-left: 0px;">
+            <div>Sprite Type:</div>
+            <div>{{(selectedSprite as Core.Instance_Sprite).sprite.name}}</div>
+        </div>
+        <div class="control">
+            <label for="name">{{$t('room_editor.instance_name')}}:</label>
+            <input id="name" type="text" :value="selectedSprite.name" v-tooltip="$t('room_editor.tt_inst_name')"
+                @change="setInstanceName(($event.target as any).value)" v-input-active/>
+        </div>
+        <div class="control">
+            <label for="custDepth">{{$t('room_editor.custom_depth')}}:</label>
+            <input id="custDepth" type="number" :value="selectedSprite.zDepth" v-tooltip="$t('room_editor.tt_cust_depth')"
+                @change="setInstProp({zDepth: nanToNull(parseInt(($event.target as any).value))})" v-input-active/>
+        </div>
+        <Collapsible
+            heading-text="Animation Settings">
+            <div class="collapsible-props">
+                <div class="control">
+                    <label for="animPlay">Play:</label>
+                    <input id="animPlay" type="checkbox" :checked="selectedSprite.animPlaying"
+                        @change="setInstProp({animPlaying: ($event.target as any).checked})"/>
+                </div>
+                <div class="control">
+                    <label for="loop">Loop:</label>
+                    <input id="loop" type="checkbox" :checked="selectedSprite.animLoop"
+                        @change="setInstProp({animLoop: ($event.target as any).checked})"/>
+                </div>
+                <div class="control">
+                    <label for="startframe">{{$t('object_editor.start_frame')}}:</label>
+                    <input id="startframe" type="number" :value="selectedSprite.startFrame" v-tooltip="$t('room_editor.tt_inst_name')"
+                        @change="setInstProp({startFrame: nanToNull(parseInt(($event.target as any).value))})" v-input-active/>
+                </div>
+                <div class="control">
+                    <label for="fps">{{$t('object_editor.fps')}}:</label>
+                    <input id="fps" type="number" :value="selectedSprite.fps" v-tooltip="$t('room_editor.tt_inst_name')"
+                        @change="setInstProp({fps: nanToNull(parseInt(($event.target as any).value))})" v-input-active/>
+                </div>
+            </div>
+        </Collapsible>
+        <GroupList
+            :editList="selectedSprite.groups"
+            @group-changed="emit('inst-group-changed', $event)"/>
     </div>
 </template>
 
 <style scoped>
+@import '@/components/common/formStyles.css';
+
+.collapsible-props{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    gap: 10px;
+}
 </style>

@@ -162,7 +162,6 @@ export class Engine implements iEngineCallbacks {
 
         if (this.enableUpdate){
             try{
-                this._processDebugNav();
                 this._updateInstances();
                 this._updateAnimations();
                 this._processCollisions();
@@ -181,21 +180,6 @@ export class Engine implements iEngineCallbacks {
         this._dialogFullscreen.render(this.deltaTime);
 
         window.IS_ENGINE = false;
-    }
-
-    private _processDebugNav = (): void =>{
-        const camera = this._loadedRoom!.camera;
-        const controlVelocity = new Vector(0, 0);
-        const speed = 2 * camera.size;
-        const zoomSpeed = 0.1;
-        let zoom = 0;
-
-        controlVelocity.y = (!!this._keymap.get('KeyI') ? speed : 0) - (!!this._keymap.get('KeyK') ? speed : 0);
-        controlVelocity.x = (!!this._keymap.get('KeyJ') ? speed : 0) - (!!this._keymap.get('KeyL') ? speed : 0);
-        zoom = (!!this._keymap.get('KeyO') ? zoomSpeed : 0) - (!!this._keymap.get('KeyU') ? zoomSpeed : 0);
-
-        camera.velocity.copy(controlVelocity);
-        camera.size += zoom;
     }
 
     private _updateInstances = (): void => {

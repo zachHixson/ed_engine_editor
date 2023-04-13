@@ -114,7 +114,7 @@ const mouse = reactive({
     cellCache: new Array<Vector>(),
     inWindow: false,
 });
-const editorSelection = ref<Instance_Base | Core.Instance_Exit | null>();
+const editorSelection = ref<Instance_Base | null>();
 const overlappingInstances = ref<Instance_Base[]>([]);
 
 //computed properties
@@ -724,7 +724,7 @@ function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
                 v-for="instance in overlappingInstances"
                 class="overlap-item"
                 @click="()=>{
-                    editorSelection = instance;
+                    editorSelection = instance as Instance_Base;
                     overlappingInstances = [];
                 }">
                 <VueCanvas width="32" height="32" :onMounted="instance.drawThumbnail.bind(instance)" />

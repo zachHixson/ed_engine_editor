@@ -83,4 +83,37 @@ function closeRoomBGColorEditor(): void {
 
 <style scoped>
 @import '@/components/common/formStyles.css';
+
+.bgColorEditor{
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    right: 10px;
+}
+
+.bgColorEditor > .arrow{
+    align-self: flex-end;
+    margin-bottom: -2px;
+    z-index: 4;
+}
+
+.bgColorEditor > .arrow > path{
+    fill: var(--heading);
+    stroke: var(--border);
+    stroke-width: 2px;
+}
+
+.bgColorEditor > .contents{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--heading);
+    width: 100%;
+    flex-grow: 1;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    z-index: 3;
+}
 </style>

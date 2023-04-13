@@ -12,22 +12,34 @@ export class Instance_Sprite extends Instance_Base {
     static DEFAULT_SPRITE_ICON = [new ImageData(Sprite.DIMENSIONS, Sprite.DIMENSIONS)];
 
     private _useIcon = false;
-
-    sprite: Sprite;
+    private _sprite: Sprite;
+    private _zDepth = 0;
 
     constructor(id: number, pos = new Vector(), sprite: Sprite){
         super(id, pos);
-        this.sprite = sprite;
+        this._sprite = sprite;
+        this.name = this._sprite.name + '_' + this.id;
     }
 
     get TYPE(){return INSTANCE_TYPE.SPRITE}
+    get sprite(){return this._sprite}
+    set sprite(sprite: Sprite){this._sprite = sprite}
+    get startFrame(){return this.startFrameOverride ?? 0}
+    set startFrame(frame: number){
+        this.startFrameOverride = Math.max(Math.min(Math.floor(frame), this.sprite.frames.length - 1), 0);
+    }
     get renderable(){return true}
     get hasEditorFrame(){
-        this._useIcon = this.sprite?.frameIsEmpty(this.startFrame) ?? true;
+        this._useIcon = this.sprite?.frameIsEmpty(this.startFrameOverride ?? 0) ?? true;
         return !this._useIcon;
     }
     get frameDataId(){return this._useIcon || !this.renderable ? Instance_Sprite.DEFAULT_SPRITE_ICON_ID : this.sprite!.id}
     get frameData(){return this._useIcon || !this.renderable ? Instance_Sprite.DEFAULT_SPRITE_ICON : this.sprite!.frames}
+
+    get zDepth(){return this._zDepth}
+    set zDepth(newDepth: number){
+        this._zDepth = Math.max(Math.min(newDepth, 99), -99);
+    }
 
     clone(): Instance_Sprite {
         const clone = new Instance_Sprite(0, new Vector(), this.sprite);
@@ -46,6 +58,7 @@ export class Instance_Sprite extends Instance_Base {
 
     static fromSaveData(data: iInstanceSpriteSaveData, spriteMap: Map<number, Sprite>): Instance_Sprite {
         const newSprite = new Instance_Sprite(data.id, Vector.fromObject(data.pos), spriteMap.get(data.spriteId)!);
+        newSprite.loadBaseSaveData(data);
         return newSprite;
     }
 }

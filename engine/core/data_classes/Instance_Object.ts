@@ -7,7 +7,7 @@ import { iInstanceBaseSaveData, Instance_Base } from './Instance_Base';
 
 export interface iObjectInstanceSaveData extends iInstanceBaseSaveData {
     objId: number;
-    zDepthOverride: number | null;
+    zDepthOverride: number | '';
     collisionOverride: COLLISION_OVERRIDE;
 }
 
@@ -23,7 +23,6 @@ export class Instance_Object extends Instance_Base{
 
     protected  _objRef: Game_Object;
     
-    private _animProgress: number = 0;
     private _hasCollisionEvent: boolean | null = null;
     private _prevExit: {
         exit: Instance_Exit,
@@ -33,10 +32,6 @@ export class Instance_Object extends Instance_Base{
     private _useIcon = false;
 
     collisionOverride: COLLISION_OVERRIDE = COLLISION_OVERRIDE.KEEP;
-    startFrameOverride: number | null = null;
-    fps: number = 0;
-    animLoop: boolean = false;
-    animPlaying: boolean = false;
     lastPos: Vector = new Vector();
     localVariables: Map<string, any> = new Map();
     exposedProps: Map<string, any> = new Map();
@@ -100,30 +95,6 @@ export class Instance_Object extends Instance_Base{
         return this._objRef.triggerExits;
     }
 
-    get animFrame(){
-        const frame = Math.floor(this._animProgress * this.fps);
-
-        if (!this.sprite){
-            return 0;
-        }
-
-        if (this.animLoop){
-            return frame % this.sprite.frames.length;
-        }
-        else{
-            return Math.min(frame, this.sprite.frames.length - 1);
-        }
-    }
-    set animFrame(val: number){
-        if (!this.sprite){
-            return;
-        }
-        
-        const frame = Math.min(Math.max(val, 0), this.sprite.frames.length - 1);
-        const animDur = Math.floor(this.sprite.frames.length * this.fps) * 1000;
-        this._animProgress = Math.floor(frame / this.sprite.frames.length * animDur);
-    }
-
     get prevExit(){return this._prevExit}
 
     get zDepthOverride(){return this._zDepthOverride}
@@ -155,7 +126,7 @@ export class Instance_Object extends Instance_Base{
         return {
             ...baseData,
             objId: this._objRef.id,
-            zDepthOverride: this.zDepthOverride,
+            zDepthOverride: this.zDepthOverride ?? '',
             collisionOverride: this.collisionOverride,
         };
     }
@@ -169,26 +140,12 @@ export class Instance_Object extends Instance_Base{
 
     private _loadSaveData(data: iObjectInstanceSaveData): void {
         this.loadBaseSaveData(data);
-        this.zDepthOverride = data.zDepthOverride;
+        this.zDepthOverride = data.zDepthOverride == '' ? null : data.zDepthOverride;
         this.collisionOverride = data.collisionOverride;
     }
 
     executeNodeEvent(eventName: string, data?: any): void {
         this.logic?.executeEvent(eventName, this, data);
-    }
-
-    initAnimProps(): void {
-        this.fps = this._objRef.fps;
-        this.animLoop = this._objRef.animLoop;
-        this.animPlaying = this._objRef.animPlaying;
-        this.animFrame = this._objRef.startFrame;
-    }
-
-    advanceAnimation(deltaTime: number): void {
-        if (this.animPlaying){
-            this._animProgress += deltaTime;
-            this.needsRenderUpdate = true;
-        }
     }
     
     setPosition(newPos: Vector): void {
@@ -205,6 +162,13 @@ export class Instance_Object extends Instance_Base{
 
     clearPrevExit(): void {
         this._prevExit = null;
+    }
+
+    initAnimProps(): void {
+        this.fps = this._objRef.fps;
+        this.animLoop = this._objRef.animLoop;
+        this.animPlaying = this._objRef.animPlaying;
+        this.animFrame = this._objRef.startFrame;
     }
 
     initLocalVariables(): void {

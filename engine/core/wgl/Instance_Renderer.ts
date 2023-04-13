@@ -242,6 +242,10 @@ export class Instance_Renderer {
         this._colorOverrideUniform.set(color.r, color.g, color.b, 1.0);
     }
 
+    hasInstance(instanceId: number): boolean {
+        return !!this._instanceMap.get(instanceId);
+    }
+
     addInstance(instance: Instance_Base, startFrame = 0): void {
         const image = instance.frameData;
         const depthOffset = instance.depthOffset == 0 ? this._getNextDepthOffset(instance.userDepth) : instance.depthOffset;

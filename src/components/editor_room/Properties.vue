@@ -29,6 +29,7 @@ export function nanToNull(inp: number): number | null {
 </script>
 
 <script setup lang="ts">
+import SpriteProperties from './properties/SpriteProperties.vue';
 import ObjectProperties from './properties/ObjectProperties.vue';
 import CameraProperties from './properties/CameraProperties.vue';
 import ExitProperties from './properties/ExitProperties.vue';
@@ -52,6 +53,10 @@ const emit = defineEmits([
     'room-prop-set',
 ]);
 
+const showSpriteProps = computed(()=>(
+    props.selectedTool == Core.ROOM_TOOL_TYPE.SELECT_MOVE &&
+    props.selectedInstance?.TYPE == Core.INSTANCE_TYPE.SPRITE
+))
 const showObjectProps = computed(()=>(
     props.selectedTool == Core.ROOM_TOOL_TYPE.SELECT_MOVE &&
     props.selectedInstance?.TYPE == Core.INSTANCE_TYPE.OBJECT
@@ -70,6 +75,12 @@ const showPlaceHolder = computed(()=>
 
 <template>
     <div class="properties">
+        <SpriteProperties
+            v-if="showSpriteProps"
+            :selected-sprite="(selectedInstance as Core.Instance_Sprite)"
+            :selected-room="room"
+            @inst-prop-set="emit('inst-prop-set', $event)"
+            @inst-group-changed="emit('inst-group-changed', $event)"></SpriteProperties>
         <ObjectProperties
             v-if="showObjectProps"
             :selected-object="(selectedInstance as Core.Instance_Object)"
@@ -103,19 +114,19 @@ const showPlaceHolder = computed(()=>
     user-select: none;
 }
 
-.properties >>> .propContents{
+.properties:deep(.propContents){
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-.properties >>> .heading{
+.properties:deep(.heading){
     font-size: 1.3em;
     font-weight: bold;
     margin-bottom: 10px;
 }
 
-.properties >>> .info{
+.properties:deep(.info){
     --margin: 20px;
     width: 100%;
     display: flex;
@@ -123,69 +134,36 @@ const showPlaceHolder = computed(()=>
     justify-content: space-between;
 }
 
-.properties >>> .control{
+.properties:deep(.control){
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
     width: 100%;
 }
 
-.properties >>> .control > label{
-    text-align: left;
+.properties:deep(.control > label){
+    text-align: right;
     flex-shrink: 1;
     width: max-content;
 }
 
-.properties >>> .control > input,
-.properties >>> .control > select,
-.properties >>> .control > button{
+.properties:deep(.control > input),
+.properties:deep(.control > select),
+.properties:deep(.control > button){
     width: 100px;
     box-sizing: border-box;
     margin-left: 10px;
 }
 
-.properties >>> .changeBgBtn{
+.properties:deep(.changeBgBtn){
     position: relative;
     height: 40px;
     border: 2px solid var(--border);
     border-radius: var(--corner-radius);
 }
 
-.properties >>> .changeBgBtn:hover{
+.properties:deep(.changeBgBtn:hover){
     border-color: var(--button-dark-hover);
-}
-
-.properties >>> .bgColorEditor{
-    position: absolute;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    right: 10px;
-}
-
-.properties >>> .bgColorEditor > .arrow{
-    align-self: flex-end;
-    margin-bottom: -2px;
-    z-index: 4;
-}
-
-.properties >>> .bgColorEditor > .arrow > path{
-    fill: var(--heading);
-    stroke: var(--border);
-    stroke-width: 2px;
-}
-
-.properties >>> .bgColorEditor > .contents{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: var(--heading);
-    width: 100%;
-    flex-grow: 1;
-    border: 2px solid var(--border);
-    border-radius: 10px;
-    padding: 10px;
-    z-index: 3;
 }
 </style>

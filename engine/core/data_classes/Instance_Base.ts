@@ -2,6 +2,7 @@ import { INSTANCE_TYPE } from "../Enums";
 import { Vector } from "../Vector";
 import { Node_Enums } from "../core";
 import { Draw } from "../core";
+import { Sprite } from "../core";
 
 export interface iInstanceBaseSaveData {
     id: number;
@@ -9,6 +10,10 @@ export interface iInstanceBaseSaveData {
     type: string;
     pos: { x: number, y: number };
     groups: string[];
+    startFrameOverride: number | '';
+    fps: number;
+    animLoop: 0 | 1;
+    animPlaying: 0 | 1;
 }
 
 export interface iCollisionEvent {
@@ -17,12 +22,18 @@ export interface iCollisionEvent {
 }
 
 export abstract class Instance_Base{
+    private _animProgress: number = 0;
+
     id: number;
     name: string;
     pos: Vector;
     groups: string[] = [];
     depthOffset: number = 0;
     needsRenderUpdate = false;
+    startFrameOverride: number | null = null;
+    fps: number = 6;
+    animLoop: boolean = false;
+    animPlaying: boolean = false;
 
     constructor(id: number, pos: Vector = new Vector()){
         this.id = id;
@@ -36,11 +47,10 @@ export abstract class Instance_Base{
     abstract toSaveData(): any;
 
     //Rendering getters
+    get sprite(): Sprite | null {return null};
     get renderable() {return false};
     get hasEditorFrame(): boolean {return false};
     get startFrame(){return 0};
-    get animFrame(){return 0};
-    set animFrame(val: number){};
     get userDepth(){return 0};
     get zDepth(){return 0};
     set zDepth(val){};
@@ -49,13 +59,42 @@ export abstract class Instance_Base{
 
     get hasCollisionEvent(){return false};
 
+    get animFrame(){
+        const frame = Math.floor(this._animProgress * this.fps);
+
+        if (!this.sprite){
+            return 0;
+        }
+
+        if (this.animLoop){
+            return frame % this.sprite.frames.length;
+        }
+        else{
+            return Math.min(frame, this.sprite.frames.length - 1);
+        }
+    }
+    set animFrame(val: number){
+        if (!this.sprite){
+            return;
+        }
+        
+        const frame = Math.min(Math.max(val, 0), this.sprite.frames.length - 1);
+        const animDur = Math.floor(this.sprite.frames.length * this.fps) * 1000;
+        this._animProgress = Math.floor(frame / this.sprite.frames.length * animDur);
+    }
+
     //Lifecycle events
     onCreate(): void {}
     onUpdate(deltaTime: number): void {}
     onCollision(event: iCollisionEvent): void {}
     onDestroy(): void {}
 
-    advanceAnimation(deltaTime: number): void {}
+    advanceAnimation(deltaTime: number): void {
+        if (this.animPlaying){
+            this._animProgress += deltaTime;
+            this.needsRenderUpdate = true;
+        }
+    }
 
     setPosition(newPos: Vector): void {
         this.pos.copy(newPos);
@@ -66,6 +105,10 @@ export abstract class Instance_Base{
         this.name = data.name;
         this.pos = Vector.fromObject(data.pos);
         this.groups = data.groups;
+        this.startFrameOverride = data.startFrameOverride == '' ? null : data.startFrameOverride;
+        this.fps = data.fps;
+        this.animLoop = !!data.animLoop;
+        this.animPlaying = !!data.animPlaying;
     }
 
     getBaseSaveData(): iInstanceBaseSaveData {
@@ -75,6 +118,10 @@ export abstract class Instance_Base{
             type: this.TYPE,
             pos: this.pos.toObject(),
             groups: this.groups,
+            startFrameOverride: this.startFrameOverride ?? '',
+            fps: this.fps,
+            animLoop: +this.animLoop as (0 | 1),
+            animPlaying: +this.animPlaying as (0 | 1),
         } satisfies iInstanceBaseSaveData;
     }
 

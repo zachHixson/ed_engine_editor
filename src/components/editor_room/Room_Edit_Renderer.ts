@@ -144,8 +144,8 @@ export default class Room_Edit_Renderer {
         this.queueRender();
     }
 
-    private _getRenderer(instance: Core.Instance_Base): Core.Instance_Renderer {
-        return instance.hasEditorFrame ? this._instanceRenderer : this._iconRenderer;
+    private _getRenderer(hasEditorFrame: boolean): Core.Instance_Renderer {
+        return hasEditorFrame ? this._instanceRenderer : this._iconRenderer;
     }
 
     initInstances(): void {
@@ -162,20 +162,33 @@ export default class Room_Edit_Renderer {
     }
 
     addInstance(instance: Core.Instance_Base): void {
-        const renderer = this._getRenderer(instance);
-        renderer.addInstance(instance, instance.startFrame);
+        const hasEditorFrame = instance.hasEditorFrame
+        const renderer = this._getRenderer(hasEditorFrame);
+        const frame = hasEditorFrame ? instance.startFrame : 0;
+        renderer.addInstance(instance, frame);
         this.queueRender();
     }
 
     removeInstance(instance: Core.Instance_Base): void {
-        const renderer = this._getRenderer(instance);
+        const renderer = this._getRenderer(instance.hasEditorFrame);
         renderer.removeInstance(instance);
         this.queueRender();
     }
 
     updateInstance(instance: Core.Instance_Base): void {
-        const renderer = this._getRenderer(instance);
-        renderer.updateInstance(instance);
+        const hasEditorFrame = instance.hasEditorFrame;
+        const frame = hasEditorFrame ? instance.startFrame : 0;
+        const renderer = this._getRenderer(hasEditorFrame);
+        const otherRenderer = this._getRenderer(!hasEditorFrame);
+        
+        if (renderer.hasInstance(instance.id)){
+            renderer.updateInstance(instance, frame);
+        }
+        else{
+            otherRenderer.removeInstance(instance);
+            renderer.addInstance(instance, frame);
+        }
+
         this.queueRender();
     }
 
