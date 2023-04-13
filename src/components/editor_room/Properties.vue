@@ -31,6 +31,7 @@ export function nanToNull(inp: number): number | null {
 <script setup lang="ts">
 import SpriteProperties from './properties/SpriteProperties.vue';
 import ObjectProperties from './properties/ObjectProperties.vue';
+import LogicProperties from './properties/LogicProperties.vue';
 import CameraProperties from './properties/CameraProperties.vue';
 import ExitProperties from './properties/ExitProperties.vue';
 import RoomProperties from './properties/RoomProperties.vue';
@@ -61,6 +62,10 @@ const showObjectProps = computed(()=>(
     props.selectedTool == Core.ROOM_TOOL_TYPE.SELECT_MOVE &&
     props.selectedInstance?.TYPE == Core.INSTANCE_TYPE.OBJECT
 ));
+const showLogicProps = computed(()=>(
+    props.selectedTool == Core.ROOM_TOOL_TYPE.SELECT_MOVE &&
+    props.selectedInstance?.TYPE == Core.INSTANCE_TYPE.LOGIC
+));
 const showCameraProps = computed(()=>props.selectedTool == Core.ROOM_TOOL_TYPE.CAMERA);
 const showExitProps = computed(()=>(
     props.selectedInstance?.TYPE == Core.INSTANCE_TYPE.EXIT &&
@@ -87,6 +92,9 @@ const showPlaceHolder = computed(()=>
             :selected-room="room"
             @inst-prop-set="emit('inst-prop-set', $event)"
             @inst-group-changed="emit('inst-group-changed', $event)"></ObjectProperties>
+        <LogicProperties
+            v-if="showLogicProps"
+            :selected-logic="(selectedInstance as Core.Instance_Logic)"></LogicProperties>
         <CameraProperties
             v-if="showCameraProps"
             :selected-instance="selectedInstance"
