@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ColorPicker from '@/components/common/ColorPicker.vue';
 
-import { ref, onMounted, nextTick } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useGameDataStore } from '@/stores/GameData';
 import type Core from '@/core';
 
@@ -13,26 +13,29 @@ const props = defineProps<{
 
 const emit = defineEmits([
     'room-prop-set',
+    'room-bg-changed',
+    'room-bg-change-end',
 ]);
 
 const changeingBG = ref<boolean>(false);
 const bgColorBtn = ref<HTMLElement>();
 
+watch(()=>props.room.bgColor, (newColor: Core.Draw.Color)=>{
+    setColorBtn(newColor);
+}, {immediate: true});
+
 onMounted(()=>{
-    if (bgColorBtn.value){
-        bgColorBtn.value.style.background = props.room.bgColor.toHex();
-    }
+    setColorBtn(props.room.bgColor);
 });
 
 function setRoomProp(propObj: any): void {
     emit('room-prop-set', propObj);
 }
 
-function setRoomBgColor(color: Core.Draw.Color): void {
+function setColorBtn(newColor: Core.Draw.Color){
     if (bgColorBtn.value){
-        bgColorBtn.value.style.background = color.toHex();
+        bgColorBtn.value.style.background = newColor.toHex();
     }
-    setRoomProp({bgColor: color});
 }
 
 function closeRoomBGColorEditor(): void {
@@ -46,14 +49,17 @@ function closeRoomBGColorEditor(): void {
         <div class="control">
             <label for="roomBGColor">{{$t('room_editor.bg_color')}}:</label>
             <button id="roomBGColor" class="changeBgBtn" ref="bgColorBtn" v-tooltip="$t('room_editor.tt_room_background')"
-                @click="nextTick(()=>{changeingBG = !changeingBG})"
-                v-click-outside="closeRoomBGColorEditor">
-                <div v-show="changeingBG" ref="bgColorEditor" class="bgColorEditor">
+                @click="changeingBG = true">
+                <div v-if="changeingBG" ref="bgColorEditor" class="bgColorEditor">
                     <svg width="50" height="25" class="arrow">
                         <path d="M0 25 L25 0 L50 25"/>
                     </svg>
-                    <div v-if="changeingBG" class="contents">
-                        <ColorPicker :color="props.room.bgColor" :width="150" @change="setRoomBgColor"/>
+                    <div class="contents" v-click-outside.lazy="closeRoomBGColorEditor">
+                        <ColorPicker
+                            :color="props.room.bgColor"
+                            :width="150"
+                            @change="emit('room-bg-changed', {bgColor: $event})"
+                            @change-end="emit('room-bg-change-end', {bgColor: $event})"/>
                     </div>
                 </div>
             </button>

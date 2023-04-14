@@ -329,7 +329,7 @@ function toolSelectMove(mEvent: imEvent): void {
 
 function toolAddBrush(mEvent: imEvent): void {
     if (!props.selectedAsset) return;
-    
+
     switch(mEvent.type){
         case Core.MOUSE_EVENT.MOVE:
         case Core.MOUSE_EVENT.DOWN:
@@ -612,13 +612,24 @@ function actionRoomPropChange({newState}: RoomPropChangeProps, makeCommit = true
 
     Object.assign(props.selectedRoom, newState);
 
-    if (!oldState.bgColor.compare(props.selectedRoom.bgColor)){
+    const bgColorHasChanged = !oldState.bgColor.compare(props.selectedRoom.bgColor);
+
+    if (bgColorHasChanged){
         bgColorChanged();
     }
 
     if (makeCommit){
-        let data = {newState, oldState} satisfies RoomPropChangeProps;
+        const data = {newState, oldState} satisfies RoomPropChangeProps;
+
+        if (undoStore.cache.has('bg-color')){
+            data.oldState.bgColor = undoStore.cache.get('bg-color').clone();
+        }
+
         undoStore.commit({action: Core.ROOM_ACTION.ROOM_PROP_CHANGE, data});
+        undoStore.cache.delete('bg-color');
+    }
+    else if(bgColorHasChanged && !undoStore.cache.has('bg-color')){
+        undoStore.cache.set('bg-color', oldState.bgColor);
     }
 }
 
@@ -688,11 +699,11 @@ function revertExitAdd({exitRef}: ExitAddProps): void {
 }
 
 function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
-    const oldBG = props.selectedRoom.bgColor;
+    const curBG = props.selectedRoom.bgColor.clone();
 
     Object.assign(props.selectedRoom, oldState);
 
-    if (!oldBG.compare(props.selectedRoom.bgColor)){
+    if (!curBG.compare(props.selectedRoom.bgColor)){
         bgColorChanged();
     }
 }
@@ -767,7 +778,9 @@ function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
                     @inst-var-changed="actionInstanceVarChange({changeObj: $event})"
                     @cam-prop-set="actionCameraChange({newState: $event})"
                     @exit-prop-set="actionInstanceChange({newState: ($event as Partial<Core.Instance_Base>)})"
-                    @room-prop-set="actionRoomPropChange({newState: $event})"/>
+                    @room-prop-set="actionRoomPropChange({newState: $event})"
+                    @room-bg-changed="actionRoomPropChange({newState: $event}, false)"
+                    @room-bg-change-end="actionRoomPropChange({newState: $event}, true)"/>
             </div>
         </div>
     </div>

@@ -211,6 +211,14 @@ export class Color{
         Object.assign(this, {r, g, b, a});
     }
 
+    copy(newColor: Color): void {
+        Object.assign(this, newColor);
+    }
+
+    clone(): Color {
+        return Object.assign(new Color(0, 0, 0, 0), this);
+    }
+
     toCSS(): string {
         return `rgba(${this._r}, ${this._g}, ${this._b}, ${this._a})`;
     }

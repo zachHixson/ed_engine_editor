@@ -52,6 +52,8 @@ const emit = defineEmits([
     'cam-prop-set',
     'exit-prop-set',
     'room-prop-set',
+    'room-bg-changed',
+    'room-bg-change-end',
 ]);
 
 const showSpriteProps = computed(()=>(
@@ -111,7 +113,9 @@ const showPlaceHolder = computed(()=>
         <RoomProperties
             v-show="showRoomProps"
             :room="room"
-            @room-prop-set="emit('room-prop-set', $event)"></RoomProperties>
+            @room-prop-set="emit('room-prop-set', $event)"
+            @room-bg-changed="emit('room-bg-changed', $event)"
+            @room-bg-change-end="emit('room-bg-change-end', $event)"></RoomProperties>
         <div v-show="showPlaceHolder" class="noProps">{{$t('room_editor.no_props')}}</div>
     </div>
 </template>
