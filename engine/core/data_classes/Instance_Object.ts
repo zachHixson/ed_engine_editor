@@ -85,9 +85,10 @@ export class Instance_Object extends Instance_Base{
         return this.animPlayingOverride ?? this._objRef.animPlaying
     };
 
+    get startFrameOverrideClamped(){return this.startFrameOverride};
     set startFrameOverrideClamped(val: number | null){
         this.startFrameOverride = val === null ? null : Math.max(Math.min(val, (this._objRef.sprite?.frames.length ?? 0) - 1), 0);
-    }
+    };
 
     get hasCollisionEvent(){
         if (this._hasCollisionEvent != null) return this._hasCollisionEvent;

@@ -72,7 +72,7 @@ function setInstanceName(newName: string): void {
                 </div>
                 <div class="control">
                     <label for="startframe">{{$t('object_editor.start_frame')}}:</label>
-                    <input id="startframe" type="number" :value="selectedObject.startFrameOverride" v-tooltip="$t('room_editor.tt_start_frame_nullable')"
+                    <input id="startframe" type="number" :value="selectedObject.startFrameOverrideClamped" v-tooltip="$t('room_editor.tt_start_frame_nullable')"
                         @change="setInstProp({startFrameOverrideClamped: nanToNull(parseInt(($event.target as any).value))})" v-input-active/>
                 </div>
                 <div class="control">
