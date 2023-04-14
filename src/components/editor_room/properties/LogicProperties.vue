@@ -39,14 +39,14 @@ function setInstanceName(newName: string): void {
 
 <template>
     <div class="propContents">
-        <div class="heading">Logic</div>
+        <div class="heading">{{ t('room_editor.logic_properties_heading') }}</div>
         <div class="info" style="margin: var(--margin); margin-left: 0px;">
-            <div>Logic Type:</div>
+            <div>{{ t('room_editor.logic_type') }}:</div>
             <div>{{logicName}}</div>
         </div>
         <div class="control">
-            <label for="name">{{$t('room_editor.instance_name')}}:</label>
-            <input id="name" type="text" :value="selectedLogic.name" v-tooltip="$t('room_editor.tt_inst_name')"
+            <label for="name">{{t('room_editor.instance_name')}}:</label>
+            <input id="name" type="text" :value="selectedLogic.name" v-tooltip="t('room_editor.tt_inst_name')"
                 @change="setInstanceName(($event.target as any).value)" v-input-active/>
         </div>
         <GroupList

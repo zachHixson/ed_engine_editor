@@ -61,23 +61,23 @@ function setInstanceName(newName: string): void {
             heading-text="Animation Settings">
             <div class="collapsible-props">
                 <div class="control">
-                    <label for="animPlay">Play:</label>
-                    <Checkbox class="custom-checkbox" :value="selectedObject.animPlayingOverride" :triple="true"
+                    <label for="animPlay">{{ t('object_editor.is_playing') }}:</label>
+                    <Checkbox class="custom-checkbox" :value="selectedObject.animPlayingOverride" :triple="true" v-tooltip="$t('room_editor.tt_anim_play_triple')"
                         @change="setInstProp({animPlayingOverride: $event})"></Checkbox>
                 </div>
                 <div class="control">
-                    <label for="loop">Loop:</label>
-                    <Checkbox class="custom-checkbox" :value="selectedObject.animLoopOverride" :triple="true"
+                    <label for="loop">{{ t('object_editor.loop') }}:</label>
+                    <Checkbox class="custom-checkbox" :value="selectedObject.animLoopOverride" :triple="true" v-tooltip="$t('room_editor.tt_anim_loop_triple')"
                         @change="setInstProp({animLoopOverride: $event})"></Checkbox>
                 </div>
                 <div class="control">
                     <label for="startframe">{{$t('object_editor.start_frame')}}:</label>
-                    <input id="startframe" type="number" :value="selectedObject.startFrameOverride" v-tooltip="$t('room_editor.tt_inst_name')"
+                    <input id="startframe" type="number" :value="selectedObject.startFrameOverride" v-tooltip="$t('room_editor.tt_start_frame_nullable')"
                         @change="setInstProp({startFrameOverrideClamped: nanToNull(parseInt(($event.target as any).value))})" v-input-active/>
                 </div>
                 <div class="control">
                     <label for="fps">{{$t('object_editor.fps')}}:</label>
-                    <input id="fps" type="number" :value="selectedObject.fpsOverride" v-tooltip="$t('room_editor.tt_inst_name')"
+                    <input id="fps" type="number" :value="selectedObject.fpsOverride" v-tooltip="$t('room_editor.tt_fps_nullable')"
                         @change="setInstProp({fpsOverride: nanToNull(parseInt(($event.target as any).value))})" v-input-active/>
                 </div>
             </div>

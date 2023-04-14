@@ -172,11 +172,14 @@ const showPlaceHolder = computed(()=>
 .properties:deep(.control > button){
     width: 100px;
     box-sizing: border-box;
+    margin: 0;
     margin-left: 10px;
 }
 
 .properties:deep(.control > .custom-checkbox){
-    margin-left: 10px;
+    margin: 45px;
+    margin-top: 0;
+    margin-bottom: 0;
 }
 
 .properties:deep(.changeBgBtn){

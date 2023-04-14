@@ -32,9 +32,9 @@ function setInstProp(propObj: any): void {
 
 <template>
     <div class="propContents">
-        <div class="heading">Sprite</div>
+        <div class="heading">{{ t('room_editor.sprite_properties_heading') }}</div>
         <div class="info" style="margin: var(--margin); margin-left: 0px;">
-            <div>Sprite Type:</div>
+            <div>{{ t('room_editor.sprite_type') }}:</div>
             <div>{{(selectedSprite as Core.Instance_Sprite).sprite.name}}</div>
         </div>
         <div class="control">
@@ -51,23 +51,23 @@ function setInstProp(propObj: any): void {
             heading-text="Animation Settings">
             <div class="collapsible-props">
                 <div class="control">
-                    <label for="animPlay">Play:</label>
-                    <input id="animPlay" type="checkbox" :checked="!!selectedSprite.animPlayingOverride"
+                    <label for="animPlay">{{ t('object_editor.is_playing') }}:</label>
+                    <input id="animPlay" type="checkbox" :checked="!!selectedSprite.animPlayingOverride" v-tooltip="$t('room_editor.tt_anim_play')"
                         @change="setInstProp({animPlayingOverride: ($event.target as any).checked})"/>
                 </div>
                 <div class="control">
-                    <label for="loop">Loop:</label>
-                    <input id="loop" type="checkbox" :checked="!!selectedSprite.animLoopOverride"
+                    <label for="loop">{{ t('object_editor.loop') }}:</label>
+                    <input id="loop" type="checkbox" :checked="!!selectedSprite.animLoopOverride" v-tooltip="$t('room_editor.tt_anim_loop_triple')"
                         @change="setInstProp({animLoopOverride: ($event.target as any).checked})"/>
                 </div>
                 <div class="control">
                     <label for="startframe">{{$t('object_editor.start_frame')}}:</label>
-                    <input id="startframe" type="number" :value="selectedSprite.startFrame" v-tooltip="$t('room_editor.tt_inst_name')"
+                    <input id="startframe" type="number" :value="selectedSprite.startFrame" v-tooltip="$t('room_editor.tt_start_frame')"
                         @change="setInstProp({startFrame: nanToNull(parseInt(($event.target as any).value))})" v-input-active/>
                 </div>
                 <div class="control">
                     <label for="fps">{{$t('object_editor.fps')}}:</label>
-                    <input id="fps" type="number" :value="selectedSprite.fpsOverride" v-tooltip="$t('room_editor.tt_inst_name')"
+                    <input id="fps" type="number" :value="selectedSprite.fpsOverride" v-tooltip="$t('room_editor.tt_fps')"
                         @change="setInstProp({fpsOverride: nanToNull(parseInt(($event.target as any).value))})" v-input-active/>
                 </div>
             </div>
