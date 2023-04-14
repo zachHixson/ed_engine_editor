@@ -7,11 +7,12 @@ import { Camera } from './Camera';
 import Engine from '@engine/Engine';
 import { COLLISION_EVENT } from '../nodes/Node_Enums';
 import { TRANSITION } from '@engine/transitions/Transition_Base';
+import { Room } from './Room';
 
 export interface iExitSaveData extends iInstanceBaseSaveData {
     isEnding: boolean;
-    destinationRoom: number | null;
-    destinationExit: number | null;
+    destinationRoom: number | '';
+    destinationExit: number | '';
     transition: TRANSITION;
     endingDialog: string;
 }
@@ -82,7 +83,7 @@ export class Instance_Exit extends Instance_Base {
         }
     }
 
-    onUpdate(): void {
+    override onUpdate(): void {
         if (Instance_Exit.destExit != this) return;
         
         const overlapping = Instance_Exit.engine!.getInstancesOverlapping(this).filter(i => i.id == Instance_Exit.exitInstance?.id);
@@ -92,7 +93,7 @@ export class Instance_Exit extends Instance_Base {
         }
     }
 
-    onCollision(event: iCollisionEvent): void {
+    override onCollision(event: iCollisionEvent): void {
         if (Instance_Exit.exitInstance) return;
         if (event.type != COLLISION_EVENT.START) return;
         if (this.isEnding) {
@@ -119,22 +120,37 @@ export class Instance_Exit extends Instance_Base {
         }
     }
 
-    clone(): Instance_Exit {
+    override clone(): Instance_Exit {
         const clone = new Instance_Exit(this.id, this.pos);
         Object.assign(clone, this);
         clone.pos = this.pos.clone();
         return clone;
     }
 
-    toSaveData(): iExitSaveData {
+    override toSaveData(): iExitSaveData {
         return {
             ...this.getBaseSaveData(),
             isEnding: this.isEnding,
-            destinationRoom: this.destinationRoom,
-            destinationExit: this.destinationExit,
+            destinationRoom: this.destinationRoom === null ? '' : this.destinationRoom,
+            destinationExit: this.destinationExit === null ? '' : this.destinationExit,
             transition: this.transition,
             endingDialog: this.endingDialog,
         };
+    }
+
+    override needsPurge(roomMap: Map<number, Room>): boolean {
+        const destRoom = roomMap.get(this.destinationRoom!);
+        const destExit = destRoom?.instances.find(i => i.id == this.destinationExit);
+
+        if (!destRoom){
+            this.destinationRoom = null;
+        }
+
+        if (!destExit){
+            this.destinationExit = null;
+        }
+
+        return false;
     }
 
     static fromSaveData(data: iExitSaveData): Instance_Exit {
@@ -144,8 +160,8 @@ export class Instance_Exit extends Instance_Base {
     private _loadSaveData(data: iExitSaveData): Instance_Exit {
         this.loadBaseSaveData(data);
         this.isEnding = data.isEnding;
-        this.destinationRoom = data.destinationRoom;
-        this.destinationExit = data.destinationExit;
+        this.destinationRoom = data.destinationRoom === '' ? null : data.destinationRoom;
+        this.destinationExit = data.destinationExit === '' ? null : data.destinationExit;
         this.transition = data.transition;
         this.endingDialog = data.endingDialog;
 

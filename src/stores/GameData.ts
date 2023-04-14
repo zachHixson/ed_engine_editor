@@ -134,8 +134,24 @@ export const useGameDataStore = defineStore({
             this.logic = loadObj.logic.map(l => Logic.fromSaveData(l, nodeAPI));
         },
         purgeMissingReferences(){
+            const spriteMap = new Map<number, Core.Sprite>();
+            const objectMap = new Map<number, Core.Game_Object>();
+            const logicMap = new Map<number, Core.iEditorLogic>();
+            const roomMap = new Map<number, Core.Room>();
+            const assetMap = new Map<Core.CATEGORY_ID, Map<number, Core.Asset_Base | Core.iEditorLogic>>([
+                [Core.CATEGORY_ID.SPRITE, spriteMap],
+                [Core.CATEGORY_ID.OBJECT, objectMap],
+                [Core.CATEGORY_ID.LOGIC, logicMap],
+                [Core.CATEGORY_ID.ROOM, roomMap],
+            ]);
+
+            this.sprites.forEach((s: any) => spriteMap.set(s.id, s));
+            this.objects.forEach((o: any) => objectMap.set(o.id, o));
+            this.logic.forEach((l: any) => logicMap.set(l.id, l));
+            this.rooms.forEach((r: any) => roomMap.set(r.id, r));
+
             this.objects.forEach(o => o.purgeMissingReferences(this.sprites as Core.Sprite[]));
-            this.rooms.forEach(r => r.purgeMissingReferences(this.objects as Core.Game_Object[], this.rooms as Core.Room[]));
+            this.rooms.forEach(r => r.purgeMissingReferences(assetMap));
         }
     }
 });

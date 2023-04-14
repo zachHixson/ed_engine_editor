@@ -46,6 +46,7 @@ export abstract class Instance_Base{
     abstract get TYPE(): INSTANCE_TYPE;
     abstract clone(): any;
     abstract toSaveData(): any;
+    abstract needsPurge(assetMap: Map<number, any>): boolean;
 
     //Rendering getters
     get sprite(): Sprite | null {return null};

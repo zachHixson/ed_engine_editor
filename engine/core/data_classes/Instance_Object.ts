@@ -117,11 +117,11 @@ export class Instance_Object extends Instance_Base{
         }
     }
 
-    onCreate(): void {
+    override onCreate(): void {
         this.executeNodeEvent('e_create');
     }
 
-    clone(): Instance_Object {
+    override clone(): Instance_Object {
         const clone = new Instance_Object(this.id, this.pos, this._objRef);
         Object.assign(clone, this);
         clone.pos = this.pos.clone();
@@ -130,7 +130,7 @@ export class Instance_Object extends Instance_Base{
         return clone;
     }
 
-    toSaveData(): iObjectInstanceSaveData {
+    override toSaveData(): iObjectInstanceSaveData {
         const baseData = this.getBaseSaveData();
 
         return {
@@ -139,6 +139,10 @@ export class Instance_Object extends Instance_Base{
             zDepthOverride: this.zDepthOverride ?? '',
             collisionOverride: this.collisionOverride,
         };
+    }
+
+    override needsPurge(objectMap: Map<number, any>): boolean {
+        return !objectMap.get(this._objRef.id);
     }
 
     static fromSaveData(data: iObjectInstanceSaveData, objMap: Map<number, Game_Object>): Instance_Object {

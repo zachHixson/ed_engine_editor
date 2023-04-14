@@ -47,7 +47,7 @@ export class Instance_Sprite extends Instance_Base {
         this._zDepth = Math.max(Math.min(newDepth, 99), -99);
     }
 
-    clone(): Instance_Sprite {
+    override clone(): Instance_Sprite {
         const clone = new Instance_Sprite(0, new Vector(), this.sprite);
         Object.assign(clone, this);
         clone.pos = this.pos.clone();
@@ -55,11 +55,15 @@ export class Instance_Sprite extends Instance_Base {
         return clone;
     }
 
-    toSaveData(): iInstanceSpriteSaveData {
+    override toSaveData(): iInstanceSpriteSaveData {
         return {
             ...this.getBaseSaveData(),
             spriteId: this.sprite.id,
         };
+    }
+
+    override needsPurge(spriteMap: Map<number, any>): boolean {
+        return !spriteMap.get(this.sprite.id);
     }
 
     static fromSaveData(data: iInstanceSpriteSaveData, spriteMap: Map<number, Sprite>): Instance_Sprite {

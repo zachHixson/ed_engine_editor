@@ -61,6 +61,10 @@ export class Instance_Logic extends Instance_Object {
         }
     }
 
+    override needsPurge(logicMap: Map<number, any>): boolean {
+        return !logicMap.get(this.logicId);
+    }
+
     static fromSaveData(data: iInstanceLogicSaveData, objMap: Map<number, Game_Object>): Instance_Logic {
         const instance = new Instance_Logic(data.id, Vector.fromObject(data.pos), data.logicId, data.name);
 

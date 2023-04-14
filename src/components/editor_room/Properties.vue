@@ -105,8 +105,9 @@ const showPlaceHolder = computed(()=>
             @cam-prop-set="emit('cam-prop-set', $event)"></CameraProperties>
         <ExitProperties
             v-if="showExitProps"
-            :selected-instance="selectedInstance!"
-            :room="room"></ExitProperties>
+            :selected-exit="(selectedInstance as Core.Instance_Exit)"
+            :room="room"
+            @exit-prop-set="emit('exit-prop-set', $event)"></ExitProperties>
         <RoomProperties
             v-show="showRoomProps"
             :room="room"

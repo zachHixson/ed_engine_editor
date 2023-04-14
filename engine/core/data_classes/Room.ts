@@ -14,6 +14,7 @@ import { Linked_List } from '../Linked_List';
 import { Instance_Sprite, iInstanceSpriteSaveData } from './Instance_Sprite';
 import { Instance_Logic, iInstanceLogicSaveData } from './Instance_Logic';
 import { iEngineLogic } from '../LogicInterfaces';
+import { iEditorLogic } from '../LogicInterfaces';
 
 export interface iRoomSaveData extends iAssetSaveData {
     cameraProps: iCameraSaveData;
@@ -122,48 +123,20 @@ export class Room extends Asset_Base {
         console.error('ERROR: Cannot perform spacial operations without initializing spacial data');
     }
 
-    purgeMissingReferences(objects: Game_Object[], rooms: Room[]){
-        const objectInstances: Instance_Object[] = [];
-        const exitInstances: Instance_Exit[] = [];
-        const spriteInstances: Instance_Sprite[] = [];
-
+    purgeMissingReferences(assetMap: Map<CATEGORY_ID, Map<number, Asset_Base | iEditorLogic>>){
         this._instances.forEach(instance => {
-            switch (instance.TYPE){
-                case INSTANCE_TYPE.OBJECT:
-                    objectInstances.push(instance as Instance_Object);
-                    break;
-                case INSTANCE_TYPE.EXIT:
-                    exitInstances.push(instance as Instance_Exit);
-                    break;
-                case INSTANCE_TYPE.SPRITE:
-                    spriteInstances.push(instance as Instance_Sprite);
-                    break;
+            let typeMap;
+
+            switch(instance.TYPE){
+                case INSTANCE_TYPE.SPRITE: typeMap = assetMap.get(CATEGORY_ID.SPRITE)!; break;
+                case INSTANCE_TYPE.OBJECT: typeMap = assetMap.get(CATEGORY_ID.OBJECT)!; break;
+                case INSTANCE_TYPE.LOGIC: typeMap = assetMap.get(CATEGORY_ID.LOGIC)!; break;
+                case INSTANCE_TYPE.EXIT: typeMap = assetMap.get(CATEGORY_ID.ROOM)!; break;
             }
-        })
 
-        objectInstances.forEach(i => {
-            const foundObj = objects.find(o => o.id == i.objRef.id);
-
-            if (!foundObj){
-                this.removeInstance(i.id);
+            if (instance.needsPurge(typeMap)){
+                this.removeInstance(instance.id);
             }
-        });
-
-        exitInstances.forEach(e => {
-            const foundRoom = rooms.find(r => r.id == e.destinationRoom);
-
-            if (!foundRoom){
-                e.destinationRoom = null;
-                e.destinationExit = null;
-            }
-        });
-
-        spriteInstances.forEach(i => {
-            //const foundObj = objects.find(o => o.id == i.objRef.id);
-
-            // if (!foundObj){
-            //     this.removeInstance(i.id);
-            // }
         });
     }
 
