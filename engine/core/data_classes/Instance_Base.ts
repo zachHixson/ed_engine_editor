@@ -3,6 +3,7 @@ import { Vector } from "../Vector";
 import { Node_Enums } from "../core";
 import { Draw } from "../core";
 import { Sprite } from "../core";
+import { Util } from "../core";
 
 export interface iInstanceBaseSaveData {
     id: number;
@@ -70,10 +71,10 @@ export abstract class Instance_Base{
         }
 
         if (this.animLoop){
-            return frame % this.sprite.frames.length;
+            return Util.mod(frame, this.sprite.frames.length);
         }
         else{
-            return Math.min(frame, this.sprite.frames.length - 1);
+            return Math.max(Math.min(frame, this.sprite.frames.length - 1), 0);
         }
     }
     set animFrame(val: number){
