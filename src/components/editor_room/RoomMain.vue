@@ -328,6 +328,8 @@ function toolSelectMove(mEvent: imEvent): void {
 }
 
 function toolAddBrush(mEvent: imEvent): void {
+    if (!props.selectedAsset) return;
+    
     switch(mEvent.type){
         case Core.MOUSE_EVENT.MOVE:
         case Core.MOUSE_EVENT.DOWN:
