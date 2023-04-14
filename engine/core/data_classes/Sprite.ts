@@ -4,7 +4,7 @@ import { Asset_Base, iAssetSaveData } from './Asset_Base';
 import { NavState, getNavSaveData, parseNavSaveData, iNavSaveData } from '../NavState';
 
 export interface iSpriteSaveData extends iAssetSaveData {
-    frames: string[][],
+    frames: string[],
     navState: iNavSaveData,
 }
 
@@ -30,7 +30,7 @@ export class Sprite extends Asset_Base {
     toSaveData(): iSpriteSaveData {
         return {
             ...this.getBaseAssetData(),
-            frames: this.compressFrames(this.getFramesCopy()),
+            frames: this.compressFrames(this.getFramesCopy()).map(f => f.join(',')),
             navState: getNavSaveData(this.navState),
         } satisfies iSpriteSaveData;
     }
@@ -40,14 +40,15 @@ export class Sprite extends Asset_Base {
     }
 
     private _loadSaveData(data: iSpriteSaveData): Sprite {
-        const hexFrames = this.decompressFrames(data.frames);
+        const splitFrames = data.frames.map(f => f.split(','));
+        const hexFrames = this.decompressFrames(splitFrames);
         const imgDataFrames = new Array(hexFrames.length);
 
         this.loadBaseAssetData(data);
         this.navState = parseNavSaveData(data.navState);
 
         for (let i = 0; i < hexFrames.length; i++){
-            imgDataFrames[i] = this._hexToImageData(data.frames[i]);
+            imgDataFrames[i] = this._hexToImageData(splitFrames[i]);
         }
 
         this.frames = imgDataFrames;
