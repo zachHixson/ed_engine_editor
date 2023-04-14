@@ -10,10 +10,10 @@ export interface iInstanceBaseSaveData {
     type: string;
     pos: { x: number, y: number };
     groups: string[];
-    startFrameOverride: number | '';
-    fps: number;
-    animLoop: 0 | 1;
-    animPlaying: 0 | 1;
+    startFrame: number | '';
+    fps: number | '';
+    animLoop: 0 | 1 | '';
+    animPlaying: 0 | 1 | '';
 }
 
 export interface iCollisionEvent {
@@ -31,9 +31,9 @@ export abstract class Instance_Base{
     depthOffset: number = 0;
     needsRenderUpdate = false;
     startFrameOverride: number | null = null;
-    fps: number = 6;
-    animLoop: boolean = false;
-    animPlaying: boolean = false;
+    fpsOverride: number | null = null;
+    animLoopOverride: boolean | null = null;
+    animPlayingOverride: boolean | null = null;
 
     constructor(id: number, pos: Vector = new Vector()){
         this.id = id;
@@ -48,9 +48,12 @@ export abstract class Instance_Base{
 
     //Rendering getters
     get sprite(): Sprite | null {return null};
-    get renderable() {return false};
-    get hasEditorFrame(): boolean {return false};
+    get renderable(){return false};
+    get hasEditorFrame(){return false};
     get startFrame(){return 0};
+    get fps(){return 0};
+    get animLoop(){return false};
+    get animPlaying(){return false};
     get userDepth(){return 0};
     get zDepth(){return 0};
     set zDepth(val){};
@@ -105,10 +108,12 @@ export abstract class Instance_Base{
         this.name = data.name;
         this.pos = Vector.fromObject(data.pos);
         this.groups = data.groups;
-        this.startFrameOverride = data.startFrameOverride == '' ? null : data.startFrameOverride;
-        this.fps = data.fps;
-        this.animLoop = !!data.animLoop;
-        this.animPlaying = !!data.animPlaying;
+        this.startFrameOverride = data.startFrame === '' ? null : data.startFrame;
+        this.fpsOverride = data.fps === '' ? null : data.fps;
+        this.animLoopOverride = data.animLoop === '' ? null : !!data.animLoop;
+        this.animPlayingOverride = data.animPlaying === '' ? null : !!data.animPlaying;
+
+        this.animFrame = this.startFrame;
     }
 
     getBaseSaveData(): iInstanceBaseSaveData {
@@ -118,10 +123,10 @@ export abstract class Instance_Base{
             type: this.TYPE,
             pos: this.pos.toObject(),
             groups: this.groups,
-            startFrameOverride: this.startFrameOverride ?? '',
-            fps: this.fps,
-            animLoop: +this.animLoop as (0 | 1),
-            animPlaying: +this.animPlaying as (0 | 1),
+            startFrame: this.startFrameOverride ?? '',
+            fps: this.fpsOverride ?? '',
+            animLoop: this.animLoopOverride === null ? '' : +this.animLoopOverride as (0 | 1),
+            animPlaying: this.animPlayingOverride === null ? '' : +this.animPlayingOverride as (0 | 1),
         } satisfies iInstanceBaseSaveData;
     }
 

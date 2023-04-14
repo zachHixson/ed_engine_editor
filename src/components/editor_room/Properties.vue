@@ -131,10 +131,18 @@ const showPlaceHolder = computed(()=>
     gap: 10px;
 }
 
+.properties:deep(.collapsible-props){
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    gap: 10px;
+}
+
 .properties:deep(.heading){
     font-size: 1.3em;
     font-weight: bold;
-    margin-bottom: 10px;
 }
 
 .properties:deep(.info){
@@ -164,6 +172,10 @@ const showPlaceHolder = computed(()=>
 .properties:deep(.control > button){
     width: 100px;
     box-sizing: border-box;
+    margin-left: 10px;
+}
+
+.properties:deep(.control > .custom-checkbox){
     margin-left: 10px;
 }
 

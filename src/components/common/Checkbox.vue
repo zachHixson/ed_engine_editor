@@ -59,7 +59,6 @@ defineExpose({value: state.value, checked: state.value});
     width: 20px;
     height: 20px;
     background: white;
-    margin: auto;
     border: 1px solid var(--border);
     border-radius: 5px;
 }

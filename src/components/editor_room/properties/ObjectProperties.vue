@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import Collapsible from './Collapsible.vue';
 import GroupList from '@/components/common/GroupList.vue';
+import Checkbox from '@/components/common/Checkbox.vue';
 
 import type Core from '@/core';
 import { checkNameCollisions, nanToNull } from '../Properties.vue';
@@ -55,6 +57,31 @@ function setInstanceName(newName: string): void {
             <input id="instCustDepth" type="number" :value="(selectedObject as Core.Instance_Object).zDepthOverride" v-tooltip="$t('room_editor.tt_cust_depth')"
                 @change="setInstProp({zDepthOverride: nanToNull(parseInt(($event.target as any).value))})" v-input-active/>
         </div>
+        <Collapsible
+            heading-text="Animation Settings">
+            <div class="collapsible-props">
+                <div class="control">
+                    <label for="animPlay">Play:</label>
+                    <Checkbox class="custom-checkbox" :value="selectedObject.animPlayingOverride" :triple="true"
+                        @change="setInstProp({animPlayingOverride: $event})"></Checkbox>
+                </div>
+                <div class="control">
+                    <label for="loop">Loop:</label>
+                    <Checkbox class="custom-checkbox" :value="selectedObject.animLoopOverride" :triple="true"
+                        @change="setInstProp({animLoopOverride: $event})"></Checkbox>
+                </div>
+                <div class="control">
+                    <label for="startframe">{{$t('object_editor.start_frame')}}:</label>
+                    <input id="startframe" type="number" :value="selectedObject.startFrameOverride" v-tooltip="$t('room_editor.tt_inst_name')"
+                        @change="setInstProp({startFrameOverrideClamped: nanToNull(parseInt(($event.target as any).value))})" v-input-active/>
+                </div>
+                <div class="control">
+                    <label for="fps">{{$t('object_editor.fps')}}:</label>
+                    <input id="fps" type="number" :value="selectedObject.fpsOverride" v-tooltip="$t('room_editor.tt_inst_name')"
+                        @change="setInstProp({fpsOverride: nanToNull(parseInt(($event.target as any).value))})" v-input-active/>
+                </div>
+            </div>
+        </Collapsible>
         <GroupList
             :editList="selectedObject!.groups"
             :readOnlyList="(selectedObject as Core.Instance_Object).objRef.groups"

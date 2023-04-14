@@ -66,7 +66,6 @@ export class Instance_Object extends Instance_Base{
         this._useIcon = this._objRef?.sprite?.frameIsEmpty(this.startFrame) ?? true;
         return !this._useIcon;
     };
-    get startFrame(){return this.startFrameOverride ?? this._objRef.startFrame};
     get frameDataId(){return this._useIcon || !this.renderable ? Instance_Object.DEFAULT_INSTANCE_ICON_ID : this._objRef!.sprite!.id};
     get frameData(){return this._useIcon || !this.renderable ? Instance_Object.DEFAULT_INSTANCE_ICON : this._objRef!.sprite!.frames};
     get sprite(){return this._objRef?.sprite};
@@ -77,6 +76,17 @@ export class Instance_Object extends Instance_Base{
             case COLLISION_OVERRIDE.FORCE: return true;
             case COLLISION_OVERRIDE.IGNORE: return false;
         }
+    }
+
+    get startFrame(){return this.startFrameOverride ?? this._objRef.startFrame};
+    get fps(){return this.fpsOverride ?? this._objRef.fps};
+    get animLoop(){return this.animLoopOverride ?? this._objRef.animLoop};
+    get animPlaying(){
+        return this.animPlayingOverride ?? this._objRef.animPlaying
+    };
+
+    set startFrameOverrideClamped(val: number | null){
+        this.startFrameOverride = val === null ? null : Math.max(Math.min(val, (this._objRef.sprite?.frames.length ?? 0) - 1), 0);
     }
 
     get hasCollisionEvent(){
@@ -162,13 +172,6 @@ export class Instance_Object extends Instance_Base{
 
     clearPrevExit(): void {
         this._prevExit = null;
-    }
-
-    initAnimProps(): void {
-        this.fps = this._objRef.fps;
-        this.animLoop = this._objRef.animLoop;
-        this.animPlaying = this._objRef.animPlaying;
-        this.animFrame = this._objRef.startFrame;
     }
 
     initLocalVariables(): void {

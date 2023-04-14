@@ -15,6 +15,9 @@ export class Instance_Sprite extends Instance_Base {
     private _sprite: Sprite;
     private _zDepth = 0;
 
+    startFrameOverride: number = 0;
+    fpsOverride: number = 6;
+
     constructor(id: number, pos = new Vector(), sprite: Sprite){
         super(id, pos);
         this._sprite = sprite;
@@ -24,10 +27,13 @@ export class Instance_Sprite extends Instance_Base {
     get TYPE(){return INSTANCE_TYPE.SPRITE}
     get sprite(){return this._sprite}
     set sprite(sprite: Sprite){this._sprite = sprite}
-    get startFrame(){return this.startFrameOverride ?? 0}
+    get startFrame(){return this.startFrameOverride}
     set startFrame(frame: number){
         this.startFrameOverride = Math.max(Math.min(Math.floor(frame), this.sprite.frames.length - 1), 0);
     }
+    get fps(){return this.fpsOverride}
+    get animLoop(){return !!this.animLoopOverride}
+    get animPlaying(){return !!this.animPlayingOverride}
     get renderable(){return true}
     get hasEditorFrame(){
         this._useIcon = this.sprite?.frameIsEmpty(this.startFrameOverride ?? 0) ?? true;

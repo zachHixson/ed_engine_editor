@@ -350,8 +350,6 @@ export class Engine implements iEngineCallbacks {
         logicEvents?.forEach((event, key) => {
             this._registerNodeEvent(key, instance);
         });
-
-        instance.initAnimProps();
     }
 
     private _registerNodeEvent = (eventName: string, instance: Instance_Object)=>{

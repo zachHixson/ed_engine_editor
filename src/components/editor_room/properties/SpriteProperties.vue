@@ -52,13 +52,13 @@ function setInstProp(propObj: any): void {
             <div class="collapsible-props">
                 <div class="control">
                     <label for="animPlay">Play:</label>
-                    <input id="animPlay" type="checkbox" :checked="selectedSprite.animPlaying"
-                        @change="setInstProp({animPlaying: ($event.target as any).checked})"/>
+                    <input id="animPlay" type="checkbox" :checked="!!selectedSprite.animPlayingOverride"
+                        @change="setInstProp({animPlayingOverride: ($event.target as any).checked})"/>
                 </div>
                 <div class="control">
                     <label for="loop">Loop:</label>
-                    <input id="loop" type="checkbox" :checked="selectedSprite.animLoop"
-                        @change="setInstProp({animLoop: ($event.target as any).checked})"/>
+                    <input id="loop" type="checkbox" :checked="!!selectedSprite.animLoopOverride"
+                        @change="setInstProp({animLoopOverride: ($event.target as any).checked})"/>
                 </div>
                 <div class="control">
                     <label for="startframe">{{$t('object_editor.start_frame')}}:</label>
@@ -67,8 +67,8 @@ function setInstProp(propObj: any): void {
                 </div>
                 <div class="control">
                     <label for="fps">{{$t('object_editor.fps')}}:</label>
-                    <input id="fps" type="number" :value="selectedSprite.fps" v-tooltip="$t('room_editor.tt_inst_name')"
-                        @change="setInstProp({fps: nanToNull(parseInt(($event.target as any).value))})" v-input-active/>
+                    <input id="fps" type="number" :value="selectedSprite.fpsOverride" v-tooltip="$t('room_editor.tt_inst_name')"
+                        @change="setInstProp({fpsOverride: nanToNull(parseInt(($event.target as any).value))})" v-input-active/>
                 </div>
             </div>
         </Collapsible>
@@ -80,13 +80,4 @@ function setInstProp(propObj: any): void {
 
 <style scoped>
 @import '@/components/common/formStyles.css';
-
-.collapsible-props{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    gap: 10px;
-}
 </style>
