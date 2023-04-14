@@ -94,7 +94,10 @@ const showPlaceHolder = computed(()=>
             @inst-group-changed="emit('inst-group-changed', $event)"></ObjectProperties>
         <LogicProperties
             v-if="showLogicProps"
-            :selected-logic="(selectedInstance as Core.Instance_Logic)"></LogicProperties>
+            :selected-logic="(selectedInstance as Core.Instance_Logic)"
+            :selected-room="room"
+            @inst-prop-set="emit('inst-prop-set', $event)"
+            @inst-group-changed="emit('inst-group-changed', $event)"></LogicProperties>
         <CameraProperties
             v-if="showCameraProps"
             :selected-instance="selectedInstance"

@@ -21,9 +21,10 @@ export class Instance_Logic extends Instance_Object {
     logicId: number;
     logicScript: iEngineLogic | null = null;
 
-    constructor(id: number, pos = new Vector(), logicScriptId: number){
+    constructor(id: number, pos = new Vector(), logicScriptId: number, logicScriptName: string){
         super(id, pos, Instance_Logic._placeHolderObject);
 
+        this.name = logicScriptName + '_' + logicScriptId;
         this.logicId = logicScriptId;
     }
 
@@ -45,7 +46,7 @@ export class Instance_Logic extends Instance_Object {
     get frameData(){return Instance_Logic.LOGIC_ICON}
 
     override clone(): Instance_Logic {
-        const clone = new Instance_Logic(this.id, this.pos, this.logicId);
+        const clone = new Instance_Logic(this.id, this.pos, this.logicId, this.name);
         Object.assign(clone, this);
         clone.pos = this.pos.clone();
         if (this.lastPos) clone.lastPos = this.lastPos.clone();
@@ -61,7 +62,7 @@ export class Instance_Logic extends Instance_Object {
     }
 
     static fromSaveData(data: iInstanceLogicSaveData, objMap: Map<number, Game_Object>): Instance_Logic {
-        const instance = new Instance_Logic(data.id, Vector.fromObject(data.pos), data.logicId);
+        const instance = new Instance_Logic(data.id, Vector.fromObject(data.pos), data.logicId, data.name);
 
         if (data.objId >= 0){
             instance._objRef = objMap.get(data.objId)!;
