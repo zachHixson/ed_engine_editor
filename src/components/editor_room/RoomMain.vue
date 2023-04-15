@@ -164,6 +164,7 @@ onMounted(()=>{
 
     resize();
     bindHotkeys();
+    toolClicked(ROOM_TOOL_TYPE.SELECT_MOVE);
 
     if (props.selectedRoom){
         props.selectedRoom.initSpacialData();
