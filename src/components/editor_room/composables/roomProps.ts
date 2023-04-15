@@ -1,13 +1,29 @@
 import Tool_Base from './Tool_Base';
 import type { iActionArguments } from '../RoomMain.vue';
 import { RoomMainEventBus } from '../RoomMain.vue';
+import { useRoomEditorStore } from '@/stores/RoomEditor';
 import Core from '@/core';
+import type { imEvent } from '../RoomEditWindow.vue';
 
 type RoomPropChangeProps = {newState: object, oldState?: object};
 
 export function useRoomProps(args: iActionArguments){
     
-    class Room_Props extends Tool_Base {}
+    class Room_Props extends Tool_Base {
+        constructor(){
+            super();
+            this.openPanel();
+        }
+
+        override click(): void {
+            this.openPanel();
+        }
+
+        openPanel(): void {
+            const roomEditorStore = useRoomEditorStore();
+            roomEditorStore.setPropPanelState(true);
+        }
+    }
 
     function actionRoomPropChange({newState}: RoomPropChangeProps, makeCommit = true): void {
         const oldState = Object.assign({}, args.props.selectedRoom);
