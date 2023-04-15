@@ -65,27 +65,20 @@ export abstract class Instance_Base{
     get hasCollisionEvent(){return false};
 
     get animFrame(){
-        const frame = Math.floor(this._animProgress * this.fps);
-
         if (!this.sprite){
             return 0;
         }
 
-        if (this.animLoop){
-            return Util.mod(frame, this.sprite.frames.length);
-        }
-        else{
-            return Math.max(Math.min(frame, this.sprite.frames.length - 1), 0);
-        }
+        return Math.floor(this._animProgress * this.sprite.frames.length);
     }
     set animFrame(val: number){
         if (!this.sprite){
             return;
         }
-        
+
+        const negOffset = +(Math.sign(this.fps) < 0);
         const frame = Math.min(Math.max(val, 0), this.sprite.frames.length - 1);
-        const animDur = Math.floor(this.sprite.frames.length * this.fps) * 1000;
-        this._animProgress = Math.floor(frame / this.sprite.frames.length * animDur);
+        this._animProgress = (frame + negOffset) / this.sprite.frames.length;
     }
 
     //Lifecycle events
@@ -95,9 +88,24 @@ export abstract class Instance_Base{
     onDestroy(): void {}
 
     advanceAnimation(deltaTime: number): void {
+        if (!this.sprite) return;
+
         if (this.animPlaying){
-            this._animProgress += deltaTime;
-            this.needsRenderUpdate = true;
+            const oldProgress = this._animProgress;
+            const progressFactor = (deltaTime / 1000) * 100;
+            const speed = (progressFactor * this.fps) * this.sprite.frames.length;
+            this._animProgress += speed;
+
+            if (this.animLoop){
+                this._animProgress = Util.mod(this._animProgress, 1);
+            }
+            else{
+                this._animProgress = Math.max(Math.min(this._animProgress, 1), 0);
+            }
+            
+            if (this._animProgress != oldProgress){
+                this.needsRenderUpdate = true;
+            }
         }
     }
 
