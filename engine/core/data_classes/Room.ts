@@ -20,8 +20,8 @@ export interface iRoomSaveData extends iAssetSaveData {
     cameraProps: iCameraSaveData;
     instancesSerial: iInstanceBaseSaveData[],
     bgColor: string,
-    persist: boolean,
-    useGravity: boolean,
+    persist: 0 | 1,
+    useGravity: 0 | 1,
     gravity: number,
     navState: iNavSaveData,
 }
@@ -59,8 +59,8 @@ export class Room extends Asset_Base {
             cameraProps: this.camera.toSaveData(),
             instancesSerial: this.instances.toArray().map(i => i.toSaveData()),
             bgColor: this.bgColor.toHex().replace('#', ''),
-            persist: this.persist,
-            useGravity: this.useGravity,
+            persist: +this.persist as (0 | 1),
+            useGravity: +this.useGravity as (0 | 1),
             gravity: this.gravity,
             navState: getNavSaveData(this.navState),
         } satisfies iRoomSaveData;
@@ -77,8 +77,8 @@ export class Room extends Asset_Base {
         this.camera = Camera.fromSaveData(data.cameraProps);
         this.navState = parseNavSaveData(data.navState);
         this.bgColor = new Color().fromHex(data.bgColor);
-        this.persist = data.persist;
-        this.useGravity = data.useGravity;
+        this.persist = !!data.persist;
+        this.useGravity = !!data.useGravity;
         this.gravity = data.gravity;
 
         for (let i = 0; i < instancesSerial.length; i++){

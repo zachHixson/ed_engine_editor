@@ -13,8 +13,8 @@ export interface iInstanceBaseSaveData {
     groups: string[];
     startFrame: number | '';
     fps: number | '';
-    animLoop: 0 | 1 | '';
-    animPlaying: 0 | 1 | '';
+    animLoop: 0 | 1 | 2;
+    animPlaying: 0 | 1 | 2;
 }
 
 export interface iCollisionEvent {
@@ -120,8 +120,8 @@ export abstract class Instance_Base{
         this.groups = data.groups;
         this.startFrameOverride = data.startFrame === '' ? null : data.startFrame;
         this.fpsOverride = data.fps === '' ? null : data.fps;
-        this.animLoopOverride = data.animLoop === '' ? null : !!data.animLoop;
-        this.animPlayingOverride = data.animPlaying === '' ? null : !!data.animPlaying;
+        this.animLoopOverride = data.animLoop === 0 ? null : !!(data.animLoop - 1);
+        this.animPlayingOverride = data.animPlaying === 0 ? null : !!(data.animPlaying - 1);
 
         this.animFrame = this.startFrame;
     }
@@ -135,8 +135,8 @@ export abstract class Instance_Base{
             groups: this.groups,
             startFrame: this.startFrameOverride ?? '',
             fps: this.fpsOverride ?? '',
-            animLoop: this.animLoopOverride === null ? '' : +this.animLoopOverride as (0 | 1),
-            animPlaying: this.animPlayingOverride === null ? '' : +this.animPlayingOverride as (0 | 1),
+            animLoop: this.animLoopOverride === null ? 0 : +this.animLoopOverride + 1 as (1 | 2),
+            animPlaying: this.animPlayingOverride === null ? 0 : +this.animPlayingOverride + 1 as (1 | 2),
         } satisfies iInstanceBaseSaveData;
     }
 
