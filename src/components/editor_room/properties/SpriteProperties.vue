@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Collapsible from './Collapsible.vue';
+import Checkbox from '@/components/common/Checkbox.vue';
 import GroupList from '@/components/common/GroupList.vue';
 
 import { checkNameCollisions, nanToNull } from '../Properties.vue';
@@ -52,13 +53,13 @@ function setInstProp(propObj: any): void {
             <div class="collapsible-props">
                 <div class="control">
                     <label for="animPlay">{{ t('object_editor.is_playing') }}:</label>
-                    <input id="animPlay" type="checkbox" :checked="!!selectedSprite.animPlayingOverride" v-tooltip="$t('room_editor.tt_anim_play')"
-                        @change="setInstProp({animPlayingOverride: ($event.target as any).checked})"/>
+                    <Checkbox id="animPlay" class="custom-checkbox" :value="!!selectedSprite.animPlayingOverride" v-tooltip="$t('room_editor.tt_anim_play')"
+                        @change="setInstProp({animPlayingOverride: ($event as any).checked})"/>
                 </div>
                 <div class="control">
                     <label for="loop">{{ t('object_editor.loop') }}:</label>
-                    <input id="loop" type="checkbox" :checked="!!selectedSprite.animLoopOverride" v-tooltip="$t('room_editor.tt_anim_loop_triple')"
-                        @change="setInstProp({animLoopOverride: ($event.target as any).checked})"/>
+                    <Checkbox id="loop" class="custom-checkbox" :value="!!selectedSprite.animLoopOverride" v-tooltip="$t('room_editor.tt_anim_loop_triple')"
+                        @change="setInstProp({animLoopOverride: ($event as any).checked})"/>
                 </div>
                 <div class="control">
                     <label for="startframe">{{$t('object_editor.start_frame')}}:</label>

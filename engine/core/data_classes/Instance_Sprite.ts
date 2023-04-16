@@ -25,6 +25,7 @@ export class Instance_Sprite extends Instance_Base {
     }
 
     get TYPE(){return INSTANCE_TYPE.SPRITE}
+    get sourceId(){return this.sprite.id}
     get sprite(){return this._sprite}
     set sprite(sprite: Sprite){this._sprite = sprite}
     get startFrame(){return this.startFrameOverride}

@@ -10,7 +10,7 @@ export function useDelete(args: iActionArguments){
     
     class Erase_Brush extends Tool_Base {
         private _down = false;
-        private _cellCache = new Array<Core.Vector>();
+        private _last: Core.Vector | null = null;
 
         override mouseDown(mEvent: imEvent): void {
             this._down = true;
@@ -18,11 +18,7 @@ export function useDelete(args: iActionArguments){
         }
 
         override mouseMove(mEvent: imEvent): void {
-            let removedFromCell = false;
-
-            if (this._cellCache.length > 0){
-                removedFromCell ||= this._cellCache[0].equalTo(mEvent.worldCell);
-            }
+            let removedFromCell = this._last?.equalTo(mEvent.worldCell) ?? false;
 
             if (!removedFromCell && this._down){
                 let instances = args.props.selectedRoom.getInstancesInRadius(mEvent.worldCell, 0);
@@ -33,7 +29,7 @@ export function useDelete(args: iActionArguments){
                     actionDelete({instId: instances[0].id}, false);
                 }
 
-                this._cellCache[0] = mEvent.worldCell;
+                this._last = mEvent.worldCell;
             }
         }
 

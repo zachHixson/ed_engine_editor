@@ -30,6 +30,7 @@ export abstract class Instance_Base{
     pos: Vector;
     groups: string[] = [];
     depthOffset: number = 0;
+    depthOverride: number | null = null;
     needsRenderUpdate = false;
     startFrameOverride: number | null = null;
     fpsOverride: number | null = null;
@@ -44,7 +45,8 @@ export abstract class Instance_Base{
 
     //Basic data getters
     abstract get TYPE(): INSTANCE_TYPE;
-    abstract clone(): any;
+    abstract get sourceId(): number | string;
+    abstract clone(): Instance_Base;
     abstract toSaveData(): any;
     abstract needsPurge(assetMap: Map<number, any>): boolean;
 
@@ -59,6 +61,8 @@ export abstract class Instance_Base{
     get userDepth(){return 0};
     get zDepth(){return 0};
     set zDepth(val){};
+    get zDepthOverride(){return 0};
+    set zDepthOverride(val: number | null){};
     abstract get frameDataId(): number | string;
     abstract get frameData(): Array<ImageData>;
 

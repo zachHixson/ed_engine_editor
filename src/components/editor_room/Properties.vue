@@ -32,12 +32,16 @@ export function nanToNull(inp: number): number | null {
 import SpriteProperties from './properties/SpriteProperties.vue';
 import ObjectProperties from './properties/ObjectProperties.vue';
 import LogicProperties from './properties/LogicProperties.vue';
+import AddBrushProperties from './properties/AddBrushProperties.vue';
 import CameraProperties from './properties/CameraProperties.vue';
 import ExitProperties from './properties/ExitProperties.vue';
 import RoomProperties from './properties/RoomProperties.vue';
 
 import { computed } from 'vue';
+import { useAssetBrowserStore } from '@/stores/AssetBrowser';
 import Core from '@/core';
+
+const assetBrowserStore = useAssetBrowserStore();
 
 const props = defineProps<{
     camera: Core.Camera,
@@ -68,6 +72,7 @@ const showLogicProps = computed(()=>(
     props.selectedTool == Core.ROOM_TOOL_TYPE.SELECT_MOVE &&
     props.selectedInstance?.TYPE == Core.INSTANCE_TYPE.LOGIC
 ));
+const showAddBrushProps = computed(()=>props.selectedTool == Core.ROOM_TOOL_TYPE.ADD_BRUSH);
 const showCameraProps = computed(()=>props.selectedTool == Core.ROOM_TOOL_TYPE.CAMERA);
 const showExitProps = computed(()=>(
     props.selectedInstance?.TYPE == Core.INSTANCE_TYPE.EXIT &&
@@ -100,6 +105,10 @@ const showPlaceHolder = computed(()=>
             :selected-room="room"
             @inst-prop-set="emit('inst-prop-set', $event)"
             @inst-group-changed="emit('inst-group-changed', $event)"></LogicProperties>
+        <AddBrushProperties
+            v-if="showAddBrushProps"
+            :selected-asset="assetBrowserStore.getSelectedAsset"
+            :selected-instance="selectedInstance"></AddBrushProperties>
         <CameraProperties
             v-if="showCameraProps"
             :selected-instance="selectedInstance"
@@ -182,7 +191,10 @@ const showPlaceHolder = computed(()=>
 }
 
 .properties:deep(.control > .custom-checkbox){
-    margin: 45px;
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    margin-left: 10px;
     margin-top: 0;
     margin-bottom: 0;
 }

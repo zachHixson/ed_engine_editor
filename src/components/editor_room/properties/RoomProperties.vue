@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import Checkbox from '@/components/common/Checkbox.vue';
 import ColorPicker from '@/components/common/ColorPicker.vue';
 
 import { ref, onMounted, watch } from 'vue';
@@ -66,13 +67,13 @@ function closeRoomBGColorEditor(): void {
         </div>
         <div class="control">
             <label for="roomPersist">{{$t('room_editor.persist')}}:</label>
-            <input id="roomPersist" type="checkbox" :checked="room.persist" v-tooltip="$t('room_editor.tt_room_persist')"
-                @change="setRoomProp({persist: ($event.target as any).checked})"/>
+            <Checkbox id="roomPersist" class="custom-checkbox" :value="room.persist" v-tooltip="$t('room_editor.tt_room_persist')"
+                @change="setRoomProp({persist: ($event as any)})"/>
         </div>
         <div class="control">
             <label for="roomUseGrav">{{$t('room_editor.enable_gravity')}}:</label>
-            <input id="roomUseGrav" type="checkbox" :checked="room.useGravity" v-tooltip="$t('room_editor.tt_room_use_gravity')"
-                @change="setRoomProp({useGravity: ($event.target as any).checked})"/>
+            <Checkbox id="roomUseGrav" class="custom-checkbox" :value="room.useGravity" v-tooltip="$t('room_editor.tt_room_use_gravity')"
+                @change="setRoomProp({useGravity: ($event as any)})"/>
         </div>
         <div v-show="room.useGravity" class="control">
             <label for="roomGrav">{{$t('room_editor.gravity')}}:</label>

@@ -55,6 +55,7 @@ export class Instance_Object extends Instance_Base{
     }
 
     get TYPE(){return INSTANCE_TYPE.OBJECT};
+    get sourceId(){return this._objRef.id};
     get COLLISION_OVERRIDES(){return COLLISION_OVERRIDE};
 
     get objRef(){return this._objRef};

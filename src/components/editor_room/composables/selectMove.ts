@@ -16,19 +16,33 @@ export function useSelectMove(args: iActionArguments){
         private _newSelection = false;
         private _downOnSelection = false;
         private _worldPosDown: Core.Vector | null = null;
-        private _cellCache = new Array<Core.Vector>();
+        private _last: Core.Vector | null = null;
+
+        private _selectInstanceByPos(pos: Core.Vector): void {
+            const nearbyInst = args.props.selectedRoom
+                .getInstancesInRadius(pos, 0)
+                .filter(instance => instance.pos.equalTo(pos))
+                .sort((a, b) => b.zDepth - a.zDepth);
+        
+            if (nearbyInst.length > 0){
+                args.editorSelection.value = nearbyInst[0];
+            }
+            else{
+                args.editorSelection.value = null;
+            }
+        }
 
         override mouseDown(mEvent: imEvent): void {
             this._down = true;
             this._worldPosDown = mEvent.worldCell.clone();
             
-            if (args.editorSelection.value == null){
-                selectInstanceByPos(mEvent.worldCell);
-                this._newSelection = true;
-            }
-            else if (args.editorSelection.value.pos.equalTo(mEvent.worldCell)){
+            if (args.editorSelection.value?.pos.equalTo(mEvent.worldCell)){
                 this._downOnSelection = true;
-                this._cellCache.push(mEvent.worldCell.clone());
+                this._last = mEvent.worldCell.clone();
+            }
+            else{
+                this._selectInstanceByPos(mEvent.worldCell);
+                this._newSelection = true;
             }
         }
 
@@ -36,10 +50,10 @@ export function useSelectMove(args: iActionArguments){
             if (
                 this._down &&
                 this._downOnSelection &&
-                !this._cellCache[0].equalTo(mEvent.worldCell)
+                !this._last?.equalTo(mEvent.worldCell)
             ){
                 actionMove({instRef: args.editorSelection.value as Core.Instance_Object, newPos: mEvent.worldCell}, false);
-                this._cellCache[0].copy(mEvent.worldCell);
+                this._last?.copy(mEvent.worldCell);
             }
         }
 
@@ -54,7 +68,7 @@ export function useSelectMove(args: iActionArguments){
 
         override mouseUp(mEvent: imEvent): void {
             if (this._worldPosDown && mEvent.worldCell.equalTo(this._worldPosDown) && !this._newSelection){
-                selectInstanceByPos(mEvent.worldCell);
+                this._selectInstanceByPos(mEvent.worldCell);
             }
 
             if (args.undoStore.cache.get('move_start')){
@@ -64,21 +78,7 @@ export function useSelectMove(args: iActionArguments){
             this._downOnSelection = false;
             this._newSelection = false;
             this._down = false;
-            this._cellCache = [];
-        }
-    }
-
-    function selectInstanceByPos(pos: Core.Vector): void {
-        const nearbyInst = args.props.selectedRoom
-            .getInstancesInRadius(pos, 0)
-            .filter(instance => instance.pos.equalTo(pos))
-            .sort((a, b) => b.zDepth - a.zDepth);
-    
-        if (nearbyInst.length > 0){
-            args.editorSelection.value = nearbyInst[0];
-        }
-        else{
-            args.editorSelection.value = null;
+            this._last = null;
         }
     }
 

@@ -28,7 +28,8 @@ export class Instance_Logic extends Instance_Object {
         this.logicId = logicScriptId;
     }
 
-    get TYPE(){return INSTANCE_TYPE.LOGIC};
+    get TYPE(){return INSTANCE_TYPE.LOGIC}
+    get sourceId(){return this.logicId}
 
     get objRef(){
         //Don't create an object reference until the user actually tries to access it

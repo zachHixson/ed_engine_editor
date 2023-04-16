@@ -6,6 +6,9 @@ interface iState {
     selectedNavTool: Core.NAV_TOOL_TYPE | null,
     propertiesOpen: boolean,
     viewGrid: boolean,
+    addBrushCopy: boolean,
+    addBrushOverlap: boolean,
+    addBrushDepth: number | null,
 }
 
 export const useRoomEditorStore = defineStore({
@@ -15,7 +18,10 @@ export const useRoomEditorStore = defineStore({
         selectedTool: Core.ROOM_TOOL_TYPE.SELECT_MOVE,
         selectedNavTool: null,
         propertiesOpen: false,
-        viewGrid: true
+        viewGrid: true,
+        addBrushCopy: false,
+        addBrushOverlap: false,
+        addBrushDepth: null,
     }),
 
     getters: {
