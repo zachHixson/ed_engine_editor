@@ -78,14 +78,14 @@ const editWindow = ref<any>();
 //define component data
 const tools = [
     {
-        tool: ROOM_TOOL_TYPE.SELECT_MOVE,
-        text: t('room_editor.select_move'),
-        icon: selectMoveIcon,
-    },
-    {
         tool: ROOM_TOOL_TYPE.ADD_BRUSH,
         text: t('room_editor.add_brush'),
         icon: brushAddIcon,
+    },
+    {
+        tool: ROOM_TOOL_TYPE.SELECT_MOVE,
+        text: t('room_editor.select_move'),
+        icon: selectMoveIcon,
     },
     {
         tool: ROOM_TOOL_TYPE.ERASER,
@@ -135,6 +135,7 @@ const propertiesOpen = computed<boolean>({
         roomEditorStore.setPropPanelState(newVal);
     }
 });
+const propertiesIcon = computed(()=>tools.find(t => t.tool == roomEditorStore.selectedTool)!.icon);
 const isRoomSelected = computed<boolean>(()=>props.selectedRoom != null);
 const cssBG = computed<string>(()=>{
     const color =  props.selectedRoom?.bgColor.toHex() ?? '#FFFFFF'
@@ -321,7 +322,7 @@ function toggleGrid(): void {
             <div class="resizeBtnWrapper">
                 <button class="resizeBtn" @click="propertiesOpen = !propertiesOpen; resize()">
                     <Svg v-show="propertiesOpen" :src="arrowIcon" style="transform: rotate(90deg)"></Svg>
-                    <Svg v-show="!propertiesOpen" :src="gearIcon" style="transform: rotate(-90deg)"></Svg>
+                    <Svg v-show="!propertiesOpen" :src="propertiesIcon"></Svg>
                 </button>
             </div>
             <div v-show="propertiesOpen" class="propertiesContents">

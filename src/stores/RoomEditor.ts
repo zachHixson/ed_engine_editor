@@ -15,7 +15,7 @@ export const useRoomEditorStore = defineStore({
     id: 'RoomEditor',
 
     state: (): iState => ({
-        selectedTool: Core.ROOM_TOOL_TYPE.SELECT_MOVE,
+        selectedTool: Core.ROOM_TOOL_TYPE.ADD_BRUSH,
         selectedNavTool: null,
         propertiesOpen: false,
         viewGrid: true,

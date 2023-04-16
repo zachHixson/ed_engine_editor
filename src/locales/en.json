@@ -161,7 +161,7 @@
         "enable_gravity": "Enable Gravity",
         "gravity": "Gravity",
         "set_start_room": "Set as Starting Room",
-        "no_props": "No Properties to Display",
+        "no_props": "Select an instance to edit it's properties",
         "tt_inst_name": "Unique name for this instance",
         "tt_coll_ovr": "Change the collision type for this instance only.<br><strong>\"Keep\"</strong> will keep the original object's value",
         "tt_cust_depth": "Change what order this instance is drawn on top of others.<br>Higher number = On Top",
