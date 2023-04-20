@@ -96,9 +96,11 @@ export abstract class Instance_Base{
 
         if (this.animPlaying){
             const oldProgress = this._animProgress;
-            const progressFactor = (deltaTime / 1000) * 100;
-            const speed = (progressFactor * this.fps) * this.sprite.frames.length;
-            this._animProgress += speed;
+            const dt = 1000 * deltaTime;
+            const frameDuration = 1000 / this.fps;
+            const animDuration = frameDuration * this.sprite.frames.length;
+            const curProgress = (this._animProgress * animDuration + dt) / animDuration;
+            this._animProgress = curProgress;
 
             if (this.animLoop){
                 this._animProgress = Util.mod(this._animProgress, 1);
