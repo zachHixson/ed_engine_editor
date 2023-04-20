@@ -42,6 +42,7 @@ export class Instance_Exit extends Instance_Base {
     static get TRANSITION_TYPES(){return TRANSITION}
 
     get TYPE(){return INSTANCE_TYPE.EXIT}
+    get sourceId(){return -1}
 
     get frameDataId(){return this.isEnding ? Instance_Exit.ENDING_ICON_ID : Instance_Exit.EXIT_ICON_ID}
     get frameData(){return this.isEnding ? Instance_Exit.ENDING_ICON : Instance_Exit.EXIT_ICON}
