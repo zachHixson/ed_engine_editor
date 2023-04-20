@@ -26,10 +26,13 @@ const DEPTH_OFFSET_INCREMENT = Math.pow(10, -7);
 
 export class Instance_Renderer {
     private static readonly DEFAULT_BUFFER_SIZE = 64;
-    private static readonly _planeGeo = WGL.createPlaneGeo().map(i => (i + 1) * 8);
+    private static readonly _planeGeo = WGL.createPlaneGeo().map(i => i * 8);
     private static readonly _planeUVs = WGL.createPlaneGeo().map(i => (i + 1) * 0.5);
     private static readonly _vertexSource = `
+        precision highp float;
+        
         uniform mat3 u_viewMatrix;
+        uniform float u_instanceScale;
 
         attribute vec2 a_planeVerts;
         attribute vec3 a_position;
@@ -43,7 +46,8 @@ export class Instance_Renderer {
             v_uv = a_uv;
             v_spriteOffset = a_spriteOffset;
 
-            vec2 worldPos = (a_planeVerts + a_position.xy);
+            vec2 vert = (a_planeVerts * u_instanceScale) + 8.0;
+            vec2 worldPos = vert + a_position.xy;
             vec3 clipPos = vec3(worldPos, 1.0) * u_viewMatrix;
             gl_Position = vec4(clipPos.xy, a_position.z, 1.0);
         }
@@ -53,7 +57,6 @@ export class Instance_Renderer {
 
         uniform int u_tileSize;
         uniform int u_atlasSize;
-        uniform float u_instanceScale;
         uniform vec4 u_colorOverride;
         uniform sampler2D u_atlasTexture;
 
@@ -71,11 +74,10 @@ export class Instance_Renderer {
             float tileSize = float(u_tileSize);
             float atlasSize = float(u_atlasSize);
             float scaleFac = atlasSize / tileSize;
-            float invInstanceScale = 1.0 / u_instanceScale;
 
             //main atlas mapping
             vec2 uv = vec2(v_uv.x, 1.0 - v_uv.y);
-            uv = atlasMap(vec4(uv, 0.0, 0.0), scaleFac, invInstanceScale).xy;
+            uv = atlasMap(vec4(uv, 0.0, 0.0), scaleFac, 1.0).xy;
 
             ${
                 //eliminate pixel gap between atlased sprites
@@ -89,17 +91,6 @@ export class Instance_Renderer {
             }
 
             vec4 tex = texture2D(u_atlasTexture, uv);
-            
-            ${
-                //apply "scale mask" if repeatEdges is disabled to crop out bordering atlas sprites
-                !repeatEdges ?
-                `
-                vec2 maskUv = abs(v_uv - 0.5) * 2.0;
-                float mask = max(maskUv.x, maskUv.y);
-                mask = 1.0 - step(u_instanceScale, mask);
-                tex.a *= mask;
-                ` :''
-            }
 
             //color override
             tex = mix(tex, vec4(u_colorOverride.rgb, 1.0), u_colorOverride.a * tex.a);
