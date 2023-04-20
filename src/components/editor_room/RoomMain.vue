@@ -202,6 +202,11 @@ const { changeRoomProps } = useRoomProps(actionArgs);
 useAdd(actionArgs);
 
 function bindHotkeys(): void {
+    const deleteInstanceMacro = () => {
+        const id = editorSelection.value?.id;
+        deleteInstance({instId: id}, true);
+    }
+
     hotkeyMap.bindKey(['s'], toolClicked, [ROOM_TOOL_TYPE.SELECT_MOVE]);
     hotkeyMap.bindKey(['b'], toolClicked, [ROOM_TOOL_TYPE.ADD_BRUSH]);
     hotkeyMap.bindKey(['e'], toolClicked, [ROOM_TOOL_TYPE.ERASER]);
@@ -210,8 +215,8 @@ function bindHotkeys(): void {
     hotkeyMap.bindKey(['r'], toolClicked, [ROOM_TOOL_TYPE.ROOM_PROPERTIES]);
     hotkeyMap.bindKey(['g'], ()=>{roomEditorStore.setGridState(!roomEditorStore.getGridState)});
     hotkeyMap.bindKey(['n'], ()=>{propertiesOpen.value = !propertiesOpen.value; resize()});
-    hotkeyMap.bindKey(['delete'], deleteInstance);
-    hotkeyMap.bindKey(['backspace'], deleteInstance);
+    hotkeyMap.bindKey(['delete'], deleteInstanceMacro);
+    hotkeyMap.bindKey(['backspace'], deleteInstanceMacro);
 }
 
 function refreshRoom(): void {
@@ -335,6 +340,7 @@ function toggleGrid(): void {
                     @inst-prop-set="changeInstanceProps({newState: $event as object})"
                     @inst-group-changed="changeInstanceGroups($event)"
                     @inst-var-changed="()=>{}"
+                    @inst-deleted="deleteInstance({instId: $event.id}, $event.commit)"
                     @cam-prop-set="changeCameraProps({newState: $event})"
                     @exit-prop-set="changeInstanceProps({newState: ($event as Partial<Core.Instance_Base>)})"
                     @room-prop-set="changeRoomProps({newState: $event})"

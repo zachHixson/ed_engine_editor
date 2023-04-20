@@ -9,6 +9,8 @@ interface iState {
     addBrushCopy: boolean,
     addBrushOverlap: boolean,
     addBrushDepth: number | null,
+    eraserTopOnly: boolean,
+    eraserSelectedType: boolean,
 }
 
 export const useRoomEditorStore = defineStore({
@@ -22,6 +24,8 @@ export const useRoomEditorStore = defineStore({
         addBrushCopy: false,
         addBrushOverlap: false,
         addBrushDepth: null,
+        eraserTopOnly: true,
+        eraserSelectedType: false,
     }),
 
     getters: {

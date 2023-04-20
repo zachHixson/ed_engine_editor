@@ -29,10 +29,11 @@ export function nanToNull(inp: number): number | null {
 </script>
 
 <script setup lang="ts">
+import AddBrushProperties from './properties/AddBrushProperties.vue';
 import SpriteProperties from './properties/SpriteProperties.vue';
 import ObjectProperties from './properties/ObjectProperties.vue';
 import LogicProperties from './properties/LogicProperties.vue';
-import AddBrushProperties from './properties/AddBrushProperties.vue';
+import EraserProperties from './properties/EraserProperties.vue';
 import CameraProperties from './properties/CameraProperties.vue';
 import ExitProperties from './properties/ExitProperties.vue';
 import RoomProperties from './properties/RoomProperties.vue';
@@ -53,6 +54,7 @@ const props = defineProps<{
 const emit = defineEmits([
     'inst-prop-set',
     'inst-group-changed',
+    'inst-deleted',
     'cam-prop-set',
     'exit-prop-set',
     'room-prop-set',
@@ -60,6 +62,7 @@ const emit = defineEmits([
     'room-bg-change-end',
 ]);
 
+const showAddBrushProps = computed(()=>props.selectedTool == Core.ROOM_TOOL_TYPE.ADD_BRUSH);
 const showSpriteProps = computed(()=>(
     props.selectedTool == Core.ROOM_TOOL_TYPE.SELECT_MOVE &&
     props.selectedInstance?.TYPE == Core.INSTANCE_TYPE.SPRITE
@@ -72,7 +75,7 @@ const showLogicProps = computed(()=>(
     props.selectedTool == Core.ROOM_TOOL_TYPE.SELECT_MOVE &&
     props.selectedInstance?.TYPE == Core.INSTANCE_TYPE.LOGIC
 ));
-const showAddBrushProps = computed(()=>props.selectedTool == Core.ROOM_TOOL_TYPE.ADD_BRUSH);
+const showEraserProps = computed(()=>props.selectedTool == Core.ROOM_TOOL_TYPE.ERASER);
 const showCameraProps = computed(()=>props.selectedTool == Core.ROOM_TOOL_TYPE.CAMERA);
 const showExitProps = computed(()=>(
     props.selectedInstance?.TYPE == Core.INSTANCE_TYPE.EXIT &&
@@ -87,6 +90,10 @@ const showPlaceHolder = computed(()=>
 
 <template>
     <div class="properties">
+        <AddBrushProperties
+            v-if="showAddBrushProps"
+            :selected-asset="assetBrowserStore.getSelectedAsset"
+            :selected-instance="selectedInstance"></AddBrushProperties>
         <SpriteProperties
             v-if="showSpriteProps"
             :selected-sprite="(selectedInstance as Core.Instance_Sprite)"
@@ -105,10 +112,11 @@ const showPlaceHolder = computed(()=>
             :selected-room="room"
             @inst-prop-set="emit('inst-prop-set', $event)"
             @inst-group-changed="emit('inst-group-changed', $event)"></LogicProperties>
-        <AddBrushProperties
-            v-if="showAddBrushProps"
-            :selected-asset="assetBrowserStore.getSelectedAsset"
-            :selected-instance="selectedInstance"></AddBrushProperties>
+        <EraserProperties
+            v-if="showEraserProps"
+            :selected-instance="selectedInstance"
+            :selected-room="room"
+            @inst-deleted="emit('inst-deleted', $event)"></EraserProperties>
         <CameraProperties
             v-if="showCameraProps"
             :selected-instance="selectedInstance"

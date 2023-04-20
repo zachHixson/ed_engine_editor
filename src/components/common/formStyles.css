@@ -19,6 +19,7 @@
 .control > button, .control > input[type=button]{
     background: var(--button-dark-norm);
     border: 2px solid var(--border);
+    border-radius: var(--corner-radius);
     color: var(--text-dark);
     font-weight: bold;
 }

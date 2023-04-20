@@ -307,12 +307,14 @@ export class Linked_List<T>{
         return newArray;
     }
 
-    forEach(func: (e: T)=>void): void {
+    forEach(func: (e: T, idx: number)=>void): void {
         let curNode = this._start;
+        let idx = 0;
 
         while (curNode){
-            func(curNode.val);
+            func(curNode.val, idx);
             curNode = curNode.next;
+            idx++;
         }
     }
 
