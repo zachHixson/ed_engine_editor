@@ -204,7 +204,8 @@ useAdd(actionArgs);
 function bindHotkeys(): void {
     const deleteInstanceMacro = () => {
         const id = editorSelection.value?.id;
-        deleteInstance({instId: id}, true);
+        deleteInstance({instId: id}, false);
+        deleteInstance({}, true);
     }
 
     hotkeyMap.bindKey(['s'], toolClicked, [ROOM_TOOL_TYPE.SELECT_MOVE]);
