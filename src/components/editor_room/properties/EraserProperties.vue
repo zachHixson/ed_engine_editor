@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import Checkbox from '@/components/common/Checkbox.vue';
 import { useRoomEditorStore } from '@/stores/RoomEditor';
+import { useI18n } from 'vue-i18n';
 import type Core from '@/core';
+
+const { t } = useI18n();
 
 const roomEditorStore = useRoomEditorStore();
 
@@ -30,19 +33,22 @@ function deleteAllType(): void {
 
 <template>
     <div class="propContents">
-        <div class="heading">Eraser</div>
+        <div class="heading">{{ t('room_editor.eraser_properties') }}</div>
         <div class="control">
-            <label for="copySelected">Erase top only:</label>
-            <Checkbox id="copySelected" class="custom-checkbox" :value="roomEditorStore.eraserTopOnly"
+            <label for="copySelected">{{ t('room_editor.erase_top_only') }}:</label>
+            <Checkbox id="copySelected" class="custom-checkbox" :value="roomEditorStore.eraserTopOnly"  v-tooltip="t('room_editor.tt_erase_top_only')"
                 @change="roomEditorStore.eraserTopOnly = $event"/>
         </div>
         <div class="control">
-            <label for="copySelected">Only Erase selected type:</label>
-            <Checkbox id="copySelected" class="custom-checkbox" :value="roomEditorStore.eraserSelectedType"
+            <label for="copySelected">{{ t('room_editor.erase_selected_type') }}:</label>
+            <Checkbox id="copySelected" class="custom-checkbox" :value="roomEditorStore.eraserSelectedType" v-tooltip="t('room_editor.tt_erase_selected_type')"
                 @change="roomEditorStore.eraserSelectedType = $event"/>
         </div>
         <div class="control">
-            <button style="width: 150px" @click="deleteAllType">Delete all of selected type</button>
+            <button
+                style="width: 150px"
+                @click="deleteAllType"
+                v-tooltip="t('room_editor.tt_delete_all_selected')">{{ t('room_editor.delete_all_selected') }}</button>
         </div>
     </div>
 </template>
