@@ -104,11 +104,11 @@ export default class Node_API implements Core.iEditorAPI {
     }
 
     addNode(node: Node, commit: boolean = true): void {
-        this.editor.actionAddNode({templateId: node.templateId, nodeRef: node}, commit);
+        this.editor.addNode({templateId: node.templateId, nodeRef: node}, commit);
     }
 
     deleteNodes(nodeList: Node[], commit: boolean = true): void {
-        this.editor.actionDeleteNodes({nodeRefList: nodeList}, commit);
+        this.editor.deleteNodes({nodeRefList: nodeList}, commit);
     }
 
     forEachNode(callback: (node: Node)=>void, isGlobal = true): void {
