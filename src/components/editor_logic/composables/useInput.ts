@@ -10,7 +10,6 @@ import type HotkeyMap from '@/components/common/HotkeyMap';
 import type { ActionMakeConnectionProps, ActionRemoveConnectionProps } from './useConnection';
 import type { ActionMoveNodesProps } from './useNode';
 import type Logic from '../node_components/Logic';
-import type { ActionMap } from './sharedTypes';
 
 const { Vector } = Core;
 

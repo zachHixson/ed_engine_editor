@@ -3,7 +3,6 @@ import type { iActionArguments } from '../RoomMain.vue';
 import { RoomMainEventBus } from '../RoomMain.vue';
 import { useRoomEditorStore } from '@/stores/RoomEditor';
 import Core from '@/core';
-import type { imEvent } from '../RoomEditWindow.vue';
 
 type RoomPropChangeProps = {newState: object, oldState?: object};
 

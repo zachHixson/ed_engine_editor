@@ -8,13 +8,14 @@ import Core from '@/core';
 type DeleteProps = {instId?: number, instRefList?: Core.Instance_Base[]};
 
 export function useDelete(args: iActionArguments){
+
+    const roomEditorStore = useRoomEditorStore();
     
     class Erase_Brush extends Tool_Base {
         private _down = false;
         private _last: Core.Vector | null = null;
 
         private deleteInstancesInCell(instances: Core.Instance_Base[]): void {
-            const roomEditorStore = useRoomEditorStore();
             const filteredInstances = roomEditorStore.eraserSelectedType && args.props.selectedAsset ?
                 instances.filter(i => i.sourceId == args.props.selectedAsset.id) : instances;
 

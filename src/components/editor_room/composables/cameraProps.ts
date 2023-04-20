@@ -22,7 +22,7 @@ export function useCameraProps(args: iActionArguments){
             }
         }
 
-        override mouseUp(mEvent: imEvent): void {
+        override mouseUp(): void {
             this._down = false;
         }
     }

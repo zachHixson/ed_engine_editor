@@ -1,7 +1,6 @@
 import Tool_Base from './Tool_Base';
 import { RoomMainEventBus } from '../RoomMain.vue';
 import type { iActionArguments } from '../RoomMain.vue';
-import { useGameDataStore } from '@/stores/GameData';
 import { useRoomEditorStore } from '@/stores/RoomEditor';
 import i18n from '@/i18n';
 import Core from '@/core';
@@ -14,6 +13,8 @@ type ExitAddProps = {exitRef?: Core.Instance_Exit, pos: Core.Vector};
 const t = i18n.global.t;
 
 export function useAdd(args: iActionArguments){
+
+    const roomEditorStore = useRoomEditorStore();
 
     class Add_Brush extends Tool_Base {
         private _mouseDown = false;
@@ -67,7 +68,6 @@ export function useAdd(args: iActionArguments){
         override mouseMove(mEvent: imEvent): void {
             if (!args.props.selectedAsset) return;
 
-            const roomEditorStore = useRoomEditorStore();
             const instancesInCell = roomEditorStore.addBrushOverlap ? [] : this._getInstancesAtPos(mEvent.worldCell);
             const newCell = !this._curCell?.equalTo(mEvent.worldCell) ?? true;
     
@@ -111,7 +111,6 @@ export function useAdd(args: iActionArguments){
     }
 
     function actionAdd({newInstance, instRefList = [], pos}: AddProps, makeCommit = true): void {
-        const gameDataStore = useGameDataStore();
         const cacheList = args.undoStore.cache.get('add_list');
     
         if (makeCommit){
@@ -122,19 +121,6 @@ export function useAdd(args: iActionArguments){
         }
     
         if (newInstance){
-            // const newInst = (()=>{
-            //     switch (args.props.selectedAsset.category_ID){
-            //         case Core.CATEGORY_ID.SPRITE:
-            //             return new Core.Instance_Sprite(args.props.selectedRoom.curInstId, pos, sprite);
-            //         case Core.CATEGORY_ID.OBJECT:
-            //             const object = gameDataStore.getAllObjects.find(o => o.id == sourceId)!;
-            //             return new Core.Instance_Object(args.props.selectedRoom.curInstId, pos!, object);
-            //         case Core.CATEGORY_ID.LOGIC:
-            //             const logicName = args.props.selectedAsset.name;
-            //             return new Core.Instance_Logic(args.props.selectedRoom.curInstId, pos, sourceId, logicName);
-            //     }
-            // })()!;
-    
             instRefList.push(newInstance);
     
             if (cacheList){
