@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import Logic from '@/components/editor_logic/Logic';
+import Logic from '@/components/editor_logic/node_components/Logic';
 import type Node_API from '@/components/editor_logic/Node_API';
 import i18n from '@/i18n';
 import Core from '@/core';

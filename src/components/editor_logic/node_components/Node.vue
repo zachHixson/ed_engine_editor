@@ -15,11 +15,9 @@ import { useI18n } from 'vue-i18n';
 import type Node from './Node';
 import type Node_Connection from './Node_Connection';
 import type { iHoverSocket, iValueChanged } from './Socket.vue';
-import decoratorMap from './decoratorMap';
-import categoryStyleMap from './categoryStyleMap';
+import decoratorMap from '../decoratorMap';
+import categoryStyleMap from '../categoryStyleMap';
 import Core from '@/core';
-
-import eventIcon from '@/assets/event.svg';
 
 const { t, te } = useI18n();
 const { Vector } = Core;

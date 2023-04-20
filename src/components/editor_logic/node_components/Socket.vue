@@ -16,7 +16,7 @@ export interface iValueChanged {
 </script>
 
 <script setup lang="ts">
-import Node_Connection from '@/components/editor_logic/Node_Connection';
+import Node_Connection from './Node_Connection';
 import Svg from '@/components/common/Svg.vue';
 import type Node from './Node';
 import Checkbox from '@/components/common/Checkbox.vue';
@@ -32,7 +32,7 @@ import socketStringIcon from '@/assets/socket_string.svg';
 import socketObjectIcon from '@/assets/socket_object.svg';
 import socketBoolIcon from '@/assets/socket_bool.svg';
 import type Logic from './Logic';
-import decoratorMap from './decoratorMap';
+import decoratorMap from '../decoratorMap';
 
 const { t, te } = useI18n();
 const assetBrowserStore = useAssetBrowserStore();

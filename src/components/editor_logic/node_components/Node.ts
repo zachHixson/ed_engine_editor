@@ -1,6 +1,6 @@
 import Core from '@/core';
 import type Logic from "./Logic";
-import type Node_API from "./Node_API";
+import type Node_API from "../Node_API";
 
 const { Vector } = Core;
 

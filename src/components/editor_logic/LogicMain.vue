@@ -6,10 +6,10 @@ export const LogicMainEventBus = new Core.Event_Bus();
 import UndoPanel from '@/components/common/UndoPanel.vue';
 import NavControlPanel from '@/components/common/NavControlPanel.vue';
 import DragList, { type iChangeEventProps } from '@/components/common/DragList.vue';
-import Node, { type iRelinkInfo } from '@/components/editor_logic/Node.vue';
-import Node_Connection from '@/components/editor_logic/Node_Connection';
-import Connection from '@/components/editor_logic/Connection.vue';
-import type { iHoverSocket } from './Socket.vue';
+import Node, { type iRelinkInfo } from '@/components/editor_logic/node_components/Node.vue';
+import Node_Connection from '@/components/editor_logic/node_components/Node_Connection';
+import Connection from '@/components/editor_logic/node_components/Connection.vue';
+import type { iHoverSocket } from './node_components/Socket.vue';
 import HotkeyMap from '@/components/common/HotkeyMap';
 import Undo_Store, { type iActionStore, useUndoHelpers } from '@/components/common/Undo_Store';
 import DialogNewVariable from './DialogNewVariable.vue';
@@ -19,8 +19,8 @@ import NodeLibrary from './NodeLibrary.vue';
 import { ref, reactive, computed, watch, nextTick, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
 import { useMainStore } from '@/stores/Main';
 import { useLogicEditorStore } from '@/stores/LogicEditor';
-import type Logic from './Logic';
-import type { default as Node_Obj } from './Node';
+import type Logic from './node_components/Logic';
+import type { default as Node_Obj } from './node_components/Node';
 import Core from '@/core';
 
 import arrowIcon from '@/assets/arrow_01.svg';
@@ -55,7 +55,6 @@ const graphListRef = ref<HTMLDivElement>();
 const graphRenameRefs: Map<number, HTMLInputElement> = new Map();
 const selectionBoxRef = ref<HTMLDivElement>();
 
-const selectedCategory = ref<string | null>(null);
 const actionMap = new Map<Core.LOGIC_ACTION, (data?: any | object, commit?: boolean)=>void>();
 const revertMap = new Map<Core.LOGIC_ACTION, (data?: any | object, commit?: boolean)=>void>();
 const undoStore = reactive(new Undo_Store<iActionStore>(32, false)) as Undo_Store<iActionStore>;
@@ -73,8 +72,6 @@ const selectionBox = reactive({
     dim: new Vector(),
 });
 const shiftDown = ref(false);
-const isSearching = ref(false);
-const searchQuery = ref('');
 const renamingGraph = ref<number | null>(null);
 const showNewVariableWindow = ref(false);
 const newVariableCallback = ref<(positive: boolean, varInfo: Core.iNewVarInfo)=>void>(()=>{});
@@ -103,7 +100,6 @@ const visibleConnections = computed(()=>props.selectedAsset.connections.filter(n
 const selectedNodes = computed(()=>props.selectedAsset.selectedNodes);
 const inputActive = computed(()=>mainStore.getInputActive);
 const graphs = computed(()=>props.selectedAsset.graphs);
-const graphKeys = computed(()=>props.selectedAsset.graphs.map(graph => graph.id));
 
 watch(()=>props.selectedAsset, ()=>{
     nextTick(()=>{

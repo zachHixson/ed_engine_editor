@@ -2,7 +2,7 @@ import i18n from '@/i18n';
 import Node from './Node';
 import Node_Connection from './Node_Connection';
 import Core from '@/core';
-import type Node_API from './Node_API';
+import type Node_API from '../Node_API';
 
 const { Vector } = Core;
 const { t } = i18n.global;

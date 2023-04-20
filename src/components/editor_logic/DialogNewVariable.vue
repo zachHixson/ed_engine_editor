@@ -4,7 +4,7 @@ import Svg from '@/components/common/Svg.vue';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useLogicEditorStore } from '@/stores/LogicEditor';
-import type Logic from './Logic';
+import type Logic from './node_components/Logic';
 import Core from '@/core';
 import errorIcon from '@/assets/error_decorator.svg';
 import warningIcon from '@/assets/warning_decorator.svg';

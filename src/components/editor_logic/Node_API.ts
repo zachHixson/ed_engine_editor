@@ -1,8 +1,8 @@
 import { useLogicEditorStore } from "@/stores/LogicEditor";
 import { useGameDataStore } from "@/stores/GameData";
-import type Node from "./Node";
+import type Node from "./node_components/Node";
 import type Core from '@/core';
-import type Node_Connection from "./Node_Connection";
+import type Node_Connection from "./node_components/Node_Connection";
 
 export type TextInfo = {textId: string, vars: {[keys: string]: any}};
 

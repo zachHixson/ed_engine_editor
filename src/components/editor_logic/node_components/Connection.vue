@@ -4,7 +4,6 @@ import type Node_Connection from './Node_Connection';
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import Core from '@/core';
 import type { iRelinkInfo } from './Node.vue';
-import type Socket from './Socket.vue';
 
 const enum HANDLE {
     LEFT = -1,
