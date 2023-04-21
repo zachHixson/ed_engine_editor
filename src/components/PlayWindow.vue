@@ -44,7 +44,7 @@ function start(): void {
 
     engine = new Engine(
         canvas.value!,
-        mainStore.getSaveData,
+        mainStore.getSaveData(),
         {restart}
     );
     engine.start();

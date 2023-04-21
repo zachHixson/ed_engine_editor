@@ -31,10 +31,10 @@ export const useGameDataStore = defineStore({
         getAllObjects: (state): Core.Game_Object[] => state.objects as Core.Game_Object[],
         getAllLogic: (state): Logic[] => state.logic as Logic[],
         getAllRooms: (state): Core.Room[] => state.rooms as Core.Room[],
-        getSpriteSaveData: (state): Core.iSpriteSaveData[] => state.sprites.map(s => s.toSaveData()),
-        getObjectSaveData: (state): Core.iGameObjectSaveData[] => state.objects.map(o => o.toSaveData()),
-        getRoomSaveData: (state): Core.iRoomSaveData[] => state.rooms.map(r => r.toSaveData()),
-        getLogicSaveData: (state): any => state.logic.map(r => r.toSaveData()),
+        getSpriteSaveData: (state) => (): Core.iSpriteSaveData[] => state.sprites.map(s => s.toSaveData()),
+        getObjectSaveData: (state) => (): Core.iGameObjectSaveData[] => state.objects.map(o => o.toSaveData()),
+        getRoomSaveData: (state) => (): Core.iRoomSaveData[] => state.rooms.map(r => r.toSaveData()),
+        getLogicSaveData: (state) => (): any => state.logic.map(r => r.toSaveData()),
     },
 
     actions: {

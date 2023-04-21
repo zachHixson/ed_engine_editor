@@ -60,14 +60,14 @@ function openProject(data: any): void {
 }
 
 function saveProject(): void {
-    saveAs(mainStore.getSaveData, `${mainStore.getProjectName}.edproj`);
+    saveAs(mainStore.getSaveData(), `${mainStore.getProjectName}.edproj`);
 }
 
 function packageGame(): void {
     const licenseText = document.getElementById('license')?.innerHTML;
     const engineLicense = engineLicensePreamble + licenseText;
     const projectName = mainStore.getProjectName;
-    const gameData = mainStore.getSaveData;
+    const gameData = mainStore.getSaveData();
     const compiled = HTMLTemplate
         .replace('[title]', projectName)
         .replace('[engineLicense]', engineLicense)
