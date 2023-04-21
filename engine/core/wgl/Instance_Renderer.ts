@@ -2,6 +2,7 @@ import { Instance_Base, WGL } from "../core";
 import { Mat3 } from "../Mat3";
 import { Atlas } from './Atlas';
 import { Color } from "../Draw";
+import { easeOutBack } from "../Util";
 
 interface iInstanceData {
     instance: Instance_Base,
@@ -18,6 +19,7 @@ interface iAtlasData {
     planeUVBuffer: WGL.Attribute,
     positionBuffer: WGL.Attribute,
     spriteOffsetBuffer: WGL.Attribute,
+    backAnimBuffer: WGL.Attribute,
     bufferLocations: Array<number>,
     renderLength: number,
 }
@@ -38,6 +40,7 @@ export class Instance_Renderer {
         attribute vec3 a_position;
         attribute vec2 a_spriteOffset;
         attribute vec2 a_uv;
+        attribute float a_backAnim;
 
         varying vec2 v_uv;
         varying vec2 v_spriteOffset;
@@ -46,7 +49,8 @@ export class Instance_Renderer {
             v_uv = a_uv;
             v_spriteOffset = a_spriteOffset;
 
-            vec2 vert = (a_planeVerts * u_instanceScale) + 8.0;
+            float backAnim = a_backAnim / 225.0;
+            vec2 vert = (a_planeVerts * backAnim * u_instanceScale) + 8.0;
             vec2 worldPos = vert + a_position.xy;
             vec3 clipPos = vec3(worldPos, 1.0) * u_viewMatrix;
             gl_Position = vec4(clipPos.xy, a_position.z, 1.0);
@@ -154,15 +158,6 @@ export class Instance_Renderer {
         this._instanceScaleUniform.set(1);
     }
 
-    updateViewMatrix(viewMat: Mat3): void {
-        this._gl.useProgram(this._program);
-        this._viewMatrixUniform.set(false, viewMat.data);
-    }
-
-    resize(): void {
-        this._gl.viewport(0, 0, this._gl.canvas.width, this._gl.canvas.height);
-    }
-
     private _createAtlasData(bufferSize = Instance_Renderer.DEFAULT_BUFFER_SIZE){
         const buffersize = Math.round(bufferSize);
         const atlasData = {
@@ -172,6 +167,7 @@ export class Instance_Renderer {
             planeUVBuffer: new WGL.Attribute(this._gl, this._program, 'a_uv'),
             positionBuffer: new WGL.Attribute(this._gl, this._program, 'a_position'),
             spriteOffsetBuffer: new WGL.Attribute(this._gl, this._program, 'a_spriteOffset'),
+            backAnimBuffer: new WGL.Attribute(this._gl, this._program, 'a_backAnim'),
             bufferLocations: new Array(buffersize),
             renderLength: 0,
         };
@@ -181,8 +177,10 @@ export class Instance_Renderer {
         atlasData.planeUVBuffer.set(new Float32Array(Instance_Renderer._planeUVs), 2, this._gl.FLOAT);
         atlasData.positionBuffer.set(new Float32Array(buffersize * 3), 3, this._gl.FLOAT);
         atlasData.spriteOffsetBuffer.set(new Uint8Array(buffersize * 2), 2, this._gl.UNSIGNED_BYTE);
+        atlasData.backAnimBuffer.set(new Uint8Array(bufferSize).fill(255), 1, this._gl.UNSIGNED_BYTE);
         atlasData.positionBuffer.setDivisor(1);
         atlasData.spriteOffsetBuffer.setDivisor(1);
+        atlasData.backAnimBuffer.setDivisor(1);
 
         this._atlasPool.push(atlasData);
     }
@@ -193,6 +191,7 @@ export class Instance_Renderer {
 
         atlasData.positionBuffer.setSubData(new Float32Array([instance.pos.x, instance.pos.y, -instance.zDepth]), bufferLocation * 4 * 3);
         atlasData.spriteOffsetBuffer.setSubData(new Uint8Array([spriteoffset.x, spriteoffset.y]), bufferLocation * 2);
+        atlasData.backAnimBuffer.setSubData(new Uint8ClampedArray([easeOutBack(instance.backAnim) * 225]), bufferLocation);
         atlasData.bufferLocations[bufferLocation] = instance.id;
     }
 
@@ -204,6 +203,7 @@ export class Instance_Renderer {
         this._gl.bindVertexArray(atlasData.vao);
         atlasData.positionBuffer.set(new Float32Array(newBufferSize * 3), 3, this._gl.FLOAT);
         atlasData.spriteOffsetBuffer.set(new Uint8Array(newBufferSize * 2), 2, this._gl.UNSIGNED_BYTE);
+        atlasData.backAnimBuffer.set(new Uint8Array(newBufferSize), 1, this._gl.UNSIGNED_BYTE);
         atlasData.positionBuffer.setDivisor(1);
         atlasData.spriteOffsetBuffer.setDivisor(1);
         atlasData.bufferLocations = new Array(newBufferSize);
@@ -221,6 +221,15 @@ export class Instance_Renderer {
 
         this._depthOffsets.set(userDepth, nextOffset);
         return nextOffset;
+    }
+
+    updateViewMatrix(viewMat: Mat3): void {
+        this._gl.useProgram(this._program);
+        this._viewMatrixUniform.set(false, viewMat.data);
+    }
+
+    resize(): void {
+        this._gl.viewport(0, 0, this._gl.canvas.width, this._gl.canvas.height);
     }
 
     setInstanceScale(scale: number): void {
@@ -374,6 +383,7 @@ export class Instance_Renderer {
             atlasData.planeUVBuffer.enable();
             atlasData.positionBuffer.enable();
             atlasData.spriteOffsetBuffer.enable();
+            atlasData.backAnimBuffer.enable();
 
             this._gl.drawArraysInstanced(
                 this._gl.TRIANGLES,
@@ -386,6 +396,7 @@ export class Instance_Renderer {
             atlasData.planeUVBuffer.disable();
             atlasData.positionBuffer.disable();
             atlasData.spriteOffsetBuffer.disable();
+            atlasData.backAnimBuffer.disable();
 
             this._atlasTextureUniform.deactivate();
         }

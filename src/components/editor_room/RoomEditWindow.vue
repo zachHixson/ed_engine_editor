@@ -183,7 +183,7 @@ function emitMouseEvent(event: MouseEvent, type: Core.MOUSE_EVENT): void {
 
 function instanceAdded(instance: Core.Instance_Base): void {
     contentsBounds.value = props.selectedRoom.getContentsBounds();
-    renderer.addInstance(instance);
+    renderer.addInstance(instance, true);
 }
 
 function instanceRemoved(instance: Core.Instance_Base): void {

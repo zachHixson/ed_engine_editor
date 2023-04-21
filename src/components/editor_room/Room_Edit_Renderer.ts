@@ -27,6 +27,7 @@ export default class Room_Edit_Renderer {
     private _viewMatrixInv = new Mat3();
     private _viewMatrixNeedsUpdate = true;
     private _mouseCell = new Vector(0, 0);
+    private _backAnimQueue = new Map<number, Core.Instance_Base>();
 
     constructor(canvas: HTMLCanvasElement, navState: Core.NavState){
         this._canvas = canvas;
@@ -155,16 +156,22 @@ export default class Room_Edit_Renderer {
         this._iconRenderer.clear();
 
         this._roomRef.instances.forEach(instance => {
-            this.addInstance(instance);
+            this.addInstance(instance, false);
         });
 
         this.queueRender();
     }
 
-    addInstance(instance: Core.Instance_Base): void {
+    addInstance(instance: Core.Instance_Base, backAnim: boolean): void {
         const hasEditorFrame = instance.hasEditorFrame
         const renderer = this._getRenderer(hasEditorFrame);
         const frame = hasEditorFrame ? instance.startFrame : 0;
+
+        if (backAnim){
+            instance.backAnim = 0;
+            this._backAnimQueue.set(instance.id, instance);
+        }
+        
         renderer.addInstance(instance, frame);
         this.queueRender();
     }
@@ -215,11 +222,27 @@ export default class Room_Edit_Renderer {
         this.queueRender();
     }
 
+    private _updateBackAnimQueue(): void {
+        this._backAnimQueue.forEach(i => {
+            i.backAnim = Math.min(i.backAnim + 0.1, 1);
+            this.updateInstance(i);
+            this.queueRender();
+
+            if (i.backAnim >= 1){
+                this._backAnimQueue.delete(i.id);
+            }
+        });
+    }
+
     queueRender(): void {
         if (this._nextDrawCall == null){
             this._nextDrawCall = requestAnimationFrame(()=>{
                 this.render();
                 this._nextDrawCall = null;
+
+                if (this._backAnimQueue.size > 0){
+                    this._updateBackAnimQueue();
+                }
             });
         }
     }
