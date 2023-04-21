@@ -224,7 +224,7 @@ export default class Room_Edit_Renderer {
 
     private _updateBackAnimQueue(): void {
         this._backAnimQueue.forEach(i => {
-            i.backAnim = Math.min(i.backAnim + 0.1, 1);
+            i.backAnim = Math.min(i.backAnim + 0.2, 1);
             this.updateInstance(i);
             this.queueRender();
 

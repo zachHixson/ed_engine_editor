@@ -111,9 +111,9 @@ export function useAdd(args: iActionArguments){
     }
 
     function actionAdd({newInstance, instRefList = [], pos}: AddProps, makeCommit = true): void {
-        const cacheList = args.undoStore.cache.get('add_list');
+        const cacheList = args.undoStore.cache.get('add_list') as Core.Instance_Base[];
     
-        if (makeCommit){
+        if (makeCommit && cacheList){
             const data = {instRefList: cacheList};
             args.undoStore.commit({action: Core.ROOM_ACTION.ADD, data});
             args.undoStore.cache.delete('add_list');
