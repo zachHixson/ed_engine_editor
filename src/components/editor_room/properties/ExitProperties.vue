@@ -24,7 +24,7 @@ const destinationRoomExits = computed(()=>{
     const allRooms = gameDataStore.getAllRooms;
     const destRoom = allRooms.find(r => r.id == props.selectedExit.destinationRoom);
 
-    return destRoom?.instances.toArray().filter(instance => instance.TYPE == Core.INSTANCE_TYPE.EXIT);
+    return destRoom?.instances.toArray().filter(instance => instance.TYPE == Core.INSTANCE_TYPE.EXIT && instance.id != props.selectedExit.id);
 });
 
 function setExitProp(propObj: any): void {
@@ -74,7 +74,8 @@ function setExitName(newName: string): void {
         <div v-show="!selectedExit.isEnding && selectedExit.destinationRoom !== null" class="control">
             <label for="exitDestExit">{{$t('room_editor.dest_exit')}}:</label>
             <select id="exitDestExit" :value="selectedExit.destinationExit" v-tooltip="$t('room_editor.tt_exit_dest_exit')"
-                @change="setExitProp({destinationExit: parseInt(($event.target as any).value)})">
+                @change="setExitProp({destinationExit: nanToNull(parseInt(($event.target as any).value))})">
+                <option value="">{{$t('generic.no_option')}}</option>
                 <option
                     v-for="exit in destinationRoomExits"
                     :key="exit.id"

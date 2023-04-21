@@ -1,8 +1,7 @@
 import { Asset_Base, iAssetSaveData } from './Asset_Base';
 import {CATEGORY_ID} from '../Enums';
 import { Sprite } from './Sprite';
-import { iAnyObj } from '../interfaces';
-import { iEditorLogic, iEngineLogic } from '../LogicInterfaces';
+import { iEngineLogic } from '../LogicInterfaces';
 
 export interface iGameObjectSaveData extends iAssetSaveData {
     _startFrame: number

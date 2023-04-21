@@ -68,15 +68,20 @@ export class Instance_Exit extends Instance_Base {
 
         engine.loadRoom(this.destinationRoom!);
 
-        Instance_Exit.destExit = engine.room.instances.find(e => e.id == this.destinationExit)! as Instance_Exit;
+        if (exitBehavior == EXIT_TYPES.TO_DESTINATION && this.destinationExit){
+            Instance_Exit.destExit = engine.room.instances.find(e => e.id == this.destinationExit)! as Instance_Exit;
 
-        switch(exitBehavior) {
-            case EXIT_TYPES.TO_DESTINATION:
-                objInstance.pos.copy(Instance_Exit.destExit.pos);
-                objInstance.lastPos.copy(objInstance.pos);
-                objInstance.setPrevExit(Instance_Exit.destExit, direction);
-            case EXIT_TYPES.KEEP_POSITION:
-                engine.addInstance(objInstance);
+            objInstance.pos.copy(Instance_Exit.destExit.pos);
+            objInstance.lastPos.copy(objInstance.pos);
+            objInstance.setPrevExit(Instance_Exit.destExit, direction);
+        }
+
+        if (this.destinationExit == null){
+            Instance_Exit.resetState();
+        }
+
+        if (exitBehavior != EXIT_TYPES.TRANSITION_ONLY){
+            engine.addInstance(objInstance);
         }
 
         if (Instance_Exit.exitCamera){
