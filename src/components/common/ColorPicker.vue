@@ -226,6 +226,7 @@ function valueDown(event: MouseEvent): void {
     document.addEventListener('mousemove', valueMove);
     document.addEventListener('mouseup', mouseUp);
     emit('change-start');
+    emit('change', selectedColor);
 }
 
 function wheelMove(event: WheelEvent): void {

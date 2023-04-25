@@ -49,7 +49,7 @@ export function useAdd(args: iActionArguments){
             newInstance.name = (()=>{
                 const roomInstances = args.props.selectedRoom.instances;
                 const newName = newInstance.name + '_' + newInstance.id;;
-                return checkNameCollisions(newInstance.id, newName, roomInstances, t('room_editor.duplicate_name_suffix'));;
+                return checkNameCollisions(newInstance.id, newName, roomInstances, t('room_editor.duplicate_name_suffix'));
             })();
             newInstance.pos.copy(pos);
 
