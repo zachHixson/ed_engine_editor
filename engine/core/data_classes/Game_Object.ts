@@ -4,20 +4,20 @@ import { Sprite } from './Sprite';
 import { iEngineLogic } from '../LogicInterfaces';
 
 export interface iGameObjectSaveData extends iAssetSaveData {
-    _startFrame: number
-    spriteId: number | '';
+    strtFrm: number
+    sprId: number | '';
     fps: number;
-    animLoop: 0 | 1;
-    animPlaying: 0 | 1;
+    loop: 0 | 1;
+    play: 0 | 1;
     zDepth: number;
-    isSolid: 0 | 1;
-    applyGravity: 0 | 1;
-    triggerExits: 0 | 1;
-    exitBehavior: EXIT_TYPES;
-    keepCameraSettings: 0 | 1;
-    customLogic: 0 | 1;
-    logicPresetId: number | '';
-    logicScriptId: number | '';
+    solid: 0 | 1;
+    grav: 0 | 1;
+    trigEx: 0 | 1;
+    exBeh: EXIT_TYPES;
+    kpCam: 0 | 1;
+    custLog: 0 | 1;
+    lPresId: number | '';
+    lScrId: number | '';
     groups: string[];
 }
 
@@ -72,20 +72,20 @@ export class Game_Object extends Asset_Base {
     toSaveData(): iGameObjectSaveData {
         return {
             ...this.getBaseAssetData(),
-            _startFrame: this._startFrame,
-            spriteId: this.sprite?.id ?? '',
+            strtFrm: this._startFrame,
+            sprId: this.sprite?.id ?? '',
             fps: this.fps,
-            animLoop: +this.animLoop as (0 | 1),
-            animPlaying: +this.animPlaying as (0 | 1),
+            loop: +this.animLoop as (0 | 1),
+            play: +this.animPlaying as (0 | 1),
             zDepth: this.zDepth,
-            isSolid: +this.isSolid as (0 | 1),
-            applyGravity: +this.applyGravity as (0 | 1),
-            triggerExits: +this.triggerExits as (0 | 1),
-            exitBehavior: this.exitBehavior,
-            keepCameraSettings: +this.keepCameraSettings as (0 | 1),
-            customLogic: +this.customLogic as (0 | 1),
-            logicPresetId: this.logicPresetId ?? '',
-            logicScriptId: this.logicScriptId ?? '',
+            solid: +this.isSolid as (0 | 1),
+            grav: +this.applyGravity as (0 | 1),
+            trigEx: +this.triggerExits as (0 | 1),
+            exBeh: this.exitBehavior,
+            kpCam: +this.keepCameraSettings as (0 | 1),
+            custLog: +this.customLogic as (0 | 1),
+            lPresId: this.logicPresetId ?? '',
+            lScrId: this.logicScriptId ?? '',
             groups: this.groups,
         };
     }
@@ -96,20 +96,20 @@ export class Game_Object extends Asset_Base {
 
     private _loadSaveData(data: iGameObjectSaveData, spriteMap: Map<number, Sprite>, logicMap?: Map<number, iEngineLogic>): Game_Object {
         this.loadBaseAssetData(data);
-        this._startFrame = data._startFrame;
-        this.sprite = data.spriteId ? spriteMap.get(data.spriteId)! : null;
+        this._startFrame = data.strtFrm;
+        this.sprite = data.sprId ? spriteMap.get(data.sprId)! : null;
         this.fps = data.fps;
-        this.animLoop = !!data.animLoop;
-        this.animPlaying = !!data.animPlaying;
+        this.animLoop = !!data.loop;
+        this.animPlaying = !!data.play;
         this.zDepth = data.zDepth;
-        this.isSolid = !!data.isSolid;
-        this.applyGravity = !!data.applyGravity;
-        this.triggerExits = !!data.triggerExits;
-        this.exitBehavior = data.exitBehavior;
-        this.keepCameraSettings = !!data.keepCameraSettings;
-        this.customLogic = !!data.customLogic;
-        this.logicPresetId = data.logicPresetId == '' ? null : data.logicPresetId;
-        this.logicScriptId = data.logicScriptId == '' ? null : data.logicScriptId;
+        this.isSolid = !!data.solid;
+        this.applyGravity = !!data.grav;
+        this.triggerExits = !!data.trigEx;
+        this.exitBehavior = data.exBeh;
+        this.keepCameraSettings = !!data.kpCam;
+        this.customLogic = !!data.custLog;
+        this.logicPresetId = data.lPresId == '' ? null : data.lPresId;
+        this.logicScriptId = data.lScrId == '' ? null : data.lScrId;
         this.logicScript = logicMap?.get(this.logicScriptId!) ?? null;
         this.groups = data.groups;
         return this;

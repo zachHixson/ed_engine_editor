@@ -6,13 +6,12 @@ import { Instance_Base } from "./Instance_Base";
 export interface iCameraSaveData {
     _size: number,
     pos: { x: number, y: number },
-    velocity: { x: number, y: number },
-    moveType: MOVE_TYPES,
-    scrollDir: SCROLL_DIRS;
-    scrollSpeed: number;
-    followObjId: number | null;
-    followType: FOLLOW_TYPES;
-    tiledOrigin: Vector | null;
+    vel: { x: number, y: number },
+    move: MOVE_TYPES,
+    sDir: SCROLL_DIRS;
+    sSpeed: number;
+    fObjId: number | null;
+    fType: FOLLOW_TYPES;
 }
 
 enum MOVE_TYPES {
@@ -66,14 +65,13 @@ export class Camera{
         return {
             _size: this._size,
             pos: this.pos.toObject(),
-            velocity: this.velocity.toObject(),
-            moveType: this.moveType,
-            scrollDir: this.scrollDir,
-            scrollSpeed: this.scrollSpeed,
-            followObjId: this.followObjId,
-            followType: this.followType,
-            tiledOrigin: this.tiledOrigin,
-        };
+            vel: this.velocity.toObject(),
+            move: this.moveType,
+            sDir: this.scrollDir,
+            sSpeed: this.scrollSpeed,
+            fObjId: this.followObjId,
+            fType: this.followType,
+        } satisfies iCameraSaveData;
     }
 
     static fromSaveData(data: iCameraSaveData): Camera {
@@ -82,13 +80,12 @@ export class Camera{
 
     private _loadSaveData(data: iCameraSaveData): Camera {
         this.pos = Vector.fromObject(data.pos);
-        this.velocity = Vector.fromObject(data.velocity);
-        this.moveType = data.moveType;
-        this.scrollDir = data.scrollDir;
-        this.scrollSpeed = data.scrollSpeed;
-        this.followObjId = data.followObjId;
-        this.followType = data.followType;
-        this.tiledOrigin = data.tiledOrigin;
+        this.velocity = Vector.fromObject(data.vel);
+        this.moveType = data.move;
+        this.scrollDir = data.sDir;
+        this.scrollSpeed = data.sSpeed;
+        this.followObjId = data.fObjId;
+        this.followType = data.fType;
 
         return this;
     }

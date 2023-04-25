@@ -17,13 +17,13 @@ import { iEngineLogic } from '../LogicInterfaces';
 import { iEditorLogic } from '../LogicInterfaces';
 
 export interface iRoomSaveData extends iAssetSaveData {
-    cameraProps: iCameraSaveData;
-    instancesSerial: iInstanceBaseSaveData[],
-    bgColor: string,
-    persist: 0 | 1,
-    useGravity: 0 | 1,
-    gravity: number,
-    navState: iNavSaveData,
+    cam: iCameraSaveData;
+    inst: iInstanceBaseSaveData[],
+    bg: string,
+    pers: 0 | 1,
+    uGrav: 0 | 1,
+    grav: number,
+    nav: iNavSaveData,
 }
 
 export class Room extends Asset_Base {
@@ -56,13 +56,13 @@ export class Room extends Asset_Base {
 
         return {
             ...this.getBaseAssetData(),
-            cameraProps: this.camera.toSaveData(),
-            instancesSerial: this.instances.toArray().map(i => i.toSaveData()),
-            bgColor: this.bgColor.toHex().replace('#', ''),
-            persist: +this.persist as (0 | 1),
-            useGravity: +this.useGravity as (0 | 1),
-            gravity: this.gravity,
-            navState: getNavSaveData(this.navState),
+            cam: this.camera.toSaveData(),
+            inst: this.instances.toArray().map(i => i.toSaveData()),
+            bg: this.bgColor.toHex().replace('#', ''),
+            pers: +this.persist as (0 | 1),
+            uGrav: +this.useGravity as (0 | 1),
+            grav: this.gravity,
+            nav: getNavSaveData(this.navState),
         } satisfies iRoomSaveData;
     }
 
@@ -71,15 +71,15 @@ export class Room extends Asset_Base {
     }
 
     private _loadSaveData(data: iRoomSaveData, assetMap: Map<CATEGORY_ID, Map<number, Asset_Base | iEngineLogic>>){
-        const instancesSerial = data.instancesSerial;
+        const instancesSerial = data.inst;
 
         this.loadBaseAssetData(data);
-        this.camera = Camera.fromSaveData(data.cameraProps);
-        this.navState = parseNavSaveData(data.navState);
-        this.bgColor = new Color().fromHex(data.bgColor);
-        this.persist = !!data.persist;
-        this.useGravity = !!data.useGravity;
-        this.gravity = data.gravity;
+        this.camera = Camera.fromSaveData(data.cam);
+        this.navState = parseNavSaveData(data.nav);
+        this.bgColor = new Color().fromHex(data.bg);
+        this.persist = !!data.pers;
+        this.useGravity = !!data.uGrav;
+        this.gravity = data.grav;
 
         for (let i = 0; i < instancesSerial.length; i++){
             const curInstance = instancesSerial[i];

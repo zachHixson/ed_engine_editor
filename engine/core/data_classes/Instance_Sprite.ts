@@ -4,7 +4,7 @@ import { Instance_Base, iInstanceBaseSaveData } from "./Instance_Base";
 import { Sprite } from "./Sprite";
 
 export interface iInstanceSpriteSaveData extends iInstanceBaseSaveData {
-    spriteId: number;
+    sId: number;
 }
 
 export class Instance_Sprite extends Instance_Base {
@@ -59,7 +59,7 @@ export class Instance_Sprite extends Instance_Base {
     override toSaveData(): iInstanceSpriteSaveData {
         return {
             ...this.getBaseSaveData(),
-            spriteId: this.sprite.id,
+            sId: this.sprite.id,
         };
     }
 
@@ -68,7 +68,7 @@ export class Instance_Sprite extends Instance_Base {
     }
 
     static fromSaveData(data: iInstanceSpriteSaveData, spriteMap: Map<number, Sprite>): Instance_Sprite {
-        const newSprite = new Instance_Sprite(data.id, Vector.fromObject(data.pos), spriteMap.get(data.spriteId)!);
+        const newSprite = new Instance_Sprite(data.id, Vector.fromObject(data.pos), spriteMap.get(data.sId)!);
         newSprite.loadBaseSaveData(data);
         return newSprite;
     }

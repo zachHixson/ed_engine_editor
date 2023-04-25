@@ -7,8 +7,8 @@ import { iInstanceBaseSaveData, Instance_Base } from './Instance_Base';
 
 export interface iObjectInstanceSaveData extends iInstanceBaseSaveData {
     objId: number;
-    zDepthOverride: number | '';
-    collisionOverride: COLLISION_OVERRIDE;
+    zOvr: number | '';
+    collOvr: COLLISION_OVERRIDE;
 }
 
 enum COLLISION_OVERRIDE {
@@ -138,8 +138,8 @@ export class Instance_Object extends Instance_Base{
         return {
             ...baseData,
             objId: this._objRef.id,
-            zDepthOverride: this.zDepthOverride ?? '',
-            collisionOverride: this.collisionOverride,
+            zOvr: this.zDepthOverride ?? '',
+            collOvr: this.collisionOverride,
         };
     }
 
@@ -156,8 +156,8 @@ export class Instance_Object extends Instance_Base{
 
     private _loadSaveData(data: iObjectInstanceSaveData): void {
         this.loadBaseSaveData(data);
-        this.zDepthOverride = data.zDepthOverride == '' ? null : data.zDepthOverride;
-        this.collisionOverride = data.collisionOverride;
+        this.zDepthOverride = data.zOvr == '' ? null : data.zOvr;
+        this.collisionOverride = data.collOvr;
     }
 
     executeNodeEvent(eventName: string, data?: any): void {

@@ -5,7 +5,7 @@ import { iEngineLogic } from "../LogicInterfaces";
 import { INSTANCE_TYPE } from "../Enums";
 
 export interface iInstanceLogicSaveData extends iObjectInstanceSaveData {
-    logicId: number;
+    lId: number;
 }
 
 export class Instance_Logic extends Instance_Object {
@@ -58,7 +58,7 @@ export class Instance_Logic extends Instance_Object {
     override toSaveData(): iInstanceLogicSaveData {
         return {
             ...super.toSaveData(),
-            logicId: this.logicId
+            lId: this.logicId
         }
     }
 
@@ -67,13 +67,13 @@ export class Instance_Logic extends Instance_Object {
     }
 
     static fromSaveData(data: iInstanceLogicSaveData, objMap: Map<number, Game_Object>): Instance_Logic {
-        const instance = new Instance_Logic(data.id, Vector.fromObject(data.pos), data.logicId, data.name);
+        const instance = new Instance_Logic(data.id, Vector.fromObject(data.pos), data.lId, data.name);
 
         if (data.objId >= 0){
             instance._objRef = objMap.get(data.objId)!;
         }
 
-        instance.logicId = data.logicId;
+        instance.logicId = data.lId;
 
         return instance;
     }

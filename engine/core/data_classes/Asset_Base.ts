@@ -4,7 +4,7 @@ import {ID_Generator} from '../ID_Generator';
 export interface iAssetSaveData {
     id: number;
     name: string;
-    sortOrder: number;
+    sort: number;
 }
 
 export abstract class Asset_Base {
@@ -18,14 +18,14 @@ export abstract class Asset_Base {
     loadBaseAssetData(data: iAssetSaveData): void {
         this.id = data.id;
         this.name = data.name;
-        this.sortOrder = data.sortOrder;
+        this.sortOrder = data.sort;
     }
     
     getBaseAssetData(): iAssetSaveData {
         return {
             id: this.id,
             name: this.name,
-            sortOrder: this.sortOrder,
+            sort: this.sortOrder,
         }
     }
 

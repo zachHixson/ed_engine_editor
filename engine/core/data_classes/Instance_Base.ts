@@ -11,10 +11,10 @@ export interface iInstanceBaseSaveData {
     type: string;
     pos: { x: number, y: number };
     groups: string[];
-    startFrame: number | '';
+    strtFrm: number | '';
     fps: number | '';
-    animLoop: 0 | 1 | 2;
-    animPlaying: 0 | 1 | 2;
+    loop: 0 | 1 | 2;
+    play: 0 | 1 | 2;
 }
 
 export interface iCollisionEvent {
@@ -125,10 +125,10 @@ export abstract class Instance_Base{
         this.name = data.name;
         this.pos = Vector.fromObject(data.pos);
         this.groups = data.groups;
-        this.startFrameOverride = data.startFrame === '' ? null : data.startFrame;
+        this.startFrameOverride = data.strtFrm === '' ? null : data.strtFrm;
         this.fpsOverride = data.fps === '' ? null : data.fps;
-        this.animLoopOverride = data.animLoop === 0 ? null : !!(data.animLoop - 1);
-        this.animPlayingOverride = data.animPlaying === 0 ? null : !!(data.animPlaying - 1);
+        this.animLoopOverride = data.loop === 0 ? null : !!(data.loop - 1);
+        this.animPlayingOverride = data.play === 0 ? null : !!(data.play - 1);
 
         this.animFrame = this.startFrame;
     }
@@ -140,10 +140,10 @@ export abstract class Instance_Base{
             type: this.TYPE,
             pos: this.pos.toObject(),
             groups: this.groups,
-            startFrame: this.startFrameOverride ?? '',
+            strtFrm: this.startFrameOverride ?? '',
             fps: this.fpsOverride ?? '',
-            animLoop: this.animLoopOverride === null ? 0 : +this.animLoopOverride + 1 as (1 | 2),
-            animPlaying: this.animPlayingOverride === null ? 0 : +this.animPlayingOverride + 1 as (1 | 2),
+            loop: this.animLoopOverride === null ? 0 : +this.animLoopOverride + 1 as (1 | 2),
+            play: this.animPlayingOverride === null ? 0 : +this.animPlayingOverride + 1 as (1 | 2),
         } satisfies iInstanceBaseSaveData;
     }
 
