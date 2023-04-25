@@ -4,7 +4,9 @@ import type { imEvent } from '../RoomEditWindow.vue';
 import { RoomMainEventBus } from '../RoomMain.vue';
 import Core from '@/core';
 
-type CameraChangeProps = {newState?: object, oldState?: object};
+import { toRaw } from 'vue';
+
+type CameraChangeProps = {newState?: Partial<Core.Camera>, oldState?: Partial<Core.Camera>};
 
 export function useCameraProps(args: iActionArguments){
     
@@ -18,25 +20,32 @@ export function useCameraProps(args: iActionArguments){
 
         override mouseMove(mEvent: imEvent): void {
             if (this._down){
-                actionCameraChange({newState: {pos: mEvent.worldCell.addScalar(8)}});
+                actionCameraChange({newState: {pos: mEvent.worldCell.addScalar(8)}}, false);
             }
         }
 
         override mouseUp(): void {
             this._down = false;
+            actionCameraChange({}, true);
         }
     }
 
     function actionCameraChange({newState}: CameraChangeProps, makeCommit = true): void {
         const oldState = Object.assign({}, args.props.selectedRoom.camera);
-    
+
+        if (newState?.pos && !args.undoStore.cache.has('camera-start-pos')){
+            args.undoStore.cache.set('camera-start-pos', {pos: args.props.selectedRoom.camera.pos});
+        }
+
+        newState ??= Object.assign({}, args.props.selectedRoom.camera);
         Object.assign(args.props.selectedRoom.camera, newState);
-        
         RoomMainEventBus.emit('camera-changed');
     
         if (makeCommit){
-            const data = {newState, oldState} satisfies CameraChangeProps;
+            const cacheGet = (args.undoStore.cache.get('camera-start-pos') ?? oldState) as Partial<Core.Camera>;
+            const data = {newState, oldState: cacheGet} satisfies CameraChangeProps;
             args.undoStore.commit({action: Core.ROOM_ACTION.CAMERA_CHANGE, data});
+            args.undoStore.cache.delete('camera-start-pos');
         }
     }
 
