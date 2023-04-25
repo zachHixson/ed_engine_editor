@@ -216,7 +216,7 @@ function scrollHandler(event: Event): void {
                         <DragList @order-changed="orderChanged">
                             <Asset
                                 v-for="item in selectedList"
-                                :key="item.id"
+                                :key="item.id + Math.random()"
                                 :asset="item"
                                 :defaultIcon="selected_category.icon"
                                 :assetBrowserEventBus="AssetBrowserEventBus"

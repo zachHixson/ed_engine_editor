@@ -36,7 +36,7 @@ onMounted(()=>{
     updateEditorAsset();
 });
 
-function updateAssetPreviews(id: number): void {
+function updateAssetPreviews(id?: number): void {
     AppEventBus.emit('update-asset', id);
 }
 

@@ -113,7 +113,7 @@ function onEnterPress(event: KeyboardEvent): void {
 }
 
 function drawThumbnail(id?: number): void {
-    const needsDraw = !drawn || id == props.asset.id;
+    const needsDraw = !drawn || id == props.asset.id || id == undefined;
 
     thumbnail.value = props.asset.thumbnail;
 
