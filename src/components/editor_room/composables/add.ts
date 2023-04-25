@@ -93,6 +93,7 @@ export function useAdd(args: iActionArguments){
         override mouseUp(): void {
             actionAdd({}, true);
             this._mouseDown = false;
+            this._curCell = null;
         }
     }
 
