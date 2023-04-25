@@ -141,13 +141,12 @@ function mouseWheel(event: MouseEvent): void {
 
 function mouseEnter(event: MouseEvent): void {
     RoomEditWindowEventBus.emit('mouse-enter', event);
-    //renderer.enableCursor = true;
 }
 
 function mouseLeave(event: MouseEvent): void {
     RoomEditWindowEventBus.emit('mouse-leave');
     emitMouseEvent(event, Core.MOUSE_EVENT.LEAVE);
-    //renderer.enableCursor = false;
+    mouseUp(event);
     renderer.mouseMove(event);
 }
 
