@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import Checkbox from '@/components/common/Checkbox.vue';
 
+import { computed } from 'vue';
 import Core from '@/core';
 import { useI18n } from 'vue-i18n';
 import { checkNameCollisions, nanToNull } from '../Properties.vue';
@@ -48,17 +49,27 @@ function setExitName(newName: string): void {
                 @change="setExitName(($event.target as any).value)" v-input-active/>
         </div>
         <div class="control">
+            <label for="detectBacktrack">{{$t('room_editor.detect_backtrack')}}:</label>
+            <Checkbox id="detectBacktrack" class="custom-checkbox" :value="selectedExit.detectBacktracking" v-tooltip="$t('room_editor.tt_exit_detect_backtrack')"
+                @change="setExitProp({detectBacktracking: $event})"></Checkbox>
+        </div>
+        <div class="control">
+            <label for="exitEnding">{{$t('room_editor.is_ending')}}:</label>
+            <Checkbox id="exitEnding" class="custom-checkbox" :value="selectedExit.isEnding" v-tooltip="$t('room_editor.tt_exit_is_ending')"
+                @change="setExitProp({isEnding: $event})"></Checkbox>
+        </div>
+        <div v-show="selectedExit.isEnding" class="control">
+            <label for="endingDialog">{{$t('room_editor.end_dialog')}}:</label>
+            <textarea id="endingDialog" :value="selectedExit.endingDialog" v-tooltip="$t('room_editor.tt_exit_end_dialog')"
+                @change="setExitProp({endingDialog: ($event.target as any).value})"></textarea>
+        </div>
+        <div class="control">
             <label for="exitTrans">{{$t('room_editor.transition')}}:</label>
             <select id="exitTrans" :value="selectedExit.transition" v-tooltip="$t('room_editor.tt_exit_trans')"
                 @change="setExitProp({transition: ($event.target! as any).value})">
                 <option :value="Core.Instance_Exit.TRANSITION_TYPES.NONE">{{$t('generic.no_option')}}</option>
                 <option :value="Core.Instance_Exit.TRANSITION_TYPES.FADE">{{$t('room_editor.trans_fade')}}</option>
             </select>
-        </div>
-        <div class="control">
-            <label for="exitEnding">{{$t('room_editor.is_ending')}}:</label>
-            <input id="exitEnding" type="checkbox" :checked="selectedExit.isEnding" v-tooltip="$t('room_editor.tt_exit_is_ending')"
-                @change="setExitProp({isEnding: ($event.target as any).checked})"/>
         </div>
         <div v-show="!selectedExit.isEnding" class="control">
             <label for="exitDestRoom">{{$t('room_editor.dest_room')}}:</label>
@@ -81,11 +92,6 @@ function setExitName(newName: string): void {
                     :key="exit.id"
                     :value="exit.id">{{exit.name}}</option>
             </select>
-        </div>
-        <div v-show="selectedExit.isEnding" class="control">
-            <label for="endingDialog">{{$t('room_editor.end_dialog')}}:</label>
-            <textarea id="endingDialog" :value="selectedExit.endingDialog" v-tooltip="$t('room_editor.tt_exit_end_dialog')"
-                @change="setExitProp({endingDialog: ($event.target as any).value})"></textarea>
         </div>
     </div>
 </template>

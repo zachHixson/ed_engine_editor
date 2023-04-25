@@ -374,7 +374,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                 this.triggerOutput('_o');
             },
             checkExitBacktrack(this: iEngineNode, newPos: Vector): boolean {
-                if (!this.instance.prevExit) return false;
+                if (!(this.instance.prevExit && this.instance.prevExit?.exit.detectBacktracking)) return false;
 
                 const direction = newPos.clone().subtract(this.instance.pos).normalize();
                 const dot = direction.dot(this.instance.prevExit.direction.clone().multiplyScalar(-1));

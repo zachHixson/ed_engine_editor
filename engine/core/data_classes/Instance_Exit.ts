@@ -10,11 +10,12 @@ import { TRANSITION } from '@engine/transitions/Transition_Base';
 import { Room } from './Room';
 
 export interface iExitSaveData extends iInstanceBaseSaveData {
-    isEnding: boolean;
-    destinationRoom: number | '';
-    destinationExit: number | '';
-    transition: TRANSITION;
-    endingDialog: string;
+    btrack: 0 | 1;
+    end: 0 | 1;
+    dRoom: number | '';
+    dExit: number | '';
+    trans: TRANSITION;
+    dialog: string;
 }
 
 export class Instance_Exit extends Instance_Base {
@@ -34,6 +35,7 @@ export class Instance_Exit extends Instance_Base {
     }
 
     isEnding: boolean = false;
+    detectBacktracking: boolean = true;
     destinationRoom: number | null = null;
     destinationExit: number | null = null;
     transition: TRANSITION = TRANSITION.NONE;
@@ -136,11 +138,12 @@ export class Instance_Exit extends Instance_Base {
     override toSaveData(): iExitSaveData {
         return {
             ...this.getBaseSaveData(),
-            isEnding: this.isEnding,
-            destinationRoom: this.destinationRoom === null ? '' : this.destinationRoom,
-            destinationExit: this.destinationExit === null ? '' : this.destinationExit,
-            transition: this.transition,
-            endingDialog: this.endingDialog,
+            btrack: (+this.detectBacktracking) as (0 | 1),
+            end: (+this.isEnding) as 0 | 1,
+            dRoom: this.destinationRoom === null ? '' : this.destinationRoom,
+            dExit: this.destinationExit === null ? '' : this.destinationExit,
+            trans: this.transition,
+            dialog: this.endingDialog,
         };
     }
 
@@ -165,11 +168,12 @@ export class Instance_Exit extends Instance_Base {
 
     private _loadSaveData(data: iExitSaveData): Instance_Exit {
         this.loadBaseSaveData(data);
-        this.isEnding = data.isEnding;
-        this.destinationRoom = data.destinationRoom === '' ? null : data.destinationRoom;
-        this.destinationExit = data.destinationExit === '' ? null : data.destinationExit;
-        this.transition = data.transition;
-        this.endingDialog = data.endingDialog;
+        this.detectBacktracking = !!data.btrack;
+        this.isEnding = !!data.end;
+        this.destinationRoom = data.dRoom === '' ? null : data.dRoom;
+        this.destinationExit = data.dExit === '' ? null : data.dExit;
+        this.transition = data.trans;
+        this.endingDialog = data.dialog;
 
         return this;
     }
