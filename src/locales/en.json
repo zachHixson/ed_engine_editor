@@ -193,7 +193,7 @@
         "tt_camera_move": "Set what type of motion the camera has.<br><strong>Locked:</strong> Camera is still<br><strong>Follow:</strong> Camera follows an object<br><strong>Scroll:</strong> Camera scrolls at a constant rate in the chosen direction",
         "tt_camera_scroll_dir": "Set which direction the camera should scroll in",
         "tt_camera_scroll_speed": "Set the speed that the camera will scroll",
-        "tt_camera_follow_obj": "Select which object the camera should follow",
+        "tt_camera_follow_obj": "The camera will follow the selected instance",
         "tt_camera_follow_type": "Select style of motion the camera should use when following an object.<br><strong>Smooth:</strong> Object will always be near center of screen<br><strong>Tiled:</strong> Object must reach edge of screen before camera moves",
         "tt_exit_name": "Unique name for this exit",
         "tt_exit_detect_backtrack": "If enabled, when used as a destination this exit will detect when the player immediately tries to go back through the exit",

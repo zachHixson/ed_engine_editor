@@ -1,14 +1,22 @@
 <script setup lang="ts">
+import Svg from '@/components/common/Svg.vue';
+
+import { computed } from 'vue';
 import Core from '@/core';
+
+import eyedropperIcon from '@/assets/eye_dropper.svg';
 
 const props = defineProps<{
     selectedInstance: Core.Instance_Base | null;
+    selectedRoom: Core.Room,
     camera: Core.Camera;
 }>();
 
 const emit = defineEmits([
     'cam-prop-set',
 ]);
+
+const followObjName = computed(()=>props.selectedRoom.instances.find(i => i.id == props.camera.followObjId)?.name ?? 'none');
 
 function setCamProp(propObj: any): void {
     emit('cam-prop-set', propObj);
@@ -62,12 +70,57 @@ function setFollowObj(): void {
         </div>
         <div v-show="camera.moveType == Core.Camera.MOVE_TYPES.FOLLOW" class="control">
             <label for="camFollowObj">{{$t('room_editor.follow_obj')}}: </label>
-            <input id="camFollowObj" type="button" value="Set" v-tooltip="$t('room_editor.tt_camera_follow_obj')"
-                @click="setFollowObj()" :disabled="!selectedInstance" />
+            <div class="followObjInfo">
+                <div class="followObjName" v-tooltip="()=>followObjName">{{ followObjName }}</div>
+                <button @click="setFollowObj" v-tooltip="$t('room_editor.tt_camera_follow_obj')">
+                    <Svg :src="eyedropperIcon"></Svg>
+                </button>
+            </div>
         </div>
     </div>
 </template>
 
 <style scoped>
 @import '@/components/common/formStyles.css';
+
+.followObjInfo{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100px;
+    height: 30px;
+    background: #EEEEEE;
+    margin-left: 10px;
+    border: 2px solid gray;
+    border-radius: 10px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.followObjName{
+    display: flex;
+    justify-content: flex-start;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 1;
+    flex-grow: 0;
+    padding: 5px;
+}
+
+.followObjInfo > button {
+    height: 100%;
+    width: 20px;
+    flex-shrink: 0;
+    background: var(--button-dark-norm);
+    border: none;
+}
+
+.followObjInfo > button:hover {
+    background: var(--button-dark-hover);
+}
+
+.followObjInfo > button:active {
+    background: var(--button-dark-down);
+}
 </style>

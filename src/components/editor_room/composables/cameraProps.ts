@@ -4,8 +4,6 @@ import type { imEvent } from '../RoomEditWindow.vue';
 import { RoomMainEventBus } from '../RoomMain.vue';
 import Core from '@/core';
 
-import { toRaw } from 'vue';
-
 type CameraChangeProps = {newState?: Partial<Core.Camera>, oldState?: Partial<Core.Camera>};
 
 export function useCameraProps(args: iActionArguments){

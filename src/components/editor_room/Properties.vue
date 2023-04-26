@@ -120,6 +120,7 @@ const showPlaceHolder = computed(()=>
         <CameraProperties
             v-if="showCameraProps"
             :selected-instance="selectedInstance"
+            :selected-room="room"
             :camera="camera"
             @cam-prop-set="emit('cam-prop-set', $event)"></CameraProperties>
         <ExitProperties
@@ -193,6 +194,7 @@ const showPlaceHolder = computed(()=>
 .properties:deep(.control > select),
 .properties:deep(.control > button){
     width: 100px;
+    min-height: 30px;
     box-sizing: border-box;
     margin: 0;
     margin-left: 10px;

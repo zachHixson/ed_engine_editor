@@ -136,6 +136,10 @@ export class Room extends Asset_Base {
 
             if (instance.needsPurge(typeMap)){
                 this.removeInstance(instance.id);
+
+                if (this.camera.followObjId == instance.id){
+                    this.camera.followObjId = null;
+                }
             }
         });
     }
