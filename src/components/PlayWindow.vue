@@ -1,13 +1,35 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import Svg from './common/Svg.vue';
+
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useMainStore } from '@/stores/Main';
 import Core, { Engine } from '@/core';
 import { PLAY_STATE } from '@/stores/Main';
+import { useI18n } from 'vue-i18n';
 
+import terminalIcon from '@/assets/terminal.svg';
+
+enum Level {
+    LOG = 0,
+    WARN = 1,
+    ERROR = 2,
+    NODE_EXCEPTION = 3,
+}
+
+interface iConsoleLine {
+    message: string;
+    time: [string, string, string];
+    level: Level;
+    unread: boolean;
+}
+
+const { t } = useI18n();
 const mainStore = useMainStore();
 
 const canvasWrapper = ref<HTMLElement>();
 const canvas = ref<HTMLCanvasElement>();
+const consoleOpen = ref(false);
+const consoleOuput = ref(new Array<iConsoleLine>());
 
 let engine: Engine | null = null;
 let resizeInterval: number;
@@ -20,6 +42,35 @@ const playState = computed<PLAY_STATE>({
         mainStore.setPlayState(newState);
     }
 });
+const unreadLevelClass = computed<string>(()=>{
+    let unreadLevel: Level | null = null;
+
+    consoleOuput.value.forEach(m => {
+        if (!m.unread) return;
+
+        if (unreadLevel == null || m.level > unreadLevel){
+            unreadLevel = m.level;
+        }
+    });
+
+    if (unreadLevel == null) return '';
+
+    switch(unreadLevel){
+        case Level.ERROR:
+        case Level.NODE_EXCEPTION:
+            return 'console-badge-error';
+        case Level.WARN:
+            return 'console-badge-warn';
+        default:
+            return '';
+    }
+});
+
+watch(consoleOpen, ()=>{
+    if (consoleOpen.value){
+        consoleOuput.value.forEach(m => m.unread = false);
+    }
+});
 
 onMounted(()=>{
     start();
@@ -30,11 +81,7 @@ onBeforeUnmount(()=>{
 });
 
 function start(): void {
-    const restart = ()=>{
-        clearInterval(resizeInterval);
-        start();
-    };
-
+    const callbackArgs = {restart};
     resizeInterval = setInterval(()=>{
         const wrapper = canvasWrapper.value as HTMLElement;
         const minDim = Math.min(wrapper.clientWidth, wrapper.clientHeight);
@@ -42,10 +89,19 @@ function start(): void {
         Core.Draw.resizeHDPICanvas(canvas.value!, minDim, minDim);
     }, 20);
 
+    if (playState.value == PLAY_STATE.DEBUGGING){
+        Object.assign(callbackArgs, {
+            log,
+            warn,
+            error,
+            nodeException,
+        });
+    }
+
     engine = new Engine(
         canvas.value!,
         mainStore.getSaveData(),
-        {restart}
+        callbackArgs
     );
     engine.start();
 }
@@ -54,6 +110,66 @@ function close(): void {
     playState.value = PLAY_STATE.NOT_PLAYING;
     clearInterval(resizeInterval);
     engine!.stop();
+}
+
+function padNum(num: number): string {
+    const padding = new Array(2).fill('0');
+    const str = num.toString();
+
+    return padding.slice(0, 2 - str.length).join('') + str;
+}
+
+function addLogMessage(textArr: string[], level: Level): void {
+    const text = textArr.join(' ');
+    const time = new Date();
+    const h = padNum(time.getHours());
+    const m = padNum(time.getMinutes());
+    const s = padNum(time.getSeconds());
+    
+    consoleOuput.value.push({
+        message: text,
+        time: [h, m, s],
+        level,
+        unread: true,
+    });
+
+    if (consoleOuput.value.length > 150){
+        consoleOuput.value.splice(0, 1);
+    }
+}
+
+function log(...args: any): void {
+    addLogMessage(args, Level.LOG);
+}
+
+function warn(...args: any): void {
+    addLogMessage(args, Level.WARN);
+}
+
+function error(...args: any): void {
+    addLogMessage(args, Level.ERROR);
+}
+
+function nodeException(error: string, treeData: any): void {
+    addLogMessage([t(error)], Level.NODE_EXCEPTION);
+}
+
+function restart(){
+    clearInterval(resizeInterval);
+    start();
+};
+
+function messageClassSelector(log: iConsoleLine): string {
+    switch(log.level){
+        default:
+        case Level.LOG:
+            return 'console-log';
+        case Level.WARN:
+            return 'console-warn';
+        case Level.ERROR:
+        case Level.NODE_EXCEPTION:
+            return 'console-error';
+    }
 }
 </script>
 
@@ -69,6 +185,29 @@ function close(): void {
         </div>
         <div ref="canvasWrapper" class="canvasWrapper">
             <canvas ref="canvas" class="canvas">//Error loading canvas</canvas>
+            <div
+                v-show="playState == PLAY_STATE.DEBUGGING"
+                class="debug-console"
+                :class="consoleOpen ? 'debug-console-show':''">
+                <div class="closeBtn console-button" @click="consoleOpen = !consoleOpen">
+                    <div style="width: 50%; height: 90%;">
+                        <Svg style="width: 100%; height: 100%" :src="terminalIcon"></Svg>
+                    </div>
+                    <div
+                        v-if="unreadLevelClass != ''"
+                        class="console-badge"
+                        :class="unreadLevelClass"></div>
+                </div>
+                <div class="console-message-list">
+                    <div
+                        v-for="log in consoleOuput"
+                        class="console-message"
+                        :class="messageClassSelector(log)">
+                        <span class="console-time">{{ `[${log.time[0]}:${log.time[1]}:${log.time[2]}]` }}</span>
+                        <span class="console-text">{{ log.message }}</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -125,5 +264,80 @@ function close(): void {
 
 .canvas{
     position: absolute;
+}
+
+.debug-console{
+    position: absolute;
+    top: 100%;
+    width: 100%;
+    height: 100%;
+    background: #00000055;
+    transition: top 0.5s;
+}
+
+.debug-console-show{
+    top: 0%;
+}
+
+.console-message-list{
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    overflow-y: auto;
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+.console-time {
+    opacity: 50%;
+    margin-right: 5px;
+}
+
+.console-message{
+    width: 100%;
+}
+
+.console-warn{
+    background: #FFFF0088;
+}
+
+.console-error{
+    background: #FF000088;
+}
+
+.console-button{
+    position: absolute;
+    left: 50px;
+    top: -50px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 80px;
+    height: 50px;
+    border-radius: var(--corner-radius) var(--corner-radius) 0px 0px;
+    border-bottom: none;
+    box-sizing: border-box;
+}
+
+.console-badge{
+    position: absolute;
+    right: -7px;
+    top: -7px;
+    width: 15px;
+    height: 15px;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+}
+
+.console-badge-error {
+    background: red;
+}
+
+.console-badge-warn {
+    background: orange;
 }
 </style>
