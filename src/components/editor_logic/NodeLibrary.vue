@@ -4,9 +4,12 @@ import { useLogicEditorStore } from '@/stores/LogicEditor';
 import Core from '@/core';
 import Svg from '@/components/common/Svg.vue';
 import categoryStyleMap from './categoryStyleMap';
+import { useI18n } from 'vue-i18n';
 
 import icon_magglass from '@/assets/navigation_magglass.svg';
 import icon_arrow from '@/assets/arrow_01.svg';
+
+const { t } = useI18n();
 
 const emit = defineEmits(['node-clicked']);
 
@@ -74,7 +77,8 @@ function tabClick(category: string): void {
         <div class="tab-list">
             <div class="tab"
                 :style="selectedCategory == 'search' ? 'width: 35px':''"
-                @click="tabClick('search')">
+                @click="tabClick('search')"
+                v-tooltip="t('logic_editor.search')">
                 <div v-if="selectedCategory == 'search'" class="line-erase"></div>
                 <Svg class="tab-icon" :src="icon_magglass"></Svg>
             </div>
@@ -85,7 +89,8 @@ function tabClick(category: string): void {
                     ${selectedCategory == category.name ? 'width: 35px':''}
                 `"
                 class="tab"
-                @click="tabClick(category.name)">
+                @click="tabClick(category.name)"
+                v-tooltip="t('logic_editor.' + category.name)">
                 <div v-if="selectedCategory == category.name" class="line-erase" :style="`background: ${category.color}`"></div>
                 <Svg class="tab-icon" :src="category.icon" :style="category.icon == icon_arrow ? 'rotate: 90deg;':''"></Svg>
             </div>
