@@ -42,7 +42,6 @@ const navHotkeyTool = ref<Core.NAV_TOOL_TYPE | null>(null);
 const previewData: ImageData = new ImageData(Core.Sprite.DIMENSIONS, Core.Sprite.DIMENSIONS);
 const maxZoom = ref(2);
 const mouseCell = new Core.Vector(-20, -20);
-const unitScale = ref(1);
 const devicePixelRatio = ref(window.devicePixelRatio);
 let renderer: Art_Canvas_Renderer | null = null;
 

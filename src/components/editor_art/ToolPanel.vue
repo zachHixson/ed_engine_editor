@@ -20,6 +20,7 @@ import boxFilledIcon from '@/assets/box_filled.svg';
 import circleIcon from '@/assets/circle.svg';
 import circleFilledIcon from '@/assets/circle_filled.svg';
 import eraserIcon from '@/assets/eraser.svg';
+import moveIcon from '@/assets/move_arrows.svg';
 import eyeDropperIcon from '@/assets/eye_dropper.svg';
 import arrowIcon from '@/assets/arrow_01.svg';
 
@@ -58,6 +59,11 @@ const brushes = [
         icon: bucketIcon,
     },
     {
+        tool: Core.ART_TOOL_TYPE.ERASER,
+        name: t('art_editor.eraser_tool'),
+        icon: eraserIcon,
+    },
+    {
         tool: Core.ART_TOOL_TYPE.LINE,
         name: t('art_editor.line_tool'),
         icon: lineIcon,
@@ -83,9 +89,9 @@ const brushes = [
         icon: circleFilledIcon,
     },
     {
-        tool: Core.ART_TOOL_TYPE.ERASER,
-        name: t('art_editor.eraser_tool'),
-        icon: eraserIcon,
+        tool: Core.ART_TOOL_TYPE.MOVE,
+        name: t('art_editor.move_tool'),
+        icon: moveIcon,
     },
     {
         tool: Core.ART_TOOL_TYPE.EYE_DROPPER,
@@ -165,6 +171,7 @@ function bindHotkeys(): void {
     hotkeyMap.bindKey(['c'], toolChanged, [Core.ART_TOOL_TYPE.ELLIPSE]);
     hotkeyMap.bindKey(['alt', 'c'], toolChanged, [Core.ART_TOOL_TYPE.ELLIPSE_FILL]);
     hotkeyMap.bindKey(['e'], toolChanged, [Core.ART_TOOL_TYPE.ERASER]);
+    hotkeyMap.bindKey(['m'], toolChanged, [Core.ART_TOOL_TYPE.MOVE]);
     hotkeyMap.bindKey(['d'], toolChanged, [Core.ART_TOOL_TYPE.EYE_DROPPER]);
 }
 

@@ -205,10 +205,12 @@ export default class Art_Canvas_Renderer{
     }
 
     mouseDown(): void {
+        this._updatePreviewTexture();
         this.queueRender();
     }
 
     mouseUp(): void {
+        this._updatePreviewTexture();
         this.queueRender();
     }
 

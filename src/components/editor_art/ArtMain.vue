@@ -19,6 +19,7 @@ import Eye_Dropper from './tools/Eye_Dropper';
 import { ref, reactive, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { useArtEditorStore } from '@/stores/ArtEditor';
 import Core from '@/core';
+import Move from './tools/Move';
 
 type iSpriteUndoData = {spriteData: ImageData[]}
 
@@ -76,6 +77,7 @@ onMounted(()=>{
     toolMap.set(Core.ART_TOOL_TYPE.ELLIPSE, ()=> new Ellipse_Brush());
     toolMap.set(Core.ART_TOOL_TYPE.ELLIPSE_FILL, ()=> new Ellipse_Brush(true));
     toolMap.set(Core.ART_TOOL_TYPE.ERASER, ()=> new Eraser());
+    toolMap.set(Core.ART_TOOL_TYPE.MOVE, ()=>new Move());
     toolMap.set(Core.ART_TOOL_TYPE.EYE_DROPPER, ()=> new Eye_Dropper());
 
     toolSelected(artEditorStore.getSelectedTool!);

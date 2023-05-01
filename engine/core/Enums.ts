@@ -34,6 +34,7 @@ export enum ART_TOOL_TYPE {
     ELLIPSE,
     ELLIPSE_FILL,
     ERASER,
+    MOVE,
     EYE_DROPPER,
 };
 
