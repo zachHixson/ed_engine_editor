@@ -37,7 +37,7 @@ const tool = ref<Tool_Base | null>(null);
 
 const selectedFrameIdx = computed({
     get(){
-        return artEditorStore.getSelectedFrame;
+        return Math.min(props.selectedAsset.frames.length - 1, artEditorStore.getSelectedFrame);
     },
     set(newIdx){
         artEditorStore.selectFrame(newIdx);
@@ -53,7 +53,7 @@ watch(()=>props.selectedAsset, ()=>{
         const selectedFrame = artEditorStore.getSelectedFrame;
 
         if (props.selectedAsset.frames.length < selectedFrame + 1){
-            artEditorStore.selectFrame(0);
+            artEditorStore.selectFrame(selectedFrameIdx.value);
         }
     }
 });
