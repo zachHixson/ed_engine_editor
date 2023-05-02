@@ -16,10 +16,11 @@ import {
     INSTANCE_TYPE,
     Node_Enums,
     WGL,
-CATEGORY_ID,
-Asset_Base,
-iEngineLogic,
-Instance_Logic,
+    CATEGORY_ID,
+    Asset_Base,
+    iEngineLogic,
+    Instance_Logic,
+    MOUSE_EVENT,
 } from '@engine/core/core';
 import Node from './Node';
 import iGameData from './iGameData';
@@ -70,8 +71,9 @@ export class Engine implements iEngineCallbacks {
     private _errorLogs: Map<string, boolean> = new Map();
     private _gameData: iGameData;
     private _mouse = {
-        x: 0,
-        y: 0,
+        screenPos: new Vector,
+        pos: new Vector(),
+        down: false,
     };
     private _transitionMap: Map<TRANSITION, Transition_Base>;
     private _transition: Transition_Base;
@@ -313,6 +315,19 @@ export class Engine implements iEngineCallbacks {
     private _bindInputEvents = ()=>{
         document.addEventListener("keydown", this._keyDown);
         document.addEventListener("keyup", this._keyUp);
+        this._canvas.addEventListener("mousedown", this._mouseDown);
+        this._canvas.addEventListener("mouseup", this._mouseUp);
+        this._canvas.addEventListener("mousemove", this._mouseMove);
+        this._canvas.addEventListener("mouseleave", this._mouseLeave);
+    }
+
+    private _unbindInputEvents = ()=>{
+        document.removeEventListener("keydown", this._keyDown);
+        document.removeEventListener("keyup", this._keyUp);
+        this._canvas.removeEventListener("mousedown", this._mouseDown);
+        this._canvas.removeEventListener("mouseup", this._mouseUp);
+        this._canvas.removeEventListener("mousemove", this._mouseMove);
+        this._canvas.removeEventListener("mouseleave", this._mouseLeave);
     }
 
     private _keyDown = (e: KeyboardEvent): void =>{
@@ -339,9 +354,57 @@ export class Engine implements iEngineCallbacks {
         });
     }
 
-    private _unbindInputEvents = ()=>{
-        document.removeEventListener("keydown", this._keyDown);
-        document.removeEventListener("keyup", this._keyUp);
+    private _mouseDown = (e: MouseEvent): void =>{
+        this.mouse.down = true;
+
+        const instances = this.getInstancesAtPosition(this.mouse.pos);
+
+        this._dispatchLogicEvent('e_mouse_button', {
+            type: MOUSE_EVENT.DOWN,
+            buttons: e.buttons,
+            pos: this.mouse.pos,
+            instances,
+        });
+    }
+
+    private _mouseUp = (e: MouseEvent): void =>{
+        this.mouse.down = false;
+
+        const instances = this.getInstancesAtPosition(this.mouse.pos);
+
+        this._dispatchLogicEvent('e_mouse_button', {
+            type: MOUSE_EVENT.UP,
+            buttons: e.buttons,
+            pos: this.mouse.pos,
+            instances,
+        });
+    }
+
+    private _mouseMove = (e: MouseEvent): void =>{
+        this.mouse.screenPos.set(e.offsetX, e.offsetY);
+        this.mouse.pos.copy(this._screenToWorldPos(this.mouse.screenPos));
+        this._dispatchLogicEvent('e_mouse_move');
+    }
+
+    private _mouseLeave = (e: MouseEvent): void =>{
+        if (this.mouse.down){
+            this._mouseUp(e);
+        }
+    }
+
+    private _screenToWorldPos = (pos: Vector): Vector =>{
+        const p = pos.clone();
+
+        //convert to clip space
+        p.divide(new Vector(this._canvas.clientWidth, this._canvas.clientHeight));
+        p.subtractScalar(0.5);
+        p.multiplyScalar(2);
+        p.y *= -1;
+
+        //convert to world space
+        p.multiplyMat3(this._renderer.viewMatrixInv.clone().transpose());
+
+        return p;
     }
 
     private _registerInstanceEvents = (instance: Instance_Object): void =>{

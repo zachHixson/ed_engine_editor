@@ -1,6 +1,8 @@
 import {SOCKET_TYPE, WIDGET, COLLISION_EVENT} from './Node_Enums';
 import { iNodeTemplate } from './iNodeTemplate';
 import { iEngineNode } from '../LogicInterfaces';
+import { MOUSE_EVENT } from '../Enums';
+import { Vector } from '../Vector';
 
 export default [
     {// Create
@@ -27,19 +29,38 @@ export default [
         id: 'e_mouse_button',
         isEvent: true,
         category: 'events',
-        widget: {
-            id: 'mouse_btn',
-            type: WIDGET.MOUSE_BTN,
-        },
         outTriggers: ['button_down', 'button_up', 'button_click'],
         outputs: [
-            {id: 'which_button', type: SOCKET_TYPE.STRING, execute: 'which'},
+            {id: 'which_button', type: SOCKET_TYPE.NUMBER, execute: 'which'},
             {id: 'x', type: SOCKET_TYPE.NUMBER, execute: 'x'},
             {id: 'y', type: SOCKET_TYPE.NUMBER, execute: 'y'},
             {id: 'object', type: SOCKET_TYPE.OBJECT, execute: 'object'},
         ],
-        execute(this: iEngineNode, data: MouseEvent){
+        execute(this: iEngineNode, data: any){
+            const lBtn = !!(data.buttons & 0b001);
+            const mBtn = !!(data.buttons & 0b010);
+            const rBtn = !!(data.buttons & 0b100);
+
+            if (lBtn) data.button = 1;
+            if (mBtn) data.button = 2;
+            if (rBtn) data.button = 3;
+
             this.dataCache.set('lastData', data);
+
+            if (data.type == MOUSE_EVENT.DOWN){
+                this.dataCache.set('downPos', data.pos.clone());
+                this.triggerOutput('button_down');
+            }
+            else if (data.type == MOUSE_EVENT.UP){
+                const downPos = this.dataCache.get('downPos') as Vector | undefined;
+
+                if (downPos && downPos.equalTo(data.pos)){
+                    this.triggerOutput('button_click');
+                }
+                else{
+                    this.triggerOutput('button_up');
+                }
+            }
         },
         methods: {
             which(this: iEngineNode){
@@ -48,15 +69,15 @@ export default [
             },
             x(this: iEngineNode){
                 const eventData = this.dataCache.get('lastData');
-                return eventData?.x ?? 0;
+                return eventData?.pos.x ?? 0;
             },
             y(this: iEngineNode){
                 const eventData = this.dataCache.get('lastData');
-                return eventData?.y ?? 0;
+                return eventData?.pos.y ?? 0;
             },
             object(this: iEngineNode){
                 const eventData = this.dataCache.get('lastData');
-                return eventData?.object ?? null;
+                return eventData?.instances[0] ?? null;
             },
         },
     },
@@ -71,10 +92,10 @@ export default [
         ],
         methods: {
             x(this: iEngineNode){
-                return this.engine.mouse.x;
+                return this.engine.mouse.pos.x;
             },
             y(this: iEngineNode){
-                return this.engine.mouse.y;
+                return this.engine.mouse.pos.y;
             },
         },
     },

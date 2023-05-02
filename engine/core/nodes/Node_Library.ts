@@ -300,21 +300,25 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         outTriggers: ['_o'],
         inputs: [
-            {id: 'x', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
-            {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
+            {id: 'x', type: SOCKET_TYPE.NUMBER, default: '', required: false},
+            {id: 'y', type: SOCKET_TYPE.NUMBER, default: '', required: false},
             {id: 'relative', type: SOCKET_TYPE.BOOL, default: false},
         ],
         methods: {
-            setPosition(){
+            setPosition(this: iEngineNode){
+                const x = this.getInput('x');
+                const y = this.getInput('y');
                 const relative = this.getInput('relative');
                 const newPos = new Vector(
-                    Math.round(this.getInput('x')),
-                    -Math.round(this.getInput('y'))
+                    Math.round(x == '' ? this.instance.pos.x : x),
+                    Math.round(y == '' ? this.instance.pos.y : y)
                 );
 
                 if (relative){
                     newPos.add(this.instance.pos);
                 }
+
+                this.engine.setInstancePosition(this.instance, newPos);
                 
                 this.triggerOutput('_o');
             },

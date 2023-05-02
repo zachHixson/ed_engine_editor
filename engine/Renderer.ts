@@ -7,6 +7,7 @@ export default class Renderer{
     private _instanceRenderer: Instance_Renderer;
     private _room: Room | null = null;
     private _viewMatrix = new Mat3();
+    private _viewMatrixInv = new Mat3();
     private _viewMatrixNeedsUpdate = true;
 
     constructor(gl: WebGL2RenderingContext){
@@ -14,10 +15,14 @@ export default class Renderer{
         this._instanceRenderer = new Instance_Renderer(this._gl, 16, 1024, false, true);
     }
 
-    setRoom = (room: Room): void => {
-        this._room = room;
-        this._gl.clearColor(this._room.bgColor.r / 255, this._room.bgColor.g / 255, this._room.bgColor.b / 255, 1);
-        this._instanceRenderer.clear();
+    get viewMatrix(){
+        this._updateViewMatrix();
+        return this._viewMatrix;
+    }
+
+    get viewMatrixInv(){
+        this._updateViewMatrix();
+        return this._viewMatrixInv;
     }
 
     private _updateViewMatrix = (): void => {
@@ -29,8 +34,15 @@ export default class Renderer{
         const tranMat = new Mat3([1, 0, -x, 0, 1, -y, 0, 0, 1]);
 
         this._viewMatrix.copy(zoomMat.multiply(tranMat));
+        this._viewMatrixInv.copy(this._viewMatrix.clone().inverse());
         this._instanceRenderer.updateViewMatrix(this._viewMatrix);
         this._viewMatrixNeedsUpdate = false;
+    }
+
+    setRoom = (room: Room): void => {
+        this._room = room;
+        this._gl.clearColor(this._room.bgColor.r / 255, this._room.bgColor.g / 255, this._room.bgColor.b / 255, 1);
+        this._instanceRenderer.clear();
     }
 
     addInstance = (instance: Instance_Base): void => {
