@@ -20,7 +20,7 @@ import boxFilledIcon from '@/assets/box_filled.svg';
 import circleIcon from '@/assets/circle.svg';
 import circleFilledIcon from '@/assets/circle_filled.svg';
 import eraserIcon from '@/assets/eraser.svg';
-import moveIcon from '@/assets/move_arrows.svg';
+import moveIcon from '@/assets/direction_arrows.svg';
 import eyeDropperIcon from '@/assets/eye_dropper.svg';
 import arrowIcon from '@/assets/arrow_01.svg';
 
