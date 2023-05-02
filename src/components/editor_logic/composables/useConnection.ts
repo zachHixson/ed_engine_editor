@@ -133,6 +133,8 @@ export default function useConnection(
     revertMap.set(Core.LOGIC_ACTION.DISCONNECT, revertRemoveConnection);
 
     return {
+        nodeRefs,
+        connectionRefs,
         draggingConnection,
         dragConnection,
         relinkConnections,

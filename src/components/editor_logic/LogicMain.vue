@@ -92,6 +92,8 @@ watch(()=>props.selectedAsset, ()=>{
 const { stepForward, stepBackward } = useUndoHelpers(undoStore, actionMap, revertMap);
 
 const {
+    nodeRefs,
+    connectionRefs,
     draggingConnection,
     createConnection,
     dragConnection,
