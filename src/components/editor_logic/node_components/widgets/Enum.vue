@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import SearchDropdown from '@/components/common/SearchDropdown.vue';
+
 import { computed, nextTick, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -10,14 +12,20 @@ const props = defineProps<{
     setWidgetData: (data: any)=>void,
 }>();
 
-const enumOptions = computed(()=>props.widget.options);
+const enumOptions = computed(()=>
+    props.widget.options.map((o: any) => ({
+            name: t('node.' + o),
+            value: o,
+            id: o,
+    }))
+);
 const selectWidth = computed(()=>{
     if (enumOptions.value.length <= 0) return '20px';
 
-    let largest = t('node.' + enumOptions.value[0]).length;
+    let largest = t('node.' + enumOptions.value[0].value).length;
 
-    enumOptions.value.forEach((option: string) => {
-        let curLength = t('node.' + option).length;
+    enumOptions.value.forEach(({ value }: {value: string}) => {
+        let curLength = t('node.' + value).length;
         if (curLength > largest){
             largest = curLength;
         }
@@ -36,14 +44,7 @@ onMounted(()=>{
 
 <template>
     <div class="enum">
-        <select
-            :style="`width: ${selectWidth};`"
-            @change="setWidgetData(($event.target as HTMLInputElement).value)" :value="enumValue">
-            <option
-                v-for="option in enumOptions"
-                :key="option"
-                :value="option">{{t('node.' + option)}}</option>
-        </select>
+        <SearchDropdown :style="`width: ${selectWidth};`" :items="enumOptions" @change="setWidgetData($event)" :value="enumValue"></SearchDropdown>
     </div>
 </template>
 

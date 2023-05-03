@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Svg from '@/components/common/Svg.vue';
+import SearchDropdown from '../common/SearchDropdown.vue';
 
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -103,12 +104,12 @@ function close(): void {
                 </div>
                 <div class="control">
                     <label for="type">{{$t('logic_editor.type')}}: </label>
-                    <select style="background: white" v-model="type">
-                        <option :value="Core.Node_Enums.SOCKET_TYPE.NUMBER">{{$t('logic_editor.number')}}</option>
-                        <option :value="Core.Node_Enums.SOCKET_TYPE.STRING">{{$t('logic_editor.string')}}</option>
-                        <option :value="Core.Node_Enums.SOCKET_TYPE.BOOL">{{$t('logic_editor.boolean')}}</option>
-                        <option :value="Core.Node_Enums.SOCKET_TYPE.OBJECT">{{$t('logic_editor.object')}}</option>
-                    </select>
+                    <SearchDropdown id="type" :value="type" @change="type = $event" :items="[
+                        { name: t('logic_editor.number'), id: Core.Node_Enums.SOCKET_TYPE.NUMBER, value: Core.Node_Enums.SOCKET_TYPE.NUMBER },
+                        { name: t('logic_editor.string'), id: Core.Node_Enums.SOCKET_TYPE.STRING, value: Core.Node_Enums.SOCKET_TYPE.STRING },
+                        { name: t('logic_editor.boolean'), id: Core.Node_Enums.SOCKET_TYPE.BOOL, value: Core.Node_Enums.SOCKET_TYPE.BOOL },
+                        { name: t('logic_editor.object'), id: Core.Node_Enums.SOCKET_TYPE.OBJECT, value: Core.Node_Enums.SOCKET_TYPE.OBJECT },
+                    ]"></SearchDropdown>
                 </div>
                 <div class="control">
                     <label for="isGlobal">{{$t('logic_editor.is_global')}}: </label>

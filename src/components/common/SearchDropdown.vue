@@ -2,7 +2,7 @@
 import Svg from './Svg.vue';
 import VueCanvas from './VueCanvas.vue';
 
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import arrowIcon from '@/assets/arrow_01.svg';
@@ -34,11 +34,15 @@ const selectedId = ref<number | string>(-1);
 const open = ref(false);
 const searchQuery = ref<string>('');
 
-const selected = computed<any>(()=>props.items.find(i => i.id == selectedId.value) ?? (props.items[0] ? props.items[0] : null));
+const selected = computed<any>(()=>findSelected(selectedId.value));
 const filteredItems = computed(()=>searchQuery.value.length ? props.items.filter(i => i.name.toLowerCase().includes(searchQuery.value.toLowerCase())) : props.items);
 
+watch(()=>props.value, ()=>{
+    selectedId.value = findSelected(props.value)?.id ?? -1
+});
+
 onMounted(()=>{
-    if (props.value){
+    if (props.value !== undefined){
         selectedId.value = props.items.find(i => i.value == props.value)?.id ?? -1;
     }
 });
@@ -52,7 +56,7 @@ function setOpen(value: boolean): void {
             dropdownEl.value!.style.left = left + 'px';
             dropdownEl.value!.style.top = bottom + 'px';
             dropdownEl.value!.style.width = boxEl.value!.clientWidth + 'px';
-            searchEl.value!.focus();
+            searchEl.value && searchEl.value.focus();
         });
     }
 }
@@ -65,8 +69,12 @@ function updateSearchQuery(e: Event): void {
 
 function selectItem(item: typeof props.items[number]): void {
     selectedId.value = item.id;
-    emit('change', item);
+    emit('change', item.value);
     open.value = false;
+}
+
+function findSelected(val: any): typeof props.items[number] | null {
+    return props.items.find(i => i.id == val) ?? (props.items[0] ?? null);
 }
 </script>
 
@@ -74,8 +82,8 @@ function selectItem(item: typeof props.items[number]): void {
     <div class="search-dropdown" ref="boxEl" @click="setOpen(true)">
         <div v-if="selected" class="selected-text">{{ selected.name }}</div>
         <Teleport to="#global-dest">
-            <div v-if="open" ref="dropdownEl" class="dropdown-box" v-click-outside.lazy="()=>setOpen(false)">
-                <div class="search-wrapper">
+            <div v-if="open" ref="dropdownEl" class="dropdown-box" v-click-outside.lazy.any="()=>setOpen(false)">
+                <div v-if="search" class="search-wrapper">
                     <input ref="searchEl" class="search" type="text" :placeholder="t('generic.search')" @input="updateSearchQuery"/>
                 </div>
                 <div class="dropdown-list">
@@ -107,6 +115,7 @@ function selectItem(item: typeof props.items[number]): void {
     border-radius: var(--corner-radius);
     background: #FCFCFC;
     box-sizing: border-box;
+    flex-shrink: 0;
 }
 
 .search-dropdown:hover{
@@ -119,6 +128,7 @@ function selectItem(item: typeof props.items[number]): void {
     align-items: center;
     height: 100%;
     padding: 5px;
+    font-size: 13px;
     box-sizing: border-box;
 }
 
@@ -129,7 +139,8 @@ function selectItem(item: typeof props.items[number]): void {
     display: flex;
     flex-direction: column;
     width: 100px;
-    z-index: 1000;
+    font-size: 13px;
+    z-index: 99999;
     pointer-events: all;
     user-select: none;
     filter: drop-shadow(1px 1px 2px #00000055);

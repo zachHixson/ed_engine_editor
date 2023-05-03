@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Checkbox from '@/components/common/Checkbox.vue';
+import SearchDropdown from '@/components/common/SearchDropdown.vue';
 
 import { computed } from 'vue';
 import Core from '@/core';
@@ -19,13 +20,30 @@ const emit = defineEmits([
     'exit-prop-set',
 ]);
 
+const genericNoOption = { name: t('generic.no_option'), id: -1, value: null };
+
+const destinationRooms = computed(()=>{
+    const rooms = gameDataStore.getAllRooms.map(r => ({
+        name: r.name,
+        id: r.id,
+        value: r.id,
+    }));
+
+    return [genericNoOption, ...rooms];
+});
 const destinationRoomExits = computed(()=>{
-    if (props.selectedExit?.TYPE != Core.INSTANCE_TYPE.EXIT) return null;
+    if (props.selectedExit?.TYPE != Core.INSTANCE_TYPE.EXIT) return [genericNoOption];
     
     const allRooms = gameDataStore.getAllRooms;
     const destRoom = allRooms.find(r => r.id == props.selectedExit.destinationRoom);
+    const destExits = destRoom?.instances.toArray().filter(instance => instance.TYPE == Core.INSTANCE_TYPE.EXIT && instance.id != props.selectedExit.id);
+    const options = destExits?.map(e => ({
+        name: e.name,
+        id: e.id,
+        value: e.id,
+    })) ?? [];
 
-    return destRoom?.instances.toArray().filter(instance => instance.TYPE == Core.INSTANCE_TYPE.EXIT && instance.id != props.selectedExit.id);
+    return [genericNoOption, ...options];
 });
 
 function setExitProp(propObj: any): void {
@@ -65,33 +83,36 @@ function setExitName(newName: string): void {
         </div>
         <div class="control">
             <label for="exitTrans">{{$t('room_editor.transition')}}:</label>
-            <select id="exitTrans" :value="selectedExit.transition" v-tooltip="$t('room_editor.tt_exit_trans')"
-                @change="setExitProp({transition: ($event.target! as any).value})">
-                <option :value="Core.Instance_Exit.TRANSITION_TYPES.NONE">{{$t('generic.no_option')}}</option>
-                <option :value="Core.Instance_Exit.TRANSITION_TYPES.FADE">{{$t('room_editor.trans_fade')}}</option>
-            </select>
+            <SearchDropdown
+                id="exitTrans"
+                class="custom-select"
+                :value="selectedExit.transition"
+                :items="[
+                    { name: t('generic.no_option'), id: Core.Instance_Exit.TRANSITION_TYPES.NONE, value: Core.Instance_Exit.TRANSITION_TYPES.NONE},
+                    { name: t('room_editor.trans_fade'), id: Core.Instance_Exit.TRANSITION_TYPES.FADE, value: Core.Instance_Exit.TRANSITION_TYPES.FADE},
+                ]"
+                @change="setExitProp({transition: $event})"
+                v-tooltip="$t('room_editor.tt_exit_trans')"></SearchDropdown>
         </div>
         <div v-show="!selectedExit.isEnding" class="control">
             <label for="exitDestRoom">{{$t('room_editor.dest_room')}}:</label>
-            <select id="exitDestRoom" :value="selectedExit.destinationRoom" v-tooltip="$t('room_editor.tt_exit_dest_room')"
-                @change="setExitProp({destinationRoom: nanToNull(parseInt(($event.target as any).value))})">
-                <option value="">{{$t('generic.no_option')}}</option>
-                <option
-                    v-for="room in gameDataStore.getAllRooms"
-                    :key="room.id"
-                    :value="room.id">{{room.name}}</option>
-            </select>
+            <SearchDropdown
+                id="exitTrans"
+                class="custom-select"
+                :value="selectedExit.destinationRoom"
+                :items="destinationRooms"
+                @change="setExitProp({destinationRoom: nanToNull(parseInt($event))})"
+                v-tooltip="$t('room_editor.tt_exit_dest_room')"></SearchDropdown>
         </div>
         <div v-show="!selectedExit.isEnding && selectedExit.destinationRoom !== null" class="control">
             <label for="exitDestExit">{{$t('room_editor.dest_exit')}}:</label>
-            <select id="exitDestExit" :value="selectedExit.destinationExit" v-tooltip="$t('room_editor.tt_exit_dest_exit')"
-                @change="setExitProp({destinationExit: nanToNull(parseInt(($event.target as any).value))})">
-                <option value="">{{$t('generic.no_option')}}</option>
-                <option
-                    v-for="exit in destinationRoomExits"
-                    :key="exit.id"
-                    :value="exit.id">{{exit.name}}</option>
-            </select>
+            <SearchDropdown
+                id="exitTrans"
+                class="custom-select"
+                :value="selectedExit.destinationExit"
+                :items="destinationRoomExits"
+                @change="setExitProp({destinationExit: nanToNull(parseInt($event))})"
+                v-tooltip="$t('room_editor.tt_exit_dest_exit')"></SearchDropdown>
         </div>
     </div>
 </template>

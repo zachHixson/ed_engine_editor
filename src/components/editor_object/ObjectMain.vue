@@ -28,6 +28,13 @@ const emit = defineEmits(['asset-changed']);
 
 const frameStartRef = ref<HTMLInputElement>();
 
+const genericNoOption = {name: t('generic.no_option'), id: -1, value: null}
+const exitBehaviors = [
+    {name: t('object_editor.to_destination'), id: Core.Game_Object.EXIT_TYPES.TO_DESTINATION, value: Core.Game_Object.EXIT_TYPES.TO_DESTINATION},
+    {name: t('object_editor.keep_position'), id: Core.Game_Object.EXIT_TYPES.KEEP_POSITION, value: Core.Game_Object.EXIT_TYPES.KEEP_POSITION},
+    {name: t('object_editor.transition_only'), id: Core.Game_Object.EXIT_TYPES.TRANSITION_ONLY, value: Core.Game_Object.EXIT_TYPES.TRANSITION_ONLY},
+];
+
 const spriteChoices = computed(()=>{
     const sprites = gameDataStore.getAllSprites.map(s => ({
         name: s.name,
@@ -36,10 +43,19 @@ const spriteChoices = computed(()=>{
         thumbnail: s.frameIsEmpty(0) ? Core.Instance_Sprite.DEFAULT_SPRITE_ICON[0] : s.frames[0]
     }));
 
-    return [{name: t('generic.no_option'), id: -1, value: null}, ...sprites];
+    return [genericNoOption, ...sprites];
 });
 const logicScripts = computed(()=>gameDataStore.getAllLogic);
-const selectedLogic = computed(()=>props.selectedAsset.logicScriptId);
+const logicChoices = computed(()=>{
+    const scripts = logicScripts.value.map(s => ({
+        name: s.name,
+        id: s.id,
+        value: s.id,
+        thumbnail: Core.Instance_Logic.DEFAULT_INSTANCE_ICON[0],
+    }));
+
+    return [genericNoOption, ...scripts, { name: t('generic.new'), id: Math.random(), value:'new' }];
+});
 const startFrame = computed({
     get(){
         return props.selectedAsset.startFrame;
@@ -52,12 +68,10 @@ const startFrame = computed({
     }
 });
 
-function setObjectSprite({ id }: { id: number }) : void {
-    const selectedSpriteId = id;
-
-    if (selectedSpriteId >= 0){
+function setObjectSprite(id: number) : void {
+    if (id >= 0){
         const allSprites = gameDataStore.getAllSprites;
-        const selectedSprite = allSprites.find(s => s.id == selectedSpriteId);
+        const selectedSprite = allSprites.find(s => s.id == id);
         props.selectedAsset.sprite = selectedSprite!;
     }
     else{
@@ -97,12 +111,10 @@ function groupChanged({add, groupName, newName, remove}: {add: boolean, groupNam
     }
 }
 
-function logicScriptChanged(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    const value = target.value;
-    let scriptId;
+function logicScriptChanged(id: number | string): void {
+    let scriptId: number;
 
-    if (value == 'new'){
+    if (id == 'new'){
         let newScript;
 
         gameDataStore.addAsset(Core.CATEGORY_ID.LOGIC);
@@ -110,14 +122,11 @@ function logicScriptChanged(event: Event): void {
         scriptId = newScript.id;
     }
     else{
-        scriptId = parseInt(value);
+        const numid = id as number;
+        scriptId = numid;
     }
 
     props.selectedAsset.logicScriptId = scriptId;
-
-    nextTick(()=>{
-        target.value = (props.selectedAsset.logicScriptId as any);
-    });
 }
 </script>
 
@@ -127,7 +136,13 @@ function logicScriptChanged(event: Event): void {
             <CategoryWrapper class="cat-drawing" :iconPath="spriteIcon" :heading="t('object_editor.heading_sprite')">
                 <div class="options">
                     <div class="control">
-                        <SearchDropdown :items="spriteChoices" :value="props.selectedAsset.sprite ? props.selectedAsset.sprite.id : null" @change="setObjectSprite" :thumbnail="true"></SearchDropdown>
+                        <SearchDropdown
+                            :items="spriteChoices"
+                            :value="props.selectedAsset.sprite ? props.selectedAsset.sprite.id : null"
+                            :thumbnail="true"
+                            :search="true"
+                            @change="setObjectSprite"
+                            v-tooltip="$t('object_editor.tt_sprite')"></SearchDropdown>
                     </div>
                     <div v-if="props.selectedAsset.sprite" class="control">
                         <label for="frameStart">{{$t('object_editor.start_frame')}}:</label>
@@ -183,11 +198,7 @@ function logicScriptChanged(event: Event): void {
                 </div>
                 <div v-if="props.selectedAsset.triggerExits" class="control">
                     <label for="exit_behavior">{{$t('object_editor.exit_behavior')}}:</label>
-                    <select id="exit_behavior" v-model="props.selectedAsset.exitBehavior" v-tooltip="$t('object_editor.tt_exit_behavior')">
-                        <option :value="Core.Game_Object.EXIT_TYPES.TO_DESTINATION">{{$t('object_editor.to_destination')}}</option>
-                        <option :value="Core.Game_Object.EXIT_TYPES.KEEP_POSITION">{{$t('object_editor.keep_position')}}</option>
-                        <option :value="Core.Game_Object.EXIT_TYPES.TRANSITION_ONLY">{{$t('object_editor.transition_only')}}</option>
-                    </select>
+                    <SearchDropdown id="exit_behavior" :items="exitBehaviors" :value="props.selectedAsset.exitBehavior" @change="props.selectedAsset.exitBehavior = $event"></SearchDropdown>
                 </div>
                 <div v-if="props.selectedAsset.triggerExits" class="control">
                     <label for="keep_camera_settings">{{$t('object_editor.keep_camera_settings')}}:</label>
@@ -199,16 +210,7 @@ function logicScriptChanged(event: Event): void {
             <div class="options">
                 <div class="control">
                     <label for="logic_script_select">{{$t('object_editor.logic_script')}}:</label>
-                    <select id="logic_script_select" :value="selectedLogic ?? ''" @change="logicScriptChanged" v-tooltip="$t('object_editor.tt_logic_script')">
-                        <option :value="''">{{$t('generic.no_option')}}</option>
-                        <option
-                            v-for="script in logicScripts"
-                            :key="script.id"
-                            :value="script.id">
-                            {{script.name}}
-                        </option>
-                        <option :value="'new'">{{$t('generic.new')}}</option>
-                    </select>
+                    <SearchDropdown id="logic_script_select" :items="logicChoices" :value="props.selectedAsset.logicScriptId ?? null" @change="logicScriptChanged"></SearchDropdown>
                 </div>
             </div>
             <div class="v-divider"></div>

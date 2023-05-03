@@ -191,7 +191,7 @@ const showPlaceHolder = computed(()=>
 }
 
 .properties:deep(.control > input),
-.properties:deep(.control > select),
+.properties:deep(.control > .custom-select),
 .properties:deep(.control > button){
     width: 100px;
     min-height: 30px;

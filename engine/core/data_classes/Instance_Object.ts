@@ -20,6 +20,7 @@ enum COLLISION_OVERRIDE {
 export class Instance_Object extends Instance_Base{
     static DEFAULT_INSTANCE_ICON_ID = 'INSTANCE_ICON';
     static DEFAULT_INSTANCE_ICON = [new ImageData(Sprite.DIMENSIONS, Sprite.DIMENSIONS)];
+    static COLLISION_OVERRIDES = COLLISION_OVERRIDE;
 
     protected  _objRef: Game_Object;
     

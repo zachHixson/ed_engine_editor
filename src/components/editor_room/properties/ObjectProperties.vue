@@ -2,8 +2,9 @@
 import Collapsible from './Collapsible.vue';
 import GroupList from '@/components/common/GroupList.vue';
 import Checkbox from '@/components/common/Checkbox.vue';
+import SearchDropdown from '@/components/common/SearchDropdown.vue';
 
-import type Core from '@/core';
+import Core from '@/core';
 import { checkNameCollisions, nanToNull } from '../Properties.vue';
 import { useI18n } from 'vue-i18n';
 
@@ -18,6 +19,8 @@ const emit = defineEmits([
     'inst-prop-set',
     'inst-group-changed',
 ]);
+
+const collisionOverrides = Core.Instance_Object.COLLISION_OVERRIDES;
 
 function setInstProp(propObj: any): void {
     emit('inst-prop-set', propObj);
@@ -45,12 +48,18 @@ function setInstanceName(newName: string): void {
         </div>
         <div class="control">
             <label for="instCollisionOvrr">{{$t('room_editor.collision')}}:</label>
-            <select id="instCollisionOvrr" :value="(selectedObject as Core.Instance_Object).collisionOverride" v-tooltip="$t('room_editor.tt_coll_ovr')"
-                @change="setInstProp({collisionOverride: ($event.target as any).value})">
-                <option :value="(selectedObject as Core.Instance_Object).COLLISION_OVERRIDES.KEEP">{{$t('room_editor.keep')}}</option>
-                <option :value="(selectedObject as Core.Instance_Object).COLLISION_OVERRIDES.FORCE">{{$t('room_editor.on')}}</option>
-                <option :value="(selectedObject as Core.Instance_Object).COLLISION_OVERRIDES.IGNORE">{{$t('room_editor.off')}}</option>
-            </select>
+            <SearchDropdown
+                id="instCollisionOvrr"
+                class="custom-select"
+                :value="(selectedObject as Core.Instance_Object).collisionOverride"
+                :items="[
+                    { name: t('room_editor.keep'), id: collisionOverrides.KEEP, value: collisionOverrides.KEEP},
+                    { name: t('room_editor.on'), id: collisionOverrides.FORCE, value: collisionOverrides.FORCE},
+                    { name: t('room_editor.off'), id: collisionOverrides.IGNORE, value: collisionOverrides.IGNORE},
+                ]"
+                @change="setInstProp({collisionOverride: $event})"
+                v-tooltip="$t('room_editor.tt_coll_ovr')"
+                ></SearchDropdown>
         </div>
         <div class="control">
             <label for="instCustDepth">{{$t('room_editor.custom_depth')}}:</label>
