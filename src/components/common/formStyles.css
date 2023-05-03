@@ -32,3 +32,8 @@
 .control > button:active, .control > input[type=button]:active{
     background: var(--button-dark-down);
 }
+
+.control > .search-dropdown{
+    width: 150px;
+    height: 30px;
+}

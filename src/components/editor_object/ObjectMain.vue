@@ -6,6 +6,7 @@ export const ObjectMainEventBus = new Core.Event_Bus();
 import AnimationPlayer from '@/components/common/AnimationPlayer.vue';
 import GroupList from '@/components/common/GroupList.vue';
 import CategoryWrapper from './CategoryWrapper.vue';
+import SearchDropdown from '../common/SearchDropdown.vue';
 
 import { ref, computed, nextTick, onMounted } from 'vue';
 import { useGameDataStore } from '@/stores/GameData';
@@ -26,9 +27,17 @@ const props = defineProps<{
 const emit = defineEmits(['asset-changed']);
 
 const frameStartRef = ref<HTMLInputElement>();
-const spriteSelectorRef = ref<HTMLSelectElement>();
 
-const spriteChoices = computed(()=>gameDataStore.getAllSprites);
+const spriteChoices = computed(()=>{
+    const sprites = gameDataStore.getAllSprites.map(s => ({
+        name: s.name,
+        id: s.id,
+        value: s.id,
+        thumbnail: s.frameIsEmpty(0) ? Core.Instance_Sprite.DEFAULT_SPRITE_ICON[0] : s.frames[0]
+    }));
+
+    return [{name: t('generic.no_option'), id: -1, value: null}, ...sprites];
+});
 const logicScripts = computed(()=>gameDataStore.getAllLogic);
 const selectedLogic = computed(()=>props.selectedAsset.logicScriptId);
 const startFrame = computed({
@@ -43,8 +52,8 @@ const startFrame = computed({
     }
 });
 
-function setObjectSprite() : void {
-    const selectedSpriteId = parseInt(spriteSelectorRef.value!.value);
+function setObjectSprite({ id }: { id: number }) : void {
+    const selectedSpriteId = id;
 
     if (selectedSpriteId >= 0){
         const allSprites = gameDataStore.getAllSprites;
@@ -115,19 +124,10 @@ function logicScriptChanged(event: Event): void {
 <template>
     <div class="objMain">
         <div class="top-row">
-            <CategoryWrapper :iconPath="spriteIcon" :heading="t('object_editor.heading_sprite')">
+            <CategoryWrapper class="cat-drawing" :iconPath="spriteIcon" :heading="t('object_editor.heading_sprite')">
                 <div class="options">
                     <div class="control">
-                        <label for="drawing_select">{{$t('object_editor.sprite_selector')}}:</label>
-                        <select ref="spriteSelectorRef" id="drawing_select" :value="props.selectedAsset.sprite ? props.selectedAsset.sprite.id : ''" @change="setObjectSprite" v-tooltip="$t('object_editor.tt_sprite')">
-                            <option :value="''">{{$t('generic.no_option')}}</option>
-                            <option
-                                v-for="sprite in spriteChoices"
-                                :key="sprite.id"
-                                :value="sprite.id">
-                                {{sprite.name}}
-                            </option>
-                        </select>
+                        <SearchDropdown :items="spriteChoices" :value="props.selectedAsset.sprite ? props.selectedAsset.sprite.id : null" @change="setObjectSprite" :thumbnail="true"></SearchDropdown>
                     </div>
                     <div v-if="props.selectedAsset.sprite" class="control">
                         <label for="frameStart">{{$t('object_editor.start_frame')}}:</label>
@@ -162,7 +162,7 @@ function logicScriptChanged(event: Event): void {
                     </div>
                 </div>
             </CategoryWrapper>
-            <CategoryWrapper :iconPath="physicsIcon" :heading="t('object_editor.heading_physics')">
+            <CategoryWrapper class="cat-physics" :iconPath="physicsIcon" :heading="t('object_editor.heading_physics')">
                 <div class="options">
                     <div class="control">
                         <label for="isSolid">{{$t('object_editor.is_solid')}}:</label>
@@ -175,7 +175,7 @@ function logicScriptChanged(event: Event): void {
                 </div>
             </CategoryWrapper>
         </div>
-        <CategoryWrapper class="logic" :iconPath="logicIcon" :heading="t('object_editor.heading_logic')">
+        <CategoryWrapper class="cat-logic" :iconPath="logicIcon" :heading="t('object_editor.heading_logic')">
             <div class="options">
                 <div class="control">
                     <label for="trigger_exits">{{$t('object_editor.trigger_exits')}}:</label>
@@ -197,12 +197,6 @@ function logicScriptChanged(event: Event): void {
             </div>
             <div class="v-divider"></div>
             <div class="options">
-                <div v-if="!props.selectedAsset.customLogic" class="control">
-                    <label for="logic_preset_select">{{$t('object_editor.logic_preset')}}:</label>
-                    <select id="logic_preset_select" v-tooltip="$t('object_editor.tt_logic_preset')">
-                        <option :value="null">{{$t('generic.no_option')}}</option>
-                    </select>
-                </div>
                 <div class="control">
                     <label for="logic_script_select">{{$t('object_editor.logic_script')}}:</label>
                     <select id="logic_script_select" :value="selectedLogic ?? ''" @change="logicScriptChanged" v-tooltip="$t('object_editor.tt_logic_script')">
@@ -243,7 +237,7 @@ function logicScriptChanged(event: Event): void {
     background: white;
     padding: 20px;
     width: 100%;
-    overflow-x: none;
+    overflow-x: hidden;
     overflow-y: auto;
 }
 
@@ -254,7 +248,10 @@ function logicScriptChanged(event: Event): void {
 }
 
 .v-divider{
+    display: block;
     border-right: 1px solid rgba(0.0, 0.0, 0.0, 0.2);
+    height: 100%;
+    width: 1px;
 }
 
 .control{
@@ -281,15 +278,21 @@ function logicScriptChanged(event: Event): void {
     justify-content: stretch;
     gap: 10px;
     width: 100%;
+    height: 270px;
     max-width: 1200px;
 }
 
-.top-row > * {
+.cat-drawing{
     flex-grow: 1;
 }
 
-.logic {
+.cat-physics{
+    width: 230px;
+}
+
+.cat-logic {
     width: 100%;
     max-width: 1200px;
+    height: 165px;
 }
 </style>

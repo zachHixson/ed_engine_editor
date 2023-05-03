@@ -1,10 +1,10 @@
 {
-    "test": "test",
     "generic":{
         "no_option": "-- None --",
         "delete": "Delete",
         "new": "-- New --",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "search": "Search"
     },
     "editor_main":{
         "project_name": "Project Name:",

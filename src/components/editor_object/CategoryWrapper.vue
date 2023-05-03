@@ -20,10 +20,9 @@ defineProps<{
 <style>
 .categoryWrapper{
     display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: flex-start;
-    flex-wrap: wrap;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-end;
     background: var(--tool-panel-bg);
     padding: 10px;
     box-sizing: border-box;
@@ -43,6 +42,7 @@ defineProps<{
 .title{
     display: flex;
     align-items: center;
+    width: 100%;
     color: var(--text-dark);
     font-weight: bold;
     font-size: 1.5em;
@@ -56,7 +56,7 @@ defineProps<{
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
-    height: 100%;
+    align-items: flex-start;
     gap: 10px;
     flex-grow: 1;
 }

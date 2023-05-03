@@ -94,18 +94,21 @@ function saveAs(data: string, fileName: string){
 </script>
 
 <template>
-    <HeaderPanel class="headerPanel"
-        @new-project="newProject"
-        @open-project="openProject"
-        @save-project="saveProject"
-        @package-game="packageGame" />
-    <TabPanel class="TabPanel" ref="tabPanel"/>
-    <AssetBrowser class="assetBrowser" ref="assetBrowser" @asset-selected="updateEditorAsset" @asset-deleted="updateAfterDeletion" />
-    <EditorWindow class="editorWindow" ref="editorWindow" @asset-changed="updateAssetPreviews"/>
-    <transition name="playWindow">
-        <PlayWindow v-if="mainStore.getPlayState != PLAY_STATE.NOT_PLAYING" class="playWindow" />
-    </transition>
-    <Tooltip />
+    <div id="global-dest"></div>
+    <div class="main">
+        <HeaderPanel class="headerPanel"
+            @new-project="newProject"
+            @open-project="openProject"
+            @save-project="saveProject"
+            @package-game="packageGame" />
+        <TabPanel class="TabPanel" ref="tabPanel"/>
+        <AssetBrowser class="assetBrowser" ref="assetBrowser" @asset-selected="updateEditorAsset" @asset-deleted="updateAfterDeletion" />
+        <EditorWindow class="editorWindow" ref="editorWindow" @asset-changed="updateAssetPreviews"/>
+        <transition name="playWindow">
+            <PlayWindow v-if="mainStore.getPlayState != PLAY_STATE.NOT_PLAYING" class="playWindow" />
+        </transition>
+        <Tooltip />
+    </div>
     <!--Preloaded icons-->
     <div hidden>
         <img src="@/assets/error_decorator.svg" />
@@ -135,6 +138,11 @@ html, body{
     font-family: Avenir, Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    width: 100%;
+    height: 100%;
+}
+
+.main{
     display: grid;
     grid-template-areas:
         "headerPanel headerPanel"
@@ -146,6 +154,15 @@ html, body{
     height: 100%;
     max-height: 100vh;
     background: var(--main-bg);
+}
+
+#global-dest{
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
 }
 
 .headerPanel{

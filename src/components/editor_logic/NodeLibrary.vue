@@ -59,7 +59,7 @@ function tabClick(category: string): void {
         <div v-if="showPanel" class="library-panel">
             <div class="library-heading">{{ selectedCategory }}</div>
             <div v-if="selectedCategory == 'search'" class="search-wrapper">
-                <input class="search-box" type="text" style="width: 100%" placeholder="Search" v-model="searchValue"/>
+                <input class="search-box" type="text" style="width: 100%" :placeholder="t('generic.search')" v-model="searchValue"/>
             </div>
             <div class="node-list">
                 <div
