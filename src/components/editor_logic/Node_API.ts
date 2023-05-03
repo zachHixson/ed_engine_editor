@@ -3,16 +3,19 @@ import { useGameDataStore } from "@/stores/GameData";
 import type Node from "./node_components/Node";
 import type Core from '@/core';
 import type Node_Connection from "./node_components/Node_Connection";
+import { useI18n } from "vue-i18n";
 
 export type TextInfo = {textId: string, vars: {[keys: string]: any}};
 
 export default class Node_API implements Core.iEditorAPI {
     _editor: any;
 
+    gameDataStore = useGameDataStore();
+    logicEditorStore = useLogicEditorStore();
+
     get editor(){return this._editor};
     get globalVariableMap(){
-        const logicEditorStore = useLogicEditorStore();
-        return logicEditorStore.globalVariableMap;
+        return this.logicEditorStore.globalVariableMap;
     };
 
     unMount(): void {
@@ -113,8 +116,7 @@ export default class Node_API implements Core.iEditorAPI {
 
     forEachNode(callback: (node: Node)=>void, isGlobal = true): void {
         if (isGlobal){
-            const gameDataStore = useGameDataStore();
-            const allLogic = gameDataStore.getAllLogic;
+            const allLogic = this.gameDataStore.getAllLogic;
 
             for (let l = 0; l < allLogic.length; l++){
                 const curLogic = allLogic[l];
@@ -143,5 +145,10 @@ export default class Node_API implements Core.iEditorAPI {
 
     popLastCommit(){
         return this.editor.undoStore.popLast();
+    }
+
+    t(text: string): string {
+        const { t } = useI18n();
+        return t(text);
     }
 }

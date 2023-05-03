@@ -12,7 +12,7 @@ interface iNode_Base extends iNodeLifecycleEvents {
     template: iNodeTemplate;
     nodeId: number;
     isEvent: boolean;
-    widgetData?: iAnyObj | null;
+    widgetData?: any;
     dataCache: Map<string, any>;
 }
 
@@ -26,6 +26,7 @@ export interface iNodeLifecycleEvents {
     logicLoaded?: (logic: iEditorLogic | iEngineLogic)=>void;
     afterGameDataLoaded?: ()=>void;
     onScriptAdd?: ()=>void;
+    onBeforeMount?: ()=>void;
     onMount?: ()=>void;
     allNodesMounted?: ()=>void;
     onNewVariable?: ()=>void;
@@ -73,6 +74,7 @@ export interface iEditorNodeOutput extends iOutput {
 
 export interface iEditorNode extends iNode_Base {
     templateId: string;
+    widget?: any;
     inTriggers: Map<string, iEditorNodeInTrigger>;
     outTriggers: Map<string, {
         id: string,
@@ -114,6 +116,8 @@ export interface iNewVarInfo {
 export interface iEditorAPI {
     editor: iAnyObj;
     globalVariableMap: Map<string, SOCKET_TYPE>;
+    gameDataStore: any;
+    logicEditorStore: any;
 
     getGlobalVariable(name: string): SOCKET_TYPE | undefined;
     setGlobalVariable(name: string, type: SOCKET_TYPE): void;
@@ -130,6 +134,7 @@ export interface iEditorAPI {
     dialogConfirm(textInfo: {textId: string, vars: {[keys: string]: any}}, callback: (positive: boolean)=>void): void;
     dialogNewVariable(callback: (positive: boolean, varInfo: iNewVarInfo)=>void): void;
     popLastCommit(): void;
+    t(text: string): string;
 }
 
 export interface iEngineLogic {

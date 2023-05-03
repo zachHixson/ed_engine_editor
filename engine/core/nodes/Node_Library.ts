@@ -3,47 +3,11 @@ import { iNodeTemplate } from './iNodeTemplate';
 import Cat_Events from './Cat_Events';
 import Cat_Variables from './Cat_Variables';
 import { Vector } from '../Vector';
-import { iEngineNode } from '../LogicInterfaces';
-import { Instance_Object } from '../core';
+import { iEditorNode, iEngineNode } from '../LogicInterfaces';
+import { Game_Object, Instance_Object } from '../core';
 
 export const NODE_LIST: iNodeTemplate[] = [
     ...Cat_Events,
-    {
-        id: 'trigger_2io',
-        category: 'testing',
-        inTriggers: [
-            {id: 'trigger_2io_inTrigger_01', execute: 'do_thing'},
-            {id: 'trigger_2io_inTrigger_02', execute: 'do_thing'},
-        ],
-        outTriggers: ['trigger_2io_outTrigger_01', 'trigger_2io_outTrigger_02'],
-        inputs: [
-            {id: 'trigger_2io_iNum1', type: SOCKET_TYPE.NUMBER, default: 1},
-            {id: 'trigger_2io_iNum2', type: SOCKET_TYPE.NUMBER, default: 2},
-        ],
-        outputs: [
-            {id: 'trigger_2io_oNum1', type: SOCKET_TYPE.NUMBER, execute: 'do_thing'},
-            {id: 'trigger_2io_oNum2', type: SOCKET_TYPE.NUMBER, execute: 'do_thing'},
-        ],
-    },
-    {
-        id: 'all_types',
-        category: 'testing',
-        inputs: [
-            {id: 'all_types_iNumber', type: SOCKET_TYPE.NUMBER, default: 88},
-            {id: 'all_types_iAny', type: SOCKET_TYPE.ANY, default: null},
-            {id: 'all_types_iObject', type: SOCKET_TYPE.OBJECT, default: null},
-            {id: 'all_types_iString', type: SOCKET_TYPE.STRING, default: 'Default'},
-            {id: 'all_types_iBool', type: SOCKET_TYPE.BOOL, default: false},
-        ],
-        outputs: [
-            {id: 'all_types_oNumber', type: SOCKET_TYPE.NUMBER, execute: 'do_thing'},
-            {id: 'all_types_oAny', type: SOCKET_TYPE.ANY, execute: 'do_thing'},
-            {id: 'all_types_oObject', type: SOCKET_TYPE.OBJECT, execute: 'do_thing'},
-            {id: 'all_types_oString', type: SOCKET_TYPE.STRING, execute: 'do_thing'},
-            {id: 'all_types_oBool', type: SOCKET_TYPE.BOOL, execute: 'do_thing'},
-        ],
-    },
-    ///////////// actual nodes
     {// Branch
         id: 'branch',
         category: 'actual',
@@ -72,7 +36,9 @@ export const NODE_LIST: iNodeTemplate[] = [
         widget: {
             id: 'compare_function',
             type: WIDGET.ENUM,
-            options: ['equal_sym', 'gt', 'lt', 'gte', 'lte'],
+            options: {
+                items: ['equal_sym', 'gt', 'lt', 'gte', 'lte']
+            },
         },
         outputs: [
             {id: 'equal', type: SOCKET_TYPE.BOOL, execute: 'compare'},
@@ -99,7 +65,9 @@ export const NODE_LIST: iNodeTemplate[] = [
         widget: {
             id: 'logic_function',
             type: WIDGET.ENUM,
-            options: ['and', 'or', 'xor'],
+            options: {
+                items: ['and', 'or', 'xor']
+            },
         },
         inputs: [
             {id: '_inp1', type: SOCKET_TYPE.BOOL, default: false},
@@ -147,16 +115,17 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: '_data', type: SOCKET_TYPE.ANY, default: null},
         ],
         methods: {
-            log(){
+            log(this: iEngineNode){
                 const label = this.getInput('label');
                 const data = this.getInput('_data');
                 const hasData = data || typeof data == 'boolean';
+                const outData = data.name ? `{{${data.name}}}` : data;
 
                 if (label.length > 0 && hasData){
-                    this.engine.log(label, data);
+                    this.engine.log(label, outData);
                 }
                 else if (hasData){
-                    this.engine.log(data);
+                    this.engine.log(outData);
                 }
                 else{
                     this.engine.log(label);
@@ -190,7 +159,9 @@ export const NODE_LIST: iNodeTemplate[] = [
         widget: {
             id: 'math_function',
             type: WIDGET.ENUM,
-            options: ['add_sym', 'subtract_sym', 'multiply_sym', 'divide_sym', 'power'],
+            options: {
+                items: ['add_sym', 'subtract_sym', 'multiply_sym', 'divide_sym', 'power']
+            },
         },
         inputs: [
             {id: '_num1', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
@@ -262,6 +233,53 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
             dialogClosed(){
                 this.triggerOutput('dialog_closed');
+            }
+        }
+    },
+    {// Object Input
+        id:'object_input',
+        category: 'actual',
+        widget: {
+            id: 'object',
+            type: WIDGET.ENUM,
+            options: {
+                items: [],
+                showSearch: true,
+                showThumbnail: true,
+            }
+        },
+        outputs: [
+            { id: '_o', type: SOCKET_TYPE.OBJECT, execute: 'getObject' }
+        ],
+        onBeforeMount(this: iEditorNode){
+            const genericNoOption = {
+                name: this.editorAPI.t('generic.no_option'),
+                id: -1,
+                value: null,
+            };
+            const objects = this.editorAPI.gameDataStore.getAllObjects.map((o: Game_Object) => ({
+                name: o.name,
+                id: o.id,
+                value: o.id,
+                thumbnail: (()=>{
+                    const thumbFrame = o.sprite?.frames[o.startFrame];
+
+                    if (!(thumbFrame && o.sprite)){
+                        return Instance_Object.DEFAULT_INSTANCE_ICON[0];
+                    }
+
+                    return o.sprite.frameIsEmpty(o.startFrame) ? Instance_Object.DEFAULT_INSTANCE_ICON[0] : o.sprite?.frames[o.startFrame];
+                })()
+            }));
+
+            this.widget.options.items = [genericNoOption, ...objects];
+        },
+        methods: {
+            getObject(this: iEngineNode){
+                const objects = this.engine.gameData.objects;
+                const selectedObjectId = this.widgetData;
+
+                return objects.filter(o => o.id == selectedObjectId)[0] ?? null;
             }
         }
     },

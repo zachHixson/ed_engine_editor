@@ -32,6 +32,7 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
     logicLoaded: Core.iNodeLifecycleEvents['logicLoaded'];
     afterGameDataLoaded: Core.iNodeLifecycleEvents['afterGameDataLoaded'];
     onScriptAdd: Core.iNodeLifecycleEvents['onScriptAdd'];
+    onBeforeMount: Core.iNodeLifecycleEvents['onBeforeMount'];
     onMount: Core.iNodeLifecycleEvents['onMount'];
     allNodesMounted: Core.iNodeLifecycleEvents['allNodesMounted'];
     onNewVariable: Core.iNodeLifecycleEvents['onNewVariable'];
@@ -75,6 +76,7 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
         this.logicLoaded = template.logicLoaded?.bind(this);
         this.afterGameDataLoaded = template.afterGameDataLoaded?.bind(this);
         this.onScriptAdd = template.onScriptAdd?.bind(this);
+        this.onBeforeMount = template.onBeforeMount?.bind(this);
         this.onMount = template.onMount?.bind(this);
         this.allNodesMounted = template.allNodesMounted?.bind(this);
         this.onNewVariable = template.onNewVariable?.bind(this);

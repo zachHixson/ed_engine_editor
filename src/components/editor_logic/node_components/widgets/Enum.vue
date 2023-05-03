@@ -12,13 +12,17 @@ const props = defineProps<{
     setWidgetData: (data: any)=>void,
 }>();
 
-const enumOptions = computed(()=>
-    props.widget.options.map((o: any) => ({
+const enumOptions = computed(()=>{
+    if (typeof props.widget.options.items[0] == 'string'){
+        return props.widget.options.items.map((o: any) => ({
             name: t('node.' + o),
             value: o,
             id: o,
-    }))
-);
+        }));
+    }
+
+    return props.widget.options.items;
+});
 const selectWidth = computed(()=>{
     if (enumOptions.value.length <= 0) return '20px';
 
@@ -34,6 +38,8 @@ const selectWidth = computed(()=>{
     return `${largest + 2}em`;
 });
 const enumValue = computed(()=>props.widgetData ?? enumOptions.value[0]);
+const showSearch = computed(()=>props.widget.options.showSearch);
+const showThumbnail = computed(()=>props.widget.options.showThumbnail);
 
 onMounted(()=>{
     nextTick(()=>{
@@ -44,7 +50,13 @@ onMounted(()=>{
 
 <template>
     <div class="enum">
-        <SearchDropdown :style="`width: ${selectWidth};`" :items="enumOptions" @change="setWidgetData($event)" :value="enumValue"></SearchDropdown>
+        <SearchDropdown
+            :style="`width: ${selectWidth};`"
+            :items="enumOptions"
+            :value="enumValue"
+            :search="showSearch"
+            :thumbnail="showThumbnail"
+            @change="setWidgetData($event)"></SearchDropdown>
     </div>
 </template>
 

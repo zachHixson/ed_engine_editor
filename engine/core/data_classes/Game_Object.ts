@@ -58,7 +58,7 @@ export class Game_Object extends Asset_Base {
         return this.sprite.frameIsEmpty(this._startFrame) ? null : this.sprite.drawToCanvas(this._startFrame);
     }
 
-    get zDepth(){return this._zDepth};
+    get zDepth(){return this._zDepth}
     set zDepth(newDepth: number){
         this._zDepth = Math.max(Math.min(newDepth, 99), -99);
     }

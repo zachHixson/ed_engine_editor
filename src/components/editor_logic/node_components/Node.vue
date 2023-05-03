@@ -65,6 +65,7 @@ const categoryStyle = computed(()=>categoryStyleMap.get(props.nodeObj.template.c
 const decoratorIconPath = computed(()=>decoratorMap.get(props.nodeObj.decoratorIcon!)!);
 
 onBeforeMount(()=>{
+    props.nodeObj.onBeforeMount && props.nodeObj.onBeforeMount();
     updateAllSockets();
 });
 

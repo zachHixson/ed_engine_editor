@@ -118,6 +118,7 @@ export class Engine implements iEngineCallbacks {
         Instance_Exit.engine = this;
     }
 
+    get gameData(){return this._gameData}
     get room(){return this._loadedRoom}
     get currentTime(){return this._curTime}
     get deltaTime(){return this._deltaTime}
