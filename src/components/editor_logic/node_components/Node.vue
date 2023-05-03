@@ -214,7 +214,7 @@ defineExpose({getRelinkInfo});
         :style="isSelected ? 'border-color: var(--button-norm)' : ''"
         @click="emit('node-clicked', {nodeObj, event: $event})"
         @mousedown="mouseDown">
-        <div class="heading" :style="`background: ${categoryStyle.color}`">
+        <div class="heading" :style="`border-color: ${categoryStyle.color}`">
             <div v-if="categoryStyle.icon" class="node-icon">
                 <Svg :src="categoryStyle.icon"></Svg>
             </div>
@@ -322,6 +322,7 @@ defineExpose({getRelinkInfo});
     gap: 5px;
     padding-bottom: 5px;
     padding: 5px;
+    border-top: 8px solid;
     border-radius:  8px 8px 0 0;
 }
 

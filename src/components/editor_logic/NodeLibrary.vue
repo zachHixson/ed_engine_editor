@@ -65,7 +65,7 @@ function tabClick(category: string): void {
                 <div
                     v-for="node in filteredNodes"
                     class="node"
-                    :style="`background: ${categoryStyleMap.get(node.category)?.color ?? 'var(--tool-panel-bg)'}`"
+                    :style="`border-color: ${categoryStyleMap.get(node.category)?.color ?? 'var(--tool-panel-bg)'}`"
                     @click="emit('node-clicked', node.id)">
                     <div class="node-icon">
                         <Svg :src="categoryStyleMap.get(node.category)?.icon ?? ''"></Svg>
@@ -85,13 +85,13 @@ function tabClick(category: string): void {
             <div
                 v-for="category in categoryStyles"
                 :style="`
-                    background: ${category.color};
+                    border-color: ${category.color};
                     ${selectedCategory == category.name ? 'width: 35px':''}
                 `"
                 class="tab"
                 @click="tabClick(category.name)"
                 v-tooltip="t('logic_editor.' + category.name)">
-                <div v-if="selectedCategory == category.name" class="line-erase" :style="`background: ${category.color}`"></div>
+                <div v-if="selectedCategory == category.name" class="line-erase"></div>
                 <Svg class="tab-icon" :src="category.icon" :style="category.icon == icon_arrow ? 'rotate: 90deg;':''"></Svg>
             </div>
         </div>
@@ -158,12 +158,16 @@ function tabClick(category: string): void {
     flex-shrink: 0;
     height: 25px;
     padding: 10px;
-    border: 2px solid var(--border);
+    background: var(--tool-panel-bg);
+    border-top: 8px solid red;
     border-radius: var(--corner-radius);
+    outline: 2px solid var(--border);
+    outline-offset: -2px;
 }
 
 .node:hover{
     filter: brightness(1.2);
+    outline-color: #999999;
 }
 
 .node:active{
@@ -195,13 +199,15 @@ function tabClick(category: string): void {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    width: 30px;
+    width: 35px;
     height: 70px;
     background: var(--tool-panel-bg);
-    border: 2px solid var(--border);
+    border-right: 5px solid var(--border);
     z-index: 1000;
     border-left: none;
     border-radius: 0px var(--corner-radius) var(--corner-radius) 0px;
+    outline: 2px solid var(--border);
+    box-sizing: border-box;
 }
 
 .tab-icon{
