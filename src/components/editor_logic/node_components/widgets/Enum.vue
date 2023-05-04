@@ -43,7 +43,14 @@ const showThumbnail = computed(()=>props.widget.options.showThumbnail);
 
 onMounted(()=>{
     nextTick(()=>{
-        props.setWidgetData(enumValue.value);
+        const curVal = enumValue.value;
+
+        if (curVal.value){
+            props.setWidgetData(curVal.value);
+        }
+        else{
+            props.setWidgetData(curVal);
+        }
     });
 });
 </script>
