@@ -187,9 +187,10 @@ export class Instance_Renderer {
 
     private _setInstanceData(atlasData: iAtlasData, bufferLocation: number, instance: Instance_Base, imageFrame: number): void {
         const spriteoffset = atlasData.atlas.getImageOffset(instance.frameDataId, imageFrame).divideScalar(this._tileSize);
+        const instancePos = instance.pos.clone().round();
         this._gl.bindVertexArray(atlasData.vao);
 
-        atlasData.positionBuffer.setSubData(new Float32Array([instance.pos.x, instance.pos.y, -instance.zDepth]), bufferLocation * 4 * 3);
+        atlasData.positionBuffer.setSubData(new Float32Array([instancePos.x, instancePos.y, -instance.zDepth]), bufferLocation * 4 * 3);
         atlasData.spriteOffsetBuffer.setSubData(new Uint8Array([spriteoffset.x, spriteoffset.y]), bufferLocation * 2);
         atlasData.backAnimBuffer.setSubData(new Uint8ClampedArray([easeOutBack(instance.backAnim) * 225]), bufferLocation);
         atlasData.bufferLocations[bufferLocation] = instance.id;

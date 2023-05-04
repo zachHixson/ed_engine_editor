@@ -402,12 +402,12 @@ export const NODE_LIST: iNodeTemplate[] = [
                         xInp === '' ? 0 : xInp,
                         yInp === '' ? 0 : yInp
                     );
-                    newPos = offset.add(this.instance.pos);
+                    newPos = offset.add(instance.pos);
                 }
                 else{
                     newPos = new Vector(
-                        xInp === '' ? this.instance.pos.x : xInp,
-                        yInp === '' ? this.instance.pos.y : yInp
+                        xInp === '' ? instance.pos.x : xInp,
+                        yInp === '' ? instance.pos.y : yInp
                     );
                 }
 
