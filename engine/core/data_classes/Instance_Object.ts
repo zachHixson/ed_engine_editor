@@ -124,6 +124,10 @@ export class Instance_Object extends Instance_Base{
         this.executeNodeEvent('e_create');
     }
 
+    override onUpdate(deltaTime: number): void {
+        this.executeNodeEvent('e_update', deltaTime);
+    }
+
     override clone(): Instance_Object {
         const clone = new Instance_Object(this.id, this.pos, this._objRef);
         Object.assign(clone, this);

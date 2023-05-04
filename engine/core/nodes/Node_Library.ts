@@ -300,7 +300,7 @@ export const NODE_LIST: iNodeTemplate[] = [
         id: 'instance_properties',
         category: 'actual',
         inputs: [
-            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null}
+            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true}
         ],
         outputs: [
             {id: 'Type', type: SOCKET_TYPE.ASSET, execute: 'get_asset'},
@@ -384,22 +384,31 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         outTriggers: ['_o'],
         inputs: [
+            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
             {id: 'x', type: SOCKET_TYPE.NUMBER, default: '', required: false},
             {id: 'y', type: SOCKET_TYPE.NUMBER, default: '', required: false},
             {id: 'relative', type: SOCKET_TYPE.BOOL, default: false},
         ],
         methods: {
             setPosition(this: iEngineNode){
-                const x = this.getInput('x');
-                const y = this.getInput('y');
+                const instance = this.getInput('instance') ?? this.instance;
+                const xInp = this.getInput('x');
+                const yInp = this.getInput('y');
                 const relative = this.getInput('relative');
-                const newPos = new Vector(
-                    Math.round(x == '' ? this.instance.pos.x : x),
-                    Math.round(y == '' ? this.instance.pos.y : y)
-                );
+                let newPos: Vector;
 
                 if (relative){
-                    newPos.add(this.instance.pos);
+                    const offset = new Vector(
+                        xInp === '' ? 0 : xInp,
+                        yInp === '' ? 0 : yInp
+                    );
+                    newPos = offset.add(this.instance.pos);
+                }
+                else{
+                    newPos = new Vector(
+                        xInp === '' ? this.instance.pos.x : xInp,
+                        yInp === '' ? this.instance.pos.y : yInp
+                    );
                 }
 
                 this.engine.setInstancePosition(this.instance, newPos);
