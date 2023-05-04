@@ -2,12 +2,7 @@ import { iNodeTemplate } from './iNodeTemplate';
 import {SOCKET_TYPE, SOCKET_DEFAULT} from './Node_Enums';
 import { iEditorNode, iEngineNode, iNodeSaveData } from '../LogicInterfaces';
 import { iAnyObj } from '../interfaces';
-
-type Node = iEditorNode | iEngineNode;
-
-function isEngineNode(node: any): node is iEngineNode {
-    return !!node.engine;
-}
+import { isEngineNode, type Node } from './Node_Library';
 
 export default [
     {// Create Variable

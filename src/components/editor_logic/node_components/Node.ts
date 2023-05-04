@@ -47,6 +47,7 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
 
     reverseInputs?: boolean;
     reverseOutputs?: boolean;
+    stackDataIO?: boolean;
     inputBoxWidth?: number;
     decoratorIcon?: string;
     decoratorText?: string;

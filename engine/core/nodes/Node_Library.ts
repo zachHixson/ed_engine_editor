@@ -7,6 +7,12 @@ import { iEditorNode, iEngineNode } from '../LogicInterfaces';
 import { Game_Object, Instance_Object } from '../core';
 import { assetToInstance, instanceToAsset } from './Socket_Conversions';
 
+export type Node = iEditorNode | iEngineNode;
+
+export function isEngineNode(node: any): node is iEngineNode {
+    return !!node.engine;
+}
+
 export const NODE_LIST: iNodeTemplate[] = [
     ...Cat_Events,
     {// Branch
@@ -308,6 +314,11 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'x', type: SOCKET_TYPE.NUMBER, execute: 'get_x'},
             {id: 'y', type: SOCKET_TYPE.NUMBER, execute: 'get_y'},
         ],
+        init(this: Node){
+            if (!isEngineNode(this)){
+                this.stackDataIO = true;
+            }
+        },
         methods: {
             get_asset(){
                 return instanceToAsset(this.instance, this.engine.gameData);

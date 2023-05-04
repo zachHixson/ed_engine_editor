@@ -260,7 +260,7 @@ defineExpose({getRelinkInfo});
             </div>
         </div>
         <div v-if="showTriggers && showDataSockets" class="separator"></div>
-        <div v-if="showDataSockets" class="io">
+        <div v-if="showDataSockets" class="io" :style="nodeObj.stackDataIO ? 'flex-direction: column-reverse;':''">
             <div
                 class="socket-column" 
                 style="align-items: flex-start"

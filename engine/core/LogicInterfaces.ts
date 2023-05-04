@@ -102,6 +102,7 @@ export interface iEditorNode extends iNode_Base {
     inputBoxWidth?: number;
     decoratorIcon?: string | null;
     decoratorText?: string | null;
+    stackDataIO?: boolean;
 
     method(methodName: string): any;
     getInput(inputName: string): any | null;

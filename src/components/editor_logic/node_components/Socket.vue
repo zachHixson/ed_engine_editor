@@ -205,6 +205,18 @@ defineExpose({socket: props.socket});
                 v-tooltip="te(socket.decoratorText!) ? t(socket.decoratorText!, socket.decoratorTextVars || {}): ''"></Svg>
         </div>
         <div class="name-input-wrapper" :style="isInput && !socket.flipInput ? 'flex-direction: row-reverse;':''">
+            <div
+                name="spaceholders"
+                v-if="isInput && isConnected && !hideInput"
+                class="inputBox"
+                style="opacity: 0%;">
+                <div
+                    v-if="socketType == Core.Node_Enums.SOCKET_TYPE.INSTANCE && socket.required"
+                    class="selfBox"
+                    :style="customStyles">
+                    <div>{{t('logic_editor.self')}}</div>
+                </div>
+            </div>
             <div v-if="showLabel" class="socket_name" :class="socket.hideLabel ? 'invisible':''">
                 <div>{{t('node.' + socket.id)}}</div>
             </div>
