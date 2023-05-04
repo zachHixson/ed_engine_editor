@@ -21,6 +21,24 @@ const {
     BOOL,
 } = SOCKET_TYPE;
 
+export function assetToInstance(asset: Asset_Base | iEngineLogic, id: number, pos: Vector): Instance_Base | null {
+    if (!asset) return null;
+    
+    switch(asset.category_ID){
+        case CATEGORY_ID.SPRITE:
+            const sprite = asset as Sprite;
+            return new Instance_Sprite(id, pos, sprite);
+        case CATEGORY_ID.OBJECT:
+            const object = asset as Game_Object;
+            return new Instance_Object(id, pos, object);
+        case CATEGORY_ID.LOGIC:
+            const logic = asset as iEngineLogic;
+            return new Instance_Logic(id, pos, logic.id, '');
+        default:
+            return null;
+    }
+}
+
 const socketConversionMap = (()=>{
     const scm = new Map<SOCKET_TYPE, Map<SOCKET_TYPE, (val: any)=>any>>();
 

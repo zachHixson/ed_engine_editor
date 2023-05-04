@@ -2,7 +2,17 @@ import { iAnyObj } from "./interfaces";
 import { SOCKET_TYPE } from "./nodes/Node_Enums";
 import { Vector } from "./Vector";
 import Engine from "@engine/Engine";
-import { iAssetSaveData, iInput, iInTrigger, iNavSaveData, iNodeTemplate, iOutput, Node_Enums, Instance_Object } from "./core";
+import {
+    iAssetSaveData,
+    iInput,
+    iInTrigger,
+    iNavSaveData,
+    iNodeTemplate,
+    iOutput,
+    Node_Enums,
+    Instance_Object,
+    CATEGORY_ID
+} from "./core";
 
 type Graph = {};
 type Connection = {};
@@ -139,6 +149,7 @@ export interface iEditorAPI {
 
 export interface iEngineLogic {
     id: number;
+    category_ID: CATEGORY_ID;
     events: Map<string, iEngineNode[]>;
     localVariableDefaults: Map<string, any>;
 

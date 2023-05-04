@@ -9,7 +9,8 @@ import {
     iEngineOuput,
     iEngineInTrigger,
     iEngineInput,
-    iNodeSaveData
+    iNodeSaveData,
+CATEGORY_ID
 } from '@engine/core/core';
 
 export default class Logic implements iEngineLogic {
@@ -65,6 +66,7 @@ export default class Logic implements iEngineLogic {
         });
     }
 
+    get category_ID(){return CATEGORY_ID.LOGIC};
     get localVariableDefaults(){return this._localVariableDefaults};
 
     executeEvent(eventName: string, instance: Instance_Object, data: any): void {

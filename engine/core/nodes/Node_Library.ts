@@ -5,6 +5,7 @@ import Cat_Variables from './Cat_Variables';
 import { Vector } from '../Vector';
 import { iEditorNode, iEngineNode } from '../LogicInterfaces';
 import { Game_Object, Instance_Object } from '../core';
+import { assetToInstance } from './Socket_Conversions';
 
 export const NODE_LIST: iNodeTemplate[] = [
     ...Cat_Events,
@@ -280,6 +281,38 @@ export const NODE_LIST: iNodeTemplate[] = [
                 const selectedObjectId = this.widgetData;
 
                 return objects.filter(o => o.id == selectedObjectId)[0] ?? null;
+            }
+        }
+    },
+    {
+        id: 'spawn_instance',
+        category: 'actual',
+        inTriggers: [
+            {id: '_i', execute: 'spawn_instance'}
+        ],
+        outTriggers: ['_o'],
+        inputs: [
+            {id: 'type', type: SOCKET_TYPE.ASSET, default: null, required: false},
+            {id: 'x', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
+            {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
+        ],
+        methods: {
+            spawn_instance(this: iEngineNode){
+                const baseAsset = this.getInput('type');
+                const x = this.getInput('x');
+                const y = this.getInput('y');
+                const pos = new Vector(x, y);
+                const nextId = this.engine.room.curInstId;
+                const newInstance = assetToInstance(baseAsset, nextId, pos);
+
+                if (newInstance){
+                    this.engine.addInstance(newInstance)
+                }
+                else{
+                    this.engine.warn('no_asset_specified');
+                }
+
+                this.triggerOutput('_o');
             }
         }
     },
