@@ -284,7 +284,19 @@ export const NODE_LIST: iNodeTemplate[] = [
             }
         }
     },
-    {
+    {// Get Self
+        id: 'get_self',
+        category: 'actual',
+        outputs: [
+            {id: 'self', type: SOCKET_TYPE.INSTANCE, execute: 'get_self'}
+        ],
+        methods: {
+            get_self(this: iEngineNode){
+                return this.instance;
+            }
+        }
+    },
+    {// Spawn Instance
         id: 'spawn_instance',
         category: 'actual',
         inTriggers: [
