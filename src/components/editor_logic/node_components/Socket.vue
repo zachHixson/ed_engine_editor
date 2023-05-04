@@ -29,7 +29,8 @@ import Core from '@/core';
 import socketAnyIcon from '@/assets/socket_any.svg';
 import socketNumberIcon from '@/assets/socket_number.svg';
 import socketStringIcon from '@/assets/socket_string.svg';
-import socketObjectIcon from '@/assets/socket_object.svg';
+import socketAssetIcon from '@/assets/socket_asset.svg';
+import socketInstanceIcon from '@/assets/socket_instance.svg';
 import socketBoolIcon from '@/assets/socket_bool.svg';
 import type Logic from './Logic';
 import decoratorMap from '../decoratorMap';
@@ -81,7 +82,8 @@ const iconMap = new Map<Core.Node_Enums.SOCKET_TYPE, string>([
     [Core.Node_Enums.SOCKET_TYPE.ANY, socketAnyIcon],
     [Core.Node_Enums.SOCKET_TYPE.NUMBER, socketNumberIcon],
     [Core.Node_Enums.SOCKET_TYPE.STRING, socketStringIcon],
-    [Core.Node_Enums.SOCKET_TYPE.OBJECT, socketObjectIcon],
+    [Core.Node_Enums.SOCKET_TYPE.ASSET, socketAssetIcon],
+    [Core.Node_Enums.SOCKET_TYPE.INSTANCE, socketInstanceIcon],    
     [Core.Node_Enums.SOCKET_TYPE.BOOL, socketBoolIcon],
 ]);
 const socketIcon = computed(()=>iconMap.get(socketType.value)!);
@@ -229,7 +231,7 @@ defineExpose({socket: props.socket});
                     v-input-active
                     v-tooltip="disabled && socket.value.length > 8 ? socket.value : ''" />
                 <div
-                    v-if="socketType == Core.Node_Enums.SOCKET_TYPE.OBJECT"
+                    v-if="socketType == Core.Node_Enums.SOCKET_TYPE.INSTANCE && socket.required"
                     class="selfBox"
                     :style="customStyles">
                         <div>{{t('logic_editor.self')}}</div>

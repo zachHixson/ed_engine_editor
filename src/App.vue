@@ -116,7 +116,8 @@ function saveAs(data: string, fileName: string){
         <img src="@/assets/socket_any.svg" />
         <img src="@/assets/socket_number.svg" />
         <img src="@/assets/socket_string.svg" />
-        <img src="@/assets/socket_object.svg" />
+        <img src="@/assets/socket_asset.svg" />
+        <img src="@/assets/socket_instance.svg" />
         <img src="@/assets/socket_bool.svg" />
         <img src="@/assets/checkmark.svg" />
     </div>

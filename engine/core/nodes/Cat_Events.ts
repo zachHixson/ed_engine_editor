@@ -34,7 +34,7 @@ export default [
             {id: 'which_button', type: SOCKET_TYPE.NUMBER, execute: 'which'},
             {id: 'x', type: SOCKET_TYPE.NUMBER, execute: 'x'},
             {id: 'y', type: SOCKET_TYPE.NUMBER, execute: 'y'},
-            {id: 'object', type: SOCKET_TYPE.OBJECT, execute: 'object'},
+            {id: 'object', type: SOCKET_TYPE.INSTANCE, execute: 'object'},
         ],
         execute(this: iEngineNode, data: any){
             const lBtn = !!(data.buttons & 0b001);
@@ -127,7 +127,7 @@ export default [
         category: 'events',
         outTriggers: ['start', 'repeat', 'stop'],
         outputs: [
-            {id: 'object', type: SOCKET_TYPE.OBJECT, execute: 'object'},
+            {id: 'object', type: SOCKET_TYPE.INSTANCE, execute: 'object'},
         ],
         execute(this: iEngineNode, data){
             const cacheKey = this.method('getCacheKey');

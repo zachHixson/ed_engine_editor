@@ -108,7 +108,7 @@ function close(): void {
                         { name: t('logic_editor.number'), id: Core.Node_Enums.SOCKET_TYPE.NUMBER, value: Core.Node_Enums.SOCKET_TYPE.NUMBER },
                         { name: t('logic_editor.string'), id: Core.Node_Enums.SOCKET_TYPE.STRING, value: Core.Node_Enums.SOCKET_TYPE.STRING },
                         { name: t('logic_editor.boolean'), id: Core.Node_Enums.SOCKET_TYPE.BOOL, value: Core.Node_Enums.SOCKET_TYPE.BOOL },
-                        { name: t('logic_editor.object'), id: Core.Node_Enums.SOCKET_TYPE.OBJECT, value: Core.Node_Enums.SOCKET_TYPE.OBJECT },
+                        { name: t('logic_editor.instance'), id: Core.Node_Enums.SOCKET_TYPE.INSTANCE, value: Core.Node_Enums.SOCKET_TYPE.INSTANCE },
                     ]"></SearchDropdown>
                 </div>
                 <div class="control">

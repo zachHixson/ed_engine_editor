@@ -199,7 +199,7 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         outTriggers: ['_o'],
         inputs: [
-            {id: 'instance', type: SOCKET_TYPE.OBJECT, default: null},
+            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
         ],
         methods: {
             removeInstance(){
@@ -249,7 +249,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             }
         },
         outputs: [
-            { id: '_o', type: SOCKET_TYPE.OBJECT, execute: 'getObject' }
+            { id: '_o', type: SOCKET_TYPE.ASSET, execute: 'getObject' }
         ],
         onBeforeMount(this: iEditorNode){
             const genericNoOption = {

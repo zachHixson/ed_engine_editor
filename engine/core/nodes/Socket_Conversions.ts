@@ -1,10 +1,23 @@
 import { SOCKET_TYPE } from "./Node_Enums";
+import { CATEGORY_ID, INSTANCE_TYPE } from "../Enums";
+import {
+    Vector,
+    Sprite,
+    Game_Object,
+    Asset_Base,
+    Instance_Base,
+    Instance_Logic,
+    Instance_Object,
+    Instance_Sprite,
+    iEngineLogic
+} from "../core";
 
 const {
     ANY,
     NUMBER,
     STRING,
-    OBJECT,
+    ASSET,
+    INSTANCE,
     BOOL,
 } = SOCKET_TYPE;
 
@@ -18,9 +31,28 @@ const socketConversionMap = (()=>{
     const string = new Map();
     string.set(BOOL, (val: string): boolean => !!val.length);
 
-    const object = new Map();
-    object.set(STRING, (val: {name: string}): string => val.name);
-    object.set(BOOL, () => true);
+    const asset = new Map();
+    asset.set(STRING, (val: {name: string}): string => val.name);
+    asset.set(BOOL, () => true);
+
+    const instance = new Map();
+    instance.set(STRING, (val: {name: string}): string => val.name);
+    instance.set(ASSET, (val: Instance_Base)=>{
+        switch(val.TYPE){
+            case INSTANCE_TYPE.LOGIC:
+                const logic = val as Instance_Logic;
+                return logic.logicScript;
+            case INSTANCE_TYPE.OBJECT:
+                const object = val as Instance_Object;
+                return object.objRef;
+            case INSTANCE_TYPE.SPRITE:
+                const sprite = val as Instance_Sprite;
+                return sprite.sprite;
+            default:
+                return null;
+        }
+    });
+    instance.set(BOOL, () => true);
 
     const bool = new Map();
     bool.set(NUMBER, (val: boolean): number => +val);
@@ -28,7 +60,8 @@ const socketConversionMap = (()=>{
 
     scm.set(NUMBER, number);
     scm.set(STRING, string);
-    scm.set(OBJECT, object);
+    scm.set(ASSET, asset);
+    scm.set(INSTANCE, instance);
     scm.set(BOOL, bool);
 
     return scm;
