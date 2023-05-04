@@ -5,7 +5,7 @@ import Cat_Variables from './Cat_Variables';
 import { Vector } from '../Vector';
 import { iEditorNode, iEngineNode } from '../LogicInterfaces';
 import { Game_Object, Instance_Object } from '../core';
-import { assetToInstance } from './Socket_Conversions';
+import { assetToInstance, instanceToAsset } from './Socket_Conversions';
 
 export const NODE_LIST: iNodeTemplate[] = [
     ...Cat_Events,
@@ -294,6 +294,27 @@ export const NODE_LIST: iNodeTemplate[] = [
             get_self(this: iEngineNode){
                 return this.instance;
             }
+        }
+    },
+    {// Get Instance Properties
+        id: 'instance_properties',
+        category: 'actual',
+        inputs: [
+            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null}
+        ],
+        outputs: [
+            {id: 'Type', type: SOCKET_TYPE.ASSET, execute: 'get_asset'},
+            {id: 'name', type: SOCKET_TYPE.STRING, execute: 'get_name'},
+            {id: 'x', type: SOCKET_TYPE.NUMBER, execute: 'get_x'},
+            {id: 'y', type: SOCKET_TYPE.NUMBER, execute: 'get_y'},
+        ],
+        methods: {
+            get_asset(){
+                return instanceToAsset(this.instance, this.engine.gameData);
+            },
+            get_name(){return this.instance.name},
+            get_x(){return this.instance.pos.x},
+            get_y(){return this.instance.pos.y},
         }
     },
     {// Spawn Instance

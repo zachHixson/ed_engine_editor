@@ -1,5 +1,6 @@
 import { SOCKET_TYPE } from "./Node_Enums";
 import { CATEGORY_ID, INSTANCE_TYPE } from "../Enums";
+import iGameData from "@engine/iGameData";
 import {
     Vector,
     Sprite,
@@ -37,6 +38,26 @@ export function assetToInstance(asset: Asset_Base | iEngineLogic, id: number, po
         default:
             return null;
     }
+}
+
+export function instanceToAsset(instance: Instance_Base, gameData: iGameData): Asset_Base | iEngineLogic | null {
+    let assetList: (Asset_Base | iEngineLogic)[];
+
+    switch(instance.TYPE){
+        case INSTANCE_TYPE.LOGIC:
+            assetList = gameData.logic;
+            break;
+        case INSTANCE_TYPE.OBJECT:
+            assetList = gameData.objects;
+            break;
+        case INSTANCE_TYPE.SPRITE:
+            assetList = gameData.sprites;
+            break;
+        default:
+            assetList = [];
+    }
+
+    return assetList.find(asset => asset.id == instance.sourceId) ?? null;
 }
 
 const socketConversionMap = (()=>{
