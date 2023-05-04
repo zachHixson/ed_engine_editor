@@ -249,7 +249,8 @@ export default function useInput(
             const nextConnection = connectionMap.get(connectionPath);
     
             if (nextConnection){
-                foundLoop ||= _checkLoop(nextConnection, connectionMap, checkedNodes);
+                const checkedNodesCopy = new Map(checkedNodes);
+                foundLoop ||= _checkLoop(nextConnection, connectionMap, checkedNodesCopy);
             }
         }
     
