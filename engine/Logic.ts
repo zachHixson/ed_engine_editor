@@ -10,13 +10,16 @@ import {
     iEngineInTrigger,
     iEngineInput,
     iNodeSaveData,
-CATEGORY_ID
+    CATEGORY_ID,
+    iEngineNode,
+    iEditorNode
 } from '@engine/core/core';
 
 export default class Logic implements iEngineLogic {
     private _nodes: Node[] = [];
     private _instance: Instance_Object | null = null;
     private _localVariableDefaults: Map<string, any> = new Map();
+    private _runPostEvent: (()=>void)[] = [];
 
     id: number;
     events: Map<string, Node[]> = new Map();
@@ -75,7 +78,11 @@ export default class Logic implements iEngineLogic {
         if (!event) return;
 
         this._instance = instance;
-        event.forEach(event => event.executeEvent(data));
+        event.forEach(event => {
+            event.executeEvent(data);
+            this._runPostEvent.forEach(callback => callback());
+            this._runPostEvent = [];
+        });
         this._instance = null;
     }
 
@@ -97,5 +104,9 @@ export default class Logic implements iEngineLogic {
             const templateMethod = curNode.template[name];
             templateMethod?.call(curNode, data);
         }
+    }
+
+    registerPostEventCallback(callback: ()=>void): void {
+        this._runPostEvent.push(callback);
     }
 }

@@ -156,6 +156,7 @@ export interface iEngineLogic {
 
     setLocalVariableDefault(name: string, data: iAnyObj): void;
     executeEvent(eventName: string, instance: Instance_Object, data: any): void;
+    registerPostEventCallback(callback: ()=>void): void;
 }
 
 export interface iEngineInTrigger {

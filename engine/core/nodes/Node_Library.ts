@@ -126,7 +126,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                 const label = this.getInput('label');
                 const data = this.getInput('_data');
                 const hasData = data || typeof data == 'boolean';
-                const outData = data.name ? `{{${data.name}}}` : data;
+                const outData = data?.name ? `{{${data.name}}}` : data;
 
                 if (label.length > 0 && hasData){
                     this.engine.log(label, outData);
@@ -340,6 +340,9 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'x', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
             {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
         ],
+        outputs: [
+            {id: 'instance', type: SOCKET_TYPE.INSTANCE, execute: 'get_asset'}
+        ],
         methods: {
             spawn_instance(this: iEngineNode){
                 const baseAsset = this.getInput('type');
@@ -350,14 +353,21 @@ export const NODE_LIST: iNodeTemplate[] = [
                 const newInstance = assetToInstance(baseAsset, nextId, pos);
 
                 if (newInstance){
-                    this.engine.addInstance(newInstance)
+                    this.engine.addInstance(newInstance);
+                    this.dataCache.set('spawned_instance', newInstance);
+                    this.parentScript.registerPostEventCallback(()=>{
+                        this.dataCache.delete('spawned_instance');
+                    });
                 }
                 else{
                     this.engine.warn('no_asset_specified');
                 }
 
                 this.triggerOutput('_o');
-            }
+            },
+            get_asset(){
+                return this.dataCache.get('spawned_instance') ?? null;
+            },
         }
     },
     {// Set Animation Playback
