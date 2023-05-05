@@ -19,11 +19,11 @@ export const NODE_LIST: iNodeTemplate[] = [
         id: 'branch',
         category: 'actual',
         inTriggers: [
-            {id: '_i', execute: 'checkCondition'}
+            {id: '_i', execute: 'checkCondition'},
         ],
         outTriggers: ['true', 'false'],
         inputs: [
-            {id: 'condition', type: SOCKET_TYPE.BOOL, default: false}
+            {id: 'condition', type: SOCKET_TYPE.BOOL, default: false},
         ],
         methods: {
             checkCondition(){
@@ -44,7 +44,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             id: 'compare_function',
             type: WIDGET.ENUM,
             options: {
-                items: ['equal_sym', 'gt', 'lt', 'gte', 'lte']
+                items: ['equal_sym', 'gt', 'lt', 'gte', 'lte'],
             },
         },
         outputs: [
@@ -167,7 +167,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             id: 'math_function',
             type: WIDGET.ENUM,
             options: {
-                items: ['add_sym', 'subtract_sym', 'multiply_sym', 'divide_sym', 'power']
+                items: ['add_sym', 'subtract_sym', 'multiply_sym', 'divide_sym', 'power'],
             },
         },
         inputs: [
@@ -214,21 +214,21 @@ export const NODE_LIST: iNodeTemplate[] = [
                 this.engine.removeInstance(instance);
                 this.triggerOutput('_o');
             }
-        }
+        },
     },
     {// Dialog Box
         id: 'dialog_box',
         category: 'actual',
         widget: {
             id: 'text',
-            type: WIDGET.TEXT_AREA
+            type: WIDGET.TEXT_AREA,
         },
         inTriggers: [
-            {id: '_i', execute: 'startDialog'}
+            {id: '_i', execute: 'startDialog'},
         ],
         outTriggers: ['immediate', 'dialog_closed'],
         inputs: [
-            {id: 'text', type: SOCKET_TYPE.STRING, default: ''}
+            {id: 'text', type: SOCKET_TYPE.STRING, default: ''},
         ],
         methods: {
             startDialog(){
@@ -240,7 +240,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
             dialogClosed(){
                 this.triggerOutput('dialog_closed');
-            }
+            },
         }
     },
     {// Object Input
@@ -253,10 +253,10 @@ export const NODE_LIST: iNodeTemplate[] = [
                 items: [],
                 showSearch: true,
                 showThumbnail: true,
-            }
+            },
         },
         outputs: [
-            { id: '_o', type: SOCKET_TYPE.ASSET, execute: 'getObject' }
+            { id: '_o', type: SOCKET_TYPE.ASSET, execute: 'getObject' },
         ],
         onBeforeMount(this: iEditorNode){
             const genericNoOption = {
@@ -287,32 +287,32 @@ export const NODE_LIST: iNodeTemplate[] = [
                 const selectedObjectId = this.widgetData;
 
                 return objects.filter(o => o.id == selectedObjectId)[0] ?? null;
-            }
+            },
         }
     },
     {// Get Self
         id: 'get_self',
         category: 'actual',
         outputs: [
-            {id: 'self', type: SOCKET_TYPE.INSTANCE, execute: 'get_self'}
+            {id: 'self', type: SOCKET_TYPE.INSTANCE, execute: 'getSelf'},
         ],
         methods: {
-            get_self(this: iEngineNode){
+            getSelf(this: iEngineNode){
                 return this.instance;
-            }
-        }
+            },
+        },
     },
     {// Get Instance Properties
         id: 'instance_properties',
         category: 'actual',
         inputs: [
-            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true}
+            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
         ],
         outputs: [
-            {id: 'Type', type: SOCKET_TYPE.ASSET, execute: 'get_asset'},
-            {id: 'name', type: SOCKET_TYPE.STRING, execute: 'get_name'},
-            {id: 'x', type: SOCKET_TYPE.NUMBER, execute: 'get_x'},
-            {id: 'y', type: SOCKET_TYPE.NUMBER, execute: 'get_y'},
+            {id: 'Type', type: SOCKET_TYPE.ASSET, execute: 'getAsset'},
+            {id: 'name', type: SOCKET_TYPE.STRING, execute: 'getName'},
+            {id: 'x', type: SOCKET_TYPE.NUMBER, execute: 'getX'},
+            {id: 'y', type: SOCKET_TYPE.NUMBER, execute: 'getY'},
         ],
         init(this: Node){
             if (!isEngineNode(this)){
@@ -320,19 +320,19 @@ export const NODE_LIST: iNodeTemplate[] = [
             }
         },
         methods: {
-            get_asset(){
+            getAsset(){
                 return instanceToAsset(this.instance, this.engine.gameData);
             },
-            get_name(){return this.instance.name},
-            get_x(){return this.instance.pos.x},
-            get_y(){return this.instance.pos.y},
-        }
+            getName(){return this.instance.name},
+            getX(){return this.instance.pos.x},
+            getY(){return this.instance.pos.y},
+        },
     },
     {// Spawn Instance
         id: 'spawn_instance',
         category: 'actual',
         inTriggers: [
-            {id: '_i', execute: 'spawn_instance'}
+            {id: '_i', execute: 'spawnInstance'}
         ],
         outTriggers: ['_o'],
         inputs: [
@@ -341,10 +341,10 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
         ],
         outputs: [
-            {id: 'instance', type: SOCKET_TYPE.INSTANCE, execute: 'get_asset'}
+            {id: 'instance', type: SOCKET_TYPE.INSTANCE, execute: 'getAsset'},
         ],
         methods: {
-            spawn_instance(this: iEngineNode){
+            spawnInstance(this: iEngineNode){
                 const baseAsset = this.getInput('type');
                 const x = this.getInput('x');
                 const y = this.getInput('y');
@@ -353,7 +353,9 @@ export const NODE_LIST: iNodeTemplate[] = [
                 const newInstance = assetToInstance(baseAsset, nextId, pos);
 
                 if (newInstance){
+                    newInstance.setEngine(this.engine);
                     this.engine.addInstance(newInstance);
+                    newInstance.onCreate();
                     this.dataCache.set('spawned_instance', newInstance);
                     this.parentScript.registerPostEventCallback(()=>{
                         this.dataCache.delete('spawned_instance');
@@ -365,7 +367,7 @@ export const NODE_LIST: iNodeTemplate[] = [
 
                 this.triggerOutput('_o');
             },
-            get_asset(){
+            getAsset(){
                 return this.dataCache.get('spawned_instance') ?? null;
             },
         }
@@ -394,8 +396,8 @@ export const NODE_LIST: iNodeTemplate[] = [
                 this.instance.fps = isNaN(fps) ? this.instance.fps : fps;
                 this.instance.animLoop = loop ?? this.instance.animLoop;
                 this.instance.animPlaying = playing ?? this.instance.animPlaying;
-            }
-        }
+            },
+        },
     },
     {// Set Position
         id: 'set_position',
@@ -503,7 +505,26 @@ export const NODE_LIST: iNodeTemplate[] = [
                 }
 
                 return false;
-            }
+            },
+        },
+    },
+    {// Set Velocity
+        id: 'set_velocity',
+        category: 'movement',
+        inTriggers: [
+            {id: '_i', execute: 'setVelocity'}
+        ],
+        inputs: [
+            {id: 'x', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
+            {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
+        ],
+        methods: {
+            setVelocity(this: iEngineNode){
+                this.instance.velocity.set(
+                    this.getInput('x'),
+                    this.getInput('y')
+                );
+            },
         },
     },
     ...Cat_Variables,

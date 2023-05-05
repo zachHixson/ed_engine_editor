@@ -4,6 +4,7 @@ import { Node_Enums } from "../core";
 import { Draw } from "../core";
 import { Sprite } from "../core";
 import { Util } from "../core";
+import type Engine from '@engine/Engine';
 
 export interface iInstanceBaseSaveData {
     id: number;
@@ -24,10 +25,13 @@ export interface iCollisionEvent {
 
 export abstract class Instance_Base{
     private _animProgress: number = 0;
+    private _engine: Engine | null = null;
 
     id: number;
     name: string;
     pos: Vector;
+    lastPos: Vector = new Vector();
+    velocity: Vector = new Vector(0, 0);
     groups: string[] = [];
     depthOffset: number = 0;
     depthOverride: number | null = null;
@@ -88,9 +92,20 @@ export abstract class Instance_Base{
 
     //Lifecycle events
     onCreate(): void {}
-    onUpdate(deltaTime: number): void {}
+    onUpdate(deltaTime: number): void {
+        if (!this._engine) return;
+        const hasMagnitude = this.velocity.dot(this.velocity) != 0;
+        if (!hasMagnitude) return;
+
+        this.setPosition(this.pos.add(this.velocity.clone().multiplyScalar(deltaTime)));
+        this._engine.setInstancePosition(this, this.pos);
+    }
     onCollision(event: iCollisionEvent): void {}
     onDestroy(): void {}
+
+    setEngine(engine: Engine): void {
+        this._engine = engine;
+    }
 
     advanceAnimation(deltaTime: number): void {
         if (!this.sprite) return;
@@ -117,6 +132,7 @@ export abstract class Instance_Base{
     }
 
     setPosition(newPos: Vector): void {
+        this.lastPos.copy(this.pos);
         this.pos.copy(newPos);
     }
 

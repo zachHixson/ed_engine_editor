@@ -147,7 +147,10 @@ export class Engine implements iEngineCallbacks {
             }
         });
 
-        this._loadedRoom.instances.forEach(instance => instance.onCreate());
+        this._loadedRoom.instances.forEach(instance => {
+            instance.setEngine(this);
+            instance.onCreate();
+        });
     }
 
     private _updateLoop = (time: number): void =>{

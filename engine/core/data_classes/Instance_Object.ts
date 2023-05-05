@@ -33,7 +33,6 @@ export class Instance_Object extends Instance_Base{
     private _useIcon = false;
 
     collisionOverride: COLLISION_OVERRIDE = COLLISION_OVERRIDE.KEEP;
-    lastPos: Vector = new Vector();
     localVariables: Map<string, any> = new Map();
     exposedProps: Map<string, any> = new Map();
 
@@ -125,6 +124,7 @@ export class Instance_Object extends Instance_Base{
     }
 
     override onUpdate(deltaTime: number): void {
+        super.onUpdate(deltaTime);
         this.executeNodeEvent('e_update', deltaTime);
     }
 
@@ -167,11 +167,6 @@ export class Instance_Object extends Instance_Base{
 
     executeNodeEvent(eventName: string, data?: any): void {
         this.logic?.executeEvent(eventName, this, data);
-    }
-    
-    setPosition(newPos: Vector): void {
-        this.lastPos.copy(this.pos);
-        this.pos.copy(newPos);
     }
 
     setPrevExit(exit: Instance_Exit, direction: Vector): void {
