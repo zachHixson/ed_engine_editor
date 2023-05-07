@@ -321,11 +321,12 @@ export const NODE_LIST: iNodeTemplate[] = [
         },
         methods: {
             getAsset(){
-                return instanceToAsset(this.instance, this.engine.gameData);
+                const instance = this.getInput('instance') ?? this.instance;
+                return instanceToAsset(instance, this.engine.gameData);
             },
-            getName(){return this.instance.name},
-            getX(){return this.instance.pos.x},
-            getY(){return this.instance.pos.y},
+            getName(){return (this.getInput('instance') ?? this.instance).name},
+            getX(){return (this.getInput('instance') ?? this.instance).x},
+            getY(){return (this.getInput('instance') ?? this.instance).y},
         },
     },
     {// Spawn Instance
@@ -514,16 +515,22 @@ export const NODE_LIST: iNodeTemplate[] = [
         inTriggers: [
             {id: '_i', execute: 'setVelocity'}
         ],
+        outTriggers: ['_o'],
         inputs: [
+            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
             {id: 'x', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
             {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
+            {id: 'slide', type: SOCKET_TYPE.BOOL, default: false},
         ],
         methods: {
             setVelocity(this: iEngineNode){
-                this.instance.velocity.set(
+                const instance = this.getInput('instance') ?? this.instance;
+                instance.velocity.set(
                     this.getInput('x'),
                     this.getInput('y')
                 );
+                instance.collisionSlide = this.getInput('slide');
+                this.triggerOutput('_o');
             },
         },
     },

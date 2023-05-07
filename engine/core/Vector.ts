@@ -155,6 +155,13 @@ export class Vector {
         return this;
     }
 
+    absolute(): Vector {
+        this.x = Math.abs(this.x);
+        this.y = Math.abs(this.y);
+
+        return this;
+    }
+
     equalTo(vec: Vector): boolean {
         return (
             this.x == vec.x &&
@@ -166,6 +173,12 @@ export class Vector {
         const dx = this.x - vec.x;
         const dy = this.y - vec.y;
         return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    distanceNoSqrt(vec: Vector): number {
+        const dx = this.x - vec.x;
+        const dy = this.y - vec.y;
+        return dx * dx + dy * dy;
     }
 
     randomize(lb: Vector, ub: Vector): Vector {
@@ -190,6 +203,14 @@ export class Vector {
             this.y *= scaleFac;
         }
 
+        return this;
+    }
+
+    reverse(): Vector {
+        this.x ^= this.y;
+        this.y ^= this.x;
+        this.x ^= this.y;
+        
         return this;
     }
 }

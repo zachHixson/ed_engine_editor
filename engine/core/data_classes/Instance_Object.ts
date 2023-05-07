@@ -3,7 +3,7 @@ import { Vector } from '../Vector';
 import { Sprite } from './Sprite';
 import { Instance_Exit } from './Instance_Exit';
 import { Game_Object } from './Game_Object';
-import { iInstanceBaseSaveData, Instance_Base } from './Instance_Base';
+import { iCollisionEvent, iInstanceBaseSaveData, Instance_Base } from './Instance_Base';
 
 export interface iObjectInstanceSaveData extends iInstanceBaseSaveData {
     objId: number;
@@ -126,6 +126,10 @@ export class Instance_Object extends Instance_Base{
     override onUpdate(deltaTime: number): void {
         super.onUpdate(deltaTime);
         this.executeNodeEvent('e_update', deltaTime);
+    }
+
+    override onCollision(event: iCollisionEvent): void {
+        this.executeNodeEvent('e_collision', event);
     }
 
     override clone(): Instance_Object {

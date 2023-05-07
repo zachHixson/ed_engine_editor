@@ -136,9 +136,14 @@ export default [
 
                 if (!varInfo) return;
                 const {name, type, isGlobal, isList} = varInfo;
-                isGlobal ?
-                    this.editorAPI.setGlobalVariable(name, type)
-                    : this.parentScript.setLocalVariable(name, type);
+                
+                if (isGlobal){
+                    if (this.editorAPI.getGlobalVariable(name)) return;
+                    this.editorAPI.setGlobalVariable(name, type);
+                }
+                else{
+                    this.parentScript.setLocalVariable(name, type);
+                }
             },
             editor_deleteVar(){
                 const {name, isGlobal} = this.dataCache.get('varInfo');
@@ -146,8 +151,15 @@ export default [
                     this.editorAPI.deleteGlobalVariable(name)
                     : this.parentScript.deleteLocalVariable(name);
             },
-            getInitialValue(){
-                return this.getInput('initial_value');
+            getInitialValue(this: iEngineNode){
+                const {name, isGlobal} = this.dataCache.get('varInfo');
+                const value = isGlobal ? this.engine.getGlobalVariable(name) : this.instance.getLocalVariable(name);
+                
+                if (value == undefined){
+                    return null;
+                }
+
+                return value;
             },
         }
     },
@@ -215,6 +227,7 @@ export default [
                 const nameInput = this.inputs.get('name')!;
                 nameInput.flipInput = true;
                 this.inputBoxWidth = 6;
+                this.stackDataIO = true;
                 document.addEventListener('onNewVariable', this.onNewVariable as EventListener);
             }
         },

@@ -26,6 +26,7 @@ import Node from './Node';
 import iGameData from './iGameData';
 import getTransitions from './transitions/getTransitions';
 import Transition_Base, { TRANSITION } from './transitions/Transition_Base';
+import * as Physics from './Physics';
 
 export * as Core from '@engine/core/core';
 
@@ -232,8 +233,6 @@ export class Engine implements iEngineCallbacks {
         this._collisionMap.forEach(instanceEntry => {
             const sourceInstance = instanceEntry.sourceInstance;
 
-            const sourceObj = sourceInstance;
-
             instanceEntry.collisions.forEach(collision => {
                 if (collision.active){
                     let eventType: Node_Enums.COLLISION_EVENT;
@@ -251,7 +250,7 @@ export class Engine implements iEngineCallbacks {
 
                     collision.force = false;
 
-                    sourceObj.onCollision({
+                    sourceInstance.onCollision({
                         type: eventType,
                         instance: collision.instance,
                     });
@@ -507,7 +506,7 @@ export class Engine implements iEngineCallbacks {
         this.enableUpdate = true;
     }
 
-    public start = (): void =>{
+    start = (): void =>{
         window.IS_ENGINE = true;
         this._timeStart = performance.now();
         this._curTime = this._timeStart;
@@ -567,25 +566,26 @@ export class Engine implements iEngineCallbacks {
     }
 
     registerCollision = (sourceInstance: Instance_Base, collisionInstance: Instance_Base, force = false): void =>{
-        let sourceInstanceEntry;
+        let sourceInstanceEntry = this._collisionMap.get(sourceInstance.id);
+        let subInstanceEntry;
 
         //create entry for source instance if it does not already exist
-        if (!this._collisionMap.get(sourceInstance.id)){
-            this._collisionMap.set(sourceInstance.id, {
+        if (!sourceInstanceEntry){
+            sourceInstanceEntry = {
                 sourceInstance,
                 collisions: new Map(),
-            });
+            }
+            this._collisionMap.set(sourceInstance.id, sourceInstanceEntry);
         }
 
-        sourceInstanceEntry = this._collisionMap.get(sourceInstance.id)!;
+        subInstanceEntry = sourceInstanceEntry.collisions.get(collisionInstance.id);
 
         //Register collision to map
-        if (sourceInstanceEntry.collisions.get(collisionInstance.id)){
-            const ref = sourceInstanceEntry.collisions.get(collisionInstance.id)!;
-            ref.startCollision = ref.active ? ref.startCollision : this._curTime;
-            ref.lastChecked = this._curTime;
-            ref.active = true;
-            ref.force = force;
+        if (subInstanceEntry){
+            subInstanceEntry.startCollision = subInstanceEntry.active ? subInstanceEntry.startCollision : this._curTime;
+            subInstanceEntry.lastChecked = this._curTime;
+            subInstanceEntry.active = true;
+            subInstanceEntry.force = force;
         }
         else{
             sourceInstanceEntry.collisions.set(collisionInstance.id, {
@@ -642,6 +642,22 @@ export class Engine implements iEngineCallbacks {
         if (instance.renderable){
             this._renderer.updateInstance(instance);
         }
+    }
+
+    moveInstanceDirection = (instance: Instance_Base, velocity: Vector, slide = false): void =>{
+        const instanceCenter = instance.pos.clone().addScalar(Sprite.DIMENSIONS / 2);
+        const instancesInRadius = this.room.getInstancesInRadius(instanceCenter, velocity.magnitude());
+        const {
+            newPosition,
+            collisions,
+        } = Physics.sweepInstanceInDirection(instance, instanceCenter, instancesInRadius, velocity, slide);
+    
+        this.setInstancePosition(instance, newPosition);
+    
+        collisions.forEach(col => {
+            this.registerCollision(instance, col.instance);
+            this.registerCollision(col.instance, instance);
+        });
     }
 
     setGlobalVariable = (name: string, data: any): void =>{

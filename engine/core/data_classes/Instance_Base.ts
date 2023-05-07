@@ -40,6 +40,7 @@ export abstract class Instance_Base{
     fpsOverride: number | null = null;
     animLoopOverride: boolean | null = null;
     animPlayingOverride: boolean | null = null;
+    collisionSlide: boolean = false;
     backAnim = 1;
 
     constructor(id: number, pos: Vector = new Vector()){
@@ -68,6 +69,7 @@ export abstract class Instance_Base{
     set zDepth(val){};
     get zDepthOverride(){return 0};
     set zDepthOverride(val: number | null){};
+    get isSolid(){return false};
     abstract get frameDataId(): number | string;
     abstract get frameData(): Array<ImageData>;
 
@@ -93,12 +95,9 @@ export abstract class Instance_Base{
     //Lifecycle events
     onCreate(): void {}
     onUpdate(deltaTime: number): void {
-        if (!this._engine) return;
-        const hasMagnitude = this.velocity.dot(this.velocity) != 0;
-        if (!hasMagnitude) return;
+        if (!this._engine || this.velocity.dot(this.velocity) == 0) return;
 
-        this.setPosition(this.pos.add(this.velocity.clone().multiplyScalar(deltaTime)));
-        this._engine.setInstancePosition(this, this.pos);
+        this._engine.moveInstanceDirection(this, this.velocity.clone().multiplyScalar(deltaTime), this.collisionSlide);
     }
     onCollision(event: iCollisionEvent): void {}
     onDestroy(): void {}

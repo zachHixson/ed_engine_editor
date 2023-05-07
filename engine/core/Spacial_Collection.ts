@@ -71,7 +71,7 @@ export class Spacial_Collection<T extends iSpacialObject> {
     }
 
     getByRadius(pos: Vector, radius: number): T[] {
-        const surveyCellCount = Math.floor(radius / this._cellDimensions);
+        const surveyCellCount = Math.floor(Math.max(radius, this._cellDimensions) / this._cellDimensions);
         const surveyGridSize = surveyCellCount * 2 + 1;
         const startPos = pos.clone().subtractScalar(surveyCellCount * this._cellDimensions);
         const foundItems: T[] = [];
