@@ -3,6 +3,8 @@ import { iNodeTemplate } from './iNodeTemplate';
 import { iEngineNode } from '../LogicInterfaces';
 import { MOUSE_EVENT } from '../Enums';
 import { Vector } from '../Vector';
+import { isEngineNode } from './Node_Library';
+import { type Node } from './Node_Library';
 
 export default [
     {// Create
@@ -180,22 +182,22 @@ export default [
         isEvent: true,
         category: 'events',
         outTriggers: ['_o'],
-        outputs: [
-            {id: 'name', type: SOCKET_TYPE.STRING, execute: 'name'},
-            {id: 'data', type: SOCKET_TYPE.ANY, execute: 'data'},
+        inputs: [
+            {id: 'name', type: SOCKET_TYPE.STRING, flipInput: true, hideSocket: true},
         ],
-        execute(this: iEngineNode, data: any){
-            this.dataCache.set(data.name, data);
+        init(this: Node){
+            if (!isEngineNode(this)){
+                this.inputBoxWidth = 6;
+            }
         },
-        methods: {
-            name(this: iEngineNode){
-                const data = this.dataCache.get('message');
-                return data.name;
-            },
-            data(this: iEngineNode){
-                const data = this.dataCache.get('message');
-                return data.data;
-            },
+        execute(this: iEngineNode, data: any){
+            const name = this.getInput('name');
+
+            if (name.trim().length < 0) return;
+            
+            if (data.name == name){
+                this.triggerOutput('_o');
+            }
         },
     },
 ] as iNodeTemplate[];

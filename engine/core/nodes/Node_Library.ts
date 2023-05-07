@@ -373,11 +373,32 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         }
     },
+    {// Broadcast Message
+        id: 'broadcast_message',
+        category: 'actual',
+        inTriggers: [
+            {id: '_i', execute: 'broadcastMessage'},
+        ],
+        outTriggers: ['_o'],
+        inputs: [
+            {id: 'name', type: SOCKET_TYPE.STRING, default: ''},
+        ],
+        methods: {
+            broadcastMessage(this: iEngineNode){
+                const name = this.getInput('name');
+
+                if (name.trim().length < 0) return;
+                
+                this.engine.emitMessage(this.getInput('name'));
+                this.triggerOutput('_o');
+            }
+        },
+    },
     {// Set Animation Playback
         id: 'set_animation_playback',
         category: 'drawing',
         inTriggers: [
-            {id: '_i', execute: 'set_settings'},
+            {id: '_i', execute: 'setSettings'},
         ],
         outTriggers: ['_o'],
         inputs: [
@@ -387,7 +408,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'playing', type: SOCKET_TYPE.BOOL, default: null, triple: true},
         ],
         methods: {
-            set_settings(){
+            setSettings(){
                 const frame = parseInt(this.getInput('frame'));
                 const fps = parseInt(this.getInput('fps'));
                 const loop = this.getInput('loop');

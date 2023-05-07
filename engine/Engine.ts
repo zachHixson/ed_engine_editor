@@ -676,6 +676,10 @@ export class Engine implements iEngineCallbacks {
         this.enableUpdate = false;
         this._dialogBox.open(text, asyncTag);
     }
+
+    emitMessage(name: string): void {
+        this._dispatchLogicEvent('e_message', {name});
+    }
 }
 
 export default Engine;
