@@ -302,7 +302,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
     },
-    {// Get Instance Properties
+    {// Instance Properties
         id: 'instance_properties',
         category: 'actual',
         inputs: [
@@ -325,8 +325,8 @@ export const NODE_LIST: iNodeTemplate[] = [
                 return instanceToAsset(instance, this.engine.gameData);
             },
             getName(){return (this.getInput('instance') ?? this.instance).name},
-            getX(){return (this.getInput('instance') ?? this.instance).x},
-            getY(){return (this.getInput('instance') ?? this.instance).y},
+            getX(){return (this.getInput('instance') ?? this.instance).pos.x},
+            getY(){return (this.getInput('instance') ?? this.instance).pos.y},
         },
     },
     {// Spawn Instance
