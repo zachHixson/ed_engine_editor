@@ -15,8 +15,7 @@ function findInstancePathIntersections(
     instance: Instance_Base,
     instanceList: Instance_Base[],
     instanceCenter: Vector,
-    normalizedVelocity: Vector,
-    destination: Vector,
+    velocity: Vector,
 ) {
     const intersections: iLineIntersection[] = [];
     let hitSolid = false;
@@ -25,21 +24,16 @@ function findInstancePathIntersections(
         const curInstance = instanceList[i];
 
         if (curInstance.id == instance.id) continue;
-        
+
         const center = curInstance.pos.clone().addScalar(Sprite.DIMENSIONS / 2);
-        const ul = new Vector(-Sprite.DIMENSIONS, Sprite.DIMENSIONS).add(center);
-        const br = new Vector(Sprite.DIMENSIONS, -Sprite.DIMENSIONS).add(center);
-        const boundsIntersections = Util.lineBoxIntersection(instanceCenter, destination, ul, br);
+        const boxDim = new Vector(Sprite.DIMENSIONS, Sprite.DIMENSIONS);
+        const raycastResult = Util.projectSVF(instanceCenter, velocity, center, boxDim);
+        const isCorner = raycastResult?.normal.x == 0 && raycastResult?.normal.y == 0;
 
-        boundsIntersections.forEach(i => {
-            const similarDirection = i.normal.dot(normalizedVelocity) >= 0;
-            const cornerSnag = +i.point.equalTo(i.lineSegment[0]) ^ +i.point.equalTo(i.lineSegment[1]);
-            if (similarDirection || cornerSnag) return;
-
-            intersections.push({point: i.point, normal: i.normal, instance: curInstance});
-        });
-
-        hitSolid ||= intersections.length > 0 && curInstance.isSolid;
+        if (raycastResult && !isCorner){
+            intersections.push({point: raycastResult.point, normal: raycastResult.normal, instance: curInstance});
+            hitSolid ||= curInstance.isSolid;
+        }
     }
 
     return {intersections, hitSolid};
@@ -49,10 +43,9 @@ function getPathCollisions(
     instance: Instance_Base,
     instanceList: Instance_Base[],
     instanceCenter: Vector,
-    normalizedVelocity: Vector,
-    destination: Vector
+    velocity: Vector
 ){
-    const { intersections, hitSolid } = findInstancePathIntersections(instance, instanceList, instanceCenter, normalizedVelocity, destination);
+    const { intersections, hitSolid } = findInstancePathIntersections(instance, instanceList, instanceCenter, velocity);
     const collisions = new Map<number, typeof intersections[number]>();
     let closestIntersect: (typeof intersections[number]) | null = null;
     let closestDist: number = Infinity;
@@ -86,9 +79,7 @@ export function sweepInstanceInDirection(
     velocity: Vector,
     slide: boolean
 ): { newPosition: Vector, collisions: Map<number, iLineIntersection> } {
-    const normalizedVelocity = velocity.clone().normalize();
-    const destination = instanceCenter.clone().add(velocity);
-    const { collisionIntersect, collisions, hitSolid } = getPathCollisions(instance, instanceList, instanceCenter, normalizedVelocity, destination);
+    const { collisionIntersect, collisions, hitSolid } = getPathCollisions(instance, instanceList, instanceCenter, velocity);
 
     if (!(collisionIntersect && hitSolid && instance.isSolid)){
         return {
@@ -99,6 +90,7 @@ export function sweepInstanceInDirection(
 
     if (slide){
         //flatten velocity along the surface and do second collision pass
+        const destination = instanceCenter.clone().add(velocity);
         const clippedDest = Util.projectPointOnLine(destination, collisionIntersect.point, collisionIntersect.normal);
         const newVel = clippedDest.subtract(instanceCenter);
         const {
@@ -111,6 +103,7 @@ export function sweepInstanceInDirection(
         return { newPosition, collisions };
     }
     else{
+        const normalizedVelocity = velocity.clone().normalize();
         const clipVel = normalizedVelocity.multiplyScalar(instanceCenter.distanceTo(collisionIntersect.point));
         return {
             newPosition: clipVel.add(instance.pos),

@@ -60,50 +60,44 @@ export function easeOutBack(x: number): number {
     return 1 + c3 * xm1 * xm1 * xm1 + c1 * xm1 * xm1;
 }
 
-//the following function based on this example: https://www.jeffreythompson.org/collision-detection/line-line.php
-export function lineSegmentIntersection(a1: Vector, a2: Vector, b1: Vector, b2: Vector): Vector | null {
-    const a = b2.x - b1.x;
-    const b = a1.y - b1.y;
-    const c = b2.y - b1.y;
-    const d = a1.x - b1.x;
-    const e = a2.x - a1.x;
-    const f = a2.y - a1.y;
-    const g = c * e - a * f;
-    const cA = (a * b - c * d) / g;
-    const cB = (e * b - f * d) / g;
-
-    if (!(cA >= 0 && cA <= 1 && cB >= 0 && cB <= 1)) {
-        return null;
-    }
-
-    return new Vector(
-        a1.x + (cA * e),
-        a1.y + (cA * f)
+export function projectSVF(sp: Vector, sv: Vector, bp: Vector, bd: Vector){
+    /*
+        Algorithm:
+        - get SVF (signed vector field) of the box
+        - scale box's SVF based on the direction
+        - Calculate projection SVF, and shift the values based on direction
+            - The projection SVF will be used as an offset to project the sample point to the box
+        - Mask out values that won't collide
+            - Values that are greater than the length of the distance will not collide
+            - Values that are not in an "extrusion" of the box will not collide either
+                - In order to calculate the extrusion, offset the sample by the
+                    calculated projection SVF and see if the result lands in the box
+                    (i.e. both X and Y are negative)
+        - Calculate normals based on simplified box SVF
+        - Calculate if the point lies on a corner by checking if the box SVF X and Y are equal
+    */
+    const bSVF = sp.clone().subtract(bp).absolute().subtract(bd);
+    const bSVFScaled = new Vector(
+        bSVF.x * Math.abs(sv.y),
+        bSVF.y * Math.abs(sv.x)
     );
-}
+    const bSDF = Math.max(bSVFScaled.x, bSVFScaled.y);
+    const projectSVF = new Vector(
+        sv.y != 0 ? (bSDF / sv.y) * +(sv.x != 0) : bSVF.x * +(bSVF.y < 0),
+        sv.x != 0 ? (bSDF / sv.x) * +(sv.y != 0) : bSVF.y * +(bSVF.x < 0)
+    ).multiplyScalar(Math.sign(
+        (sv.y || 1) * (sv.x || 1)
+    ));
+    const projectedPoint = sp.clone().add(projectSVF);
+    const offsetSVF = projectedPoint.clone().subtract(bp).absolute().subtract(bd);
+    const boxMask = +(offsetSVF.x <= 0 && offsetSVF.y <= 0);
+    const distanceMask = +(projectSVF.dot(projectSVF) <= sv.dot(sv));
+    const normal = new Vector(
+        Math.max(Math.min(+(offsetSVF.y != 0) * -Math.sign(sv.x), 1), -1),
+        Math.max(Math.min(+(offsetSVF.x != 0) * -Math.sign(sv.y), 1), -1)
+    );
 
-export function lineBoxIntersection(l1: Vector, l2: Vector, ul: Vector, br: Vector): iBoxCollision[] {
-    //line segments
-    const l: [Vector, Vector] = [ul, new Vector(ul.x, br.y)];
-    const r: [Vector, Vector] = [br, new Vector(br.x, ul.y)];
-    const t: [Vector, Vector] = [ul, new Vector(br.x, ul.y)];
-    const b: [Vector, Vector] = [br, new Vector(ul.x, br.y)];
-
-    //setgment intersections
-    const pl = lineSegmentIntersection(l1, l2, l[0], l[1]);
-    const pr = lineSegmentIntersection(l1, l2, r[0], r[1]);
-    const pt = lineSegmentIntersection(l1, l2, t[0], t[1]);
-    const pb = lineSegmentIntersection(l1, l2, b[0], b[1]);
-    
-    const intersections: iBoxCollision[] = [];
-
-    //add results to returned list
-    pl && intersections.push({ point: pl, normal: new Vector(-1, 0), lineSegment: l });
-    pr && intersections.push({ point: pr, normal: new Vector(+1, 0), lineSegment: r });
-    pt && intersections.push({ point: pt, normal: new Vector(0, +1), lineSegment: t });
-    pb && intersections.push({ point: pb, normal: new Vector(0, -1), lineSegment: b });
-
-    return intersections;
+    return (boxMask * distanceMask) > 0 ? { point: projectedPoint, offset: projectSVF, normal: normal } : null;
 }
 
 export function projectPointOnLine(p: Vector, lp: Vector, normal: Vector): Vector {
