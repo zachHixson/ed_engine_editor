@@ -75,29 +75,31 @@ export function projectSVF(sp: Vector, sv: Vector, bp: Vector, bd: Vector){
                     (i.e. both X and Y are negative)
         - Calculate normals based on simplified box SVF
         - Calculate if the point lies on a corner by checking if the box SVF X and Y are equal
+        
+        NOTE: Vector objects are not used during the calculations because cloning them is very slow
     */
-    const bSVF = sp.clone().subtract(bp).absolute().subtract(bd);
-    const bSVFScaled = new Vector(
-        bSVF.x * Math.abs(sv.y),
-        bSVF.y * Math.abs(sv.x)
-    );
-    const bSDF = Math.max(bSVFScaled.x, bSVFScaled.y);
-    const projectSVF = new Vector(
-        sv.y != 0 ? (bSDF / sv.y) * +(sv.x != 0) : bSVF.x * +(bSVF.y < 0),
-        sv.x != 0 ? (bSDF / sv.x) * +(sv.y != 0) : bSVF.y * +(bSVF.x < 0)
-    ).multiplyScalar(Math.sign(
-        (sv.y || 1) * (sv.x || 1)
-    ));
-    const projectedPoint = sp.clone().add(projectSVF);
-    const offsetSVF = projectedPoint.clone().subtract(bp).absolute().subtract(bd);
-    const boxMask = +(offsetSVF.x <= 0 && offsetSVF.y <= 0);
-    const distanceMask = +(projectSVF.dot(projectSVF) <= sv.dot(sv));
-    const normal = new Vector(
-        Math.max(Math.min(+(offsetSVF.y != 0) * -Math.sign(sv.x), 1), -1),
-        Math.max(Math.min(+(offsetSVF.x != 0) * -Math.sign(sv.y), 1), -1)
-    );
+    const bSVFX = Math.abs(sp.x - bp.x) - bd.x;
+    const bSVFY = Math.abs(sp.y - bp.y) - bd.y;
+    const bSVFScaledX = bSVFX * Math.abs(sv.y);
+    const bSVFScaledY = bSVFY * Math.abs(sv.x);
+    const bSDF = Math.max(bSVFScaledX, bSVFScaledY);
+    const exclusiveNorSign = Math.sign((sv.y || 1) * (sv.x || 1));
+    const projectSVFX = (sv.y != 0 ? (bSDF / sv.y) * +(sv.x != 0) : bSVFX * +(bSVFY < 0)) * exclusiveNorSign;
+    const projectSVFY = (sv.x != 0 ? (bSDF / sv.x) * +(sv.y != 0) : bSVFY * +(bSVFX < 0)) * exclusiveNorSign;
+    const projectedPointX = sp.x + projectSVFX;
+    const projectedPointY = sp.y + projectSVFY;
+    const offsetSVFX = Math.abs(projectedPointX - bp.x) - bd.x;
+    const offsetSVFY = Math.abs(projectedPointY - bp.y) - bd.y;
+    const boxMask = +(offsetSVFX <= 0 && offsetSVFY <= 0);
+    const distanceMask = +((projectSVFX * projectSVFX + projectSVFY * projectSVFY) <= sv.dot(sv));
+    const normalX = Math.max(Math.min(+(offsetSVFY != 0) * -Math.sign(sv.x), 1), -1);
+    const normalY = Math.max(Math.min(+(offsetSVFX != 0) * -Math.sign(sv.y), 1), -1);
 
-    return (boxMask * distanceMask) > 0 ? { point: projectedPoint, offset: projectSVF, normal: normal } : null;
+    return (boxMask * distanceMask) > 0 ? {
+        point: new Vector(projectedPointX, projectedPointY),
+        offset: new Vector(projectSVFX, projectSVFY),
+        normal: new Vector(normalX, normalY),
+    } : null;
 }
 
 export function projectPointOnLine(p: Vector, lp: Vector, normal: Vector): Vector {
