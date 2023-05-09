@@ -159,24 +159,6 @@ export default [
             },
         },
     },
-    {// Timer
-        id: 'e_timer',
-        isEvent: true,
-        category: 'events',
-        outTriggers: ['_o'],
-        outputs: [
-            {id: 'name', type: SOCKET_TYPE.STRING, execute: 'name'},
-        ],
-        execute(this: iEngineNode, data){
-            this.dataCache.set('timer', data);
-        },
-        methods: {
-            name(this: iEngineNode){
-                const data = this.dataCache.get('timer');
-                return data.name;
-            }
-        },
-    },
     {// Message
         id: 'e_message',
         isEvent: true,

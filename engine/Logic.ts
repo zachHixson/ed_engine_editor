@@ -11,8 +11,7 @@ import {
     iEngineInput,
     iNodeSaveData,
     CATEGORY_ID,
-    iEngineNode,
-    iEditorNode
+Instance_Base,
 } from '@engine/core/core';
 
 export default class Logic implements iEngineLogic {
@@ -98,12 +97,16 @@ export default class Logic implements iEngineLogic {
         this._localVariableDefaults.set(varName, data);
     }
 
-    dispatchLifecycleEvent(name: string, data?: any): void {
+    dispatchLifecycleEvent(name: string, data?: any, instance: Instance_Object | null = null): void {
+        this._instance = instance;
+
         for (let i = 0; i < this._nodes.length; i++){
             const curNode = this._nodes[i];
             const templateMethod = curNode.template[name];
             templateMethod?.call(curNode, data);
         }
+
+        this._instance = null;
     }
 
     registerPostEventCallback(callback: ()=>void): void {

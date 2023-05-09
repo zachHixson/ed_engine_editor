@@ -48,6 +48,7 @@ export interface iNodeLifecycleEvents {
     onDeleteStopped?: (protectedNodes: iEditorNode[])=>void;
     onBeforeDelete?: ()=>void;
     onBeforeUnmount?: ()=>void;
+    onTick?: ()=>void;
 }
 
 export interface iEditorLogic {
@@ -158,6 +159,7 @@ export interface iEngineLogic {
     setLocalVariableDefault(name: string, data: iAnyObj): void;
     executeEvent(eventName: string, instance: Instance_Object, data: any): void;
     registerPostEventCallback(callback: ()=>void): void;
+    dispatchLifecycleEvent(name: string, data?: any, instance?: Instance_Object | null): void;
 }
 
 export interface iEngineInTrigger {

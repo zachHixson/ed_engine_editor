@@ -125,6 +125,7 @@ export class Instance_Object extends Instance_Base{
 
     override onUpdate(deltaTime: number): void {
         super.onUpdate(deltaTime);
+        this.logic?.dispatchLifecycleEvent('onTick', null, this);
         this.executeNodeEvent('e_update', deltaTime);
     }
 

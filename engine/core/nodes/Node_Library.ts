@@ -177,7 +177,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             log(this: iEngineNode){
                 const label = this.getInput('label');
                 const data = this.getInput('_data');
-                const hasData = data || typeof data == 'boolean';
+                const hasData = data != null || typeof data == 'boolean';
                 const outData = data?.name ? `{{${data.name}}}` : data;
 
                 if (label.length > 0 && hasData){
@@ -444,6 +444,108 @@ export const NODE_LIST: iNodeTemplate[] = [
                 this.engine.emitMessage(this.getInput('name'));
                 this.triggerOutput('_o');
             }
+        },
+    },
+    {// Timer
+        id: 'timer',
+        category: 'actual',
+        inputs: [
+            {id: 'duration', type: SOCKET_TYPE.NUMBER, required: true, default: 0},
+            {id: 'step', type: SOCKET_TYPE.NUMBER, required: true, default: 0},
+        ],
+        outputs: [
+            {id: 'elapsed', type: SOCKET_TYPE.NUMBER, execute: 'getElapsed'},
+            {id: 'remaining', type: SOCKET_TYPE.NUMBER, execute: 'getRemaining'},
+            {id: 'percent', type: SOCKET_TYPE.NUMBER, execute: 'getPercent'},
+        ],
+        inTriggers: [
+            {id: 'start', execute: 'start'},
+            {id: 'pause', execute: 'pause'},
+            {id: 'reset', execute: 'reset'},
+        ],
+        outTriggers: ['immediate', 'tick', 'complete'],
+        init(this: Node){
+            if (!isEngineNode(this)){
+                this.stackDataIO = true;
+            }
+        },
+        onTick(this: iEngineNode){
+            const timerKey = `${this.instance.id}/${this.nodeId}`;
+            const data = this.dataCache.get(timerKey);
+            const deltaTimeMS = this.engine.deltaTime * 1000;
+
+            if (!data) return;
+
+            if (!data.active){
+                data.lastTickGap = data.step;
+                return;
+            }
+
+            data.progress = Math.min(data.progress + deltaTimeMS, data.duration);
+
+            if (data.progress >= data.duration){
+                this.triggerOutput('complete');
+                this.triggerOutput('tick');
+                this.dataCache.delete(timerKey);
+                return;
+            }
+
+            if (deltaTimeMS > data.step || data.lastTickGap >= data.step){
+                this.triggerOutput('tick');
+                data.lastTickGap = 0;
+            }
+            else{
+                data.lastTickGap += deltaTimeMS;
+            }
+        },
+        methods: {
+            start(this: iEngineNode){
+                const timerKey = `${this.instance.id}/${this.nodeId}`;
+                const oldData = this.dataCache.get(timerKey);
+
+                if (oldData){
+                    oldData.active = true;
+                }
+
+                const duration = this.getInput('duration') * 1000;
+                const step = this.getInput('step') * 1000;
+
+                this.dataCache.set(timerKey, {
+                    duration,
+                    step,
+                    progress: 0,
+                    lastTickGap: 0,
+                    active: true,
+                });
+
+                this.triggerOutput('immediate');
+            },
+            pause(this: iEngineNode){
+                const data = this.dataCache.get(`${this.instance.id}/${this.nodeId}`);
+                
+                if (data){
+                    data.active = false;
+                }
+            },
+            reset(this: iEngineNode){
+                const data = this.dataCache.get(`${this.instance.id}/${this.nodeId}`);
+
+                if (data){
+                    data.duration = 0;
+                }
+            },
+            getElapsed(this: iEngineNode){
+                const data = this.dataCache.get(`${this.instance.id}/${this.nodeId}`);
+                return data ? Math.round(data.progress / 10) / 100 : 0;
+            },
+            getRemaining(this: iEngineNode){
+                const data = this.dataCache.get(`${this.instance.id}/${this.nodeId}`);
+                return data ? Math.round((data.duration - data.progress) / 10) / 100 : 0;
+            },
+            getPercent(this: iEngineNode){
+                const data = this.dataCache.get(`${this.instance.id}/${this.nodeId}`);
+                return data ? data.progress / data.duration : 0;
+            },
         },
     },
     {// Set Animation Playback
