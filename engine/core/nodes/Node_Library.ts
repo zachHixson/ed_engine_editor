@@ -289,7 +289,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                 const textArea = this.getWidgetData();
                 const textBox = this.getInput('text', instanceContext);
                 const text = textBox ? textBox : textArea;
-                this.engine.openDialogBox(text, this as any, 'dialogClosed');
+                this.engine.openDialogBox(text, 'dialogClosed', this, instanceContext);
                 this.triggerOutput('immediate', instanceContext);
             },
             dialogClosed(this: iEngineNode, instanceContext: Instance_Object){
@@ -582,6 +582,10 @@ export const NODE_LIST: iNodeTemplate[] = [
                 instance.fpsOverride = isNaN(fps) ? instance.fps : fps;
                 instance.animLoopOverride = loop ?? instance.animLoop;
                 instance.animPlayingOverride = playing ?? instance.animPlaying;
+
+                instance.needsRenderUpdate = true;
+
+                this.triggerOutput('_o', instanceContext);
             },
         },
     },

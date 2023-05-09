@@ -21,6 +21,7 @@ import {
     iEngineLogic,
     Instance_Logic,
     MOUSE_EVENT,
+iEngineNode,
 } from '@engine/core/core';
 import Node from './Node';
 import iGameData from './iGameData';
@@ -430,10 +431,10 @@ export class Engine implements iEngineCallbacks {
         eventMapGet.set(instance.id, instance);
     }
 
-    private _registerAsyncNodeEvent = (node: Node, methodName: string): string =>{
+    private _registerAsyncNodeEvent = (node: Node, methodName: string, instance: Instance_Object): string =>{
         const tag = this._newAsyncTag();
         this._nodeAsyncEventMap.set(tag, {
-            instance: node.instance,
+            instance,
             node,
             methodName
         });
@@ -671,8 +672,9 @@ export class Engine implements iEngineCallbacks {
         return this._globalVariables.get(varname);
     }
 
-    openDialogBox = (text: string, node: Node, methodName: string): void =>{
-        const asyncTag = node ? this._registerAsyncNodeEvent(node, methodName) : null;
+    openDialogBox = (text: string, methodName: string, node: iEngineNode, instance: Instance_Object): void =>{
+        const castNode = node as Node;
+        const asyncTag = node ? this._registerAsyncNodeEvent(castNode, methodName, instance) : null;
         this.enableInput = false;
         this.enableUpdate = false;
         this._dialogBox.open(text, asyncTag);
