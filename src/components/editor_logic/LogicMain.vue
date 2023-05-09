@@ -31,7 +31,7 @@ import arrowIcon from '@/assets/arrow_01.svg';
 import trashIcon from '@/assets/trash.svg';
 import hamburgerIcon from '@/assets/hamburger.svg';
 
-type ActionChangeInputProps = {socket: GenericSocket, oldVal: any, newVal: any, node: Node_Obj};
+type ActionChangeInputProps = {socket: GenericSocket, widget: boolean, oldVal: any, newVal: any, node: Node_Obj};
 
 const mainStore = useMainStore();
 const logicEditorStore = useLogicEditorStore();
@@ -100,6 +100,7 @@ const {
     relinkConnections,
     makeConnection,
     removeConnection,
+    removeConnectionList,
     revertMakeConnection,
 } = useConnection(
     props,
@@ -160,6 +161,7 @@ onBeforeMount(()=>{
         addNode,
         deleteNodes,
         revertMakeConnection,
+        removeConnectionList,
         dialogNewVariable,
         undoStore,
         emit,
@@ -278,31 +280,45 @@ function trashMouseUp(event: MouseEvent): void {
     }
 }
 
-function actionChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProps, makeCommit = true): void {
-    socket.value = newVal;
-    !makeCommit && node.emit('force-socket-update', socket.id);
+function actionChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeInputProps, makeCommit = true): void {
+    if (widget){
+        node.widgetData = newVal;
+    }
+    else{
+        socket.value = newVal;
+    }
 
     node.onValueChange && node.onValueChange({
-        socketId: socket.id,
+        socketId: widget ? -1 : socket.id,
+        widget,
         oldVal,
         newVal
     });
 
+    !(makeCommit || widget) && node.emit('force-socket-update', socket.id);
+
     if (makeCommit){
-        let data = {socket, oldVal, newVal, node};
+        let data = {socket, widget, oldVal, newVal, node};
         undoStore.commit({action: Core.LOGIC_ACTION.CHANGE_INPUT, data});
     }
 }
 
-function revertChangeInput({socket, oldVal, newVal, node}: ActionChangeInputProps): void {
+function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeInputProps): void {
+    if (widget){
+        node.widgetData = oldVal;
+    }
+    else{
         socket.value = oldVal;
         node.emit('force-socket-update', socket.id);
-        node.onValueChange && node.onValueChange({
-            socketId: socket.id,
-            newVal,
-            oldVal
-        });
     }
+    
+    node.onValueChange && node.onValueChange({
+        socketId: widget ? -1 : socket.id,
+        widget,
+        newVal,
+        oldVal
+    });
+}
 </script>
 
 <template>

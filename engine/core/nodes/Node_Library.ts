@@ -3,9 +3,9 @@ import { iNodeTemplate } from './iNodeTemplate';
 import Cat_Events from './Cat_Events';
 import Cat_Variables from './Cat_Variables';
 import { Vector } from '../Vector';
-import { iEditorNode, iEngineNode } from '../LogicInterfaces';
-import { Game_Object, Instance_Object } from '../core';
-import { assetToInstance, instanceToAsset } from './Socket_Conversions';
+import { iEditorNode, iEngineNode, iNodeConnection } from '../LogicInterfaces';
+import { Game_Object, Instance_Base, Instance_Object } from '../core';
+import { canConvertSocket, assetToInstance, instanceToAsset } from './Socket_Conversions';
 
 export type Node = iEditorNode | iEngineNode;
 
@@ -64,6 +64,58 @@ export const NODE_LIST: iNodeTemplate[] = [
                     case 'lte': return inp1 <= inp2;
                 }
             },
+        },
+    },
+    {// Compare Instances
+        id: 'compare_instances',
+        category: 'actual',
+        widget: {
+            id: 'type',
+            type: WIDGET.ENUM,
+            options: {
+                items: ['compare_instance', 'compare_type'],
+            },
+        },
+        onBeforeMount(this: iEditorNode){
+            this.method('editor_setSocketType');
+        },
+        onValueChange(this: iEditorNode){
+            this.method('editor_setSocketType');
+        },
+        inputs: [
+            {id: '_i1', type: SOCKET_TYPE.ASSET, default: null},
+            {id: '_i2', type: SOCKET_TYPE.ASSET, default: null},
+        ],
+        outputs: [
+            {id: 'result', type: SOCKET_TYPE.BOOL, execute: 'getResult'},
+        ],
+        methods: {
+            getResult(this: iEngineNode){
+                const i1 = this.getInput('_i1');
+                const i2 = this.getInput('_i2');
+
+                return i1.id == i2.id;
+            },
+            editor_setSocketType(this: iEditorNode){
+                const type = this.widgetData;
+                const deleteConnections: iNodeConnection[] = [];
+                let typeChanged = false;
+
+                //change socket icons
+                this.inputs?.forEach(input => {
+                    const connection = this.editorAPI.getConnection(this, input.id);
+                    const connectedSocket = connection ? this.editorAPI.getConnectedSocket(this, input.id, connection) : null;
+                    typeChanged ||= type != input.type;
+                    input.type = type == 'compare_type' ? SOCKET_TYPE.ASSET : SOCKET_TYPE.INSTANCE;
+                    typeChanged && this.emit('force-socket-update', input.id);
+
+                    if (connection && connectedSocket && !canConvertSocket(connectedSocket.type, input.type)){
+                        deleteConnections.push(connection);
+                    }
+                });
+
+                typeChanged && deleteConnections.length && this.editorAPI.deleteConnections(deleteConnections, true);
+            }
         },
     },
     {// Logic

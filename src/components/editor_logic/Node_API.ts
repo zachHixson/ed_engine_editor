@@ -114,6 +114,10 @@ export default class Node_API implements Core.iEditorAPI {
         this.editor.deleteNodes({nodeRefList: nodeList}, commit);
     }
 
+    deleteConnections(connectionList: Node_Connection[], commit: boolean = true): void {
+        this.editor.removeConnectionList({connectionObjList: connectionList}, commit);
+    }
+
     forEachNode(callback: (node: Node)=>void, isGlobal = true): void {
         if (isGlobal){
             const allLogic = this.gameDataStore.getAllLogic;

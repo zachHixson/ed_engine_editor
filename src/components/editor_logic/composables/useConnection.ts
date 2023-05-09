@@ -13,6 +13,7 @@ import Core from '@/core';
 
 export type ActionMakeConnectionProps = {connectionObj: Node_Connection, socketOver: iHoverSocket, prevSocket?: GenericSocket};
 export type ActionRemoveConnectionProps = {connectionObj: Node_Connection};
+export type ActionBatchRemoveConnectionsProps = {connectionObjList: Node_Connection[]};
 
 export default function useConnection(
     props: {selectedAsset: Logic},
@@ -97,8 +98,8 @@ export default function useConnection(
         makeCommit &&= !!(connectionObj.startNode && connectionObj.endNode);
     
         if (makeCommit){
-            let data = {connectionObj: Object.assign(new Node_Connection(), connectionObj)};
-            let prevSocket = undoStore.cache.get('prev_socket');
+            const data = {connectionObj: Object.assign(new Node_Connection(), connectionObj)};
+            const prevSocket = undoStore.cache.get('prev_socket');
     
             Object.assign(data.connectionObj, prevSocket);
             undoStore.commit({action: Core.LOGIC_ACTION.DISCONNECT, data});
@@ -107,6 +108,22 @@ export default function useConnection(
         props.selectedAsset.removeConnection(connectionObj.id);
         connectionObj.startNode?.onRemoveConnection && connectionObj.startNode?.onRemoveConnection(connectionObj);
         connectionObj.endNode?.onRemoveConnection && connectionObj.endNode?.onRemoveConnection(connectionObj);
+    }
+
+    function actionBatchRemoveConnections({connectionObjList}: ActionBatchRemoveConnectionsProps, makeCommit = true): void {
+        if (makeCommit){
+            const clonedList = connectionObjList.map(connection => Object.assign(new Node_Connection(), connection));
+            const data = {connectionObjList: clonedList};
+            undoStore.commit({action: Core.LOGIC_ACTION.BATCH_REMOVE_CONNECTIONS, data});
+        }
+
+        for (let i = 0; i < connectionObjList.length; i++){
+            const curConnection = connectionObjList[i];
+
+            props.selectedAsset.removeConnection(curConnection.id);
+            curConnection.startNode?.onRemoveConnection && curConnection.startNode?.onRemoveConnection(curConnection);
+            curConnection.endNode?.onRemoveConnection && curConnection.endNode?.onRemoveConnection(curConnection);
+        }
     }
 
     function revertMakeConnection({connectionObj, prevSocket}: ActionMakeConnectionProps): void {
@@ -127,10 +144,22 @@ export default function useConnection(
         });
     }
 
+    function revertBatchRemoveConnections({connectionObjList}: ActionBatchRemoveConnectionsProps): void {
+        for (let i = 0; i < connectionObjList.length; i++){
+            props.selectedAsset.addConnection(connectionObjList[i]);
+        }
+
+        nextTick(()=>{
+            relinkConnections();
+        });
+    }
+
     actionMap.set(Core.LOGIC_ACTION.CONNECT, actionMakeConnection);
     actionMap.set(Core.LOGIC_ACTION.DISCONNECT, actionRemoveConnection);
+    actionMap.set(Core.LOGIC_ACTION.BATCH_REMOVE_CONNECTIONS, actionBatchRemoveConnections);
     revertMap.set(Core.LOGIC_ACTION.CONNECT, revertMakeConnection);
     revertMap.set(Core.LOGIC_ACTION.DISCONNECT, revertRemoveConnection);
+    revertMap.set(Core.LOGIC_ACTION.BATCH_REMOVE_CONNECTIONS, revertBatchRemoveConnections);
 
     return {
         nodeRefs,
@@ -141,6 +170,7 @@ export default function useConnection(
         createConnection,
         makeConnection: actionMakeConnection,
         removeConnection: actionRemoveConnection,
+        removeConnectionList: actionBatchRemoveConnections,
         revertMakeConnection,
     };
 }

@@ -8,6 +8,7 @@ export interface iHoverSocket {
 }
 
 export interface iValueChanged {
+    widget?: boolean;
     socket: any;
     newVal: any;
     oldVal: any;

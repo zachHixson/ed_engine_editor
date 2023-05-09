@@ -1,3 +1,10 @@
+<script lang="ts">
+console.log("Static")
+const textSizeCtx = (()=>{
+    const canvas = document.createElement('canvas') as HTMLCanvasElement;
+    return canvas.getContext('2d')!;
+})();
+</script>
 <script setup lang="ts">
 import SearchDropdown from '@/components/common/SearchDropdown.vue';
 
@@ -9,7 +16,7 @@ const { t } = useI18n();
 const props = defineProps<{
     widget: any,
     widgetData: any,
-    setWidgetData: (data: any)=>void,
+    setWidgetData: (data: any, commit?: boolean)=>void,
 }>();
 
 const enumOptions = computed(()=>{
@@ -25,17 +32,23 @@ const enumOptions = computed(()=>{
 });
 const selectWidth = computed(()=>{
     if (enumOptions.value.length <= 0) return '20px';
+    
+    textSizeCtx.font = '15px Arial';
 
-    let largest = t('node.' + enumOptions.value[0].value).length;
+    let largest = textSizeCtx.measureText(t('node.' + enumOptions.value[0].value)).width;
 
     enumOptions.value.forEach(({ value }: {value: string}) => {
-        let curLength = t('node.' + value).length;
+        const curText = t('node.' + value);
+        const curLength = textSizeCtx.measureText(curText).width;
+
         if (curLength > largest){
             largest = curLength;
         }
     });
 
-    return `${largest + 2}em`;
+    largest = Math.min((largest * 2), 160);
+
+    return `${largest + 15}px`;
 });
 const enumValue = computed(()=>props.widgetData ?? enumOptions.value[0]);
 const showSearch = computed(()=>props.widget.options.showSearch);
@@ -63,7 +76,7 @@ onMounted(()=>{
             :value="enumValue"
             :search="showSearch"
             :thumbnail="showThumbnail"
-            @change="setWidgetData($event)"></SearchDropdown>
+            @change="setWidgetData($event, true)"></SearchDropdown>
     </div>
 </template>
 

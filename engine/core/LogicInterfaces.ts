@@ -141,6 +141,7 @@ export interface iEditorAPI {
     clearSelectedNodes(): void;
     addNode(node: iEditorNode, commit?: boolean): void;
     deleteNodes(nodeList: iEditorNode[], commit?: boolean): void;
+    deleteConnections(connectionList: iNodeConnection[], commit?: boolean): void;
     forEachNode(callback: (...args: any)=>void, isGlobal: boolean): void;
     dialogConfirm(textInfo: {textId: string, vars: {[keys: string]: any}}, callback: (positive: boolean)=>void): void;
     dialogNewVariable(callback: (positive: boolean, varInfo: iNewVarInfo)=>void): void;

@@ -52,10 +52,11 @@ function setOpen(value: boolean): void {
 
     if (open.value){
         nextTick(()=>{
-            const { left, bottom } = boxEl.value!.getBoundingClientRect();
+            const { left, right, bottom } = boxEl.value!.getBoundingClientRect();
             dropdownEl.value!.style.left = left + 'px';
             dropdownEl.value!.style.top = bottom + 'px';
             dropdownEl.value!.style.width = boxEl.value!.clientWidth + 'px';
+            dropdownEl.value!.style.minWidth = right - left + 'px';
             searchEl.value && searchEl.value.focus();
         });
     }

@@ -12,6 +12,8 @@ const props = defineProps<{
     setWidgetData: (data: Core.iAnyObj)=>void,
 }>();
 
+const emit = defineEmits(['input']);
+
 const currentWidget = computed(()=>{
     const WIDGET = Core.Node_Enums.WIDGET;
 
@@ -29,7 +31,8 @@ const currentWidget = computed(()=>{
             :is="currentWidget"
             :widget="widget"
             :widgetData="widgetData"
-            :setWidgetData="setWidgetData" />
+            :setWidgetData="setWidgetData"
+            @input="emit('input', $event)"/>
     </div>
 </template>
 

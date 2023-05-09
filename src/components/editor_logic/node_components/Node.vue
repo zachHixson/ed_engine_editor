@@ -142,8 +142,19 @@ function mouseUp(): void {
     isDragging.value = false;
 }
 
-function setWidgetData(data: Core.iAnyObj): void {
+function setWidgetData(data: Core.iAnyObj, commit = false): void {
+    const oldVal = props.nodeObj.widgetData;
     props.nodeObj.widgetData = data;
+
+    if (commit){
+        emit('socket-value-changed', {
+            widget: true,
+            socket: null,
+            oldVal,
+            newVal: props.nodeObj.widgetData,
+            node: props.nodeObj,
+        } satisfies iValueChanged);
+    }
 }
 
 function socketDown(connection: Node_Connection): void {
@@ -231,7 +242,8 @@ defineExpose({getRelinkInfo});
             <Widget
                 :widget="nodeObj.widget"
                 :widgetData="widgetData"
-                :setWidgetData="setWidgetData"/>
+                :setWidgetData="setWidgetData"
+                @input="onInput($event)"/>
         </div>
         <div v-if="showTriggers" class="io">
             <div class="socket-column" style="align-items: flex-start">
