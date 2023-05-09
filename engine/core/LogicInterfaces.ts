@@ -48,7 +48,7 @@ export interface iNodeLifecycleEvents {
     onDeleteStopped?: (protectedNodes: iEditorNode[])=>void;
     onBeforeDelete?: ()=>void;
     onBeforeUnmount?: ()=>void;
-    onTick?: ()=>void;
+    onTick?: (instanceContext: Instance_Object)=>void;
 }
 
 export interface iEditorLogic {
@@ -83,6 +83,8 @@ export interface iEditorNodeOutput extends iOutput {
     node: iEditorNode,
 };
 
+export type iEditorNodeMethod = (data?: any) => any;
+
 export interface iEditorNode extends iNode_Base {
     templateId: string;
     widget?: any;
@@ -105,7 +107,7 @@ export interface iEditorNode extends iNode_Base {
     decoratorText?: string | null;
     stackDataIO?: boolean;
 
-    method(methodName: string): any;
+    method(methodName: string, data?: any): any;
     getInput(inputName: string): any | null;
     emit(eventName: string, data?: any): void;
 }
@@ -159,7 +161,9 @@ export interface iEngineLogic {
     setLocalVariableDefault(name: string, data: iAnyObj): void;
     executeEvent(eventName: string, instance: Instance_Object, data: any): void;
     registerPostEventCallback(callback: ()=>void): void;
-    dispatchLifecycleEvent(name: string, data?: any, instance?: Instance_Object | null): void;
+    dispatchLogicLoaded(): void;
+    dispatchAfterGameDataLoaded(): void;
+    dispatchOnTick(instanceContext: Instance_Object): void;
 }
 
 export interface iEngineInTrigger {
@@ -186,6 +190,8 @@ export interface iEngineOuput {
     execute: string,
 };
 
+export type iEngineNodeMethod = (instanceContext: Instance_Object, data?: any) => any;
+
 export interface iEngineNode extends iNode_Base {
     inTriggers: Map<string, iEngineInTrigger>;
     outTriggers: Map<string, iEngineOutTrigger>;
@@ -194,12 +200,11 @@ export interface iEngineNode extends iNode_Base {
     parentScript: iEngineLogic;
 
     engine: Engine;
-    instance: Instance_Object;
 
-    method(methodName: string, data?: any): any;
+    method(methodName: string, instanceContext: Instance_Object, data?: any): any;
     getWidgetData(): any;
-    getInput(inputName: string): any;
-    triggerOutput(outputId: string): void;
+    getInput(inputName: string, instanceContext: Instance_Object): any;
+    triggerOutput(outputId: string, instanceContext: Instance_Object): void;
 }
 
 type iEditorConnectionSaveData = any;

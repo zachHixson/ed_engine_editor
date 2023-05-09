@@ -1,5 +1,4 @@
 <script lang="ts">
-console.log("Static")
 const textSizeCtx = (()=>{
     const canvas = document.createElement('canvas') as HTMLCanvasElement;
     return canvas.getContext('2d')!;

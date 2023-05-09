@@ -124,6 +124,7 @@ export class Engine implements iEngineCallbacks {
     get currentTime(){return this._curTime}
     get deltaTime(){return this._deltaTime}
     get mouse(){return this._mouse}
+    get keyMap(){return this._keymap}
 
     loadRoom = (roomId: number): void =>{
         const room = this._gameData.rooms.find((r: Room) => r.id == roomId)!;
@@ -297,7 +298,7 @@ export class Engine implements iEngineCallbacks {
 
         loadedData.rooms = parsedJson.rooms.map((r: serialRoom) => Room.fromSaveData(r, assetMap));
 
-        loadedData.logic.forEach(logic => logic.dispatchLifecycleEvent('afterGameDataLoaded'));
+        loadedData.logic.forEach(logic => logic.dispatchAfterGameDataLoaded());
 
         return loadedData;
     }

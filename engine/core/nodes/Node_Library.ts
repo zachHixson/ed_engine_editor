@@ -26,10 +26,10 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'condition', type: SOCKET_TYPE.BOOL, default: false},
         ],
         methods: {
-            checkCondition(){
-                const conditionVal = this.getInput('condition');
+            checkCondition(this: iEngineNode, instanceContext: Instance_Object){
+                const conditionVal = this.getInput('condition', instanceContext);
                 const out = conditionVal ? 'true' : 'false';
-                this.triggerOutput(out);
+                this.triggerOutput(out, instanceContext);
             },
         },
     },
@@ -51,10 +51,10 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'equal', type: SOCKET_TYPE.BOOL, execute: 'compare'},
         ],
         methods: {
-            compare(){
+            compare(this: iEngineNode, instanceContext: Instance_Object){
                 const compareFunc = this.getWidgetData();
-                const inp1 = this.getInput('_inp1');
-                const inp2 = this.getInput('_inp2');
+                const inp1 = this.getInput('_inp1', instanceContext);
+                const inp2 = this.getInput('_inp2', instanceContext);
 
                 switch(compareFunc){
                     case 'equal': return inp1 == inp2;
@@ -90,9 +90,9 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'result', type: SOCKET_TYPE.BOOL, execute: 'getResult'},
         ],
         methods: {
-            getResult(this: iEngineNode){
-                const i1 = this.getInput('_i1');
-                const i2 = this.getInput('_i2');
+            getResult(this: iEngineNode, instanceContext: Instance_Object){
+                const i1 = this.getInput('_i1', instanceContext);
+                const i2 = this.getInput('_i2', instanceContext);
 
                 return i1.id == i2.id;
             },
@@ -136,10 +136,10 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: '_result', type: SOCKET_TYPE.BOOL, execute: 'result'},
         ],
         methods: {
-            result(){
+            result(this: iEngineNode, instanceContext: Instance_Object){
                 const logicFunc = this.getWidgetData();
-                const inp1 = this.getInput('_inp1');
-                const inp2 = this.getInput('_inp2');
+                const inp1 = this.getInput('_inp1', instanceContext);
+                const inp2 = this.getInput('_inp2', instanceContext);
 
                 switch(logicFunc){
                     case 'and': return inp1 && inp2;
@@ -159,7 +159,9 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: '_out', type: SOCKET_TYPE.BOOL, execute: 'not'},
         ],
         methods: {
-            not(){return !this.getInput('_inp')},
+            not(this: iEngineNode, instanceContext: Instance_Object){
+                return !this.getInput('_inp', instanceContext);
+            },
         },
     },
     {// Debug Log
@@ -174,9 +176,9 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: '_data', type: SOCKET_TYPE.ANY, default: null},
         ],
         methods: {
-            log(this: iEngineNode){
-                const label = this.getInput('label');
-                const data = this.getInput('_data');
+            log(this: iEngineNode, instanceContext: Instance_Object){
+                const label = this.getInput('label', instanceContext);
+                const data = this.getInput('_data', instanceContext);
                 const hasData = data != null || typeof data == 'boolean';
                 const outData = data?.name ? `{{${data.name}}}` : data;
 
@@ -190,7 +192,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                     this.engine.log(label);
                 }
 
-                this.triggerOutput('_o');
+                this.triggerOutput('_o', instanceContext);
             },
         },
     },
@@ -205,10 +207,10 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'is_down', type: SOCKET_TYPE.BOOL, execute: 'isDown'},
         ],
         methods: {
-            isDown(){
-                const keymap = this.engine.keymap;
-                const input = this.getInput('key').toLowerCase();
-                return !!keymap[input];
+            isDown(this: iEngineNode, instanceContext: Instance_Object){
+                const keymap = this.engine.keyMap;
+                const input = this.getInput('key', instanceContext).toLowerCase();
+                return !!keymap.get(input);
             },
         },
     },
@@ -230,10 +232,10 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: '_out', type: SOCKET_TYPE.NUMBER, execute: 'compute'},
         ],
         methods: {
-            compute(){
+            compute(this: iEngineNode, instanceContext: Instance_Object){
                 const mathFunc = this.getWidgetData();
-                const num1 = this.getInput('_num1');
-                const num2 = this.getInput('_num2');
+                const num1 = this.getInput('_num1', instanceContext);
+                const num2 = this.getInput('_num2', instanceContext);
 
                 switch(mathFunc){
                     case 'add_sym': return num1 + num2;
@@ -241,7 +243,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                     case 'multiply_sym': return num1 * num2;
                     case 'divide_sym':
                         if (num2 == 0){
-                            this.engine.nodeExeption(this, 'Cannot divide by 0');
+                            this.engine.nodeException('Cannot divide by 0', null);
                             return;
                         }
                         return num1 / num2;
@@ -261,10 +263,10 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
         ],
         methods: {
-            removeInstance(){
-                const instance = this.getInput('instance') || this.instance;
+            removeInstance(this: iEngineNode, instanceContext: Instance_Object){
+                const instance = this.getInput('instance', instanceContext) || instanceContext;
                 this.engine.removeInstance(instance);
-                this.triggerOutput('_o');
+                this.triggerOutput('_o', instanceContext);
             }
         },
     },
@@ -283,15 +285,15 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'text', type: SOCKET_TYPE.STRING, default: ''},
         ],
         methods: {
-            startDialog(){
+            startDialog(this: iEngineNode, instanceContext: Instance_Object){
                 const textArea = this.getWidgetData();
-                const textBox = this.getInput('text');
+                const textBox = this.getInput('text', instanceContext);
                 const text = textBox ? textBox : textArea;
-                this.engine.openDialogBox(text, this, 'dialogClosed');
-                this.triggerOutput('immediate');
+                this.engine.openDialogBox(text, this as any, 'dialogClosed');
+                this.triggerOutput('immediate', instanceContext);
             },
-            dialogClosed(){
-                this.triggerOutput('dialog_closed');
+            dialogClosed(this: iEngineNode, instanceContext: Instance_Object){
+                this.triggerOutput('dialog_closed', instanceContext);
             },
         }
     },
@@ -349,8 +351,8 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'self', type: SOCKET_TYPE.INSTANCE, execute: 'getSelf'},
         ],
         methods: {
-            getSelf(this: iEngineNode){
-                return this.instance;
+            getSelf(this: iEngineNode, instanceContext: Instance_Object){
+                return instanceContext;
             },
         },
     },
@@ -372,13 +374,19 @@ export const NODE_LIST: iNodeTemplate[] = [
             }
         },
         methods: {
-            getAsset(){
-                const instance = this.getInput('instance') ?? this.instance;
+            getAsset(this: iEngineNode, instanceContext: Instance_Object){
+                const instance = this.getInput('instance', instanceContext) ?? instanceContext;
                 return instanceToAsset(instance, this.engine.gameData);
             },
-            getName(){return (this.getInput('instance') ?? this.instance).name},
-            getX(){return (this.getInput('instance') ?? this.instance).pos.x},
-            getY(){return (this.getInput('instance') ?? this.instance).pos.y},
+            getName(this: iEngineNode, instanceContext: Instance_Object){
+                return (this.getInput('instance', instanceContext) ?? instanceContext).name
+            },
+            getX(this: iEngineNode, instanceContext: Instance_Object){
+                return (this.getInput('instance', instanceContext) ?? instanceContext).pos.x
+            },
+            getY(this: iEngineNode, instanceContext: Instance_Object){
+                return (this.getInput('instance', instanceContext) ?? instanceContext).pos.y
+            },
         },
     },
     {// Spawn Instance
@@ -397,10 +405,10 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'instance', type: SOCKET_TYPE.INSTANCE, execute: 'getAsset'},
         ],
         methods: {
-            spawnInstance(this: iEngineNode){
-                const baseAsset = this.getInput('type');
-                const x = this.getInput('x');
-                const y = this.getInput('y');
+            spawnInstance(this: iEngineNode, instanceContext: Instance_Object){
+                const baseAsset = this.getInput('type', instanceContext);
+                const x = this.getInput('x', instanceContext);
+                const y = this.getInput('y', instanceContext);
                 const pos = new Vector(x, y);
                 const nextId = this.engine.room.curInstId;
                 const newInstance = assetToInstance(baseAsset, nextId, pos);
@@ -418,9 +426,9 @@ export const NODE_LIST: iNodeTemplate[] = [
                     this.engine.warn('no_asset_specified');
                 }
 
-                this.triggerOutput('_o');
+                this.triggerOutput('_o', instanceContext);
             },
-            getAsset(){
+            getAsset(this: iEngineNode){
                 return this.dataCache.get('spawned_instance') ?? null;
             },
         }
@@ -436,13 +444,13 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'name', type: SOCKET_TYPE.STRING, default: ''},
         ],
         methods: {
-            broadcastMessage(this: iEngineNode){
-                const name = this.getInput('name');
+            broadcastMessage(this: iEngineNode, instanceContext: Instance_Object){
+                const name = this.getInput('name', instanceContext);
 
                 if (name.trim().length < 0) return;
                 
-                this.engine.emitMessage(this.getInput('name'));
-                this.triggerOutput('_o');
+                this.engine.emitMessage(this.getInput('name', instanceContext));
+                this.triggerOutput('_o', instanceContext);
             }
         },
     },
@@ -469,8 +477,8 @@ export const NODE_LIST: iNodeTemplate[] = [
                 this.stackDataIO = true;
             }
         },
-        onTick(this: iEngineNode){
-            const timerKey = `${this.instance.id}/${this.nodeId}`;
+        onTick(this: iEngineNode, instanceContext: Instance_Object){
+            const timerKey = `${instanceContext.id}/${this.nodeId}`;
             const data = this.dataCache.get(timerKey);
             const deltaTimeMS = this.engine.deltaTime * 1000;
 
@@ -484,14 +492,14 @@ export const NODE_LIST: iNodeTemplate[] = [
             data.progress = Math.min(data.progress + deltaTimeMS, data.duration);
 
             if (data.progress >= data.duration){
-                this.triggerOutput('complete');
-                this.triggerOutput('tick');
+                this.triggerOutput('complete', instanceContext);
+                this.triggerOutput('tick', instanceContext);
                 this.dataCache.delete(timerKey);
                 return;
             }
 
             if (deltaTimeMS > data.step || data.lastTickGap >= data.step){
-                this.triggerOutput('tick');
+                this.triggerOutput('tick', instanceContext);
                 data.lastTickGap = 0;
             }
             else{
@@ -499,16 +507,16 @@ export const NODE_LIST: iNodeTemplate[] = [
             }
         },
         methods: {
-            start(this: iEngineNode){
-                const timerKey = `${this.instance.id}/${this.nodeId}`;
+            start(this: iEngineNode, instanceContext: Instance_Object){
+                const timerKey = `${instanceContext.id}/${this.nodeId}`;
                 const oldData = this.dataCache.get(timerKey);
 
                 if (oldData){
                     oldData.active = true;
                 }
 
-                const duration = this.getInput('duration') * 1000;
-                const step = this.getInput('step') * 1000;
+                const duration = this.getInput('duration', instanceContext) * 1000;
+                const step = this.getInput('step', instanceContext) * 1000;
 
                 this.dataCache.set(timerKey, {
                     duration,
@@ -518,32 +526,32 @@ export const NODE_LIST: iNodeTemplate[] = [
                     active: true,
                 });
 
-                this.triggerOutput('immediate');
+                this.triggerOutput('immediate', instanceContext);
             },
-            pause(this: iEngineNode){
-                const data = this.dataCache.get(`${this.instance.id}/${this.nodeId}`);
+            pause(this: iEngineNode, instanceContext: Instance_Object){
+                const data = this.dataCache.get(`${instanceContext.id}/${this.nodeId}`);
                 
                 if (data){
                     data.active = false;
                 }
             },
-            reset(this: iEngineNode){
-                const data = this.dataCache.get(`${this.instance.id}/${this.nodeId}`);
+            reset(this: iEngineNode, instanceContext: Instance_Object){
+                const data = this.dataCache.get(`${instanceContext.id}/${this.nodeId}`);
 
                 if (data){
                     data.duration = 0;
                 }
             },
-            getElapsed(this: iEngineNode){
-                const data = this.dataCache.get(`${this.instance.id}/${this.nodeId}`);
+            getElapsed(this: iEngineNode, instanceContext: Instance_Object){
+                const data = this.dataCache.get(`${instanceContext.id}/${this.nodeId}`);
                 return data ? Math.round(data.progress / 10) / 100 : 0;
             },
-            getRemaining(this: iEngineNode){
-                const data = this.dataCache.get(`${this.instance.id}/${this.nodeId}`);
+            getRemaining(this: iEngineNode, instanceContext: Instance_Object){
+                const data = this.dataCache.get(`${instanceContext.id}/${this.nodeId}`);
                 return data ? Math.round((data.duration - data.progress) / 10) / 100 : 0;
             },
-            getPercent(this: iEngineNode){
-                const data = this.dataCache.get(`${this.instance.id}/${this.nodeId}`);
+            getPercent(this: iEngineNode, instanceContext: Instance_Object){
+                const data = this.dataCache.get(`${instanceContext.id}/${this.nodeId}`);
                 return data ? data.progress / data.duration : 0;
             },
         },
@@ -556,22 +564,24 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         outTriggers: ['_o'],
         inputs: [
+            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null},
             {id: 'frame', type: SOCKET_TYPE.NUMBER, default: ''},
             {id: 'fps', type: SOCKET_TYPE.NUMBER, default: ''},
             {id: 'loop', type: SOCKET_TYPE.BOOL, default: null, triple: true},
             {id: 'playing', type: SOCKET_TYPE.BOOL, default: null, triple: true},
         ],
         methods: {
-            setSettings(){
-                const frame = parseInt(this.getInput('frame'));
-                const fps = parseInt(this.getInput('fps'));
-                const loop = this.getInput('loop');
-                const playing = this.getInput('playing');
+            setSettings(this: iEngineNode, instanceContext: Instance_Object){
+                const instance = this.getInput('instance', instanceContext) ?? instanceContext;
+                const frame = parseInt(this.getInput('frame', instanceContext));
+                const fps = parseInt(this.getInput('fps', instanceContext));
+                const loop = this.getInput('loop', instanceContext);
+                const playing = this.getInput('playing', instanceContext);
 
-                this.instance.animFrame = isNaN(frame) ? this.instance.animFrame : frame;
-                this.instance.fps = isNaN(fps) ? this.instance.fps : fps;
-                this.instance.animLoop = loop ?? this.instance.animLoop;
-                this.instance.animPlaying = playing ?? this.instance.animPlaying;
+                instance.animFrame = isNaN(frame) ? instance.animFrame : frame;
+                instance.fpsOverride = isNaN(fps) ? instance.fps : fps;
+                instance.animLoopOverride = loop ?? instance.animLoop;
+                instance.animPlayingOverride = playing ?? instance.animPlaying;
             },
         },
     },
@@ -589,11 +599,11 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'relative', type: SOCKET_TYPE.BOOL, default: false},
         ],
         methods: {
-            setPosition(this: iEngineNode){
-                const instance = this.getInput('instance') ?? this.instance;
-                const xInp = this.getInput('x');
-                const yInp = this.getInput('y');
-                const relative = this.getInput('relative');
+            setPosition(this: iEngineNode, instanceContext: Instance_Object){
+                const instance = this.getInput('instance', instanceContext) ?? instanceContext;
+                const xInp = this.getInput('x', instanceContext);
+                const yInp = this.getInput('y', instanceContext);
+                const relative = this.getInput('relative', instanceContext);
                 let newPos: Vector;
 
                 if (relative){
@@ -610,9 +620,9 @@ export const NODE_LIST: iNodeTemplate[] = [
                     );
                 }
 
-                this.engine.setInstancePosition(this.instance, newPos);
+                this.engine.setInstancePosition(instanceContext, newPos);
                 
-                this.triggerOutput('_o');
+                this.triggerOutput('_o', instanceContext);
             },
         },
     },
@@ -628,32 +638,32 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
         ],
         methods: {
-            moveTiled(this: iEngineNode){
+            moveTiled(this: iEngineNode, instanceContext: Instance_Object){
                 const newPos = new Vector(
-                    Math.round(this.getInput('x')),
-                    Math.round(this.getInput('y'))
-                ).add(this.instance.pos);
+                    Math.round(this.getInput('x', instanceContext)),
+                    Math.round(this.getInput('y', instanceContext))
+                ).add(instanceContext.pos);
                 let instancesInSpace: Instance_Object[];
                 let spaceEmpty: boolean;
 
-                if (this.method('checkExitBacktrack', newPos)){
+                if (this.method('checkExitBacktrack', instanceContext, newPos)){
                     return;
                 }
 
                 instancesInSpace = this.engine.getInstancesOverlapping({
-                    id: this.instance.id,
+                    id: instanceContext.id,
                     pos: newPos
                 } as Instance_Object);
                 spaceEmpty = instancesInSpace.length > 0 ? instancesInSpace.filter(i => i.isSolid).length <= 0 : true;
 
-                if (spaceEmpty || !this.instance.isSolid){
-                    this.engine.setInstancePosition(this.instance, newPos);
+                if (spaceEmpty || !instanceContext.isSolid){
+                    this.engine.setInstancePosition(instanceContext, newPos);
                 }
                 else{
                     //register collisions with current instance
-                    if (this.instance.hasCollisionEvent){
+                    if (instanceContext.hasCollisionEvent){
                         for (let i = 0; i < instancesInSpace.length; i++){
-                            this.engine.registerCollision(this.instance, instancesInSpace[i], true);
+                            this.engine.registerCollision(instanceContext, instancesInSpace[i], true);
                         }
                     }
 
@@ -662,21 +672,21 @@ export const NODE_LIST: iNodeTemplate[] = [
                         const curInstanceInSpace = instancesInSpace[i];
 
                         if (curInstanceInSpace.hasCollisionEvent){
-                            this.engine.registerCollision(curInstanceInSpace, this.instance, true);
+                            this.engine.registerCollision(curInstanceInSpace, instanceContext, true);
                         }
                     }
                 }
                 
-                this.triggerOutput('_o');
+                this.triggerOutput('_o', instanceContext);
             },
-            checkExitBacktrack(this: iEngineNode, newPos: Vector): boolean {
-                if (!(this.instance.prevExit && this.instance.prevExit?.exit.detectBacktracking)) return false;
+            checkExitBacktrack(this: iEngineNode, instanceContext: Instance_Object, newPos: Vector): boolean {
+                if (!(instanceContext.prevExit && instanceContext.prevExit?.exit.detectBacktracking)) return false;
 
-                const direction = newPos.clone().subtract(this.instance.pos).normalize();
-                const dot = direction.dot(this.instance.prevExit.direction.clone().multiplyScalar(-1));
+                const direction = newPos.clone().subtract(instanceContext.pos).normalize();
+                const dot = direction.dot(instanceContext.prevExit.direction.clone().multiplyScalar(-1));
 
                 if (dot > 0.75) {
-                    this.instance.prevExit.exit.triggerExit(this.instance, direction);
+                    instanceContext.prevExit.exit.triggerExit(instanceContext, direction);
                     return true;
                 }
 
@@ -698,14 +708,14 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'slide', type: SOCKET_TYPE.BOOL, default: false},
         ],
         methods: {
-            setVelocity(this: iEngineNode){
-                const instance = this.getInput('instance') ?? this.instance;
+            setVelocity(this: iEngineNode, instanceContext: Instance_Object){
+                const instance = this.getInput('instance', instanceContext) ?? instanceContext;
                 instance.velocity.set(
-                    this.getInput('x'),
-                    this.getInput('y')
+                    this.getInput('x', instanceContext),
+                    this.getInput('y', instanceContext)
                 );
-                instance.collisionSlide = this.getInput('slide');
-                this.triggerOutput('_o');
+                instance.collisionSlide = this.getInput('slide', instanceContext);
+                this.triggerOutput('_o', instanceContext);
             },
         },
     },

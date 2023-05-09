@@ -11,12 +11,10 @@ import {
     iEngineInput,
     iNodeSaveData,
     CATEGORY_ID,
-Instance_Base,
 } from '@engine/core/core';
 
 export default class Logic implements iEngineLogic {
     private _nodes: Node[] = [];
-    private _instance: Instance_Object | null = null;
     private _localVariableDefaults: Map<string, any> = new Map();
     private _runPostEvent: (()=>void)[] = [];
 
@@ -44,8 +42,6 @@ export default class Logic implements iEngineLogic {
 
                 eventArr.push(newNode);
             }
-
-            newNode.setInstanceCallback(()=>this._instance!);
 
             newNode.template.onScriptAdd?.call(newNode);
         });
@@ -76,37 +72,41 @@ export default class Logic implements iEngineLogic {
 
         if (!event) return;
 
-        this._instance = instance;
         event.forEach(event => {
-            event.executeEvent(data);
+            event.executeEvent(data, instance);
             this._runPostEvent.forEach(callback => callback());
             this._runPostEvent = [];
         });
-        this._instance = null;
     }
 
     executeAsyncNodeMethod(instance: Instance_Object, node: Node, methodName: string): void {
-        const oldInstance = this._instance;
-        this._instance = instance;
-        node.method(methodName);
-        this._instance = oldInstance;
+        node.method(methodName, instance);
+    }
+
+    dispatchLogicLoaded(){
+        for (let i = 0; i < this._nodes.length; i++){
+            const curNode = this._nodes[i];
+            curNode.template.logicLoaded?.call(curNode, this);
+        }
+    }
+
+    dispatchAfterGameDataLoaded(){
+        for (let i = 0; i < this._nodes.length; i++){
+            const curNode = this._nodes[i];
+            curNode.template.afterGameDataLoaded?.call(curNode);
+        }
+    }
+
+    dispatchOnTick(instanceContext: Instance_Object){
+        for (let i = 0; i < this._nodes.length; i++){
+            const curNode = this._nodes[i];
+            curNode.template.onTick?.call(curNode, instanceContext);
+        }
     }
 
     setLocalVariableDefault(name: string, data: any): void {
         const varName = name.trim().toLowerCase();
         this._localVariableDefaults.set(varName, data);
-    }
-
-    dispatchLifecycleEvent(name: string, data?: any, instance: Instance_Object | null = null): void {
-        this._instance = instance;
-
-        for (let i = 0; i < this._nodes.length; i++){
-            const curNode = this._nodes[i];
-            const templateMethod = curNode.template[name];
-            templateMethod?.call(curNode, data);
-        }
-
-        this._instance = null;
     }
 
     registerPostEventCallback(callback: ()=>void): void {

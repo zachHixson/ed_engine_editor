@@ -6,14 +6,14 @@ import {
     Instance_Object,
     convertSocketType,
     NODE_MAP,
-    iNodeSaveData
+    iNodeSaveData,
+iEngineNodeMethod,
 } from "@engine/core/core";
 import { iAnyObj } from "./core/interfaces";
 import Engine from "./Engine";
 import Logic from "./Logic";
 
 export default class Node implements iEngineNode {
-    private _getInstanceCallback: (()=>Instance_Object) | null = null;
     private _dataCache: Map<string, any> = new Map();
     private _stackTrace: {parentScriptId: number, nodeId: number};
 
@@ -28,8 +28,8 @@ export default class Node implements iEngineNode {
     outTriggers: iEngineNode["outTriggers"] = new Map();
     inputs: iEngineNode["inputs"] = new Map();
     outputs: iEngineNode["outputs"] = new Map();
-    execute: ((...args: any)=>void) | null = null;
-    methods: Map<string, (...args: any)=>any> = new Map();
+    execute: ((instanceContext: Instance_Object, data: any)=>void) | null = null;
+    methods: Map<string, iEngineNodeMethod> = new Map();
 
     constructor(nodeData: iNodeSaveData, logic: Logic, engine: Engine){
         const template = NODE_MAP.get(nodeData.templateId)!;
@@ -99,14 +99,18 @@ export default class Node implements iEngineNode {
         this.template.init?.call(this);
     }
 
-    get instance(){return this._getInstanceCallback!()}
     get dataCache(){return this._dataCache ?? {}};
 
-    setInstanceCallback(callback: ()=>Instance_Object): void {
-        this._getInstanceCallback = callback;
+    private _triggerInTrigger(executeName: string, instanceContext: Instance_Object): void {
+        this.methods.get(executeName)?.call(this, instanceContext);
     }
 
-    executeEvent(data: any): void {
+    private _getOutputData(outputName: string, instanceContext: Instance_Object): any {
+        const methodName = this.outputs.get(outputName)?.execute;
+        return this.methods.get(methodName!)?.call(this, instanceContext);
+    }
+
+    executeEvent(data: any, instanceContext: Instance_Object): void {
         if (!this.isEvent) {
             console.error('Error: Cannot call \"executeEvent()\" from non-event node');
             return
@@ -114,11 +118,11 @@ export default class Node implements iEngineNode {
 
         //execute first node
         if (this.execute){
-            this.execute.call(this, data);
+            this.execute.call(this, instanceContext, data);
         }
         else{
             const triggerId = data?.trigger ?? this.defaultTriggerId;
-            this.triggerOutput(triggerId);
+            this.triggerOutput(triggerId, instanceContext);
         }
     }
 
@@ -130,14 +134,13 @@ export default class Node implements iEngineNode {
         return this.widgetData;
     }
 
-    getInput(inputName: string): iEngineInput {
+    getInput(inputName: string, instanceContext: Instance_Object): iEngineInput {
         const input = this.inputs.get(inputName)!;
         let inputVal;
 
         if (input.connection){
-            const node = input.connection.node;
-            const method = input.connection.execute;
-            const val = node.method(method);
+            const node = input.connection.node as Node;
+            const val = node._getOutputData(input.connection.id, instanceContext);
 
             inputVal = convertSocketType(input.connection.type, input.type, val);
         }
@@ -148,13 +151,12 @@ export default class Node implements iEngineNode {
         return inputVal;
     }
 
-    triggerOutput(outputId: string){
+    triggerOutput(outputId: string, instanceContext: Instance_Object): void {
         const trigger = this.outTriggers.get(outputId);
 
         if (trigger?.connection){
-            const node = trigger.connection.node;
-            const method = trigger.connection.execute;
-            node.method(method);
+            const node = trigger.connection.node as Node;
+            node._triggerInTrigger(trigger.connection.execute, instanceContext);
         }
     }
 }

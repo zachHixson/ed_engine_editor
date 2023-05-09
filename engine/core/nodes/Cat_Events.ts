@@ -5,6 +5,7 @@ import { MOUSE_EVENT } from '../Enums';
 import { Vector } from '../Vector';
 import { isEngineNode } from './Node_Library';
 import { type Node } from './Node_Library';
+import { Instance_Object } from '../core';
 
 export default [
     {// Create
@@ -38,7 +39,7 @@ export default [
             {id: 'y', type: SOCKET_TYPE.NUMBER, execute: 'y'},
             {id: 'object', type: SOCKET_TYPE.INSTANCE, execute: 'object'},
         ],
-        execute(this: iEngineNode, data: any){
+        execute(this: iEngineNode, instanceContext: Instance_Object, data: any){
             const lBtn = !!(data.buttons & 0b001);
             const mBtn = !!(data.buttons & 0b010);
             const rBtn = !!(data.buttons & 0b100);
@@ -51,16 +52,16 @@ export default [
 
             if (data.type == MOUSE_EVENT.DOWN){
                 this.dataCache.set('downPos', data.pos.clone());
-                this.triggerOutput('button_down');
+                this.triggerOutput('button_down', instanceContext);
             }
             else if (data.type == MOUSE_EVENT.UP){
                 const downPos = this.dataCache.get('downPos') as Vector | undefined;
 
                 if (downPos && downPos.equalTo(data.pos)){
-                    this.triggerOutput('button_click');
+                    this.triggerOutput('button_click', instanceContext);
                 }
                 else{
-                    this.triggerOutput('button_up');
+                    this.triggerOutput('button_up', instanceContext);
                 }
             }
         },
@@ -110,15 +111,15 @@ export default [
             type: WIDGET.KEY,
         },
         outTriggers: ['key_down', 'key_up'],
-        execute(this: iEngineNode, data: KeyboardEvent){
+        execute(this: iEngineNode, instanceContext: Instance_Object, data: KeyboardEvent){
             const {code} = this.getWidgetData();
 
             if (data.code == code){
                 if (data.type == 'down'){
-                    this.triggerOutput('key_down');
+                    this.triggerOutput('key_down', instanceContext);
                 }
                 else{
-                    this.triggerOutput('key_up');
+                    this.triggerOutput('key_up', instanceContext);
                 }
             }
         },
@@ -131,29 +132,29 @@ export default [
         outputs: [
             {id: 'object', type: SOCKET_TYPE.INSTANCE, execute: 'object'},
         ],
-        execute(this: iEngineNode, data){
-            const cacheKey = this.method('getCacheKey');
+        execute(this: iEngineNode, instanceContext: Instance_Object, data){
+            const cacheKey = this.method('getCacheKey', instanceContext);
 
             this.dataCache.set(cacheKey, data);
 
             switch (data.type){
                 case COLLISION_EVENT.START:
-                    this.triggerOutput('start');
+                    this.triggerOutput('start', instanceContext);
                     break;
                 case COLLISION_EVENT.REPEAT:
-                    this.triggerOutput('repeat');
+                    this.triggerOutput('repeat', instanceContext);
                     break;
                 case COLLISION_EVENT.STOP:
-                    this.triggerOutput('stop');
+                    this.triggerOutput('stop', instanceContext);
                     break;
             }
         },
         methods: {
-            getCacheKey(this: iEngineNode){
-                return `${this.nodeId}/${this.instance.id.toString()}`;
+            getCacheKey(this: iEngineNode, instanceContext: Instance_Object){
+                return `${this.nodeId}/${instanceContext.id.toString()}`;
             },
-            object(this: iEngineNode){
-                const cacheKey = this.method('getCacheKey');
+            object(this: iEngineNode, instanceContext: Instance_Object){
+                const cacheKey = this.method('getCacheKey', instanceContext);
                 const cacheData = this.dataCache.get(cacheKey);
                 return cacheData?.instance ?? null;
             },
@@ -172,13 +173,13 @@ export default [
                 this.inputBoxWidth = 6;
             }
         },
-        execute(this: iEngineNode, data: any){
-            const name = this.getInput('name');
+        execute(this: iEngineNode, instanceContext: Instance_Object, data: any){
+            const name = this.getInput('name', instanceContext);
 
             if (name.trim().length < 0) return;
             
             if (data.name == name){
-                this.triggerOutput('_o');
+                this.triggerOutput('_o', instanceContext);
             }
         },
     },
