@@ -85,6 +85,9 @@ export class Instance_Object extends Instance_Base{
     get animPlaying(){
         return this.animPlayingOverride ?? this._objRef.animPlaying
     };
+    set animPlaying(playing: boolean){
+        super.animPlaying = playing;
+    }
 
     get startFrameOverrideClamped(){return this.startFrameOverride};
     set startFrameOverrideClamped(val: number | null){
@@ -96,7 +99,7 @@ export class Instance_Object extends Instance_Base{
 
         this._hasCollisionEvent = false;
 
-        this.logic?.events.forEach((event, key) => {
+        this.logic?.events.forEach((_, key) => {
             this._hasCollisionEvent ||= key == 'e_collision';
         });
 
