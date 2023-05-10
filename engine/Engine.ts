@@ -67,7 +67,7 @@ export class Engine implements iEngineCallbacks {
     private _nextAnimationFrame: number = -1;
     private _keymap: Map<string, boolean> = new Map();
     private _nodeEventMap: Map<string, Map<number, Instance_Object>> = new Map();
-    private _nodeAsyncEventMap: Map<string, any> = new Map();
+    private _nodeAsyncEventMap: Map<string, {instance: Instance_Object, node: Node, methodName: string}> = new Map();
     private _collisionMap: Map<number, iCollisionMapping> = new Map();
     private _globalVariables: Map<string, any> = new Map();
     private _errorLogs: Map<string, boolean> = new Map();
@@ -453,11 +453,12 @@ export class Engine implements iEngineCallbacks {
     }
 
     private _dispatchAsyncLogicEvent = (tag: string, clearEvent: boolean = false): void =>{
-        const {instance, node, methodName} = this._nodeAsyncEventMap.get(tag);
-        node.parentScript.executeAsyncNodeMethod(instance, node, methodName);
+        const {instance, node, methodName} = this._nodeAsyncEventMap.get(tag)!;
+        
+        node && node.method(methodName, instance);
 
         if (clearEvent){
-            this._nodeAsyncEventMap.set(tag, null);
+            this._nodeAsyncEventMap.delete(tag);
         }
     }
 

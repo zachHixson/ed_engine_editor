@@ -43,6 +43,7 @@ export default defineConfig(({mode}) => {
             apply: 'build',
         }),
     ];
+    let base = '/';
 
     if (mode == 'portable'){
         plugins.push(viteSingleFile({
@@ -50,10 +51,13 @@ export default defineConfig(({mode}) => {
         }), svgLoader({
             defaultImport: 'raw'
         }));
+
+        base = '.';
     }
 
     return {
         plugins,
+        base,
         resolve: {
             alias: {
                 '@': fileURLToPath(new URL('./src', import.meta.url)),
