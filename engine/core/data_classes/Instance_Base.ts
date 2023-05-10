@@ -1,10 +1,17 @@
 import { INSTANCE_TYPE } from "../Enums";
 import { Vector } from "../Vector";
-import { Node_Enums } from "../core";
+import { Node_Enums, iEngineLogic } from "../core";
 import { Draw } from "../core";
 import { Sprite } from "../core";
 import { Util } from "../core";
 import type Engine from '@engine/Engine';
+
+export enum InstanceAnimEvent {
+    START = 1,
+    STOP,
+    TICK,
+    FINISHED,
+}
 
 export interface iInstanceBaseSaveData {
     id: number;
@@ -64,6 +71,11 @@ export abstract class Instance_Base{
     get fps(){return 0};
     get animLoop(){return false};
     get animPlaying(){return false};
+    set animPlaying(playing: boolean){
+        if (playing == this.animPlayingOverride) return;
+        this.animPlayingOverride = playing;
+        this.onAnimationChange(this.animPlayingOverride ? InstanceAnimEvent.START : InstanceAnimEvent.STOP);
+    };
     get userDepth(){return 0};
     get zDepth(){return 0};
     set zDepth(val){};
@@ -92,8 +104,6 @@ export abstract class Instance_Base{
         const negOffset = +(Math.sign(this.fps) < 0);
         const frame = Math.min(Math.max(val, 0), this.sprite.frames.length - 1);
         this._animProgress = (frame + negOffset) / this.sprite.frames.length;
-
-        console.log(this._animProgress);
     }
 
     //Lifecycle events
@@ -103,6 +113,7 @@ export abstract class Instance_Base{
 
         this._engine.moveInstanceDirection(this, this.velocity.clone().multiplyScalar(deltaTime), this.collisionSlide);
     }
+    onAnimationChange(state: InstanceAnimEvent): void {}
     onCollision(event: iCollisionEvent): void {}
     onDestroy(): void {}
 
@@ -114,12 +125,16 @@ export abstract class Instance_Base{
         if (!this.sprite) return;
 
         if (this.animPlaying){
+            const oldFrame = this.animFrame;
             const oldProgress = this._animProgress;
             const dt = 1000 * deltaTime;
             const frameDuration = 1000 / this.fps;
             const animDuration = frameDuration * this.sprite.frames.length;
             const curProgress = (this._animProgress * animDuration + dt) / animDuration;
             this._animProgress = curProgress;
+            let newFrame: number;
+            let hasLooped: boolean;
+            let hasFinished: boolean;
 
             if (this.animLoop){
                 this._animProgress = Util.mod(this._animProgress, 1);
@@ -127,9 +142,24 @@ export abstract class Instance_Base{
             else{
                 this._animProgress = Math.max(Math.min(this._animProgress, 1), 0);
             }
+
+            newFrame = this.animFrame;
+            hasLooped = this.animLoop && (
+                (this.fps >= 0 && newFrame < oldFrame) ||
+                (this.fps < 0 && newFrame > oldFrame)
+            );
+            hasFinished = hasLooped || (
+                (this._animProgress != oldProgress) &&
+                (this._animProgress == (Math.sign(this.fps) + 1) / 2)
+            )
             
-            if (this._animProgress != oldProgress){
+            if (newFrame != oldFrame){
                 this.needsRenderUpdate = true;
+                this.onAnimationChange(InstanceAnimEvent.TICK);
+            }
+
+            if (hasFinished){
+                this.onAnimationChange(InstanceAnimEvent.FINISHED);
             }
         }
     }

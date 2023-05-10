@@ -5,7 +5,7 @@ import { MOUSE_EVENT } from '../Enums';
 import { Vector } from '../Vector';
 import { isEngineNode } from './Node_Library';
 import { type Node } from './Node_Library';
-import { Instance_Object } from '../core';
+import { InstanceAnimEvent, Instance_Object } from '../core';
 
 export default [
     {// Create
@@ -159,6 +159,44 @@ export default [
                 return cacheData?.instance ?? null;
             },
         },
+    },
+    {// Animation
+        id: 'e_animation',
+        isEvent: true,
+        category: 'events',
+        outputs: [
+            {id: 'is_playing', type: SOCKET_TYPE.BOOL, execute: 'getPlaying'},
+            {id: 'frame', type: SOCKET_TYPE.NUMBER, execute: 'getFrame'},
+            {id: 'fps', type: SOCKET_TYPE.NUMBER, execute: 'getFPS'},
+        ],
+        outTriggers: ['start', 'stop', 'tick', 'finished'],
+        execute(this: iEngineNode, instanceContext: Instance_Object, data: InstanceAnimEvent){
+            switch(data){
+                case InstanceAnimEvent.START:
+                    this.triggerOutput('start', instanceContext);
+                    break;
+                case InstanceAnimEvent.STOP:
+                    this.triggerOutput('stop', instanceContext);
+                    break;
+                case InstanceAnimEvent.TICK:
+                    this.triggerOutput('tick', instanceContext);
+                    break;
+                case InstanceAnimEvent.FINISHED:
+                    this.triggerOutput('finished', instanceContext);
+                    break;
+            }
+        },
+        methods: {
+            getPlaying(this: iEngineNode, instanceContext: Instance_Object){
+                return instanceContext.animPlaying;
+            },
+            getFrame(this: iEngineNode, instanceContext: Instance_Object){
+                return instanceContext.animFrame;
+            },
+            getFPS(this: iEngineNode, instanceContext: Instance_Object){
+                return instanceContext.fps;
+            }
+        }
     },
     {// Message
         id: 'e_message',

@@ -572,7 +572,7 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             setSettings(this: iEngineNode, instanceContext: Instance_Object){
-                const instance = this.getInput('instance', instanceContext) ?? instanceContext;
+                const instance = (this.getInput('instance', instanceContext) ?? instanceContext) as Instance_Base;
                 const frame = parseInt(this.getInput('frame', instanceContext));
                 const fps = parseInt(this.getInput('fps', instanceContext));
                 const loop = this.getInput('loop', instanceContext);
@@ -581,7 +581,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                 instance.animFrame = isNaN(frame) ? instance.animFrame : frame;
                 instance.fpsOverride = isNaN(fps) ? instance.fps : fps;
                 instance.animLoopOverride = loop ?? instance.animLoop;
-                instance.animPlayingOverride = playing ?? instance.animPlaying;
+                instance.animPlaying = playing ?? instance.animPlaying;
 
                 instance.needsRenderUpdate = true;
 
