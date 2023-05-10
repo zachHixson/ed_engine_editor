@@ -340,7 +340,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                 const objects = this.engine.gameData.objects;
                 const selectedObjectId = this.widgetData;
 
-                return objects.filter(o => o.id == selectedObjectId)[0] ?? null;
+                return objects.find(o => o.id == selectedObjectId) ?? null;
             },
         }
     },

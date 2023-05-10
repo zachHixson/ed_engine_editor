@@ -79,17 +79,27 @@ export class Atlas {
 
             if (freeLength >= length){
                 searching = false;
+            }
+        }
 
-                if (occupied){
-                    this._imageInfo.delete(curId);
-                }
+        if (searching){
+            return null;
+        }
+
+        for (let i = freeIdx!; i < freeIdx! + length - 1; i++){
+            const id = this._assignment[i];
+            const imageInfo = this._imageInfo.get(id!);
+
+            if (id != null && imageInfo){
+                this._imageInfo.delete(id);
+                i += imageInfo.length - 1;
             }
         }
 
         this._lastFoundIdx = freeIdx;
         this._lastFoundLength = freeLength;
 
-        return searching ? null : this._lastFoundIdx;
+        return this._lastFoundIdx;
     }
 
     private _calculateOffsetPosition(offset: number): number[] {
@@ -140,15 +150,15 @@ export class Atlas {
     }
 
     addImage(id: number | string, image: Array<ImageData>, incrementUsage = true): void {
+        if (this.checkExists(id)){
+            console.warn('Warning: Adding image that already exists in atlas. Use "atlas.checkExists" first');
+            return;
+        }
+        
         const freeIdx = this._lastFoundLength == image.length ? this._lastFoundIdx : this._getFreeIdx(image.length);
 
         if (freeIdx == null) {
             console.error('Error: Attempting to add image to full atlas. Make sure you\'re using "atlas.checkFree()" first');
-            return;
-        }
-
-        if (this.checkExists(id)){
-            console.warn('Warning: Adding image that already exists in atlas. Use "atlas.checkExits" first');
             return;
         }
 
