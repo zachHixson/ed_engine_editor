@@ -54,12 +54,12 @@ function setInstProp(propObj: any): void {
                 <div class="control">
                     <label for="animPlay">{{ t('object_editor.is_playing') }}:</label>
                     <Checkbox id="animPlay" class="custom-checkbox" :value="!!selectedSprite.animPlayingOverride" v-tooltip="$t('room_editor.tt_anim_play')"
-                        @change="setInstProp({animPlayingOverride: ($event as any).checked})"/>
+                        @change="setInstProp({animPlayingOverride: $event})"/>
                 </div>
                 <div class="control">
                     <label for="loop">{{ t('object_editor.loop') }}:</label>
                     <Checkbox id="loop" class="custom-checkbox" :value="!!selectedSprite.animLoopOverride" v-tooltip="$t('room_editor.tt_anim_loop_triple')"
-                        @change="setInstProp({animLoopOverride: ($event as any).checked})"/>
+                        @change="setInstProp({animLoopOverride: $event})"/>
                 </div>
                 <div class="control">
                     <label for="startframe">{{$t('object_editor.start_frame')}}:</label>

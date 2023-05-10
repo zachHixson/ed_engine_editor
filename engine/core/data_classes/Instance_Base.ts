@@ -80,7 +80,9 @@ export abstract class Instance_Base{
             return 0;
         }
 
-        return Math.floor(this._animProgress * this.sprite.frames.length);
+        const frame = Math.floor(this._animProgress * this.sprite.frames.length);
+
+        return Math.min(frame, this.sprite.frames.length - 1);
     }
     set animFrame(val: number){
         if (!this.sprite){
@@ -90,6 +92,8 @@ export abstract class Instance_Base{
         const negOffset = +(Math.sign(this.fps) < 0);
         const frame = Math.min(Math.max(val, 0), this.sprite.frames.length - 1);
         this._animProgress = (frame + negOffset) / this.sprite.frames.length;
+
+        console.log(this._animProgress);
     }
 
     //Lifecycle events
