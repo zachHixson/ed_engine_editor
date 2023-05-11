@@ -2,7 +2,7 @@ import { iNodeTemplate } from './iNodeTemplate';
 import {SOCKET_TYPE, SOCKET_DEFAULT} from './Node_Enums';
 import { iEditorNode, iEngineNode, iNodeSaveData } from '../LogicInterfaces';
 import { iAnyObj } from '../interfaces';
-import { isEngineNode, type Node } from './Node_Library';
+import { isEngineNode, type GenericNode } from './Node_Library';
 import type { Instance_Object } from '../core';
 
 export default [
@@ -17,7 +17,7 @@ export default [
         outputs: [
             {id: '_value', type: SOCKET_TYPE.ANY, execute: 'getInitialValue'}
         ],
-        init(this: Node){
+        init(this: GenericNode){
             if (!isEngineNode(this)){
                 this.editorCanDelete = false;
                 this.reverseOutputs = true;
@@ -26,7 +26,7 @@ export default [
                 this.inputs.get('initial_value')!.flipInput = true;
             }
         },
-        onScriptAdd(this: Node){
+        onScriptAdd(this: GenericNode){
             if (isEngineNode(this)){
                 const {name, isGlobal} = this.dataCache.get('varInfo');
                 const initialValue = this.inputs.get('initial_value')!.value;
@@ -39,7 +39,7 @@ export default [
                 this.method('editor_setVar');
             }
         },
-        onCreate(this: Node){
+        onCreate(this: GenericNode){
             if (isEngineNode(this)) return;
             
             this.editorAPI.deleteNodes([this], false);
@@ -68,7 +68,7 @@ export default [
             saveData.details = varInfo;
             saveData.inputs = [valueInput];
         },
-        beforeLoad(this: Node, saveData){
+        beforeLoad(this: GenericNode, saveData){
             const varInfo = saveData.details;
 
             varInfo.type = varInfo.type;
@@ -78,7 +78,7 @@ export default [
                 this.method('editor_initVarNode');
             }
         },
-        afterLoad(this: Node){
+        afterLoad(this: GenericNode){
             if (!isEngineNode(this)) this.method('editor_setVar');
         },
         onMount(this: iEditorNode){
@@ -177,7 +177,7 @@ export default [
             {id: 'name', type: SOCKET_TYPE.STRING, default: '', hideSocket: true},
             {id: 'data', type: SOCKET_TYPE.ANY, default: null, disabled: true, hideInput: true},
         ],
-        init(this: Node){
+        init(this: GenericNode){
             if (!isEngineNode(this)){
                 this.inputBoxWidth = 6;
                 this.inputs.get('name')!.enableDecorators = true;
@@ -187,7 +187,7 @@ export default [
         onInput(this: iEditorNode, event: InputEvent){
             this.method('validate', [event.target]);
         },
-        afterGameDataLoaded(this: Node){
+        afterGameDataLoaded(this: GenericNode){
             if (isEngineNode(this)) return;
             determineConnected.call(this);
             this.method('validate');
@@ -225,7 +225,7 @@ export default [
         outputs: [
             {id: 'data', type: SOCKET_TYPE.ANY, disabled: true, execute: 'getVar'},
         ],
-        init(this: Node){
+        init(this: GenericNode){
             if (!isEngineNode(this)){
                 const nameInput = this.inputs.get('name')!;
                 nameInput.flipInput = true;
@@ -237,7 +237,7 @@ export default [
         onInput(this: iEditorNode, event: any){
             this.method('validate', [event.target]);
         },
-        afterGameDataLoaded(this: Node){
+        afterGameDataLoaded(this: GenericNode){
             if (isEngineNode(this)) return;
             determineConnected.call(this);
             this.method('validate');

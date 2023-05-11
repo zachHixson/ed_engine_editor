@@ -7,7 +7,7 @@ import { iEditorNode, iEngineNode, iNodeConnection } from '../LogicInterfaces';
 import { Game_Object, Instance_Base, Instance_Object } from '../core';
 import { canConvertSocket, assetToInstance, instanceToAsset } from './Socket_Conversions';
 
-export type Node = iEditorNode | iEngineNode;
+export type GenericNode = iEditorNode | iEngineNode;
 
 export function isEngineNode(node: any): node is iEngineNode {
     return !!node.engine;
@@ -165,7 +165,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: '_i', execute: 'runLoop'},
         ],
         outTriggers: ['_o'],
-        init(this: Node){
+        init(this: GenericNode){
             if (isEngineNode(this)) return;
             this.stackDataIO = true;
         },
@@ -493,7 +493,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'x', type: SOCKET_TYPE.NUMBER, execute: 'getX'},
             {id: 'y', type: SOCKET_TYPE.NUMBER, execute: 'getY'},
         ],
-        init(this: Node){
+        init(this: GenericNode){
             if (!isEngineNode(this)){
                 this.stackDataIO = true;
             }
@@ -569,7 +569,7 @@ export const NODE_LIST: iNodeTemplate[] = [
         outputs: [
             {id: 'instances', type: SOCKET_TYPE.INSTANCE, isList: true, execute: 'getInstances'},
         ],
-        init(this: Node){
+        init(this: GenericNode){
             if (isEngineNode(this)) return;
 
             this.stackDataIO = true;
@@ -643,7 +643,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'reset', execute: 'reset'},
         ],
         outTriggers: ['immediate', 'tick', 'complete'],
-        init(this: Node){
+        init(this: GenericNode){
             if (!isEngineNode(this)){
                 this.stackDataIO = true;
             }
