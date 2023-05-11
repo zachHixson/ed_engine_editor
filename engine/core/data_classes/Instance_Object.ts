@@ -209,4 +209,8 @@ export class Instance_Object extends Instance_Base{
         const varName = name.trim().toLowerCase();
         return this.localVariables.get(varName);
     }
+
+    override isInGroup(group: string): boolean {
+        return !!this.groups.find(g => g == group) || !!this.objRef?.groups.find(g => g == group);
+    }
 };

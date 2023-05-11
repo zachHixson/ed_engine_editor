@@ -443,6 +443,52 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         }
     },
+    {// Get Instances
+        id: 'get_instances',
+        category: 'actual',
+        inputs: [
+            {id: 'name', type: SOCKET_TYPE.STRING, default: ''},
+            {id: 'group', type: SOCKET_TYPE.STRING, default: ''},
+            {id: 'type', type: SOCKET_TYPE.ASSET, default: null},
+        ],
+        outputs: [
+            {id: 'instances', type: SOCKET_TYPE.INSTANCE, isList: true, execute: 'getInstances'},
+        ],
+        init(this: Node){
+            if (isEngineNode(this)) return;
+
+            this.stackDataIO = true;
+        },
+        methods: {
+            getInstances(this: iEngineNode, instanceContext: Instance_Object){
+                const name = this.getInput('name', instanceContext);
+                const type = this.getInput('type', instanceContext);
+                const group = this.getInput('group', instanceContext);
+                const instances: Instance_Base[] = [];
+                const intersect = type && group;
+
+                this.engine.room.instances.forEach(instance => {
+                    if (instance.name == name){
+                        instances.push(instance);
+                        return;
+                    }
+
+                    if (intersect){
+                        if (instance.sourceId == type.id && instance.isInGroup(group)){
+                            instances.push(instance);
+                        }
+                    }
+                    else{
+                        if (instance.sourceId == type?.id || instance.isInGroup(group)){
+                            instances.push(instance);
+                        }
+                    }
+                });
+
+                return instances;
+            }
+        },
+    },
     {// Broadcast Message
         id: 'broadcast_message',
         category: 'actual',

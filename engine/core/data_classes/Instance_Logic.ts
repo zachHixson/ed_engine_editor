@@ -81,4 +81,8 @@ export class Instance_Logic extends Instance_Object {
     setLogic(logicMap: Map<number, iEngineLogic>): void {
         this.logicScript = logicMap.get(this.logicId)!;
     }
+
+    override isInGroup(group: string): boolean {
+        return !!this.groups.find(g => g == group);
+    }
 }

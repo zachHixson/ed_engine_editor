@@ -28,6 +28,7 @@ export interface iInTrigger {
 export interface iInput {
     id: string;
     type: SOCKET_TYPE;
+    isList?: boolean;
     default?: any;
     required?: boolean;
     triple?: boolean;
@@ -46,5 +47,6 @@ export interface iOutput {
     id: string;
     type: SOCKET_TYPE;
     execute: string;
+    isList?: boolean;
     disabled?: boolean;
 };

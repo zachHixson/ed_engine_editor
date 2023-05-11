@@ -217,4 +217,8 @@ export abstract class Instance_Base{
         ctx.scale(scaleFac, scaleFac);
         ctx.drawImage(imageCanvas, 0, 0);
     }
+
+    isInGroup(group: string): boolean {
+        return !!this.groups.find(g => g == group);
+    }
 }

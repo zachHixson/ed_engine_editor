@@ -33,6 +33,7 @@ import socketStringIcon from '@/assets/socket_string.svg';
 import socketAssetIcon from '@/assets/socket_asset.svg';
 import socketInstanceIcon from '@/assets/socket_instance.svg';
 import socketBoolIcon from '@/assets/socket_bool.svg';
+import socketListIcon from '@/assets/list_icon.svg';
 import type Logic from './Logic';
 import decoratorMap from '../decoratorMap';
 
@@ -269,11 +270,15 @@ defineExpose({socket: props.socket});
             v-if="!(isTrigger || hideSocket)"
             ref="socketConnectionRef"
             class="socket_icon"
-            :class="disabled ? 'disabled' :''"
+            :class="(disabled ? 'disabled' :'')"
             @mousedown="mouseDown"
             @mouseenter="mouseEnter"
             @mouseleave="mouseLeave">
-            <Svg class="socket_icon_img" :src="socketIcon"></Svg>
+            <Svg
+                class="socket_icon_img"
+                :class="socket.isList ? 'socket_icon_img_list':''"
+                :src="socketIcon"></Svg>
+            <Svg v-if="socket.isList" class="list_icon_img" :src="socketListIcon"></Svg>
         </div>
         <div v-if="hideSocket" class="hidden-socket"></div>
         <svg
@@ -343,20 +348,36 @@ defineExpose({socket: props.socket});
 }
 
 .socket_icon{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    position: relative;
+    width: 20px;
+    height: 20px;
+    padding: 2px;
 }
 
 .socket_icon_img {
+    position: absolute;
     width: 20px;
     height: auto;
-    padding: 2px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .socket_icon:hover:not(.disabled){
     filter: brightness(2);
+}
+
+.socket_icon_img_list {
+    width: 13px;
+}
+
+.list_icon_img {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .inputBox{
