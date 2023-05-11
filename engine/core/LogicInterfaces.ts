@@ -180,6 +180,7 @@ export interface iEngineInput {
     value: any,
     type: SOCKET_TYPE,
     connection: iEngineOuput | null,
+    isList?: boolean,
 };
 
 export interface iEngineOuput {
@@ -188,6 +189,7 @@ export interface iEngineOuput {
     node: iEngineNode,
     type: SOCKET_TYPE,
     execute: string,
+    isList?: boolean,
 };
 
 export type iEngineNodeMethod = (instanceContext: Instance_Object, data?: any) => any;

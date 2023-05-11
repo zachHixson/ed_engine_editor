@@ -7,9 +7,10 @@ import {
     convertSocketType,
     NODE_MAP,
     iNodeSaveData,
-iEngineNodeMethod,
+    iEngineNodeMethod,
 } from "@engine/core/core";
 import { iAnyObj } from "./core/interfaces";
+import { listConvert } from "./core/nodes/Socket_Conversions";
 import Engine from "./Engine";
 import Logic from "./Logic";
 
@@ -65,6 +66,7 @@ export default class Node implements iEngineNode {
                 value: def,
                 type,
                 connection: null,
+                isList: input.isList,
             });
         });
 
@@ -76,6 +78,7 @@ export default class Node implements iEngineNode {
                 node: this,
                 type,
                 execute,
+                isList: output.isList,
             });
         })
 
@@ -136,13 +139,14 @@ export default class Node implements iEngineNode {
 
     getInput(inputName: string, instanceContext: Instance_Object): iEngineInput {
         const input = this.inputs.get(inputName)!;
-        let inputVal;
+        let inputVal: any;
 
         if (input.connection){
             const node = input.connection.node as Node;
             const val = node._getOutputData(input.connection.id, instanceContext);
+            const listResult = listConvert(!!input.connection.isList, !!input.isList, val);
 
-            inputVal = convertSocketType(input.connection.type, input.type, val);
+            inputVal = convertSocketType(input.connection.type, input.type, listResult);
         }
         else{
             inputVal = input.value;

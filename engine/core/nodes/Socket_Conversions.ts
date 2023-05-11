@@ -40,6 +40,22 @@ export function assetToInstance(asset: Asset_Base | iEngineLogic, id: number, po
     }
 }
 
+export function listConvert(fromList: boolean, toList: boolean, value: any | any[]): any | any[] {
+    if (fromList == toList){
+        return value;
+    }
+
+    if (fromList && !toList){
+        return value[0] ?? null;
+    }
+
+    if (!fromList && toList){
+        return [value];
+    }
+
+    return value;
+}
+
 export function instanceToAsset(instance: Instance_Base, gameData: iGameData): Asset_Base | iEngineLogic | null {
     let assetList: (Asset_Base | iEngineLogic)[];
 
