@@ -50,8 +50,6 @@ export default class Dialog_Fullscreen extends Dialog_Base{
         }
     `;
 
-    onCloseCallback: (tag: string | null, restart?: boolean) => any = ()=>{};
-
     private _program: WebGLProgram;
     private _geoAttrib: WGL.Attribute;
     private _uvAttrib: WGL.Attribute;
@@ -93,7 +91,8 @@ export default class Dialog_Fullscreen extends Dialog_Base{
     }
 
     close(): void {
-        this.onCloseCallback(this._asyncTag, !this._asyncTag);
+        this._active = false;
+        this._onCloseCallback();
     }
 
     render(delta: number): void {

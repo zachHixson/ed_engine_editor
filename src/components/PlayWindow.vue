@@ -156,6 +156,7 @@ function nodeException(error: string, treeData: any): void {
 
 function restart(){
     clearInterval(resizeInterval);
+    engine!.stop();
     start();
 };
 

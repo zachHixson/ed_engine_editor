@@ -196,20 +196,24 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
     },
-    {// Key Down
-        id: 'key_down',
+    {// Key Input
+        id: 'key_input',
         category: 'actual',
         widget: {
             id: 'key_selector',
             type: WIDGET.KEY,
         },
         outputs: [
+            {id: 'key', type: SOCKET_TYPE.STRING, execute: 'getKey'},
             {id: 'is_down', type: SOCKET_TYPE.BOOL, execute: 'isDown'},
         ],
         methods: {
-            isDown(this: iEngineNode, instanceContext: Instance_Object){
+            getKey(this: iEngineNode){
+                return this.getWidgetData().code ?? '';
+            },
+            isDown(this: iEngineNode){
                 const keymap = this.engine.keyMap;
-                const input = this.getInput('key', instanceContext).toLowerCase();
+                const input = this.getWidgetData().toLowerCase();
                 return !!keymap.get(input);
             },
         },
@@ -282,20 +286,26 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         outTriggers: ['immediate', 'dialog_closed'],
         inputs: [
-            {id: 'text', type: SOCKET_TYPE.STRING, default: ''},
+            {id: 'text', type: SOCKET_TYPE.STRING, hideInput: true, default: ''},
+            {id: 'interaction_key', type: SOCKET_TYPE.STRING, hideInput: true, default: null},
+            {id: 'pause_game', type: SOCKET_TYPE.BOOL, default: false},
+            {id: 'fullscreen', type: SOCKET_TYPE.BOOL, default: false},
         ],
         methods: {
             startDialog(this: iEngineNode, instanceContext: Instance_Object){
                 const textArea = this.getWidgetData();
                 const textBox = this.getInput('text', instanceContext);
+                const interactKey = this.getInput('interaction_key', instanceContext) ?? 'Space';
+                const shouldPause = this.getInput('pause_game', instanceContext);
+                const isFullscreen = this.getInput('fullscreen', instanceContext);
                 const text = textBox ? textBox : textArea;
-                this.engine.openDialogBox(text, 'dialogClosed', this, instanceContext);
+
+                this.engine.openDialogBox(text, shouldPause, isFullscreen, ()=>{
+                    this.triggerOutput('dialog_closed', instanceContext)
+                }, interactKey);
                 this.triggerOutput('immediate', instanceContext);
             },
-            dialogClosed(this: iEngineNode, instanceContext: Instance_Object){
-                this.triggerOutput('dialog_closed', instanceContext);
-            },
-        }
+        },
     },
     {// Object Input
         id:'object_input',
@@ -553,6 +563,18 @@ export const NODE_LIST: iNodeTemplate[] = [
             getPercent(this: iEngineNode, instanceContext: Instance_Object){
                 const data = this.dataCache.get(`${instanceContext.id}/${this.nodeId}`);
                 return data ? data.progress / data.duration : 0;
+            },
+        },
+    },
+    {// Restart
+        id: 'restart_game',
+        category: 'actual',
+        inTriggers: [
+            {id: '_i', execute: 'restartGame'},
+        ],
+        methods: {
+            restartGame(this: iEngineNode){
+                this.engine.restart();
             },
         },
     },

@@ -15,11 +15,11 @@ export default abstract class Dialog_Base {
     protected _gl: WebGL2RenderingContext;
     protected _progress: number = 0;
     protected _arrowAnim: number = 0;
-    protected _asyncTag: string | null = null;
     protected _active: boolean = false;
+    protected _onCloseCallback: ()=>void = ()=>{};
+    protected _interactKey: string = 'Space';
     
     abstract fontRenderer: Font_Renderer;
-    onCloseCallback: (tag: string | null)=>any = ()=>{};
 
     constructor(gl: WebGL2RenderingContext){
         this._gl = gl;
@@ -72,18 +72,28 @@ export default abstract class Dialog_Base {
         return texture;
     }
 
-    open(text: string, asyncTag: string | null = null): void {
+    open(text: string, interactKey: string, closeCallback: ()=>void): void {
         if (this._active){
             this.close();
         }
 
         this.text = text;
-        this._asyncTag = asyncTag;
+        this._interactKey = interactKey;
+        this._onCloseCallback = closeCallback;
         this._active = true;
         this._setProgress(0);
     }
 
     abstract close(): void;
+
+    checkInteractKey(key: string): boolean {
+        if (this._active && key == this._interactKey){
+            this.nextPage();
+            return true;
+        }
+
+        return false;
+    }
 
     nextPage(): void {
         if (!(this._active && this.fontRenderer.pageText)){

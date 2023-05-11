@@ -52,7 +52,7 @@ interface iCollisionMapping {
 
 export class Engine implements iEngineCallbacks {
     static get VERSION(){return '0.1.0'}
-    static get ACTION_KEY(){return 'Space'}
+    static get DEFAULT_ACTION_KEY(){return 'Space'}
 
     private _canvas: HTMLCanvasElement;
     private _gl: WebGL2RenderingContext;
@@ -112,8 +112,6 @@ export class Engine implements iEngineCallbacks {
         }
 
         this._linkLogic();
-        this._dialogBox.onCloseCallback = this._onDialogBoxClose;
-        this._dialogFullscreen.onCloseCallback = this._onFullScreenClose;
         window.IS_ENGINE = false;
 
         //setup static properties
@@ -344,9 +342,9 @@ export class Engine implements iEngineCallbacks {
                 type: 'down',
             });
         }
-        else if (e.code == Engine.ACTION_KEY){
-            this._dialogBox.nextPage();
-            this._dialogFullscreen.nextPage();
+        else {
+            this._dialogBox.checkInteractKey(e.code);
+            this._dialogFullscreen.checkInteractKey(e.code);
         }
     }
 
@@ -431,17 +429,6 @@ export class Engine implements iEngineCallbacks {
         eventMapGet.set(instance.id, instance);
     }
 
-    private _registerAsyncNodeEvent = (node: Node, methodName: string, instance: Instance_Object): string =>{
-        const tag = this._newAsyncTag();
-        this._nodeAsyncEventMap.set(tag, {
-            instance,
-            node,
-            methodName
-        });
-
-        return tag;
-    }
-
     private _dispatchLogicEvent = (eventName: string, data?: iAnyObj): void => {
         const nodeEvent = this._nodeEventMap.get(eventName);
 
@@ -475,38 +462,6 @@ export class Engine implements iEngineCallbacks {
                 checkEntity.pos.y < pos.y + 16 &&
                 (checkEntity.id != id || checkEntity.TYPE != TYPE)
         ));
-    }
-
-    private _newAsyncTag = (): string =>{
-        const LENGTH = 10;
-        let tag = '';
-
-        for (let i = 0; i < LENGTH; i++){
-            const num = Math.floor(Math.random() * 16).toString(16);
-            tag += num;
-        }
-
-        return tag;
-    }
-
-    private _onDialogBoxClose = (tag: string | null): void =>{
-        if (!tag) return;
-        this._dispatchAsyncLogicEvent(tag, true);
-        this.enableInput = true;
-        this.enableUpdate = true;
-    }
-
-    private _onFullScreenClose = (tag: string | null, restart?: boolean): void =>{
-        if (restart){
-            this.stop();
-            this.restart();
-        }
-        else if (tag){
-            this._dispatchAsyncLogicEvent(tag, true);
-        }
-
-        this.enableInput = true;
-        this.enableUpdate = true;
     }
 
     start = (): void =>{
@@ -565,7 +520,7 @@ export class Engine implements iEngineCallbacks {
     triggerEnding = (endingText: string): void =>{
         this.enableInput = false;
         this.enableUpdate = false;
-        this._dialogFullscreen.open(endingText);
+        this._dialogFullscreen.open(endingText, Engine.DEFAULT_ACTION_KEY, ()=>this.restart());
     }
 
     registerCollision = (sourceInstance: Instance_Base, collisionInstance: Instance_Base, force = false): void =>{
@@ -673,12 +628,23 @@ export class Engine implements iEngineCallbacks {
         return this._globalVariables.get(varname);
     }
 
-    openDialogBox = (text: string, methodName: string, node: iEngineNode, instance: Instance_Object): void =>{
-        const castNode = node as Node;
-        const asyncTag = node ? this._registerAsyncNodeEvent(castNode, methodName, instance) : null;
+    openDialogBox = (text: string, pause: boolean, fullscreen: boolean, closeCallback: ()=>void, interactionKey = Engine.DEFAULT_ACTION_KEY): void =>{
+        const wrappedCallback = ()=>{
+            this.enableInput = true;
+            this.enableUpdate = true;
+
+            closeCallback();
+        }
+        
         this.enableInput = false;
-        this.enableUpdate = false;
-        this._dialogBox.open(text, asyncTag);
+        this.enableUpdate = !pause;
+
+        if (fullscreen){
+            this._dialogFullscreen.open(text, interactionKey, wrappedCallback);
+        }
+        else{
+            this._dialogBox.open(text, interactionKey, wrappedCallback);
+        }
     }
 
     emitMessage(name: string): void {

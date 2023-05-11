@@ -86,7 +86,6 @@ export default class Dialog_Box extends Dialog_Base {
     private _alignment: ALIGN = ALIGN.TOP;
     
     fontRenderer: Font_Renderer;
-    onCloseCallback: (tag: string | null)=>any = ()=>{};
 
     constructor(gl: WebGL2RenderingContext){
         super(gl);
@@ -134,7 +133,7 @@ export default class Dialog_Box extends Dialog_Base {
 
     close(): void {
         this._active = false;
-        this.onCloseCallback(this._asyncTag);
+        this._onCloseCallback();
     }
 
     render(delta: number): void {
