@@ -61,7 +61,7 @@ export default function useConnection(
             connectionObj.startSocketId = socketOver.socketData.id;
             connectionObj.startSocketEl = socketOver.socketEl;
         }
-    
+
         connectionObj.startNode?.onNewConnection && connectionObj.startNode.onNewConnection(connectionObj);
         connectionObj.endNode?.onNewConnection && connectionObj.endNode.onNewConnection(connectionObj);
     
@@ -96,6 +96,9 @@ export default function useConnection(
     
     function actionRemoveConnection({connectionObj}: ActionRemoveConnectionProps, makeCommit = true): void {
         makeCommit &&= !!(connectionObj.startNode && connectionObj.endNode);
+
+        connectionObj.startNode?.onRemoveConnection && connectionObj.startNode?.onRemoveConnection(connectionObj);
+        connectionObj.endNode?.onRemoveConnection && connectionObj.endNode?.onRemoveConnection(connectionObj);
     
         if (makeCommit){
             const data = {connectionObj: Object.assign(new Node_Connection(), connectionObj)};
@@ -104,13 +107,18 @@ export default function useConnection(
             Object.assign(data.connectionObj, prevSocket);
             undoStore.commit({action: Core.LOGIC_ACTION.DISCONNECT, data});
         }
-    
+
         props.selectedAsset.removeConnection(connectionObj.id);
-        connectionObj.startNode?.onRemoveConnection && connectionObj.startNode?.onRemoveConnection(connectionObj);
-        connectionObj.endNode?.onRemoveConnection && connectionObj.endNode?.onRemoveConnection(connectionObj);
     }
 
     function actionBatchRemoveConnections({connectionObjList}: ActionBatchRemoveConnectionsProps, makeCommit = true): void {
+        for (let i = 0; i < connectionObjList.length; i++){
+            const curConnection = connectionObjList[i];
+
+            curConnection.startNode?.onRemoveConnection && curConnection.startNode?.onRemoveConnection(curConnection);
+            curConnection.endNode?.onRemoveConnection && curConnection.endNode?.onRemoveConnection(curConnection);
+        }
+
         if (makeCommit){
             const clonedList = connectionObjList.map(connection => Object.assign(new Node_Connection(), connection));
             const data = {connectionObjList: clonedList};
@@ -118,11 +126,7 @@ export default function useConnection(
         }
 
         for (let i = 0; i < connectionObjList.length; i++){
-            const curConnection = connectionObjList[i];
-
-            props.selectedAsset.removeConnection(curConnection.id);
-            curConnection.startNode?.onRemoveConnection && curConnection.startNode?.onRemoveConnection(curConnection);
-            curConnection.endNode?.onRemoveConnection && curConnection.endNode?.onRemoveConnection(curConnection);
+            props.selectedAsset.removeConnection(connectionObjList[i].id);
         }
     }
 
@@ -134,6 +138,9 @@ export default function useConnection(
         else{
             props.selectedAsset.removeConnection(connectionObj.id);
         }
+
+        connectionObj.startNode?.onRemoveConnection && connectionObj.startNode?.onRemoveConnection(connectionObj, true);
+        connectionObj.endNode?.onRemoveConnection && connectionObj.endNode?.onRemoveConnection(connectionObj, true);
     }
     
     function revertRemoveConnection({connectionObj}: ActionRemoveConnectionProps): void {
@@ -142,6 +149,9 @@ export default function useConnection(
         nextTick(()=>{
             relinkConnections();
         });
+
+        connectionObj.startNode?.onNewConnection && connectionObj.startNode.onNewConnection(connectionObj, true);
+        connectionObj.endNode?.onNewConnection && connectionObj.endNode.onNewConnection(connectionObj, true);
     }
 
     function revertBatchRemoveConnections({connectionObjList}: ActionBatchRemoveConnectionsProps): void {
@@ -152,6 +162,12 @@ export default function useConnection(
         nextTick(()=>{
             relinkConnections();
         });
+
+        for (let i = 0; i < connectionObjList.length; i++){
+            const curConnection = connectionObjList[i];
+            curConnection.startNode?.onNewConnection && curConnection.startNode.onNewConnection(curConnection, true);
+            curConnection.endNode?.onNewConnection && curConnection.endNode.onNewConnection(curConnection, true);
+        }
     }
 
     actionMap.set(Core.LOGIC_ACTION.CONNECT, actionMakeConnection);

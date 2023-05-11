@@ -30,8 +30,8 @@ export interface iNodeLifecycleEvents {
     init?: ()=>void;
     onCreate?: ()=>void;
     beforeSave?: ()=>void;
-    afterSave?: (saveData: iAnyObj)=>void;
-    beforeLoad?: (saveData: iAnyObj)=>void;
+    afterSave?: (saveData: iNodeSaveData)=>void;
+    beforeLoad?: (saveData: iNodeSaveData)=>void;
     afterLoad?: ()=>void;
     logicLoaded?: (logic: iEditorLogic | iEngineLogic)=>void;
     afterGameDataLoaded?: ()=>void;
@@ -42,8 +42,8 @@ export interface iNodeLifecycleEvents {
     onNewVariable?: ()=>void;
     onInput?: (event: InputEvent)=>void;
     onMove?: ()=>void;
-    onNewConnection?: (connection: iNodeConnection)=>void;
-    onRemoveConnection?: (connection: iNodeConnection)=>void;
+    onNewConnection?: (connection: iNodeConnection, isUndo?: boolean)=>void;
+    onRemoveConnection?: (connection: iNodeConnection, isUndo?: boolean)=>void;
     onValueChange?: (value: any)=>void;
     onDeleteStopped?: (protectedNodes: iEditorNode[])=>void;
     onBeforeDelete?: ()=>void;
@@ -118,6 +118,7 @@ export interface iNodeConnection {
     endNode: iEditorNode | null;
     startSocketId: string | null;
     endSocketId: string | null;
+    disconnectedFrom: string | null;
 }
 
 export interface iNewVarInfo {

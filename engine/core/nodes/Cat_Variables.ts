@@ -26,10 +26,10 @@ export default [
                 this.inputs.get('initial_value')!.flipInput = true;
             }
         },
-        onScriptAdd(this: Node, instanceContext: Instance_Object){
+        onScriptAdd(this: Node){
             if (isEngineNode(this)){
                 const {name, isGlobal} = this.dataCache.get('varInfo');
-                const initialValue = this.getInput('initial_value', instanceContext);
+                const initialValue = this.inputs.get('initial_value')!.value;
 
                 isGlobal ?
                     this.engine.setGlobalVariable(name, initialValue)
@@ -314,7 +314,7 @@ export default [
             },
         }
     },
-] as iNodeTemplate[];
+] satisfies iNodeTemplate[] as iNodeTemplate[];
 
 function determineConnected(this: iEditorNode){
     const connection = this.editorAPI.getConnection(this, 'data');

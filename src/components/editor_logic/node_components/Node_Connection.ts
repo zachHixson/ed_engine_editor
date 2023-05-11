@@ -2,15 +2,17 @@ import type Node from './Node';
 import Core from '@/core';
 
 export default class Node_Connection extends Core.EventListenerMixin(class {}) implements Core.iNodeConnection {
+    private _disconnectedFrom: string | null = null;
+    private _startSocketId: string | null = null;
+    private _endSocketId: string | null = null;
+
     id: number;
     type: Core.Node_Enums.SOCKET_TYPE;
     graphId: number;
     canConnect: boolean;
     startNode: Node | null;
-    startSocketId: string | null;
     startSocketEl: HTMLElement | null;
     endNode: Node | null;
-    endSocketId: string | null;
     endSocketEl: HTMLElement | null;
 
     constructor(inpObj: Core.iAnyObj = {}){
@@ -26,6 +28,26 @@ export default class Node_Connection extends Core.EventListenerMixin(class {}) i
         this.endSocketId = inpObj.endSocketId ?? null;
         this.endSocketEl = inpObj.endSocketEl ?? null;
     }
+
+    get startSocketId(){return this._startSocketId}
+    set startSocketId(id: string | null){
+        if (id == null){
+            this._disconnectedFrom = this._startSocketId;
+        }
+
+        this._startSocketId = id
+    }
+
+    get endSocketId(){return this._endSocketId}
+    set endSocketId(id: string | null){
+        if (id == null){
+            this._disconnectedFrom = this._endSocketId;
+        }
+
+        this._endSocketId = id
+    }
+
+    get disconnectedFrom(){return this._disconnectedFrom}
 
     get startSocket(){
         return this.startNode?.outputs.get(this.startSocketId!);

@@ -149,7 +149,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
     },
-    {// Loop
+    {// list_loop
         id: 'list_loop',
         category: 'actual',
         inputs: [
@@ -185,11 +185,12 @@ export const NODE_LIST: iNodeTemplate[] = [
                 }
             }
         },
-        onRemoveConnection(this: iEditorNode){
-            const listConnection = this.editorAPI.getConnection(this, 'list');
+        onRemoveConnection(this: iEditorNode, connection: iNodeConnection){
+            const isListConnection = connection.endNode?.nodeId == this.nodeId && connection.disconnectedFrom == 'list';
 
-            if (!listConnection){
+            if (isListConnection){
                 const itemConnection = this.editorAPI.getConnection(this, 'item');
+                const itemOutput = this.outputs.get('item')!;
 
                 this.inputs.get('iterations')!.disabled = false;
                 this.inputs.get('list')!.type = SOCKET_TYPE.ANY;
@@ -198,12 +199,12 @@ export const NODE_LIST: iNodeTemplate[] = [
                 this.emit('force-socket-update', 'list');
 
                 if (itemConnection){
-                    const itemOutput = this.outputs.get('item')!;
-                    itemOutput.type = SOCKET_TYPE.ANY;
-                    itemOutput.disabled = true;
                     this.editorAPI.deleteConnections([itemConnection], true);
-                    this.emit('force-socket-update', 'item');
                 }
+
+                itemOutput.type = SOCKET_TYPE.ANY;
+                itemOutput.disabled = true;
+                this.emit('force-socket-update', 'item');
             }
         },
         methods: {
