@@ -4,7 +4,7 @@ import { iEngineNode } from '../LogicInterfaces';
 import { MOUSE_EVENT } from '../Enums';
 import { Vector } from '../Vector';
 import { isEngineNode } from './Node_Library';
-import { type Node } from './Node_Library';
+import { type GenericNode } from './Node_Library';
 import { InstanceAnimEvent, Instance_Object } from '../core';
 
 export default [
@@ -206,7 +206,7 @@ export default [
         inputs: [
             {id: 'name', type: SOCKET_TYPE.STRING, flipInput: true, hideSocket: true},
         ],
-        init(this: Node){
+        init(this: GenericNode){
             if (!isEngineNode(this)){
                 this.inputBoxWidth = 6;
             }

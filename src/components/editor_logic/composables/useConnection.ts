@@ -61,14 +61,14 @@ export default function useConnection(
             connectionObj.startSocketId = socketOver.socketData.id;
             connectionObj.startSocketEl = socketOver.socketEl;
         }
-
-        connectionObj.startNode?.onNewConnection && connectionObj.startNode.onNewConnection(connectionObj);
-        connectionObj.endNode?.onNewConnection && connectionObj.endNode.onNewConnection(connectionObj);
     
         //if connection was removed entirely by a previous undo, we need to recreate
         if (!props.selectedAsset.connections.includes(connectionObj)){
             props.selectedAsset.addConnection(connectionObj);
         }
+
+        connectionObj.startNode?.onNewConnection && connectionObj.startNode.onNewConnection(connectionObj);
+        connectionObj.endNode?.onNewConnection && connectionObj.endNode.onNewConnection(connectionObj);
     
         //if this is being connected through a redo, then the socketEl reference might be deprecated and needs a relink
         if (!socketOver.socketEl){
@@ -131,6 +131,9 @@ export default function useConnection(
     }
 
     function revertMakeConnection({connectionObj, prevSocket}: ActionMakeConnectionProps): void {
+        connectionObj.startNode?.onRemoveConnection && connectionObj.startNode?.onRemoveConnection(connectionObj, true);
+        connectionObj.endNode?.onRemoveConnection && connectionObj.endNode?.onRemoveConnection(connectionObj, true);
+
         if (prevSocket){
             Object.assign(connectionObj, prevSocket);
             relinkConnections();
@@ -138,9 +141,6 @@ export default function useConnection(
         else{
             props.selectedAsset.removeConnection(connectionObj.id);
         }
-
-        connectionObj.startNode?.onRemoveConnection && connectionObj.startNode?.onRemoveConnection(connectionObj, true);
-        connectionObj.endNode?.onRemoveConnection && connectionObj.endNode?.onRemoveConnection(connectionObj, true);
     }
     
     function revertRemoveConnection({connectionObj}: ActionRemoveConnectionProps): void {

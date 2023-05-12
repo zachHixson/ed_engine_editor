@@ -83,7 +83,7 @@ export interface iEditorNodeOutput extends iOutput {
     node: iEditorNode,
 };
 
-export type iEditorNodeMethod = (data?: any) => any;
+export type iEditorNodeMethod = (this: iEditorNode, data?: any) => any;
 
 export interface iEditorNode extends iNode_Base {
     templateId: string;
@@ -193,7 +193,7 @@ export interface iEngineOuput {
     isList?: boolean,
 };
 
-export type iEngineNodeMethod = (instanceContext: Instance_Object, data?: any) => any;
+export type iEngineNodeMethod = (this: iEngineNode, instanceContext: Instance_Object, data?: any) => any;
 
 export interface iEngineNode extends iNode_Base {
     inTriggers: Map<string, iEngineInTrigger>;

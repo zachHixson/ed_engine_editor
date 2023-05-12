@@ -194,14 +194,14 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
     }
 
     method(methodName: string, data: any[] = []): any {
-        const method = this.template.methods![methodName];
+        const method = this.template.methods![methodName] as Core.iEditorNodeMethod;
 
         if (!method){
             console.error(`Could not find method "${methodName}" in template ${this.templateId}`);
             return;
         }
 
-        return method.call(this, ...data);
+        return method.call(this, data);
     }
 
     getInput(inputName: string ): any | null {

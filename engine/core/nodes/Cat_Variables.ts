@@ -185,7 +185,7 @@ export default [
             }
         },
         onInput(this: iEditorNode, event: InputEvent){
-            this.method('validate', [event.target]);
+            this.method('validate', event.target);
         },
         afterGameDataLoaded(this: GenericNode){
             if (isEngineNode(this)) return;
@@ -235,7 +235,7 @@ export default [
             }
         },
         onInput(this: iEditorNode, event: any){
-            this.method('validate', [event.target]);
+            this.method('validate', event.target);
         },
         afterGameDataLoaded(this: GenericNode){
             if (isEngineNode(this)) return;

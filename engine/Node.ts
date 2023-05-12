@@ -95,7 +95,7 @@ export default class Node implements iEngineNode {
         }
 
         for (let method in template.methods){
-            this.methods.set(method, template.methods[method]);
+            this.methods.set(method, template.methods[method] as iEngineNodeMethod);
         }
 
         this.template.afterLoad?.call(this);
