@@ -28,7 +28,9 @@ interface iNode_Base extends iNodeLifecycleEvents {
 
 export interface iNodeLifecycleEvents {
     init?: ()=>void;
-    onCreate?: ()=>void;
+    onCreate?:
+        ((this: iEngineNode, instanceContext: Instance_Object)=>void) |
+        ((this: iEditorNode)=>void);
     beforeSave?: ()=>void;
     afterSave?: (saveData: iNodeSaveData)=>void;
     beforeLoad?: (saveData: iNodeSaveData)=>void;
@@ -59,14 +61,14 @@ export interface iEditorLogic {
     connections: iNodeConnection[];
     selectedGraphId: number | null;
     selectedNodes: iEditorNode[];
-    localVariables: Map<string, SOCKET_TYPE>;
+    localVariables: Map<string, iEditorVariable>;
 
     addNode(templateId: string, pos: Vector, nodeAPI: iNodeAPI, nodeRef?: iEditorNode): iEditorNode;
     deleteNode(nodeRef: iEditorNode): void;
     addConnection(connectionObj: iNodeConnection): void;
     removeConnection(id: number, connectionObj?: Connection): boolean;
-    setLocalVariable(name: string, type: SOCKET_TYPE): void;
-    getLocalVariable(name: string): SOCKET_TYPE | undefined;
+    setLocalVariable(name: string, type: SOCKET_TYPE, isList: boolean): void;
+    getLocalVariable(name: string): iEditorVariable | undefined;
     deleteLocalVariable(name: string): void;
 }
 
@@ -84,6 +86,8 @@ export interface iEditorNodeOutput extends iOutput {
 };
 
 export type iEditorNodeMethod = (this: iEditorNode, data?: any) => any;
+
+export type iEditorVariable = {type: SOCKET_TYPE, isList: boolean};
 
 export interface iEditorNode extends iNode_Base {
     templateId: string;
@@ -130,12 +134,12 @@ export interface iNewVarInfo {
 
 export interface iEditorAPI {
     editor: iAnyObj;
-    globalVariableMap: Map<string, SOCKET_TYPE>;
+    globalVariableMap: Map<string, iEditorVariable>;
     gameDataStore: any;
     logicEditorStore: any;
 
-    getGlobalVariable(name: string): SOCKET_TYPE | undefined;
-    setGlobalVariable(name: string, type: SOCKET_TYPE): void;
+    getGlobalVariable(name: string): iEditorVariable | undefined;
+    setGlobalVariable(name: string, type: SOCKET_TYPE, isList: boolean): void;
     deleteGlobalVariable(name: string): void;
     getVariableUsage(name: string, nodeType: string | null, isGlobal: boolean): iEditorNode[];
     getConnection(node: iEditorNode, socketId: string): iNodeConnection | null;
@@ -159,9 +163,10 @@ export interface iEngineLogic {
     events: Map<string, iEngineNode[]>;
     localVariableDefaults: Map<string, any>;
 
-    setLocalVariableDefault(name: string, data: iAnyObj): void;
+    setLocalVariableDefault(name: string, value: any, type: SOCKET_TYPE, isList: boolean): void;
     executeEvent(eventName: string, instance: Instance_Object, data: any): void;
     registerPostEventCallback(callback: ()=>void): void;
+    dispatchOnCreate(instanceContext: Instance_Object): void;
     dispatchLogicLoaded(): void;
     dispatchAfterGameDataLoaded(): void;
     dispatchOnTick(instanceContext: Instance_Object): void;
@@ -180,11 +185,11 @@ export interface iEngineOutTrigger {
 export interface iEngineInput {
     value: any,
     type: SOCKET_TYPE,
-    connection: iEngineOuput | null,
+    connection: iEngineOutput | null,
     isList?: boolean,
 };
 
-export interface iEngineOuput {
+export interface iEngineOutput {
     id: string,
     connection: iEngineInput | null,
     node: iEngineNode,
@@ -195,11 +200,13 @@ export interface iEngineOuput {
 
 export type iEngineNodeMethod = (this: iEngineNode, instanceContext: Instance_Object, data?: any) => any;
 
+export type iEngineVariable = {value: any, type: SOCKET_TYPE, isList: boolean};
+
 export interface iEngineNode extends iNode_Base {
     inTriggers: Map<string, iEngineInTrigger>;
     outTriggers: Map<string, iEngineOutTrigger>;
     inputs: Map<string, iEngineInput>;
-    outputs: Map<string, iEngineOuput>;
+    outputs: Map<string, iEngineOutput>;
     parentScript: iEngineLogic;
 
     engine: Engine;

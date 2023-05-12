@@ -22,12 +22,14 @@ import {
     Instance_Logic,
     MOUSE_EVENT,
 iEngineNode,
+iEngineVariable,
 } from '@engine/core/core';
 import Node from './Node';
 import iGameData from './iGameData';
 import getTransitions from './transitions/getTransitions';
 import Transition_Base, { TRANSITION } from './transitions/Transition_Base';
 import * as Physics from './Physics';
+import { SOCKET_TYPE } from './core/nodes/Node_Enums';
 
 export * as Core from '@engine/core/core';
 
@@ -69,7 +71,7 @@ export class Engine implements iEngineCallbacks {
     private _nodeEventMap: Map<string, Map<number, Instance_Object>> = new Map();
     private _nodeAsyncEventMap: Map<string, {instance: Instance_Object, node: Node, methodName: string}> = new Map();
     private _collisionMap: Map<number, iCollisionMapping> = new Map();
-    private _globalVariables: Map<string, any> = new Map();
+    private _globalVariables: Map<string, iEngineVariable> = new Map();
     private _errorLogs: Map<string, boolean> = new Map();
     private _gameData: iGameData;
     private _mouse = {
@@ -618,14 +620,23 @@ export class Engine implements iEngineCallbacks {
         });
     }
 
-    setGlobalVariable = (name: string, data: any): void =>{
+    createGlobalVariable = (name: string, value: any, type: SOCKET_TYPE, isList: boolean): void =>{
         const varname = name.trim().toLowerCase();
-        this._globalVariables.set(varname, data);
+        this._globalVariables.set(varname, {value, type, isList});
     }
 
-    getGlobalVariable = (name: string): any=>{
+    setGlobalVariable = (name: string, value: any): void =>{
         const varname = name.trim().toLowerCase();
-        return this._globalVariables.get(varname);
+        const varGet = this._globalVariables.get(varname);
+
+        if (varGet){
+            varGet.value = value;
+        }
+    }
+
+    getGlobalVariable = (name: string): iEngineVariable | null =>{
+        const varname = name.trim().toLowerCase();
+        return this._globalVariables.get(varname) ?? null;
     }
 
     openDialogBox = (text: string, pause: boolean, fullscreen: boolean, closeCallback: ()=>void, interactionKey = Engine.DEFAULT_ACTION_KEY): void =>{

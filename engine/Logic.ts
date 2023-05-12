@@ -6,16 +6,18 @@ import {
     iNodeConnection,
     iLogicSaveData,
     iEngineOutTrigger,
-    iEngineOuput,
+    iEngineOutput,
     iEngineInTrigger,
     iEngineInput,
     iNodeSaveData,
     CATEGORY_ID,
+iEngineNode,
 } from '@engine/core/core';
+import { SOCKET_TYPE } from './core/nodes/Node_Enums';
 
 export default class Logic implements iEngineLogic {
     private _nodes: Node[] = [];
-    private _localVariableDefaults: Map<string, any> = new Map();
+    private _localVariableDefaults: Map<string, {value: any, type: SOCKET_TYPE, isList: boolean}> = new Map();
     private _runPostEvent: (()=>void)[] = [];
 
     id: number;
@@ -51,7 +53,7 @@ export default class Logic implements iEngineLogic {
             const {startNodeId, endNodeId, startSocketId, endSocketId} = connection;
             const startNode = nodeMap.get(startNodeId)!;
             const endNode = nodeMap.get(endNodeId)!;
-            const allStartSockets = new Map<string, iEngineOutTrigger | iEngineOuput>();
+            const allStartSockets = new Map<string, iEngineOutTrigger | iEngineOutput>();
             const allEndSockets = new Map<string, iEngineInTrigger | iEngineInput>();
 
             startNode.outTriggers.forEach((oTrigger, key) => allStartSockets.set(key, oTrigger));
@@ -79,6 +81,14 @@ export default class Logic implements iEngineLogic {
         });
     }
 
+    dispatchOnCreate(instanceContext: Instance_Object): void {
+        for (let i = 0; i < this._nodes.length; i++){
+            const curNode = this._nodes[i];
+            const method = curNode.template.onCreate as (this: iEngineNode, instanceContext: Instance_Object)=>void;
+            method?.call(curNode, instanceContext);
+        }
+    }
+
     dispatchLogicLoaded(): void {
         for (let i = 0; i < this._nodes.length; i++){
             const curNode = this._nodes[i];
@@ -100,9 +110,9 @@ export default class Logic implements iEngineLogic {
         }
     }
 
-    setLocalVariableDefault(name: string, data: any): void {
+    setLocalVariableDefault(name: string, value: any, type: SOCKET_TYPE, isList: boolean): void {
         const varName = name.trim().toLowerCase();
-        this._localVariableDefaults.set(varName, data);
+        this._localVariableDefaults.set(varName, {value, type, isList});
     }
 
     registerPostEventCallback(callback: ()=>void): void {

@@ -5,7 +5,7 @@ interface iState {
     selectedNavTool: Core.NAV_TOOL_TYPE | null,
     openCategory: string | null,
     graphPanelOpen: boolean,
-    globalVariableMap: Map<string, Core.Node_Enums.SOCKET_TYPE>
+    globalVariableMap: Map<string, Core.iEditorVariable>,
 }
 
 export const useLogicEditorStore = defineStore({
@@ -15,14 +15,14 @@ export const useLogicEditorStore = defineStore({
         selectedNavTool: null,
         openCategory: null,
         graphPanelOpen: false,
-        globalVariableMap: new Map<string, Core.Node_Enums.SOCKET_TYPE>(),
+        globalVariableMap: new Map<string, Core.iEditorVariable>(),
     }),
     
     getters: {
         getSelectedNavTool: (state): Core.NAV_TOOL_TYPE | null => state.selectedNavTool,
         getOpenCategory: (state): string | null => state.openCategory,
         isGraphPanelOpen: (state): boolean => state.graphPanelOpen,
-        getGlobalVariableMap: (state): Map<string, Core.Node_Enums.SOCKET_TYPE> => state.globalVariableMap,
+        getGlobalVariableMap: (state): Map<string, Core.iEditorVariable> => state.globalVariableMap,
     },
 
     actions: {

@@ -26,14 +26,14 @@ export default class Node_API implements Core.iEditorAPI {
         this._editor = editorContext;
     }
 
-    getGlobalVariable(name: string): Core.Node_Enums.SOCKET_TYPE | undefined {
+    getGlobalVariable(name: string): Core.iEditorVariable | undefined {
         name = name.trim().toLowerCase();
         return this.globalVariableMap.get(name);
     }
 
-    setGlobalVariable(name: string, type: Core.Node_Enums.SOCKET_TYPE): void {
+    setGlobalVariable(name: string, type: Core.Node_Enums.SOCKET_TYPE, isList: boolean): void {
         name = name.trim().toLowerCase();
-        this.globalVariableMap.set(name, type);
+        this.globalVariableMap.set(name, {type, isList});
     }
 
     deleteGlobalVariable(name: string): void {

@@ -13,6 +13,7 @@ import { iAnyObj } from "./core/interfaces";
 import { listConvert } from "./core/nodes/Socket_Conversions";
 import Engine from "./Engine";
 import Logic from "./Logic";
+import { SOCKET_TYPE } from "./core/nodes/Node_Enums";
 
 export default class Node implements iEngineNode {
     private _dataCache: Map<string, any> = new Map();
@@ -35,12 +36,13 @@ export default class Node implements iEngineNode {
     constructor(nodeData: iNodeSaveData, logic: Logic, engine: Engine){
         const template = NODE_MAP.get(nodeData.templateId)!;
 
+        this.engine = engine;
+
         template.beforeLoad?.call(this, nodeData);
         
         this.template = template;
         this.nodeId = nodeData.nodeId;
         this.parentScript = logic;
-        this.engine = engine;
         this.isEvent = template.isEvent ?? false;
         this.widgetData = nodeData.widgetData ?? null;
         this._stackTrace = {parentScriptId: this.parentScript.id, nodeId: this.nodeId};
@@ -144,7 +146,7 @@ export default class Node implements iEngineNode {
         if (input.connection){
             const node = input.connection.node as Node;
             const val = node._getOutputData(input.connection.id, instanceContext);
-            const listResult = listConvert(!!input.connection.isList, !!input.isList, val);
+            const listResult = listConvert(!!input.connection.isList, !!input.isList || input.type == SOCKET_TYPE.ANY, val);
 
             inputVal = convertSocketType(input.connection.type, input.type, listResult);
         }

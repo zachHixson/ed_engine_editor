@@ -163,7 +163,7 @@ export default function useNode(
             undoStore.commit({action: Core.LOGIC_ACTION.ADD_NODE, data});
         }
     
-        if (!nodeRef) newNode.onCreate && newNode.onCreate();
+        if (!nodeRef) newNode.onCreate && (newNode.onCreate as ()=>void)();
     }
     
     function actionDeleteNodes({nodeRefList}: ActionDeleteNodesProps, makeCommit = true): void {

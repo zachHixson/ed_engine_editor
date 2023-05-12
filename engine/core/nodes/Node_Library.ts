@@ -189,8 +189,6 @@ export const NODE_LIST: iNodeTemplate[] = [
             const disconnectedFromList = connection.disconnectedFrom == 'list' || connection.endSocketId == 'list';
             const isListConnection = connection.endNode?.nodeId == this.nodeId && disconnectedFromList;
 
-            console.log(connection.endNode?.nodeId, connection.disconnectedFrom);
-
             if (!isListConnection) return;
 
             const itemConnection = this.editorAPI.getConnection(this, 'item');

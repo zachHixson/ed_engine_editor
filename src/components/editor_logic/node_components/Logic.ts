@@ -25,7 +25,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
     connections: Node_Connection[] = [];
     selectedGraphId: number = 0;
     selectedNodes: Node[] = [];
-    localVariables: Map<string, Core.Node_Enums.SOCKET_TYPE> = new Map();
+    localVariables: Map<string, Core.iEditorVariable> = new Map();
     sortOrder: number = 0;
 
     constructor(){
@@ -186,12 +186,12 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
         return false;
     }
 
-    setLocalVariable(name: string, type: Core.Node_Enums.SOCKET_TYPE): void {
+    setLocalVariable(name: string, type: Core.Node_Enums.SOCKET_TYPE, isList: boolean): void {
         name = name.trim().toLowerCase();
-        this.localVariables.set(name, type);
+        this.localVariables.set(name, {type, isList});
     }
 
-    getLocalVariable(name: string): Core.Node_Enums.SOCKET_TYPE | undefined {
+    getLocalVariable(name: string): Core.iEditorVariable | undefined {
         name = name.trim().toLowerCase();
         return this.localVariables.get(name);
     }

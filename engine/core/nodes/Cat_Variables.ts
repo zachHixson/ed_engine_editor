@@ -1,6 +1,6 @@
 import { iNodeTemplate } from './iNodeTemplate';
 import {SOCKET_TYPE, SOCKET_DEFAULT} from './Node_Enums';
-import { iEditorNode, iEngineNode, iNodeSaveData } from '../LogicInterfaces';
+import { iEngineInput, iEngineOutput, iEditorNode, iEngineNode, iNodeSaveData } from '../LogicInterfaces';
 import { iAnyObj } from '../interfaces';
 import { isEngineNode, type GenericNode } from './Node_Library';
 import type { Instance_Object } from '../core';
@@ -28,12 +28,18 @@ export default [
         },
         onScriptAdd(this: GenericNode){
             if (isEngineNode(this)){
-                const {name, isGlobal} = this.dataCache.get('varInfo');
-                const initialValue = this.inputs.get('initial_value')!.value;
+                const {name, isGlobal, type, isList} = this.dataCache.get('varInfo');
+                const inputValue = this.inputs.get('initial_value')!.value;
+                const isEmptyNumber = inputValue == '' && type == SOCKET_TYPE.NUMBER;
+                let initialValue = inputValue;
+
+                if (isList){
+                    initialValue = isEmptyNumber ? [] : [inputValue];
+                } 
 
                 isGlobal ?
-                    this.engine.setGlobalVariable(name, initialValue)
-                    : this.parentScript.setLocalVariableDefault(name, initialValue);
+                    this.engine.createGlobalVariable(name, initialValue, type, isList)
+                    : this.parentScript.setLocalVariableDefault(name, initialValue, type, isList);
             }
             else{
                 this.method('editor_setVar');
@@ -55,7 +61,7 @@ export default [
                     self.method('editor_initVarNode');
                     valSocket.value = SOCKET_DEFAULT.get(varInfo.type);
                     self.method('editor_setVar');
-                    !isEngineNode(self) && self.editorAPI.addNode(self, true);
+                    self.editorAPI.addNode(self, true);
                     document.dispatchEvent(new CustomEvent('onNewVariable'));
                 }
             });
@@ -63,15 +69,19 @@ export default [
         afterSave(this: iEditorNode, saveData: iNodeSaveData){
             const valueInput = saveData.inputs.find((input: iAnyObj) => input.id == 'initial_value')!;
             const varInfo = Object.assign({}, this.dataCache.get('varInfo'));
+
+            varInfo.isGlobal = +varInfo.isGlobal;
+            varInfo.isList = +varInfo.isList;
             
-            varInfo.type = varInfo.type;
             saveData.details = varInfo;
             saveData.inputs = [valueInput];
         },
         beforeLoad(this: GenericNode, saveData){
             const varInfo = saveData.details;
 
-            varInfo.type = varInfo.type;
+            varInfo.isGlobal = !!varInfo.isGlobal;
+            varInfo.isList = !!varInfo.isList;
+
             this.dataCache.set('varInfo', varInfo);
 
             if (!isEngineNode(this)){
@@ -79,7 +89,15 @@ export default [
             }
         },
         afterLoad(this: GenericNode){
-            if (!isEngineNode(this)) this.method('editor_setVar');
+            if (isEngineNode(this)){
+                const { type, isList } = this.dataCache.get('varInfo');
+                const dataOut = this.outputs.get('_value')!;
+                dataOut.type = type;
+                dataOut.isList = isList;
+            }
+            else{
+                this.method('editor_setVar')
+            };
         },
         onMount(this: iEditorNode){
             const varInfo = this.dataCache.get('varInfo');
@@ -131,6 +149,7 @@ export default [
                 
                 valSocket.type = type;
                 outSocket.type = type;
+                outSocket.isList = isList;
                 this.emit('force-socket-update');
                 this.emit('recalcWidth');
             },
@@ -142,10 +161,10 @@ export default [
                 
                 if (isGlobal){
                     if (this.editorAPI.getGlobalVariable(name)) return;
-                    this.editorAPI.setGlobalVariable(name, type);
+                    this.editorAPI.setGlobalVariable(name, type, isList);
                 }
                 else{
-                    this.parentScript.setLocalVariable(name, type);
+                    this.parentScript.setLocalVariable(name, type, isList);
                 }
             },
             editor_deleteVar(this: iEditorNode){
@@ -156,13 +175,13 @@ export default [
             },
             getInitialValue(this: iEngineNode, instanceContext: Instance_Object){
                 const {name, isGlobal} = this.dataCache.get('varInfo');
-                const value = isGlobal ? this.engine.getGlobalVariable(name) : instanceContext.getLocalVariable(name);
+                const variable = isGlobal ? this.engine.getGlobalVariable(name) : instanceContext.getLocalVariable(name);
                 
-                if (value == undefined){
+                if (variable == undefined){
                     return null;
                 }
 
-                return value;
+                return variable.value;
             },
         }
     },
@@ -184,26 +203,14 @@ export default [
                 document.addEventListener('onNewVariable', this.onNewVariable as EventListener);
             }
         },
-        onInput(this: iEditorNode, event: InputEvent){
-            this.method('validate', event.target);
-        },
-        afterGameDataLoaded(this: GenericNode){
-            if (isEngineNode(this)) return;
-            determineConnected.call(this);
-            this.method('validate');
-        },
-        onNewVariable(this: iEditorNode){
-            this.method('validate');
-            this.emit('forceUpdate');
-        },
+        onCreate: getSetOnCreate,
+        onInput: getSetOnInput,
+        afterGameDataLoaded: getSetAfterLoaded,
+        onNewVariable: getSetOnNewVariable,
         onNewConnection: determineConnected,
         onRemoveConnection: determineConnected,
-        onBeforeDelete(this: iEditorNode){
-            document.removeEventListener('onNewVariable', this.onNewVariable as EventListener);
-        },
-        onBeforeUnmount(this: iEditorNode){
-            document.removeEventListener('onNewVariable', this.onNewVariable as EventListener);
-        },
+        onBeforeDelete: getSetOnBeforeDelete,
+        onBeforeUnmount: getSetOnBeforeUnmount,
         methods: {
             setVar(this: iEngineNode, instanceContext: Instance_Object){
                 const varName = this.getInput('name', instanceContext);
@@ -234,37 +241,25 @@ export default [
                 document.addEventListener('onNewVariable', this.onNewVariable as EventListener);
             }
         },
-        onInput(this: iEditorNode, event: any){
-            this.method('validate', event.target);
-        },
-        afterGameDataLoaded(this: GenericNode){
-            if (isEngineNode(this)) return;
-            determineConnected.call(this);
-            this.method('validate');
-        },
-        onNewVariable(this: iEditorNode){
-            this.method('validate');
-            this.emit('forceUpdate');
-        },
+        onCreate: getSetOnCreate,
+        onInput: getSetOnInput,
+        afterGameDataLoaded: getSetAfterLoaded,
+        onNewVariable: getSetOnNewVariable,
         onNewConnection: determineConnected,
         onRemoveConnection: determineConnected,
-        onBeforeDelete(this: iEditorNode){
-            document.removeEventListener('onNewVariable', this.onNewVariable as EventListener);
-        },
-        onBeforeUnmount(this: iEditorNode){
-            document.removeEventListener('onNewVariable', this.onNewVariable as EventListener);
-        },
+        onBeforeDelete: getSetOnBeforeDelete,
+        onBeforeUnmount: getSetOnBeforeUnmount,
         methods: {
             getVar(this: iEngineNode, instanceContext: Instance_Object){
                 const varName = this.getInput('name', instanceContext);
                 const isGlobal = this.engine.getGlobalVariable(varName);
-                const value = isGlobal ? this.engine.getGlobalVariable(varName) : instanceContext.getLocalVariable(varName);
+                const variable = isGlobal ? this.engine.getGlobalVariable(varName) : instanceContext.getLocalVariable(varName);
                 
-                if (value == undefined){
+                if (variable == undefined){
                     return null;
                 }
 
-                return value;
+                return variable.value;
             },
             validate,
         },
@@ -333,7 +328,7 @@ function validate(this: iEditorNode, textbox?: HTMLInputElement){
     this.decoratorIcon = null;
 
     if (isValid){
-        const type = localGet ?? globalGet!;
+        const variable = localGet ?? globalGet!;
 
         if (!!globalGet && !!localGet){
             this.decoratorIcon = 'warning_decorator';
@@ -341,15 +336,66 @@ function validate(this: iEditorNode, textbox?: HTMLInputElement){
         }
 
         dataSocket.disabled = false;
-        dataSocket.type = type;
+        dataSocket.type = variable.type;
+        dataSocket.isList = variable.isList;
     }
     else if (varName.length){
         dataSocket.disabled = true;
         dataSocket.type = SOCKET_TYPE.ANY;
+        dataSocket.isList = false;
         this.decoratorIcon = 'error_decorator';
         this.decoratorText = 'node.error_var_not_found';
     }
 
     this.dataCache.set('isValid', isValid);
     this.emit('force-socket-update', 'data');
+}
+
+function getSetAfterLoaded(this: GenericNode){
+    if (isEngineNode(this)){
+        //set global node state if global variable
+        const varName = this.inputs.get('name')!.value;
+        const dataSocket = this.inputs.get('data') ?? this.outputs.get('data');
+        const variable = this.engine.getGlobalVariable(varName);
+
+        if (dataSocket && variable){
+            dataSocket.type = variable.type;
+            dataSocket.isList = variable.isList;
+        }
+    }
+    else{
+        determineConnected.call(this);
+        this.method('validate');
+    }
+}
+
+function getSetOnCreate(this: GenericNode){
+    if (!isEngineNode(this)) return;
+
+    //set node state if local variable
+    const varName = this.inputs.get('name')!.value;
+    const dataSocket = this.inputs.get('data') ?? this.outputs.get('data');
+    const variable = this.engine.getGlobalVariable(varName);
+
+    if (dataSocket && variable){
+        dataSocket.type = variable.type;
+        dataSocket.isList = variable.isList;
+    }
+}
+
+function getSetOnInput(this: iEditorNode, event: InputEvent){
+    this.method('validate', event.target);
+}
+
+function getSetOnNewVariable(this: iEditorNode){
+    this.method('validate');
+    this.emit('forceUpdate');
+}
+
+function getSetOnBeforeDelete(this: iEditorNode){
+    document.removeEventListener('onNewVariable', this.onNewVariable as EventListener);
+}
+
+function getSetOnBeforeUnmount(this: iEditorNode){
+    document.removeEventListener('onNewVariable', this.onNewVariable as EventListener);
 }

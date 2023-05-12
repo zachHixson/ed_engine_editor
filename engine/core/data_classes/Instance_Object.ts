@@ -4,6 +4,7 @@ import { Sprite } from './Sprite';
 import { Instance_Exit } from './Instance_Exit';
 import { Game_Object } from './Game_Object';
 import { InstanceAnimEvent, iCollisionEvent, iInstanceBaseSaveData, Instance_Base } from './Instance_Base';
+import { iEngineVariable } from '../LogicInterfaces';
 
 export interface iObjectInstanceSaveData extends iInstanceBaseSaveData {
     objId: number;
@@ -33,7 +34,7 @@ export class Instance_Object extends Instance_Base{
     private _useIcon = false;
 
     collisionOverride: COLLISION_OVERRIDE = COLLISION_OVERRIDE.KEEP;
-    localVariables: Map<string, any> = new Map();
+    localVariables: Map<string, iEngineVariable> = new Map();
     exposedProps: Map<string, any> = new Map();
 
     constructor(id: number, pos: Vector, objRef: Game_Object){
@@ -123,6 +124,7 @@ export class Instance_Object extends Instance_Base{
     }
 
     override onCreate(): void {
+        this.logic?.dispatchOnCreate(this);
         this.executeNodeEvent('e_create');
 
         if (this.animPlaying){
@@ -200,14 +202,15 @@ export class Instance_Object extends Instance_Base{
         this.localVariables = new Map(this.logic?.localVariableDefaults);
     }
 
-    setLocalVariable(name: string, data: any): void {
+    setLocalVariable(name: string, value: any): void {
         const varName = name.trim().toLowerCase();
-        this.localVariables.set(varName, data);
+        const varData = this.localVariables.get(varName)!;
+        varData.value = value;
     }
 
-    getLocalVariable(name: string): any {
+    getLocalVariable(name: string): iEngineVariable | null {
         const varName = name.trim().toLowerCase();
-        return this.localVariables.get(varName);
+        return this.localVariables.get(varName) ?? null;
     }
 
     override isInGroup(group: string): boolean {
