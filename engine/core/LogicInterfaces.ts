@@ -198,6 +198,7 @@ export interface iEngineOutput {
     type: SOCKET_TYPE,
     execute: string,
     isList?: boolean,
+    linkToType?: string,
 };
 
 export type iEngineNodeMethod = (this: iEngineNode, instanceContext: Instance_Object, data?: any) => any;

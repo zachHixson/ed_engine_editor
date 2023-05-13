@@ -61,26 +61,27 @@ export default class Node implements iEngineNode {
         });
 
         template.inputs?.forEach(input => {
-            const {id, type} = input;
+            const {id, type, isList} = input;
             const def = input.default ?? 0;
 
             this.inputs.set(id, {
                 value: def,
                 type,
                 connection: null,
-                isList: input.isList,
+                isList,
             });
         });
 
         template.outputs?.forEach(output => {
-            const {id, type, execute} = output;
+            const {id, type, execute, isList, linkToType} = output;
             this.outputs.set(output.id, {
                 id,
                 connection: null,
                 node: this,
                 type,
                 execute,
-                isList: output.isList,
+                isList,
+                linkToType,
             });
         })
 
@@ -145,7 +146,7 @@ export default class Node implements iEngineNode {
         if (input.connection){
             const node = input.connection.node as Node;
             const val = node._getOutputData(input.connection.id, instanceContext);
-            const listResult = listConvert(!!input.connection.isList, !!input.isList || input.type == SOCKET_TYPE.ANY, val);
+            const listResult = listConvert(!!input.connection.isList, !!input.isList, val);
 
             return convertSocketType(input.connection.type, input.type, listResult);
         }
@@ -163,7 +164,33 @@ export default class Node implements iEngineNode {
         }
     }
 
-    getType(outputName?: string): SOCKET_TYPE {
-        return SOCKET_TYPE.ANY;
+    getOutputType(outputName: string): { type: SOCKET_TYPE, isList: boolean } {
+        const output = this.outputs.get(outputName)!;
+
+        if (output.type != SOCKET_TYPE.ANY || !output.linkToType){
+            return { type: output.type, isList: !!output.isList };
+        }
+
+        const linkedInputResult = this.getInputType(output.linkToType);
+
+        output.type = linkedInputResult.type;
+
+        return linkedInputResult;
+    }
+
+    getInputType(inputName: string): { type: SOCKET_TYPE, isList: boolean } {
+        const input = this.inputs.get(inputName)!;
+        const inputConnection = input.connection;
+
+        if (input.type != SOCKET_TYPE.ANY || !inputConnection){
+            input.type = input.type;
+            return { type: input.type, isList: !!input.isList };
+        }
+
+        const inheritedResult = inputConnection.node.getOutputType(inputConnection.id);
+
+        input.type = inheritedResult.type;
+
+        return inheritedResult;
     }
 }

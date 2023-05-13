@@ -170,11 +170,13 @@ export const NODE_LIST: iNodeTemplate[] = [
             this.stackDataIO = true;
         },
         afterGameDataLoaded(this: GenericNode){
+            const type = this.getOutputType('item').type;
+            
             if (isEngineNode(this)){
-                //
+                this.inputs.get('list')!.type = type;
+                this.outputs.get('item')!.type = type;
             }
             else{
-                const type = this.getOutputType('item').type;
                 this.method('editor_setSocketTypes', type);
             }
         },
@@ -299,10 +301,11 @@ export const NODE_LIST: iNodeTemplate[] = [
             getList(this: iEngineNode, instanceContext: Instance_Object){
                 const list = this.getInput('list', instanceContext);
                 const item = this.getInput('item', instanceContext);
+                const outputList = [...list];
 
-                (item != null) && list.push(item);
+                (item != null) && outputList.push(item);
 
-                return list;
+                return outputList;
             },
             editor_setType(this: iEditorNode, [hasInput, isMounted] : [boolean, boolean]){
                 const listInput = this.inputs.get('list')!;
@@ -367,22 +370,39 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'label', type: SOCKET_TYPE.STRING, default: ''},
             {id: '_data', type: SOCKET_TYPE.ANY, default: null},
         ],
+        init(this: GenericNode){
+            if (!isEngineNode(this)) return;
+            this.inputs.get('_data')!.isList = true;
+        },
         methods: {
             log(this: iEngineNode, instanceContext: Instance_Object){
                 const label = this.getInput('label', instanceContext);
                 const data = this.getInput('_data', instanceContext);
-                const hasData = data != null || typeof data == 'boolean';
-                const outData = data?.name ? `{{${data.name}}}` : data;
+                let output = '';
 
-                if (label.length > 0 && hasData){
-                    this.engine.log(label, outData);
+                if (label.length) output += label;
+
+                if (data instanceof Array && data.length > 1){
+                    let arrayString = '';
+
+                    if (data[0].name){
+                        const arrayNames = data.map(o => `{ ${convertObjectToString(o)} }`);
+                        arrayString = arrayNames.join(', ');
+                    }
+                    else{
+                        data.join(', ');
+                    }
+
+                    output += `[${arrayString}]`;
                 }
-                else if (hasData){
-                    this.engine.log(outData);
+                else if (data.name){
+                    output += `{ ${convertObjectToString(data)} }`;
                 }
                 else{
-                    this.engine.log(label);
+                    output += data[0];
                 }
+
+                this.engine.log(output);
 
                 this.triggerOutput('_o', instanceContext);
             },
@@ -991,3 +1011,18 @@ export const NODE_MAP = new Map<string, iNodeTemplate>();
 NODE_LIST.forEach(node => {
     NODE_MAP.set(node.id, node);
 });
+
+function convertObjectToString(obj: any): string {
+    const output = [];
+
+    if (obj.objRef){
+        output.push(obj.objRef.name)
+    }
+    else if (obj.sprite){
+        output.push(obj.sprite.name);
+    }
+
+    if (obj.name) output.push(obj.name);
+
+    return output.join(' ');
+}
