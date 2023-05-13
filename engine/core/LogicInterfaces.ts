@@ -24,23 +24,24 @@ interface iNode_Base extends iNodeLifecycleEvents {
     isEvent: boolean;
     widgetData?: any;
     dataCache: Map<string, any>;
+    getOutputType(outputName: string): {type: SOCKET_TYPE, isList: boolean};
+    getInputType(inputName: string): {type: SOCKET_TYPE, isList: boolean};
 }
 
 export interface iNodeLifecycleEvents {
-    init?: ()=>void;
-    onCreate?:
-        ((this: iEngineNode, instanceContext: Instance_Object)=>void) |
-        ((this: iEditorNode)=>void);
+    init?: ()=>void; // Fired on constructor
     beforeSave?: ()=>void;
     afterSave?: (saveData: iNodeSaveData)=>void;
     beforeLoad?: (saveData: iNodeSaveData)=>void;
-    afterLoad?: ()=>void;
+    afterLoad?: (saveData: iNodeSaveData)=>void;
     logicLoaded?: (logic: iEditorLogic | iEngineLogic)=>void;
+    initVariableNodes?: ()=>void; // Fired after data is loaded, but before afterGameDataLoaded
     afterGameDataLoaded?: ()=>void;
-    onScriptAdd?: ()=>void;
+    onCreate?: // Fired when instance is spawned, or when editor node is created
+        ((this: iEngineNode, instanceContext: Instance_Object)=>void) |
+        ((this: iEditorNode)=>void);
     onBeforeMount?: ()=>void;
     onMount?: ()=>void;
-    allNodesMounted?: ()=>void;
     onNewVariable?: ()=>void;
     onInput?: (event: InputEvent)=>void;
     onMove?: ()=>void;
@@ -142,9 +143,10 @@ export interface iEditorAPI {
     setGlobalVariable(name: string, type: SOCKET_TYPE, isList: boolean): void;
     deleteGlobalVariable(name: string): void;
     getVariableUsage(name: string, nodeType: string | null, isGlobal: boolean): iEditorNode[];
-    getConnection(node: iEditorNode, socketId: string): iNodeConnection | null;
+    getInputConnection(node: iEditorNode, socketId: string): iNodeConnection | null;
+    getOutputConnections(node: iEditorNode, socketId: string): iNodeConnection[];
     cancelConnection(connection: iNodeConnection): void;
-    getConnectedSocket(node: iEditorNode, socketId: string, inputConnection?: iNodeConnection): iEditorNodeInput | iEditorNodeOutput | undefined;
+    getConnectedInputSocket(node: iEditorNode, socketId: string, inputConnection?: iNodeConnection): iEditorNodeInput | iEditorNodeOutput | undefined;
     getSelectedNodes(): iEditorNode[];
     clearSelectedNodes(): void;
     addNode(node: iEditorNode, commit?: boolean): void;

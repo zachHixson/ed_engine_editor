@@ -55,7 +55,7 @@ export const useMainStore = defineStore({
         getSelectedEditor: (state): Core.EDITOR_ID => state.selectedEditor,
         getInputActive: (state): boolean => state.inputActive,
         getPlayState: (state): PLAY_STATE => state.playState,
-        getNodeAPI: (state): Node_API => state.nodeAPI,
+        getNodeAPI: (state): Node_API => state.nodeAPI as Node_API,
     },
 
     actions: {
@@ -83,13 +83,14 @@ export const useMainStore = defineStore({
 
             this.projectName = loadObj.projectName;
             Core.ID_Generator.setID(loadObj.newestID);
-            gameDataStore.loadSaveData(loadObj, this.nodeAPI);
+            gameDataStore.loadSaveData(loadObj, this.nodeAPI as Node_API);
             
             if (loadObj.selectedRoomId != undefined){
                 const room = gameDataStore.getAllRooms.find(r => r.id == loadObj.selectedRoomId)
                 assetBrowserStore.selectRoom(room!)
             }
 
+            this.nodeAPI.forEachNode(node => node.initVariableNodes && node.initVariableNodes());
             this.nodeAPI.forEachNode(node => node.afterGameDataLoaded && node.afterGameDataLoaded());
         },
         setSelectedEditor(newEditor: Core.EDITOR_ID){ this.selectedEditor = newEditor },

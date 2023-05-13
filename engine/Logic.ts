@@ -44,8 +44,6 @@ export default class Logic implements iEngineLogic {
 
                 eventArr.push(newNode);
             }
-
-            newNode.template.onScriptAdd?.call(newNode);
         });
 
         //create and link connections
@@ -93,6 +91,13 @@ export default class Logic implements iEngineLogic {
         for (let i = 0; i < this._nodes.length; i++){
             const curNode = this._nodes[i];
             curNode.template.logicLoaded?.call(curNode, this);
+        }
+    }
+
+    dispatchInitVariableNodes(): void {
+        for (let i = 0; i < this._nodes.length; i++){
+            const curNode = this._nodes[i];
+            curNode.template.initVariableNodes?.call(curNode);
         }
     }
 

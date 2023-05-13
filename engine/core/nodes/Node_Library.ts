@@ -3,7 +3,7 @@ import { iNodeTemplate } from './iNodeTemplate';
 import Cat_Events from './Cat_Events';
 import Cat_Variables from './Cat_Variables';
 import { Vector } from '../Vector';
-import { iEditorNode, iEngineNode, iNodeConnection } from '../LogicInterfaces';
+import { iEditorNode, iEngineInput, iEngineNode, iEngineOutput, iNodeConnection } from '../LogicInterfaces';
 import { Game_Object, Instance_Base, Instance_Object } from '../core';
 import { canConvertSocket, assetToInstance, instanceToAsset } from './Socket_Conversions';
 
@@ -103,8 +103,8 @@ export const NODE_LIST: iNodeTemplate[] = [
 
                 //change socket icons
                 this.inputs?.forEach(input => {
-                    const connection = this.editorAPI.getConnection(this, input.id);
-                    const connectedSocket = connection ? this.editorAPI.getConnectedSocket(this, input.id, connection) : null;
+                    const connection = this.editorAPI.getInputConnection(this, input.id);
+                    const connectedSocket = connection ? this.editorAPI.getConnectedInputSocket(this, input.id, connection) : null;
                     typeChanged ||= type != input.type;
                     input.type = type == 'compare_type' ? SOCKET_TYPE.ASSET : SOCKET_TYPE.INSTANCE;
                     typeChanged && this.emit('force-socket-update', input.id);
@@ -159,7 +159,7 @@ export const NODE_LIST: iNodeTemplate[] = [
         outputs: [
             {id: 'index', type: SOCKET_TYPE.NUMBER, execute: 'getIndex'},
             {id: 'length', type: SOCKET_TYPE.NUMBER, execute: 'getLength'},
-            {id: 'item', type: SOCKET_TYPE.ANY, disabled: true, execute: 'getItem'},
+            {id: 'item', type: SOCKET_TYPE.ANY, disabled: true, linkToType: 'list', execute: 'getItem'},
         ],
         inTriggers: [
             {id: '_i', execute: 'runLoop'},
@@ -169,43 +169,54 @@ export const NODE_LIST: iNodeTemplate[] = [
             if (isEngineNode(this)) return;
             this.stackDataIO = true;
         },
-        onMount(this: iEditorNode){
-            this.method('editor_setSocketTypes');
+        afterGameDataLoaded(this: GenericNode){
+            if (isEngineNode(this)){
+                //
+            }
+            else{
+                const type = this.getOutputType('item').type;
+                this.method('editor_setSocketTypes', type);
+            }
         },
         onNewConnection(this: iEditorNode, connection: iNodeConnection){
-            //set type when new list is connected
-            if (!(connection.endNode!.nodeId == this.nodeId && connection.endSocketId == 'list')) return;
-            
-            const iterationConnection = this.editorAPI.getConnection(this, 'iterations');
+            const iterationConnection = this.editorAPI.getInputConnection(this, 'iterations');
+            const connectedToIteration = connection.endNode!.nodeId == this.nodeId && connection.endSocketId == 'iterations';
 
             this.method('editor_setSocketTypes');
 
             //break iterations connection
-            if (iterationConnection){
+            if (iterationConnection && !connectedToIteration){
                 this.editorAPI.deleteConnections([iterationConnection], true);
             }
         },
         onRemoveConnection(this: iEditorNode, connection: iNodeConnection){
             const disconnectedFromList = connection.disconnectedFrom == 'list' || connection.endSocketId == 'list';
-            const isListConnection = connection.endNode?.nodeId == this.nodeId && disconnectedFromList;
+            const disconnectedFromIterations = connection.disconnectedFrom == 'iterations' || connection.endSocketId == 'iterations';
+            const isEndConnection = connection.endNode?.nodeId == this.nodeId;
 
-            if (!isListConnection) return;
+            if (!isEndConnection && !(disconnectedFromList || disconnectedFromIterations)) return;
 
-            const itemConnection = this.editorAPI.getConnection(this, 'item');
-            const itemOutput = this.outputs.get('item')!;
+            if (disconnectedFromList){
+                const itemConnection = this.editorAPI.getOutputConnections(this, 'item');
+                const itemOutput = this.outputs.get('item')!;
 
-            this.inputs.get('iterations')!.disabled = false;
-            this.inputs.get('list')!.type = SOCKET_TYPE.ANY;
+                this.inputs.get('iterations')!.disabled = false;
+                this.inputs.get('list')!.type = SOCKET_TYPE.ANY;
+
+                if (itemConnection.length){
+                    this.editorAPI.deleteConnections([...itemConnection], true);
+                }
+
+                itemOutput.type = SOCKET_TYPE.ANY;
+                itemOutput.disabled = true;
+            }
+            else{
+                this.inputs.get('list')!.disabled = false;
+                this.outputs.get('item')!.disabled = false;
+            }
 
             this.emit('force-socket-update', 'iterations');
             this.emit('force-socket-update', 'list');
-
-            if (itemConnection){
-                this.editorAPI.deleteConnections([itemConnection], true);
-            }
-
-            itemOutput.type = SOCKET_TYPE.ANY;
-            itemOutput.disabled = true;
             this.emit('force-socket-update', 'item');
         },
         methods: {
@@ -244,13 +255,17 @@ export const NODE_LIST: iNodeTemplate[] = [
                 const data = this.dataCache.get(dataKey);
                 return data?.item ?? null;
             },
-            editor_setSocketTypes(this: iEditorNode){
-                const otherSocket = this.editorAPI.getConnectedSocket(this, 'list');
+            editor_setSocketTypes(this: iEditorNode, type?: SOCKET_TYPE){
+                const listConnectedSocket = this.editorAPI.getConnectedInputSocket(this, 'list');
+                const iterationsConnectedSocket = this.editorAPI.getConnectedInputSocket(this, 'iterations');
+                const socketType = type ?? listConnectedSocket?.type ?? SOCKET_TYPE.ANY;
+                const listInput = this.inputs.get('list')!;
                 const itemOutput = this.outputs.get('item')!
-                this.inputs.get('iterations')!.disabled = !!otherSocket;
-                this.inputs.get('list')!.type = otherSocket?.type ?? SOCKET_TYPE.ANY;
-                itemOutput.type = otherSocket?.type ?? SOCKET_TYPE.ANY;
-                itemOutput.disabled = false;
+                this.inputs.get('iterations')!.disabled = !!listConnectedSocket;
+                listInput.type = socketType;
+                listInput.disabled = !!iterationsConnectedSocket;
+                itemOutput.type = socketType;
+                itemOutput.disabled = !listConnectedSocket;
                 this.emit('force-socket-update', 'iterations');
                 this.emit('force-socket-update', 'list');
                 this.emit('force-socket-update', 'item');
@@ -265,16 +280,20 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'item', type: SOCKET_TYPE.ANY, hideInput: true, disabled: true, default: null},
         ],
         outputs: [
-            {id: '_o', type: SOCKET_TYPE.ANY, isList: true, disabled: true, execute: 'getList'},
+            {id: '_o', type: SOCKET_TYPE.ANY, isList: true, disabled: true, linkToType: 'list', execute: 'getList'},
         ],
+        onBeforeMount(this: iEditorNode){
+            const listConnection = this.editorAPI.getInputConnection(this, 'list');
+            this.method('editor_setType', [!!listConnection, false]);
+        },
         onNewConnection(this: iEditorNode, connection: iNodeConnection){
             if (connection.endNode?.nodeId != this.nodeId || connection.endSocketId != 'list') return;
-            this.method('editor_setType', true);
+            this.method('editor_setType', [true, true]);
         },
         onRemoveConnection(this: iEditorNode, connection: iNodeConnection){
             const connectedToList = connection.disconnectedFrom == 'list' || connection.endSocketId == 'list';
             if (connection.endNode?.nodeId != this.nodeId || !connectedToList) return;
-            this.method('editor_setType', false);
+            this.method('editor_setType', [false, true]);
         },
         methods: {
             getList(this: iEngineNode, instanceContext: Instance_Object){
@@ -285,13 +304,13 @@ export const NODE_LIST: iNodeTemplate[] = [
 
                 return list;
             },
-            editor_setType(this: iEditorNode, hasInput: boolean){
+            editor_setType(this: iEditorNode, [hasInput, isMounted] : [boolean, boolean]){
                 const listInput = this.inputs.get('list')!;
                 const itemInput = this.inputs.get('item')!;
                 const listOutput = this.outputs.get('_o')!;
-                const listConnectionType = hasInput ? this.editorAPI.getConnectedSocket(this, 'list')!.type : null;
-                const itemInputConnection = this.editorAPI.getConnection(this, 'item');
-                const listOutputConnection = this.editorAPI.getConnection(this, '_o');
+                const listConnectionType = hasInput ? this.editorAPI.getConnectedInputSocket(this, 'list')!.type : null;
+                const itemInputConnection = this.editorAPI.getInputConnection(this, 'item');
+                const listOutputConnections = this.editorAPI.getOutputConnections(this, '_o');
                 const deleteConnections: iNodeConnection[] = [];
                 const type = listConnectionType ?? SOCKET_TYPE.ANY;
                 const disabled = !listConnectionType;
@@ -302,12 +321,16 @@ export const NODE_LIST: iNodeTemplate[] = [
                 itemInput.disabled = disabled;
                 listOutput.disabled = disabled;
 
+                if (!isMounted){
+                    return;
+                }
+
                 if (itemInputConnection){
                     deleteConnections.push(itemInputConnection);
                 }
 
-                if (listOutputConnection){
-                    deleteConnections.push(listOutputConnection);
+                if (listOutputConnections.length){
+                    deleteConnections.push(...listOutputConnections);
                 }
 
                 deleteConnections.length && this.editorAPI.deleteConnections(deleteConnections, true);

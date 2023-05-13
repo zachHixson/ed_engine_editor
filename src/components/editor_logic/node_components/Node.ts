@@ -30,11 +30,10 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
     beforeLoad: Core.iNodeLifecycleEvents['beforeLoad'];
     afterLoad: Core.iNodeLifecycleEvents['afterLoad'];
     logicLoaded: Core.iNodeLifecycleEvents['logicLoaded'];
+    initVariableNodes: Core.iNodeLifecycleEvents['initVariableNodes'];
     afterGameDataLoaded: Core.iNodeLifecycleEvents['afterGameDataLoaded'];
-    onScriptAdd: Core.iNodeLifecycleEvents['onScriptAdd'];
     onBeforeMount: Core.iNodeLifecycleEvents['onBeforeMount'];
     onMount: Core.iNodeLifecycleEvents['onMount'];
-    allNodesMounted: Core.iNodeLifecycleEvents['allNodesMounted'];
     onNewVariable: Core.iNodeLifecycleEvents['onNewVariable'];
     onInput: Core.iNodeLifecycleEvents['onInput'];
     onMove: Core.iNodeLifecycleEvents['onMove'];
@@ -68,18 +67,16 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
 
         //bind lifecycle events
         this.init = template.init?.bind(this);
-        this.onScriptAdd = template.onScriptAdd?.bind(this);
         this.onCreate = template.onCreate?.bind(this);
         this.beforeSave = template.beforeSave?.bind(this);
         this.afterSave = template.afterSave?.bind(this);
         this.beforeLoad = template.beforeLoad?.bind(this);
         this.afterLoad = template.afterLoad?.bind(this);
         this.logicLoaded = template.logicLoaded?.bind(this);
+        this.initVariableNodes = template.initVariableNodes?.bind(this);
         this.afterGameDataLoaded = template.afterGameDataLoaded?.bind(this);
-        this.onScriptAdd = template.onScriptAdd?.bind(this);
         this.onBeforeMount = template.onBeforeMount?.bind(this);
         this.onMount = template.onMount?.bind(this);
-        this.allNodesMounted = template.allNodesMounted?.bind(this);
         this.onNewVariable = template.onNewVariable?.bind(this);
         this.onInput = template.onInput?.bind(this);
         this.onMove = template.onMove?.bind(this);
@@ -171,7 +168,7 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
             nodeInput.value = input.value;
         });
 
-        this.afterLoad && this.afterLoad();
+        this.afterLoad && this.afterLoad(data);
 
         return this;
     }
@@ -193,7 +190,7 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
         this.emit('onMove', newPos);
     }
 
-    method(methodName: string, data: any[] = []): any {
+    method(methodName: string, data: any): any {
         const method = this.template.methods![methodName] as Core.iEditorNodeMethod;
 
         if (!method){
@@ -204,7 +201,7 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
         return method.call(this, data);
     }
 
-    getInput(inputName: string ): any | null {
+    getInput(inputName: string): any | null {
         const input = this.inputs.get(inputName);
 
         if (!input){
@@ -217,5 +214,45 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
         }
 
         return input.value;
+    }
+
+    getOutputType(outputName: string): { type: Core.Node_Enums.SOCKET_TYPE, isList: boolean } {
+        const output = this.outputs.get(outputName)!;
+
+        if (!output){
+            console.error(`ERROR: No output "${outputName}" found on node "${this.templateId}"`);
+            return null as any;
+        }
+
+        if (output.type != Core.Node_Enums.SOCKET_TYPE.ANY || !output.linkToType){
+            return { type: output.type, isList: !!output.isList };
+        }
+
+        const linkedInputResult = this.getInputType(output.linkToType);
+
+        output.type = linkedInputResult.type;
+
+        return linkedInputResult;
+    }
+
+    getInputType(inputName: string): { type: Core.Node_Enums.SOCKET_TYPE, isList: boolean } {
+        const input = this.inputs.get(inputName);
+        const inputConnection = this.editorAPI.getInputConnection(this, inputName);
+
+        if (!input){
+            console.error(`ERROR: No input "${inputName}" found on node "${this.templateId}"`);
+            return null as any;
+        }
+
+        if (input.type != Core.Node_Enums.SOCKET_TYPE.ANY || !inputConnection){
+            input.type = input.type;
+            return { type: input.type, isList: !!input.isList };
+        }
+
+        const inheritedResult = inputConnection.startNode!.getOutputType(inputConnection.startSocketId!);
+
+        input.type = inheritedResult.type;
+
+        return inheritedResult;
     }
 };

@@ -60,7 +60,7 @@ export default class Node_API implements Core.iEditorAPI {
         return usage;
     }
 
-    getConnection(node: Core.iEditorNode, socketId: string): Node_Connection | null {
+    getInputConnection(node: Core.iEditorNode, socketId: string): Node_Connection | null {
         const logic = node.parentScript;
 
         if (!logic) return null;
@@ -68,11 +68,8 @@ export default class Node_API implements Core.iEditorAPI {
         //find correct connection
         for (let i = 0; i < logic.connections.length; i++){
             const curConnection = logic.connections[i];
-            const isStart = curConnection.startNode?.nodeId == node.nodeId;
-            const isEnd = curConnection.endNode?.nodeId == node.nodeId;
-            const connectedToNode =  isStart || isEnd;
-            const thisSocket = isStart ? curConnection.startSocketId : curConnection.endSocketId;
-            const connectedToSocket = thisSocket == socketId;
+            const connectedToNode = curConnection.endNode?.nodeId == node.nodeId;
+            const connectedToSocket = curConnection.endSocketId == socketId;
 
             if (connectedToNode && connectedToSocket){
                 return curConnection as Node_Connection;
@@ -82,20 +79,39 @@ export default class Node_API implements Core.iEditorAPI {
         return null;
     }
 
+    getOutputConnections(node: Core.iEditorNode, socketId: string): Node_Connection[] {
+        const logic = node.parentScript;
+        const outputConnections: Node_Connection[] = [];
+
+        if (!logic) return outputConnections;
+
+        //find correct connection
+        for (let i = 0; i < logic.connections.length; i++){
+            const curConnection = logic.connections[i];
+            const connectedToNode = curConnection.startNode?.nodeId == node.nodeId;
+            const connectedToSocket = curConnection.startSocketId == socketId;
+
+            if (connectedToNode && connectedToSocket){
+                outputConnections.push(curConnection as Node_Connection);
+            }
+        }
+
+        return outputConnections;
+    }
+
     cancelConnection(connection: Core.iNodeConnection): void {
         this.editor.revertMakeConnection({connectionObj: connection});
         this.editor.undoStore.popLast();
     }
 
-    getConnectedSocket(node: Core.iEditorNode, socketId: string, inputConnection?: Node_Connection): Core.iEditorNodeOutput | Core.iEditorNodeInput | undefined {
-        const connection = inputConnection ?? this.getConnection(node, socketId);
+    getConnectedInputSocket(node: Core.iEditorNode, socketId: string, inputConnection?: Node_Connection): Core.iEditorNodeOutput | Core.iEditorNodeInput | undefined {
+        const connection = inputConnection ?? this.getInputConnection(node, socketId);
 
         if (!connection){
             return undefined;
         }
 
-        const isStart = socketId == connection.startSocketId;
-        return isStart ? connection.endSocket : connection.startSocket;
+        return connection.startSocket;
     }
 
     getSelectedNodes(): Node[] {

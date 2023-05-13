@@ -145,7 +145,6 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
     addNode(templateId: string, pos: Core.Vector, nodeAPI: Node_API, nodeRef?: Node): Node {
         const newNode = nodeRef ?? new Node(templateId, this.nextNodeId, pos, this, this.selectedGraphId, nodeAPI);
         
-        newNode.onScriptAdd && newNode.onScriptAdd();
         this.nodes.push(newNode);
 
         return newNode

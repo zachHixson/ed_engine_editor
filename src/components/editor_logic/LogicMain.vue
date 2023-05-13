@@ -190,8 +190,6 @@ onMounted(()=>{
     navChange(props.selectedAsset.graphNavState);
     relinkConnections();
     updateNodeBounds();
-
-    props.selectedAsset.nodes.forEach(node => node.allNodesMounted && node.allNodesMounted());
 });
 
 onBeforeUnmount(()=>{

@@ -100,7 +100,7 @@ export default class Node implements iEngineNode {
             this.methods.set(method, template.methods[method] as iEngineNodeMethod);
         }
 
-        this.template.afterLoad?.call(this);
+        this.template.afterLoad?.call(this, nodeData);
         this.template.init?.call(this);
     }
 
@@ -141,20 +141,17 @@ export default class Node implements iEngineNode {
 
     getInput(inputName: string, instanceContext: Instance_Object): iEngineInput {
         const input = this.inputs.get(inputName)!;
-        let inputVal: any;
 
         if (input.connection){
             const node = input.connection.node as Node;
             const val = node._getOutputData(input.connection.id, instanceContext);
             const listResult = listConvert(!!input.connection.isList, !!input.isList || input.type == SOCKET_TYPE.ANY, val);
 
-            inputVal = convertSocketType(input.connection.type, input.type, listResult);
+            return convertSocketType(input.connection.type, input.type, listResult);
         }
         else{
-            inputVal = input.value;
+            return input.value;
         }
-        
-        return inputVal;
     }
 
     triggerOutput(outputId: string, instanceContext: Instance_Object): void {
@@ -164,5 +161,9 @@ export default class Node implements iEngineNode {
             const node = trigger.connection.node as Node;
             node._triggerInTrigger(trigger.connection.execute, instanceContext);
         }
+    }
+
+    getType(outputName?: string): SOCKET_TYPE {
+        return SOCKET_TYPE.ANY;
     }
 }
