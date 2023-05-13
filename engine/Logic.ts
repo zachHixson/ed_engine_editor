@@ -18,7 +18,6 @@ import { SOCKET_TYPE } from './core/nodes/Node_Enums';
 export default class Logic implements iEngineLogic {
     private _nodes: Node[] = [];
     private _localVariableDefaults: Map<string, {value: any, type: SOCKET_TYPE, isList: boolean}> = new Map();
-    private _runPostEvent: (()=>void)[] = [];
 
     id: number;
     events: Map<string, Node[]> = new Map();
@@ -74,8 +73,6 @@ export default class Logic implements iEngineLogic {
 
         event.forEach(event => {
             event.executeEvent(data, instance);
-            this._runPostEvent.forEach(callback => callback());
-            this._runPostEvent = [];
         });
     }
 
@@ -118,9 +115,5 @@ export default class Logic implements iEngineLogic {
     setLocalVariableDefault(name: string, value: any, type: SOCKET_TYPE, isList: boolean): void {
         const varName = name.trim().toLowerCase();
         this._localVariableDefaults.set(varName, {value, type, isList});
-    }
-
-    registerPostEventCallback(callback: ()=>void): void {
-        this._runPostEvent.push(callback);
     }
 }

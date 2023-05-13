@@ -167,7 +167,6 @@ export interface iEngineLogic {
 
     setLocalVariableDefault(name: string, value: any, type: SOCKET_TYPE, isList: boolean): void;
     executeEvent(eventName: string, instance: Instance_Object, data: any): void;
-    registerPostEventCallback(callback: ()=>void): void;
     dispatchOnCreate(instanceContext: Instance_Object): void;
     dispatchLogicLoaded(): void;
     dispatchAfterGameDataLoaded(): void;

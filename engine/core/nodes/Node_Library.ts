@@ -395,8 +395,8 @@ export const NODE_LIST: iNodeTemplate[] = [
 
                     output += `[${arrayString}]`;
                 }
-                else if (data.name){
-                    output += `{ ${convertObjectToString(data)} }`;
+                else if (data[0]?.name){
+                    output += `{ ${convertObjectToString(data[0])} }`;
                 }
                 else{
                     output += data[0];
@@ -640,15 +640,14 @@ export const NODE_LIST: iNodeTemplate[] = [
                     this.engine.addInstance(newInstance);
                     newInstance.onCreate();
                     this.dataCache.set('spawned_instance', newInstance);
-                    this.parentScript.registerPostEventCallback(()=>{
-                        this.dataCache.delete('spawned_instance');
-                    });
                 }
                 else{
                     this.engine.warn('no_asset_specified');
                 }
 
                 this.triggerOutput('_o', instanceContext);
+
+                this.dataCache.delete('spawned_instance');
             },
             getAsset(this: iEngineNode){
                 return this.dataCache.get('spawned_instance') ?? null;
