@@ -67,7 +67,7 @@ export default [
 
             if (isEngineNode(this)){
                 const {name, isGlobal, type, isList} = varInfo;
-                const inputValue = this.inputs.get('initial_value')!.value;
+                const inputValue = type == SOCKET_TYPE.INSTANCE ? null : this.inputs.get('initial_value')!.value;
                 const isEmptyNumber = inputValue == '' && type == SOCKET_TYPE.NUMBER;
                 let initialValue = inputValue;
 
@@ -116,6 +116,16 @@ export default [
             });
         },
         methods: {
+            getValue(this: iEngineNode, instanceContext: Instance_Object){
+                const {name, isGlobal} = this.dataCache.get('varInfo');
+                const variable = isGlobal ? this.engine.getGlobalVariable(name) : instanceContext.getLocalVariable(name);
+                
+                if (variable == undefined){
+                    return null;
+                }
+
+                return variable.value;
+            },
             editor_initVarNode(this: iEditorNode){
                 const {name, type, isGlobal, isList} = this.dataCache.get('varInfo');
                 const nameSocket = this.inputs.get('_varName')!;
@@ -157,16 +167,6 @@ export default [
                 isGlobal ?
                     this.editorAPI.deleteGlobalVariable(name)
                     : this.parentScript.deleteLocalVariable(name);
-            },
-            getInitialValue(this: iEngineNode, instanceContext: Instance_Object){
-                const {name, isGlobal} = this.dataCache.get('varInfo');
-                const variable = isGlobal ? this.engine.getGlobalVariable(name) : instanceContext.getLocalVariable(name);
-                
-                if (variable == undefined){
-                    return null;
-                }
-
-                return variable.value;
             },
         }
     },
