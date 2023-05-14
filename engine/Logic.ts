@@ -12,6 +12,7 @@ import {
     iNodeSaveData,
     CATEGORY_ID,
 iEngineNode,
+iConnectionSaveData,
 } from '@engine/core/core';
 import { SOCKET_TYPE } from './core/nodes/Node_Enums';
 
@@ -30,15 +31,15 @@ export default class Logic implements iEngineLogic {
         //create all nodes
         logicData.nodes.forEach((nodeData: iNodeSaveData) => {
             const newNode = new Node(nodeData, this, engine);
-            nodeMap.set(nodeData.nodeId, newNode);
+            nodeMap.set(nodeData.nId, newNode);
             this._nodes.push(newNode);
 
             if (newNode.isEvent){
-                let eventArr = this.events.get(nodeData.templateId);
+                let eventArr = this.events.get(nodeData.tId);
 
                 if (!eventArr){
                     eventArr = [];
-                    this.events.set(nodeData.templateId, eventArr);
+                    this.events.set(nodeData.tId, eventArr);
                 }
 
                 eventArr.push(newNode);
@@ -46,10 +47,10 @@ export default class Logic implements iEngineLogic {
         });
 
         //create and link connections
-        logicData.connections.forEach((connection: iNodeConnection & {startNodeId: number, endNodeId: number}) => {
-            const {startNodeId, endNodeId, startSocketId, endSocketId} = connection;
-            const startNode = nodeMap.get(startNodeId)!;
-            const endNode = nodeMap.get(endNodeId)!;
+        logicData.connections.forEach((connection: iConnectionSaveData) => {
+            const {sNodeId, eNodeId, sSocId, eSocId} = connection;
+            const startNode = nodeMap.get(sNodeId)!;
+            const endNode = nodeMap.get(eNodeId)!;
             const allStartSockets = new Map<string, iEngineOutTrigger | iEngineOutput>();
             const allEndSockets = new Map<string, iEngineInTrigger | iEngineInput>();
 
@@ -58,8 +59,8 @@ export default class Logic implements iEngineLogic {
             endNode.inTriggers.forEach((iTrigger, key) => allEndSockets.set(key, iTrigger));
             endNode.inputs.forEach((input, key) => allEndSockets.set(key, input));
 
-            allStartSockets.get(startSocketId!)!.connection = allEndSockets.get(endSocketId!)!;
-            allEndSockets.get(endSocketId!)!.connection = allStartSockets.get(startSocketId!)!;
+            allStartSockets.get(sSocId!)!.connection = allEndSockets.get(eSocId!)!;
+            allEndSockets.get(eSocId!)!.connection = allStartSockets.get(sSocId!)!;
         });
     }
 
@@ -88,13 +89,6 @@ export default class Logic implements iEngineLogic {
         for (let i = 0; i < this._nodes.length; i++){
             const curNode = this._nodes[i];
             curNode.template.logicLoaded?.call(curNode, this);
-        }
-    }
-
-    dispatchInitVariableNodes(): void {
-        for (let i = 0; i < this._nodes.length; i++){
-            const curNode = this._nodes[i];
-            curNode.template.initVariableNodes?.call(curNode);
         }
     }
 

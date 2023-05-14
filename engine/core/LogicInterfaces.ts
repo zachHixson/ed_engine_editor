@@ -9,7 +9,6 @@ import {
     iNavSaveData,
     iNodeTemplate,
     iOutput,
-    Node_Enums,
     Instance_Object,
     CATEGORY_ID
 } from "./core";
@@ -24,8 +23,6 @@ interface iNode_Base extends iNodeLifecycleEvents {
     isEvent: boolean;
     widgetData?: any;
     dataCache: Map<string, any>;
-    getOutputType(outputName: string): {type: SOCKET_TYPE, isList: boolean};
-    getInputType(inputName: string): {type: SOCKET_TYPE, isList: boolean};
 }
 
 export interface iNodeLifecycleEvents {
@@ -35,7 +32,6 @@ export interface iNodeLifecycleEvents {
     beforeLoad?: (saveData: iNodeSaveData)=>void;
     afterLoad?: (saveData: iNodeSaveData)=>void;
     logicLoaded?: (logic: iEditorLogic | iEngineLogic)=>void;
-    initVariableNodes?: ()=>void; // Fired after data is loaded, but before afterGameDataLoaded
     afterGameDataLoaded?: ()=>void;
     onCreate?: // Fired when instance is spawned, or when editor node is created
         ((this: iEngineNode, instanceContext: Instance_Object)=>void) |
@@ -197,7 +193,6 @@ export interface iEngineOutput {
     type: SOCKET_TYPE,
     execute: string,
     isList?: boolean,
-    linkToType?: string,
 };
 
 export type iEngineNodeMethod = (this: iEngineNode, instanceContext: Instance_Object, data?: any) => any;
@@ -229,21 +224,20 @@ export interface iLogicSaveData extends iAssetSaveData {
 }
 
 export interface iNodeSaveData {
-    templateId: string,
-    nodeId: number,
-    graphId: number,
+    tId: string, //templateId
+    nId: number, //nodeId
+    gId: number, //groupId
     pos: { x: number, y: number },
-    inputs: { id: string, value: any }[],
-    widgetData: any,
-    details?: any,
+    inp: { id: string, value: any }[], //inputs
+    widg: any, //widgetData
+    d?: any, //extra save data appended by node
 }
 
 export interface iConnectionSaveData {
     id: number,
-    type: Node_Enums.SOCKET_TYPE,
-    graphId: number,
-    startSocketId: string,
-    endSocketId: string,
-    startNodeId: number,
-    endNodeId: number,
+    gId: number, //group ID
+    sSocId: string, //start socket ID
+    eSocId: string, //end socket ID
+    sNodeId: number, //start node ID
+    eNodeId: number, //end node ID
 }

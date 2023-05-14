@@ -56,7 +56,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
             graphs: this.graphs.map(g => g.toSaveData()),
             nodes: this.nodes.map(n => n.toSaveData()),
             connections: this.connections.map(c => c.toSaveData()),
-        };
+        } satisfies Core.iLogicSaveData;
     }
 
     static fromSaveData(data: Core.iLogicSaveData, nodeAPI: Node_API): Logic {
@@ -73,7 +73,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
             return Graph.fromSaveData(graph);
         });
         this.nodes = data.nodes.map(nodeData => {
-            this._nextNodeId = Math.max(this._nextNodeId, nodeData.nodeId + 1);
+            this._nextNodeId = Math.max(this._nextNodeId, nodeData.nId + 1);
             return Node.fromSaveData(nodeData, this, nodeAPI);
         });
 

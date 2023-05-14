@@ -299,7 +299,6 @@ export class Engine implements iEngineCallbacks {
 
         loadedData.rooms = parsedJson.rooms.map((r: serialRoom) => Room.fromSaveData(r, assetMap));
 
-        loadedData.logic.forEach(logic => logic.dispatchInitVariableNodes());
         loadedData.logic.forEach(logic => logic.dispatchAfterGameDataLoaded());
 
         return loadedData;

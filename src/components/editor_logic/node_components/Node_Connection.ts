@@ -18,7 +18,7 @@ export default class Node_Connection extends Core.EventListenerMixin(class {}) i
     constructor(inpObj: Core.iAnyObj = {}){
         super();
         this.id = inpObj.id;
-        this.type = inpObj.type;
+        this.type = inpObj.type ?? null;
         this.graphId = inpObj.graphId;
         this.canConnect = inpObj.canConnect;
         this.startNode = inpObj.startNode ?? null;
@@ -63,22 +63,38 @@ export default class Node_Connection extends Core.EventListenerMixin(class {}) i
     }
 
     toSaveData(): Core.iConnectionSaveData {
-        const {id, type, graphId, startNode, endNode} = this;
+        const {id, graphId, startNode, endNode} = this;
         const startSocketId = this.startSocketId!;
         const endSocketId = this.endSocketId!;
         const startNodeId = startNode!.nodeId;
         const endNodeId = endNode!.nodeId;
 
-        return {id, type, graphId, startNodeId, startSocketId, endNodeId, endSocketId};
+        return {
+            id: id,
+            gId: graphId,
+            sSocId: startSocketId,
+            eSocId: endSocketId,
+            sNodeId: startNodeId,
+            eNodeId: endNodeId,
+        } satisfies Core.iConnectionSaveData;
     }
 
     static fromSaveData(data: Core.iConnectionSaveData, nodeMap: Map<number, Node>): Node_Connection {
-        return new Node_Connection(data)._loadSaveData(data, nodeMap);
+        const { id, gId, sSocId, eSocId, sNodeId, eNodeId } = data;
+        const newData = {
+            id,
+            graphId: gId,
+            startSocketId: sSocId,
+            endSocketId: eSocId,
+            startNodeId: sNodeId,
+            eNodeId: eNodeId,
+        };
+        return new Node_Connection(newData)._loadSaveData(data, nodeMap);
     }
 
-    private _loadSaveData(data: Core.iAnyObj, nodeMap: Map<number, Node>){
-        this.startNode = nodeMap.get(data.startNodeId)!;
-        this.endNode = nodeMap.get(data.endNodeId)!;
+    private _loadSaveData(data: Core.iConnectionSaveData, nodeMap: Map<number, Node>){
+        this.startNode = nodeMap.get(data.sNodeId)!;
+        this.endNode = nodeMap.get(data.eNodeId)!;
 
         return this;
     }

@@ -49,5 +49,4 @@ export interface iOutput {
     execute: string;
     isList?: boolean;
     disabled?: boolean;
-    linkToType?: string;
 };

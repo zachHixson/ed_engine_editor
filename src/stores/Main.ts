@@ -90,7 +90,6 @@ export const useMainStore = defineStore({
                 assetBrowserStore.selectRoom(room!)
             }
 
-            this.nodeAPI.forEachNode(node => node.initVariableNodes && node.initVariableNodes());
             this.nodeAPI.forEachNode(node => node.afterGameDataLoaded && node.afterGameDataLoaded());
         },
         setSelectedEditor(newEditor: Core.EDITOR_ID){ this.selectedEditor = newEditor },

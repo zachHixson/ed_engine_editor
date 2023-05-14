@@ -48,17 +48,17 @@ export default [
             });
         },
         afterSave(this: iEditorNode, saveData: iNodeSaveData){
-            const valueInput = saveData.inputs.find((input: iAnyObj) => input.id == 'initial_value')!;
+            const valueInput = saveData.inp.find((input: iAnyObj) => input.id == 'initial_value')!;
             const varInfo = Object.assign({}, this.dataCache.get('varInfo'));
 
             varInfo.isGlobal = +varInfo.isGlobal;
             varInfo.isList = +varInfo.isList;
             
-            saveData.details = varInfo;
-            saveData.inputs = [valueInput];
+            saveData.d = varInfo;
+            saveData.inp = [valueInput];
         },
         afterLoad(this: GenericNode, saveData){
-            const varInfo = saveData.details;
+            const varInfo = saveData.d;
 
             varInfo.isGlobal = !!varInfo.isGlobal;
             varInfo.isList = !!varInfo.isList;
@@ -189,7 +189,7 @@ export default [
             }
         },
         onInput: onInput,
-        initVariableNodes: initVariableNodes,
+        afterGameDataLoaded: afterGameDataLoaded,
         onNewVariable: onNewVariable,
         onNewConnection: determineConnected,
         onRemoveConnection: determineConnected,
@@ -226,7 +226,7 @@ export default [
             }
         },
         onInput: onInput,
-        initVariableNodes: initVariableNodes,
+        afterGameDataLoaded: afterGameDataLoaded,
         onNewVariable: onNewVariable,
         onNewConnection: determineConnected,
         onRemoveConnection: determineConnected,
@@ -334,7 +334,7 @@ function validate(this: iEditorNode, textbox?: HTMLInputElement){
     this.emit('force-socket-update', 'data');
 }
 
-function initVariableNodes(this: GenericNode){
+function afterGameDataLoaded(this: GenericNode){
     if (isEngineNode(this)){
         //set global node state if global variable
         const varName = this.inputs.get('name')!.value;

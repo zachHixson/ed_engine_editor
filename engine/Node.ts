@@ -34,17 +34,17 @@ export default class Node implements iEngineNode {
     methods: Map<string, iEngineNodeMethod> = new Map();
 
     constructor(nodeData: iNodeSaveData, logic: Logic, engine: Engine){
-        const template = NODE_MAP.get(nodeData.templateId)!;
+        const template = NODE_MAP.get(nodeData.tId)!;
 
         this.engine = engine;
 
         template.beforeLoad?.call(this, nodeData);
         
         this.template = template;
-        this.nodeId = nodeData.nodeId;
+        this.nodeId = nodeData.nId;
         this.parentScript = logic;
         this.isEvent = template.isEvent ?? false;
-        this.widgetData = nodeData.widgetData ?? null;
+        this.widgetData = nodeData.widg ?? null;
         this._stackTrace = {parentScriptId: this.parentScript.id, nodeId: this.nodeId};
 
         template.inTriggers?.forEach(trigger => {
@@ -73,7 +73,7 @@ export default class Node implements iEngineNode {
         });
 
         template.outputs?.forEach(output => {
-            const {id, type, execute, isList, linkToType} = output;
+            const {id, type, execute, isList} = output;
             this.outputs.set(output.id, {
                 id,
                 connection: null,
@@ -81,11 +81,10 @@ export default class Node implements iEngineNode {
                 type,
                 execute,
                 isList,
-                linkToType,
             });
         })
 
-        nodeData.inputs.forEach(srcInput => {
+        nodeData.inp.forEach(srcInput => {
             this.inputs.get(srcInput.id)!.value = srcInput.value;
         });
 
@@ -162,35 +161,5 @@ export default class Node implements iEngineNode {
             const node = trigger.connection.node as Node;
             node._triggerInTrigger(trigger.connection.execute, instanceContext);
         }
-    }
-
-    getOutputType(outputName: string): { type: SOCKET_TYPE, isList: boolean } {
-        const output = this.outputs.get(outputName)!;
-
-        if (output.type != SOCKET_TYPE.ANY || !output.linkToType){
-            return { type: output.type, isList: !!output.isList };
-        }
-
-        const linkedInputResult = this.getInputType(output.linkToType);
-
-        output.type = linkedInputResult.type;
-
-        return linkedInputResult;
-    }
-
-    getInputType(inputName: string): { type: SOCKET_TYPE, isList: boolean } {
-        const input = this.inputs.get(inputName)!;
-        const inputConnection = input.connection;
-
-        if (input.type != SOCKET_TYPE.ANY || !inputConnection){
-            input.type = input.type;
-            return { type: input.type, isList: !!input.isList };
-        }
-
-        const inheritedResult = inputConnection.node.getOutputType(inputConnection.id);
-
-        input.type = inheritedResult.type;
-
-        return inheritedResult;
     }
 }

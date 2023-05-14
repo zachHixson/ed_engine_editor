@@ -30,7 +30,6 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
     beforeLoad: Core.iNodeLifecycleEvents['beforeLoad'];
     afterLoad: Core.iNodeLifecycleEvents['afterLoad'];
     logicLoaded: Core.iNodeLifecycleEvents['logicLoaded'];
-    initVariableNodes: Core.iNodeLifecycleEvents['initVariableNodes'];
     afterGameDataLoaded: Core.iNodeLifecycleEvents['afterGameDataLoaded'];
     onBeforeMount: Core.iNodeLifecycleEvents['onBeforeMount'];
     onMount: Core.iNodeLifecycleEvents['onMount'];
@@ -73,7 +72,6 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
         this.beforeLoad = template.beforeLoad?.bind(this);
         this.afterLoad = template.afterLoad?.bind(this);
         this.logicLoaded = template.logicLoaded?.bind(this);
-        this.initVariableNodes = template.initVariableNodes?.bind(this);
         this.afterGameDataLoaded = template.afterGameDataLoaded?.bind(this);
         this.onBeforeMount = template.onBeforeMount?.bind(this);
         this.onMount = template.onMount?.bind(this);
@@ -131,18 +129,18 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
         this.beforeSave && this.beforeSave();
 
         const outObj: Core.iNodeSaveData = {
-            templateId: this.templateId,
-            nodeId: this.nodeId,
-            graphId: this.graphId,
+            tId: this.templateId,
+            nId: this.nodeId,
+            gId: this.graphId,
             pos: this.pos.clone().multiplyScalar(100).divideScalar(100).floor(),
-            inputs: [],
-            widgetData: {},
+            inp: [],
+            widg: {},
         };
 
-        this.inputs.forEach(({id, value}) => outObj.inputs.push({id, value}));
+        this.inputs.forEach(({id, value}) => outObj.inp.push({id, value}));
 
         if (this.widget){
-            outObj.widgetData = JSON.parse(JSON.stringify(this.widgetData));
+            outObj.widg = JSON.parse(JSON.stringify(this.widgetData));
         }
 
         this.afterSave && this.afterSave(outObj);
@@ -151,18 +149,18 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
     }
 
     static fromSaveData(data: Core.iNodeSaveData, parentScript: Logic, nodeAPI: Node_API): Node {
-        const node = new Node(data.templateId, data.nodeId, Vector.fromObject(data.pos), parentScript, data.graphId, nodeAPI);
+        const node = new Node(data.tId, data.nId, Vector.fromObject(data.pos), parentScript, data.gId, nodeAPI);
         return node._loadSaveData(data);
     }
 
     private _loadSaveData(data: Core.iNodeSaveData): Node {
         this.beforeLoad && this.beforeLoad(data);
 
-        if (data.widgetData){
-            this.widgetData = data.widgetData;
+        if (data.widg){
+            this.widgetData = data.widg;
         }
 
-        data.inputs.forEach(input => {
+        data.inp.forEach(input => {
             const nodeInput = this.inputs.get(input.id);
             if (!nodeInput) return;
             nodeInput.value = input.value;
@@ -214,45 +212,5 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
         }
 
         return input.value;
-    }
-
-    getOutputType(outputName: string): { type: Core.Node_Enums.SOCKET_TYPE, isList: boolean } {
-        const output = this.outputs.get(outputName)!;
-
-        if (!output){
-            console.error(`ERROR: No output "${outputName}" found on node "${this.templateId}"`);
-            return null as any;
-        }
-
-        if (output.type != Core.Node_Enums.SOCKET_TYPE.ANY || !output.linkToType){
-            return { type: output.type, isList: !!output.isList };
-        }
-
-        const linkedInputResult = this.getInputType(output.linkToType);
-
-        output.type = linkedInputResult.type;
-
-        return linkedInputResult;
-    }
-
-    getInputType(inputName: string): { type: Core.Node_Enums.SOCKET_TYPE, isList: boolean } {
-        const input = this.inputs.get(inputName);
-        const inputConnection = this.editorAPI.getInputConnection(this, inputName);
-
-        if (!input){
-            console.error(`ERROR: No input "${inputName}" found on node "${this.templateId}"`);
-            return null as any;
-        }
-
-        if (input.type != Core.Node_Enums.SOCKET_TYPE.ANY || !inputConnection){
-            input.type = input.type;
-            return { type: input.type, isList: !!input.isList };
-        }
-
-        const inheritedResult = inputConnection.startNode!.getOutputType(inputConnection.startSocketId!);
-
-        input.type = inheritedResult.type;
-
-        return inheritedResult;
     }
 };

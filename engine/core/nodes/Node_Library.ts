@@ -3,8 +3,8 @@ import { iNodeTemplate } from './iNodeTemplate';
 import Cat_Events from './Cat_Events';
 import Cat_Variables from './Cat_Variables';
 import { Vector } from '../Vector';
-import { iEditorNode, iEngineInput, iEngineNode, iEngineOutput, iNodeConnection } from '../LogicInterfaces';
-import { Game_Object, Instance_Base, Instance_Object } from '../core';
+import { iEditorNode, iEngineInput, iEngineNode, iEngineOutput, iNodeConnection, iNodeSaveData } from '../LogicInterfaces';
+import { Game_Object, Instance_Base, Instance_Object, iEditorNodeInput, iEditorNodeOutput } from '../core';
 import { canConvertSocket, assetToInstance, instanceToAsset } from './Socket_Conversions';
 
 export type GenericNode = iEditorNode | iEngineNode;
@@ -159,7 +159,7 @@ export const NODE_LIST: iNodeTemplate[] = [
         outputs: [
             {id: 'index', type: SOCKET_TYPE.NUMBER, execute: 'getIndex'},
             {id: 'length', type: SOCKET_TYPE.NUMBER, execute: 'getLength'},
-            {id: 'item', type: SOCKET_TYPE.ANY, disabled: true, linkToType: 'list', execute: 'getItem'},
+            {id: 'item', type: SOCKET_TYPE.ANY, disabled: true, execute: 'getItem'},
         ],
         inTriggers: [
             {id: '_i', execute: 'runLoop'},
@@ -169,15 +169,18 @@ export const NODE_LIST: iNodeTemplate[] = [
             if (isEngineNode(this)) return;
             this.stackDataIO = true;
         },
-        afterGameDataLoaded(this: GenericNode){
-            const type = this.getOutputType('item').type;
+        afterSave(this: iEditorNode, saveData: iNodeSaveData){
+            saveData.d = this.inputs.get('list')!.type;
+        },
+        afterLoad(this: GenericNode, saveData: iNodeSaveData) {
+            const type = saveData.d;
+            const itemOut = this.outputs.get('item')!;
             
-            if (isEngineNode(this)){
-                this.inputs.get('list')!.type = type;
-                this.outputs.get('item')!.type = type;
-            }
-            else{
-                this.method('editor_setSocketTypes', type);
+            this.inputs.get('list')!.type = type;
+            itemOut.type = type;
+
+            if (!isEngineNode(this)){
+                (itemOut as iEditorNodeOutput).disabled = type == SOCKET_TYPE.ANY;
             }
         },
         onNewConnection(this: iEditorNode, connection: iNodeConnection){
@@ -282,8 +285,26 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'item', type: SOCKET_TYPE.ANY, hideInput: true, disabled: true, default: null},
         ],
         outputs: [
-            {id: '_o', type: SOCKET_TYPE.ANY, isList: true, disabled: true, linkToType: 'list', execute: 'getList'},
+            {id: '_o', type: SOCKET_TYPE.ANY, isList: true, disabled: true, execute: 'getList'},
         ],
+        afterSave(this: iEditorNode, saveData: iNodeSaveData){
+            saveData.d = this.inputs.get('list')!.type;
+        },
+        afterLoad(this: GenericNode, saveData: iNodeSaveData) {
+            const type = saveData.d.type;
+            const listInput = this.inputs.get('list')!;
+            const output = this.outputs.get('_o')!;
+            
+            this.inputs.get('list')!.type = type;
+            listInput.type = type;
+            output.type = type;
+
+            if (!isEngineNode(this)){
+                const disable = type == SOCKET_TYPE.ANY;
+                (listInput as iEditorNodeInput).disabled = disable;
+                (output as iEditorNodeOutput).disabled = disable;
+            }
+        },
         onBeforeMount(this: iEditorNode){
             const listConnection = this.editorAPI.getInputConnection(this, 'list');
             this.method('editor_setType', [!!listConnection, false]);
