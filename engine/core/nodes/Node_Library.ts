@@ -3,7 +3,7 @@ import { iNodeTemplate } from './iNodeTemplate';
 import Cat_Events from './Cat_Events';
 import Cat_Variables from './Cat_Variables';
 import { Vector } from '../Vector';
-import { iEditorNode, iEngineInput, iEngineNode, iEngineOutput, iNodeConnection, iNodeSaveData, iEventContext } from '../LogicInterfaces';
+import { iEditorNode, iEngineNode, iNodeConnection, iNodeSaveData, iEventContext } from '../LogicInterfaces';
 import { Game_Object, Instance_Base, Instance_Object, iEditorNodeInput, iEditorNodeOutput } from '../core';
 import { canConvertSocket, assetToInstance, instanceToAsset } from './Socket_Conversions';
 
@@ -387,19 +387,16 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'label', type: SOCKET_TYPE.STRING, default: ''},
             {id: '_data', type: SOCKET_TYPE.ANY, default: null},
         ],
-        init(this: GenericNode){
-            if (!isEngineNode(this)) return;
-            this.inputs.get('_data')!.isList = true;
-        },
         methods: {
             log(this: iEngineNode, eventContext: iEventContext){
                 const label = this.getInput('label', eventContext);
-                const data = this.getInput('_data', eventContext);
+                const rawData = this.getInput('_data', eventContext);
+                const data = rawData && rawData.length != undefined ? rawData : [rawData];
                 let output = '';
 
                 if (label.length) output += label;
 
-                if (data instanceof Array && data.length > 1){
+                if (data instanceof Array && data?.length > 1){
                     let arrayString = '';
 
                     if (data[0].name){
@@ -415,7 +412,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                 else if (data[0]?.name){
                     output += `{ ${convertObjectToString(data[0])} }`;
                 }
-                else{
+                else if (data[0] != null){
                     output += data[0];
                 }
 
@@ -761,37 +758,9 @@ export const NODE_LIST: iNodeTemplate[] = [
                 this.stackDataIO = true;
             }
         },
-        onTick(this: iEngineNode, eventContext: iEventContext){
-            const data = this.dataCache.get(eventContext.eventKey);
-            const deltaTimeMS = this.engine.deltaTime * 1000;
-
-            if (!data) return;
-
-            if (!data.active){
-                data.lastTickGap = data.step;
-                return;
-            }
-
-            data.progress = Math.min(data.progress + deltaTimeMS, data.duration);
-
-            if (data.progress >= data.duration){
-                this.triggerOutput('complete', eventContext);
-                this.triggerOutput('tick', eventContext);
-                this.dataCache.delete(eventContext.eventKey);
-                return;
-            }
-
-            if (deltaTimeMS > data.step || data.lastTickGap >= data.step){
-                this.triggerOutput('tick', eventContext);
-                data.lastTickGap = 0;
-            }
-            else{
-                data.lastTickGap += deltaTimeMS;
-            }
-        },
         methods: {
             start(this: iEngineNode, eventContext: iEventContext){
-                const oldData = this.dataCache.get(eventContext.eventKey);
+                const oldData = this.dataCache.get(eventContext.instance.id);
 
                 if (oldData){
                     oldData.active = true;
@@ -799,26 +768,58 @@ export const NODE_LIST: iNodeTemplate[] = [
 
                 const duration = this.getInput('duration', eventContext) * 1000;
                 const step = this.getInput('step', eventContext) * 1000;
-
-                this.dataCache.set(eventContext.eventKey, {
+                const data = {
                     duration,
                     step,
                     progress: 0,
                     lastTickGap: 0,
                     active: true,
-                });
+                };
+                const tickLoop = ()=>{
+                    const deltaTimeMS = this.engine.deltaTime * 1000;
+
+                    if (!data) return;
+
+                    if (!data.active){
+                        data.lastTickGap = data.step;
+                        return;
+                    }
+
+                    data.progress = Math.min(data.progress + deltaTimeMS, data.duration);
+
+                    if (data.progress >= data.duration){
+                        this.triggerOutput('complete', eventContext);
+                        this.triggerOutput('tick', eventContext);
+                        this.dataCache.delete(eventContext.eventKey);
+                        return;
+                    }
+
+                    if (deltaTimeMS > data.step || data.lastTickGap >= data.step){
+                        this.triggerOutput('tick', eventContext);
+                        data.lastTickGap = 0;
+                    }
+                    else{
+                        data.lastTickGap += deltaTimeMS;
+                    }
+
+                    requestAnimationFrame(tickLoop);
+                }
+
+                this.dataCache.set(eventContext.instance.id, data);
 
                 this.triggerOutput('immediate', eventContext);
+
+                requestAnimationFrame(tickLoop);
             },
             pause(this: iEngineNode, eventContext: iEventContext){
-                const data = this.dataCache.get(eventContext.eventKey);
+                const data = this.dataCache.get(eventContext.instance.id);
                 
                 if (data){
                     data.active = false;
                 }
             },
             reset(this: iEngineNode, eventContext: iEventContext){
-                const data = this.dataCache.get(eventContext.eventKey);
+                const data = this.dataCache.get(eventContext.instance.id);
 
                 if (data){
                     data.duration = 0;

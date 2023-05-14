@@ -47,7 +47,6 @@ export interface iNodeLifecycleEvents {
     onDeleteStopped?: (protectedNodes: iEditorNode[])=>void;
     onBeforeDelete?: ()=>void;
     onBeforeUnmount?: ()=>void;
-    onTick?: (eventContext: iEventContext)=>void;
 }
 
 export interface iEditorLogic {
@@ -166,7 +165,6 @@ export interface iEngineLogic {
     dispatchOnCreate(instance: Instance_Object): void;
     dispatchLogicLoaded(): void;
     dispatchAfterGameDataLoaded(): void;
-    dispatchOnTick(instance: Instance_Object): void;
 }
 
 export interface iEngineInTrigger {

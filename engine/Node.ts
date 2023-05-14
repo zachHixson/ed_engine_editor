@@ -140,7 +140,7 @@ export default class Node implements iEngineNode {
         return this.widgetData;
     }
 
-    getInput(inputName: string, eventContext: iEventContext): iEngineInput {
+    getInput(inputName: string, eventContext: iEventContext): any {
         const input = this.inputs.get(inputName)!;
 
         if (input.connection){

@@ -106,13 +106,6 @@ export default class Logic implements iEngineLogic {
         }
     }
 
-    dispatchOnTick(instance: Instance_Object): void {
-        for (let i = 0; i < this._nodes.length; i++){
-            const curNode = this._nodes[i];
-            curNode.template.onTick?.call(curNode, this.createEventContext(instance));
-        }
-    }
-
     setLocalVariableDefault(name: string, value: any, type: SOCKET_TYPE, isList: boolean): void {
         const varName = name.trim().toLowerCase();
         this._localVariableDefaults.set(varName, {value, type, isList});
