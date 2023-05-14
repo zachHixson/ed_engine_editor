@@ -22,7 +22,7 @@ interface iNode_Base extends iNodeLifecycleEvents {
     nodeId: number;
     isEvent: boolean;
     widgetData?: any;
-    dataCache: Map<string, any>;
+    dataCache: Map<number | string, any>;
 }
 
 export interface iNodeLifecycleEvents {
@@ -34,7 +34,7 @@ export interface iNodeLifecycleEvents {
     logicLoaded?: (logic: iEditorLogic | iEngineLogic)=>void;
     afterGameDataLoaded?: ()=>void;
     onCreate?: // Fired when instance is spawned, or when editor node is created
-        ((this: iEngineNode, instanceContext: Instance_Object)=>void) |
+        ((this: iEngineNode, eventContext: iEventContext)=>void) |
         ((this: iEditorNode)=>void);
     onBeforeMount?: ()=>void;
     onMount?: ()=>void;
@@ -47,7 +47,7 @@ export interface iNodeLifecycleEvents {
     onDeleteStopped?: (protectedNodes: iEditorNode[])=>void;
     onBeforeDelete?: ()=>void;
     onBeforeUnmount?: ()=>void;
-    onTick?: (instanceContext: Instance_Object)=>void;
+    onTick?: (eventContext: iEventContext)=>void;
 }
 
 export interface iEditorLogic {
@@ -163,10 +163,10 @@ export interface iEngineLogic {
 
     setLocalVariableDefault(name: string, value: any, type: SOCKET_TYPE, isList: boolean): void;
     executeEvent(eventName: string, instance: Instance_Object, data: any): void;
-    dispatchOnCreate(instanceContext: Instance_Object): void;
+    dispatchOnCreate(instance: Instance_Object): void;
     dispatchLogicLoaded(): void;
     dispatchAfterGameDataLoaded(): void;
-    dispatchOnTick(instanceContext: Instance_Object): void;
+    dispatchOnTick(instance: Instance_Object): void;
 }
 
 export interface iEngineInTrigger {
@@ -195,7 +195,7 @@ export interface iEngineOutput {
     isList?: boolean,
 };
 
-export type iEngineNodeMethod = (this: iEngineNode, instanceContext: Instance_Object, data?: any) => any;
+export type iEngineNodeMethod = (this: iEngineNode, eventContext: iEventContext, data?: any) => any;
 
 export type iEngineVariable = {value: any, type: SOCKET_TYPE, isList: boolean};
 
@@ -208,19 +208,19 @@ export interface iEngineNode extends iNode_Base {
 
     engine: Engine;
 
-    method(methodName: string, instanceContext: Instance_Object, data?: any): any;
+    method(methodName: string, eventContext: iEventContext, data?: any): any;
     getWidgetData(): any;
-    getInput(inputName: string, instanceContext: Instance_Object): any;
-    triggerOutput(outputId: string, instanceContext: Instance_Object): void;
+    getInput(inputName: string, eventContext: iEventContext): any;
+    triggerOutput(outputId: string, eventContext: iEventContext): void;
 }
 
-type iEditorConnectionSaveData = any;
+export type iEventContext = {eventKey: number, instance: Instance_Object};
 
 export interface iLogicSaveData extends iAssetSaveData {
     selectedGraphId: number,
     graphs: Array<{id: number, name: string, navState: iNavSaveData}>,
     nodes: iNodeSaveData[],
-    connections: iEditorConnectionSaveData[],
+    connections: iConnectionSaveData[],
 }
 
 export interface iNodeSaveData {

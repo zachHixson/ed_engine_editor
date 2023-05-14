@@ -8,6 +8,7 @@ import {
     NODE_MAP,
     iNodeSaveData,
     iEngineNodeMethod,
+    iEventContext,
 } from "@engine/core/core";
 import { iAnyObj } from "./core/interfaces";
 import { listConvert } from "./core/nodes/Socket_Conversions";
@@ -16,7 +17,7 @@ import Logic from "./Logic";
 import { SOCKET_TYPE } from "./core/nodes/Node_Enums";
 
 export default class Node implements iEngineNode {
-    private _dataCache: Map<string, any> = new Map();
+    private _dataCache: Map<number | string, any> = new Map();
     private _stackTrace: {parentScriptId: number, nodeId: number};
 
     template: iNodeTemplate;
@@ -30,7 +31,7 @@ export default class Node implements iEngineNode {
     outTriggers: iEngineNode["outTriggers"] = new Map();
     inputs: iEngineNode["inputs"] = new Map();
     outputs: iEngineNode["outputs"] = new Map();
-    execute: ((instanceContext: Instance_Object, data: any)=>void) | null = null;
+    execute: ((eventContext: iEventContext, data: any)=>void) | null = null;
     methods: Map<string, iEngineNodeMethod> = new Map();
 
     constructor(nodeData: iNodeSaveData, logic: Logic, engine: Engine){
@@ -106,16 +107,16 @@ export default class Node implements iEngineNode {
 
     get dataCache(){return this._dataCache ?? {}};
 
-    private _triggerInTrigger(executeName: string, instanceContext: Instance_Object): void {
-        this.methods.get(executeName)?.call(this, instanceContext);
+    private _triggerInTrigger(executeName: string, eventContext: iEventContext): void {
+        this.methods.get(executeName)?.call(this, eventContext);
     }
 
-    private _getOutputData(outputName: string, instanceContext: Instance_Object): any {
+    private _getOutputData(outputName: string, eventContext: iEventContext): any {
         const methodName = this.outputs.get(outputName)?.execute;
-        return this.methods.get(methodName!)?.call(this, instanceContext);
+        return this.methods.get(methodName!)?.call(this, eventContext);
     }
 
-    executeEvent(data: any, instanceContext: Instance_Object): void {
+    executeEvent(data: any, eventContext: iEventContext): void {
         if (!this.isEvent) {
             console.error('Error: Cannot call \"executeEvent()\" from non-event node');
             return
@@ -123,11 +124,11 @@ export default class Node implements iEngineNode {
 
         //execute first node
         if (this.execute){
-            this.execute.call(this, instanceContext, data);
+            this.execute.call(this, eventContext, data);
         }
         else{
             const triggerId = data?.trigger ?? this.defaultTriggerId;
-            this.triggerOutput(triggerId, instanceContext);
+            this.triggerOutput(triggerId, eventContext);
         }
     }
 
@@ -139,12 +140,12 @@ export default class Node implements iEngineNode {
         return this.widgetData;
     }
 
-    getInput(inputName: string, instanceContext: Instance_Object): iEngineInput {
+    getInput(inputName: string, eventContext: iEventContext): iEngineInput {
         const input = this.inputs.get(inputName)!;
 
         if (input.connection){
             const node = input.connection.node as Node;
-            const val = node._getOutputData(input.connection.id, instanceContext);
+            const val = node._getOutputData(input.connection.id, eventContext);
             const listResult = listConvert(!!input.connection.isList, !!input.isList, val);
 
             return convertSocketType(input.connection.type, input.type, listResult);
@@ -154,12 +155,12 @@ export default class Node implements iEngineNode {
         }
     }
 
-    triggerOutput(outputId: string, instanceContext: Instance_Object): void {
+    triggerOutput(outputId: string, eventContext: iEventContext): void {
         const trigger = this.outTriggers.get(outputId);
 
         if (trigger?.connection){
             const node = trigger.connection.node as Node;
-            node._triggerInTrigger(trigger.connection.execute, instanceContext);
+            node._triggerInTrigger(trigger.connection.execute, eventContext);
         }
     }
 }

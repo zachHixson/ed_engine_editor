@@ -1,6 +1,6 @@
 import { iNodeTemplate } from './iNodeTemplate';
 import {SOCKET_TYPE, SOCKET_DEFAULT} from './Node_Enums';
-import { iEngineInput, iEngineOutput, iEditorNode, iEngineNode, iNodeSaveData } from '../LogicInterfaces';
+import { iEngineInput, iEngineOutput, iEditorNode, iEngineNode, iNodeSaveData, iEventContext } from '../LogicInterfaces';
 import { iAnyObj } from '../interfaces';
 import { isEngineNode, type GenericNode } from './Node_Library';
 import type { Instance_Object } from '../core';
@@ -116,9 +116,9 @@ export default [
             });
         },
         methods: {
-            getValue(this: iEngineNode, instanceContext: Instance_Object){
+            getValue(this: iEngineNode, eventContext: iEventContext){
                 const {name, isGlobal} = this.dataCache.get('varInfo');
-                const variable = isGlobal ? this.engine.getGlobalVariable(name) : instanceContext.getLocalVariable(name);
+                const variable = isGlobal ? this.engine.getGlobalVariable(name) : eventContext.instance.getLocalVariable(name);
                 
                 if (variable == undefined){
                     return null;
@@ -196,13 +196,13 @@ export default [
         onBeforeDelete: onBeforeDelete,
         onBeforeUnmount: onBeforeUnmount,
         methods: {
-            setVar(this: iEngineNode, instanceContext: Instance_Object){
-                const varName = this.getInput('name', instanceContext);
-                const data = this.getInput('data', instanceContext);
+            setVar(this: iEngineNode, eventContext: iEventContext){
+                const varName = this.getInput('name', eventContext);
+                const data = this.getInput('data', eventContext);
                 const isGlobal = this.engine.getGlobalVariable(varName) !== undefined;
 
-                isGlobal ? this.engine.setGlobalVariable(varName, data) : instanceContext.setLocalVariable(varName, data);
-                this.triggerOutput('_o', instanceContext);
+                isGlobal ? this.engine.setGlobalVariable(varName, data) : eventContext.instance.setLocalVariable(varName, data);
+                this.triggerOutput('_o', eventContext);
             },
             validate,
         },
@@ -233,10 +233,10 @@ export default [
         onBeforeDelete: onBeforeDelete,
         onBeforeUnmount: onBeforeUnmount,
         methods: {
-            getVar(this: iEngineNode, instanceContext: Instance_Object){
-                const varName = this.getInput('name', instanceContext);
+            getVar(this: iEngineNode, eventContext: iEventContext){
+                const varName = this.getInput('name', eventContext);
                 const isGlobal = this.engine.getGlobalVariable(varName);
-                const variable = isGlobal ? this.engine.getGlobalVariable(varName) : instanceContext.getLocalVariable(varName);
+                const variable = isGlobal ? this.engine.getGlobalVariable(varName) : eventContext.instance.getLocalVariable(varName);
                 
                 if (variable == undefined){
                     return null;
@@ -257,8 +257,8 @@ export default [
             {id: '_out', type: SOCKET_TYPE.NUMBER, execute: 'value'},
         ],
         methods: {
-            value(this: iEngineNode, instanceContext: Instance_Object){
-                return this.getInput('_number', instanceContext);
+            value(this: iEngineNode, eventContext: iEventContext){
+                return this.getInput('_number', eventContext);
             },
         }
     },
@@ -272,8 +272,8 @@ export default [
             {id: '_out', type: SOCKET_TYPE.STRING, execute: 'value'},
         ],
         methods: {
-            value(this: iEngineNode, instanceContext: Instance_Object){
-                return this.getInput('_string', instanceContext);
+            value(this: iEngineNode, eventContext: iEventContext){
+                return this.getInput('_string', eventContext);
             },
         }
     },
@@ -287,8 +287,8 @@ export default [
             {id: '_out', type: SOCKET_TYPE.BOOL, execute: 'value'},
         ],
         methods: {
-            value(this: iEngineNode, instanceContext: Instance_Object){
-                return this.getInput('_boolean', instanceContext);
+            value(this: iEngineNode, eventContext: iEventContext){
+                return this.getInput('_boolean', eventContext);
             },
         }
     },

@@ -7,7 +7,7 @@ const { Vector } = Core;
 export default class Node extends Core.EventListenerMixin(class {}) implements Core.iEditorNode {
     private _template: Core.iNodeTemplate;
     private _editorAPI: Node_API;
-    private _dataCache: Map<string, any> = new Map();
+    private _dataCache: Map<number | string, any> = new Map();
 
     nodeId: number;
     isEvent: boolean;

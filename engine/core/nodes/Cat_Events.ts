@@ -1,6 +1,6 @@
 import {SOCKET_TYPE, WIDGET, COLLISION_EVENT} from './Node_Enums';
 import { iNodeTemplate } from './iNodeTemplate';
-import { iEngineNode } from '../LogicInterfaces';
+import { iEngineNode, iEventContext } from '../LogicInterfaces';
 import { MOUSE_EVENT } from '../Enums';
 import { Vector } from '../Vector';
 import { isEngineNode } from './Node_Library';
@@ -39,7 +39,7 @@ export default [
             {id: 'y', type: SOCKET_TYPE.NUMBER, execute: 'y'},
             {id: 'object', type: SOCKET_TYPE.INSTANCE, execute: 'object'},
         ],
-        execute(this: iEngineNode, instanceContext: Instance_Object, data: any){
+        execute(this: iEngineNode, eventContext: iEventContext, data: any){
             const lBtn = !!(data.buttons & 0b001);
             const mBtn = !!(data.buttons & 0b010);
             const rBtn = !!(data.buttons & 0b100);
@@ -52,16 +52,16 @@ export default [
 
             if (data.type == MOUSE_EVENT.DOWN){
                 this.dataCache.set('downPos', data.pos.clone());
-                this.triggerOutput('button_down', instanceContext);
+                this.triggerOutput('button_down', eventContext);
             }
             else if (data.type == MOUSE_EVENT.UP){
                 const downPos = this.dataCache.get('downPos') as Vector | undefined;
 
                 if (downPos && downPos.equalTo(data.pos)){
-                    this.triggerOutput('button_click', instanceContext);
+                    this.triggerOutput('button_click', eventContext);
                 }
                 else{
-                    this.triggerOutput('button_up', instanceContext);
+                    this.triggerOutput('button_up', eventContext);
                 }
             }
         },
@@ -111,15 +111,15 @@ export default [
             type: WIDGET.KEY,
         },
         outTriggers: ['key_down', 'key_up'],
-        execute(this: iEngineNode, instanceContext: Instance_Object, data: KeyboardEvent){
+        execute(this: iEngineNode, eventContext: iEventContext, data: KeyboardEvent){
             const {code} = this.getWidgetData();
 
             if (data.code == code){
                 if (data.type == 'down'){
-                    this.triggerOutput('key_down', instanceContext);
+                    this.triggerOutput('key_down', eventContext);
                 }
                 else{
-                    this.triggerOutput('key_up', instanceContext);
+                    this.triggerOutput('key_up', eventContext);
                 }
             }
         },
@@ -130,32 +130,28 @@ export default [
         category: 'events',
         outTriggers: ['start', 'repeat', 'stop'],
         outputs: [
-            {id: 'object', type: SOCKET_TYPE.INSTANCE, execute: 'object'},
+            {id: 'object', type: SOCKET_TYPE.INSTANCE, execute: 'getObject'},
         ],
-        execute(this: iEngineNode, instanceContext: Instance_Object, data){
-            const cacheKey = this.method('getCacheKey', instanceContext);
-
-            this.dataCache.set(cacheKey, data);
+        execute(this: iEngineNode, eventContext: iEventContext, data){
+            this.dataCache.set(eventContext.eventKey, data);
 
             switch (data.type){
                 case COLLISION_EVENT.START:
-                    this.triggerOutput('start', instanceContext);
+                    this.triggerOutput('start', eventContext);
                     break;
                 case COLLISION_EVENT.REPEAT:
-                    this.triggerOutput('repeat', instanceContext);
+                    this.triggerOutput('repeat', eventContext);
                     break;
                 case COLLISION_EVENT.STOP:
-                    this.triggerOutput('stop', instanceContext);
+                    this.triggerOutput('stop', eventContext);
                     break;
             }
+
+            this.dataCache.delete(eventContext.eventKey);
         },
         methods: {
-            getCacheKey(this: iEngineNode, instanceContext: Instance_Object){
-                return `${this.nodeId}/${instanceContext.id.toString()}`;
-            },
-            object(this: iEngineNode, instanceContext: Instance_Object){
-                const cacheKey = this.method('getCacheKey', instanceContext);
-                const cacheData = this.dataCache.get(cacheKey);
+            getObject(this: iEngineNode, eventContext: iEventContext){
+                const cacheData = this.dataCache.get(eventContext.eventKey);
                 return cacheData?.instance ?? null;
             },
         },
@@ -170,31 +166,31 @@ export default [
             {id: 'fps', type: SOCKET_TYPE.NUMBER, execute: 'getFPS'},
         ],
         outTriggers: ['start', 'stop', 'tick', 'finished'],
-        execute(this: iEngineNode, instanceContext: Instance_Object, data: InstanceAnimEvent){
+        execute(this: iEngineNode, eventContext: iEventContext, data: InstanceAnimEvent){
             switch(data){
                 case InstanceAnimEvent.START:
-                    this.triggerOutput('start', instanceContext);
+                    this.triggerOutput('start', eventContext);
                     break;
                 case InstanceAnimEvent.STOP:
-                    this.triggerOutput('stop', instanceContext);
+                    this.triggerOutput('stop', eventContext);
                     break;
                 case InstanceAnimEvent.TICK:
-                    this.triggerOutput('tick', instanceContext);
+                    this.triggerOutput('tick', eventContext);
                     break;
                 case InstanceAnimEvent.FINISHED:
-                    this.triggerOutput('finished', instanceContext);
+                    this.triggerOutput('finished', eventContext);
                     break;
             }
         },
         methods: {
-            getPlaying(this: iEngineNode, instanceContext: Instance_Object){
-                return instanceContext.animPlaying;
+            getPlaying(this: iEngineNode, eventContext: iEventContext){
+                return eventContext.instance.animPlaying;
             },
-            getFrame(this: iEngineNode, instanceContext: Instance_Object){
-                return instanceContext.animFrame;
+            getFrame(this: iEngineNode, eventContext: iEventContext){
+                return eventContext.instance.animFrame;
             },
-            getFPS(this: iEngineNode, instanceContext: Instance_Object){
-                return instanceContext.fps;
+            getFPS(this: iEngineNode, eventContext: iEventContext){
+                return eventContext.instance.fps;
             }
         }
     },
@@ -211,13 +207,13 @@ export default [
                 this.inputBoxWidth = 6;
             }
         },
-        execute(this: iEngineNode, instanceContext: Instance_Object, data: any){
-            const name = this.getInput('name', instanceContext);
+        execute(this: iEngineNode, eventContext: iEventContext, data: any){
+            const name = this.getInput('name', eventContext);
 
             if (name.trim().length < 0) return;
             
             if (data.name == name){
-                this.triggerOutput('_o', instanceContext);
+                this.triggerOutput('_o', eventContext);
             }
         },
     },

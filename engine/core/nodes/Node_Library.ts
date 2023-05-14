@@ -3,7 +3,7 @@ import { iNodeTemplate } from './iNodeTemplate';
 import Cat_Events from './Cat_Events';
 import Cat_Variables from './Cat_Variables';
 import { Vector } from '../Vector';
-import { iEditorNode, iEngineInput, iEngineNode, iEngineOutput, iNodeConnection, iNodeSaveData } from '../LogicInterfaces';
+import { iEditorNode, iEngineInput, iEngineNode, iEngineOutput, iNodeConnection, iNodeSaveData, iEventContext } from '../LogicInterfaces';
 import { Game_Object, Instance_Base, Instance_Object, iEditorNodeInput, iEditorNodeOutput } from '../core';
 import { canConvertSocket, assetToInstance, instanceToAsset } from './Socket_Conversions';
 
@@ -26,10 +26,10 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'condition', type: SOCKET_TYPE.BOOL, default: false},
         ],
         methods: {
-            checkCondition(this: iEngineNode, instanceContext: Instance_Object){
-                const conditionVal = this.getInput('condition', instanceContext);
+            checkCondition(this: iEngineNode, eventContext: iEventContext){
+                const conditionVal = this.getInput('condition', eventContext);
                 const out = conditionVal ? 'true' : 'false';
-                this.triggerOutput(out, instanceContext);
+                this.triggerOutput(out, eventContext);
             },
         },
     },
@@ -51,10 +51,10 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'equal', type: SOCKET_TYPE.BOOL, execute: 'compare'},
         ],
         methods: {
-            compare(this: iEngineNode, instanceContext: Instance_Object){
+            compare(this: iEngineNode, eventContext: iEventContext){
                 const compareFunc = this.getWidgetData();
-                const inp1 = this.getInput('_inp1', instanceContext);
-                const inp2 = this.getInput('_inp2', instanceContext);
+                const inp1 = this.getInput('_inp1', eventContext);
+                const inp2 = this.getInput('_inp2', eventContext);
 
                 switch(compareFunc){
                     case 'equal': return inp1 == inp2;
@@ -90,9 +90,9 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'result', type: SOCKET_TYPE.BOOL, execute: 'getResult'},
         ],
         methods: {
-            getResult(this: iEngineNode, instanceContext: Instance_Object){
-                const i1 = this.getInput('_i1', instanceContext);
-                const i2 = this.getInput('_i2', instanceContext);
+            getResult(this: iEngineNode, eventContext: iEventContext){
+                const i1 = this.getInput('_i1', eventContext);
+                const i2 = this.getInput('_i2', eventContext);
 
                 return i1.id == i2.id;
             },
@@ -136,10 +136,10 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: '_result', type: SOCKET_TYPE.BOOL, execute: 'result'},
         ],
         methods: {
-            result(this: iEngineNode, instanceContext: Instance_Object){
+            result(this: iEngineNode, eventContext: iEventContext){
                 const logicFunc = this.getWidgetData();
-                const inp1 = this.getInput('_inp1', instanceContext);
-                const inp2 = this.getInput('_inp2', instanceContext);
+                const inp1 = this.getInput('_inp1', eventContext);
+                const inp2 = this.getInput('_inp2', eventContext);
 
                 switch(logicFunc){
                     case 'and': return inp1 && inp2;
@@ -225,39 +225,35 @@ export const NODE_LIST: iNodeTemplate[] = [
             this.emit('force-socket-update', 'item');
         },
         methods: {
-            runLoop(this: iEngineNode, instanceContext: Instance_Object){
-                const dataKey = `${instanceContext.id}/${this.nodeId}`;
-                const iterations = this.getInput('iterations', instanceContext);
-                const list = this.getInput('list', instanceContext);
+            runLoop(this: iEngineNode, eventContext: iEventContext){
+                const iterations = this.getInput('iterations', eventContext);
+                const list = this.getInput('list', eventContext);
 
                 if (list && list.length){
                     for (let i = 0; i < list.length; i++){
-                        this.dataCache.set(dataKey, {index: i, length: list.length, item: list[i]});
-                        this.triggerOutput('_o', instanceContext);
+                        this.dataCache.set(eventContext.eventKey, {index: i, length: list.length, item: list[i]});
+                        this.triggerOutput('_o', eventContext);
                     }
                 }
                 else{
                     for (let i = 0; i < iterations; i++){
-                        this.dataCache.set(dataKey, {index: i, length: iterations, item: i});
-                        this.triggerOutput('_o', instanceContext);
+                        this.dataCache.set(eventContext.eventKey, {index: i, length: iterations, item: i});
+                        this.triggerOutput('_o', eventContext);
                     }
                 }
 
-                this.dataCache.delete(dataKey);
+                this.dataCache.delete(eventContext.eventKey);
             },
-            getIndex(this: iEngineNode, instanceContext: Instance_Object){
-                const dataKey = `${instanceContext.id}/${this.nodeId}`;
-                const data = this.dataCache.get(dataKey);
+            getIndex(this: iEngineNode, eventContext: iEventContext){
+                const data = this.dataCache.get(eventContext.eventKey);
                 return data?.index ?? 0;
             },
-            getLength(this: iEngineNode, instanceContext: Instance_Object){
-                const dataKey = `${instanceContext.id}/${this.nodeId}`;
-                const data = this.dataCache.get(dataKey);
+            getLength(this: iEngineNode, eventContext: iEventContext){
+                const data = this.dataCache.get(eventContext.eventKey);
                 return data?.length ?? 0;
             },
-            getItem(this: iEngineNode, instanceContext: Instance_Object){
-                const dataKey = `${instanceContext.id}/${this.nodeId}`;
-                const data = this.dataCache.get(dataKey);
+            getItem(this: iEngineNode, eventContext: iEventContext){
+                const data = this.dataCache.get(eventContext.eventKey);
                 return data?.item ?? null;
             },
             editor_setSocketTypes(this: iEditorNode, type?: SOCKET_TYPE){
@@ -319,9 +315,9 @@ export const NODE_LIST: iNodeTemplate[] = [
             this.method('editor_setType', [false, true]);
         },
         methods: {
-            getList(this: iEngineNode, instanceContext: Instance_Object){
-                const list = this.getInput('list', instanceContext);
-                const item = this.getInput('item', instanceContext);
+            getList(this: iEngineNode, eventContext: iEventContext){
+                const list = this.getInput('list', eventContext);
+                const item = this.getInput('item', eventContext);
                 const outputList = [...list];
 
                 (item != null) && outputList.push(item);
@@ -375,8 +371,8 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: '_out', type: SOCKET_TYPE.BOOL, execute: 'not'},
         ],
         methods: {
-            not(this: iEngineNode, instanceContext: Instance_Object){
-                return !this.getInput('_inp', instanceContext);
+            not(this: iEngineNode, eventContext: iEventContext){
+                return !this.getInput('_inp', eventContext);
             },
         },
     },
@@ -396,9 +392,9 @@ export const NODE_LIST: iNodeTemplate[] = [
             this.inputs.get('_data')!.isList = true;
         },
         methods: {
-            log(this: iEngineNode, instanceContext: Instance_Object){
-                const label = this.getInput('label', instanceContext);
-                const data = this.getInput('_data', instanceContext);
+            log(this: iEngineNode, eventContext: iEventContext){
+                const label = this.getInput('label', eventContext);
+                const data = this.getInput('_data', eventContext);
                 let output = '';
 
                 if (label.length) output += label;
@@ -425,7 +421,7 @@ export const NODE_LIST: iNodeTemplate[] = [
 
                 this.engine.log(output);
 
-                this.triggerOutput('_o', instanceContext);
+                this.triggerOutput('_o', eventContext);
             },
         },
     },
@@ -469,10 +465,10 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: '_out', type: SOCKET_TYPE.NUMBER, execute: 'compute'},
         ],
         methods: {
-            compute(this: iEngineNode, instanceContext: Instance_Object){
+            compute(this: iEngineNode, eventContext: iEventContext){
                 const mathFunc = this.getWidgetData();
-                const num1 = this.getInput('_num1', instanceContext);
-                const num2 = this.getInput('_num2', instanceContext);
+                const num1 = this.getInput('_num1', eventContext);
+                const num2 = this.getInput('_num2', eventContext);
 
                 switch(mathFunc){
                     case 'add_sym': return num1 + num2;
@@ -500,10 +496,10 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
         ],
         methods: {
-            removeInstance(this: iEngineNode, instanceContext: Instance_Object){
-                const instance = this.getInput('instance', instanceContext) || instanceContext;
+            removeInstance(this: iEngineNode, eventContext: iEventContext){
+                const instance = this.getInput('instance', eventContext) ?? eventContext.instance;
                 this.engine.removeInstance(instance);
-                this.triggerOutput('_o', instanceContext);
+                this.triggerOutput('_o', eventContext);
             }
         },
     },
@@ -525,18 +521,18 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'fullscreen', type: SOCKET_TYPE.BOOL, default: false},
         ],
         methods: {
-            startDialog(this: iEngineNode, instanceContext: Instance_Object){
+            startDialog(this: iEngineNode, eventContext: iEventContext){
                 const textArea = this.getWidgetData();
-                const textBox = this.getInput('text', instanceContext);
-                const interactKey = this.getInput('interaction_key', instanceContext) ?? 'Space';
-                const shouldPause = this.getInput('pause_game', instanceContext);
-                const isFullscreen = this.getInput('fullscreen', instanceContext);
+                const textBox = this.getInput('text', eventContext);
+                const interactKey = this.getInput('interaction_key', eventContext) ?? 'Space';
+                const shouldPause = this.getInput('pause_game', eventContext);
+                const isFullscreen = this.getInput('fullscreen', eventContext);
                 const text = textBox ? textBox : textArea;
 
                 this.engine.openDialogBox(text, shouldPause, isFullscreen, ()=>{
-                    this.triggerOutput('dialog_closed', instanceContext)
+                    this.triggerOutput('dialog_closed', eventContext)
                 }, interactKey);
-                this.triggerOutput('immediate', instanceContext);
+                this.triggerOutput('immediate', eventContext);
             },
         },
     },
@@ -594,8 +590,8 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'self', type: SOCKET_TYPE.INSTANCE, execute: 'getSelf'},
         ],
         methods: {
-            getSelf(this: iEngineNode, instanceContext: Instance_Object){
-                return instanceContext;
+            getSelf(this: iEngineNode, eventContext: iEventContext){
+                return eventContext;
             },
         },
     },
@@ -617,18 +613,18 @@ export const NODE_LIST: iNodeTemplate[] = [
             }
         },
         methods: {
-            getAsset(this: iEngineNode, instanceContext: Instance_Object){
-                const instance = this.getInput('instance', instanceContext) ?? instanceContext;
+            getAsset(this: iEngineNode, eventContext: iEventContext){
+                const instance = this.getInput('instance', eventContext) ?? eventContext.instance;
                 return instanceToAsset(instance, this.engine.gameData);
             },
-            getName(this: iEngineNode, instanceContext: Instance_Object){
-                return (this.getInput('instance', instanceContext) ?? instanceContext).name
+            getName(this: iEngineNode, eventContext: iEventContext){
+                return (this.getInput('instance', eventContext) ?? eventContext.instance).name
             },
-            getX(this: iEngineNode, instanceContext: Instance_Object){
-                return (this.getInput('instance', instanceContext) ?? instanceContext).pos.x
+            getX(this: iEngineNode, eventContext: iEventContext){
+                return (this.getInput('instance', eventContext) ?? eventContext.instance).pos.x
             },
-            getY(this: iEngineNode, instanceContext: Instance_Object){
-                return (this.getInput('instance', instanceContext) ?? instanceContext).pos.y
+            getY(this: iEngineNode, eventContext: iEventContext){
+                return (this.getInput('instance', eventContext) ?? eventContext.instance).pos.y
             },
         },
     },
@@ -648,10 +644,10 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'instance', type: SOCKET_TYPE.INSTANCE, execute: 'getAsset'},
         ],
         methods: {
-            spawnInstance(this: iEngineNode, instanceContext: Instance_Object){
-                const baseAsset = this.getInput('type', instanceContext);
-                const x = this.getInput('x', instanceContext);
-                const y = this.getInput('y', instanceContext);
+            spawnInstance(this: iEngineNode, eventContext: iEventContext){
+                const baseAsset = this.getInput('type', eventContext);
+                const x = this.getInput('x', eventContext);
+                const y = this.getInput('y', eventContext);
                 const pos = new Vector(x, y);
                 const nextId = this.engine.room.curInstId;
                 const newInstance = assetToInstance(baseAsset, nextId, pos);
@@ -666,7 +662,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                     this.engine.warn('no_asset_specified');
                 }
 
-                this.triggerOutput('_o', instanceContext);
+                this.triggerOutput('_o', eventContext);
 
                 this.dataCache.delete('spawned_instance');
             },
@@ -692,10 +688,10 @@ export const NODE_LIST: iNodeTemplate[] = [
             this.stackDataIO = true;
         },
         methods: {
-            getInstances(this: iEngineNode, instanceContext: Instance_Object){
-                const name = this.getInput('name', instanceContext);
-                const type = this.getInput('type', instanceContext);
-                const group = this.getInput('group', instanceContext);
+            getInstances(this: iEngineNode, eventContext: iEventContext){
+                const name = this.getInput('name', eventContext);
+                const type = this.getInput('type', eventContext);
+                const group = this.getInput('group', eventContext);
                 const instances: Instance_Base[] = [];
                 const intersect = type && group;
 
@@ -732,13 +728,13 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'name', type: SOCKET_TYPE.STRING, default: ''},
         ],
         methods: {
-            broadcastMessage(this: iEngineNode, instanceContext: Instance_Object){
-                const name = this.getInput('name', instanceContext);
+            broadcastMessage(this: iEngineNode, eventContext: iEventContext){
+                const name = this.getInput('name', eventContext);
 
                 if (name.trim().length < 0) return;
                 
-                this.engine.emitMessage(this.getInput('name', instanceContext));
-                this.triggerOutput('_o', instanceContext);
+                this.engine.emitMessage(this.getInput('name', eventContext));
+                this.triggerOutput('_o', eventContext);
             }
         },
     },
@@ -765,9 +761,8 @@ export const NODE_LIST: iNodeTemplate[] = [
                 this.stackDataIO = true;
             }
         },
-        onTick(this: iEngineNode, instanceContext: Instance_Object){
-            const timerKey = `${instanceContext.id}/${this.nodeId}`;
-            const data = this.dataCache.get(timerKey);
+        onTick(this: iEngineNode, eventContext: iEventContext){
+            const data = this.dataCache.get(eventContext.eventKey);
             const deltaTimeMS = this.engine.deltaTime * 1000;
 
             if (!data) return;
@@ -780,14 +775,14 @@ export const NODE_LIST: iNodeTemplate[] = [
             data.progress = Math.min(data.progress + deltaTimeMS, data.duration);
 
             if (data.progress >= data.duration){
-                this.triggerOutput('complete', instanceContext);
-                this.triggerOutput('tick', instanceContext);
-                this.dataCache.delete(timerKey);
+                this.triggerOutput('complete', eventContext);
+                this.triggerOutput('tick', eventContext);
+                this.dataCache.delete(eventContext.eventKey);
                 return;
             }
 
             if (deltaTimeMS > data.step || data.lastTickGap >= data.step){
-                this.triggerOutput('tick', instanceContext);
+                this.triggerOutput('tick', eventContext);
                 data.lastTickGap = 0;
             }
             else{
@@ -795,18 +790,17 @@ export const NODE_LIST: iNodeTemplate[] = [
             }
         },
         methods: {
-            start(this: iEngineNode, instanceContext: Instance_Object){
-                const timerKey = `${instanceContext.id}/${this.nodeId}`;
-                const oldData = this.dataCache.get(timerKey);
+            start(this: iEngineNode, eventContext: iEventContext){
+                const oldData = this.dataCache.get(eventContext.eventKey);
 
                 if (oldData){
                     oldData.active = true;
                 }
 
-                const duration = this.getInput('duration', instanceContext) * 1000;
-                const step = this.getInput('step', instanceContext) * 1000;
+                const duration = this.getInput('duration', eventContext) * 1000;
+                const step = this.getInput('step', eventContext) * 1000;
 
-                this.dataCache.set(timerKey, {
+                this.dataCache.set(eventContext.eventKey, {
                     duration,
                     step,
                     progress: 0,
@@ -814,32 +808,32 @@ export const NODE_LIST: iNodeTemplate[] = [
                     active: true,
                 });
 
-                this.triggerOutput('immediate', instanceContext);
+                this.triggerOutput('immediate', eventContext);
             },
-            pause(this: iEngineNode, instanceContext: Instance_Object){
-                const data = this.dataCache.get(`${instanceContext.id}/${this.nodeId}`);
+            pause(this: iEngineNode, eventContext: iEventContext){
+                const data = this.dataCache.get(eventContext.eventKey);
                 
                 if (data){
                     data.active = false;
                 }
             },
-            reset(this: iEngineNode, instanceContext: Instance_Object){
-                const data = this.dataCache.get(`${instanceContext.id}/${this.nodeId}`);
+            reset(this: iEngineNode, eventContext: iEventContext){
+                const data = this.dataCache.get(eventContext.eventKey);
 
                 if (data){
                     data.duration = 0;
                 }
             },
-            getElapsed(this: iEngineNode, instanceContext: Instance_Object){
-                const data = this.dataCache.get(`${instanceContext.id}/${this.nodeId}`);
+            getElapsed(this: iEngineNode, eventContext: iEventContext){
+                const data = this.dataCache.get(eventContext.eventKey);
                 return data ? Math.round(data.progress / 10) / 100 : 0;
             },
-            getRemaining(this: iEngineNode, instanceContext: Instance_Object){
-                const data = this.dataCache.get(`${instanceContext.id}/${this.nodeId}`);
+            getRemaining(this: iEngineNode, eventContext: iEventContext){
+                const data = this.dataCache.get(eventContext.eventKey);
                 return data ? Math.round((data.duration - data.progress) / 10) / 100 : 0;
             },
-            getPercent(this: iEngineNode, instanceContext: Instance_Object){
-                const data = this.dataCache.get(`${instanceContext.id}/${this.nodeId}`);
+            getPercent(this: iEngineNode, eventContext: iEventContext){
+                const data = this.dataCache.get(eventContext.eventKey);
                 return data ? data.progress / data.duration : 0;
             },
         },
@@ -871,12 +865,12 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'playing', type: SOCKET_TYPE.BOOL, default: null, triple: true},
         ],
         methods: {
-            setSettings(this: iEngineNode, instanceContext: Instance_Object){
-                const instance = (this.getInput('instance', instanceContext) ?? instanceContext) as Instance_Base;
-                const frame = parseInt(this.getInput('frame', instanceContext));
-                const fps = parseInt(this.getInput('fps', instanceContext));
-                const loop = this.getInput('loop', instanceContext);
-                const playing = this.getInput('playing', instanceContext);
+            setSettings(this: iEngineNode, eventContext: iEventContext){
+                const instance = (this.getInput('instance', eventContext) ?? eventContext.instance) as Instance_Base;
+                const frame = parseInt(this.getInput('frame', eventContext));
+                const fps = parseInt(this.getInput('fps', eventContext));
+                const loop = this.getInput('loop', eventContext);
+                const playing = this.getInput('playing', eventContext);
 
                 instance.animFrame = isNaN(frame) ? instance.animFrame : frame;
                 instance.fpsOverride = isNaN(fps) ? instance.fps : fps;
@@ -885,7 +879,7 @@ export const NODE_LIST: iNodeTemplate[] = [
 
                 instance.needsRenderUpdate = true;
 
-                this.triggerOutput('_o', instanceContext);
+                this.triggerOutput('_o', eventContext);
             },
         },
     },
@@ -903,11 +897,11 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'relative', type: SOCKET_TYPE.BOOL, default: false},
         ],
         methods: {
-            setPosition(this: iEngineNode, instanceContext: Instance_Object){
-                const instance = this.getInput('instance', instanceContext) ?? instanceContext;
-                const xInp = this.getInput('x', instanceContext);
-                const yInp = this.getInput('y', instanceContext);
-                const relative = this.getInput('relative', instanceContext);
+            setPosition(this: iEngineNode, eventContext: iEventContext){
+                const instance = this.getInput('instance', eventContext) ?? eventContext.instance;
+                const xInp = this.getInput('x', eventContext);
+                const yInp = this.getInput('y', eventContext);
+                const relative = this.getInput('relative', eventContext);
                 let newPos: Vector;
 
                 if (relative){
@@ -924,9 +918,9 @@ export const NODE_LIST: iNodeTemplate[] = [
                     );
                 }
 
-                this.engine.setInstancePosition(instanceContext, newPos);
+                this.engine.setInstancePosition(eventContext.instance, newPos);
                 
-                this.triggerOutput('_o', instanceContext);
+                this.triggerOutput('_o', eventContext);
             },
         },
     },
@@ -942,32 +936,32 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
         ],
         methods: {
-            moveTiled(this: iEngineNode, instanceContext: Instance_Object){
+            moveTiled(this: iEngineNode, eventContext: iEventContext){
                 const newPos = new Vector(
-                    Math.round(this.getInput('x', instanceContext)),
-                    Math.round(this.getInput('y', instanceContext))
-                ).add(instanceContext.pos);
+                    Math.round(this.getInput('x', eventContext)),
+                    Math.round(this.getInput('y', eventContext))
+                ).add(eventContext.instance.pos);
                 let instancesInSpace: Instance_Object[];
                 let spaceEmpty: boolean;
 
-                if (this.method('checkExitBacktrack', instanceContext, newPos)){
+                if (this.method('checkExitBacktrack', eventContext, newPos)){
                     return;
                 }
 
                 instancesInSpace = this.engine.getInstancesOverlapping({
-                    id: instanceContext.id,
+                    id: eventContext.instance.id,
                     pos: newPos
                 } as Instance_Object);
                 spaceEmpty = instancesInSpace.length > 0 ? instancesInSpace.filter(i => i.isSolid).length <= 0 : true;
 
-                if (spaceEmpty || !instanceContext.isSolid){
-                    this.engine.setInstancePosition(instanceContext, newPos);
+                if (spaceEmpty || !eventContext.instance.isSolid){
+                    this.engine.setInstancePosition(eventContext.instance, newPos);
                 }
                 else{
                     //register collisions with current instance
-                    if (instanceContext.hasCollisionEvent){
+                    if (eventContext.instance.hasCollisionEvent){
                         for (let i = 0; i < instancesInSpace.length; i++){
-                            this.engine.registerCollision(instanceContext, instancesInSpace[i], true);
+                            this.engine.registerCollision(eventContext.instance, instancesInSpace[i], true);
                         }
                     }
 
@@ -976,21 +970,21 @@ export const NODE_LIST: iNodeTemplate[] = [
                         const curInstanceInSpace = instancesInSpace[i];
 
                         if (curInstanceInSpace.hasCollisionEvent){
-                            this.engine.registerCollision(curInstanceInSpace, instanceContext, true);
+                            this.engine.registerCollision(curInstanceInSpace, eventContext.instance, true);
                         }
                     }
                 }
                 
-                this.triggerOutput('_o', instanceContext);
+                this.triggerOutput('_o', eventContext);
             },
-            checkExitBacktrack(this: iEngineNode, instanceContext: Instance_Object, newPos: Vector): boolean {
-                if (!(instanceContext.prevExit && instanceContext.prevExit?.exit.detectBacktracking)) return false;
+            checkExitBacktrack(this: iEngineNode, eventContext: iEventContext, newPos: Vector): boolean {
+                if (!(eventContext.instance.prevExit && eventContext.instance.prevExit?.exit.detectBacktracking)) return false;
 
-                const direction = newPos.clone().subtract(instanceContext.pos).normalize();
-                const dot = direction.dot(instanceContext.prevExit.direction.clone().multiplyScalar(-1));
+                const direction = newPos.clone().subtract(eventContext.instance.pos).normalize();
+                const dot = direction.dot(eventContext.instance.prevExit.direction.clone().multiplyScalar(-1));
 
                 if (dot > 0.75) {
-                    instanceContext.prevExit.exit.triggerExit(instanceContext, direction);
+                    eventContext.instance.prevExit.exit.triggerExit(eventContext.instance, direction);
                     return true;
                 }
 
@@ -1012,14 +1006,14 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'slide', type: SOCKET_TYPE.BOOL, default: false},
         ],
         methods: {
-            setVelocity(this: iEngineNode, instanceContext: Instance_Object){
-                const instance = this.getInput('instance', instanceContext) ?? instanceContext;
+            setVelocity(this: iEngineNode, eventContext: iEventContext){
+                const instance = this.getInput('instance', eventContext) ?? eventContext.instance;
                 instance.velocity.set(
-                    this.getInput('x', instanceContext),
-                    this.getInput('y', instanceContext)
+                    this.getInput('x', eventContext),
+                    this.getInput('y', eventContext)
                 );
-                instance.collisionSlide = this.getInput('slide', instanceContext);
-                this.triggerOutput('_o', instanceContext);
+                instance.collisionSlide = this.getInput('slide', eventContext);
+                this.triggerOutput('_o', eventContext);
             },
         },
     },

@@ -13,10 +13,13 @@ import {
     CATEGORY_ID,
 iEngineNode,
 iConnectionSaveData,
+iEventContext,
 } from '@engine/core/core';
 import { SOCKET_TYPE } from './core/nodes/Node_Enums';
 
 export default class Logic implements iEngineLogic {
+    private static _curEventKey = 0;
+
     private _nodes: Node[] = [];
     private _localVariableDefaults: Map<string, {value: any, type: SOCKET_TYPE, isList: boolean}> = new Map();
 
@@ -67,21 +70,25 @@ export default class Logic implements iEngineLogic {
     get category_ID(){return CATEGORY_ID.LOGIC};
     get localVariableDefaults(){return this._localVariableDefaults};
 
+    private createEventContext(instance: Instance_Object): iEventContext {
+        return { eventKey: Logic._curEventKey++, instance: instance };
+    }
+
     executeEvent(eventName: string, instance: Instance_Object, data: any): void {
         const event = this.events.get(eventName);
 
         if (!event) return;
 
         event.forEach(event => {
-            event.executeEvent(data, instance);
+            event.executeEvent(data, this.createEventContext(instance));
         });
     }
 
-    dispatchOnCreate(instanceContext: Instance_Object): void {
+    dispatchOnCreate(instance: Instance_Object): void {
         for (let i = 0; i < this._nodes.length; i++){
             const curNode = this._nodes[i];
-            const method = curNode.template.onCreate as (this: iEngineNode, instanceContext: Instance_Object)=>void;
-            method?.call(curNode, instanceContext);
+            const method = curNode.template.onCreate as (this: iEngineNode, eventContext: iEventContext)=>void;
+            method?.call(curNode, this.createEventContext(instance));
         }
     }
 
@@ -99,10 +106,10 @@ export default class Logic implements iEngineLogic {
         }
     }
 
-    dispatchOnTick(instanceContext: Instance_Object): void {
+    dispatchOnTick(instance: Instance_Object): void {
         for (let i = 0; i < this._nodes.length; i++){
             const curNode = this._nodes[i];
-            curNode.template.onTick?.call(curNode, instanceContext);
+            curNode.template.onTick?.call(curNode, this.createEventContext(instance));
         }
     }
 

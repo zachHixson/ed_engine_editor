@@ -1,7 +1,7 @@
 import { iAnyObj } from "../interfaces";
 import { SOCKET_TYPE, WIDGET } from "./Node_Enums";
 import { Instance_Object } from "../core";
-import { iNodeLifecycleEvents, iEditorNodeMethod, iEngineNodeMethod } from "../LogicInterfaces";
+import { iEventContext, iNodeLifecycleEvents, iEditorNodeMethod, iEngineNodeMethod } from "../LogicInterfaces";
 
 export interface iNodeTemplate extends iNodeLifecycleEvents {
     id: string;
@@ -16,7 +16,7 @@ export interface iNodeTemplate extends iNodeLifecycleEvents {
         options?: iAnyObj | any[];
     };
     outputs?: Array<iOutput>;
-    execute?(instanceContext: Instance_Object, data: any): void;
+    execute?(eventContext: iEventContext, data: any): void;
     methods?: {[key: string]: iEditorNodeMethod | iEngineNodeMethod};
 }
 
