@@ -21,10 +21,8 @@ import {
     iEngineLogic,
     Instance_Logic,
     MOUSE_EVENT,
-iEngineNode,
-iEngineVariable,
+    iEngineVariable,
 } from '@engine/core/core';
-import Node from './Node';
 import iGameData from './iGameData';
 import getTransitions from './transitions/getTransitions';
 import Transition_Base, { TRANSITION } from './transitions/Transition_Base';
@@ -53,8 +51,8 @@ interface iCollisionMapping {
 }
 
 export class Engine implements iEngineCallbacks {
-    static get VERSION(){return '0.1.0'}
-    static get DEFAULT_ACTION_KEY(){return 'Space'}
+    static readonly VERSION = '0.1.0';
+    static readonly DEFAULT_ACTION_KEY = 'Space';
 
     private _canvas: HTMLCanvasElement;
     private _gl: WebGL2RenderingContext;
@@ -69,10 +67,8 @@ export class Engine implements iEngineCallbacks {
     private _nextAnimationFrame: number = -1;
     private _keymap: Map<string, boolean> = new Map();
     private _nodeEventMap: Map<string, Map<number, Instance_Object>> = new Map();
-    private _nodeAsyncEventMap: Map<string, {instance: Instance_Object, node: Node, methodName: string}> = new Map();
     private _collisionMap: Map<number, iCollisionMapping> = new Map();
     private _globalVariables: Map<string, iEngineVariable> = new Map();
-    private _errorLogs: Map<string, boolean> = new Map();
     private _gameData: iGameData;
     private _mouse = {
         screenPos: new Vector,
@@ -441,16 +437,6 @@ export class Engine implements iEngineCallbacks {
         })
     }
 
-    private _dispatchAsyncLogicEvent = (tag: string, clearEvent: boolean = false): void =>{
-        const {instance, node, methodName} = this._nodeAsyncEventMap.get(tag)!;
-        
-        node && node.method(methodName, instance);
-
-        if (clearEvent){
-            this._nodeAsyncEventMap.delete(tag);
-        }
-    }
-
     private _clearNodeEvents = (): void =>{
         this._nodeEventMap = new Map();
     }
@@ -503,7 +489,6 @@ export class Engine implements iEngineCallbacks {
         this._unbindInputEvents();
         this._keymap = new Map();
         this._nodeEventMap = new Map();
-        this._nodeAsyncEventMap = new Map();
         this._collisionMap = new Map();
         this._globalVariables = new Map();
         window.IS_ENGINE = false;

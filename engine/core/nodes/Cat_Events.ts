@@ -5,7 +5,7 @@ import { MOUSE_EVENT } from '../Enums';
 import { Vector } from '../Vector';
 import { isEngineNode } from './Node_Library';
 import { type GenericNode } from './Node_Library';
-import { InstanceAnimEvent, Instance_Object } from '../core';
+import { InstanceAnimEvent } from '../core';
 
 export default [
     {// Create
