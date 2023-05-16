@@ -35,6 +35,10 @@ export class Instance_Sprite extends Instance_Base {
     get fps(){return this.fpsOverride}
     get animLoop(){return !!this.animLoopOverride}
     get animPlaying(){return !!this.animPlayingOverride}
+    set animPlaying(playing: boolean){
+        if (playing == this.animPlayingOverride) return;
+        this.animPlayingOverride = playing;
+    };
     get renderable(){return true}
     get hasEditorFrame(){
         this._useIcon = this.sprite?.frameIsEmpty(this.startFrameOverride ?? 0) ?? true;

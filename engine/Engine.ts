@@ -619,9 +619,9 @@ export class Engine implements iEngineCallbacks {
         }
     }
 
-    getGlobalVariable = (name: string): iEngineVariable | null =>{
+    getGlobalVariable = (name: string): iEngineVariable | undefined =>{
         const varname = name.trim().toLowerCase();
-        return this._globalVariables.get(varname) ?? null;
+        return this._globalVariables.get(varname);
     }
 
     openDialogBox = (text: string, pause: boolean, fullscreen: boolean, closeCallback: ()=>void, interactionKey = Engine.DEFAULT_ACTION_KEY): void =>{

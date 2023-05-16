@@ -34,10 +34,10 @@ export const NODE_LIST: iNodeTemplate[] = [
         },
     },
     {// Compare
-        id: 'compare',
+        id: 'compare_numbers',
         category: 'actual',
         inputs: [
-            {id: '_inp', type: SOCKET_TYPE.NUMBER, default: 0},
+            {id: '_inp1', type: SOCKET_TYPE.NUMBER, default: 0},
             {id: '_inp2', type: SOCKET_TYPE.NUMBER, default: 0},
         ],
         widget: {
@@ -360,6 +360,43 @@ export const NODE_LIST: iNodeTemplate[] = [
                 this.emit('force-socket-update', '_o');
             },
         },
+    },
+    {// List Length
+        id: 'list_length',
+        category: 'actual',
+        inputs: [
+            {id: '_list', type: SOCKET_TYPE.ANY, hideInput: true, isList: true, default: null},
+        ],
+        outputs: [
+            {id: 'length', type: SOCKET_TYPE.NUMBER, execute: 'getLength'},
+        ],
+        afterSave(this: iEditorNode, saveData: iNodeSaveData){
+            saveData.d = this.inputs.get('_list')!.type;
+        },
+        afterLoad(this: iEditorNode, saveData: iNodeSaveData){
+            this.inputs.get('_list')!.type = saveData.d;
+        },
+        onNewConnection(this: iEditorNode, connection: iNodeConnection){
+            if (!(connection.endNode?.nodeId == this.nodeId && connection.endSocketId == '_list')) return;
+
+            const getConnectedSocket = this.editorAPI.getConnectedInputSocket(this, '_list')!;
+
+            this.inputs.get('_list')!.type = getConnectedSocket.type;
+            this.emit('force-socket-update', '_list');
+        },
+        onRemoveConnection(this: iEditorNode, connection: iNodeConnection){
+            if (!(connection.endNode?.nodeId == this.nodeId && connection.disconnectedFrom == '_list')) return;
+
+            this.inputs.get('_list')!.type = SOCKET_TYPE.ANY;
+            this.emit('force-socket-update', '_list');
+        },
+        methods: {
+            getLength(this: iEngineNode, eventContext: iEventContext){
+                const list = this.getInput('_list', eventContext) as any[] | null;
+
+                return list?.length ?? 0;
+            }
+        }
     },
     {// Not
         id: 'not',

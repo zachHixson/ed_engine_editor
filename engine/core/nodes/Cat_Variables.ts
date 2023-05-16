@@ -1,9 +1,8 @@
 import { iNodeTemplate } from './iNodeTemplate';
 import {SOCKET_TYPE, SOCKET_DEFAULT} from './Node_Enums';
-import { iEngineInput, iEngineOutput, iEditorNode, iEngineNode, iNodeSaveData, iEventContext } from '../LogicInterfaces';
+import { iEditorNode, iEngineNode, iNodeSaveData, iEventContext } from '../LogicInterfaces';
 import { iAnyObj } from '../interfaces';
 import { isEngineNode, type GenericNode } from './Node_Library';
-import type { Instance_Object } from '../core';
 
 export default [
     {// Create Variable
@@ -15,7 +14,7 @@ export default [
             {id: 'initial_value', type: SOCKET_TYPE.NUMBER, default: 0, hideSocket: true},
         ],
         outputs: [
-            {id: '_value', type: SOCKET_TYPE.ANY, execute: 'getInitialValue'}
+            {id: '_value', type: SOCKET_TYPE.ANY, execute: 'getValue'}
         ],
         init(this: GenericNode){
             if (!isEngineNode(this)){
@@ -73,7 +72,7 @@ export default [
 
                 if (isList){
                     initialValue = isEmptyNumber ? [] : [inputValue];
-                } 
+                }
 
                 isGlobal ?
                     this.engine.createGlobalVariable(name, initialValue, type, isList)
