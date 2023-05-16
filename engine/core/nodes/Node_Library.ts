@@ -789,7 +789,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'pause', execute: 'pause'},
             {id: 'reset', execute: 'reset'},
         ],
-        outTriggers: ['immediate', 'tick', 'complete'],
+        outTriggers: ['immediate', 'started', 'tick', 'complete'],
         init(this: GenericNode){
             if (!isEngineNode(this)){
                 this.stackDataIO = true;
@@ -801,6 +801,8 @@ export const NODE_LIST: iNodeTemplate[] = [
 
                 if (oldData){
                     oldData.active = true;
+                    this.triggerOutput('immediate', eventContext);
+                    return;
                 }
 
                 const duration = this.getInput('duration', eventContext) * 1000;
@@ -827,7 +829,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                     if (data.progress >= data.duration){
                         this.triggerOutput('complete', eventContext);
                         this.triggerOutput('tick', eventContext);
-                        this.dataCache.delete(eventContext.eventKey);
+                        this.dataCache.delete(eventContext.instance.id);
                         return;
                     }
 
@@ -843,10 +845,9 @@ export const NODE_LIST: iNodeTemplate[] = [
                 }
 
                 this.dataCache.set(eventContext.instance.id, data);
-
-                this.triggerOutput('immediate', eventContext);
-
                 requestAnimationFrame(tickLoop);
+                this.triggerOutput('started', eventContext);
+                this.triggerOutput('immediate', eventContext);
             },
             pause(this: iEngineNode, eventContext: iEventContext){
                 const data = this.dataCache.get(eventContext.instance.id);
@@ -854,13 +855,12 @@ export const NODE_LIST: iNodeTemplate[] = [
                 if (data){
                     data.active = false;
                 }
+
+                this.triggerOutput('immediate', eventContext);
             },
             reset(this: iEngineNode, eventContext: iEventContext){
-                const data = this.dataCache.get(eventContext.instance.id);
-
-                if (data){
-                    data.duration = 0;
-                }
+                this.dataCache.delete(eventContext.instance.id);
+                this.triggerOutput('immediate', eventContext);
             },
             getElapsed(this: iEngineNode, eventContext: iEventContext){
                 const data = this.dataCache.get(eventContext.eventKey);

@@ -72,8 +72,8 @@ function registerConnectEvents(): void {
 function relink(nodeInfoMap: Map<number, iRelinkInfo>): void {
     const start = nodeInfoMap.get(props.connectionObj.startNode!.nodeId)!;
     const end = nodeInfoMap.get(props.connectionObj.endNode!.nodeId)!;
-    const startSocketComp = start.sockets.get(props.connectionObj.startSocketId!);
-    const endSocketComp = end.sockets.get(props.connectionObj.endSocketId!);
+    const startSocketComp = start.outSockets.get(props.connectionObj.startSocketId!);
+    const endSocketComp = end.inSockets.get(props.connectionObj.endSocketId!);
 
     props.connectionObj.canConnect = true;
     props.connectionObj.startSocketEl = startSocketComp!.$refs.socketConnectionRef as HTMLElement;

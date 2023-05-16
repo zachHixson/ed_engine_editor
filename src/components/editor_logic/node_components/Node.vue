@@ -1,7 +1,8 @@
 <script lang="ts">
 export interface iRelinkInfo {
-    id: number,
-    sockets: Map<string, InstanceType<typeof Socket>>,
+    id: number;
+    inSockets: Map<string, InstanceType<typeof Socket>>;
+    outSockets: Map<string, InstanceType<typeof Socket>>;
 }
 </script>
 
@@ -203,16 +204,19 @@ function getRelinkInfo(): iRelinkInfo {
     const outTriggers = outTriggerRefs.value ?? [];
     const inData = inputRefs.value ?? [];
     const outData = outputRefs.value ?? [];
-    const allSocketEls = [...inTriggers, ...outTriggers, ...inData, ...outData];
-    const socketElMap = new Map();
+    const inSocketElMap = new Map();
+    const outSocketElMap = new Map();
 
-    allSocketEls.forEach(socketEl => {
-        socketElMap.set(socketEl.socket.id, socketEl);
-    });
+    inTriggers.forEach(it => inSocketElMap.set(it.socket.id, it));
+    inData.forEach(id => inSocketElMap.set(id.socket.id, id));
+
+    outTriggers.forEach(ot => outSocketElMap.set(ot.socket.id, ot));
+    outData.forEach(od => outSocketElMap.set(od.socket.id, od));
 
     return {
         id: props.nodeObj.nodeId,
-        sockets: socketElMap,
+        inSockets: inSocketElMap,
+        outSockets: outSocketElMap,
     }
 }
 

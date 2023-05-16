@@ -74,10 +74,11 @@ const hideInput = computed(()=>{
     return props.socket.hideInput
 });
 const isTrigger = computed(()=>(socketType.value == undefined));
-const isConnected = computed(()=>(!!props.parentConnections.find(c => (
-    c.startSocketId == props.socket.id && c.startNode!.nodeId == props.parentId ||
-    c.endSocketId == props.socket.id && c.endNode!.nodeId == props.parentId
-)) && !!hasSize));
+const isConnected = computed(()=>(!!props.parentConnections.find(c => {
+    const connectedInput = c.endNode?.nodeId == props.parentId && c.endSocketId == props.socket.id && props.isInput;
+    const connectedOutput = c.startNode?.nodeId == props.parentId && c.startSocketId == props.socket.id && !props.isInput;
+    return connectedInput || connectedOutput;
+}) && !!hasSize));
 const canConnect = computed(()=>!(isConnected.value && (isTrigger.value != props.isInput)));
 const required = computed(()=>!!props.socket.required ?? true);
 const iconMap = new Map<Core.Node_Enums.SOCKET_TYPE, string>([
