@@ -884,6 +884,32 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
     },
+    {// Random Number
+        id: 'random_number',
+        category: 'actual',
+        inputs: [
+            {id: 'lower', type: SOCKET_TYPE.NUMBER, required: true, default: 0},
+            {id: 'upper', type: SOCKET_TYPE.NUMBER, required: true, default: 1},
+            {id: 'round', type: SOCKET_TYPE.BOOL, default: false},
+        ],
+        outputs: [
+            {id: 'number', type: SOCKET_TYPE.NUMBER, execute: 'getNum'},
+        ],
+        init(this: GenericNode){
+            if (isEngineNode(this)) return;
+            this.stackDataIO = true;
+        },
+        methods: {
+            getNum(this: iEngineNode, eventContext: iEventContext){
+                const lower = this.getInput('lower', eventContext);
+                const upper = this.getInput('upper', eventContext);
+                const round = this.getInput('round', eventContext);
+                const num = Math.random() * (upper - lower) + lower;
+
+                return round ? Math.round(num) : num;
+            }
+        }
+    },
     {// Restart
         id: 'restart_game',
         category: 'actual',
