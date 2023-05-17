@@ -643,7 +643,7 @@ export class Engine implements iEngineCallbacks {
         }
     }
 
-    emitMessage(name: string): void {
+    broadcastMessage(name: string): void {
         this._dispatchLogicEvent('e_message', {name});
     }
 }

@@ -760,14 +760,22 @@ export const NODE_LIST: iNodeTemplate[] = [
         outTriggers: ['_o'],
         inputs: [
             {id: 'name', type: SOCKET_TYPE.STRING, default: ''},
+            {id: 'global', type: SOCKET_TYPE.BOOL, default: false},
         ],
         methods: {
             broadcastMessage(this: iEngineNode, eventContext: iEventContext){
                 const name = this.getInput('name', eventContext);
+                const global = this.getInput('global', eventContext);
 
                 if (name.trim().length < 0) return;
                 
-                this.engine.emitMessage(this.getInput('name', eventContext));
+                if (global){
+                    this.engine.broadcastMessage(name);
+                }
+                else{
+                    eventContext.instance.executeNodeEvent('e_message', {name});
+                }
+
                 this.triggerOutput('_o', eventContext);
             }
         },
