@@ -6,6 +6,7 @@ import { Vector } from '../Vector';
 import { iEditorNode, iEngineNode, iNodeConnection, iNodeSaveData, iEventContext } from '../LogicInterfaces';
 import { Game_Object, Instance_Base, Instance_Object, iEditorNodeInput, iEditorNodeOutput } from '../core';
 import { canConvertSocket, assetToInstance, instanceToAsset } from './Socket_Conversions';
+import { Sprite, Util } from '../core';
 
 export type GenericNode = iEditorNode | iEngineNode;
 
@@ -748,6 +749,72 @@ export const NODE_LIST: iNodeTemplate[] = [
                 });
 
                 return instances;
+            }
+        },
+    },
+    {// Raycast
+        id: 'raycast',
+        category: 'actual',
+        widget: {
+            id: 'direction',
+            type: WIDGET.DIRECTION,
+            options: {
+                startDir: [1, 0],
+            },
+        },
+        inputs: [
+            {id: 'start_x', type: SOCKET_TYPE.NUMBER, required: false, default: ''},
+            {id: 'start_y', type: SOCKET_TYPE.NUMBER, required: false, default: ''},
+            {id: 'distance', type: SOCKET_TYPE.NUMBER, required: true, default: 1},
+            {id: 'only_solid', type: SOCKET_TYPE.BOOL, default: false},
+            {id: 'ignore_self', type: SOCKET_TYPE.BOOL, default: true},
+        ],
+        outputs: [
+            {id: 'instances', type: SOCKET_TYPE.INSTANCE, isList: true, execute: 'raycast'},
+        ],
+        init(this: GenericNode){
+            if (isEngineNode(this)) return;
+            this.stackDataIO = true;
+        },
+        methods: {
+            raycast(this: iEngineNode, eventContext: iEventContext){
+                const widgetDir = this.widgetData;
+                const startX = this.getInput('start_x', eventContext);
+                const startY = this.getInput('start_y', eventContext);
+                const startPos = new Vector(
+                    startX && startX.length ? startX : eventContext.instance.pos.x,
+                    startY && startY.length ? startY : eventContext.instance.pos.y,
+                );
+                const distance = this.getInput('distance', eventContext);
+                const onlySolid = this.getInput('only_solid', eventContext);
+                const ignoreSelf = this.getInput('ignore_self', eventContext);
+                const rayVector = new Vector(widgetDir[0], widgetDir[1]).multiplyScalar(distance);
+                const nearInstances = this.engine.room.getInstancesInRadius(startPos, distance)
+                    .filter(i => {
+                        const selfCheck = !ignoreSelf || i.id != eventContext.instance.id;
+                        const solidCheck = !onlySolid || i.isSolid;
+                        return selfCheck && solidCheck;
+                    });
+                const halfSpriteDim = Sprite.DIMENSIONS / 2;
+                const spriteDim = new Vector(halfSpriteDim, halfSpriteDim);
+                const collisions: Instance_Base[] = [];
+
+                for (let i = 0; i < nearInstances.length; i++){
+                    const curInstance = nearInstances[i];
+                    const curInstancePos = curInstance.pos.clone()
+                    const intersect = Util.projectSVF(startPos, rayVector, curInstancePos, spriteDim);
+
+                    intersect && collisions.push(curInstance);
+                }
+
+                collisions.sort((a, b)=>{
+                    const aDist = a.pos.distanceNoSqrt(startPos);
+                    const bDist = b.pos.distanceNoSqrt(startPos);
+
+                    return aDist - bDist;
+                });
+
+                return collisions;
             }
         },
     },
