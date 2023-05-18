@@ -357,7 +357,7 @@ function onInput(this: iEditorNode, event: InputEvent){
 
 function onNewVariable(this: iEditorNode){
     this.method('validate');
-    this.emit('forceUpdate');
+    this.emit('force-update');
 }
 
 function onBeforeDelete(this: iEditorNode){

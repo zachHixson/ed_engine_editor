@@ -762,6 +762,11 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'name', type: SOCKET_TYPE.STRING, default: ''},
             {id: 'global', type: SOCKET_TYPE.BOOL, default: false},
         ],
+        init(this: GenericNode){
+            if (!isEngineNode(this)){
+                this.inputBoxWidth = 6;
+            }
+        },
         methods: {
             broadcastMessage(this: iEngineNode, eventContext: iEventContext){
                 const name = this.getInput('name', eventContext);
@@ -1067,23 +1072,28 @@ export const NODE_LIST: iNodeTemplate[] = [
     {// Set Velocity
         id: 'set_velocity',
         category: 'movement',
+        widget: {
+            id: 'direction',
+            type: WIDGET.DIRECTION,
+            options: {
+                startDir: [1, 0],
+            },
+        },
         inTriggers: [
             {id: '_i', execute: 'setVelocity'}
         ],
         outTriggers: ['_o'],
         inputs: [
             {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
-            {id: 'x', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
-            {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
+            {id: 'speed', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
             {id: 'slide', type: SOCKET_TYPE.BOOL, default: false},
         ],
         methods: {
             setVelocity(this: iEngineNode, eventContext: iEventContext){
                 const instance = this.getInput('instance', eventContext) ?? eventContext.instance;
-                instance.velocity.set(
-                    this.getInput('x', eventContext),
-                    this.getInput('y', eventContext)
-                );
+                const speed = this.getInput('speed', eventContext);
+                const direction = new Vector(this.widgetData[0], this.widgetData[1]);
+                instance.velocity.copy(direction.multiplyScalar(speed));
                 instance.collisionSlide = this.getInput('slide', eventContext);
                 this.triggerOutput('_o', eventContext);
             },

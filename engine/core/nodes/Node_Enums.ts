@@ -23,6 +23,7 @@ export enum WIDGET {
     KEY,
     MOUSE_BTN,
     TEXT_AREA,
+    DIRECTION,
 }
 
 export enum COLLISION_EVENT {

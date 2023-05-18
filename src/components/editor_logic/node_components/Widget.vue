@@ -2,6 +2,7 @@
 import Enum from './widgets/Enum.vue';
 import Key from './widgets/Key.vue';
 import TextArea from './widgets/TextArea.vue';
+import Direction from './widgets/Direction.vue';
 
 import { computed } from 'vue';
 import Core from '@/core';
@@ -21,6 +22,7 @@ const currentWidget = computed(()=>{
         case WIDGET.ENUM: return Enum;
         case WIDGET.KEY: return Key;
         case WIDGET.TEXT_AREA: return TextArea;
+        case WIDGET.DIRECTION: return Direction;
     }
 });
 </script>

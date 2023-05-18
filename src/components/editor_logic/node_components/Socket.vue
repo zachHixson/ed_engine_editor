@@ -228,6 +228,7 @@ defineExpose({socket: props.socket});
                     v-if="socketType == Core.Node_Enums.SOCKET_TYPE.NUMBER"
                     type="number"
                     ref="numInputRef"
+                    class="textField"
                     :style="customStyles"
                     :value="socketValue"
                     :required="required"
@@ -237,6 +238,7 @@ defineExpose({socket: props.socket});
                 <Input
                     v-if="socketType == Core.Node_Enums.SOCKET_TYPE.STRING"
                     type="text"
+                    class="textField"
                     :style="customStyles"
                     :value="socketValue"
                     :disabled="disabled"
@@ -256,7 +258,6 @@ defineExpose({socket: props.socket});
                     ref="boolCheckboxRef"
                     :triple="props.socket.triple"
                     style="width: 20px"
-                    :style="customStyles"
                     :value="socketValue"
                     :disabled="disabled"
                     @change="boolValueChanged"
@@ -385,6 +386,7 @@ defineExpose({socket: props.socket});
     position: relative;
     display: flex;
     flex-direction: row;
+    align-items: center;
     height: 25px;
 }
 
@@ -399,6 +401,10 @@ defineExpose({socket: props.socket});
     background: none;
     border: none;
     text-overflow: ellipsis;
+}
+
+.textField{
+    height: 100%;
 }
 
 .infoBox {

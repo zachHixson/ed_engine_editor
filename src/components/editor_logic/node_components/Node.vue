@@ -37,7 +37,7 @@ const emit = defineEmits([
     'node-move-end',
     'socket-down',
     'socket-over',
-    'socket-value-changed'
+    'socket-value-changed',
 ]);
 
 const rootRef = ref<HTMLDivElement>();
@@ -75,7 +75,7 @@ onMounted(()=>{
 
     props.nodeObj.addEventListener('onMove', updateConnections);
     props.nodeObj.addEventListener('recalcWidth', updateNodeSize);
-    props.nodeObj.addEventListener('forceUpdate', forceUpdate);
+    props.nodeObj.addEventListener('force-update', forceUpdate);
     window.addEventListener('mouseup', mouseUp);
 
     updateNodeSize();
@@ -86,7 +86,7 @@ onBeforeUnmount(()=>{
     window.removeEventListener('mouseup', mouseUp);
     props.nodeObj.removeEventListener('onMove', updateConnections);
     props.nodeObj.removeEventListener('recalcWidth', updateNodeSize);
-    props.nodeObj.removeEventListener('forceUpdate', forceUpdate);
+    props.nodeObj.removeEventListener('force-update', forceUpdate);
     props.nodeObj.onBeforeUnmount && props.nodeObj.onBeforeUnmount();
 });
 
