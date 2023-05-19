@@ -221,7 +221,7 @@ defineExpose({socket: props.socket});
                 </div>
             </div>
             <div v-if="showLabel" class="socket_name" :class="socket.hideLabel ? 'invisible':''">
-                <div>{{t('node.' + socket.id)}}</div>
+                <div>{{ socket.id[0] == '#' ? socket.id.substring(1, socket.id.length) : t('node.' + socket.id)}}</div>
             </div>
             <div v-if="isInput && !isConnected && !hideInput" class="inputBox">
                 <Input

@@ -48,13 +48,25 @@ const outputRefs = ref<InstanceType<typeof Socket>[]>([]);
 const nodeObjRef = reactive(props.nodeObj);
 
 const dragOffset = new Vector();
-const inTriggerList = ref<Core.iEditorNodeInTrigger[]>([]);
-const outTriggerList = ref<{id: string, node: Core.iEditorNode}[]>([]);
-const inputList = ref<Core.iEditorNodeInput[]>([]);
-const outputList = ref<Core.iEditorNodeOutput[]>([]);
 const isDragging = ref(false);
 const forceUpdateKey = ref(0);
 
+const inTriggerList = computed(()=>{
+    forceUpdateKey.value;
+    return Array.from(props.nodeObj.inTriggers, ([_, trigger]) => trigger);
+});
+const outTriggerList = computed(()=>{
+    forceUpdateKey.value;
+    return Array.from(props.nodeObj.outTriggers, ([_, trigger]) => trigger);
+});
+const inputList = computed(()=>{
+    forceUpdateKey.value;
+    return Array.from(props.nodeObj.inputs, ([_, input]) => input);
+});
+const outputList = computed(()=>{
+    forceUpdateKey.value;
+    return Array.from(props.nodeObj.outputs, ([_, output]) => output);
+});
 const widgetData = computed(()=>props.nodeObj.widgetData);
 const showTriggers = computed(()=>inTriggerList.value.length > 0 || outTriggerList.value.length > 0);
 const showDataSockets = computed(()=>inputList.value.length > 0 || outputList.value.length > 0);
@@ -67,7 +79,6 @@ const decoratorIconPath = computed(()=>decoratorMap.get(props.nodeObj.decoratorI
 
 onBeforeMount(()=>{
     props.nodeObj.onBeforeMount && props.nodeObj.onBeforeMount();
-    updateAllSockets();
 });
 
 onMounted(()=>{
@@ -76,6 +87,7 @@ onMounted(()=>{
     props.nodeObj.addEventListener('onMove', updateConnections);
     props.nodeObj.addEventListener('recalcWidth', updateNodeSize);
     props.nodeObj.addEventListener('force-update', forceUpdate);
+    props.nodeObj.addEventListener('update-connections', updateConnections);
     window.addEventListener('mouseup', mouseUp);
 
     updateNodeSize();
@@ -87,31 +99,9 @@ onBeforeUnmount(()=>{
     props.nodeObj.removeEventListener('onMove', updateConnections);
     props.nodeObj.removeEventListener('recalcWidth', updateNodeSize);
     props.nodeObj.removeEventListener('force-update', forceUpdate);
+    props.nodeObj.removeEventListener('update-connections', updateConnections);
     props.nodeObj.onBeforeUnmount && props.nodeObj.onBeforeUnmount();
 });
-
-function updateAllSockets(): void {
-    updateInTriggerList();
-    updateOutTriggerList();
-    updateInputlist();
-    updateOutputList();
-}
-
-function updateInTriggerList(): void {
-    inTriggerList.value = Array.from(props.nodeObj.inTriggers, ([id, trigger]) => trigger);
-}
-
-function updateOutTriggerList(): void {
-    outTriggerList.value = Array.from(props.nodeObj.outTriggers, ([id, trigger]) => trigger);
-}
-
-function updateInputlist(): void {
-    inputList.value = Array.from(props.nodeObj.inputs, ([id, input]) => input);
-}
-
-function updateOutputList(): void {
-    outputList.value = Array.from(props.nodeObj.outputs, ([id, output]) => output);
-}
 
 function updateNodeSize(): void {
     rootRef.value!.style.width = 'max-content';

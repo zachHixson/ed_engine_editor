@@ -98,6 +98,7 @@ export interface iEditorNode extends iNode_Base {
     parentScript: iEditorLogic;
     editorCanDelete: boolean;
     editorAPI: iEditorAPI;
+    domRef: HTMLDivElement | null;
 
     //misc settings
     reverseInputs?: boolean;

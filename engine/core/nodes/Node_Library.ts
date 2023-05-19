@@ -34,6 +34,99 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
     },
+    {// Sequence
+        id: 'sequence',
+        category: 'actual',
+        inTriggers: [
+            {id: '_i', execute: 'startSequence'},
+        ],
+        outTriggers: ['#1', '#2'],
+        afterSave(this: iEditorNode, saveData: iNodeSaveData){
+            saveData.d = this.outTriggers.size;
+        },
+        afterLoad(this: iEditorNode, saveData: iNodeSaveData){
+            const outputNumber = saveData.d;
+            this.outTriggers.clear();
+
+            for (let i = 0; i < outputNumber; i++){
+                const id = '#' + (i + 1);
+                this.outTriggers.set(id, {
+                    id,
+                    node: this,
+                });
+            }
+        },
+        onMount(this: iEditorNode){
+            const wrapper = document.createElement('div');
+            const removeBtn = document.createElement('button');
+            const addBtn = document.createElement('button');
+
+            wrapper.style.cssText = `
+                display: flex;
+                flex-direction: row;
+                justify-content: flex-end;
+                gap: 3px;
+                padding: 5px;
+            `;
+
+            removeBtn.style.cssText = `
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 20px;
+                height: 20px;
+                border: 2px solid var(--border);
+                border-radius: 5px;
+            `;
+            addBtn.style.cssText = removeBtn.style.cssText;
+            
+            removeBtn.innerHTML = '-';
+            addBtn.innerHTML = '+';
+
+            removeBtn.onclick = ()=>{
+                if (this.outTriggers.size > 1){
+                    const lastOutput = '#' + this.outTriggers.size;
+                    const connections = this.editorAPI.getOutputConnections(this, lastOutput);
+
+                    if (connections.length){
+                        this.editorAPI.deleteConnections(connections, false);
+                    }
+
+                    this.outTriggers.delete(lastOutput);
+                    this.emit('force-update');
+
+                    setTimeout(()=>{
+                        this.emit('update-connections');
+                    });
+                }
+            };
+
+            addBtn.onclick = ()=>{
+                const nextOutputName = '#' + (this.outTriggers.size + 1);
+                this.outTriggers.set(nextOutputName, {
+                    id: nextOutputName,
+                    node: this,
+                });
+                this.emit('force-update');
+                setTimeout(()=>{
+                    this.emit('update-connections');
+                });
+            };
+            
+            wrapper.append(removeBtn);
+            wrapper.append(addBtn);
+
+            this.domRef!.append(wrapper);
+        },
+        methods: {
+            startSequence(this: iEngineNode, eventContext: iEventContext){
+                for (let i = 0; i < this.outTriggers.size; i++){
+                    const id = '#' + (i + 1);
+                    this.triggerOutput(id, eventContext);
+                }
+            }
+        }
+    },
     {// Compare
         id: 'compare_numbers',
         category: 'actual',
