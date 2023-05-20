@@ -972,7 +972,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             start(this: iEngineNode, eventContext: iEventContext){
                 const oldData = this.dataCache.get(eventContext.instance.id);
 
-                if (oldData){
+                if (oldData && !oldData.complete){
                     oldData.active = true;
                     this.triggerOutput('immediate', eventContext);
                     return;
@@ -986,6 +986,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                     progress: 0,
                     lastTickGap: 0,
                     active: true,
+                    complete: false,
                 };
                 const tickLoop = ()=>{
                     const deltaTimeMS = this.engine.deltaTime * 1000;
@@ -1000,6 +1001,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                     data.progress = Math.min(data.progress + deltaTimeMS, data.duration);
 
                     if (data.progress >= data.duration){
+                        data.complete = true;
                         this.triggerOutput('complete', eventContext);
                         this.triggerOutput('tick', eventContext);
                         this.dataCache.delete(eventContext.instance.id);
@@ -1036,15 +1038,15 @@ export const NODE_LIST: iNodeTemplate[] = [
                 this.triggerOutput('immediate', eventContext);
             },
             getElapsed(this: iEngineNode, eventContext: iEventContext){
-                const data = this.dataCache.get(eventContext.eventKey);
+                const data = this.dataCache.get(eventContext.instance.id);
                 return data ? Math.round(data.progress / 10) / 100 : 0;
             },
             getRemaining(this: iEngineNode, eventContext: iEventContext){
-                const data = this.dataCache.get(eventContext.eventKey);
+                const data = this.dataCache.get(eventContext.instance.id);
                 return data ? Math.round((data.duration - data.progress) / 10) / 100 : 0;
             },
             getPercent(this: iEngineNode, eventContext: iEventContext){
-                const data = this.dataCache.get(eventContext.eventKey);
+                const data = this.dataCache.get(eventContext.instance.id);
                 return data ? data.progress / data.duration : 0;
             },
         },
