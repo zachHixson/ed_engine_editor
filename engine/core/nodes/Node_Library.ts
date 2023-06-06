@@ -1163,56 +1163,36 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
     },
-    {// Move Tiled
-        id: 'move_tiled',
+    {// Jump To
+        id: 'jump_to',
         category: 'movement',
         inTriggers: [
-            {id: '_i', execute: 'moveTiled'},
+            {id: '_i', execute: 'jumpTo'},
         ],
         outTriggers: ['_o'],
         inputs: [
+            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
             {id: 'x', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
             {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
+            {id: 'relative', type: SOCKET_TYPE.BOOL, default: false},
         ],
         methods: {
-            moveTiled(this: iEngineNode, eventContext: iEventContext){
-                const newPos = new Vector(
-                    Math.round(this.getInput('x', eventContext)),
-                    Math.round(this.getInput('y', eventContext))
-                ).add(eventContext.instance.pos);
-                let instancesInSpace: Instance_Object[];
-                let spaceEmpty: boolean;
+            jumpTo(this: iEngineNode, eventContext: iEventContext){
+                const instance: Instance_Base = this.getInput('instance', eventContext) ?? eventContext.instance;
+                const x: number = Math.round(this.getInput('x', eventContext));
+                const y: number = Math.round(this.getInput('y', eventContext));
+                const relative: boolean = this.getInput('relative', eventContext);
+                const newPos = new Vector(x, y);
 
-                if (this.method('checkExitBacktrack', eventContext, newPos)){
-                    return;
+                if (relative){
+                    newPos.add(instance.pos);
                 }
 
-                instancesInSpace = this.engine.getInstancesOverlapping({
-                    id: eventContext.instance.id,
-                    pos: newPos
-                } as Instance_Object);
-                spaceEmpty = instancesInSpace.length > 0 ? instancesInSpace.filter(i => i.isSolid).length <= 0 : true;
-
-                if (spaceEmpty || !eventContext.instance.isSolid){
-                    this.engine.setInstancePosition(eventContext.instance, newPos);
-                }
-                else{
-                    //register collisions with current instance
-                    if (eventContext.instance.hasCollisionEvent){
-                        for (let i = 0; i < instancesInSpace.length; i++){
-                            this.engine.registerCollision(eventContext.instance, instancesInSpace[i], true);
-                        }
-                    }
-
-                    //register collisions with collided instance
-                    for (let i = 0; i < instancesInSpace.length; i++){
-                        const curInstanceInSpace = instancesInSpace[i];
-
-                        if (curInstanceInSpace.hasCollisionEvent){
-                            this.engine.registerCollision(curInstanceInSpace, eventContext.instance, true);
-                        }
-                    }
-                }
+                this.engine.moveInstanceDirection(
+                    instance,
+                    newPos.clone().subtract(instance.pos),
+                    false,
+                );
                 
                 this.triggerOutput('_o', eventContext);
             },
