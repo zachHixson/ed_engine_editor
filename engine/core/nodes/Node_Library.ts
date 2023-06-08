@@ -1232,9 +1232,9 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             setVelocity(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.getInput('instance', eventContext) ?? eventContext.instance;
-                const speed = this.getInput('speed', eventContext);
-                const direction = new Vector(this.widgetData[0], this.widgetData[1]);
+                const instance: Instance_Base = this.getInput('instance', eventContext) ?? eventContext.instance;
+                const speed: number = this.getInput('speed', eventContext);
+                const direction = Vector.fromArray(this.widgetData);
                 instance.velocity.copy(direction.multiplyScalar(speed));
                 instance.collisionSlide = this.getInput('slide', eventContext);
                 this.triggerOutput('_o', eventContext);

@@ -46,8 +46,8 @@ function getPathCollisions(
     velocity: Vector
 ){
     const { intersections, hitSolid } = findInstancePathIntersections(instance, instanceList, instanceCenter, velocity);
-    const collisions = new Map<number, typeof intersections[number]>();
-    let closestIntersect: (typeof intersections[number]) | null = null;
+    const collisions = new Map<number, iLineIntersection>();
+    let closestIntersect: iLineIntersection | null = null;
     let closestDist: number = Infinity;
     
     for (let i = 0; i < intersections.length; i++){
