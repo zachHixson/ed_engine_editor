@@ -32,8 +32,24 @@ const engineLicensePreamble = `
 `;
 
 onMounted(()=>{
+    const autoLoadData = localStorage.getItem('autoLoad');
+
     mainStore.newProject();
     updateEditorAsset();
+
+    //setup debug commands
+    (<any>window).setAutoLoad = ()=>{
+        const saveData = mainStore.getSaveData();
+        localStorage.setItem('autoLoad', saveData);
+    };
+    (<any>window).clearAutoLoad = ()=>{
+        localStorage.setItem('autoLoad', '');
+    };
+
+    //Load autoLoad project
+    if (autoLoadData){
+        openProject(autoLoadData);
+    }
 });
 
 function updateAssetPreviews(id?: number): void {
