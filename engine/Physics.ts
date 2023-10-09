@@ -79,7 +79,8 @@ export function sweepInstanceInDirection(
     velocity: Vector,
     slide: boolean
 ): { newPosition: Vector, collisions: Map<number, iLineIntersection> } {
-    const { collisionIntersect, collisions, hitSolid } = getPathCollisions(instance, instanceList, instanceCenter, velocity);
+    const offsetPos = instanceCenter.clone().add(velocity.clone().normalize().scale(0.001));
+    const { collisionIntersect, collisions, hitSolid } = getPathCollisions(instance, instanceList, offsetPos, velocity);
 
     if (!(collisionIntersect && hitSolid && instance.isSolid)){
         return {

@@ -590,8 +590,7 @@ export class Engine implements iEngineCallbacks {
     }
 
     moveInstanceDirection = (instance: Instance_Base, velocity: Vector, slide = false): void =>{
-        const instanceCenter = instance.pos.clone().addScalar(Sprite.DIMENSIONS / 2)
-            .add(velocity.clone().normalize().scale(0.001));
+        const instanceCenter = instance.pos.clone().addScalar(Sprite.DIMENSIONS / 2);
         const instancesInRadius = this.room.getInstancesInRadius(instanceCenter, velocity.magnitude());
         const {
             newPosition,
