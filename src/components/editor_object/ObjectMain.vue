@@ -295,6 +295,5 @@ function logicScriptChanged(id: number | string): void {
 .cat-logic {
     width: 100%;
     max-width: 1200px;
-    height: 165px;
 }
 </style>

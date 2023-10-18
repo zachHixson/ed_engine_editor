@@ -59,5 +59,6 @@ defineProps<{
     align-items: flex-start;
     gap: 10px;
     flex-grow: 1;
+    overflow-y: auto;
 }
 </style>
