@@ -16,6 +16,8 @@ import { useGameDataStore } from './stores/GameData';
 import { useAssetBrowserStore } from './stores/AssetBrowser';
 import Core, { HTMLTemplate, EngineRawText } from '@/core';
 
+import licenseText from '@/../LICENSE.txt?raw';
+
 //stores
 const mainStore = useMainStore();
 const gameDataStore = useGameDataStore();
@@ -80,7 +82,6 @@ function saveProject(): void {
 }
 
 function packageGame(): void {
-    const licenseText = document.getElementById('license')?.innerHTML;
     const engineLicense = engineLicensePreamble + licenseText;
     const projectName = mainStore.getProjectName;
     const gameData = mainStore.getSaveData();
