@@ -1,6 +1,6 @@
 import {SOCKET_TYPE, WIDGET, COLLISION_EVENT} from './Node_Enums';
 import { iNodeTemplate } from './iNodeTemplate';
-import { iEngineNode, iEventContext } from '../LogicInterfaces';
+import { iEditorNode, iEngineNode, iEventContext } from '../LogicInterfaces';
 import { MOUSE_EVENT } from '../Enums';
 import { Vector } from '../Vector';
 import { isEngineNode } from './Node_Library';
@@ -128,11 +128,41 @@ export default [
         id: 'e_collision',
         isEvent: true,
         category: 'events',
+        inputs: [
+            {id: 'group', type: SOCKET_TYPE.STRING, flipInput: true, hideSocket: true, default: ''},
+        ],
         outTriggers: ['start', 'repeat', 'stop'],
         outputs: [
             {id: 'object', type: SOCKET_TYPE.INSTANCE, execute: 'getObject'},
         ],
+        init(this: GenericNode){
+            if(!isEngineNode(this)){
+                this.stackDataIO = true;
+            }
+            else{
+                this.dataCache.set('currentTime', this.engine.currentTime);
+                this.dataCache.set('groups', new Map<string, boolean>());
+            }
+        },
         execute(this: iEngineNode, eventContext: iEventContext, data){
+            const group = this.getInput('group', eventContext);
+
+            if (this.dataCache.get('currentTime') != this.engine.currentTime){
+                this.dataCache.get('groups').clear();
+                this.dataCache.set('currentTime', this.engine.currentTime);
+            }
+            
+            if (group.length > 0){
+                const groups = this.dataCache.get('groups');
+
+                if (groups.has(group)){
+                    return;
+                }
+                else{
+                    groups.set(group, true);
+                }
+            }
+
             this.dataCache.set(eventContext.eventKey, data);
 
             switch (data.type){
