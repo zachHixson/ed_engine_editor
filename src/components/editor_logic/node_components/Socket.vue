@@ -217,7 +217,16 @@ defineExpose({socket: props.socket});
                     v-if="socketType == Core.Node_Enums.SOCKET_TYPE.INSTANCE && socket.required"
                     class="selfBox"
                     :style="customStyles">
-                    <div>{{t('logic_editor.self')}}</div>
+                </div>
+                <div
+                    v-if="socketType == Core.Node_Enums.SOCKET_TYPE.NUMBER || socketType == Core.Node_Enums.SOCKET_TYPE.STRING"
+                    class="textField"
+                    :style="customStyles">
+                </div>
+                <div
+                    v-if="socketType == Core.Node_Enums.SOCKET_TYPE.BOOL"
+                    class="width: 20px"
+                    :style="customStyles">
                 </div>
             </div>
             <div v-if="showLabel" class="socket_name" :class="socket.hideLabel ? 'invisible':''">
