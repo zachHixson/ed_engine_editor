@@ -105,6 +105,7 @@ export default function useConnection(
             const prevSocket = undoStore.cache.get('prev_socket');
     
             Object.assign(data.connectionObj, prevSocket);
+            undoStore.cache.delete('prev_socket');
             undoStore.commit({action: Core.LOGIC_ACTION.DISCONNECT, data});
         }
 
