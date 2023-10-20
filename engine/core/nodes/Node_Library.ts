@@ -521,8 +521,7 @@ export const NODE_LIST: iNodeTemplate[] = [
         methods: {
             log(this: iEngineNode, eventContext: iEventContext){
                 const label = this.getInput('label', eventContext);
-                const rawData = this.getInput('_data', eventContext, false);
-                const data = rawData && rawData.length != undefined ? rawData : [rawData];
+                const data = this.getInput('_data', eventContext, false);
                 let output = '';
 
                 if (label.length) output += label;
