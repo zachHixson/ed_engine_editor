@@ -56,7 +56,7 @@ export class Engine implements iEngineCallbacks {
 
     private _canvas: HTMLCanvasElement;
     private _gl: WebGL2RenderingContext;
-    private _timeStart: number = 0;
+    private _timeStart: number = -1;
     private _curTime: number = 0;
     private _deltaTime: number = 0;
     private _lastLoopTimestamp: number = 0;
@@ -122,6 +122,7 @@ export class Engine implements iEngineCallbacks {
     get deltaTime(){return this._deltaTime}
     get mouse(){return this._mouse}
     get keyMap(){return this._keymap}
+    get isRunning(){return this._timeStart >= 0}
 
     loadRoom = (roomId: number): void =>{
         const room = this._gameData.rooms.find((r: Room) => r.id == roomId)!;
@@ -491,6 +492,7 @@ export class Engine implements iEngineCallbacks {
         this._nodeEventMap = new Map();
         this._collisionMap = new Map();
         this._globalVariables = new Map();
+        this._timeStart = -1;
         window.IS_ENGINE = false;
         Instance_Exit.engine = null;
     }

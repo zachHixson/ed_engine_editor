@@ -991,6 +991,8 @@ export const NODE_LIST: iNodeTemplate[] = [
                     const deltaTimeMS = this.engine.deltaTime * 1000;
 
                     if (!data) return;
+                    
+                    if (!this.engine.isRunning) return;
 
                     if (!data.active){
                         data.lastTickGap = data.step;
