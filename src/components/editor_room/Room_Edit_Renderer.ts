@@ -74,13 +74,7 @@ export default class Room_Edit_Renderer {
     }
 
     private _iconsLoaded = (event: CustomEvent): void => {
-        const images = event.detail as {id: string, image: ImageData[]}[];
-
-        for (let i = 0; i < images.length; i++){
-            const image = images[i];
-            this._iconRenderer.updateSprite(image.id, image.image);
-        }
-
+        this.initInstances();
         this.queueRender();
     }
     
@@ -151,6 +145,7 @@ export default class Room_Edit_Renderer {
 
     initInstances(): void {
         if (!this._roomRef) return;
+        if (!iconsLoaded) return;
 
         this._instanceRenderer.clear();
         this._iconRenderer.clear();
