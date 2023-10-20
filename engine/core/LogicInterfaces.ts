@@ -209,7 +209,7 @@ export interface iEngineNode extends iNode_Base {
 
     method(methodName: string, eventContext: iEventContext, data?: any): any;
     getWidgetData(): any;
-    getInput(inputName: string, eventContext: iEventContext): any;
+    getInput(inputName: string, eventContext: iEventContext, convertList?: boolean): any;
     triggerOutput(outputId: string, eventContext: iEventContext): void;
 }
 

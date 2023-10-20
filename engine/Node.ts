@@ -140,13 +140,13 @@ export default class Node implements iEngineNode {
         return this.widgetData;
     }
 
-    getInput(inputName: string, eventContext: iEventContext): any {
+    getInput(inputName: string, eventContext: iEventContext, convertList: boolean = true): any {
         const input = this.inputs.get(inputName)!;
 
         if (input.connection){
             const node = input.connection.node as Node;
             const val = node._getOutputData(input.connection.id, eventContext);
-            const listResult = listConvert(!!input.connection.isList, !!input.isList, val);
+            const listResult = convertList ? listConvert(Array.isArray(val), !!input.isList, val) : val;
 
             return convertSocketType(input.connection.type, input.type, listResult);
         }

@@ -521,13 +521,13 @@ export const NODE_LIST: iNodeTemplate[] = [
         methods: {
             log(this: iEngineNode, eventContext: iEventContext){
                 const label = this.getInput('label', eventContext);
-                const rawData = this.getInput('_data', eventContext);
+                const rawData = this.getInput('_data', eventContext, false);
                 const data = rawData && rawData.length != undefined ? rawData : [rawData];
                 let output = '';
 
                 if (label.length) output += label;
 
-                if (data instanceof Array && data?.length > 1){
+                if (Array.isArray(data)){
                     let arrayString = '';
 
                     if (data[0].name){
@@ -540,11 +540,11 @@ export const NODE_LIST: iNodeTemplate[] = [
 
                     output += `[${arrayString}]`;
                 }
-                else if (data[0]?.name){
+                else if (data?.name){
                     output += `{ ${convertObjectToString(data[0])} }`;
                 }
-                else if (data[0] != null){
-                    output += data[0];
+                else if (data != null){
+                    output += data;
                 }
 
                 this.engine.log(output);
