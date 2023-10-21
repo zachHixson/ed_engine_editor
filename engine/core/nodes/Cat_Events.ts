@@ -146,23 +146,27 @@ export default [
         },
         execute(this: iEngineNode, eventContext: iEventContext, data){
             const group = this.getInput('group', eventContext);
+            const groupKey = group + data.instance.id;
 
+            //clear group flags at start of every frame
             if (this.dataCache.get('currentTime') != this.engine.currentTime){
                 this.dataCache.get('groups').clear();
                 this.dataCache.set('currentTime', this.engine.currentTime);
             }
             
+            //if part of collision group, reject duplicate collisions
             if (group.length > 0){
                 const groups = this.dataCache.get('groups');
 
-                if (groups.has(group)){
+                if (groups.has(groupKey)){
                     return;
                 }
                 else{
-                    groups.set(group, true);
+                    groups.set(groupKey, true);
                 }
             }
 
+            //Dispatch collision event
             this.dataCache.set(eventContext.eventKey, data);
 
             switch (data.type){
