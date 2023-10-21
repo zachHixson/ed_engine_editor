@@ -398,6 +398,9 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
                 <button class="resizeBtn resizeBtn-left" @click="showGraphs = !showGraphs" :style="showGraphs ? 'transform: translateX(2px);' : ''">
                     <Svg v-show="showGraphs" :src="arrowIcon" style="transform: rotate(90deg)"></Svg>
                     <Svg v-show="!showGraphs" :src="hamburgerIcon"></Svg>
+                    <div v-if="selectedAsset.graphs.length > 1" class="graph-count-badge">
+                        <div>{{ selectedAsset.graphs.length }}</div>
+                    </div>
                 </button>
             </div>
             <div class="nav-control-wrapper">
@@ -476,6 +479,21 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
     justify-content: center;
     height: 100%;
     user-select: none;
+}
+
+.graph-count-badge{
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgb(119, 205, 255);
+    border: 2px solid var(--border);
 }
 
 .resizeBtn-right-wrapper{
