@@ -83,7 +83,6 @@
         "keep_position": "Keep Position",
         "transition_only": "Transition Only",
         "keep_camera_settings": "Keep Camera Settings",
-        "logic_preset": "Logic Preset",
         "logic_script": "Logic Script",
         "groups": "Groups",
         "group_prefix": "Group_",
@@ -99,7 +98,6 @@
         "tt_trigger_exits": "Toggles whether or not the object should trigger a room change when it collides with an exit",
         "tt_exit_behavior": "Sets what happens to object when it triggers an exit",
         "tt_keep_camera_settings": "Current camera settings will get transferred to next room",
-        "tt_logic_preset": "Select from a wide variety of logic presets",
         "tt_logic_script": "Select a custom logic script for this object to use",
         "tt_groups": "Add custom groups the instance should belong to.<br>Can be used when scripting to get different instances which have the same group"
     },

@@ -16,7 +16,6 @@ export interface iGameObjectSaveData extends iAssetSaveData {
     exBeh: EXIT_TYPES;
     kpCam: 0 | 1;
     custLog: 0 | 1;
-    lPresId: number | '';
     lScrId: number | '';
     groups: string[];
 }
@@ -43,7 +42,6 @@ export class Game_Object extends Asset_Base {
     exitBehavior: EXIT_TYPES = EXIT_TYPES.TO_DESTINATION;
     keepCameraSettings: boolean = true;
     customLogic: boolean = false;
-    logicPresetId: number | null = null;
     logicScriptId: number | null = null;
     logicScript: iEngineLogic | null = null;
     groups: string[] = [];
@@ -84,7 +82,6 @@ export class Game_Object extends Asset_Base {
             exBeh: this.exitBehavior,
             kpCam: +this.keepCameraSettings as (0 | 1),
             custLog: +this.customLogic as (0 | 1),
-            lPresId: this.logicPresetId ?? '',
             lScrId: this.logicScriptId ?? '',
             groups: this.groups,
         };
@@ -108,7 +105,6 @@ export class Game_Object extends Asset_Base {
         this.exitBehavior = data.exBeh;
         this.keepCameraSettings = !!data.kpCam;
         this.customLogic = !!data.custLog;
-        this.logicPresetId = data.lPresId == '' ? null : data.lPresId;
         this.logicScriptId = data.lScrId == '' ? null : data.lScrId;
         this.logicScript = logicMap?.get(this.logicScriptId!) ?? null;
         this.groups = data.groups;
