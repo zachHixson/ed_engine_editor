@@ -1,8 +1,8 @@
 import { nextTick } from 'vue';
 import type { Ref, ComputedRef } from 'vue';
-import type { default as Node_Obj } from '../node_components/Node';
+import { default as Node_Obj } from '../node_components/Node';
 import type Logic from '../node_components/Logic';
-import type Node_Connection from '../node_components/Node_Connection';
+import Node_Connection from '../node_components/Node_Connection';
 import { useMainStore } from '@/stores/Main';
 import { useLogicEditorStore } from '@/stores/LogicEditor';
 import type Undo_Store from '@/components/common/Undo_Store';
@@ -67,23 +67,15 @@ export default function useNode(
         updateNodeBounds();
     }
 
-    function getNewNodePos(): Core.Vector {
+    function getNewNodePos(variation = 50): Core.Vector {
         const vpBounds = nodeViewportRef.value!.getBoundingClientRect();
         const vpUl = new Vector(vpBounds.left, vpBounds.top);
         const vpBr = new Vector(vpBounds.right, vpBounds.bottom);
         const midpoint = vpUl.clone().add(vpBr).divideScalar(2);
         const navPos = clientToNavPos(midpoint);
-    
-        for (let i = 0; i < props.selectedAsset.nodes.length; i++){
-            let curNode = props.selectedAsset.nodes[i];
-    
-            if (curNode.pos.equalTo(navPos)){
-                let size = 50;
-                let ul = new Vector(-size, -size);
-                let br = new Vector(size, size);
-                navPos.add(new Vector(0, 0).randomize(ul, br));
-            }
-        }
+        const ul = new Vector(-variation, -variation);
+        const br = new Vector(variation, variation);
+        navPos.add(new Vector(0, 0).randomize(ul, br));
         
         return navPos;
     }
@@ -153,6 +145,46 @@ export default function useNode(
         protectedNodes.forEach(node => node.onDeleteStopped && node.onDeleteStopped(protectedNodes));
     }
 
+    function copySelectedToClipboard(): void {
+        if (selectedNodes.value.length <= 0) return;
+
+        const nodeMap = new Map<number, Node_Obj>();
+        const connectionList= selectedNodes.value[0].parentScript.connections;
+        const nodeData: Core.iNodeSaveData[] = [];
+        const connectionData: Core.iConnectionSaveData[] = [];
+        const boundsCenter = new Vector(0, 0);
+
+        //calculate node bounds
+        selectedNodes.value.forEach(node => {
+            const bounds = node.domRef!.getBoundingClientRect();
+            boundsCenter.add(node.pos);
+        });
+
+        boundsCenter.divideScalar(selectedNodes.value.length);
+
+        //add all selected nodes to map
+        selectedNodes.value.forEach(node => {
+            const data = node.toSaveData();
+
+            data.pos.x -= boundsCenter.x;
+            data.pos.y -= boundsCenter.y;
+
+            nodeMap.set(node.nodeId, node);
+            nodeData.push(data);
+        });
+
+        //Only copy connections where both ends are contained within selection
+        connectionList.forEach(connection => {
+            const isContained = nodeMap.has(connection.startNode!.nodeId) && nodeMap.has(connection.endNode!.nodeId);
+
+            if (!isContained) return;
+
+            connectionData.push(connection.toSaveData());
+        });
+
+        logicEditorStore.setClipboard(nodeData, connectionData);
+    }
+
     function actionAddNode({templateId, nodeRef}: ActionAddNodeProps, makeCommit = true): void {
         const nodeAPI = mainStore.getNodeAPI;
         const pos = getNewNodePos();
@@ -164,6 +196,56 @@ export default function useNode(
         }
     
         if (!nodeRef) newNode.onCreate && (newNode.onCreate as ()=>void)();
+    }
+
+    function actionPasteNodes(_:{}, makeCommit = true): void {
+        const {nodeData, connectionData} = logicEditorStore.getClipboard;
+        const posOffset = getNewNodePos();
+        const idMap = new Map<number, number>();
+        const nodeMap = new Map<number, Node_Obj>();
+        const connectionList: Node_Connection[] = [];
+        const nodeAPI = mainStore.getNodeAPI;
+
+        if (nodeData.length <= 0) return;
+
+        deselectAllNodes();
+
+        nodeData.forEach(data => {
+            const node = Node_Obj.fromSaveData(data, props.selectedAsset, nodeAPI);
+            const newId = props.selectedAsset.nextNodeId;
+            idMap.set(node.nodeId, newId);
+            node.nodeId = newId;
+            node.graphId = props.selectedAsset.selectedGraphId;
+            node.pos.add(posOffset);
+            nodeMap.set(node.nodeId, node);
+            props.selectedAsset.addNode(node.templateId, node.pos, nodeAPI, node);
+            props.selectedAsset.selectedNodes.push(node);
+        });
+
+        connectionData.forEach(data => {
+            const modifiedData = Object.assign({}, data);
+            modifiedData.sNodeId = idMap.get(modifiedData.sNodeId)!;
+            modifiedData.eNodeId = idMap.get(modifiedData.eNodeId)!;
+
+            const connection = Node_Connection.fromSaveData(modifiedData, nodeMap);
+            connection.id = 0;
+            connection.graphId = props.selectedAsset.selectedGraphId;
+            props.selectedAsset.addConnection(connection);
+            connectionList.push(connection);
+            connection.startNode?.onRemoveConnection && connection.startNode?.onRemoveConnection(connection);
+            connection.endNode?.onRemoveConnection && connection.endNode?.onRemoveConnection(connection);
+        });
+
+        nextTick(()=>{
+            relinkConnections();
+        });
+
+        if (makeCommit){
+            const nodeList = Array.from(nodeMap, ([_, value])=>value);
+            const connectionMap = new Map().set(props.selectedAsset, connectionList);
+            const data = {nodeRefList: nodeList, connectionRefMap: connectionMap} satisfies ActionDeleteNodesProps;
+            undoStore.commit({action: Core.LOGIC_ACTION.PASTE, data});
+        }
     }
     
     function actionDeleteNodes({nodeRefList}: ActionDeleteNodesProps, makeCommit = true): void {
@@ -265,9 +347,11 @@ export default function useNode(
     }
 
     actionMap.set(Core.LOGIC_ACTION.ADD_NODE, actionAddNode);
+    actionMap.set(Core.LOGIC_ACTION.PASTE, revertDeleteNodes);
     actionMap.set(Core.LOGIC_ACTION.DELETE_NODES, actionDeleteNodes);
     actionMap.set(Core.LOGIC_ACTION.MOVE, actionMoveNodes);
     revertMap.set(Core.LOGIC_ACTION.ADD_NODE, revertAddNode);
+    revertMap.set(Core.LOGIC_ACTION.PASTE, actionDeleteNodes);
     revertMap.set(Core.LOGIC_ACTION.DELETE_NODES, revertDeleteNodes);
     revertMap.set(Core.LOGIC_ACTION.MOVE, revertMoveNodes);
 
@@ -280,7 +364,9 @@ export default function useNode(
         selectAllNodes,
         deselectAllNodes,
         deleteSelectedNodes,
+        copySelectedToClipboard,
         addNode: actionAddNode,
+        pasteNodes: actionPasteNodes,
         deleteNodes: actionDeleteNodes,
         moveNodes: actionMoveNodes,
     };

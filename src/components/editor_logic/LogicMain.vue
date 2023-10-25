@@ -15,6 +15,7 @@ import DialogNewVariable from './DialogNewVariable.vue';
 import Svg from '@/components/common/Svg.vue';
 import NodeLibrary from './NodeLibrary.vue';
 import Graphs from './Graphs.vue';
+import ContextMenu from './ContextMenu.vue';
 
 import { ref, reactive, computed, watch, nextTick, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
 import type { Ref } from 'vue';
@@ -117,7 +118,9 @@ const {
     updateNodeBounds,
     selectAllNodes,
     deselectAllNodes,
+    copySelectedToClipboard,
     addNode,
+    pasteNodes,
     deleteNodes,
     deleteSelectedNodes,
     moveNodes,
@@ -140,6 +143,7 @@ const {
     selectionBox,
     selectionBoxRef,
     navToolSelected,
+    contextMenuPosition,
 } = useInput(
     props,
     hotkeyMap,
@@ -326,6 +330,13 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
             :selectedAsset="selectedAsset"
             :callback="newVariableCallback"
             @close="dialogNewVariableClose"/>
+        <ContextMenu
+            v-if="contextMenuPosition != null"
+            :position="contextMenuPosition"
+            v-click-outside.any="()=>{contextMenuPosition = null}"
+            ref="contextMenuEl"
+            @copy="copySelectedToClipboard(); contextMenuPosition = null;"
+            @paste="pasteNodes({}); contextMenuPosition = null;"></ContextMenu>
         <div class="node-panel-wrapper">
             <NodeLibrary
                 @node-clicked="addNode({templateId: $event})"/>

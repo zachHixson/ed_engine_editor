@@ -43,6 +43,7 @@ export default function useInput(
     });
     const currentSocketOver = ref<iHoverSocket | null>(null);
     const navControlPanelScroll = (event: WheelEvent)=>LogicMainEventBus.emit('mouse-wheel', event);
+    const contextMenuPosition = ref<Core.Vector | null>(null);
 
     onMounted(()=>{
         window.addEventListener('keydown', keyDown);
@@ -54,6 +55,7 @@ export default function useInput(
         nodeViewportRef.value!.addEventListener('mouseenter', mouseEnter);
         nodeViewportRef.value!.addEventListener('mouseleave', mouseLeave);
         nodeViewportRef.value!.addEventListener('wheel', navControlPanelScroll);
+        nodeViewportRef.value!.addEventListener('contextmenu', contextMenu);
     });
 
     onBeforeUnmount(()=>{
@@ -66,6 +68,7 @@ export default function useInput(
         nodeViewportRef.value!.removeEventListener('mouseenter', mouseEnter);
         nodeViewportRef.value!.removeEventListener('mouseleave', mouseLeave);
         nodeViewportRef.value!.removeEventListener('wheel', navControlPanelScroll);
+        nodeViewportRef.value!.removeEventListener('contextmenu', contextMenu);
     });
 
     function mouseClick(event: MouseEvent): void {
@@ -193,6 +196,13 @@ export default function useInput(
             lastMouseDragPos.copy(mousePos);
         }
     }
+
+    function contextMenu(e: MouseEvent): void {
+        const viewportDim = nodeViewportRef.value!.getBoundingClientRect();
+        const mousePos = new Vector(e.clientX - viewportDim.x, e.clientY - viewportDim.y);
+        e.preventDefault();
+        contextMenuPosition.value = mousePos;
+    }
     
     function navToolSelected(newTool: Core.NAV_TOOL_TYPE): void {
         const logicEditorStore = useLogicEditorStore();
@@ -262,5 +272,6 @@ export default function useInput(
         selectionBox,
         selectionBoxRef,
         navToolSelected,
+        contextMenuPosition,
     }
 }

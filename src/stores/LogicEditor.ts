@@ -6,6 +6,10 @@ interface iState {
     openCategory: string | null,
     graphPanelOpen: boolean,
     globalVariableMap: Map<string, Core.iEditorVariable>,
+    clipboard: {
+        nodeData: Core.iNodeSaveData[],
+        connectionData: Core.iConnectionSaveData[],
+    },
 }
 
 export const useLogicEditorStore = defineStore({
@@ -16,6 +20,10 @@ export const useLogicEditorStore = defineStore({
         openCategory: null,
         graphPanelOpen: false,
         globalVariableMap: new Map<string, Core.iEditorVariable>(),
+        clipboard: {
+            nodeData: [],
+            connectionData: [],
+        },
     }),
     
     getters: {
@@ -23,11 +31,16 @@ export const useLogicEditorStore = defineStore({
         getOpenCategory: (state): string | null => state.openCategory,
         isGraphPanelOpen: (state): boolean => state.graphPanelOpen,
         getGlobalVariableMap: (state): Map<string, Core.iEditorVariable> => state.globalVariableMap,
+        getClipboard: (state): iState['clipboard'] => state.clipboard,
     },
 
     actions: {
         selectNavTool(newTool: Core.NAV_TOOL_TYPE | null){ this.selectedNavTool = newTool },
         setOpenCategory(category: string | null){ this.openCategory = category },
         setGraphPanelState(newState: boolean){ this.graphPanelOpen = newState },
+        setClipboard(nodeData: Core.iNodeSaveData[], connectionData: Core.iConnectionSaveData[]){
+            this.clipboard.nodeData = nodeData;
+            this.clipboard.connectionData = connectionData;
+        },
     }
 });
