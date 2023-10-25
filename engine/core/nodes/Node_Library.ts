@@ -766,6 +766,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'type', type: SOCKET_TYPE.ASSET, default: null, required: false},
             {id: 'x', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
             {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
+            {id: 'relative', type: SOCKET_TYPE.BOOL, default: false},
         ],
         outputs: [
             {id: 'instance', type: SOCKET_TYPE.INSTANCE, execute: 'getAsset'},
@@ -775,7 +776,8 @@ export const NODE_LIST: iNodeTemplate[] = [
                 const baseAsset = this.getInput('type', eventContext);
                 const x = this.getInput('x', eventContext);
                 const y = this.getInput('y', eventContext);
-                const pos = new Vector(x, y);
+                const relative = this.getInput('relative', eventContext);
+                const pos = relative ? new Vector(x, y).add(eventContext.instance.pos) : new Vector(x, y);
                 const nextId = this.engine.room.curInstId;
                 const newInstance = assetToInstance(baseAsset, nextId, pos);
 
