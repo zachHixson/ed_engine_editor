@@ -7,6 +7,7 @@ export interface iNodeTemplate extends iNodeLifecycleEvents {
     id: string;
     category: string;
     isEvent?: boolean;
+    doNotCopy?: boolean;
     inTriggers?: Array<iInTrigger>;
     outTriggers?: Array<string>;
     inputs?: Array<iInput>;

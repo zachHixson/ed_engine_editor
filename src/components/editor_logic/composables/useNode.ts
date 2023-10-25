@@ -146,24 +146,25 @@ export default function useNode(
     }
 
     function copySelectedToClipboard(): void {
-        if (selectedNodes.value.length <= 0) return;
+        const nodesToCopy = selectedNodes.value.filter(node => !node.template.doNotCopy);
+
+        if (nodesToCopy.length <= 0) return;
 
         const nodeMap = new Map<number, Node_Obj>();
-        const connectionList= selectedNodes.value[0].parentScript.connections;
+        const connectionList= nodesToCopy[0].parentScript.connections;
         const nodeData: Core.iNodeSaveData[] = [];
         const connectionData: Core.iConnectionSaveData[] = [];
         const boundsCenter = new Vector(0, 0);
 
         //calculate node bounds
-        selectedNodes.value.forEach(node => {
-            const bounds = node.domRef!.getBoundingClientRect();
+        nodesToCopy.forEach(node => {
             boundsCenter.add(node.pos);
         });
 
-        boundsCenter.divideScalar(selectedNodes.value.length);
+        boundsCenter.divideScalar(nodesToCopy.length);
 
         //add all selected nodes to map
-        selectedNodes.value.forEach(node => {
+        nodesToCopy.forEach(node => {
             const data = node.toSaveData();
 
             data.pos.x -= boundsCenter.x;

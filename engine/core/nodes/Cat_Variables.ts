@@ -8,6 +8,7 @@ export default [
     {// Create Variable
         id: 'create_variable',
         category: 'variables',
+        doNotCopy: true,
         inputs: [
             {id: '_varName', type: SOCKET_TYPE.INFO, hideSocket: true},
             {id: '_varType', type: SOCKET_TYPE.INFO, hideSocket: true},
