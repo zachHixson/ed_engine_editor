@@ -409,7 +409,7 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
                 <button class="resizeBtn resizeBtn-left" @click="showGraphs = !showGraphs" :style="showGraphs ? 'transform: translateX(2px);' : ''">
                     <Svg v-show="showGraphs" :src="arrowIcon" style="transform: rotate(90deg)"></Svg>
                     <Svg v-show="!showGraphs" :src="hamburgerIcon"></Svg>
-                    <div v-if="selectedAsset.graphs.length > 1" class="graph-count-badge">
+                    <div v-if="selectedAsset.graphs.length > 1 && !showGraphs" class="graph-count-badge">
                         <div>{{ selectedAsset.graphs.length }}</div>
                     </div>
                 </button>
