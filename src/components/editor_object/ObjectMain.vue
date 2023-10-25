@@ -7,15 +7,18 @@ import AnimationPlayer from '@/components/common/AnimationPlayer.vue';
 import GroupList from '@/components/common/GroupList.vue';
 import CategoryWrapper from './CategoryWrapper.vue';
 import SearchDropdown from '../common/SearchDropdown.vue';
+import Svg from '../common/Svg.vue';
 
-import { ref, computed, nextTick, onMounted } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import { useGameDataStore } from '@/stores/GameData';
 import { useI18n } from 'vue-i18n';
+import { AssetBrowserEventBus } from '../asset_browser/AssetBrowser.vue';
 import Core from '@/core';
 
 import spriteIcon from '@/assets/sprite_icon.svg';
 import physicsIcon from '@/assets/physics.svg';
 import logicIcon from '@/assets/logic.svg';
+import goTo from '@/assets/go_to.svg';
 
 const { t } = useI18n();
 const gameDataStore = useGameDataStore();
@@ -128,6 +131,15 @@ function logicScriptChanged(id: number | string): void {
 
     props.selectedAsset.logicScriptId = scriptId;
 }
+
+function gotoLogicScript(){
+    const selectedScriptId = props.selectedAsset.logicScriptId;
+
+    if (selectedScriptId == null) return;
+
+    const selectedScript = gameDataStore.getAllLogic.find(s => s.id == selectedScriptId)!;
+    AssetBrowserEventBus.emit('select-asset', selectedScript);
+}
 </script>
 
 <template>
@@ -211,6 +223,9 @@ function logicScriptChanged(id: number | string): void {
                 <div class="control">
                     <label for="logic_script_select">{{$t('object_editor.logic_script')}}:</label>
                     <SearchDropdown id="logic_script_select" :items="logicChoices" :value="props.selectedAsset.logicScriptId ?? null" @change="logicScriptChanged"></SearchDropdown>
+                    <button style="width: 25px; height: 25px;" @click="gotoLogicScript" v-tooltip="$t('object_editor.tt_goto_logic')">
+                        <Svg :src="goTo" style="width: 100%; height: 100%;"></Svg>
+                    </button>
                 </div>
             </div>
             <div class="v-divider"></div>

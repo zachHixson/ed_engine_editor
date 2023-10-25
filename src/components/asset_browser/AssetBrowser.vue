@@ -8,7 +8,7 @@ import DragList from '@/components/common/DragList.vue';
 import Svg from '@/components/common/Svg.vue';
 
 import { AppEventBus } from '@/App.vue';
-import { ref, computed, nextTick, onMounted } from 'vue';
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAssetBrowserStore } from '@/stores/AssetBrowser';
 import { useGameDataStore } from '@/stores/GameData';
@@ -79,6 +79,12 @@ const selectedList = computed(()=>{
 
 onMounted(()=>{
     AppEventBus.addEventListener('update-asset', updateAsset);
+    AssetBrowserEventBus.addEventListener('select-asset', selectAsset);
+});
+
+onBeforeUnmount(()=>{
+    AppEventBus.removeEventListener('update-asset', updateAsset);
+    AssetBrowserEventBus.removeEventListener('select-asset', selectAsset);
 });
 
 function openCategory(category: typeof categories[number]): void {

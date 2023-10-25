@@ -99,6 +99,7 @@
         "tt_exit_behavior": "Sets what happens to object when it triggers an exit",
         "tt_keep_camera_settings": "Current camera settings will get transferred to next room",
         "tt_logic_script": "Select a custom logic script for this object to use",
+        "tt_goto_logic": "Open logic script in logic editor",
         "tt_groups": "Add custom groups the instance should belong to.<br>Can be used when scripting to get different instances which have the same group"
     },
     "room_editor":{
