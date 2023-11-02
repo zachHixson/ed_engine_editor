@@ -4,6 +4,7 @@ import { Node_Enums, iEngineLogic } from "../core";
 import { Draw } from "../core";
 import { Sprite } from "../core";
 import { Util } from "../core";
+import Matter from 'matter-js';
 import type Engine from '@engine/Engine';
 
 export enum InstanceAnimEvent {
@@ -33,6 +34,7 @@ export interface iCollisionEvent {
 export abstract class Instance_Base{
     private _animProgress: number = 0;
     private _engine: Engine | null = null;
+    private _physicsObject: ReturnType<typeof Matter.Bodies.rectangle> | null = null;
 
     id: number;
     name: string;
@@ -82,6 +84,7 @@ export abstract class Instance_Base{
     get zDepthOverride(){return 0};
     set zDepthOverride(val: number | null){};
     get isSolid(){return false};
+    get applyGravity(){return false}
     abstract get frameDataId(): number | string;
     abstract get frameData(): Array<ImageData>;
 
@@ -107,15 +110,25 @@ export abstract class Instance_Base{
     }
 
     //Lifecycle events
-    onCreate(): void {}
+    onCreate(): void {
+        if (this.isSolid || this.applyGravity){
+            this.initPhysicsBody(!this.applyGravity);
+        }
+    }
     onUpdate(deltaTime: number): void {
-        if (!this._engine || this.velocity.dot(this.velocity) == 0) return;
+        //update position if not a phyics object
+        if (this._physicsObject) return;
 
-        this._engine.moveInstanceDirection(this, this.velocity.clone().multiplyScalar(deltaTime), this.collisionSlide);
+        const vel = this.velocity.clone().scale(deltaTime);
+        const newPos = vel.add(this.pos);
+        this._engine!.setInstancePosition(this, newPos);
     }
     onAnimationChange(state: InstanceAnimEvent): void {}
     onCollision(event: iCollisionEvent): void {}
-    onDestroy(): void {}
+    onDestroy(): void {
+        Matter.Events.on(this._engine!.physics, 'beforeUpdate', this.beforeUpdateHandler);
+        Matter.Events.on(this._engine!.physics, 'afterUpdate', this.afterUpdateHandler);
+    }
 
     setEngine(engine: Engine): void {
         this._engine = engine;
@@ -220,5 +233,44 @@ export abstract class Instance_Base{
 
     isInGroup(group: string): boolean {
         return !!this.groups.find(g => g == group);
+    }
+
+    //matter handlers
+    beforeUpdateHandler(eventData: any): void {
+        const deltaTime = eventData.delta as number;
+        const vel = this.velocity.clone()
+
+        if (this.applyGravity && this.velocity.y > 0){
+            const newPhysVel = Vector.fromObject(this._physicsObject!.velocity);
+            newPhysVel.y = this.velocity.y - this._engine!.room.gravity * 9.81;
+            Matter.Body.setVelocity(this._physicsObject!, newPhysVel);
+        }
+
+        vel.add(this._physicsObject!.velocity as Vector).scale(deltaTime);
+        Matter.Body.translate(this._physicsObject!, vel);
+    }
+
+    afterUpdateHandler(): void {
+        this.pos.copy(this._physicsObject!.position);
+        this._engine!.setInstancePosition(this, this.pos);
+    }
+
+    initPhysicsBody(isStatic: boolean): void {
+        if (this._physicsObject) return;
+
+        const options = {
+            id: this.id,
+            isStatic
+        };
+        this._physicsObject = Matter.Bodies.rectangle(this.pos.x, this.pos.y, Sprite.DIMENSIONS, Sprite.DIMENSIONS, options);
+        this._engine!.addPhysicsObjects([this._physicsObject]);
+
+        this.beforeUpdateHandler = this.beforeUpdateHandler.bind(this);
+        this.afterUpdateHandler = this.afterUpdateHandler.bind(this);
+
+        Matter.Body.setInertia(this._physicsObject, Infinity);
+        
+        Matter.Events.on(this._engine!.physics, 'beforeUpdate', this.beforeUpdateHandler);
+        Matter.Events.on(this._engine!.physics, 'afterUpdate', this.afterUpdateHandler);
     }
 }

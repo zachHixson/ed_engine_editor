@@ -27,6 +27,7 @@ import iGameData from './iGameData';
 import getTransitions from './transitions/getTransitions';
 import Transition_Base, { TRANSITION } from './transitions/Transition_Base';
 import * as Physics from './Physics';
+import Matter from 'matter-js';
 import { SOCKET_TYPE } from './core/nodes/Node_Enums';
 
 export * as Core from '@engine/core/core';
@@ -61,6 +62,7 @@ export class Engine implements iEngineCallbacks {
     private _deltaTime: number = 0;
     private _lastLoopTimestamp: number = 0;
     private _loadedRoom: Room = new Room();
+    private _physics = Matter.Engine.create();
     private _renderer: Renderer;
     private _dialogBox: Dialog_Box;
     private _dialogFullscreen: Dialog_Fullscreen;
@@ -86,7 +88,6 @@ export class Engine implements iEngineCallbacks {
     error: (...args: any)=>void = function(){console.error(...arguments)};
     nodeException: (error: string, treeData: any)=>void = function(error: string, treeData: any){console.error(error)};
     restart: ()=>void = function(){location.reload()};
-
 
     constructor(canvas: HTMLCanvasElement, gameData: string, callbacks?: iEngineCallbacks){
         window.IS_ENGINE = true;
@@ -114,6 +115,22 @@ export class Engine implements iEngineCallbacks {
 
         //setup static properties
         Instance_Exit.engine = this;
+
+        //setup Matter listeners
+        const collisionHandler = (event: any) => {
+            const pairs = event.pairs;
+
+            for (let i = 0; i < pairs.length; i++){
+                const {bodyA, bodyB} = pairs[i];
+                const instA = this.room.getInstanceById(bodyA.id)!;
+                const instB = this.room.getInstanceById(bodyB.id)!;
+                
+                this.registerCollision(instA, instB);
+                this.registerCollision(instB, instA);
+            }
+        }
+        Matter.Events.on(this._physics, 'collisionStart', collisionHandler);
+        Matter.Events.on(this._physics, 'collisionActive', collisionHandler);
     }
 
     get gameData(){return this._gameData}
@@ -123,6 +140,7 @@ export class Engine implements iEngineCallbacks {
     get mouse(){return this._mouse}
     get keyMap(){return this._keymap}
     get isRunning(){return this._timeStart >= 0}
+    get physics(){return this._physics}
 
     loadRoom = (roomId: number): void =>{
         const room = this._gameData.rooms.find((r: Room) => r.id == roomId)!;
@@ -151,6 +169,9 @@ export class Engine implements iEngineCallbacks {
             instance.setEngine(this);
             instance.onCreate();
         });
+
+        this._physics.gravity.y = -1;
+        this._physics.gravity.scale = this._loadedRoom.gravity * 9.81;
     }
 
     private _updateLoop = (time: number): void =>{
@@ -170,8 +191,10 @@ export class Engine implements iEngineCallbacks {
             try{
                 this._updateInstances();
                 this._updateAnimations();
-                this._processCollisions();
                 this._updateCamera();
+                Matter.Engine.update(this._physics, this.deltaTime);
+                this._mapInstanceOverlaps();
+                this._dispatchCollisionEvents();
             }
             catch(e){
                 this.error(e);
@@ -207,11 +230,6 @@ export class Engine implements iEngineCallbacks {
 
     private _updateCamera = (): void =>{
         this._loadedRoom.camera.update(this.deltaTime, this._loadedRoom!, this._renderer.updateViewMatrix);
-    }
-
-    private _processCollisions = (): void =>{
-        this._mapInstanceOverlaps();
-        this._dispatchCollisionEvents();
     }
 
     private _mapInstanceOverlaps = (): void =>{
@@ -494,6 +512,7 @@ export class Engine implements iEngineCallbacks {
         this._globalVariables = new Map();
         this._timeStart = -1;
         window.IS_ENGINE = false;
+        Matter.Events.off(this._physics, undefined as any, undefined as any);
         Instance_Exit.engine = null;
     }
 
@@ -605,6 +624,10 @@ export class Engine implements iEngineCallbacks {
             this.registerCollision(instance, col.instance);
             this.registerCollision(col.instance, instance);
         });
+    }
+
+    addPhysicsObjects = (objList: ReturnType<typeof Matter.Bodies.rectangle>[]): void => {
+        Matter.Composite.add(this._physics.world, objList);
     }
 
     createGlobalVariable = (name: string, value: any, type: SOCKET_TYPE, isList: boolean): void =>{

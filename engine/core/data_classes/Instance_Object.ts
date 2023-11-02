@@ -33,6 +33,7 @@ export class Instance_Object extends Instance_Base{
     private _zDepthOverride: number | null = null;
     private _useIcon = false;
 
+    gravityOverride: boolean | null = null;
     collisionOverride: COLLISION_OVERRIDE = COLLISION_OVERRIDE.KEEP;
     localVariables: Map<string, iEngineVariable> = new Map();
     exposedProps: Map<string, any> = new Map();
@@ -79,6 +80,7 @@ export class Instance_Object extends Instance_Base{
             case COLLISION_OVERRIDE.IGNORE: return false;
         }
     }
+    get applyGravity(){return this.gravityOverride == null ? this.objRef.applyGravity : this.gravityOverride}
 
     get startFrame(){return this.startFrameOverride ?? this._objRef.startFrame};
     get fps(){return this.fpsOverride ?? this._objRef.fps};
@@ -124,6 +126,7 @@ export class Instance_Object extends Instance_Base{
     }
 
     override onCreate(): void {
+        super.onCreate();
         this.logic?.dispatchOnCreate(this);
         this.executeNodeEvent('e_create');
 

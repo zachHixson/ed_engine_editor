@@ -1240,6 +1240,11 @@ export const NODE_LIST: iNodeTemplate[] = [
                 const direction = Vector.fromArray(this.widgetData);
                 instance.velocity.copy(direction.multiplyScalar(speed));
                 instance.collisionSlide = this.getInput('slide', eventContext);
+
+                if (instance.isSolid){
+                    instance.initPhysicsBody(!instance.applyGravity);
+                }
+
                 this.triggerOutput('_o', eventContext);
             },
         },
