@@ -1231,7 +1231,6 @@ export const NODE_LIST: iNodeTemplate[] = [
         inputs: [
             {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
             {id: 'speed', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
-            {id: 'slide', type: SOCKET_TYPE.BOOL, default: false},
         ],
         methods: {
             setVelocity(this: iEngineNode, eventContext: iEventContext){
@@ -1239,10 +1238,9 @@ export const NODE_LIST: iNodeTemplate[] = [
                 const speed: number = this.getInput('speed', eventContext);
                 const direction = Vector.fromArray(this.widgetData);
                 instance.velocity.copy(direction.multiplyScalar(speed));
-                instance.collisionSlide = this.getInput('slide', eventContext);
 
                 if (instance.isSolid){
-                    instance.initPhysicsBody(!instance.applyGravity);
+                    instance.initPhysicsBody(false);
                 }
 
                 this.triggerOutput('_o', eventContext);

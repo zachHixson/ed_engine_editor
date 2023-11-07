@@ -49,7 +49,6 @@ export abstract class Instance_Base{
     fpsOverride: number | null = null;
     animLoopOverride: boolean | null = null;
     animPlayingOverride: boolean | null = null;
-    collisionSlide: boolean = false;
     backAnim = 1;
 
     constructor(id: number, pos: Vector = new Vector()){
@@ -238,13 +237,33 @@ export abstract class Instance_Base{
     //matter handlers
     beforeUpdateHandler(eventData: any): void {
         const deltaTime = eventData.delta as number;
-        const vel = this.velocity.clone()
+        const vel = this.velocity.clone();
+        const isSleeping = this.velocity.dot(this.velocity) == 0 && !this.applyGravity;
 
+        Matter.Sleeping.set(this._physicsObject!, isSleeping);
+
+        //Apply gravity
+        if (this.applyGravity){
+            Matter.Body.applyForce(
+                this._physicsObject!,
+                this._physicsObject!.position,
+                new Vector(0, -this._engine!.room.gravity)
+            );
+        }
+
+        //If an object is moving against gravity, remove the cumulative force to make control of object more natural
         if (this.applyGravity && this.velocity.y > 0){
             const newPhysVel = Vector.fromObject(this._physicsObject!.velocity);
             newPhysVel.y = this.velocity.y - this._engine!.room.gravity * 9.81;
             Matter.Body.setVelocity(this._physicsObject!, newPhysVel);
         }
+
+        //clamp object's velocity
+        const maxVel = Sprite.DIMENSIONS / deltaTime;
+        Matter.Body.setVelocity(this._physicsObject!, {
+            x: Util.clamp(this._physicsObject!.velocity.x, -maxVel, maxVel),
+            y: Util.clamp(this._physicsObject!.velocity.y, -maxVel, maxVel),
+        });
 
         vel.add(this._physicsObject!.velocity as Vector).scale(deltaTime);
         Matter.Body.translate(this._physicsObject!, vel);
@@ -255,12 +274,13 @@ export abstract class Instance_Base{
         this._engine!.setInstancePosition(this, this.pos);
     }
 
-    initPhysicsBody(isStatic: boolean): void {
+    initPhysicsBody(isSleeping: boolean): void {
         if (this._physicsObject) return;
 
         const options = {
             id: this.id,
-            isStatic
+            isStatic: false,
+            isSleeping,
         };
         this._physicsObject = Matter.Bodies.rectangle(this.pos.x, this.pos.y, Sprite.DIMENSIONS, Sprite.DIMENSIONS, options);
         this._engine!.addPhysicsObjects([this._physicsObject]);
@@ -272,5 +292,9 @@ export abstract class Instance_Base{
         
         Matter.Events.on(this._engine!.physics, 'beforeUpdate', this.beforeUpdateHandler);
         Matter.Events.on(this._engine!.physics, 'afterUpdate', this.afterUpdateHandler);
+    }
+
+    setStatic(state: boolean): void {
+        Matter.Body.setStatic(this._physicsObject!, state);
     }
 }

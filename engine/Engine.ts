@@ -115,6 +115,7 @@ export class Engine implements iEngineCallbacks {
 
         //setup static properties
         Instance_Exit.engine = this;
+        this._physics.gravity.scale = 0;
 
         //setup Matter listeners
         const collisionHandler = (event: any) => {
@@ -169,9 +170,6 @@ export class Engine implements iEngineCallbacks {
             instance.setEngine(this);
             instance.onCreate();
         });
-
-        this._physics.gravity.y = -1;
-        this._physics.gravity.scale = this._loadedRoom.gravity * 9.81;
     }
 
     private _updateLoop = (time: number): void =>{
