@@ -861,7 +861,6 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'start_y', type: SOCKET_TYPE.NUMBER, required: false, default: ''},
             {id: 'distance', type: SOCKET_TYPE.NUMBER, required: true, default: 1},
             {id: 'only_solid', type: SOCKET_TYPE.BOOL, default: false},
-            {id: 'ignore_self', type: SOCKET_TYPE.BOOL, default: true},
         ],
         outputs: [
             {id: 'instances', type: SOCKET_TYPE.INSTANCE, isList: true, execute: 'raycast'},
@@ -876,12 +875,12 @@ export const NODE_LIST: iNodeTemplate[] = [
                 const startX = this.getInput('start_x', eventContext);
                 const startY = this.getInput('start_y', eventContext);
                 const startPos = new Vector(
-                    startX && startX.length ? startX : eventContext.instance.pos.x,
-                    startY && startY.length ? startY : eventContext.instance.pos.y,
+                    startX ?? eventContext.instance.pos.x,
+                    startY ?? eventContext.instance.pos.y,
                 );
                 const distance = this.getInput('distance', eventContext);
                 const onlySolid = this.getInput('only_solid', eventContext);
-                const ignoreSelf = this.getInput('ignore_self', eventContext);
+                const ignoreSelf = (startX ?? true) || (startY ?? true);
                 const rayVector = new Vector(widgetDir[0], widgetDir[1]).multiplyScalar(distance);
                 const nearInstances = this.engine.room.getInstancesInRadius(startPos, distance)
                     .filter(i => {
@@ -1230,7 +1229,7 @@ export const NODE_LIST: iNodeTemplate[] = [
         outTriggers: ['_o'],
         inputs: [
             {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
-            {id: 'speed', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
+            {id: 'speed', type: SOCKET_TYPE.NUMBER, default: 10, required: true},
         ],
         methods: {
             setVelocity(this: iEngineNode, eventContext: iEventContext){
@@ -1246,6 +1245,35 @@ export const NODE_LIST: iNodeTemplate[] = [
                 this.triggerOutput('_o', eventContext);
             },
         },
+    },
+    {// Push Direction
+        id: 'push_direction',
+        category: 'movement',
+        widget: {
+            id: 'direction',
+            type: WIDGET.DIRECTION,
+            options: {
+                startDir: [1, 0],
+            },
+        },
+        inTriggers: [
+            {id: '_i', execute: 'push'}
+        ],
+        outTriggers: ['_o'],
+        inputs: [
+            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
+            {id: 'strength', type: SOCKET_TYPE.NUMBER, default: 1, required: true},
+        ],
+        methods: {
+            push(this: iEngineNode, eventContext: iEventContext){
+                const instance: Instance_Base = this.getInput('instance', eventContext) ?? eventContext.instance;
+                const strength = this.getInput('strength', eventContext);
+                const force = Vector.fromArray(this.widgetData).scale(strength);
+                instance.applyForce(force);
+
+                this.triggerOutput('_o', eventContext);
+            }
+        }
     },
     ...Cat_Variables,
 ];

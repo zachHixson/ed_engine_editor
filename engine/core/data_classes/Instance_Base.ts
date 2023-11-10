@@ -297,4 +297,8 @@ export abstract class Instance_Base{
     setStatic(state: boolean): void {
         Matter.Body.setStatic(this._physicsObject!, state);
     }
+
+    applyForce(force: Vector): void {
+        Matter.Body.applyForce(this._physicsObject!, this._physicsObject!.position, force);
+    }
 }
