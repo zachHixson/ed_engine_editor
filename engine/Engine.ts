@@ -118,16 +118,25 @@ export class Engine implements iEngineCallbacks {
         this._physics.gravity.scale = 0;
 
         //setup Matter listeners
+        const dotCheck = -Math.cos(Math.PI / 4);
+        const checkOnGround = (posA: ReturnType<typeof Matter.Vector.create>, posB: ReturnType<typeof Matter.Vector.create>)=>{
+            const dir = Matter.Vector.normalise(Matter.Vector.sub(posA, posB));
+            return dir.y <= dotCheck;
+        }
         const collisionHandler = (event: any) => {
             const pairs = event.pairs;
 
             for (let i = 0; i < pairs.length; i++){
-                const {bodyA, bodyB} = pairs[i];
+                const { bodyA, bodyB } = pairs[i];
                 const instA = this.room.getInstanceById(bodyA.id)!;
                 const instB = this.room.getInstanceById(bodyB.id)!;
                 
                 this.registerCollision(instA, instB);
                 this.registerCollision(instB, instA);
+
+                //check both instances if they are on the ground
+                instA.onGround ||= checkOnGround(bodyB.position, bodyA.position);
+                instB.onGround ||= checkOnGround(bodyA.position, bodyB.position);
             }
         }
         Matter.Events.on(this._physics, 'collisionStart', collisionHandler);
@@ -212,6 +221,9 @@ export class Engine implements iEngineCallbacks {
     private _updateInstances = (): void => {
         this._loadedRoom.instances.forEach(instance => {
             instance.onUpdate(this._deltaTime);
+            
+            //clear onGround flag for next update
+            instance.onGround = false;
         });
     }
 

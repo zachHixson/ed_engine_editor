@@ -41,6 +41,7 @@ export abstract class Instance_Base{
     pos: Vector;
     lastPos: Vector = new Vector();
     velocity: Vector = new Vector(0, 0);
+    onGround: boolean = false;
     groups: string[] = [];
     depthOffset: number = 0;
     depthOverride: number | null = null;

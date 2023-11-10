@@ -1275,6 +1275,18 @@ export const NODE_LIST: iNodeTemplate[] = [
             }
         }
     },
+    {
+        id: 'is_on_ground',
+        category: 'movement',
+        outputs: [
+            {id: '_o', type: SOCKET_TYPE.BOOL, execute: 'onGround'},
+        ],
+        methods: {
+            onGround(this: iEngineNode, eventContext: iEventContext){
+                return eventContext.instance.onGround;
+            }
+        }
+    },
     ...Cat_Variables,
 ];
 
