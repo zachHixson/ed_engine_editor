@@ -620,22 +620,6 @@ export class Engine implements iEngineCallbacks {
         }
     }
 
-    moveInstanceDirection = (instance: Instance_Base, velocity: Vector, slide = false): void =>{
-        const instanceCenter = instance.pos.clone().addScalar(Sprite.DIMENSIONS / 2);
-        const instancesInRadius = this.room.getInstancesInRadius(instanceCenter, velocity.magnitude());
-        const {
-            newPosition,
-            collisions,
-        } = Physics.sweepInstanceInDirection(instance, instanceCenter, instancesInRadius, velocity, slide);
-    
-        this.setInstancePosition(instance, newPosition);
-    
-        collisions.forEach(col => {
-            this.registerCollision(instance, col.instance);
-            this.registerCollision(col.instance, instance);
-        });
-    }
-
     addPhysicsObjects = (objList: ReturnType<typeof Matter.Bodies.rectangle>[]): void => {
         Matter.Composite.add(this._physics.world, objList);
     }

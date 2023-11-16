@@ -6,6 +6,7 @@ import { Vector } from '../Vector';
 import { iEditorNode, iEngineNode, iNodeConnection, iNodeSaveData, iEventContext } from '../LogicInterfaces';
 import { Game_Object, Instance_Base, Instance_Object, iEditorNodeInput, iEditorNodeOutput } from '../core';
 import { canConvertSocket, assetToInstance, instanceToAsset } from './Socket_Conversions';
+import Matter from 'matter-js';
 import { Sprite, Util } from '../core';
 
 export type GenericNode = iEditorNode | iEngineNode;
@@ -1184,18 +1185,67 @@ export const NODE_LIST: iNodeTemplate[] = [
                 const x: number = Math.round(this.getInput('x', eventContext));
                 const y: number = Math.round(this.getInput('y', eventContext));
                 const relative: boolean = this.getInput('relative', eventContext);
-                const newPos = new Vector(x, y);
+                const desiredDest = relative ? new Vector(x, y).add(instance.pos) : new Vector(x, y);
 
-                if (relative){
-                    newPos.add(instance.pos);
+                //jump if no collision on instnace
+                if (!instance.isSolid){
+                    this.engine.setInstancePosition(instance, desiredDest);
+                    this.triggerOutput('_o', eventContext);
+                    return;
                 }
 
-                this.engine.moveInstanceDirection(
-                    instance,
-                    newPos.clone().subtract(instance.pos),
-                    false,
-                );
+                //setup raycast check
+                const NORM_OFFSET = 0.0001;
+                const halfDim = Sprite.DIMENSIONS / 2;
+                const instCenter = instance.pos.clone().addScalar(halfDim);
+                const checkDim = new Vector(Sprite.DIMENSIONS, Sprite.DIMENSIONS).subtractScalar(NORM_OFFSET); //boxes are made slightly smaller to allow for 1 tile wide paths
+                const velocity = desiredDest.clone().subtract(instance.pos);
+                const nearBodies = this.engine.room.getInstancesInRadius(instance.pos, velocity.length())
+                    .filter(i => {
+                        const selfCheck = i.id != instance.id;
+                        return selfCheck && i.isSolid;
+                    });
                 
+                let nearestDist = instance.pos.distanceNoSqrt(desiredDest);
+                let nearestDest = desiredDest.addScalar(halfDim);
+                let nearestCastResult: ReturnType<typeof Util.projectSVF> | null = null;
+
+                //raycast against all instances in vacinity using minkowski addition
+                for (let i = 0; i < nearBodies.length; i++){
+                    const curBody = nearBodies[i];
+                    const curCenter = curBody.pos.clone().addScalar(halfDim);
+                    const raycastResult = Util.projectSVF(instCenter, velocity, curCenter, checkDim);
+
+                    if (!raycastResult) continue;
+
+                    const checkDist = instCenter.distanceNoSqrt(raycastResult.point);
+
+                    if (checkDist < nearestDist){
+                        nearestDist = checkDist;
+                        nearestDest = raycastResult.point;
+                        nearestCastResult = raycastResult;
+                    }
+                }
+
+                //jump if no ray collisions
+                if (!nearestCastResult){
+                    this.engine.setInstancePosition(instance, nearestDest.subtractScalar(halfDim));
+                    this.triggerOutput('_o', eventContext);
+                    return;
+                }
+
+                //final collision point is offset 
+                const normalOffset = nearestCastResult.normal.clone().scale(NORM_OFFSET);
+                const finalDest = nearestDest
+                    .subtractScalar(halfDim)
+                    .add(normalOffset);
+                
+                //round single axis based on direction of collision normal
+                finalDest.x = nearestCastResult.normal.x ? Math.round(finalDest.x) : finalDest.x;
+                finalDest.y = nearestCastResult.normal.y ? Math.round(finalDest.y) : finalDest.y;
+
+                //set instance position and continue to next node
+                this.engine.setInstancePosition(instance, finalDest);
                 this.triggerOutput('_o', eventContext);
             },
             checkExitBacktrack(this: iEngineNode, eventContext: iEventContext, newPos: Vector): boolean {

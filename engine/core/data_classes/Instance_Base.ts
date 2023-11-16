@@ -89,6 +89,7 @@ export abstract class Instance_Base{
     abstract get frameData(): Array<ImageData>;
 
     get hasCollisionEvent(){return false};
+    get physicsObject(){return this._physicsObject};
 
     get animFrame(){
         if (!this.sprite){
@@ -241,6 +242,7 @@ export abstract class Instance_Base{
         const vel = this.velocity.clone();
         const isSleeping = this.velocity.dot(this.velocity) == 0 && !this.applyGravity;
 
+        Matter.Body.setPosition(this._physicsObject!, this.pos);
         Matter.Sleeping.set(this._physicsObject!, isSleeping);
 
         //Apply gravity
@@ -293,10 +295,6 @@ export abstract class Instance_Base{
         
         Matter.Events.on(this._engine!.physics, 'beforeUpdate', this.beforeUpdateHandler);
         Matter.Events.on(this._engine!.physics, 'afterUpdate', this.afterUpdateHandler);
-    }
-
-    setStatic(state: boolean): void {
-        Matter.Body.setStatic(this._physicsObject!, state);
     }
 
     applyForce(force: Vector): void {
