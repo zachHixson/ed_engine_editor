@@ -876,12 +876,12 @@ export const NODE_LIST: iNodeTemplate[] = [
                 const startX = this.getInput('start_x', eventContext);
                 const startY = this.getInput('start_y', eventContext);
                 const startPos = new Vector(
-                    startX ?? eventContext.instance.pos.x,
-                    startY ?? eventContext.instance.pos.y,
+                    startX || eventContext.instance.pos.x,
+                    startY || eventContext.instance.pos.y,
                 );
                 const distance = this.getInput('distance', eventContext);
                 const onlySolid = this.getInput('only_solid', eventContext);
-                const ignoreSelf = (startX ?? true) || (startY ?? true);
+                const ignoreSelf = (startX || true) || (startY || true);
                 const rayVector = new Vector(widgetDir[0], widgetDir[1]).multiplyScalar(distance);
                 const nearInstances = this.engine.room.getInstancesInRadius(startPos, distance)
                     .filter(i => {
