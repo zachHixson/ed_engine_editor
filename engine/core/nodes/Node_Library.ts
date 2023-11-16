@@ -1181,22 +1181,25 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             jumpTo(this: iEngineNode, eventContext: iEventContext){
+                const halfDim = Sprite.DIMENSIONS / 2;
                 const instance: Instance_Base = this.getInput('instance', eventContext) ?? eventContext.instance;
-                const x: number = Math.round(this.getInput('x', eventContext));
-                const y: number = Math.round(this.getInput('y', eventContext));
+                const x: number = Math.round(this.getInput('x', eventContext) - halfDim);
+                const y: number = Math.round(this.getInput('y', eventContext) - halfDim);
                 const relative: boolean = this.getInput('relative', eventContext);
                 const desiredDest = relative ? new Vector(x, y).add(instance.pos) : new Vector(x, y);
 
-                //jump if no collision on instnace
+                //jump if no collision on instance
                 if (!instance.isSolid){
                     this.engine.setInstancePosition(instance, desiredDest);
                     this.triggerOutput('_o', eventContext);
                     return;
                 }
 
+                //round starting position to nearest integer
+                instance.pos.round();
+
                 //setup raycast check
                 const NORM_OFFSET = 0.0001;
-                const halfDim = Sprite.DIMENSIONS / 2;
                 const instCenter = instance.pos.clone().addScalar(halfDim);
                 const checkDim = new Vector(Sprite.DIMENSIONS, Sprite.DIMENSIONS).subtractScalar(NORM_OFFSET); //boxes are made slightly smaller to allow for 1 tile wide paths
                 const velocity = desiredDest.clone().subtract(instance.pos);
