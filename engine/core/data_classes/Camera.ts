@@ -4,7 +4,7 @@ import { Room } from "./Room";
 import { Instance_Base } from "./Instance_Base";
 
 export interface iCameraSaveData {
-    _size: number,
+    size: number,
     pos: { x: number, y: number },
     vel: { x: number, y: number },
     move: MOVE_TYPES,
@@ -63,7 +63,7 @@ export class Camera{
 
     toSaveData(): iCameraSaveData {
         return {
-            _size: this._size,
+            size: this._size,
             pos: this.pos.toObject(),
             vel: this.velocity.toObject(),
             move: this.moveType,
@@ -79,6 +79,7 @@ export class Camera{
     }
 
     private _loadSaveData(data: iCameraSaveData): Camera {
+        this._size = data.size;
         this.pos = Vector.fromObject(data.pos);
         this.velocity = Vector.fromObject(data.vel);
         this.moveType = data.move;
