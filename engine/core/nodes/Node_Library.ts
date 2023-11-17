@@ -1183,10 +1183,10 @@ export const NODE_LIST: iNodeTemplate[] = [
             jumpTo(this: iEngineNode, eventContext: iEventContext){
                 const halfDim = Sprite.DIMENSIONS / 2;
                 const instance: Instance_Base = this.getInput('instance', eventContext) ?? eventContext.instance;
-                const x: number = Math.round(this.getInput('x', eventContext) - halfDim);
-                const y: number = Math.round(this.getInput('y', eventContext) - halfDim);
+                const x: number = Math.round(this.getInput('x', eventContext));
+                const y: number = Math.round(this.getInput('y', eventContext));
                 const relative: boolean = this.getInput('relative', eventContext);
-                const desiredDest = relative ? new Vector(x, y).add(instance.pos) : new Vector(x, y);
+                const desiredDest = relative ? new Vector(x, y).add(instance.pos) : new Vector(x, y).subtractScalar(halfDim);
 
                 //jump if no collision on instance
                 if (!instance.isSolid){
