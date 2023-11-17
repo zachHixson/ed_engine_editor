@@ -110,16 +110,21 @@ export default [
             id: 'key_selector',
             type: WIDGET.KEY,
         },
-        outTriggers: ['key_down', 'key_up'],
+        outTriggers: ['key_down', 'key_pressed', 'key_up'],
         execute(this: iEngineNode, eventContext: iEventContext, data: KeyboardEvent){
             const {code} = this.getWidgetData();
 
             if (data.code == code){
-                if (data.type == 'down'){
-                    this.triggerOutput('key_down', eventContext);
-                }
-                else{
-                    this.triggerOutput('key_up', eventContext);
+                switch (data.type){
+                    case 'down':
+                        this.triggerOutput('key_down', eventContext);
+                        break;
+                    case 'pressed':
+                        this.triggerOutput('key_pressed', eventContext);
+                        break;
+                    case 'up':
+                        this.triggerOutput('key_up', eventContext);
+                        break;
                 }
             }
         },

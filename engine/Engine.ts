@@ -196,6 +196,7 @@ export class Engine implements iEngineCallbacks {
 
         if (this.enableUpdate){
             try{
+                this._dispatchKeyPressedEvents();
                 this._updateInstances();
                 this._updateAnimations();
                 this._updateCamera();
@@ -216,6 +217,18 @@ export class Engine implements iEngineCallbacks {
         this._dialogFullscreen.render(this.deltaTime);
 
         window.IS_ENGINE = false;
+    }
+
+    private _dispatchKeyPressedEvents = (): void => {
+        for (let [code, val] of this._keymap){
+            if (val){
+                this._dispatchLogicEvent('e_keyboard', {
+                    which_key: code.toUpperCase(),
+                    code: code,
+                    type: 'pressed',
+                });
+            }
+        }
     }
 
     private _updateInstances = (): void => {
