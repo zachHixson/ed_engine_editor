@@ -1299,6 +1299,35 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
     },
+    {
+        id: 'move_direction',
+        category: 'movement',
+        widget: {
+            id: 'direction',
+            type: WIDGET.DIRECTION,
+            options: {
+                startDir: [1, 0],
+            },
+        },
+        inTriggers: [
+            {id: '_i', execute: 'moveDirection'},
+        ],
+        outTriggers: ['_o'],
+        inputs: [
+            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
+            {id: 'speed', type: SOCKET_TYPE.NUMBER, default: 1, required: true},
+        ],
+        methods: {
+            moveDirection(this: iEngineNode, eventContext: iEventContext){
+                const instance: Instance_Base = this.getInput('instance', eventContext) ?? eventContext.instance;
+                const speed: number = this.getInput('speed', eventContext);
+                const direction = Vector.fromArray(this.widgetData);
+                const velocity = direction.scale(speed);
+
+                instance.moveVector.add(velocity);
+            },
+        },
+    },
     {// Push Direction
         id: 'push_direction',
         category: 'movement',
@@ -1310,7 +1339,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
         inTriggers: [
-            {id: '_i', execute: 'push'}
+            {id: '_i', execute: 'push'},
         ],
         outTriggers: ['_o'],
         inputs: [
@@ -1325,8 +1354,8 @@ export const NODE_LIST: iNodeTemplate[] = [
                 instance.applyForce(force);
 
                 this.triggerOutput('_o', eventContext);
-            }
-        }
+            },
+        },
     },
     {
         id: 'is_on_ground',
@@ -1337,8 +1366,8 @@ export const NODE_LIST: iNodeTemplate[] = [
         methods: {
             onGround(this: iEngineNode, eventContext: iEventContext){
                 return eventContext.instance.onGround;
-            }
-        }
+            },
+        },
     },
     ...Cat_Variables,
 ];

@@ -41,6 +41,7 @@ export abstract class Instance_Base{
     pos: Vector;
     lastPos: Vector = new Vector();
     velocity: Vector = new Vector(0, 0);
+    moveVector: Vector = new Vector(0, 0);
     onGround: boolean = false;
     groups: string[] = [];
     depthOffset: number = 0;
@@ -118,11 +119,12 @@ export abstract class Instance_Base{
     }
     onUpdate(deltaTime: number): void {
         //update position if not a phyics object
-        if (this._physicsObject) return;
+        if (!this._physicsObject) return;
 
-        const vel = this.velocity.clone().scale(deltaTime);
+        const vel = this.velocity.clone().add(this.moveVector).scale(deltaTime);
         const newPos = vel.add(this.pos);
         this._engine!.setInstancePosition(this, newPos);
+        this.moveVector.set(0, 0);
     }
     onAnimationChange(state: InstanceAnimEvent): void {}
     onCollision(event: iCollisionEvent): void {}
@@ -268,8 +270,9 @@ export abstract class Instance_Base{
             y: Util.clamp(this._physicsObject!.velocity.y, -maxVel, maxVel),
         });
 
-        vel.add(this._physicsObject!.velocity as Vector).scale(deltaTime);
+        vel.add(this._physicsObject!.velocity as Vector).add(this.moveVector).scale(deltaTime);
         Matter.Body.translate(this._physicsObject!, vel);
+        this.moveVector.set(0, 0);
     }
 
     afterUpdateHandler(): void {
