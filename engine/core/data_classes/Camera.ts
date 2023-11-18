@@ -138,18 +138,28 @@ export class Camera{
     }
 
     private _followSmart(deltaTime: number, targetInst: Instance_Base): void {
+        const halfDim = Sprite.DIMENSIONS / 2;
+
         if (!this._smartTarget) {
-            this._smartTarget = Vector.fromObject(targetInst.pos);
-            this._targetInstLastPos.copy(this._smartTarget);
+            this._targetInstLastPos.copy(targetInst.pos);
+            this._smartTarget = targetInst.pos.clone().addScalar(halfDim);
             this.pos.copy(this._smartTarget);
         }
 
         const instVelocity = targetInst.pos.clone().subtract(this._targetInstLastPos);
+        const velLength = instVelocity.length();
 
         //only update target if player has moved
-        if (instVelocity.length() > 0){
-            const offset = instVelocity.multiplyScalar(2).clampLength((this.size * Sprite.DIMENSIONS) / 2);
-            const newTargetPos = targetInst.pos.clone().add(offset);
+        if (velLength> 0){
+            const scale = velLength >= 5 ? 2 : 20; //determine appropriate scale for tiled vs. smooth movement
+            const offset = instVelocity.multiplyScalar(scale).clampLength((this.size * Sprite.DIMENSIONS) / 2);
+
+            //remove vertical offset if player is making a platformer
+            if (targetInst.applyGravity){
+                offset.y = 0;
+            }
+
+            const newTargetPos = targetInst.pos.clone().add(offset).addScalar(halfDim);
             this._smartTarget.copy(newTargetPos);
         }
 

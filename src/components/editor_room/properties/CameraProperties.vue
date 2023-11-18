@@ -27,6 +27,7 @@ function setCamProp(propObj: any): void {
 }
 
 function setFollowObj(): void {
+    if (!props.selectedInstance) return;
     props.camera.followObjId = props.selectedInstance!.id;
 }
 </script>
