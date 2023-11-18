@@ -119,7 +119,7 @@ export abstract class Instance_Base{
     }
     onUpdate(deltaTime: number): void {
         //update position if not a phyics object
-        if (!this._physicsObject) return;
+        if (this._physicsObject) return;
 
         const vel = this.velocity.clone().add(this.moveVector).scale(deltaTime);
         const newPos = vel.add(this.pos);
