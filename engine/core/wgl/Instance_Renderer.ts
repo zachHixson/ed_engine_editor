@@ -19,9 +19,15 @@ interface iAtlasData {
     planeUVBuffer: WGL.Attribute,
     positionBuffer: WGL.Attribute,
     spriteOffsetBuffer: WGL.Attribute,
+    orientationBuffer: WGL.Attribute,
     backAnimBuffer: WGL.Attribute,
     bufferLocations: Array<number>,
     renderLength: number,
+}
+
+enum ORIENTATION_BITS {
+    hFlip = 0b0001,
+    vFlip = 0b0010,
 }
 
 const DEPTH_OFFSET_INCREMENT = Math.pow(10, -7);
@@ -40,17 +46,32 @@ export class Instance_Renderer {
         attribute vec3 a_position;
         attribute vec2 a_spriteOffset;
         attribute vec2 a_uv;
+        attribute float a_orientation;
         attribute float a_backAnim;
 
         varying vec2 v_uv;
         varying vec2 v_spriteOffset;
 
+        bool checkBit(float val, int bit){
+            float fBit = pow(2.0, float(bit));
+            return mod(floor(val / fBit), 2.0) == 1.0;
+        }
+
         void main(){
+            bool hFlip = checkBit(a_orientation, 0);
+            bool vFlip = checkBit(a_orientation, 1);
+            vec2 verts = a_planeVerts;
+
+            if (hFlip) verts.x *= -1.0;
+            if (vFlip) verts.y *= -1.0;
+
+            verts.x += a_orientation;
+
             v_uv = a_uv;
             v_spriteOffset = a_spriteOffset;
 
             float backAnim = a_backAnim / 225.0;
-            vec2 vert = (a_planeVerts * backAnim * u_instanceScale) + 8.0;
+            vec2 vert = (verts * backAnim * u_instanceScale) + 8.0;
             vec2 worldPos = vert + a_position.xy;
             vec3 clipPos = vec3(worldPos, 1.0) * u_viewMatrix;
             gl_Position = vec4(clipPos.xy, a_position.z, 1.0);
@@ -160,13 +181,14 @@ export class Instance_Renderer {
 
     private _createAtlasData(bufferSize = Instance_Renderer.DEFAULT_BUFFER_SIZE){
         const buffersize = Math.round(bufferSize);
-        const atlasData = {
+        const atlasData: iAtlasData = {
             atlas: new Atlas(this._gl, this._tileSize, this._atlasSize, this._generateMipmaps),
             vao: this._gl.createVertexArray()!,
             planeGeoBuffer: new WGL.Attribute(this._gl, this._program, 'a_planeVerts'),
             planeUVBuffer: new WGL.Attribute(this._gl, this._program, 'a_uv'),
             positionBuffer: new WGL.Attribute(this._gl, this._program, 'a_position'),
             spriteOffsetBuffer: new WGL.Attribute(this._gl, this._program, 'a_spriteOffset'),
+            orientationBuffer: new WGL.Attribute(this._gl, this._program, 'a_orientation'),
             backAnimBuffer: new WGL.Attribute(this._gl, this._program, 'a_backAnim'),
             bufferLocations: new Array(buffersize),
             renderLength: 0,
@@ -177,9 +199,11 @@ export class Instance_Renderer {
         atlasData.planeUVBuffer.set(new Float32Array(Instance_Renderer._planeUVs), 2, this._gl.FLOAT);
         atlasData.positionBuffer.set(new Float32Array(buffersize * 3), 3, this._gl.FLOAT);
         atlasData.spriteOffsetBuffer.set(new Uint8Array(buffersize * 2), 2, this._gl.UNSIGNED_BYTE);
-        atlasData.backAnimBuffer.set(new Uint8Array(bufferSize).fill(255), 1, this._gl.UNSIGNED_BYTE);
+        atlasData.orientationBuffer.set(new Uint8Array(buffersize), 1, this._gl.UNSIGNED_BYTE);
+        atlasData.backAnimBuffer.set(new Uint8Array(buffersize), 1, this._gl.UNSIGNED_BYTE);
         atlasData.positionBuffer.setDivisor(1);
         atlasData.spriteOffsetBuffer.setDivisor(1);
+        atlasData.orientationBuffer.setDivisor(1);
         atlasData.backAnimBuffer.setDivisor(1);
 
         this._atlasPool.push(atlasData);
@@ -188,10 +212,17 @@ export class Instance_Renderer {
     private _setInstanceData(atlasData: iAtlasData, bufferLocation: number, instance: Instance_Base, imageFrame: number): void {
         const spriteoffset = atlasData.atlas.getImageOffset(instance.frameDataId, imageFrame).divideScalar(this._tileSize);
         const instancePos = instance.pos.clone().round();
+        let orientationData = 0b000;
+
+        //Pack orientation data
+        orientationData = orientationData | (+instance.flipH * ORIENTATION_BITS.hFlip);
+        orientationData = orientationData | (+instance.flipV * ORIENTATION_BITS.vFlip);
+
         this._gl.bindVertexArray(atlasData.vao);
 
         atlasData.positionBuffer.setSubData(new Float32Array([instancePos.x, instancePos.y, -instance.zDepth]), bufferLocation * 4 * 3);
         atlasData.spriteOffsetBuffer.setSubData(new Uint8Array([spriteoffset.x, spriteoffset.y]), bufferLocation * 2);
+        atlasData.orientationBuffer.setSubData(new Uint8Array([orientationData]), bufferLocation);
         atlasData.backAnimBuffer.setSubData(new Uint8ClampedArray([easeOutBack(instance.backAnim) * 225]), bufferLocation);
         atlasData.bufferLocations[bufferLocation] = instance.id;
     }
@@ -204,9 +235,12 @@ export class Instance_Renderer {
         this._gl.bindVertexArray(atlasData.vao);
         atlasData.positionBuffer.set(new Float32Array(newBufferSize * 3), 3, this._gl.FLOAT);
         atlasData.spriteOffsetBuffer.set(new Uint8Array(newBufferSize * 2), 2, this._gl.UNSIGNED_BYTE);
+        atlasData.orientationBuffer.set(new Uint8Array(newBufferSize), 1, this._gl.UNSIGNED_BYTE);
         atlasData.backAnimBuffer.set(new Uint8Array(newBufferSize), 1, this._gl.UNSIGNED_BYTE);
         atlasData.positionBuffer.setDivisor(1);
         atlasData.spriteOffsetBuffer.setDivisor(1);
+        atlasData.orientationBuffer.setDivisor(1);
+        atlasData.backAnimBuffer.setDivisor(1);
         atlasData.bufferLocations = new Array(newBufferSize);
 
         //fill old data
@@ -384,6 +418,7 @@ export class Instance_Renderer {
             atlasData.planeUVBuffer.enable();
             atlasData.positionBuffer.enable();
             atlasData.spriteOffsetBuffer.enable();
+            atlasData.orientationBuffer.enable();
             atlasData.backAnimBuffer.enable();
 
             this._gl.drawArraysInstanced(
@@ -397,6 +432,7 @@ export class Instance_Renderer {
             atlasData.planeUVBuffer.disable();
             atlasData.positionBuffer.disable();
             atlasData.spriteOffsetBuffer.disable();
+            atlasData.orientationBuffer.disable();
             atlasData.backAnimBuffer.disable();
 
             this._atlasTextureUniform.deactivate();

@@ -1125,6 +1125,30 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
     },
+    {
+        id: 'flip_sprite',
+        category: 'drawing',
+        inTriggers: [
+            {id: '_i', execute: 'flipSprite'},
+        ],
+        outTriggers: ['_o'],
+        inputs: [
+            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
+            {id: 'hFlip', type: SOCKET_TYPE.BOOL, default: false},
+            {id: 'vFlip', type: SOCKET_TYPE.BOOL, default: false},
+        ],
+        methods: {
+            flipSprite(this: iEngineNode, eventContext: iEventContext){
+                const instance: Instance_Base = this.getInput('instance', eventContext) ?? eventContext.instance;
+                const hFlip: boolean = this.getInput('hFlip', eventContext);
+                const vFlip: boolean = this.getInput('vFlip', eventContext);
+
+                instance.flipH = hFlip;
+                instance.flipV = vFlip;
+                instance.needsRenderUpdate = true;
+            }
+        }
+    },
     {// Set Position
         id: 'set_position',
         category: 'movement',
@@ -1299,7 +1323,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
     },
-    {
+    {// Move Direction
         id: 'move_direction',
         category: 'movement',
         widget: {
@@ -1357,7 +1381,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
     },
-    {
+    {// Is On Ground
         id: 'is_on_ground',
         category: 'movement',
         outputs: [

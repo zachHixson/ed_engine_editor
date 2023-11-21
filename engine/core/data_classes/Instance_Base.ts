@@ -51,6 +51,8 @@ export abstract class Instance_Base{
     fpsOverride: number | null = null;
     animLoopOverride: boolean | null = null;
     animPlayingOverride: boolean | null = null;
+    flipH: boolean = false;
+    flipV: boolean = false;
     backAnim = 1;
 
     constructor(id: number, pos: Vector = new Vector()){
