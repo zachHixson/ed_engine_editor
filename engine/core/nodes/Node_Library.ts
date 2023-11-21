@@ -4,9 +4,8 @@ import Cat_Events from './Cat_Events';
 import Cat_Variables from './Cat_Variables';
 import { Vector } from '../Vector';
 import { iEditorNode, iEngineNode, iNodeConnection, iNodeSaveData, iEventContext } from '../LogicInterfaces';
-import { Game_Object, Instance_Base, Instance_Object, iEditorNodeInput, iEditorNodeOutput } from '../core';
+import { Game_Object, Instance_Base, Instance_Object, Instance_Sprite, iEditorNodeInput, iEditorNodeOutput } from '../core';
 import { canConvertSocket, assetToInstance, instanceToAsset } from './Socket_Conversions';
-import Matter from 'matter-js';
 import { Sprite, Util } from '../core';
 
 export type GenericNode = iEditorNode | iEngineNode;
@@ -1125,7 +1124,55 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
     },
-    {
+    {// Set Sprite
+        id: 'set_sprite',
+        category: 'drawing',
+        widget: {
+            id: 'sprite',
+            type: WIDGET.ENUM,
+            options: {
+                items: [],
+                showSearch: true,
+                showThumbnail: true,
+            },
+        },
+        inTriggers: [
+            {id: '_i', execute: 'setSprite'},
+        ],
+        outTriggers: ['_o'],
+        inputs: [
+            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
+        ],
+        onBeforeMount(this: iEditorNode){
+            const sprites = this.editorAPI.gameDataStore.getAllSprites.map((s: Sprite)=>({
+                name: s.name,
+                id: s.id,
+                value: s.id,
+                thumbnail: (()=>{
+                    if (s.frameIsEmpty(0)){
+                        return Instance_Sprite.DEFAULT_SPRITE_ICON[0];
+                    }
+
+                    return s.frames[0];
+                })(),
+            }));
+
+            this.widget.options.items = sprites;
+        },
+        methods: {
+            setSprite(this: iEngineNode, eventContext: iEventContext){
+                const instance = this.getInput('instance', eventContext) ?? eventContext.instance;
+                const spriteId: number = this.widgetData;
+                const sprite = this.engine.gameData.sprites.find(s => s.id == spriteId);
+
+                instance.sprite = sprite;
+                this.engine.refreshRenderedInstance(instance);
+
+                this.triggerOutput('_o', eventContext);
+            },
+        },
+    },
+    {// Flip Sprite
         id: 'flip_sprite',
         category: 'drawing',
         inTriggers: [
@@ -1146,8 +1193,10 @@ export const NODE_LIST: iNodeTemplate[] = [
                 instance.flipH = hFlip;
                 instance.flipV = vFlip;
                 instance.needsRenderUpdate = true;
-            }
-        }
+
+                this.triggerOutput('_o', eventContext);
+            },
+        },
     },
     {// Set Position
         id: 'set_position',

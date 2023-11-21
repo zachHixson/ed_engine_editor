@@ -72,6 +72,7 @@ export class Instance_Object extends Instance_Base{
     get frameDataId(){return this._useIcon || !this.renderable ? Instance_Object.DEFAULT_INSTANCE_ICON_ID : this._objRef!.sprite!.id};
     get frameData(){return this._useIcon || !this.renderable ? Instance_Object.DEFAULT_INSTANCE_ICON : this._objRef!.sprite!.frames};
     get sprite(){return this._objRef?.sprite};
+    set sprite(newSprite: Sprite | null){if (this._objRef) this._objRef.sprite = newSprite};
     get logic(){return this._objRef.logicScript};
     get isSolid(){
         switch(this.collisionOverride){

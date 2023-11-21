@@ -633,6 +633,13 @@ export class Engine implements iEngineCallbacks {
         }
     }
 
+    refreshRenderedInstance = (instance: Instance_Base): void =>{
+        if (!instance.renderable) return;
+
+        this._renderer.removeInstance(instance);
+        this._renderer.addInstance(instance);
+    }
+
     addPhysicsObjects = (objList: ReturnType<typeof Matter.Bodies.rectangle>[]): void => {
         Matter.Composite.add(this._physics.world, objList);
     }
