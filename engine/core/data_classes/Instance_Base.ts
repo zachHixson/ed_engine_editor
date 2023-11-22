@@ -257,13 +257,13 @@ export abstract class Instance_Base{
                 this._physicsObject!.position,
                 new Vector(0, -this._engine!.room.gravity)
             );
-        }
 
-        //If an object is moving against gravity, remove the cumulative force to make control of object more natural
-        if (this.applyGravity && this.velocity.y > 0){
-            const newPhysVel = Vector.fromObject(this._physicsObject!.velocity);
-            newPhysVel.y = this.velocity.y - this._engine!.room.gravity * 9.81;
-            Matter.Body.setVelocity(this._physicsObject!, newPhysVel);
+            //If an object is moving against gravity, remove the cumulative force to make control of object more natural
+            if (this.velocity.y > 0){
+                const newPhysVel = Vector.fromObject(this._physicsObject!.velocity);
+                newPhysVel.y = this.velocity.y - this._engine!.room.gravity * 9.81;
+                Matter.Body.setVelocity(this._physicsObject!, newPhysVel);
+            }
         }
 
         //clamp object's velocity

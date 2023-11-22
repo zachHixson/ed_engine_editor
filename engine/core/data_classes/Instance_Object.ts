@@ -33,6 +33,7 @@ export class Instance_Object extends Instance_Base{
     private _zDepthOverride: number | null = null;
     private _useIcon = false;
 
+    spriteOverride: Sprite | null = null;
     gravityOverride: boolean | null = null;
     collisionOverride: COLLISION_OVERRIDE = COLLISION_OVERRIDE.KEEP;
     localVariables: Map<string, iEngineVariable> = new Map();
@@ -69,10 +70,14 @@ export class Instance_Object extends Instance_Base{
         this._useIcon = this._objRef?.sprite?.frameIsEmpty(this.startFrame) ?? true;
         return !this._useIcon;
     };
-    get frameDataId(){return this._useIcon || !this.renderable ? Instance_Object.DEFAULT_INSTANCE_ICON_ID : this._objRef!.sprite!.id};
-    get frameData(){return this._useIcon || !this.renderable ? Instance_Object.DEFAULT_INSTANCE_ICON : this._objRef!.sprite!.frames};
-    get sprite(){return this._objRef?.sprite};
-    set sprite(newSprite: Sprite | null){if (this._objRef) this._objRef.sprite = newSprite};
+    get frameDataId(){return this._useIcon || !this.renderable ? Instance_Object.DEFAULT_INSTANCE_ICON_ID : this.sprite!.id};
+    get frameData(){return this._useIcon || !this.renderable ? Instance_Object.DEFAULT_INSTANCE_ICON : this.sprite!.frames};
+    get sprite(){
+        return this.spriteOverride ?? this._objRef?.sprite
+    };
+    set sprite(newSprite: Sprite | null){
+        this.spriteOverride = newSprite;
+    };
     get logic(){return this._objRef.logicScript};
     get isSolid(){
         switch(this.collisionOverride){
