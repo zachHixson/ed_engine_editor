@@ -1,14 +1,10 @@
-import { ref, nextTick } from 'vue';
+import { nextTick } from 'vue';
 import type { iHoverSocket } from '../node_components/Socket.vue';
-import type { GenericSocket } from './sharedTypes';
+import type { GenericSocket } from '../LogicMain.vue';
 import Node_Connection from "../node_components/Node_Connection";
-import type Connection from '../node_components/Connection.vue';
-import type Node from '@/components/editor_logic/node_components/Node.vue';
 import type Logic from '../node_components/Logic';
 import type { iRelinkInfo } from '../node_components/Node.vue';
-import type { ActionMap } from './sharedTypes';
-import type Undo_Store from '@/components/common/Undo_Store';
-import type { iActionStore } from '@/components/common/Undo_Store';
+import type { ActionData, DomRefs, LogicEditorState } from '../LogicMain.vue';
 import Core from '@/core';
 
 export type ActionMakeConnectionProps = {connectionObj: Node_Connection, socketOver: iHoverSocket, prevSocket?: GenericSocket};
@@ -17,13 +13,13 @@ export type ActionBatchRemoveConnectionsProps = {connectionObjList: Node_Connect
 
 export default function useConnection(
     props: {selectedAsset: Logic},
-    actionMap: ActionMap,
-    revertMap: ActionMap,
-    undoStore: Undo_Store<iActionStore>
+    domRefs: DomRefs,
+    actionData: ActionData,
+    state: LogicEditorState,
 ){
-    const draggingConnection = ref<Node_Connection | null>(null);
-    const nodeRefs = ref<InstanceType<typeof Node>[]>([]);
-    const connectionRefs = ref<InstanceType<typeof Connection>[]>([]);
+    const { nodeRefs, connectionRefs } = domRefs; 
+    const { actionMap, revertMap, undoStore } = actionData;
+    const { draggingConnection } = state;
 
     function createConnection(connectionObj: Node_Connection): void {
         props.selectedAsset.addConnection(connectionObj);
@@ -179,8 +175,6 @@ export default function useConnection(
     revertMap.set(Core.LOGIC_ACTION.BATCH_REMOVE_CONNECTIONS, revertBatchRemoveConnections);
 
     return {
-        nodeRefs,
-        connectionRefs,
         draggingConnection,
         dragConnection,
         relinkConnections,

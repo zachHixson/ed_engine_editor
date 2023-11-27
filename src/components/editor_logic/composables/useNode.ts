@@ -1,14 +1,10 @@
 import { nextTick } from 'vue';
-import type { Ref, ComputedRef } from 'vue';
 import { default as Node_Obj } from '../node_components/Node';
 import type Logic from '../node_components/Logic';
 import Node_Connection from '../node_components/Node_Connection';
 import { useMainStore } from '@/stores/Main';
 import { useLogicEditorStore } from '@/stores/LogicEditor';
-import type Undo_Store from '@/components/common/Undo_Store';
-import type { iActionStore } from '@/components/common/Undo_Store';
-import type { ActionMap } from './sharedTypes';
-import { mouseDownPos, shiftDown } from './useInput';
+import type { ActionData, DomRefs, LogicEditorState } from '../LogicMain.vue';
 import Core from '@/core';
 
 type ActionAddNodeProps = {templateId: string, nodeRef?: Node_Obj};
@@ -19,17 +15,15 @@ const { Vector } = Core;
 
 export default function useNode(
     props: { selectedAsset: Logic },
-    actionMap: ActionMap,
-    revertMap: ActionMap,
-    undoStore: Undo_Store<iActionStore>,
-    navHotkeyTool: Ref<Core.NAV_TOOL_TYPE | null>,
-    isDraggingNode: Ref<boolean>,
-    nodeViewportRef: Ref<HTMLDivElement | undefined>,
-    visibleNodes: ComputedRef<Node_Obj[]>,
-    selectedNodes: ComputedRef<Node_Obj[]>,
+    domRefs: DomRefs,
+    actionData: ActionData,
+    state: LogicEditorState,
     clientToNavPos: (pos: Core.Vector)=>Core.Vector,
     relinkConnections: ()=>void,
 ){
+    const { nodeViewportRef } = domRefs;
+    const { actionMap, revertMap, undoStore } = actionData;
+    const { selectedNodes, navHotkeyTool, isDraggingNode, visibleNodes, mouseDownPos, shiftDown } = state;
     const mainStore = useMainStore();
     const logicEditorStore = useLogicEditorStore();
 

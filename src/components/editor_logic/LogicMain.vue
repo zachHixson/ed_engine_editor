@@ -1,4 +1,41 @@
 <script lang="ts">
+export type GenericSocket = {id: string, value: any};
+export type ActionMap = Map<Core.LOGIC_ACTION, (data?: any | object, commit?: boolean)=>void>;
+
+export type DomRefs = {
+    nodeViewportRef: Ref<HTMLDivElement | undefined>,
+    nodeNavRef: Ref<HTMLDivElement | undefined>,
+    nodeRefs: Ref<InstanceType<typeof Node>[]>,
+    connectionRefs: Ref<InstanceType<typeof Connection>[]>,
+}
+
+export type ActionData = {
+    actionMap: Map<Core.LOGIC_ACTION, (data?: any | object, commit?: boolean)=>void>,
+    revertMap: Map<Core.LOGIC_ACTION, (data?: any | object, commit?: boolean)=>void>,
+    hotkeyMap: HotkeyMap,
+    undoStore: Undo_Store<iActionStore>,
+    undoLength: ComputedRef<number>,
+    redoLength: ComputedRef<number>,
+}
+
+export type LogicEditorState = {
+    showNewVariableWindow: Ref<boolean>,
+    newVariableCallback: Ref<(positive: boolean, varInfo: Core.iNewVarInfo)=>void>,
+    navHotkeyTool: Ref<Core.NAV_TOOL_TYPE | null>,
+    selectedNavTool: ComputedRef<Core.NAV_TOOL_TYPE | null>,
+    showGraphs: WritableComputedRef<boolean>,
+    nodeDraggingEnabled: ComputedRef<boolean>,
+    curNavState: ComputedRef<Core.NavState>,
+    visibleNodes: ComputedRef<Node_Obj[]>,
+    visibleConnections: ComputedRef<Node_Connection[]>,
+    selectedNodes: ComputedRef<Node_Obj[]>,
+    isDraggingNode: Ref<boolean>,
+    draggingConnection: Ref<Node_Connection | null>,
+    inputActive: ComputedRef<boolean>,
+    mouseDownPos: Core.Vector,
+    shiftDown: { value: boolean },
+}
+
 export const LogicMainEventBus = new Core.Event_Bus();
 </script>
 
@@ -8,7 +45,6 @@ import NavControlPanel from '@/components/common/NavControlPanel.vue';
 import Node from '@/components/editor_logic/node_components/Node.vue';
 import type Node_Connection from '@/components/editor_logic/node_components/Node_Connection';
 import Connection from '@/components/editor_logic/node_components/Connection.vue';
-import type { GenericSocket } from './composables/sharedTypes';
 import HotkeyMap from '@/components/common/HotkeyMap';
 import Undo_Store, { type iActionStore, useUndoHelpers } from '@/components/common/Undo_Store';
 import DialogNewVariable from './DialogNewVariable.vue';
@@ -18,7 +54,7 @@ import Graphs from './Graphs.vue';
 import ContextMenu from './ContextMenu.vue';
 
 import { ref, reactive, computed, watch, nextTick, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
-import type { Ref } from 'vue';
+import type { Ref, ComputedRef, WritableComputedRef } from 'vue';
 import { useMainStore } from '@/stores/Main';
 import { useLogicEditorStore } from '@/stores/LogicEditor';
 import type Logic from './node_components/Logic';
@@ -44,58 +80,66 @@ const props = defineProps<{
 
 const emit = defineEmits(['dialog-confirm']);
 
-const nodeViewportRef = ref<HTMLDivElement>();
-const nodeNavRef = ref<HTMLDivElement>();
+const domRefs: DomRefs = {
+    nodeViewportRef: ref(),
+    nodeNavRef: ref(),
+    nodeRefs: ref([]),
+    connectionRefs: ref<InstanceType<typeof Connection>[]>([]),
+}
 
-const actionMap = new Map<Core.LOGIC_ACTION, (data?: any | object, commit?: boolean)=>void>();
-const revertMap = new Map<Core.LOGIC_ACTION, (data?: any | object, commit?: boolean)=>void>();
-const undoStore = reactive(new Undo_Store<iActionStore>(32, false)) as Undo_Store<iActionStore>;
-const hotkeyMap = new HotkeyMap();
-const showNewVariableWindow = ref(false);
-const newVariableCallback = ref<(positive: boolean, varInfo: Core.iNewVarInfo)=>void>(()=>{});
-const navHotkeyTool = ref<Core.NAV_TOOL_TYPE | null>(null);
+const actionData: ActionData = {
+    actionMap: new Map(),
+    revertMap: new Map(),
+    hotkeyMap: new HotkeyMap(),
+    undoStore: reactive(new Undo_Store<iActionStore>(32, false)) as Undo_Store<iActionStore>,
+    undoLength: computed(()=>actionData.undoStore.undoLength),
+    redoLength: computed(()=>actionData.undoStore.redoLength),
+}
 
-const undoLength = computed(()=>undoStore.undoLength);
-const redoLength = computed(()=>undoStore.redoLength);
-const selectedNavTool = computed(()=>logicEditorStore.getSelectedNavTool);
-const showGraphs = computed({
-    get(){
-        return logicEditorStore.isGraphPanelOpen;
-    },
-    set(newState){
-        logicEditorStore.setGraphPanelState(newState);
-    }
-});
-const nodeDraggingEnabled = computed(()=>selectedNavTool.value == null);
-const curNavState = computed(()=>{
-    nextTick(()=>{
-        navChange(props.selectedAsset.graphNavState!);
-    });
-    return props.selectedAsset.graphNavState;
-});
-const visibleNodes = computed(()=>props.selectedAsset.nodes.filter(n => n.graphId == props.selectedAsset.selectedGraphId));
-const visibleConnections = computed(()=>props.selectedAsset.connections.filter(n => n.graphId == props.selectedAsset.selectedGraphId));
-const selectedNodes = computed(()=>props.selectedAsset.selectedNodes);
-const isDraggingNode = ref(false);
-const inputActive = computed(()=>mainStore.getInputActive);
+const state: LogicEditorState = {
+    showNewVariableWindow: ref(false),
+    newVariableCallback: ref(()=>{}),
+    navHotkeyTool: ref(null),
+    selectedNavTool: computed(()=>logicEditorStore.getSelectedNavTool),
+    showGraphs: computed({
+        get(){
+            return logicEditorStore.isGraphPanelOpen;
+        },
+        set(newState){
+            logicEditorStore.setGraphPanelState(newState);
+        }
+    }),
+    nodeDraggingEnabled: computed(()=>state.selectedNavTool.value == null),
+    curNavState: computed(()=>{
+        nextTick(()=>{
+            navChange(props.selectedAsset.graphNavState!);
+        });
+        return props.selectedAsset.graphNavState;
+    }),
+    visibleNodes: computed(()=>props.selectedAsset.nodes.filter(n => n.graphId == props.selectedAsset.selectedGraphId)),
+    visibleConnections: computed(()=>props.selectedAsset.connections.filter(n => n.graphId == props.selectedAsset.selectedGraphId)),
+    selectedNodes: computed(()=>props.selectedAsset.selectedNodes),
+    isDraggingNode: ref(false),
+    inputActive: computed(()=>mainStore.getInputActive),
+    draggingConnection: ref(null),
+    mouseDownPos: new Vector(),
+    shiftDown: { value: false },
+}
 
-watch(inputActive, (newState: boolean)=>hotkeyMap.enabled = !newState);
+watch(state.inputActive, (newState: boolean)=>actionData.hotkeyMap.enabled = !newState);
 
 watch(()=>props.selectedAsset, ()=>{
     nextTick(()=>{
         relinkConnections();
-        navChange(curNavState.value!);
+        navChange(state.curNavState.value!);
         updateNodeBounds();
-        undoStore.clear();
+        actionData.undoStore.clear();
     });
 });
 
-const { stepForward, stepBackward } = useUndoHelpers(undoStore, actionMap, revertMap);
+const { stepForward, stepBackward } = useUndoHelpers(actionData.undoStore, actionData.actionMap, actionData.revertMap);
 
 const {
-    nodeRefs,
-    connectionRefs,
-    draggingConnection,
     createConnection,
     dragConnection,
     relinkConnections,
@@ -105,9 +149,9 @@ const {
     revertMakeConnection,
 } = useConnection(
     props,
-    actionMap,
-    revertMap,
-    undoStore
+    domRefs,
+    actionData,
+    state,
 );
 
 const {
@@ -126,14 +170,9 @@ const {
     moveNodes,
 } = useNode(
     props,
-    actionMap,
-    revertMap,
-    undoStore,
-    navHotkeyTool,
-    isDraggingNode,
-    nodeViewportRef,
-    visibleNodes,
-    selectedNodes,
+    domRefs,
+    actionData,
+    state,
     clientToNavPos,
     relinkConnections,
 );
@@ -146,13 +185,9 @@ const {
     contextMenuPosition,
 } = useInput(
     props,
-    hotkeyMap,
-    nodeViewportRef,
-    draggingConnection as Ref<Node_Connection>,
-    isDraggingNode,
-    inputActive,
-    visibleNodes,
-    selectedNodes,
+    domRefs,
+    actionData,
+    state,
     deselectAllNodes,
     clientToNavPos,
     makeConnection,
@@ -167,13 +202,13 @@ onBeforeMount(()=>{
         revertMakeConnection,
         removeConnectionList,
         dialogNewVariable,
-        undoStore,
+        undoStore: actionData.undoStore,
         emit,
     };
 
     Object.defineProperties(apiExports, {
         selectedNodes: {
-            get: ()=>selectedNodes.value
+            get: ()=>state.selectedNodes.value
         },
         selectedAsset: {
             get: ()=>props.selectedAsset
@@ -189,8 +224,8 @@ onMounted(()=>{
     resize();
 
     bindHotkeys();
-    actionMap.set(Core.LOGIC_ACTION.CHANGE_INPUT, actionChangeInput);
-    revertMap.set(Core.LOGIC_ACTION.CHANGE_INPUT, revertChangeInput);
+    actionData.actionMap.set(Core.LOGIC_ACTION.CHANGE_INPUT, actionChangeInput);
+    actionData.revertMap.set(Core.LOGIC_ACTION.CHANGE_INPUT, revertChangeInput);
     navChange(props.selectedAsset.graphNavState);
     relinkConnections();
     updateNodeBounds();
@@ -199,21 +234,22 @@ onMounted(()=>{
 onBeforeUnmount(()=>{
     window.removeEventListener('resize', resize);
     mainStore.getNodeAPI.unMount();
-    undoStore.destroy();
+    actionData.undoStore.destroy();
 });
 
 function bindHotkeys(): void {
+    const { hotkeyMap } = actionData;
     hotkeyMap.bindKey(['delete'], deleteSelectedNodes);
     hotkeyMap.bindKey(['backspace'], deleteSelectedNodes);
-    hotkeyMap.bindKey(['n'], ()=>{showGraphs.value = !showGraphs.value});
+    hotkeyMap.bindKey(['n'], ()=>{state.showGraphs.value = !state.showGraphs.value});
     hotkeyMap.bindKey(['control', 'a'], selectAllNodes);
 }
 
 function navChange(newState: Core.NavState): void {
     const TILE_SIZE = 100;
 
-    const vpEl = nodeViewportRef.value!;
-    const navEl = nodeNavRef.value!;
+    const vpEl = domRefs.nodeViewportRef.value!;
+    const navEl = domRefs.nodeNavRef.value!;
 
     //update navWrapper
     navEl.style.left = (newState.offset.x * newState.zoomFac) + 'px';
@@ -236,6 +272,7 @@ function clientToNavPos(pos: Core.Vector): Core.Vector {
         - Multiply percentage by viewport dimensions to get mouse position in "nav space" (viewport and
             navWrapper dimensions will always be the same since CSS scale does not change pixel values of width/height)
     */
+    const { nodeViewportRef, nodeNavRef } = domRefs;
     const vpBounds = nodeViewportRef.value!.getBoundingClientRect();
     const vpOrigin = new Vector(vpBounds.left, vpBounds.top);
     const vpSize = new Vector(nodeViewportRef.value!.clientWidth, nodeViewportRef.value!.clientHeight);
@@ -250,18 +287,19 @@ function clientToNavPos(pos: Core.Vector): Core.Vector {
 }
 
 function resize(): void {
+    const { nodeViewportRef } = domRefs;
     const dim = {width: nodeViewportRef.value!.clientWidth, height: nodeViewportRef.value!.clientHeight};
     LogicMainEventBus.emit('nav-set-container-dimensions', dim);
 }
 
 function dialogNewVariable(callback: (positive: boolean, varInfo: Core.iNewVarInfo)=>void): void {
-    newVariableCallback.value = callback;
-    showNewVariableWindow.value = true;
+    state.newVariableCallback.value = callback;
+    state.showNewVariableWindow.value = true;
 }
 
 function dialogNewVariableClose(): void {
-    newVariableCallback.value = ()=>{};
-    showNewVariableWindow.value = false;
+    state.newVariableCallback.value = ()=>{};
+    state.showNewVariableWindow.value = false;
 }
 
 function switchGraph(id: number): void {
@@ -275,10 +313,10 @@ function switchGraph(id: number): void {
 }
 
 function trashMouseUp(event: MouseEvent): void {
-    if (isDraggingNode.value){
+    if (state.isDraggingNode.value){
         event.stopPropagation()
         deleteSelectedNodes();
-        isDraggingNode.value = false;
+        state.isDraggingNode.value = false;
     }
 }
 
@@ -301,7 +339,7 @@ function actionChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
 
     if (makeCommit){
         let data = {socket, widget, oldVal, newVal, node};
-        undoStore.commit({action: Core.LOGIC_ACTION.CHANGE_INPUT, data});
+        actionData.undoStore.commit({action: Core.LOGIC_ACTION.CHANGE_INPUT, data});
     }
 }
 
@@ -326,9 +364,9 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
 <template>
     <div class="logicMain">
         <DialogNewVariable
-            v-show="showNewVariableWindow"
+            v-show="state.showNewVariableWindow.value"
             :selectedAsset="selectedAsset"
-            :callback="newVariableCallback"
+            :callback="state.newVariableCallback.value"
             @close="dialogNewVariableClose"/>
         <ContextMenu
             v-if="contextMenuPosition != null"
@@ -343,35 +381,35 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
             <div class="undo-panel-wrapper">
                 <UndoPanel
                     class="undo-panel"
-                    :undoLength="undoLength"
-                    :redoLength="redoLength"
+                    :undoLength="actionData.undoLength.value"
+                    :redoLength="actionData.redoLength.value"
                     @undo="stepBackward"
                     @redo="stepForward"/>
             </div>
         </div>
         <div
             :style="(selectedAsset.selectedGraphId != null) ? '' : 'background: white'"
-            ref="nodeViewportRef"
+            :ref="domRefs.nodeViewportRef"
             class="node-viewport">
-            <div ref="nodeNavRef" class="node-nav-wrapper">
+            <div :ref="domRefs.nodeNavRef" class="node-nav-wrapper">
                 <Connection
-                    v-for="connection in visibleConnections"
+                    v-for="connection in state.visibleConnections.value"
                     :key="`connection,${selectedAsset.id},${selectedAsset.selectedGraphId},${connection.id}`"
                     ref="connectionRefs"
                     :connectionObj="connection"
                     :clientToNavSpace="clientToNavPos"
                     :navWrapper="($refs.nodeNav as HTMLDivElement)"
                     :allConnections="selectedAsset.connections"
-                    :draggingConnection="(draggingConnection as Node_Connection)"
+                    :draggingConnection="(state.draggingConnection.value as Node_Connection)"
                     @drag-start="dragConnection"/>
                 <Node
-                    v-for="node in visibleNodes"
+                    v-for="node in state.visibleNodes.value"
                     :key="`node,${selectedAsset.id},${selectedAsset.selectedGraphId},${node.nodeId}`"
-                    ref="nodeRefs"
+                    :ref="domRefs.nodeRefs"
                     :nodeObj="node"
                     :clientToNavSpace="clientToNavPos"
-                    :canDrag="nodeDraggingEnabled"
-                    :selectedNodes="selectedNodes"
+                    :canDrag="state.nodeDraggingEnabled.value"
+                    :selectedNodes="state.selectedNodes.value"
                     :allConnections="selectedAsset.connections"
                     class="node"
                     @node-clicked="nodeClick"
@@ -394,7 +432,7 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
         </div>
         <div
             class="trash-wrapper"
-            :class="isDraggingNode ? 'tras-wrapper-show' : 'trash-wrapper-hide'">
+            :class="state.isDraggingNode.value ? 'tras-wrapper-show' : 'trash-wrapper-hide'">
             <button
                 class="trash-button"
                 @mouseup="trashMouseUp">
@@ -406,10 +444,10 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
                 :selected-asset="selectedAsset"
                 @graph-switched="switchGraph($event)"></Graphs>
             <div class="resizeBtn-left-wrapper">
-                <button class="resizeBtn resizeBtn-left" @click="showGraphs = !showGraphs" :style="showGraphs ? 'transform: translateX(2px);' : ''">
-                    <Svg v-show="showGraphs" :src="arrowIcon" style="transform: rotate(90deg)"></Svg>
-                    <Svg v-show="!showGraphs" :src="hamburgerIcon"></Svg>
-                    <div v-if="selectedAsset.graphs.length > 1 && !showGraphs" class="graph-count-badge">
+                <button class="resizeBtn resizeBtn-left" @click="state.showGraphs.value = !state.showGraphs.value" :style="state.showGraphs.value ? 'transform: translateX(2px);' : ''">
+                    <Svg v-show="state.showGraphs.value" :src="arrowIcon" style="transform: rotate(90deg)"></Svg>
+                    <Svg v-show="!state.showGraphs.value" :src="hamburgerIcon"></Svg>
+                    <div v-if="selectedAsset.graphs.length > 1 && !state.showGraphs.value" class="graph-count-badge">
                         <div>{{ selectedAsset.graphs.length }}</div>
                     </div>
                 </button>
@@ -418,8 +456,8 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
                 <NavControlPanel
                     ref="navControlPanel"
                     class="nav-control"
-                    :navState="curNavState!"
-                    :selectedNavTool="selectedNavTool"
+                    :navState="state.curNavState.value!"
+                    :selectedNavTool="state.selectedNavTool.value"
                     :contentsBounds="contentsBounds"
                     :unitScale="1"
                     :maxZoom="2"
@@ -427,7 +465,7 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
                     :parent-event-bus="LogicMainEventBus"
                     @navChanged="navChange"
                     @tool-selected="navToolSelected"
-                    @set-hotkey-tool="navHotkeyTool = $event"/>
+                    @set-hotkey-tool="state.navHotkeyTool.value = $event"/>
             </div>
         </div>
     </div>

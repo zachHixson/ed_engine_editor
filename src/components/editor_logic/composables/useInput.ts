@@ -1,36 +1,31 @@
 import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
-import type { Ref, ComputedRef } from 'vue';
 import { useLogicEditorStore } from "@/stores/LogicEditor";
-import { LogicMainEventBus } from '../LogicMain.vue';
+import { DomRefs, ActionData, LogicEditorState, LogicMainEventBus } from '../LogicMain.vue';
 import type Node_Connection from '../node_components/Node_Connection';
 import type { iHoverSocket } from '../node_components/Socket.vue';
 import type { default as Node_Obj } from '../node_components/Node';
 import Core from '@/core';
-import type HotkeyMap from '@/components/common/HotkeyMap';
 import type { ActionMakeConnectionProps, ActionRemoveConnectionProps } from './useConnection';
 import type { ActionMoveNodesProps } from './useNode';
 import type Logic from '../node_components/Logic';
 
 const { Vector } = Core;
 
-export const mouseDownPos = new Vector();
-export const shiftDown = {value: false};
-
 export default function useInput(
     props: { selectedAsset: Logic },
-    hotkeyMap: HotkeyMap,
-    nodeViewportRef: Ref<HTMLDivElement | undefined>,
-    draggingConnection: Ref<Node_Connection | null>,
-    isDraggingNode: Ref<boolean>,
-    inputActive: ComputedRef<boolean>,
-    visibleNodes: ComputedRef<Node_Obj[]>,
-    selectedNodes: ComputedRef<Node_Obj[]>,
+    domRefs: DomRefs,
+    actionData: ActionData,
+    state: LogicEditorState,
     deselectAllNodes: ()=>void,
     clientToNavPos: (pos: Core.Vector)=>Core.Vector,
     makeConnection: (props: ActionMakeConnectionProps, commit?: boolean)=>void,
     removeConnection: (props: ActionRemoveConnectionProps, commit?: boolean)=>void,
     moveNodes: (props: ActionMoveNodesProps, commit?: boolean)=>void,
 ){
+    const { nodeViewportRef } = domRefs;
+    const { hotkeyMap } = actionData;
+    const { isDraggingNode, draggingConnection, inputActive, selectedNodes, visibleNodes, mouseDownPos, shiftDown } = state;
+
     const logicEditorStore = useLogicEditorStore();
     
     const selectionBoxRef = ref<HTMLDivElement>();
