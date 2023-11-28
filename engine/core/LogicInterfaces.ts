@@ -109,7 +109,7 @@ export interface iEditorNode extends iNode_Base {
     stackDataIO?: boolean;
 
     method(methodName: string, data?: any): any;
-    getInput(inputName: string): any | null;
+    getInput<T>(inputName: string): T;
     emit(eventName: string, data?: any): void;
 }
 
@@ -209,7 +209,7 @@ export interface iEngineNode extends iNode_Base {
 
     method(methodName: string, eventContext: iEventContext, data?: any): any;
     getWidgetData(): any;
-    getInput(inputName: string, eventContext: iEventContext, convertList?: boolean): any;
+    getInput<T>(inputName: string, eventContext: iEventContext, convertList?: boolean): T;
     triggerOutput(outputId: string, eventContext: iEventContext): void;
 }
 

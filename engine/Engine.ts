@@ -26,7 +26,6 @@ import {
 import iGameData from './iGameData';
 import getTransitions from './transitions/getTransitions';
 import Transition_Base, { TRANSITION } from './transitions/Transition_Base';
-import * as Physics from './Physics';
 import Matter from 'matter-js';
 import { SOCKET_TYPE } from './core/nodes/Node_Enums';
 

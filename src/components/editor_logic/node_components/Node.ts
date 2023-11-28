@@ -199,7 +199,7 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
         return method.call(this, data);
     }
 
-    getInput(inputName: string): any | null {
+    getInput(inputName: string): any {
         const input = this.inputs.get(inputName);
 
         if (!input){

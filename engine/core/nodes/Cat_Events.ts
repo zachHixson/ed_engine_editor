@@ -150,7 +150,7 @@ export default [
             }
         },
         execute(this: iEngineNode, eventContext: iEventContext, data){
-            const group = this.getInput('group', eventContext);
+            const group = this.getInput<string>('group', eventContext);
             const groupKey = group + data.instance.id;
 
             //clear group flags at start of every frame
@@ -247,7 +247,7 @@ export default [
             }
         },
         execute(this: iEngineNode, eventContext: iEventContext, data: any){
-            const name = this.getInput('name', eventContext);
+            const name = this.getInput<string>('name', eventContext);
 
             if (name.trim().length < 0) return;
             

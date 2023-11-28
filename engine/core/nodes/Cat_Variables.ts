@@ -197,8 +197,8 @@ export default [
         onBeforeUnmount: onBeforeUnmount,
         methods: {
             setVar(this: iEngineNode, eventContext: iEventContext){
-                const varName = this.getInput('name', eventContext);
-                const data = this.getInput('data', eventContext);
+                const varName = this.getInput<string>('name', eventContext);
+                const data = this.getInput<any>('data', eventContext);
                 const isGlobal = this.engine.getGlobalVariable(varName) !== undefined;
 
                 isGlobal ? this.engine.setGlobalVariable(varName, data) : eventContext.instance.setLocalVariable(varName, data);
@@ -234,7 +234,7 @@ export default [
         onBeforeUnmount: onBeforeUnmount,
         methods: {
             getVar(this: iEngineNode, eventContext: iEventContext){
-                const varName = this.getInput('name', eventContext);
+                const varName = this.getInput<string>('name', eventContext);
                 const isGlobal = this.engine.getGlobalVariable(varName);
                 const variable = isGlobal ? this.engine.getGlobalVariable(varName) : eventContext.instance.getLocalVariable(varName);
                 
@@ -258,7 +258,7 @@ export default [
         ],
         methods: {
             value(this: iEngineNode, eventContext: iEventContext){
-                return this.getInput('_number', eventContext);
+                return this.getInput<number>('_number', eventContext);
             },
         }
     },
@@ -273,7 +273,7 @@ export default [
         ],
         methods: {
             value(this: iEngineNode, eventContext: iEventContext){
-                return this.getInput('_string', eventContext);
+                return this.getInput<string>('_string', eventContext);
             },
         }
     },
@@ -288,7 +288,7 @@ export default [
         ],
         methods: {
             value(this: iEngineNode, eventContext: iEventContext){
-                return this.getInput('_boolean', eventContext);
+                return this.getInput<boolean>('_boolean', eventContext);
             },
         }
     },
@@ -303,7 +303,7 @@ function determineConnected(this: iEditorNode){
 
 function validate(this: iEditorNode, textbox?: HTMLInputElement){
     const dataSocket = this.inputs.get('data') || this.outputs.get('data')!;
-    const varName = textbox?.value ?? this.getInput('name');
+    const varName = textbox?.value ?? this.getInput<string>('name');
     const globalGet = this.editorAPI.getGlobalVariable(varName);
     const localGet = this.parentScript.getLocalVariable(varName);
     const isValid = !!globalGet || !!localGet;

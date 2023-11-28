@@ -70,7 +70,7 @@ export abstract class Instance_Base{
 
     //Rendering getters
     get sprite(): Sprite | null {return null};
-    set sprite(sprite: Sprite){}
+    set sprite(sprite: Sprite | null){}
     get renderable(){return false};
     get hasEditorFrame(){return false};
     get startFrame(){return 0};

@@ -4,9 +4,8 @@ import Cat_Events from './Cat_Events';
 import Cat_Variables from './Cat_Variables';
 import { Vector } from '../Vector';
 import { iEditorNode, iEngineNode, iNodeConnection, iNodeSaveData, iEventContext } from '../LogicInterfaces';
-import { Game_Object, Instance_Base, Instance_Object, Instance_Sprite, iEditorNodeInput, iEditorNodeOutput } from '../core';
+import { Asset_Base, Game_Object, Instance_Base, Instance_Object, Instance_Sprite, iEditorNodeInput, iEditorNodeOutput, Sprite, Util } from '../core';
 import { canConvertSocket, assetToInstance, instanceToAsset } from './Socket_Conversions';
-import { Sprite, Util } from '../core';
 
 export type GenericNode = iEditorNode | iEngineNode;
 
@@ -28,7 +27,7 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             checkCondition(this: iEngineNode, eventContext: iEventContext){
-                const conditionVal = this.getInput('condition', eventContext);
+                const conditionVal = this.getInput<boolean>('condition', eventContext);
                 const out = conditionVal ? 'true' : 'false';
                 this.triggerOutput(out, eventContext);
             },
@@ -147,8 +146,8 @@ export const NODE_LIST: iNodeTemplate[] = [
         methods: {
             compare(this: iEngineNode, eventContext: iEventContext){
                 const compareFunc = this.getWidgetData();
-                const inp1 = this.getInput('_inp1', eventContext);
-                const inp2 = this.getInput('_inp2', eventContext);
+                const inp1 = this.getInput<number>('_inp1', eventContext);
+                const inp2 = this.getInput<number>('_inp2', eventContext);
 
                 switch(compareFunc){
                     case 'equal': return inp1 == inp2;
@@ -185,8 +184,8 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             getResult(this: iEngineNode, eventContext: iEventContext){
-                const i1 = this.getInput('_i1', eventContext);
-                const i2 = this.getInput('_i2', eventContext);
+                const i1 = this.getInput<Asset_Base>('_i1', eventContext);
+                const i2 = this.getInput<Asset_Base>('_i2', eventContext);
 
                 return i1.id == i2.id;
             },
@@ -232,13 +231,13 @@ export const NODE_LIST: iNodeTemplate[] = [
         methods: {
             result(this: iEngineNode, eventContext: iEventContext){
                 const logicFunc = this.getWidgetData();
-                const inp1 = this.getInput('_inp1', eventContext);
-                const inp2 = this.getInput('_inp2', eventContext);
+                const inp1 = this.getInput<boolean>('_inp1', eventContext);
+                const inp2 = this.getInput<boolean>('_inp2', eventContext);
 
                 switch(logicFunc){
                     case 'and': return inp1 && inp2;
                     case 'or': return inp1 || inp2;
-                    case 'xor': return !!(inp1 ^ inp2);
+                    case 'xor': return !!(+inp1 ^ +inp2);
                 }
             },
         },
@@ -320,8 +319,8 @@ export const NODE_LIST: iNodeTemplate[] = [
         },
         methods: {
             runLoop(this: iEngineNode, eventContext: iEventContext){
-                const iterations = this.getInput('iterations', eventContext);
-                const list = this.getInput('list', eventContext);
+                const iterations = this.getInput<number>('iterations', eventContext);
+                const list = this.getInput<any[]>('list', eventContext);
 
                 if (list && list.length){
                     for (let i = 0; i < list.length; i++){
@@ -410,8 +409,8 @@ export const NODE_LIST: iNodeTemplate[] = [
         },
         methods: {
             getList(this: iEngineNode, eventContext: iEventContext){
-                const list = this.getInput('list', eventContext);
-                const item = this.getInput('item', eventContext);
+                const list = this.getInput<any[]>('list', eventContext);
+                const item = this.getInput<any>('item', eventContext);
                 const outputList = [...list];
 
                 (item != null) && outputList.push(item);
@@ -486,7 +485,7 @@ export const NODE_LIST: iNodeTemplate[] = [
         },
         methods: {
             getLength(this: iEngineNode, eventContext: iEventContext){
-                const list = this.getInput('_list', eventContext) as any[] | null;
+                const list = this.getInput<any[] | null>('_list', eventContext);
 
                 return list?.length ?? 0;
             }
@@ -503,7 +502,7 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             not(this: iEngineNode, eventContext: iEventContext){
-                return !this.getInput('_inp', eventContext);
+                return !this.getInput<boolean>('_inp', eventContext);
             },
         },
     },
@@ -520,8 +519,8 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             log(this: iEngineNode, eventContext: iEventContext){
-                const label = this.getInput('label', eventContext);
-                const data = this.getInput('_data', eventContext, false);
+                const label = this.getInput<string>('label', eventContext);
+                const data = this.getInput<any>('_data', eventContext, false);
                 let output = '';
 
                 if (label.length) output += label;
@@ -594,8 +593,8 @@ export const NODE_LIST: iNodeTemplate[] = [
         methods: {
             compute(this: iEngineNode, eventContext: iEventContext){
                 const mathFunc = this.getWidgetData();
-                const num1 = this.getInput('_num1', eventContext);
-                const num2 = this.getInput('_num2', eventContext);
+                const num1= this.getInput<number>('_num1', eventContext);
+                const num2= this.getInput<number>('_num2', eventContext);
 
                 switch(mathFunc){
                     case 'add_sym': return num1 + num2;
@@ -624,7 +623,7 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             removeInstance(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.getInput('instance', eventContext) ?? eventContext.instance;
+                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
                 this.engine.removeInstance(instance);
                 this.triggerOutput('_o', eventContext);
             }
@@ -650,10 +649,10 @@ export const NODE_LIST: iNodeTemplate[] = [
         methods: {
             startDialog(this: iEngineNode, eventContext: iEventContext){
                 const textArea = this.getWidgetData();
-                const textBox = this.getInput('text', eventContext);
-                const interactKey = this.getInput('interaction_key', eventContext) ?? 'Space';
-                const shouldPause = this.getInput('pause_game', eventContext);
-                const isFullscreen = this.getInput('fullscreen', eventContext);
+                const textBox = this.getInput<string>('text', eventContext);
+                const interactKey = this.getInput<string>('interaction_key', eventContext) ?? 'Space';
+                const shouldPause = this.getInput<boolean>('pause_game', eventContext);
+                const isFullscreen = this.getInput<boolean>('fullscreen', eventContext);
                 const text = textBox ? textBox : textArea;
 
                 this.engine.openDialogBox(text, shouldPause, isFullscreen, ()=>{
@@ -741,17 +740,17 @@ export const NODE_LIST: iNodeTemplate[] = [
         },
         methods: {
             getAsset(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.getInput('instance', eventContext) ?? eventContext.instance;
+                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
                 return instanceToAsset(instance, this.engine.gameData);
             },
             getName(this: iEngineNode, eventContext: iEventContext){
-                return (this.getInput('instance', eventContext) ?? eventContext.instance).name
+                return (this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance).name
             },
             getX(this: iEngineNode, eventContext: iEventContext){
-                return (this.getInput('instance', eventContext) ?? eventContext.instance).pos.x
+                return (this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance).pos.x
             },
             getY(this: iEngineNode, eventContext: iEventContext){
-                return (this.getInput('instance', eventContext) ?? eventContext.instance).pos.y
+                return (this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance).pos.y
             },
         },
     },
@@ -773,10 +772,10 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             spawnInstance(this: iEngineNode, eventContext: iEventContext){
-                const baseAsset = this.getInput('type', eventContext);
-                const x = this.getInput('x', eventContext);
-                const y = this.getInput('y', eventContext);
-                const relative = this.getInput('relative', eventContext);
+                const baseAsset = this.getInput<Asset_Base>('type', eventContext);
+                const x = this.getInput<number>('x', eventContext);
+                const y = this.getInput<number>('y', eventContext);
+                const relative = this.getInput<boolean>('relative', eventContext);
                 const pos = relative ? new Vector(x, y).add(eventContext.instance.pos) : new Vector(x, y);
                 const nextId = this.engine.room.curInstId;
                 const newInstance = assetToInstance(baseAsset, nextId, pos);
@@ -818,9 +817,9 @@ export const NODE_LIST: iNodeTemplate[] = [
         },
         methods: {
             getInstances(this: iEngineNode, eventContext: iEventContext){
-                const name = this.getInput('name', eventContext);
-                const type = this.getInput('type', eventContext);
-                const group = this.getInput('group', eventContext);
+                const name = this.getInput<string>('name', eventContext);
+                const group = this.getInput<string>('group', eventContext);
+                const type = this.getInput<Asset_Base>('type', eventContext);
                 const instances: Instance_Base[] = [];
                 const intersect = type && group;
 
@@ -872,14 +871,14 @@ export const NODE_LIST: iNodeTemplate[] = [
         methods: {
             raycast(this: iEngineNode, eventContext: iEventContext){
                 const widgetDir = this.widgetData;
-                const startX = this.getInput('start_x', eventContext);
-                const startY = this.getInput('start_y', eventContext);
+                const startX = this.getInput<number>('start_x', eventContext);
+                const startY = this.getInput<number>('start_y', eventContext);
+                const distance = this.getInput<number>('distance', eventContext);
+                const onlySolid = this.getInput<boolean>('only_solid', eventContext);
                 const startPos = new Vector(
                     startX || eventContext.instance.pos.x,
                     startY || eventContext.instance.pos.y,
                 );
-                const distance = this.getInput('distance', eventContext);
-                const onlySolid = this.getInput('only_solid', eventContext);
                 const ignoreSelf = (startX || true) || (startY || true);
                 const rayVector = new Vector(widgetDir[0], widgetDir[1]).multiplyScalar(distance);
                 const nearInstances = this.engine.room.getInstancesInRadius(startPos, distance)
@@ -929,8 +928,8 @@ export const NODE_LIST: iNodeTemplate[] = [
         },
         methods: {
             broadcastMessage(this: iEngineNode, eventContext: iEventContext){
-                const name = this.getInput('name', eventContext);
-                const global = this.getInput('global', eventContext);
+                const name = this.getInput<string>('name', eventContext);
+                const global = this.getInput<boolean>('global', eventContext);
 
                 if (name.trim().length < 0) return;
                 
@@ -978,8 +977,8 @@ export const NODE_LIST: iNodeTemplate[] = [
                     return;
                 }
 
-                const duration = this.getInput('duration', eventContext) * 1000;
-                const step = this.getInput('step', eventContext) * 1000;
+                const duration = this.getInput<number>('duration', eventContext) * 1000;
+                const step = this.getInput<number>('step', eventContext) * 1000;
                 const data = {
                     duration,
                     step,
@@ -1070,9 +1069,9 @@ export const NODE_LIST: iNodeTemplate[] = [
         },
         methods: {
             getNum(this: iEngineNode, eventContext: iEventContext){
-                const lower = this.getInput('lower', eventContext);
-                const upper = this.getInput('upper', eventContext);
-                const round = this.getInput('round', eventContext);
+                const lower = this.getInput<number>('lower', eventContext);
+                const upper = this.getInput<number>('upper', eventContext);
+                const round = this.getInput<boolean>('round', eventContext);
                 const num = Math.random() * (upper - lower) + lower;
 
                 return round ? Math.round(num) : num;
@@ -1107,11 +1106,11 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             setSettings(this: iEngineNode, eventContext: iEventContext){
-                const instance = (this.getInput('instance', eventContext) ?? eventContext.instance) as Instance_Base;
-                const frame = parseInt(this.getInput('frame', eventContext));
-                const fps = parseInt(this.getInput('fps', eventContext));
-                const loop = this.getInput('loop', eventContext);
-                const playing = this.getInput('playing', eventContext);
+                const instance = (this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance);
+                const frame = parseInt(this.getInput<string>('frame', eventContext));
+                const fps = parseInt(this.getInput<string>('fps', eventContext));
+                const loop = this.getInput<boolean>('loop', eventContext);
+                const playing = this.getInput<boolean>('playing', eventContext);
 
                 instance.animFrame = isNaN(frame) ? instance.animFrame : frame;
                 instance.fpsOverride = isNaN(fps) ? instance.fps : fps;
@@ -1161,11 +1160,11 @@ export const NODE_LIST: iNodeTemplate[] = [
         },
         methods: {
             setSprite(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.getInput('instance', eventContext) ?? eventContext.instance;
+                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
                 const spriteId: number = this.widgetData;
                 const sprite = this.engine.gameData.sprites.find(s => s.id == spriteId);
 
-                instance.sprite = sprite;
+                instance.sprite = sprite ?? null;
                 this.engine.refreshRenderedInstance(instance);
 
                 this.triggerOutput('_o', eventContext);
@@ -1186,9 +1185,9 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             flipSprite(this: iEngineNode, eventContext: iEventContext){
-                const instance: Instance_Base = this.getInput('instance', eventContext) ?? eventContext.instance;
-                const hFlip: boolean = this.getInput('hFlip', eventContext);
-                const vFlip: boolean = this.getInput('vFlip', eventContext);
+                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
+                const hFlip = this.getInput<boolean>('hFlip', eventContext);
+                const vFlip = this.getInput<boolean>('vFlip', eventContext);
 
                 instance.flipH = hFlip;
                 instance.flipV = vFlip;
@@ -1213,10 +1212,10 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             setPosition(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.getInput('instance', eventContext) ?? eventContext.instance;
-                const xInp = this.getInput('x', eventContext);
-                const yInp = this.getInput('y', eventContext);
-                const relative = this.getInput('relative', eventContext);
+                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
+                const xInp = this.getInput<number & string>('x', eventContext);
+                const yInp = this.getInput<number & string>('y', eventContext);
+                const relative = this.getInput<boolean>('relative', eventContext);
                 let newPos: Vector;
 
                 if (relative){
@@ -1255,10 +1254,10 @@ export const NODE_LIST: iNodeTemplate[] = [
         methods: {
             jumpTo(this: iEngineNode, eventContext: iEventContext){
                 const halfDim = Sprite.DIMENSIONS / 2;
-                const instance: Instance_Base = this.getInput('instance', eventContext) ?? eventContext.instance;
-                const x: number = Math.round(this.getInput('x', eventContext));
-                const y: number = Math.round(this.getInput('y', eventContext));
-                const relative: boolean = this.getInput('relative', eventContext);
+                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
+                const x = Math.round(this.getInput<number>('x', eventContext));
+                const y = Math.round(this.getInput<number>('y', eventContext));
+                const relative = this.getInput<boolean>('relative', eventContext);
                 const desiredDest = relative ? new Vector(x, y).add(instance.pos) : new Vector(x, y).subtractScalar(halfDim);
 
                 //jump if no collision on instance
@@ -1359,8 +1358,8 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             setVelocity(this: iEngineNode, eventContext: iEventContext){
-                const instance: Instance_Base = this.getInput('instance', eventContext) ?? eventContext.instance;
-                const speed: number = this.getInput('speed', eventContext);
+                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
+                const speed = this.getInput<number>('speed', eventContext);
                 const direction = Vector.fromArray(this.widgetData);
                 instance.velocity.copy(direction.multiplyScalar(speed));
 
@@ -1392,8 +1391,8 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             moveDirection(this: iEngineNode, eventContext: iEventContext){
-                const instance: Instance_Base = this.getInput('instance', eventContext) ?? eventContext.instance;
-                const speed: number = this.getInput('speed', eventContext);
+                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
+                const speed = this.getInput<number>('speed', eventContext);
                 const direction = Vector.fromArray(this.widgetData);
                 const velocity = direction.scale(speed);
 
@@ -1421,8 +1420,8 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             push(this: iEngineNode, eventContext: iEventContext){
-                const instance: Instance_Base = this.getInput('instance', eventContext) ?? eventContext.instance;
-                const strength = this.getInput('strength', eventContext);
+                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
+                const strength = this.getInput<number>('strength', eventContext);
                 const force = Vector.fromArray(this.widgetData).scale(strength);
                 instance.applyForce(force);
 
