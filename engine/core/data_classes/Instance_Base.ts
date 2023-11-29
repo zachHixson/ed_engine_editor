@@ -93,6 +93,7 @@ export abstract class Instance_Base{
     abstract get frameData(): Array<ImageData>;
 
     get hasCollisionEvent(){return false};
+    get triggerExits(){return false};
     get physicsObject(){return this._physicsObject};
 
     get animFrame(){

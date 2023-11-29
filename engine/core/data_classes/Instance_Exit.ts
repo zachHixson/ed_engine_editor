@@ -106,6 +106,7 @@ export class Instance_Exit extends Instance_Base {
     override onCollision(event: iCollisionEvent): void {
         if (Instance_Exit.exitInstance) return;
         if (event.type != COLLISION_EVENT.START) return;
+        if (!event.instance.triggerExits) return;
         if (this.isEnding) {
             Instance_Exit.engine!.triggerEnding(this.endingDialog);
             return;
