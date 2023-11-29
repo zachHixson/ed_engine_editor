@@ -154,7 +154,18 @@ export class Engine implements iEngineCallbacks {
     loadRoom = (roomId: number): void =>{
         const room = this._gameData.rooms.find((r: Room) => r.id == roomId)!;
         this._dispatchLogicEvent('e_before_destroy');
-        this._loadedRoom && this._loadedRoom.clearSpacialData();
+
+        if (this._loadedRoom){
+            //clear MatterJS bodies
+            Matter.Composite.clear(this._physics.world, false);
+            this._loadedRoom.instances.forEach(instance => {
+                Matter.Events.off(this.physics, 'beforeUpdate', instance.beforeUpdateHandler);
+                Matter.Events.off(this.physics, 'afterUpdate', instance.afterUpdateHandler);
+            });
+
+            this._loadedRoom.clearSpacialData();
+        }
+        
         this._loadedRoom = room.persist ? room : room.clone();
         this._loadedRoom.initSpacialData();
         this._collisionMap = new Map();

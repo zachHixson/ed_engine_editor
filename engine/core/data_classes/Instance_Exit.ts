@@ -83,7 +83,9 @@ export class Instance_Exit extends Instance_Base {
         }
 
         if (exitBehavior != EXIT_TYPES.TRANSITION_ONLY){
+            objInstance.clearPhysicsBody();
             engine.addInstance(objInstance);
+            objInstance.initPhysicsBody(!objInstance.applyGravity);
         }
 
         if (Instance_Exit.exitCamera){

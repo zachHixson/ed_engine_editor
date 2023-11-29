@@ -131,10 +131,7 @@ export abstract class Instance_Base{
     }
     onAnimationChange(state: InstanceAnimEvent): void {}
     onCollision(event: iCollisionEvent): void {}
-    onDestroy(): void {
-        Matter.Events.on(this._engine!.physics, 'beforeUpdate', this.beforeUpdateHandler);
-        Matter.Events.on(this._engine!.physics, 'afterUpdate', this.afterUpdateHandler);
-    }
+    onDestroy(): void {}
 
     setEngine(engine: Engine): void {
         this._engine = engine;
@@ -301,6 +298,13 @@ export abstract class Instance_Base{
         
         Matter.Events.on(this._engine!.physics, 'beforeUpdate', this.beforeUpdateHandler);
         Matter.Events.on(this._engine!.physics, 'afterUpdate', this.afterUpdateHandler);
+    }
+
+    clearPhysicsBody(): void {
+        Matter.Events.off(this._engine!.physics, 'beforeUpdate', this.beforeUpdateHandler);
+        Matter.Events.off(this._engine!.physics, 'afterUpdate', this.afterUpdateHandler);
+        Matter.Composite.remove(this._engine!.physics.world, this._physicsObject!);
+        this._physicsObject = null;
     }
 
     applyForce(force: Vector): void {
