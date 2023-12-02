@@ -1363,10 +1363,6 @@ export const NODE_LIST: iNodeTemplate[] = [
                 const direction = Vector.fromArray(this.widgetData);
                 instance.velocity.copy(direction.multiplyScalar(speed));
 
-                if (instance.isSolid){
-                    instance.initPhysicsBody(false);
-                }
-
                 this.triggerOutput('_o', eventContext);
             },
         },

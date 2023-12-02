@@ -4,7 +4,6 @@ import { Node_Enums, iEngineLogic } from "../core";
 import { Draw } from "../core";
 import { Sprite } from "../core";
 import { Util } from "../core";
-import Matter from 'matter-js';
 import type Engine from '@engine/Engine';
 
 export enum InstanceAnimEvent {
@@ -34,7 +33,7 @@ export interface iCollisionEvent {
 export abstract class Instance_Base{
     private _animProgress: number = 0;
     private _engine: Engine | null = null;
-    private _physicsObject: ReturnType<typeof Matter.Bodies.rectangle> | null = null;
+    private _gravityForce: Vector = new Vector(0, 0);
 
     id: number;
     name: string;
@@ -94,7 +93,6 @@ export abstract class Instance_Base{
 
     get hasCollisionEvent(){return false};
     get triggerExits(){return false};
-    get physicsObject(){return this._physicsObject};
 
     get animFrame(){
         if (!this.sprite){
@@ -116,18 +114,21 @@ export abstract class Instance_Base{
     }
 
     //Lifecycle events
-    onCreate(): void {
-        if (this.isSolid || this.applyGravity){
-            this.initPhysicsBody(!this.applyGravity);
-        }
-    }
+    onCreate(): void {}
     onUpdate(deltaTime: number): void {
-        //update position if not a phyics object
-        if (this._physicsObject) return;
+        const isStatic = this.velocity.lengthNoSqrt() == 0 && this.moveVector.lengthNoSqrt() == 0 && !this.applyGravity;
 
-        const vel = this.velocity.clone().add(this.moveVector).scale(deltaTime);
-        const newPos = vel.add(this.pos);
-        this._engine!.setInstancePosition(this, newPos);
+        if (isStatic) return;
+
+        const moveFunc = this.isSolid ? this._engine!.moveAndSlide : this._engine!.setInstancePosition;
+        const vel = this.velocity.clone().add(this.moveVector).add(this._gravityForce);
+
+        moveFunc(this, vel);
+
+        if (this.applyGravity){
+            this._gravityForce.y -= this._engine!.room.gravity;
+        }
+
         this.moveVector.set(0, 0);
     }
     onAnimationChange(state: InstanceAnimEvent): void {}
@@ -237,78 +238,5 @@ export abstract class Instance_Base{
 
     isInGroup(group: string): boolean {
         return !!this.groups.find(g => g == group);
-    }
-
-    //matter handlers
-    beforeUpdateHandler(eventData: any): void {
-        const deltaTime = eventData.delta as number;
-        const vel = this.velocity.clone();
-        const isSleeping = this.velocity.dot(this.velocity) == 0 && !this.applyGravity;
-
-        Matter.Body.setPosition(this._physicsObject!, this.pos);
-        Matter.Sleeping.set(this._physicsObject!, isSleeping);
-
-        //Apply gravity
-        if (this.applyGravity){
-            Matter.Body.applyForce(
-                this._physicsObject!,
-                this._physicsObject!.position,
-                new Vector(0, -this._engine!.room.gravity)
-            );
-
-            //If an object is moving against gravity, remove the cumulative force to make control of object more natural
-            if (this.velocity.y > 0){
-                const newPhysVel = Vector.fromObject(this._physicsObject!.velocity);
-                newPhysVel.y = this.velocity.y - this._engine!.room.gravity * 9.81;
-                Matter.Body.setVelocity(this._physicsObject!, newPhysVel);
-            }
-        }
-
-        //clamp object's velocity
-        const maxVel = Sprite.DIMENSIONS / deltaTime;
-        Matter.Body.setVelocity(this._physicsObject!, {
-            x: Util.clamp(this._physicsObject!.velocity.x, -maxVel, maxVel),
-            y: Util.clamp(this._physicsObject!.velocity.y, -maxVel, maxVel),
-        });
-
-        vel.add(this._physicsObject!.velocity as Vector).add(this.moveVector).scale(deltaTime);
-        Matter.Body.translate(this._physicsObject!, vel);
-        this.moveVector.set(0, 0);
-    }
-
-    afterUpdateHandler(): void {
-        this.pos.copy(this._physicsObject!.position);
-        this._engine!.setInstancePosition(this, this.pos);
-    }
-
-    initPhysicsBody(isSleeping: boolean): void {
-        if (this._physicsObject) return;
-
-        const options = {
-            id: this.id,
-            isStatic: false,
-            isSleeping,
-        };
-        this._physicsObject = Matter.Bodies.rectangle(this.pos.x, this.pos.y, Sprite.DIMENSIONS, Sprite.DIMENSIONS, options);
-        this._engine!.addPhysicsObjects([this._physicsObject]);
-
-        this.beforeUpdateHandler = this.beforeUpdateHandler.bind(this);
-        this.afterUpdateHandler = this.afterUpdateHandler.bind(this);
-
-        Matter.Body.setInertia(this._physicsObject, Infinity);
-        
-        Matter.Events.on(this._engine!.physics, 'beforeUpdate', this.beforeUpdateHandler);
-        Matter.Events.on(this._engine!.physics, 'afterUpdate', this.afterUpdateHandler);
-    }
-
-    clearPhysicsBody(): void {
-        Matter.Events.off(this._engine!.physics, 'beforeUpdate', this.beforeUpdateHandler);
-        Matter.Events.off(this._engine!.physics, 'afterUpdate', this.afterUpdateHandler);
-        Matter.Composite.remove(this._engine!.physics.world, this._physicsObject!);
-        this._physicsObject = null;
-    }
-
-    applyForce(force: Vector): void {
-        Matter.Body.applyForce(this._physicsObject!, this._physicsObject!.position, force);
     }
 }

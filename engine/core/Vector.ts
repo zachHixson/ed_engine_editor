@@ -87,6 +87,10 @@ export class Vector {
         return this.magnitude();
     }
 
+    lengthNoSqrt(): number {
+        return this.x * this.x + this.y * this.y;
+    }
+
     normalize(): Vector {
         const magnitude = this.magnitude();
         if (magnitude == 0) return this;
