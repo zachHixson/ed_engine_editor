@@ -395,7 +395,7 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
                 <Connection
                     v-for="connection in state.visibleConnections.value"
                     :key="`connection,${selectedAsset.id},${selectedAsset.selectedGraphId},${connection.id}`"
-                    ref="connectionRefs"
+                    :ref="domRefs.connectionRefs"
                     :connectionObj="connection"
                     :clientToNavSpace="clientToNavPos"
                     :navWrapper="($refs.nodeNav as HTMLDivElement)"
