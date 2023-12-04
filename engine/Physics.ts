@@ -13,7 +13,6 @@ export type RaycastResult = {
 }
 
 export function raycast(pos: Vector, instanceList: Instance_Base[], velocity: Vector): RaycastResult[] {
-    const collisionPos = new Vector(0, 0);
     const collisionDim = new Vector(Sprite.DIMENSIONS, Sprite.DIMENSIONS);
     const normVel = velocity.clone().normalize();
     const results: RaycastResult[] = [];
@@ -21,9 +20,7 @@ export function raycast(pos: Vector, instanceList: Instance_Base[], velocity: Ve
     if (velocity.lengthNoSqrt() <= 0) return [];
 
     for (let i = 0; i < instanceList.length; i++){
-        collisionPos.copy(instanceList[i].pos);
-        collisionPos.addScalar(8);
-        const result = Util.projectSVF(pos, velocity, collisionPos, collisionDim);
+        const result = Util.projectSVF(pos, velocity, instanceList[i].pos, collisionDim);
 
         if (!result) continue;
 
@@ -40,7 +37,7 @@ export function raycast(pos: Vector, instanceList: Instance_Base[], velocity: Ve
 
 export function move(startPoint: Vector, worldInstances: Instance_Base[], velocity: Vector): MoveResult {
     const velOffset = velocity.clone().normalize().scale(0.001);
-    const instCenter = startPoint.clone().addScalar(8).add(velOffset);
+    const instCenter = startPoint.clone().add(velOffset);
     const rayHits = raycast(instCenter, worldInstances, velocity);
     const collisions: Instance_Base[] = [];
     let closestHit: RaycastResult = rayHits[0];
@@ -80,7 +77,7 @@ export function move(startPoint: Vector, worldInstances: Instance_Base[], veloci
     }
 
     return {
-        point: closestHit.point.subtractScalar(8),
+        point: closestHit.point,
         normal: closestHit.normal,
         collisions,
     };
