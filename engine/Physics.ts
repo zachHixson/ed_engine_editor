@@ -15,6 +15,7 @@ export type RaycastResult = {
 export function raycast(pos: Vector, instanceList: Instance_Base[], velocity: Vector): RaycastResult[] {
     const collisionPos = new Vector(0, 0);
     const collisionDim = new Vector(Sprite.DIMENSIONS, Sprite.DIMENSIONS);
+    const normVel = velocity.clone().normalize();
     const results: RaycastResult[] = [];
 
     if (velocity.lengthNoSqrt() <= 0) return [];
@@ -27,7 +28,7 @@ export function raycast(pos: Vector, instanceList: Instance_Base[], velocity: Ve
         if (!result) continue;
 
         const { point, normal } = result;
-        const normCheck = velocity.clone().normalize().dot(result?.normal);
+        const normCheck = normVel.dot(result?.normal);
 
         if (normCheck >= 0) continue;
 
@@ -41,6 +42,8 @@ export function move(startPoint: Vector, worldInstances: Instance_Base[], veloci
     const velOffset = velocity.clone().normalize().scale(0.001);
     const instCenter = startPoint.clone().addScalar(8).add(velOffset);
     const rayHits = raycast(instCenter, worldInstances, velocity);
+    const collisions: Instance_Base[] = [];
+    let closestHit: RaycastResult = rayHits[0];
 
     if (rayHits.length <= 0){
         return {
@@ -50,9 +53,7 @@ export function move(startPoint: Vector, worldInstances: Instance_Base[], veloci
         };
     }
 
-    //find nearest point
-    let closest: RaycastResult = rayHits[0];
-
+    //find nearest hit point
     {
         let closestDist = rayHits[0].point.distanceNoSqrt(instCenter);
 
@@ -61,19 +62,27 @@ export function move(startPoint: Vector, worldInstances: Instance_Base[], veloci
 
             if (checkDist < closestDist){
                 closestDist = checkDist;
-                closest = rayHits[i];
+                closestHit = rayHits[i];
             }
         }
     }
 
-    if (closest.normal.lengthNoSqrt() <= 0){
-        closest.normal.set(0, 1);
+    //find all collisions
+    for (let i = 0; i < rayHits.length; i++){
+        if (rayHits[i].point.equalTo(closestHit.point)){
+            collisions.push(rayHits[i].instance);
+        }
+    }
+
+    //normals with a length of 0 are useless, but sometimes occur and cause errors, so we correct for that
+    if (closestHit.normal.lengthNoSqrt() <= 0){
+        closestHit.normal.set(0, 1);
     }
 
     return {
-        point: closest.point.subtractScalar(8),
-        normal: closest.normal,
-        collisions: rayHits.map(h => h.instance),
+        point: closestHit.point.subtractScalar(8),
+        normal: closestHit.normal,
+        collisions,
     };
 }
 
@@ -85,15 +94,11 @@ export function moveAndSlide(startPoint: Vector, worldInstances: Instance_Base[]
         const oldDesiredDest = startPoint.clone().add(velocity);
         const newDesiredDest = Util.projectPointOnLine(oldDesiredDest, moveResult.point, moveResult.normal);
         const newDesiredVelocity = newDesiredDest.subtract(moveResult.point);
-        const newDest = move(moveResult.point, worldInstances, newDesiredVelocity);
+        const newResult = move(moveResult.point, worldInstances, newDesiredVelocity);
 
-        if (isNaN(newDest.point.x) || isNaN(newDest.point.y)){
-            debugger;
-        }
-
-        moveResult.point.copy(newDest.point);
-        moveResult.normal.copy(newDest.normal);
-        moveResult.collisions.push(...newDest.collisions);
+        moveResult.point.copy(newResult.point);
+        moveResult.normal.copy(newResult.normal);
+        moveResult.collisions.push(...newResult.collisions);
     }
 
     return moveResult;

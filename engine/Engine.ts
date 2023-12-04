@@ -611,16 +611,11 @@ export class Engine implements iEngineCallbacks {
             .filter(i => i.isSolid && i.id != instance.id);
         const result = Physics.moveAndSlide(instance.pos, nearByInstances, vel);
 
-        if (result.collisions.length > 0){
-            instance._gravityForce.set(0, 0);
-        }
-
-        try{
-            this.setInstancePosition(instance, result.point);
-        }
-        catch (e){
-            debugger;
-        }
+        this.setInstancePosition(instance, result.point);
+        result.collisions.forEach(collisionBody => {
+            this.registerCollision(instance, collisionBody);
+            this.registerCollision(collisionBody, instance);
+        });
     }
 
     refreshRenderedInstance = (instance: Instance_Base): void =>{
