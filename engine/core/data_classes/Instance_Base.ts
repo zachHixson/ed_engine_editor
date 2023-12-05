@@ -130,9 +130,17 @@ export abstract class Instance_Base{
         }
 
         this.moveVector.set(0, 0);
+        this.onGround = false;
     }
     onAnimationChange(state: InstanceAnimEvent): void {}
-    onCollision(event: iCollisionEvent): void {}
+    onCollision(event: iCollisionEvent): void {
+        if (!this.applyGravity) return;
+
+        const dir = event.instance.pos.clone().subtract(this.pos).normalize();
+        this.onGround ||= dir.y < -Math.cos(Math.PI / 4);
+
+        if (this.onGround) this._gravityForce.y = 0;
+    }
     onDestroy(): void {}
 
     setEngine(engine: Engine): void {

@@ -151,6 +151,7 @@ export class Instance_Object extends Instance_Base{
     }
 
     override onCollision(event: iCollisionEvent): void {
+        super.onCollision(event);
         this.executeNodeEvent('e_collision', event);
     }
 
