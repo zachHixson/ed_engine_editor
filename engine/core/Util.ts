@@ -90,10 +90,16 @@ export function projectSVF(sp: Vector, sv: Vector, bp: Vector, bd: Vector){
     const projectedPointY = sp.y + projectSVFY;
     const offsetSVFX = Math.abs(projectedPointX - bp.x) - bd.x;
     const offsetSVFY = Math.abs(projectedPointY - bp.y) - bd.y;
+
+    //calculate masks
     const boxMask = +(offsetSVFX <= 0 && offsetSVFY <= 0);
     const distanceMask = +((projectSVFX * projectSVFX + projectSVFY * projectSVFY) <= sv.dot(sv));
-    const normalX = Math.max(Math.min(+(offsetSVFY != 0) * -Math.sign(sv.x), 1), -1);
-    const normalY = Math.max(Math.min(+(offsetSVFX != 0) * -Math.sign(sv.y), 1), -1);
+
+    //calculate normal
+    const velAspect = Math.abs(sv.y / sv.x);
+    const invAspect = 1 / velAspect;
+    const normalX = +(bSVFX * velAspect >= bSVFY) * (+(sp.x > bp.x) * 2 - 1) * +(offsetSVFY != 0);
+    const normalY = +(bSVFY * invAspect >= bSVFX) * (+(sp.y > bp.y) * 2 - 1) * +(offsetSVFX != 0);
 
     return (boxMask * distanceMask) > 0 ? {
         point: new Vector(projectedPointX, projectedPointY),

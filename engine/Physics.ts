@@ -25,7 +25,7 @@ export function raycast(pos: Vector, instanceList: Instance_Base[], velocity: Ve
         if (!result) continue;
 
         const { point, normal } = result;
-        const normCheck = normVel.dot(result?.normal);
+        const normCheck = normVel.dot(normal);
 
         if (normCheck >= 0) continue;
 
@@ -60,6 +60,15 @@ export function move(startPoint: Vector, worldInstances: Instance_Base[], veloci
             if (checkDist < closestDist){
                 closestDist = checkDist;
                 closestHit = rayHits[i];
+            }
+            else if (checkDist == closestDist){
+                const curInstDist = closestHit.instance.pos.distanceNoSqrt(startPoint);
+                const hitDist = rayHits[i].instance.pos.distanceNoSqrt(startPoint);
+                const instCheck = hitDist < curInstDist;
+
+                if (instCheck){
+                    closestHit = rayHits[i];
+                }
             }
         }
     }
