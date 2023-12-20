@@ -1,9 +1,7 @@
 import { INSTANCE_TYPE } from "../Enums";
 import { Vector } from "../Vector";
-import { Node_Enums, iEngineLogic } from "../core";
 import { Draw } from "../core";
-import { Sprite } from "../core";
-import { Util } from "../core";
+import { Sprite, Util, Node_Enums } from "../core";
 import type Engine from '@engine/Engine';
 
 export enum InstanceAnimEvent {
@@ -28,12 +26,14 @@ export interface iInstanceBaseSaveData {
 export interface iCollisionEvent {
     type: Node_Enums.COLLISION_EVENT,
     instance: Instance_Base,
+    normal?: Vector,
 }
 
 export abstract class Instance_Base{
     private _animProgress: number = 0;
     private _engine: Engine | null = null;
-    private _gravityForce: Vector = new Vector(0, 0);
+    private _physForce: Vector = new Vector(0, 0);
+    private _onGround: boolean = false;
 
     id: number;
     name: string;
@@ -41,7 +41,6 @@ export abstract class Instance_Base{
     lastPos: Vector = new Vector();
     velocity: Vector = new Vector(0, 0);
     moveVector: Vector = new Vector(0, 0);
-    onGround: boolean = false;
     groups: string[] = [];
     depthOffset: number = 0;
     depthOverride: number | null = null;
@@ -87,6 +86,7 @@ export abstract class Instance_Base{
     get zDepthOverride(){return 0};
     set zDepthOverride(val: number | null){};
     get isSolid(){return false};
+    get onGround(){return this._onGround};
     get applyGravity(){return false}
     abstract get frameDataId(): number | string;
     abstract get frameData(): Array<ImageData>;
@@ -121,25 +121,40 @@ export abstract class Instance_Base{
         if (isStatic) return;
 
         const moveFunc = this.isSolid ? this._engine!.moveAndSlide : this._engine!.setInstancePosition;
-        const vel = this.velocity.clone().add(this.moveVector).add(this._gravityForce);
+        const vel = this.velocity.clone()
+            .add(this.moveVector)
+            .add(this._physForce);
 
         moveFunc(this, vel);
 
         if (this.applyGravity){
-            this._gravityForce.y -= this._engine!.room.gravity;
+            this._physForce.y -= this._engine!.room.gravity;
         }
 
         this.moveVector.set(0, 0);
-        this.onGround = false;
+        this._onGround = false;
     }
     onAnimationChange(state: InstanceAnimEvent): void {}
     onCollision(event: iCollisionEvent): void {
-        if (!this.applyGravity) return;
+        if (!this.isSolid) return;
 
-        const dir = event.instance.pos.clone().subtract(this.pos).normalize();
-        this.onGround ||= dir.y < -Math.cos(Math.PI / 4);
+        if (event.normal && event.type != Node_Enums.COLLISION_EVENT.STOP){
+            this._onGround ||= event.normal.y > 0;
+            
+            //Arrest velocity in direction of collision
+            if (-Math.sign(event.normal.x) == Math.sign(this._physForce.x)){
+                this._physForce.x = 0;
+            }
 
-        if (this.onGround) this._gravityForce.y = 0;
+            if (-Math.sign(event.normal.y) == Math.sign(this._physForce.y)){
+                this._physForce.y = 0;
+            }
+
+            //Apply friction
+            if (event.normal.y > 0){
+                this._physForce.x *= 0.9;
+            }
+        }
     }
     onDestroy(): void {}
 
@@ -246,5 +261,9 @@ export abstract class Instance_Base{
 
     isInGroup(group: string): boolean {
         return !!this.groups.find(g => g == group);
+    }
+
+    applyForce(force: Vector): void {
+        this._physForce.add(force.clone().scale(2));
     }
 }

@@ -44,6 +44,7 @@ interface iCollisionMapping {
     sourceInstance: Instance_Base,
     collisions: Map<number, {
         instance: Instance_Base,
+        normal?: Vector,
         startCollision: number,
         lastChecked: number,
         active: boolean,
@@ -207,9 +208,6 @@ export class Engine implements iEngineCallbacks {
     private _updateInstances = (): void => {
         this._loadedRoom.instances.forEach(instance => {
             instance.onUpdate(this._deltaTime);
-            
-            //clear onGround flag for next update
-            instance.onGround = false;
         });
     }
 
@@ -266,6 +264,7 @@ export class Engine implements iEngineCallbacks {
                     sourceInstance.onCollision({
                         type: eventType,
                         instance: collision.instance,
+                        normal: collision.normal,
                     });
                 }
             });
@@ -443,13 +442,13 @@ export class Engine implements iEngineCallbacks {
     }
 
     private _dispatchLogicEvent = (eventName: string, data?: iAnyObj): void => {
-        const nodeEvent = this._nodeEventMap.get(eventName);
+        const registeredInstances = this._nodeEventMap.get(eventName);
 
-        if (!nodeEvent) return;
+        if (!registeredInstances) return;
 
-        nodeEvent.forEach(nodeEvent => {
-            nodeEvent.executeNodeEvent(eventName, data);
-        })
+        registeredInstances.forEach(instance => {
+            instance.executeNodeEvent(eventName, data);
+        });
     }
 
     private _clearNodeEvents = (): void =>{
@@ -526,7 +525,7 @@ export class Engine implements iEngineCallbacks {
         this._dialogFullscreen.open(endingText, Engine.DEFAULT_ACTION_KEY, ()=>this.restart());
     }
 
-    registerCollision = (sourceInstance: Instance_Base, collisionInstance: Instance_Base, force = false): void =>{
+    registerCollision = (sourceInstance: Instance_Base, collisionInstance: Instance_Base, normal?: Vector, force = false): void =>{
         let sourceInstanceEntry = this._collisionMap.get(sourceInstance.id);
         let subInstanceEntry;
 
@@ -543,6 +542,7 @@ export class Engine implements iEngineCallbacks {
 
         //Register collision to map
         if (subInstanceEntry){
+            subInstanceEntry.normal = normal;
             subInstanceEntry.startCollision = subInstanceEntry.active ? subInstanceEntry.startCollision : this._curTime;
             subInstanceEntry.lastChecked = this._curTime;
             subInstanceEntry.active = true;
@@ -551,6 +551,7 @@ export class Engine implements iEngineCallbacks {
         else{
             sourceInstanceEntry.collisions.set(collisionInstance.id, {
                 instance: collisionInstance,
+                normal: normal,
                 startCollision: this._curTime,
                 lastChecked: this._curTime,
                 active: true,
@@ -613,8 +614,8 @@ export class Engine implements iEngineCallbacks {
 
         this.setInstancePosition(instance, result.point);
         result.collisions.forEach(collisionBody => {
-            this.registerCollision(instance, collisionBody);
-            this.registerCollision(collisionBody, instance);
+            this.registerCollision(instance, collisionBody, result.normal);
+            this.registerCollision(collisionBody, instance, result.normal);
         });
     }
 

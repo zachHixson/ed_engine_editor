@@ -96,7 +96,7 @@ export function moveAndSlide(startPoint: Vector, worldInstances: Instance_Base[]
     const moveResult = move(startPoint, worldInstances, velocity);
 
     //Calculate adjusted velocity
-    if (moveResult.collisions.length > 0){
+    if (moveResult.collisions.length > 0 && velocity.x != 0 && velocity.y != 0){
         const oldDesiredDest = startPoint.clone().add(velocity);
         const newDesiredDest = Util.projectPointOnLine(oldDesiredDest, moveResult.point, moveResult.normal);
         const newDesiredVelocity = newDesiredDest.subtract(moveResult.point);
