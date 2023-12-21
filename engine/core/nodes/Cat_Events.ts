@@ -1,6 +1,6 @@
 import {SOCKET_TYPE, WIDGET, COLLISION_EVENT} from './Node_Enums';
 import { iNodeTemplate } from './iNodeTemplate';
-import { iEditorNode, iEngineNode, iEventContext } from '../LogicInterfaces';
+import { iEngineNode, iEventContext } from '../LogicInterfaces';
 import { MOUSE_EVENT } from '../Enums';
 import { Vector } from '../Vector';
 import { isEngineNode } from './Node_Library';

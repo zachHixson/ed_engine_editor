@@ -32,6 +32,13 @@ import * as Physics from './Physics';
 
 export * as Core from '@engine/core/core';
 
+enum KEY_STATE {
+    DOWN = 'down',
+    PRESSED = 'pressed',
+    UP = 'up',
+    NONE = 'NONE',
+}
+
 interface iEngineCallbacks {
     log?: (...args: any)=>void
     warn?: (...args: any)=>void
@@ -67,7 +74,7 @@ export class Engine implements iEngineCallbacks {
     private _dialogBox: Dialog_Box;
     private _dialogFullscreen: Dialog_Fullscreen;
     private _nextAnimationFrame: number = -1;
-    private _keymap: Map<string, boolean> = new Map();
+    private _keymap: Map<string, KEY_STATE> = new Map();
     private _nodeEventMap: Map<string, Map<number, Instance_Object>> = new Map();
     private _collisionMap: Map<number, iCollisionMapping> = new Map();
     private _globalVariables: Map<string, iEngineVariable> = new Map();
@@ -76,6 +83,8 @@ export class Engine implements iEngineCallbacks {
         screenPos: new Vector,
         pos: new Vector(),
         down: false,
+        moved: false,
+        buttons: 0,
     };
     private _transitionMap: Map<TRANSITION, Transition_Base>;
     private _transition: Transition_Base;
@@ -171,7 +180,7 @@ export class Engine implements iEngineCallbacks {
 
         if (this.enableUpdate){
             try{
-                this._dispatchKeyPressedEvents();
+                this._dispatchInputEvents();
                 this._updateInstances();
                 this._updateAnimations();
                 this._updateCamera();
@@ -193,15 +202,47 @@ export class Engine implements iEngineCallbacks {
         window.IS_ENGINE = false;
     }
 
-    private _dispatchKeyPressedEvents = (): void => {
-        for (let [code, val] of this._keymap){
-            if (val){
+    private _dispatchInputEvents = (): void => {
+        //Dispatch keyboard events
+        for (let [code, state] of this._keymap){
+            if (state != KEY_STATE.NONE){
+                let nextState: KEY_STATE = state;
+
                 this._dispatchLogicEvent('e_keyboard', {
                     which_key: code.toUpperCase(),
                     code: code,
-                    type: 'pressed',
+                    type: state,
                 });
+
+                switch(state){
+                    case KEY_STATE.DOWN:
+                        nextState = KEY_STATE.PRESSED;
+                        break;
+                    case KEY_STATE.UP:
+                        nextState = KEY_STATE.NONE;
+                        break;
+                }
+
+                this._keymap.set(code, nextState);
             }
+        }
+
+        //Dispatch mouse events
+        {
+            const instances = this.getInstancesAtPosition(this.mouse.pos);
+            const eventType = this.mouse.down ? MOUSE_EVENT.DOWN : MOUSE_EVENT.UP;
+
+            this._dispatchLogicEvent('e_mouse_button', {
+                type: eventType,
+                buttons: this.mouse.buttons,
+                pos: this.mouse.pos,
+                instances,
+            });
+        }
+
+        if (this.mouse.moved){
+            this._dispatchLogicEvent('e_mouse_move');
+            this.mouse.moved = false;
         }
     }
 
@@ -346,13 +387,11 @@ export class Engine implements iEngineCallbacks {
     }
 
     private _keyDown = (e: KeyboardEvent): void =>{
-        if (!this._keymap.get(e.code) && this.enableInput){
-            this._keymap.set(e.code, true);
-            this._dispatchLogicEvent('e_keyboard', {
-                which_key: e.key.toUpperCase(),
-                code: e.code,
-                type: 'down',
-            });
+        const keyGet = this._keymap.get(e.code);
+        const isActive = keyGet && keyGet != KEY_STATE.NONE;
+
+        if (!isActive && this.enableInput){
+            this._keymap.set(e.code, KEY_STATE.DOWN);
         }
         else {
             this._dialogBox.checkInteractKey(e.code);
@@ -361,44 +400,23 @@ export class Engine implements iEngineCallbacks {
     }
 
     private _keyUp = (e: KeyboardEvent): void =>{
-        this._keymap.set(e.code, false);
-        this._dispatchLogicEvent('e_keyboard', {
-            which_key: e.key.toUpperCase(),
-            code: e.code,
-            type: 'up',
-        });
+        this._keymap.set(e.code, KEY_STATE.UP);
     }
 
     private _mouseDown = (e: MouseEvent): void =>{
         this.mouse.down = true;
-
-        const instances = this.getInstancesAtPosition(this.mouse.pos);
-
-        this._dispatchLogicEvent('e_mouse_button', {
-            type: MOUSE_EVENT.DOWN,
-            buttons: e.buttons,
-            pos: this.mouse.pos,
-            instances,
-        });
+        this.mouse.buttons = e.buttons;
     }
 
     private _mouseUp = (e: MouseEvent): void =>{
         this.mouse.down = false;
-
-        const instances = this.getInstancesAtPosition(this.mouse.pos);
-
-        this._dispatchLogicEvent('e_mouse_button', {
-            type: MOUSE_EVENT.UP,
-            buttons: e.buttons,
-            pos: this.mouse.pos,
-            instances,
-        });
+        this.mouse.buttons = e.buttons;
     }
 
     private _mouseMove = (e: MouseEvent): void =>{
         this.mouse.screenPos.set(e.offsetX, e.offsetY);
         this.mouse.pos.copy(this._screenToWorldPos(this.mouse.screenPos));
-        this._dispatchLogicEvent('e_mouse_move');
+        this.mouse.moved = true;
     }
 
     private _mouseLeave = (e: MouseEvent): void =>{
@@ -425,7 +443,7 @@ export class Engine implements iEngineCallbacks {
     private _registerInstanceEvents = (instance: Instance_Object): void =>{
         const logicEvents = instance.logic?.events;
 
-        logicEvents?.forEach((event, key) => {
+        logicEvents?.forEach((_, key) => {
             this._registerNodeEvent(key, instance);
         });
     }
