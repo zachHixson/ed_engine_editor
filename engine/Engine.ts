@@ -624,6 +624,12 @@ export class Engine implements iEngineCallbacks {
         }
     }
 
+    translateInstance = (instance: Instance_Base, velocity: Vector): void => {
+        const vel = velocity.clone().scale(this._deltaTime);
+        const newPos = instance.pos.clone().add(vel);
+        this.setInstancePosition(instance, newPos);
+    }
+
     moveAndSlide = (instance: Instance_Base, velocity: Vector): void => {
         const vel = velocity.clone().scale(this._deltaTime);
         const nearByInstances = this.room.getInstancesInRadius(instance.pos, vel.length())
@@ -631,9 +637,9 @@ export class Engine implements iEngineCallbacks {
         const result = Physics.moveAndSlide(instance.pos, nearByInstances, vel);
 
         this.setInstancePosition(instance, result.point);
-        result.collisions.forEach(collisionBody => {
-            this.registerCollision(instance, collisionBody, result.normal);
-            this.registerCollision(collisionBody, instance, result.normal);
+        result.collisions.forEach(({instance: collisionBody, normal}) => {
+            this.registerCollision(instance, collisionBody, normal);
+            this.registerCollision(collisionBody, instance, normal);
         });
     }
 

@@ -3,7 +3,7 @@ import { Instance_Base, Vector, Util, Sprite } from './core/core';
 export type MoveResult = {
     point: Vector,
     normal: Vector,
-    collisions: Instance_Base[],
+    collisions: RaycastResult[],
 }
 
 export type RaycastResult = {
@@ -39,7 +39,7 @@ export function move(startPoint: Vector, worldInstances: Instance_Base[], veloci
     const velOffset = velocity.clone().normalize().scale(0.001);
     const instCenter = startPoint.clone().add(velOffset);
     const rayHits = raycast(instCenter, worldInstances, velocity);
-    const collisions: Instance_Base[] = [];
+    const collisions: RaycastResult[] = [];
     let closestHit: RaycastResult = rayHits[0];
 
     if (rayHits.length <= 0){
@@ -76,7 +76,7 @@ export function move(startPoint: Vector, worldInstances: Instance_Base[], veloci
     //find all collisions
     for (let i = 0; i < rayHits.length; i++){
         if (rayHits[i].point.equalTo(closestHit.point)){
-            collisions.push(rayHits[i].instance);
+            collisions.push(rayHits[i]);
         }
     }
 
@@ -94,7 +94,7 @@ export function move(startPoint: Vector, worldInstances: Instance_Base[], veloci
 
 export function moveAndSlide(startPoint: Vector, worldInstances: Instance_Base[], velocity: Vector): MoveResult {
     const moveResult = move(startPoint, worldInstances, velocity);
-
+    
     //Calculate adjusted velocity
     if (moveResult.collisions.length > 0 && velocity.x != 0 && velocity.y != 0){
         const oldDesiredDest = startPoint.clone().add(velocity);
@@ -102,8 +102,8 @@ export function moveAndSlide(startPoint: Vector, worldInstances: Instance_Base[]
         const newDesiredVelocity = newDesiredDest.subtract(moveResult.point);
         const newResult = move(moveResult.point, worldInstances, newDesiredVelocity);
 
-        moveResult.point.copy(newResult.point);
-        moveResult.normal.copy(newResult.normal);
+        moveResult.point = newResult.point;
+        moveResult.normal = newResult.normal;
         moveResult.collisions.push(...newResult.collisions);
     }
 

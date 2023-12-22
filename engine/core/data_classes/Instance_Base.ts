@@ -120,16 +120,16 @@ export abstract class Instance_Base{
 
         if (isStatic) return;
 
-        const moveFunc = this.isSolid ? this._engine!.moveAndSlide : this._engine!.setInstancePosition;
+        if (this.applyGravity){
+            this._physForce.y -= this._engine!.room.gravity;
+        }
+
+        const moveFunc = this.isSolid ? this._engine!.moveAndSlide : this._engine!.translateInstance;
         const vel = this.velocity.clone()
             .add(this.moveVector)
             .add(this._physForce);
 
         moveFunc(this, vel);
-
-        if (this.applyGravity){
-            this._physForce.y -= this._engine!.room.gravity;
-        }
 
         this.moveVector.set(0, 0);
         this._onGround = false;
@@ -264,6 +264,6 @@ export abstract class Instance_Base{
     }
 
     applyForce(force: Vector): void {
-        this._physForce.add(force.clone().scale(2));
+        this._physForce.add(force);
     }
 }
