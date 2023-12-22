@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import SvgVue from './Svg.vue';
+
 import { ref, computed, watch } from 'vue';
 
 import checkIcon from '@/assets/checkmark.svg';
@@ -44,7 +46,7 @@ defineExpose({value: state.value, checked: state.value});
 
 <template>
     <div class="checkbox" :class="styles" @click="onClick">
-        <img v-if="showCheck" style="margin: 2px;" :src="checkIcon" draggable="false"/>
+        <SvgVue v-if="showCheck" style="margin: 2px; width: 100%; height: 100%;" :src="checkIcon" draggable="false"></SvgVue>
         <svg v-if="showInt" width="20px" height="20px">
             <path d="M4 10 L14 10" stroke="#333333" stroke-width="3px" stroke-linecap="round"/>
         </svg>
