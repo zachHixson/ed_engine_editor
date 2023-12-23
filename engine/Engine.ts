@@ -172,15 +172,19 @@ export class Engine implements iEngineCallbacks {
         this._update();
 
         this._lastLoopTimestamp = time;
-        this._nextAnimationFrame = requestAnimationFrame(this._updateLoop);
+
+        if (this.isRunning){
+            this._nextAnimationFrame = requestAnimationFrame(this._updateLoop);
+        }
     }
 
     private _update = (): void =>{
         window.IS_ENGINE = true;
 
+        this._dispatchInputEvents();
+
         if (this.enableUpdate){
             try{
-                this._dispatchInputEvents();
                 this._updateInstances();
                 this._updateAnimations();
                 this._updateCamera();
@@ -208,11 +212,17 @@ export class Engine implements iEngineCallbacks {
             if (state != KEY_STATE.NONE){
                 let nextState: KEY_STATE = state;
 
-                this._dispatchLogicEvent('e_keyboard', {
-                    which_key: code.toUpperCase(),
-                    code: code,
-                    type: state,
-                });
+                if (this.enableInput){
+                    this._dispatchLogicEvent('e_keyboard', {
+                        which_key: code.toUpperCase(),
+                        code: code,
+                        type: state,
+                    });
+                }
+                else if (state == KEY_STATE.DOWN){
+                    this._dialogBox.checkInteractKey(code);
+                    this._dialogFullscreen.checkInteractKey(code);
+                }
 
                 switch(state){
                     case KEY_STATE.DOWN:
@@ -387,15 +397,11 @@ export class Engine implements iEngineCallbacks {
     }
 
     private _keyDown = (e: KeyboardEvent): void =>{
-        const keyGet = this._keymap.get(e.code);
-        const isActive = keyGet && keyGet != KEY_STATE.NONE;
+        const keyGet = this._keymap.get(e.code) ?? KEY_STATE.NONE;
+        const inactive = keyGet == KEY_STATE.NONE;
 
-        if (!isActive && this.enableInput){
+        if (inactive){
             this._keymap.set(e.code, KEY_STATE.DOWN);
-        }
-        else {
-            this._dialogBox.checkInteractKey(e.code);
-            this._dialogFullscreen.checkInteractKey(e.code);
         }
     }
 
