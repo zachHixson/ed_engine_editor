@@ -12,6 +12,8 @@ export type RaycastResult = {
     instance: Instance_Base,
 }
 
+const INV_SPR_DIM = 1 / Sprite.DIMENSIONS;
+
 export function raycast(pos: Vector, instanceList: Instance_Base[], velocity: Vector): RaycastResult[] {
     const collisionDim = new Vector(Sprite.DIMENSIONS, Sprite.DIMENSIONS);
     const normVel = velocity.clone().normalize();
@@ -92,11 +94,70 @@ export function move(startPoint: Vector, worldInstances: Instance_Base[], veloci
     };
 }
 
+function holeCheck(point: Vector, worldInstances: Instance_Base[], velocity: Vector): {start: Vector, direction: Vector} | null {
+    /*
+        General Idea:
+            - If the player is aligned to one axis (i.e. they are butting up against a wall, floor, or ceiling)
+            - Round the position to the nearest tile grid point, and cast 3 rays in the direction perpendicular with the axis
+              they're aligned with
+            - If the center ray (ctr) hits, but one of the adjacent rays (ra, rb) are blocked, then there must be a hole
+            - If there is a hole, then return the direction and rounded position so we can do a second move at a new starting point
+    */
+    const xAligned = point.x % 16 == 0;
+    const yAligned = point.y % 16 == 0;
+
+    //Only continue if we are aligned to an axis
+    if (!(xAligned || yAligned)) return null;
+
+    const ctr = point.clone().scale(INV_SPR_DIM).round().scale(Sprite.DIMENSIONS);
+    const deltaCheck = ctr.distanceNoSqrt(point) < 2;
+
+    //Only check for holes if we're close enough to them
+    if (!deltaCheck) return null;
+
+    const ra = ctr.clone();
+    const rb = ctr.clone();
+    let ray: Vector;
+
+    //Offset side rays
+    if (xAligned){
+        ray = new Vector(Math.sign(velocity.x), 0);
+        ra.y += 16;
+        rb.y -= 16;
+    }
+    else{
+        ray = new Vector(0, Math.sign(velocity.y));
+        ra.x += 16;
+        rb.x -= 16;
+    }
+
+    //Cast all rays and check result
+    const cRes = raycast(ctr, worldInstances, ray);
+    const aRes = raycast(ra, worldInstances, ray);
+    const bRes = raycast(rb, worldInstances, ray);
+    
+    if (!cRes.length && (aRes.length || bRes.length)){
+        return {start: ctr, direction: ray};
+    }
+
+    return null;
+}
+
 export function moveAndSlide(startPoint: Vector, worldInstances: Instance_Base[], velocity: Vector): MoveResult {
     const moveResult = move(startPoint, worldInstances, velocity);
     
     //Calculate adjusted velocity
     if (moveResult.collisions.length > 0 && velocity.x != 0 && velocity.y != 0){
+        //Detect and adjust for holes
+        const holeRes = holeCheck(moveResult.point, worldInstances, velocity);
+
+        if (holeRes){
+            const correctedRes = move(holeRes.start, worldInstances, velocity.clone().multiply(holeRes.direction));
+            moveResult.point = correctedRes.point;
+            moveResult.normal = new Vector(holeRes.direction.y, holeRes.direction.x);
+        }
+
+        //slide
         const oldDesiredDest = startPoint.clone().add(velocity);
         const newDesiredDest = Util.projectPointOnLine(oldDesiredDest, moveResult.point, moveResult.normal);
         const newDesiredVelocity = newDesiredDest.subtract(moveResult.point);
