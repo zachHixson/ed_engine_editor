@@ -69,6 +69,7 @@ export class Engine implements iEngineCallbacks {
     private _curTime: number = 0;
     private _deltaTime: number = 0;
     private _lastLoopTimestamp: number = 0;
+    private _awayTime: number = 0;
     private _loadedRoom: Room = new Room();
     private _renderer: Renderer;
     private _dialogBox: Dialog_Box;
@@ -167,7 +168,8 @@ export class Engine implements iEngineCallbacks {
 
     private _updateLoop = (time: number): void =>{
         this._curTime = time;
-        this._deltaTime = Math.max((time - this._lastLoopTimestamp) / 1000, 0);
+        this._deltaTime = Math.max((time - this._lastLoopTimestamp - this._awayTime) / 1000, 0);
+        this._awayTime = 0;
 
         this._update();
 
@@ -379,6 +381,7 @@ export class Engine implements iEngineCallbacks {
     }
 
     private _bindInputEvents = ()=>{
+        document.addEventListener('visibilitychange', this._visibilityChange);
         document.addEventListener("keydown", this._keyDown);
         document.addEventListener("keyup", this._keyUp);
         this._canvas.addEventListener("mousedown", this._mouseDown);
@@ -388,12 +391,27 @@ export class Engine implements iEngineCallbacks {
     }
 
     private _unbindInputEvents = ()=>{
+        document.removeEventListener('visibilitychange', this._visibilityChange);
         document.removeEventListener("keydown", this._keyDown);
         document.removeEventListener("keyup", this._keyUp);
         this._canvas.removeEventListener("mousedown", this._mouseDown);
         this._canvas.removeEventListener("mouseup", this._mouseUp);
         this._canvas.removeEventListener("mousemove", this._mouseMove);
         this._canvas.removeEventListener("mouseleave", this._mouseLeave);
+    }
+
+    private _visibilityChange = (): void => {
+        if (document.visibilityState == 'hidden'){
+            this._awayTime = performance.now();
+            this._keymap.forEach((_, key)=>{
+                this._keymap.set(key, KEY_STATE.NONE);
+            });
+            this.mouse.down = false;
+            this.mouse.buttons = 0;
+        }
+        else{
+            this._awayTime = performance.now() - this._awayTime;
+        }
     }
 
     private _keyDown = (e: KeyboardEvent): void =>{
