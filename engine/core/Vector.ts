@@ -1,6 +1,22 @@
 import { Mat3 } from "./Mat3";
 
-export class Vector {
+export interface ConstVector {
+    readonly x: number;
+    readonly y: number;
+    clone(): Vector;
+    dot(vec: ConstVector): number;
+    cross(vec: ConstVector): number;
+    distanceTo(vec: ConstVector): number;
+    distanceNoSqrt(vec: ConstVector): number;
+    length(): number;
+    lengthNoSqrt(): number;
+    magnitude(): number;
+    equalTo(vec: ConstVector): boolean;
+    toObject(): {x: number, y: number};
+    toArray(): [number, number];
+};
+
+export class Vector implements ConstVector {
     x: number;
     y: number;
 
@@ -9,7 +25,7 @@ export class Vector {
         this.y = y;
     }
 
-    add(vec: Vector): Vector {
+    add(vec: ConstVector): Vector {
         this.x += vec.x;
         this.y += vec.y;
         return this;
@@ -21,7 +37,7 @@ export class Vector {
         return this;
     }
 
-    subtract(vec: Vector): Vector {
+    subtract(vec: ConstVector): Vector {
         this.x -= vec.x;
         this.y -= vec.y;
         return this;
@@ -33,7 +49,7 @@ export class Vector {
         return this;
     }
 
-    multiply(vec: Vector): Vector {
+    multiply(vec: ConstVector): Vector {
         this.x *= vec.x;
         this.y *= vec.y;
         return this;
@@ -59,7 +75,7 @@ export class Vector {
         return this.scale(scalar);
     }
 
-    divide(vec: Vector): Vector {
+    divide(vec: ConstVector): Vector {
         this.x /= vec.x;
         this.y /= vec.y;
         return this;
@@ -71,11 +87,11 @@ export class Vector {
         return this;
     }
 
-    dot(vec: Vector): number {
+    dot(vec: ConstVector): number {
         return this.x * vec.x + this.y * vec.y;
     }
 
-    cross(vec: Vector): number {
+    cross(vec: ConstVector): number {
         return this.x * vec.y - this.y * vec.x;
     }
 
@@ -123,7 +139,7 @@ export class Vector {
         return this;
     }
 
-    toArray(): number[] {
+    toArray(): [number, number] {
         return [this.x, this.y];
     }
 
@@ -166,26 +182,26 @@ export class Vector {
         return this;
     }
 
-    equalTo(vec: Vector): boolean {
+    equalTo(vec: ConstVector): boolean {
         return (
             this.x == vec.x &&
             this.y == vec.y
         );
     }
 
-    distanceTo(vec: Vector): number {
+    distanceTo(vec: ConstVector): number {
         const dx = this.x - vec.x;
         const dy = this.y - vec.y;
         return Math.sqrt(dx * dx + dy * dy);
     }
 
-    distanceNoSqrt(vec: Vector): number {
+    distanceNoSqrt(vec: ConstVector): number {
         const dx = this.x - vec.x;
         const dy = this.y - vec.y;
         return dx * dx + dy * dy;
     }
 
-    randomize(lb: Vector, ub: Vector): Vector {
+    randomize(lb: ConstVector, ub: ConstVector): Vector {
         const dx = ub.x - lb.x;
         const dy = ub.y - lb.y;
         this.x = Math.random() * dx + lb.x;

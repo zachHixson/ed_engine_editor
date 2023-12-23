@@ -2,7 +2,7 @@ import {SOCKET_TYPE, WIDGET} from './Node_Enums';
 import { iNodeTemplate } from './iNodeTemplate';
 import Cat_Events from './Cat_Events';
 import Cat_Variables from './Cat_Variables';
-import { Vector } from '../Vector';
+import { ConstVector, Vector } from '../Vector';
 import { iEditorNode, iEngineNode, iNodeConnection, iNodeSaveData, iEventContext } from '../LogicInterfaces';
 import { Asset_Base, Game_Object, Instance_Base, Instance_Object, Instance_Sprite, iEditorNodeInput, iEditorNodeOutput, Sprite, Util } from '../core';
 import { canConvertSocket, assetToInstance, instanceToAsset } from './Socket_Conversions';
@@ -1323,7 +1323,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                 this.engine.setInstancePosition(instance, finalDest);
                 this.triggerOutput('_o', eventContext);
             },
-            checkExitBacktrack(this: iEngineNode, eventContext: iEventContext, newPos: Vector): boolean {
+            checkExitBacktrack(this: iEngineNode, eventContext: iEventContext, newPos: ConstVector): boolean {
                 if (!(eventContext.instance.prevExit && eventContext.instance.prevExit?.exit.detectBacktracking)) return false;
 
                 const direction = newPos.clone().subtract(eventContext.instance.pos).normalize();

@@ -1,4 +1,4 @@
-import { Vector } from "./Vector";
+import { ConstVector, Vector } from "./Vector";
 import { Mat3 } from "./Mat3";
 
 const PRECISION = 100;
@@ -32,7 +32,7 @@ export class NavState implements iNavState {
         return this._matrix
     }
 
-    setOffset(offset: Vector): void {
+    setOffset(offset: ConstVector): void {
         this._offset.copy(offset);
         this._needsUpdate = true;
     }

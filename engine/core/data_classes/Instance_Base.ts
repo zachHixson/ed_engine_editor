@@ -1,5 +1,5 @@
 import { INSTANCE_TYPE } from "../Enums";
-import { Vector } from "../Vector";
+import { ConstVector, Vector } from "../Vector";
 import { Draw } from "../core";
 import { Sprite, Util, Node_Enums } from "../core";
 import type Engine from '@engine/Engine';
@@ -53,10 +53,10 @@ export abstract class Instance_Base{
     flipV: boolean = false;
     backAnim = 1;
 
-    constructor(id: number, pos: Vector = new Vector()){
+    constructor(id: number, pos: ConstVector = new Vector()){
         this.id = id;
         this.name = this.id.toString();
-        this.pos = pos;
+        this.pos = pos.clone();
     }
 
     //Basic data getters
@@ -205,7 +205,7 @@ export abstract class Instance_Base{
         }
     }
 
-    setPosition(newPos: Vector): void {
+    setPosition(newPos: ConstVector): void {
         this.lastPos.copy(this.pos);
         this.pos.copy(newPos);
     }

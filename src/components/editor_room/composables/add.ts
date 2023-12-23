@@ -8,7 +8,7 @@ import type { imEvent } from '../RoomEditWindow.vue';
 import { checkNameCollisions } from '../Properties.vue';
 
 type AddProps = {newInstance?: Core.Instance_Base, instRefList?: Core.Instance_Base[], pos?: Core.Vector};
-type ExitAddProps = {exitRef?: Core.Instance_Exit, pos: Core.Vector};
+type ExitAddProps = {exitRef?: Core.Instance_Exit, pos: Core.ConstVector};
 
 const t = i18n.global.t;
 
@@ -39,7 +39,7 @@ export function useAdd(args: iActionArguments){
             }
         }
 
-        private _instanceFromCopy(pos: Core.Vector): Core.Instance_Base | null {
+        private _instanceFromCopy(pos: Core.ConstVector): Core.Instance_Base | null {
             const selectedInstance = args.editorSelection.value;
 
             if (!selectedInstance) return null;

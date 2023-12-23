@@ -5,7 +5,7 @@ import { RoomMainEventBus } from '../RoomMain.vue';
 import Core from '@/core';
 import { ref, nextTick } from 'vue';
 
-type MoveProps = {instId?: number, instRef?: Core.Instance_Base, newPos?: Core.Vector, oldPos?: Core.Vector};
+type MoveProps = {instId?: number, instRef?: Core.Instance_Base, newPos?: Core.ConstVector, oldPos?: Core.Vector};
 
 export function useSelectMove(args: iActionArguments){
     const overlapBox = ref<HTMLDivElement>();

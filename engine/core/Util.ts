@@ -1,4 +1,4 @@
-import { Vector } from "./Vector";
+import { ConstVector, Vector } from "./Vector";
 
 export interface iBoxCollision {
     point: Vector;
@@ -60,7 +60,7 @@ export function easeOutBack(x: number): number {
     return 1 + c3 * xm1 * xm1 * xm1 + c1 * xm1 * xm1;
 }
 
-export function projectSVF(sp: Vector, sv: Vector, bp: Vector, bd: Vector){
+export function projectSVF(sp: ConstVector, sv: ConstVector, bp: ConstVector, bd: ConstVector){
     /*
         Algorithm:
         - get SVF (signed vector field) of the box
@@ -108,7 +108,7 @@ export function projectSVF(sp: Vector, sv: Vector, bp: Vector, bd: Vector){
     } : null;
 }
 
-export function projectPointOnLine(p: Vector, lp: Vector, normal: Vector): Vector {
+export function projectPointOnLine(p: ConstVector, lp: ConstVector, normal: ConstVector): Vector {
     const point = p.clone().subtract(lp);
     const dest = new Vector(normal.y, normal.x);
     const magnitude = point.dot(dest) / dest.magnitude();

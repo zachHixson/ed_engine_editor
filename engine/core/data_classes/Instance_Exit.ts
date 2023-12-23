@@ -1,4 +1,4 @@
-import { Vector } from '../Vector';
+import { ConstVector, Vector } from '../Vector';
 import { iCollisionEvent, iInstanceBaseSaveData, Instance_Base } from './Instance_Base';
 import {INSTANCE_TYPE} from '../Enums';
 import { Instance_Object } from './Instance_Object';
@@ -51,7 +51,7 @@ export class Instance_Exit extends Instance_Base {
 
     get hasCollisionEvent(){return true};
 
-    private _loadRoom(objInstance: Instance_Object, instDirection?: Vector){
+    private _loadRoom(objInstance: Instance_Object, instDirection?: ConstVector){
         const EXIT_TYPES = Game_Object.EXIT_TYPES;
         const engine = Instance_Exit.engine!;
         const exitBehavior = objInstance.objRef.exitBehavior;

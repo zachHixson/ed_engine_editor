@@ -1,6 +1,6 @@
 import Renderer from '@engine/Renderer';
 import font from './Font';
-import { Vector } from '@engine/core/core';
+import { ConstVector, Vector } from '@engine/core/core';
 import { WGL } from '@engine/core/core';
 
 export default class Font_Renderer{
@@ -83,7 +83,7 @@ export default class Font_Renderer{
     reveal: number = 0;
     splitPages: boolean = true;
 
-    constructor(gl: WebGL2RenderingContext, pos?: Vector, width?: number, height?: number){
+    constructor(gl: WebGL2RenderingContext, pos?: ConstVector, width?: number, height?: number){
         this._gl = gl;
         this._program = WGL.createProgram(
             this._gl,

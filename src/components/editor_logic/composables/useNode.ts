@@ -9,7 +9,7 @@ import Core from '@/core';
 
 type ActionAddNodeProps = {templateId: string, nodeRef?: Node_Obj};
 type ActionDeleteNodesProps = {nodeRefList: Node_Obj[], connectionRefMap?: Map<Logic, Node_Connection[]>};
-export type ActionMoveNodesProps = {nodeRefList: Node_Obj[], velocity: Core.Vector};
+export type ActionMoveNodesProps = {nodeRefList: Node_Obj[], velocity: Core.ConstVector};
 
 const { Vector } = Core;
 

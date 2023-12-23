@@ -51,7 +51,7 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
     decoratorText?: string;
     decoratorTextVars?: any;
 
-    constructor(templateId: string, id: number, pos: Core.Vector, parentScript: Logic, graphId: number, editorAPI: Node_API){
+    constructor(templateId: string, id: number, pos: Core.ConstVector, parentScript: Logic, graphId: number, editorAPI: Node_API){
         const template = Core.NODE_MAP.get(templateId)!;
         
         super();
@@ -181,11 +181,11 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
         this.domRef.style.top = this.pos.y + 'px';
     }
 
-    setPos(newPos: Core.Vector): void {
+    setPos(newPos: Core.ConstVector): void {
         this.pos.copy(newPos);
         this.domRef!.style.left = this.pos.x + 'px';
         this.domRef!.style.top = this.pos.y + 'px';
-        this.emit('onMove', newPos);
+        this.emit('onMove', newPos.clone());
     }
 
     method(methodName: string, data: any): any {
