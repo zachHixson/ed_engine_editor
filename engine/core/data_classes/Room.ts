@@ -52,8 +52,6 @@ export class Room extends Asset_Base {
     }
 
     toSaveData(): iRoomSaveData {
-        this._instances.sort((a, b) => a.zDepth < b.zDepth);
-
         return {
             ...this.getBaseAssetData(),
             cam: this.camera.toSaveData(),
