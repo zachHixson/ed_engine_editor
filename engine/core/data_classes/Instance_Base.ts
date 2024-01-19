@@ -33,7 +33,8 @@ export abstract class Instance_Base{
     private _animProgress: number = 0;
     private _engine: Engine | null = null;
     private _physForce: Vector = new Vector(0, 0);
-    private _onGround: boolean = false;
+
+    protected _onGround: boolean = false;
 
     id: number;
     name: string;
@@ -115,7 +116,7 @@ export abstract class Instance_Base{
 
     //Lifecycle events
     onCreate(): void {}
-    onUpdate(deltaTime: number): void {
+    onUpdate(deltaTime: number, resetOnGround = true): void {
         const isStatic = this.velocity.lengthNoSqrt() == 0 && this.moveVector.lengthNoSqrt() == 0 && !this.applyGravity;
 
         if (isStatic) return;
@@ -132,7 +133,10 @@ export abstract class Instance_Base{
         moveFunc(this, vel);
 
         this.moveVector.set(0, 0);
-        this._onGround = false;
+
+        if (resetOnGround){
+            this._onGround = false;
+        }
     }
     onAnimationChange(state: InstanceAnimEvent): void {}
     onCollision(event: iCollisionEvent): void {

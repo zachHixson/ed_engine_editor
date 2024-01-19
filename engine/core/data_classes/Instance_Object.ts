@@ -142,8 +142,9 @@ export class Instance_Object extends Instance_Base{
     }
 
     override onUpdate(deltaTime: number): void {
-        super.onUpdate(deltaTime);
+        super.onUpdate(deltaTime, false);
         this.executeNodeEvent('e_update', deltaTime);
+        this._onGround = false;
     }
 
     override onAnimationChange(state: InstanceAnimEvent): void {
