@@ -568,8 +568,10 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
             isDown(this: iEngineNode){
                 const keymap = this.engine.keyMap;
-                const input = this.getWidgetData().toLowerCase();
-                return !!keymap.get(input);
+                const input = this.getWidgetData().code;
+                const mapCheck = keymap.get(input);
+
+                return mapCheck == 'down' || mapCheck == 'pressed';
             },
         },
     },
@@ -717,7 +719,7 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             getSelf(this: iEngineNode, eventContext: iEventContext){
-                return eventContext;
+                return eventContext.instance;
             },
         },
     },
@@ -1106,7 +1108,7 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             setSettings(this: iEngineNode, eventContext: iEventContext){
-                const instance = (this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance);
+                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
                 const frame = parseInt(this.getInput<string>('frame', eventContext));
                 const fps = parseInt(this.getInput<string>('fps', eventContext));
                 const loop = this.getInput<boolean>('loop', eventContext);
@@ -1393,6 +1395,8 @@ export const NODE_LIST: iNodeTemplate[] = [
                 const velocity = direction.scale(speed);
 
                 instance.moveVector.add(velocity);
+
+                this.triggerOutput('_o', eventContext);
             },
         },
     },
