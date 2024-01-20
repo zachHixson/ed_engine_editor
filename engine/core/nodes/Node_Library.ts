@@ -749,9 +749,11 @@ export const NODE_LIST: iNodeTemplate[] = [
                 return (this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance).name
             },
             getX(this: iEngineNode, eventContext: iEventContext){
+                console.warn('instance_properties.getX is deprecated, please use "get_position", node instead');
                 return (this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance).pos.x
             },
             getY(this: iEngineNode, eventContext: iEventContext){
+                console.warn('instance_properties.getY is deprecated, please use "get_position", node instead');
                 return (this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance).pos.y
             },
         },
@@ -1438,6 +1440,54 @@ export const NODE_LIST: iNodeTemplate[] = [
         methods: {
             onGround(this: iEngineNode, eventContext: iEventContext){
                 return eventContext.instance.onGround;
+            },
+        },
+    },
+    {// Get Position
+        id: 'get_position',
+        category: 'movement',
+        onBeforeMount(this: iEditorNode){
+            this.stackDataIO = true;
+        },
+        inputs: [
+            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
+        ],
+        outputs: [
+            {id: 'X', type: SOCKET_TYPE.NUMBER, execute: 'getX'},
+            {id: 'Y', type: SOCKET_TYPE.NUMBER, execute: 'getY'},
+        ],
+        methods: {
+            getX(this: iEngineNode, eventContext: iEventContext){
+                const instance = this.getInput<Instance_Base | undefined>('instance', eventContext) ?? eventContext.instance;
+                return instance.pos.x;
+            },
+            getY(this: iEngineNode, eventContext: iEventContext){
+                const instance = this.getInput<Instance_Base | undefined>('instance', eventContext) ?? eventContext.instance;
+                return instance.pos.y;
+            },
+        },
+    },
+    {// Get Velocity
+        id: 'get_velocity',
+        category: 'movement',
+        onBeforeMount(this: iEditorNode){
+            this.stackDataIO = true;
+        },
+        inputs: [
+            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
+        ],
+        outputs: [
+            {id: 'X', type: SOCKET_TYPE.NUMBER, execute: 'getX'},
+            {id: 'Y', type: SOCKET_TYPE.NUMBER, execute: 'getY'},
+        ],
+        methods: {
+            getX(this: iEngineNode, eventContext: iEventContext){
+                const instance = this.getInput<Instance_Base | undefined>('instance', eventContext) ?? eventContext.instance;
+                return instance.totalVelocity.x;
+            },
+            getY(this: iEngineNode, eventContext: iEventContext){
+                const instance = this.getInput<Instance_Base | undefined>('instance', eventContext) ?? eventContext.instance;
+                return instance.totalVelocity.y;
             },
         },
     },

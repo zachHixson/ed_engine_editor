@@ -33,6 +33,7 @@ export abstract class Instance_Base{
     private _animProgress: number = 0;
     private _engine: Engine | null = null;
     private _physForce: Vector = new Vector(0, 0);
+    private _cachedTotalVelocity = new Vector(0, 0);
 
     protected _onGround: boolean = false;
 
@@ -88,7 +89,8 @@ export abstract class Instance_Base{
     set zDepthOverride(val: number | null){};
     get isSolid(){return false};
     get onGround(){return this._onGround};
-    get applyGravity(){return false}
+    get applyGravity(){return false};
+    get totalVelocity(){return this._cachedTotalVelocity as ConstVector};
     abstract get frameDataId(): number | string;
     abstract get frameData(): Array<ImageData>;
 
@@ -126,7 +128,7 @@ export abstract class Instance_Base{
         }
 
         const moveFunc = this.isSolid ? this._engine!.moveAndSlide : this._engine!.translateInstance;
-        const vel = this.velocity.clone()
+        const vel = this._cachedTotalVelocity.copy(this.velocity)
             .add(this.moveVector)
             .add(this._physForce);
 
