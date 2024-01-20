@@ -150,7 +150,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                 const inp2 = this.getInput<number>('_inp2', eventContext);
 
                 switch(compareFunc){
-                    case 'equal': return inp1 == inp2;
+                    case 'equal_sym': return inp1 == inp2;
                     case 'gt': return inp1 > inp2;
                     case 'lt': return inp1 < inp2;
                     case 'gte': return inp1 >= inp2;
