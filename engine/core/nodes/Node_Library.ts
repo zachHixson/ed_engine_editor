@@ -735,10 +735,8 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'x', type: SOCKET_TYPE.NUMBER, execute: 'getX'},
             {id: 'y', type: SOCKET_TYPE.NUMBER, execute: 'getY'},
         ],
-        init(this: GenericNode){
-            if (!isEngineNode(this)){
-                this.stackDataIO = true;
-            }
+        onBeforeMount(this: iEditorNode){
+            this.stackDataIO = true;
         },
         methods: {
             getAsset(this: iEngineNode, eventContext: iEventContext){
@@ -1113,13 +1111,24 @@ export const NODE_LIST: iNodeTemplate[] = [
                 const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
                 const frame = parseInt(this.getInput<string>('frame', eventContext));
                 const fps = parseInt(this.getInput<string>('fps', eventContext));
-                const loop = this.getInput<boolean>('loop', eventContext);
-                const playing = this.getInput<boolean>('playing', eventContext);
+                const loop = this.getInput<boolean | null>('loop', eventContext);
+                const playing = this.getInput<boolean | null>('playing', eventContext);
 
-                instance.animFrame = isNaN(frame) ? instance.animFrame : frame;
-                instance.fpsOverride = isNaN(fps) ? instance.fps : fps;
-                instance.animLoopOverride = loop ?? instance.animLoop;
-                instance.animPlaying = playing ?? instance.animPlaying;
+                if (!isNaN(frame)){
+                    instance.animFrame = frame;
+                }
+                
+                if (!isNaN(fps)){
+                    instance.fpsOverride = fps;
+                }
+                
+                if (loop != null){
+                    instance.animLoopOverride = loop;
+                }
+                
+                if (playing != null){
+                    instance.animPlaying = playing;
+                }
 
                 instance.needsRenderUpdate = true;
 
