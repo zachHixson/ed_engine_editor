@@ -15,7 +15,7 @@ export interface iInstanceBaseSaveData {
     id: number;
     name: string;
     type: string;
-    pos: { x: number, y: number };
+    pos: [number, number];
     groups: string[];
     strtFrm: number | '';
     fps: number | '';
@@ -219,7 +219,7 @@ export abstract class Instance_Base{
     loadBaseSaveData(data: iInstanceBaseSaveData): void {
         this.id = data.id;
         this.name = data.name;
-        this.pos = Vector.fromObject(data.pos);
+        this.pos = Vector.fromArray(data.pos);
         this.groups = data.groups;
         this.startFrameOverride = data.strtFrm === '' ? null : data.strtFrm;
         this.fpsOverride = data.fps === '' ? null : data.fps;
@@ -234,7 +234,7 @@ export abstract class Instance_Base{
             id: this.id,
             name: this.name,
             type: this.TYPE,
-            pos: this.pos.toObject(),
+            pos: this.pos.toArray(),
             groups: this.groups,
             strtFrm: this.startFrameOverride ?? '',
             fps: this.fpsOverride ?? '',
