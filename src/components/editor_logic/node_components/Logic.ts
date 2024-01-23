@@ -10,7 +10,7 @@ const { t } = i18n.global;
 interface iGraphSaveData {
     id: number;
     name: string;
-    navState: Core.iNavSaveData;
+    nav: Core.iNavSaveData;
 }
 
 export default class Logic extends Core.Asset_Base implements Core.iEditorLogic {
@@ -45,7 +45,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
         zoomFac: 1,
     }}
 
-    set graphNavState(newState: Core.NavState | Core.iNavState | Core.iNavSaveData){
+    set graphNavState(newState: Core.NavState | Core.iNavState){
         this.graphs[this.selectedGraphId].navState.copy(newState);
     }
 
@@ -216,14 +216,14 @@ class Graph {
         return {
             id: this.id,
             name: this.name,
-            navState: Core.getNavSaveData(this.navState),
+            nav: this.navState.toSaveData(),
         }
     }
 
     static fromSaveData(data: iGraphSaveData): Graph {
         const newGraph = new Graph(data.id);
         newGraph.name = data.name;
-        newGraph.navState = Core.parseNavSaveData(data.navState);
+        newGraph.navState = Core.NavState.fromSaveData(data.nav);
         return newGraph;
     }
 }

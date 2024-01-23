@@ -1,7 +1,7 @@
 import {CATEGORY_ID} from '../Enums';
 import {createCanvas, hexToRGBA, RGBAToHex} from '../Draw';
 import { Asset_Base, iAssetSaveData } from './Asset_Base';
-import { NavState, getNavSaveData, parseNavSaveData, iNavSaveData } from '../NavState';
+import { NavState, iNavSaveData } from '../NavState';
 
 export interface iSpriteSaveData extends iAssetSaveData {
     frames: string[],
@@ -31,7 +31,7 @@ export class Sprite extends Asset_Base {
         return {
             ...this.getBaseAssetData(),
             frames: this.compressFrames(this.getFramesCopy()).map(f => f.join(',')),
-            nav: getNavSaveData(this.navState),
+            nav: this.navState.toSaveData(),
         } satisfies iSpriteSaveData;
     }
 
@@ -45,7 +45,7 @@ export class Sprite extends Asset_Base {
         const imgDataFrames = new Array(hexFrames.length);
 
         this.loadBaseAssetData(data);
-        this.navState = parseNavSaveData(data.nav);
+        this.navState = NavState.fromSaveData(data.nav);
 
         for (let i = 0; i < hexFrames.length; i++){
             imgDataFrames[i] = this._hexToImageData(splitFrames[i]);

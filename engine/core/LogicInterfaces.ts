@@ -217,7 +217,7 @@ export type iEventContext = {eventKey: number, instance: Instance_Object};
 
 export interface iLogicSaveData extends iAssetSaveData {
     selectedGraphId: number,
-    graphs: Array<{id: number, name: string, navState: iNavSaveData}>,
+    graphs: Array<{id: number, name: string, nav: iNavSaveData}>,
     nodes: iNodeSaveData[],
     connections: iConnectionSaveData[],
 }

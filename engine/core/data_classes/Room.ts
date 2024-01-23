@@ -1,5 +1,5 @@
 import { Asset_Base, iAssetSaveData } from './Asset_Base';
-import { NavState, getNavSaveData, parseNavSaveData, iNavSaveData } from '../NavState';
+import { NavState, iNavSaveData } from '../NavState';
 import { Camera, iCameraSaveData } from './Camera';
 import { Spacial_Collection } from '../Spacial_Collection';
 import { CATEGORY_ID, INSTANCE_TYPE } from '../Enums';
@@ -60,7 +60,7 @@ export class Room extends Asset_Base {
             pers: +this.persist as (0 | 1),
             uGrav: +this.useGravity as (0 | 1),
             grav: this.gravity,
-            nav: getNavSaveData(this.navState),
+            nav: this.navState.toSaveData(),
         } satisfies iRoomSaveData;
     }
 
@@ -73,7 +73,7 @@ export class Room extends Asset_Base {
 
         this.loadBaseAssetData(data);
         this.camera = Camera.fromSaveData(data.cam);
-        this.navState = parseNavSaveData(data.nav);
+        this.navState = NavState.fromSaveData(data.nav);
         this.bgColor = new Color().fromHex(data.bg);
         this.persist = !!data.pers;
         this.useGravity = !!data.uGrav;

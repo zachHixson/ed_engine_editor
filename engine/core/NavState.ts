@@ -9,10 +9,7 @@ export interface iNavState {
     matrix: Mat3;
 }
 
-export interface iNavSaveData {
-    offset: { x: number, y: number },
-    zoomFac: number,
-}
+export type iNavSaveData = [number, number, number];
 
 export class NavState implements iNavState {
     private static _defaultMatrix = [1, 0, 0, 0, 1, 0, 0, 0, 1];
@@ -67,22 +64,24 @@ export class NavState implements iNavState {
         this._needsUpdate = false;
     }
 
-    copy(newState: NavState | iNavState | iNavSaveData): void {
+    copy(newState: NavState | iNavState): void {
         this._offset.copy(newState.offset);
         this._zoomFac = newState.zoomFac;
     }
-}
 
-export function getNavSaveData(navState: NavState){
-    return {
-        offset: navState.offset.clone().multiplyScalar(PRECISION).round().divideScalar(PRECISION),
-        zoomFac: Math.round(navState.zoomFac * PRECISION) / PRECISION,
+    toSaveData(): [number, number, number] {
+        const rounded = this.offset.clone().multiplyScalar(PRECISION).round().divideScalar(PRECISION);
+        return [
+            rounded.x,
+            rounded.y,
+            Math.round(this.zoomFac * PRECISION) / PRECISION
+        ];
     }
-}
 
-export function parseNavSaveData(navData: iNavSaveData): NavState {
-    const newNavState = new NavState();
-    newNavState.setOffset(Vector.fromObject(navData.offset));
-    newNavState.setZoom(navData.zoomFac);
-    return newNavState;
+    static fromSaveData(navData: iNavSaveData): NavState {
+        const newNavState = new NavState();
+        newNavState.setOffset(new Vector(navData[0], navData[1]));
+        newNavState.setZoom(navData[2]);
+        return newNavState;
+    }
 }
