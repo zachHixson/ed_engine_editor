@@ -148,8 +148,6 @@ export class Room extends Asset_Base {
     }
 
     clearSpacialData(): void {
-        if (!this._spacialCollection) return;
-        this._instances.sort((a, b) => a.zDepth < b.zDepth);
         this._spacialCollection = null;
     }
 
