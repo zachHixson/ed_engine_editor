@@ -252,15 +252,20 @@ function navChange(newState: Core.NavState): void {
     const navEl = domRefs.nodeNavRef.value!;
 
     //update navWrapper
-    navEl.style.left = (newState.offset.x * newState.zoomFac) + 'px';
-    navEl.style.top = (newState.offset.y * newState.zoomFac) + 'px';
+    navEl.style.left = (newState.offset.x * newState.zoomFac / devicePixelRatio) + 'px';
+    navEl.style.top = (newState.offset.y * newState.zoomFac / devicePixelRatio) + 'px';
     navEl.style.transform = 'scale(' + newState.zoomFac + ')';
 
     //update grid background
     const tileSize = newState.zoomFac * TILE_SIZE;
-    const center = new Vector(vpEl.clientWidth, vpEl.clientHeight).divideScalar(2);
-
-    center.add(newState.offset.clone().multiplyScalar(newState.zoomFac));
+    const center = new Vector(vpEl.clientWidth, vpEl.clientHeight)
+        .divideScalar(2)
+        .add(
+            newState.offset.clone()
+            .multiplyScalar(newState.zoomFac)
+        )
+        .divideScalar(devicePixelRatio);
+    
     vpEl.style.backgroundSize = `${tileSize}px ${tileSize}px`;
     vpEl.style.backgroundPosition = `left ${center.x}px top ${center.y}px`;
 }
