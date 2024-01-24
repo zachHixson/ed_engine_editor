@@ -206,38 +206,22 @@ export class Linked_List<T>{
         }
     }
 
-    sort(smallestFunc: (a: T, b: T)=>boolean = (a, b) => a < b): void {
-        let head = null;
-        let tail = null;
-
+    sort(compareFunc: (a: T, b: T) => number = (a, b) => (a as number) - (b as number)): void {
         if (!this._start){
             return;
         }
 
-        while (this._start){
-            const smallest = this._findSmallestNode(smallestFunc)!;
+        const arr = new Array(this.length);
+        let curNode: Node<T> | null = this._start;
+        let idx = 0;
 
-            this._removeNode(smallest);
+        this.forEach((val, idx) => arr[idx] = val);
+        arr.sort(compareFunc);
 
-            if (tail){
-                tail.next = smallest;
-            }
-
-            if (!head){
-                head = smallest;
-            }
-
-            if (smallest == this._start){
-                this._start = (this._start.next) ? this._start.next : null;
-            }
-
-            smallest.prev = tail;
-            smallest.next = null;
-            tail = smallest;
+        while (curNode) {
+            curNode.val = arr[idx++];
+            curNode = curNode.next;
         }
-
-        this._start = head;
-        this._end = tail;
     }
 
     remove(callback: (value: T) => boolean): T | null {
@@ -280,27 +264,13 @@ export class Linked_List<T>{
         this._length--;
     }
 
-    private _findSmallestNode(smallestFunc: (a: T, b: T)=>boolean = (a, b) => a < b): Node<T> | null {
-        let smallest = this._start;
-        let seeker = this._start?.next;
-
-        while (seeker){
-            if (smallestFunc(seeker.val, smallest!.val)){
-                smallest = seeker;
-            }
-
-            seeker = seeker.next;
-        }
-
-        return smallest;
-    }
-
     toArray(): T[] {
-        let newArray = [];
+        const newArray = new Array(this._length);
         let curNode = this._start;
+        let idx = 0;
 
         while (curNode){
-            newArray.push(curNode.val);
+            newArray[idx++] = curNode.val;
             curNode = curNode.next;
         }
 
