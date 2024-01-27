@@ -781,23 +781,29 @@ export const NODE_LIST: iNodeTemplate[] = [
                 const pos = relative ? new Vector(x, y).add(eventContext.instance.pos) : new Vector(x, y);
                 const nextId = this.engine.room.curInstId;
                 const newInstance = assetToInstance(baseAsset, nextId, pos);
+                let instanceMap = this.dataCache.get('instanceMap');
+
+                //create instanceMap
+                if (!instanceMap){
+                    instanceMap = new WeakMap();
+                    this.dataCache.set('instanceMap', instanceMap);
+                }
 
                 if (newInstance){
                     newInstance.setEngine(this.engine);
                     this.engine.addInstance(newInstance);
                     newInstance.onCreate();
-                    this.dataCache.set('spawned_instance', newInstance);
+                    instanceMap.set(eventContext, newInstance);
                 }
                 else{
                     this.engine.warn('no_asset_specified');
                 }
 
                 this.triggerOutput('_o', eventContext);
-
-                this.dataCache.delete('spawned_instance');
             },
-            getAsset(this: iEngineNode){
-                return this.dataCache.get('spawned_instance') ?? null;
+            getAsset(this: iEngineNode, eventContext: iEventContext){
+                const instanceMap = this.dataCache.get('instanceMap');
+                return instanceMap.get(eventContext) ?? null;
             },
         }
     },
