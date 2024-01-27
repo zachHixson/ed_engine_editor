@@ -72,7 +72,7 @@ export class Instance_Sprite extends Instance_Base {
     }
 
     static fromSaveData(data: iInstanceSpriteSaveData, spriteMap: Map<number, Sprite>): Instance_Sprite {
-        const newSprite = new Instance_Sprite(data.id, Vector.fromObject(data.pos), spriteMap.get(data.sId)!);
+        const newSprite = new Instance_Sprite(data.id, Vector.fromArray(data.pos), spriteMap.get(data.sId)!);
         newSprite.loadBaseSaveData(data);
         return newSprite;
     }

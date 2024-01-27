@@ -39,6 +39,7 @@ export abstract class Instance_Base{
 
     id: number;
     name: string;
+    sprite: Sprite | null = null;
     pos: Vector;
     lastPos: Vector = new Vector();
     velocity: Vector = new Vector(0, 0);
@@ -69,9 +70,7 @@ export abstract class Instance_Base{
     abstract needsPurge(assetMap: Map<number, any>): boolean;
 
     //Rendering getters
-    get sprite(): Sprite | null {return null};
-    set sprite(sprite: Sprite | null){}
-    get renderable(){return false};
+    get renderable(){return !!this.sprite};
     get hasEditorFrame(){return false};
     get startFrame(){return 0};
     get fps(){return 0};

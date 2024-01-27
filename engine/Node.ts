@@ -1,9 +1,7 @@
 import {
-    iEngineInput,
     iEngineLogic,
     iEngineNode,
     iNodeTemplate,
-    Instance_Object,
     convertSocketType,
     NODE_MAP,
     iNodeSaveData,
@@ -14,7 +12,6 @@ import { iAnyObj } from "./core/interfaces";
 import { listConvert } from "./core/nodes/Socket_Conversions";
 import Engine from "./Engine";
 import Logic from "./Logic";
-import { SOCKET_TYPE } from "./core/nodes/Node_Enums";
 
 export default class Node implements iEngineNode {
     private _dataCache: Map<number | string, any> = new Map();

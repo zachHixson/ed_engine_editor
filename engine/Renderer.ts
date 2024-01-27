@@ -53,6 +53,10 @@ export default class Renderer{
         this._instanceRenderer.removeInstance(instance);
     }
 
+    hasInstance = (instanceId: number): boolean => {
+        return this._instanceRenderer.hasInstance(instanceId);
+    }
+
     updateInstance = (instance: Instance_Base, newFrame?: number): void => {
         this._instanceRenderer.updateInstance(instance, newFrame);
     }

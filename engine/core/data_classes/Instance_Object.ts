@@ -43,6 +43,7 @@ export class Instance_Object extends Instance_Base{
         super(id, pos);
 
         this._objRef = objRef;
+        this.sprite = this._objRef.sprite;
         this.name = this._objRef.name + '_' + this.id;
         this.collisionOverride = COLLISION_OVERRIDE.KEEP;
 
@@ -65,19 +66,12 @@ export class Instance_Object extends Instance_Base{
     set objRef(obj: Game_Object){this._objRef = obj};
     get userDepth(){return (this.zDepthOverride) ? this.zDepthOverride : this._objRef.zDepth};
     get zDepth(){return (this.userDepth / 100) + this.depthOffset};
-    get renderable(){return !!this._objRef?.sprite};
     get hasEditorFrame(){
-        this._useIcon = this._objRef?.sprite?.frameIsEmpty(this.startFrame) ?? true;
+        this._useIcon = this.sprite?.frameIsEmpty(this.startFrame) ?? true;
         return !this._useIcon;
     };
     get frameDataId(){return this._useIcon || !this.renderable ? Instance_Object.DEFAULT_INSTANCE_ICON_ID : this.sprite!.id};
     get frameData(){return this._useIcon || !this.renderable ? Instance_Object.DEFAULT_INSTANCE_ICON : this.sprite!.frames};
-    get sprite(){
-        return this.spriteOverride ?? this._objRef?.sprite
-    };
-    set sprite(newSprite: Sprite | null){
-        this.spriteOverride = newSprite;
-    };
     get logic(){return this._objRef.logicScript};
     get isSolid(){
         switch(this.collisionOverride){
@@ -100,7 +94,7 @@ export class Instance_Object extends Instance_Base{
 
     get startFrameOverrideClamped(){return this.startFrameOverride};
     set startFrameOverrideClamped(val: number | null){
-        this.startFrameOverride = val === null ? null : Math.max(Math.min(val, (this._objRef.sprite?.frames.length ?? 0) - 1), 0);
+        this.startFrameOverride = val === null ? null : Math.max(Math.min(val, (this.sprite?.frames.length ?? 0) - 1), 0);
     };
 
     get hasCollisionEvent(){
@@ -181,7 +175,7 @@ export class Instance_Object extends Instance_Base{
     }
 
     static fromSaveData(data: iObjectInstanceSaveData, objMap: Map<number, Game_Object>): Instance_Object {
-        const newObj = new Instance_Object(data.id, Vector.fromObject(data.pos), objMap.get(data.objId)!);
+        const newObj = new Instance_Object(data.id, Vector.fromArray(data.pos), objMap.get(data.objId)!);
         newObj._loadSaveData(data);
 
         return newObj;

@@ -669,9 +669,12 @@ export class Engine implements iEngineCallbacks {
     }
 
     refreshRenderedInstance = (instance: Instance_Base): void =>{
+        if (this._renderer.hasInstance(instance.id)){
+            this._renderer.removeInstance(instance);
+        }
+
         if (!instance.renderable) return;
 
-        this._renderer.removeInstance(instance);
         this._renderer.addInstance(instance);
     }
 

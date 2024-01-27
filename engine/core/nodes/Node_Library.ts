@@ -1100,7 +1100,7 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         outTriggers: ['_o'],
         inputs: [
-            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null},
+            {id: 'instance', type: SOCKET_TYPE.INSTANCE, required: true, default: null},
             {id: 'frame', type: SOCKET_TYPE.NUMBER, default: ''},
             {id: 'fps', type: SOCKET_TYPE.NUMBER, default: ''},
             {id: 'loop', type: SOCKET_TYPE.BOOL, default: null, triple: true},
@@ -1156,6 +1156,11 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
         ],
         onBeforeMount(this: iEditorNode){
+            const genericNoOption = {
+                name: this.editorAPI.t('generic.no_option'),
+                id: -1,
+                value: null,
+            };
             const sprites = this.editorAPI.gameDataStore.getAllSprites.map((s: Sprite)=>({
                 name: s.name,
                 id: s.id,
@@ -1169,7 +1174,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                 })(),
             }));
 
-            this.widget.options.items = sprites;
+            this.widget.options.items = [genericNoOption, ...sprites];
         },
         methods: {
             setSprite(this: iEngineNode, eventContext: iEventContext){
