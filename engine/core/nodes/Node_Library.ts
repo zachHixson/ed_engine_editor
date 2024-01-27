@@ -853,6 +853,24 @@ export const NODE_LIST: iNodeTemplate[] = [
             }
         },
     },
+    {// Is In Group
+        id: 'is_in_group',
+        category: 'actual',
+        inputs: [
+            {id: 'group', type: SOCKET_TYPE.STRING, default: ''},
+            {id: 'instance', type: SOCKET_TYPE.INSTANCE, required: true, default: null}
+        ],
+        outputs: [
+            {id: '_o', type: SOCKET_TYPE.BOOL, execute: 'isInGroup'},
+        ],
+        methods: {
+            isInGroup(this: iEngineNode, eventContext: iEventContext){
+                const group = this.getInput<string>('group', eventContext);
+                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
+                return !!instance.groups.find(i => i == group);
+            }
+        }
+    },
     {// Raycast
         id: 'raycast',
         category: 'actual',
