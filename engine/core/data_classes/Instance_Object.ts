@@ -81,6 +81,7 @@ export class Instance_Object extends Instance_Base{
         }
     }
     get applyGravity(){return this.gravityOverride == null ? this.objRef.applyGravity : this.gravityOverride}
+    set applyGravity(newVal: boolean){this.gravityOverride = newVal}
 
     get startFrame(){return this.startFrameOverride ?? this._objRef.startFrame};
     get fps(){return this.fpsOverride ?? this._objRef.fps};

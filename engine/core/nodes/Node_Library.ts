@@ -1529,6 +1529,36 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
     },
+    {// Set Physics
+        id: 'set_physics',
+        category: 'movement',
+        inTriggers: [
+            {id: '_i', execute: 'setPhysics'},
+        ],
+        outTriggers: ['_o'],
+        inputs: [
+            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
+            {id: 'solid', type: SOCKET_TYPE.BOOL, triple: true, default: null},
+            {id: 'gravity', type: SOCKET_TYPE.BOOL, triple: true, default: null},
+        ],
+        methods: {
+            setPhysics(this: iEngineNode, eventContext: iEventContext){
+                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
+                const solid = this.getInput<boolean | null>('solid', eventContext);
+                const gravity = this.getInput<boolean | null>('gravity', eventContext);
+
+                if (solid != null){
+                    instance.isSolid = solid;
+                }
+
+                if (gravity != null){
+                    instance.applyGravity = gravity;
+                }
+
+                this.triggerOutput('_o', eventContext);
+            }
+        }
+    },
     ...Cat_Variables,
 ];
 

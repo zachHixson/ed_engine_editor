@@ -87,8 +87,10 @@ export abstract class Instance_Base{
     get zDepthOverride(){return 0};
     set zDepthOverride(val: number | null){};
     get isSolid(){return false};
+    set isSolid(newVal: boolean){};
     get onGround(){return this._onGround};
     get applyGravity(){return false};
+    set applyGravity(newVal: boolean){};
     get totalVelocity(){return this._cachedTotalVelocity as ConstVector};
     abstract get frameDataId(): number | string;
     abstract get frameData(): Array<ImageData>;
