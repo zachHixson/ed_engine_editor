@@ -585,7 +585,10 @@ export class Engine implements iEngineCallbacks {
 
         //Register collision to map
         if (subInstanceEntry){
-            subInstanceEntry.normal = normal;
+            if (normal){
+                subInstanceEntry.normal = normal;
+            }
+            
             subInstanceEntry.startCollision = subInstanceEntry.active ? subInstanceEntry.startCollision : this._curTime;
             subInstanceEntry.lastChecked = this._curTime;
             subInstanceEntry.active = true;
