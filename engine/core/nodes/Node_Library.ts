@@ -187,7 +187,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                 const i1 = this.getInput<Asset_Base>('_i1', eventContext);
                 const i2 = this.getInput<Asset_Base>('_i2', eventContext);
 
-                return i1.id == i2.id;
+                return i1?.id == i2?.id;
             },
             editor_setSocketType(this: iEditorNode){
                 const type = this.widgetData;
