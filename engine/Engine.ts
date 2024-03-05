@@ -393,12 +393,12 @@ export class Engine implements iEngineCallbacks {
 
     private _unbindInputEvents = ()=>{
         document.removeEventListener('visibilitychange', this._visibilityChange);
-        document.removeEventListener("keydown", this._keyDown);
-        document.removeEventListener("keyup", this._keyUp);
-        this._canvas.removeEventListener("mousedown", this._mouseDown);
-        this._canvas.removeEventListener("mouseup", this._mouseUp);
-        this._canvas.removeEventListener("mousemove", this._mouseMove);
-        this._canvas.removeEventListener("mouseleave", this._mouseLeave);
+        document.removeEventListener('keydown', this._keyDown);
+        document.removeEventListener('keyup', this._keyUp);
+        this._canvas.removeEventListener('mousedown', this._mouseDown);
+        this._canvas.removeEventListener('mouseup', this._mouseUp);
+        this._canvas.removeEventListener('mousemove', this._mouseMove);
+        this._canvas.removeEventListener('mouseleave', this._mouseLeave);
     }
 
     private _visibilityChange = (): void => {
