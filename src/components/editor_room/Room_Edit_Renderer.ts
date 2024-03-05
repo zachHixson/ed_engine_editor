@@ -32,14 +32,15 @@ export default class Room_Edit_Renderer {
     constructor(canvas: HTMLCanvasElement, navState: Core.NavState){
         this._canvas = canvas;
         this._navState = navState;
-        this._gl = WGL.getGLContext(this._canvas, {alpha: false, antialias: false})!;
+        this._gl = WGL.getGLContext(this._canvas, {premultipliedAlpha: false, antialias: false})!;
         this._instanceRenderer = new Core.Instance_Renderer(this._gl, Core.Sprite.DIMENSIONS, 1024, false, true);
         this._iconRenderer = new Core.Instance_Renderer(this._gl, 128, 512, true);
         this._uiRenderer = new UI_Renderer(this._gl);
 
-        this._gl.clearColor(0, 0, 0, 0);
+        this._gl.clearColor(0, 0, 0, 1);
+        this._gl.clear(this._gl.COLOR_BUFFER_BIT);
         this._gl.enable(this._gl.BLEND);
-        this._gl.blendFunc(this._gl.SRC_ALPHA, this._gl.ONE_MINUS_SRC_ALPHA);
+        this._gl.blendFunc(this._gl.ONE, this._gl.ONE_MINUS_SRC_ALPHA);
 
         if (!iconsLoaded){
             document.addEventListener('icons-loaded', this._iconsLoaded as EventListener, {once: true});
@@ -245,6 +246,9 @@ export default class Room_Edit_Renderer {
     render(): void {
         this._updateViewMatrix();
         this._gl.depthMask(true);
+        this._gl.colorMask(false, false, false, true);
+        this._gl.clear(this._gl.COLOR_BUFFER_BIT);
+        this._gl.colorMask(true, true, true, false);
         this._gl.clear(this._gl.COLOR_BUFFER_BIT | this._gl.DEPTH_BUFFER_BIT);
         this._gl.depthMask(false);
         this._instanceRenderer.render();
@@ -292,7 +296,7 @@ class UI_Renderer {
             //xy grid
             vec2 absUv = abs(v_uv) * 2.0;
             absUv -= (u_pixelWidth * 2.0) * .75;
-            absUv = 1.0 - smoothstep(0.0, u_pixelWidth * 2.0, absUv);
+            absUv = 1.0 - smoothstep(0.0, u_pixelWidth * 2.1, absUv);
             float xAxis = absUv.y;
             float yAxis = absUv.x;
 
@@ -319,15 +323,17 @@ class UI_Renderer {
             selectionBox = (1.0 - smoothstep(0.0, u_pixelWidth * 2.0, selectionBox)) * u_selection.z;
 
             //composite
-            gl_FragColor = vec4(vec3(0.5), 0.3 * cursor);
+            gl_FragColor = vec4(0.0);
+
+            gl_FragColor = mix(gl_FragColor, vec4(vec3(0.7), 1.0), 0.3 * cursor);
 
             if (u_showGrid){
-                gl_FragColor = mix(gl_FragColor, vec4(vec3(0.6), 0.5), grid);
+                gl_FragColor = mix(gl_FragColor, vec4(vec3(0.6), 1.0), grid * 0.5);
                 gl_FragColor = mix(gl_FragColor, vec4(1.0, 0.5, 0.0, 1.0), xAxis);
                 gl_FragColor = mix(gl_FragColor, vec4(0.5, 1.0, 0.0, 1.0), yAxis);
             }
             
-            gl_FragColor = mix(gl_FragColor, vec4(vec3(u_iconColor), 1.0), cameraIcon.a);
+            gl_FragColor = mix(gl_FragColor, vec4(vec3(u_iconColor), cameraIcon.a), cameraIcon.a);
             gl_FragColor = mix(gl_FragColor, vec4(vec3((u_iconColor + 0.5) * 0.4), 1.0), cameraBounds);
             gl_FragColor = mix(gl_FragColor, vec4(0.0, 0.5, 1.0, 1.0), selectionBox);
         }
