@@ -38,11 +38,11 @@ export default class Transition_Fade extends Transition_Base {
     constructor(gl: WebGL2RenderingContext, renderer: Renderer){
         super(gl, renderer);
 
-        this._program = WGL.createProgram(
+        this._program = WGL.compileProgram(
             this._gl,
-            WGL.createShader(this._gl, this._gl.VERTEX_SHADER, Transition_Fade._vertexSource)!,
-            WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, Transition_Fade._fragmentSource)!
-        )!;
+            Transition_Fade._vertexSource,
+            Transition_Fade._fragmentSource,
+        );
         this._geoAttrib = new WGL.Attribute(this._gl, this._program, 'a_pos');
         this._opacityUniform = new WGL.Uniform(this._gl, this._program, 'u_opacity', WGL.Uniform_Types.FLOAT);
         this._vao = this._gl.createVertexArray()!;

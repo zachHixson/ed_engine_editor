@@ -83,11 +83,11 @@ let selectedColor: Core.Draw.Color = props.color ?? new Draw.Color(255, 255, 255
 
 //wgl setup
 const wheelCtx = WGL.getGLContext(wheelBuffer)!;
-const wheelProgram = WGL.createProgram(
+const wheelProgram = WGL.compileProgram(
     wheelCtx,
-    WGL.createShader(wheelCtx, wheelCtx.VERTEX_SHADER, vertexSource)!,
-    WGL.createShader(wheelCtx, wheelCtx.FRAGMENT_SHADER, fragmentSource)!
-)!;
+    vertexSource,
+    fragmentSource,
+);
 const valueUniform = new WGL.Uniform(wheelCtx, wheelProgram, 'u_value', WGL.Uniform_Types.FLOAT)!;
 const positionAttribute = new WGL.Attribute(wheelCtx, wheelProgram, 'a_position');
 const planeGeo = WGL.createPlaneGeo();

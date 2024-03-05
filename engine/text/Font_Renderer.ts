@@ -85,11 +85,11 @@ export default class Font_Renderer{
 
     constructor(gl: WebGL2RenderingContext, pos?: ConstVector, width?: number, height?: number){
         this._gl = gl;
-        this._program = WGL.createProgram(
+        this._program = WGL.compileProgram(
             this._gl,
-            WGL.createShader(this._gl, this._gl.VERTEX_SHADER, Font_Renderer._vertexSource)!,
-            WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, Font_Renderer._fragmentSource)!,
-        )!;
+            Font_Renderer._vertexSource,
+            Font_Renderer._fragmentSource,
+        );
         this._planeGeoAttrib = new WGL.Attribute(this._gl, this._program, 'a_planeGeo');
         this._positionAttrib = new WGL.Attribute(this._gl, this._program, 'a_position');
         this._charOffsetAttrib = new WGL.Attribute(this._gl, this._program, 'a_charOffset');

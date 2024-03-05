@@ -78,42 +78,28 @@ function substitute_bufferSubData(ctx: WebGLRenderingContext){
     }
 }
 
-export function createShader(gl: WebGL2RenderingContext, type: number, source: string): WebGLShader | null {
-    const shader = gl.createShader(type);
-
-    if (!shader){
-        console.error('Error creating shader');
-        return null;
-    }
-
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)){
-        console.error(gl.getShaderInfoLog(shader));
-        gl.deleteShader(shader);
-        return null;
-    }
-
-    return shader;
-}
-
-export function createProgram(gl: WebGL2RenderingContext, vertexShader: WebGLShader, fragmentShader: WebGLShader): WebGLProgram | null {
+export function compileProgram(gl:WebGL2RenderingContext, vertexSource: string, fragmentSource: string, checkErrors = true): WebGLProgram {
+    const vs = gl.createShader(gl.VERTEX_SHADER);
+    const fs = gl.createShader(gl.FRAGMENT_SHADER);
     const program = gl.createProgram();
 
-    if (!program){
-        console.error('Error creating program');
-        return null;
+    if (!(vs && fs && program)) {
+        throw new Error('Error creating WebGL Shaders');
     }
 
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
+    gl.shaderSource(vs, vertexSource);
+    gl.shaderSource(fs, fragmentSource);
+    gl.compileShader(vs);
+    gl.compileShader(fs);
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
     gl.linkProgram(program);
 
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)){
-        console.error(gl.getProgramInfoLog(program));
-        gl.deleteProgram(program);
-        return null;
+    if (checkErrors && !gl.getProgramParameter(program, gl.LINK_STATUS)){
+        console.error(`Link Failed: ${gl.getProgramInfoLog(program)}`);
+        console.error(`Vert Shader Log: ${gl.getShaderInfoLog(vs)}`);
+        console.error(`Frag Shader Log: ${gl.getShaderInfoLog(fs)}`);
+        throw new Error('Error compiling program. See above errors.');
     }
 
     return program;

@@ -101,11 +101,11 @@ export default class Art_Canvas_Renderer{
 
         //Setup webGL context
         this._gl = WGL.getGLContext(this._canvas)!;
-        this._program = WGL.createProgram(
+        this._program = WGL.compileProgram(
             this._gl,
-            WGL.createShader(this._gl, this._gl.VERTEX_SHADER, Art_Canvas_Renderer._vertexSource)!,
-            WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, Art_Canvas_Renderer._fragmentSource)!
-        )!;
+            Art_Canvas_Renderer._vertexSource,
+            Art_Canvas_Renderer._fragmentSource,
+        );
 
         this._positionAttribute = new WGL.Attribute(this._gl, this._program, 'a_position');
         this._uvAttribute = new WGL.Attribute(this._gl, this._program, 'a_uv');

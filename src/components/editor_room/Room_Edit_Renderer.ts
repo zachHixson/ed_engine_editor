@@ -349,11 +349,11 @@ class UI_Renderer {
 
     constructor(gl: WebGL2RenderingContext){
         this._gl = gl;
-        this._program = WGL.createProgram(
+        this._program = WGL.compileProgram(
             this._gl,
-            WGL.createShader(this._gl, this._gl.VERTEX_SHADER, UI_Renderer._vertexSource)!,
-            WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, UI_Renderer._fragmentSource)!
-        )!;
+            UI_Renderer._vertexSource,
+            UI_Renderer._fragmentSource,
+        );
         this._invViewMatrixUniform = new WGL.Uniform(this._gl, this._program, 'u_invViewMatrix', WGL.Uniform_Types.MAT3);
         this._showGridUniform = new WGL.Uniform(this._gl, this._program, 'u_showGrid', WGL.Uniform_Types.BOOL);
         this._pixelWidthUniform = new WGL.Uniform(this._gl, this._program, 'u_pixelWidth', WGL.Uniform_Types.FLOAT);

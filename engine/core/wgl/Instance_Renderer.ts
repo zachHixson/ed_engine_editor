@@ -159,11 +159,11 @@ export class Instance_Renderer {
 
         //setup webGL context
         this._gl = gl;
-        this._program = WGL.createProgram(
+        this._program = WGL.compileProgram(
             this._gl,
-            WGL.createShader(this._gl, this._gl.VERTEX_SHADER, Instance_Renderer._vertexSource)!,
-            WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, Instance_Renderer._getFragmentSource(!generateMipmaps, useDepth))!    
-        )!;
+            Instance_Renderer._vertexSource,
+            Instance_Renderer._getFragmentSource(!generateMipmaps, useDepth),
+        );
         this._generateMipmaps = generateMipmaps;
         this._viewMatrixUniform = new WGL.Uniform(this._gl, this._program, 'u_viewMatrix', WGL.Uniform_Types.MAT3);
         this._tileSizeUniform = new WGL.Uniform(this._gl, this._program, 'u_tileSize', WGL.Uniform_Types.INT);

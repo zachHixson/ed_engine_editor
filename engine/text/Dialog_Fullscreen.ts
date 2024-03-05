@@ -64,11 +64,11 @@ export default class Dialog_Fullscreen extends Dialog_Base{
 
         super(gl);
 
-        this._program = WGL.createProgram(
+        this._program = WGL.compileProgram(
             this._gl,
-            WGL.createShader(this._gl, this._gl.VERTEX_SHADER, Dialog_Fullscreen._vertexSource)!,
-            WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, Dialog_Fullscreen._fragmentSource)!,
-        )!;
+            Dialog_Fullscreen._vertexSource,
+            Dialog_Fullscreen._fragmentSource,
+        );
         this._geoAttrib = new WGL.Attribute(this._gl, this._program, 'a_geo');
         this._uvAttrib = new WGL.Attribute(this._gl, this._program, 'a_uv');
         this._arrowAnimUniform = new WGL.Uniform(this._gl, this._program, 'u_arrowAnim', WGL.Uniform_Types.FLOAT);

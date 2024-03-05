@@ -216,11 +216,11 @@ function debug(...args: any[]){
     }
 
     //setup webGL props
-    const program = WGL.createProgram(
+    const program = WGL.compileProgram(
         gl,
-        WGL.createShader(gl, gl.VERTEX_SHADER, vs)!,
-        WGL.createShader(gl, gl.FRAGMENT_SHADER, fs)!
-    )!;
+        vs,
+        fs
+    );
     const textureUniform = new WGL.Texture_Uniform(gl, program, 'u_texture', atlas.texture);
     const positionAttribute = new WGL.Uniform(gl, program, 'a_position');
     const vao = gl.createVertexArray();

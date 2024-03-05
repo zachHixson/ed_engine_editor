@@ -94,11 +94,11 @@ export default class Dialog_Box extends Dialog_Base {
         const backMargin = Renderer.SCREEN_RES * (BOX_WIDTH - MARGIN) * 2;
 
         //setup webGL props
-        this._program = WGL.createProgram(
+        this._program = WGL.compileProgram(
             this._gl,
-            WGL.createShader(this._gl, this._gl.VERTEX_SHADER, Dialog_Box._vertexSource)!,
-            WGL.createShader(this._gl, this._gl.FRAGMENT_SHADER, Dialog_Box._fragmentSource)!
-        )!;
+            Dialog_Box._vertexSource,
+            Dialog_Box._fragmentSource,
+        );
         this._geoAttrib = new WGL.Attribute(this._gl, this._program, 'a_geo');
         this._uvAttrib = new WGL.Attribute(this._gl, this._program, 'a_uv');
         this._yOffsetUniform = new WGL.Uniform(this._gl, this._program, 'u_yOffset', WGL.Uniform_Types.FLOAT);
