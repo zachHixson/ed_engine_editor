@@ -129,7 +129,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
         this.graphs.splice(idx, 1);
 
         //add new graph if no more graphs exist
-        if (this.graphs.length <= 1){
+        if (this.graphs.length < 1){
             this.addGraph();
             this.selectedGraphId = this.graphs[0].id;
             return;
