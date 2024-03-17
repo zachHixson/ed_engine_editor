@@ -157,7 +157,8 @@ function frameMoved({idx, dir}: {idx: number, dir: number}): void {
     emit('frame-moved');
 }
 
-function frameCopied(): void {
+function frameCopied(frameIdx: number): void {
+    updateFramePreviews([frameIdx + 1]);
     emit('frame-copied');
 }
 
