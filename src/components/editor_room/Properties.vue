@@ -114,7 +114,7 @@ const showPlaceHolder = computed(()=>
             @inst-group-changed="emit('inst-group-changed', $event)"></LogicProperties>
         <EraserProperties
             v-if="showEraserProps"
-            :selected-instance="selectedInstance"
+            :selected-asset="assetBrowserStore.getSelectedAsset"
             :selected-room="room"
             @inst-deleted="emit('inst-deleted', $event)"></EraserProperties>
         <CameraProperties

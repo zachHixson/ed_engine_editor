@@ -9,19 +9,19 @@ const { t } = useI18n();
 const roomEditorStore = useRoomEditorStore();
 
 const props = defineProps<{
-    selectedInstance: Core.Instance_Base | null;
+    selectedAsset: Core.Asset_Base | null;
     selectedRoom: Core.Room;
 }>();
 
 const emit = defineEmits(['inst-deleted']);
 
 function deleteAllType(): void {
-    if (!props.selectedInstance) return;
+    if (!props.selectedAsset) return;
 
     const instances: Array<Core.Instance_Base> = [];
 
     props.selectedRoom.instances.forEach(i => {
-        if (i.sourceId == props.selectedInstance!.sourceId){
+        if (i.sourceId == props.selectedAsset!.id){
             instances.push(i);
         }
     });
