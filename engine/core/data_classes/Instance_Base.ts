@@ -82,7 +82,9 @@ export abstract class Instance_Base{
         this.onAnimationChange(this.animPlayingOverride ? InstanceAnimEvent.START : InstanceAnimEvent.STOP);
     };
     get userDepth(){return 0};
-    get zDepth(){return 0};
+    get zDepth(){
+        return (this.depthOverride ?? 0) + this.depthOffset;
+    };
     set zDepth(val){};
     get zDepthOverride(){return 0};
     set zDepthOverride(val: number | null){};

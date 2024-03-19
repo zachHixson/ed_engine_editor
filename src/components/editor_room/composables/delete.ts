@@ -22,7 +22,7 @@ export function useDelete(args: iActionArguments){
             if (filteredInstances.length <= 0) return;
 
             if (roomEditorStore.eraserTopOnly){
-                filteredInstances.sort((a, b) => a.zDepth - b.zDepth);
+                filteredInstances.sort((a, b) => b.zDepth - a.zDepth);
                 actionDelete({instId: filteredInstances[0].id}, false);
             }
             else{
@@ -49,6 +49,7 @@ export function useDelete(args: iActionArguments){
 
         override mouseUp(): void {
             this._down = false;
+            this._last = null;
             actionDelete({}, true);
         }
     }

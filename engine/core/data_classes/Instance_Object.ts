@@ -64,7 +64,7 @@ export class Instance_Object extends Instance_Base{
 
     get objRef(){return this._objRef};
     set objRef(obj: Game_Object){this._objRef = obj};
-    get userDepth(){return (this.zDepthOverride) ? this.zDepthOverride : this._objRef.zDepth};
+    get userDepth(){return this.zDepthOverride ?? this._objRef.zDepth};
     get zDepth(){return (this.userDepth / 100) + this.depthOffset};
     get hasEditorFrame(){
         this._useIcon = this.sprite?.frameIsEmpty(this.startFrame) ?? true;

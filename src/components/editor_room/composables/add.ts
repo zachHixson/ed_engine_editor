@@ -79,7 +79,7 @@ export function useAdd(args: iActionArguments){
                     newInstance.zDepthOverride = roomEditorStore.addBrushDepth;
                 }
 
-                actionAdd({newInstance: newInstance, pos: mEvent.worldCell}, false);
+                actionAdd({newInstance, pos: mEvent.worldCell}, false);
                 this._curCell = mEvent.worldCell.clone();
             }
         }

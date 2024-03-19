@@ -47,7 +47,7 @@ export class Instance_Sprite extends Instance_Base {
     get frameDataId(){return this._useIcon || !this.renderable ? Instance_Sprite.DEFAULT_SPRITE_ICON_ID : this.sprite!.id}
     get frameData(){return this._useIcon || !this.renderable ? Instance_Sprite.DEFAULT_SPRITE_ICON : this.sprite!.frames}
 
-    get zDepth(){return this._zDepth}
+    get zDepth(){return this._zDepth + this.depthOffset}
     set zDepth(newDepth: number){
         this._zDepth = Math.max(Math.min(newDepth, 99), -99);
     }
