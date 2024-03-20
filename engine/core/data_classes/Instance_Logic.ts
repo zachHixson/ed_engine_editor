@@ -67,7 +67,7 @@ export class Instance_Logic extends Instance_Object {
     }
 
     static fromSaveData(data: iInstanceLogicSaveData, objMap: Map<number, Game_Object>): Instance_Logic {
-        const instance = new Instance_Logic(data.id, Vector.fromObject(data.pos), data.lId, data.name);
+        const instance = new Instance_Logic(data.id, Vector.fromArray(data.pos), data.lId, data.name);
 
         instance.name = data.name;
 

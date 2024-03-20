@@ -39,7 +39,6 @@ export abstract class Instance_Base{
 
     id: number;
     name: string;
-    sprite: Sprite | null = null;
     pos: Vector;
     lastPos: Vector = new Vector();
     velocity: Vector = new Vector(0, 0);
@@ -70,6 +69,8 @@ export abstract class Instance_Base{
     abstract needsPurge(assetMap: Map<number, any>): boolean;
 
     //Rendering getters
+    get sprite(){return null}
+    set sprite(sprite: Sprite | null){}
     get renderable(){return !!this.sprite};
     get hasEditorFrame(){return false};
     get startFrame(){return 0};
@@ -88,6 +89,8 @@ export abstract class Instance_Base{
     set zDepth(val){};
     get zDepthOverride(){return 0};
     set zDepthOverride(val: number | null){};
+
+    //Logic Getters
     get isSolid(){return false};
     set isSolid(newVal: boolean){};
     get onGround(){return this._onGround};

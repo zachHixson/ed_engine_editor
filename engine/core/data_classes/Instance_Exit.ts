@@ -164,7 +164,7 @@ export class Instance_Exit extends Instance_Base {
     }
 
     static fromSaveData(data: iExitSaveData): Instance_Exit {
-        return new Instance_Exit(data.id, Vector.fromObject(data.pos))._loadSaveData(data);
+        return new Instance_Exit(data.id, Vector.fromArray(data.pos))._loadSaveData(data);
     }
 
     private _loadSaveData(data: iExitSaveData): Instance_Exit {
