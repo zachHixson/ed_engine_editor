@@ -225,7 +225,7 @@ defineExpose({socket: props.socket});
                 </div>
                 <div
                     v-if="socketType == Core.Node_Enums.SOCKET_TYPE.BOOL"
-                    class="width: 20px"
+                    style="width: 20px"
                     :style="customStyles">
                 </div>
             </div>
