@@ -56,19 +56,22 @@ export function useAdd(args: iActionArguments){
             return newInstance;
         }
 
-        private _getInstancesAtPos(cell: Core.Vector): Core.Instance_Base[] {
+        private _getInstancesAtPos(cell: Core.Vector, id: number): Core.Instance_Base[] {
             return args.props.selectedRoom.getInstancesInRadius(cell, 0)
                 .filter(inst =>{
                     const samePos = inst.pos.equalTo(cell);
-                    const assetSource = inst.sourceId == args.props.selectedAsset.id;
+                    const assetSource = inst.sourceId == id;
                     return samePos && assetSource;
                 });
         }
     
         override mouseMove(mEvent: imEvent): void {
-            if (!args.props.selectedAsset) return;
+            const sourceId = roomEditorStore.addBrushCopy ?
+                args.editorSelection?.value?.id : args.props.selectedAsset?.id;
 
-            const instancesInCell = roomEditorStore.addBrushOverlap ? [] : this._getInstancesAtPos(mEvent.worldCell);
+            if (sourceId == undefined) return;
+
+            const instancesInCell = roomEditorStore.addBrushOverlap ? [] : this._getInstancesAtPos(mEvent.worldCell, sourceId);
             const newCell = !this._curCell?.equalTo(mEvent.worldCell) ?? true;
     
             if (this._mouseDown && newCell && !instancesInCell.length){
