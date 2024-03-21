@@ -33,7 +33,6 @@ export class Instance_Object extends Instance_Base{
     private _zDepthOverride: number | null = null;
     private _useIcon = false;
 
-    spriteOverride: Sprite | null = null;
     gravityOverride: boolean | null = null;
     collisionOverride: COLLISION_OVERRIDE = COLLISION_OVERRIDE.KEEP;
     localVariables: Map<string, iEngineVariable> = new Map();

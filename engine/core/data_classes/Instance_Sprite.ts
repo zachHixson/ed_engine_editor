@@ -12,24 +12,22 @@ export class Instance_Sprite extends Instance_Base {
     static DEFAULT_SPRITE_ICON = [new ImageData(Sprite.DIMENSIONS, Sprite.DIMENSIONS)];
 
     private _useIcon = false;
-    private _sprite: Sprite;
     private _zDepth = 0;
 
     startFrameOverride: number = 0;
     fpsOverride: number = 6;
 
-    constructor(id: number, pos = new Vector(), sprite: Sprite){
+    constructor(id: number, pos = new Vector(), sprite: Sprite | null){
         super(id, pos);
         this._sprite = sprite;
-        this.name = this._sprite.name + '_' + this.id;
+        this.name = (this._sprite?.name ?? 'Sprite') + '_' + this.id;
     }
 
     get TYPE(){return INSTANCE_TYPE.SPRITE}
-    get sourceId(){return this.sprite.id}
-    get sprite(){return this._sprite}
-    set sprite(sprite: Sprite){this._sprite = sprite}
+    get sourceId(){return this.sprite?.id ?? -1}
     get startFrame(){return this.startFrameOverride}
     set startFrame(frame: number){
+        if (!this.sprite) return;
         this.startFrameOverride = Math.max(Math.min(Math.floor(frame), this.sprite.frames.length - 1), 0);
     }
     get fps(){return this.fpsOverride}
@@ -63,16 +61,18 @@ export class Instance_Sprite extends Instance_Base {
     override toSaveData(): iInstanceSpriteSaveData {
         return {
             ...this.getBaseSaveData(),
-            sId: this.sprite.id,
+            sId: this.sprite?.id ?? -1,
         };
     }
 
     override needsPurge(spriteMap: Map<number, any>): boolean {
+        if (!this.sprite) return false;
         return !spriteMap.get(this.sprite.id);
     }
 
     static fromSaveData(data: iInstanceSpriteSaveData, spriteMap: Map<number, Sprite>): Instance_Sprite {
-        const newSprite = new Instance_Sprite(data.id, Vector.fromArray(data.pos), spriteMap.get(data.sId)!);
+        const spriteAsset = data.sId >= 0 ? spriteMap.get(data.sId)! : null;
+        const newSprite = new Instance_Sprite(data.id, Vector.fromArray(data.pos), spriteAsset);
         newSprite.loadBaseSaveData(data);
         return newSprite;
     }

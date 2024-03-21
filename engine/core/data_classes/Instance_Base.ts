@@ -35,6 +35,7 @@ export abstract class Instance_Base{
     private _physForce: Vector = new Vector(0, 0);
     private _cachedTotalVelocity = new Vector(0, 0);
 
+    protected _sprite: Sprite | null = null;
     protected _onGround: boolean = false;
 
     id: number;
@@ -69,8 +70,8 @@ export abstract class Instance_Base{
     abstract needsPurge(assetMap: Map<number, any>): boolean;
 
     //Rendering getters
-    get sprite(){return null}
-    set sprite(sprite: Sprite | null){}
+    get sprite(){return this._sprite};
+    set sprite(sprite: Sprite | null){this._sprite = sprite};
     get renderable(){return !!this.sprite};
     get hasEditorFrame(){return false};
     get startFrame(){return 0};
