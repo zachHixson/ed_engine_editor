@@ -7,6 +7,8 @@ import { iEditorNode, iEngineNode, iNodeConnection, iNodeSaveData, iEventContext
 import { Asset_Base, Game_Object, Instance_Base, Instance_Object, Instance_Sprite, iEditorNodeInput, iEditorNodeOutput, Sprite, Util } from '../core';
 import { canConvertSocket, assetToInstance, instanceToAsset } from './Socket_Conversions';
 
+type SortableAsset = {sortOrder: number};
+
 export type GenericNode = iEditorNode | iEngineNode;
 
 export function isEngineNode(node: any): node is iEngineNode {
@@ -689,6 +691,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                 name: o.name,
                 id: o.id,
                 value: o.id,
+                sortOrder: o.sortOrder,
                 thumbnail: (()=>{
                     const thumbFrame = o.sprite?.frames[o.startFrame];
 
@@ -698,7 +701,7 @@ export const NODE_LIST: iNodeTemplate[] = [
 
                     return o.sprite.frameIsEmpty(o.startFrame) ? Instance_Object.DEFAULT_INSTANCE_ICON[0] : o.sprite?.frames[o.startFrame];
                 })()
-            }));
+            })).sort((a: SortableAsset, b: SortableAsset)=>a.sortOrder - b.sortOrder);
 
             this.widget.options.items = [genericNoOption, ...objects];
         },
@@ -1189,6 +1192,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                 name: s.name,
                 id: s.id,
                 value: s.id,
+                sortOrder: s.sortOrder,
                 thumbnail: (()=>{
                     if (s.frameIsEmpty(0)){
                         return Instance_Sprite.DEFAULT_SPRITE_ICON[0];
@@ -1196,7 +1200,7 @@ export const NODE_LIST: iNodeTemplate[] = [
 
                     return s.frames[0];
                 })(),
-            }));
+            })).sort((a: SortableAsset, b: SortableAsset)=>a.sortOrder - b.sortOrder);
 
             this.widget.options.items = [genericNoOption, ...sprites];
         },
