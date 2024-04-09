@@ -1,15 +1,28 @@
 import Core from '@/core';
 
+type MultiAction<T> = {
+    isMultiAction: true;
+    actions: T[];
+}
+
 export interface iActionStore {
     action: number;
     data: Core.iAnyObj;
+};
+
+function isMultiAction(a: any): a is MultiAction<any> {
+    return !!a.isMultiAction;
 }
 
-class Undo_Store<T>{
+export default class Undo_Store<T>{
+    private readonly undoStore = new Core.Linked_List<T | MultiAction<T>>();
+    private readonly redoStore = new Core.Linked_List<T | MultiAction<T>>();
+    private _isRecording = false;
+    private _commitBuffer: T[] = [];
+    private _commitMade: boolean = false;
+
     stepLimit: number;
-    undoStore = new Core.Linked_List<T>();
-    redoStore = new Core.Linked_List<T>();
-    initialState: T | null = null;
+    initialState: T | MultiAction<T> | null = null;
     returnPrevStep: boolean;
     cache = new Map<any, any | object>();
 
@@ -20,6 +33,16 @@ class Undo_Store<T>{
 
     get undoLength(){return this.undoStore.length}
     get redoLength(){return this.redoStore.length}
+    get isRecording(){return this._isRecording}
+
+    private _commit(data: T | MultiAction<T>): void {
+        this.undoStore.push(data);
+        this.redoStore.clear();
+
+        if (this.undoLength > this.stepLimit){
+            this.initialState = this.undoStore.popFirst();
+        }
+    }
 
     destroy(): void {
         this.undoStore.clear();
@@ -32,21 +55,52 @@ class Undo_Store<T>{
         this.initialState = data;
     }
 
-    commit(data: T): void {
-        this.undoStore.push(data);
-        this.redoStore.clear();
+    startRecording(autoTimeout: boolean = true): void {
+        if (this._isRecording) return;
 
-        if (this.undoLength > this.stepLimit){
-            this.initialState = this.undoStore.popFirst();
+        this._isRecording = true;
+
+        if (!autoTimeout) return;
+
+        const checkCommits = ()=>{
+            if (this._commitMade){
+                setTimeout(checkCommits, 10);
+            }
+            else{
+                this.stopRecording();
+            }
+
+            this._commitMade = false;
+        }
+
+        setTimeout(checkCommits);
+    }
+
+    stopRecording(): void {
+        this._isRecording = false;
+
+        if (this._commitBuffer.length > 0){
+            this._commit({isMultiAction: true, actions: this._commitBuffer});
+            this._commitBuffer = [];
         }
     }
 
-    peekLastUndo(): T | null {
+    commit(data: T): void {
+        if (this._isRecording){
+            this._commitBuffer.push(data);
+            this._commitMade = true;
+        }
+        else{
+            this._commit(data);
+        }
+    }
+
+    peekLastUndo(): T | MultiAction<T> | null {
         return this.undoStore.getLast();
     }
 
-    stepBack(): T | null {
-        let redoStep = this.undoStore.pop();
+    stepBack(): T | MultiAction<T> | null {
+        const redoStep = this.undoStore.pop();
 
         if (redoStep){
             this.redoStore.push(redoStep);
@@ -60,8 +114,8 @@ class Undo_Store<T>{
         }
     }
 
-    stepForward(): T | null {
-        let undoStep = this.redoStore.pop();
+    stepForward(): T | MultiAction<T> | null {
+        const undoStep = this.redoStore.pop();
 
         if (undoStep){
             this.undoStore.push(undoStep);
@@ -75,21 +129,41 @@ class Undo_Store<T>{
         this.redoStore.clear();
     }
 
-    popLast(): T | null {
+    popLast(): T | MultiAction<T> | null {
         return this.undoStore.pop();
     }
 }
 
-function useUndoHelpers(undoStore: Undo_Store<any>, actionMap: Map<any, any>, revertMap: Map<any, any>){
+export function useUndoHelpers(undoStore: Undo_Store<any>, actionMap: Map<any, any>, revertMap: Map<any, any>){
     function stepBackward(): void {
-        if (undoStore.undoLength > 0){
-            applyChronoStep(undoStore.stepBack()!, revertMap);
+        if (undoStore.undoLength <= 0) return;
+
+        const step = undoStore.stepBack();
+
+        if (isMultiAction(step)){
+            for (let i = step.actions.length - 1; i >= 0; i--){
+                const action = step.actions[i];
+                applyChronoStep(action, revertMap);
+            }
+        }
+        else{
+            applyChronoStep(step, revertMap);
         }
     }
     
     function stepForward(): void {
-        if (undoStore.redoLength > 0){
-            applyChronoStep(undoStore.stepForward()!, actionMap);
+        if (undoStore.redoLength <= 0) return;
+
+        const step = undoStore.stepForward();
+
+        if (isMultiAction(step)){
+            for (let i = 0; i < step.actions.length; i++){
+                const action = step.actions[i];
+                applyChronoStep(action, actionMap);
+            }
+        }
+        else{
+            applyChronoStep(step, actionMap);
         }
     }
     
@@ -104,6 +178,3 @@ function useUndoHelpers(undoStore: Undo_Store<any>, actionMap: Map<any, any>, re
         stepForward,
     }
 }
-
-export default Undo_Store;
-export {useUndoHelpers};

@@ -19,6 +19,7 @@ export interface iNodeTemplate extends iNodeLifecycleEvents {
     outputs?: Array<iOutput>;
     execute?(eventContext: iEventContext, data: any): void;
     methods?: {[key: string]: iEditorNodeMethod | iEngineNodeMethod};
+    refresh?(): void;
 }
 
 export interface iInTrigger {

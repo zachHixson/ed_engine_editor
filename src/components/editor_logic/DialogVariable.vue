@@ -2,68 +2,93 @@
 import Svg from '@/components/common/Svg.vue';
 import SearchDropdown from '../common/SearchDropdown.vue';
 
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useMainStore } from '@/stores/Main';
 import { useLogicEditorStore } from '@/stores/LogicEditor';
 import type Logic from './node_components/Logic';
 import Core from '@/core';
+
 import errorIcon from '@/assets/error_decorator.svg';
 import warningIcon from '@/assets/warning_decorator.svg';
+import Node_Connection from './node_components/Node_Connection';
 
 const CHAR_LIMIT = 50;
 
 const { t } = useI18n();
+const mainStore = useMainStore();
 const logicEditorStore = useLogicEditorStore();
 
 const props = defineProps<{
     selectedAsset: Logic,
-    callback: (positive: boolean, varInfo: Core.iNewVarInfo)=>void,
+    editVarInfo: Core.iVarInfo | null,
+    callback: (positive: boolean, varInfo: Core.iVarInfo)=>void,
 }>();
 
 const emit = defineEmits(['close']);
-
-const errorRef = ref<InstanceType<typeof Svg>>();
-const warningRef = ref<InstanceType<typeof Svg>>();
 
 const varName = ref('');
 const type = ref(Core.Node_Enums.SOCKET_TYPE.NUMBER);
 const isGlobal = ref(false);
 const isList = ref(false);
-const errorText = ref('');
-const warningText = ref('');
 
 const globalVariableMap = computed(()=>logicEditorStore.getGlobalVariableMap);
-const error = computed(()=>{
+const nameError = computed<string>(()=>{
     const varMap = isGlobal.value ? globalVariableMap.value : props.selectedAsset.localVariables;
     const name = varName.value.trim().toLowerCase();
-    const nameCollision = !!varMap.get(name);
+    const nameCollision = !!varMap.get(name) && name != props.editVarInfo?.name.toLowerCase();
     const containsSpace = /\s/.test(name);
-    const isError = nameCollision || containsSpace;
 
-    if (nameCollision) errorText.value = t('logic_editor.variable_name_collision');
-    if (containsSpace) errorText.value = t('logic_editor.variable_name_spaces');
-
-    return isError;
+    if (nameCollision) return t('logic_editor.variable_name_collision');
+    if (containsSpace) return t('logic_editor.variable_name_spaces');
+    return '';
 });
-const warning = computed(()=>{
+const nameWarning = computed<string>(()=>{
     const name = varName.value.trim().toLowerCase();
-    let shouldWarn = false;
+
+    if (nameError.value) return '';
 
     if (!isGlobal.value && globalVariableMap.value.get(name)){
-        shouldWarn = true;
-        warningText.value = t('logic_editor.local_global_name_warning');
+        return t('logic_editor.local_global_name_warning');
     }
 
     if (name.length == CHAR_LIMIT){
-        shouldWarn = true;
-        warningText.value = t('logic_editor.variable_length_warning', {limit: CHAR_LIMIT});
+        return t('logic_editor.variable_length_warning', {limit: CHAR_LIMIT});
     }
 
-    return shouldWarn && !error.value;
-});
-const isValid = computed(()=>!error.value && !!varName.value.length);
+    if (name.length > 0 && props.editVarInfo && name != props.editVarInfo.name.toLowerCase()){
+        return t('logic_editor.variable_name_change_warning');
+    }
 
-function createVariable(): void {
+    return '';
+});
+const typeWarning = computed<string>(()=>{
+    if (!props.editVarInfo) return '';
+
+    const nodeAPI = mainStore.getNodeAPI;
+
+    if (!Core.canConvertSocket(type.value, props.editVarInfo.type) && nodeAPI.getVariableUsage(varName.value, null, isGlobal.value).length > 0){
+        const newTypeKey = Core.Node_Enums.SOCKET_TYPE[type.value];
+        const oldTypeKey = Core.Node_Enums.SOCKET_TYPE[props.editVarInfo.type];
+        const newTypeText = t(`node.${newTypeKey}`);
+        const oldTypeText = t(`node.${oldTypeKey}`)
+        return t('logic_editor.variable_incompatible_type_warning', {newType: newTypeText, oldType: oldTypeText});
+    }
+
+    return '';
+});
+const isValid = computed(()=>!nameError.value && !!varName.value.trim().length);
+
+onMounted(()=>{
+    if (props.editVarInfo){
+        varName.value = props.editVarInfo.name;
+        type.value = props.editVarInfo.type;
+        isGlobal.value = props.editVarInfo.isGlobal;
+        isList.value = props.editVarInfo.isList;
+    }
+});
+
+function confirm(): void {
     props.callback(true, {
         name: varName.value,
         type: type.value,
@@ -88,18 +113,18 @@ function close(): void {
 </script>
 
 <template>
-    <div class="DialogNewVariable">
+    <div class="DialogVariable">
         <div class="dialog">
             <div class="heading">
-                {{$t('logic_editor.new_variable')}}:
+                {{editVarInfo ? $t('logic_editor.edit_variable') : $t('logic_editor.new_variable')}}:
             </div>
             <div class="controlsWrapper">
                 <div class="control">
                     <label for="name">Name: </label>
                     <input id="name" type="text" v-model="varName" :maxlength="CHAR_LIMIT" autocomplete="off"/>
                     <div class="decorator-wrapper">
-                        <Svg v-show="error" ref="errorRef" class="decorator" :src="errorIcon" v-tooltip="()=>errorText"></Svg>
-                        <Svg v-show="warning" ref="warningRef" class="decorator" :src="warningIcon" v-tooltip="()=>warningText"></Svg>
+                        <Svg v-show="nameError.length > 0" class="decorator" :src="errorIcon" v-tooltip="()=>nameError"></Svg>
+                        <Svg v-show="nameWarning.length > 0" class="decorator" :src="warningIcon" v-tooltip="()=>nameWarning"></Svg>
                     </div>
                 </div>
                 <div class="control">
@@ -110,10 +135,17 @@ function close(): void {
                         { name: t('logic_editor.boolean'), id: Core.Node_Enums.SOCKET_TYPE.BOOL, value: Core.Node_Enums.SOCKET_TYPE.BOOL },
                         { name: t('logic_editor.instance'), id: Core.Node_Enums.SOCKET_TYPE.INSTANCE, value: Core.Node_Enums.SOCKET_TYPE.INSTANCE },
                     ]"></SearchDropdown>
+                    <div class="decorator-wrapper">
+                        <Svg v-show="typeWarning.length > 0" class="decorator" :src="warningIcon" v-tooltip="()=>typeWarning"></Svg>
+                    </div>
                 </div>
-                <div class="control">
+                <div v-if="!editVarInfo" class="control">
                     <label for="isGlobal">{{$t('logic_editor.is_global')}}: </label>
                     <input id="isGlobal" type="checkbox" v-model="isGlobal" />
+                </div>
+                <div v-if="editVarInfo" class="control">
+                    <label for="isGlobal">{{$t('logic_editor.is_global')}}: </label>
+                    <input id="isGlobal" type="checkbox" v-model="isGlobal" disabled/>
                 </div>
                 <div class="control">
                     <label for="isList">{{$t('logic_editor.is_list')}}: </label>
@@ -122,7 +154,7 @@ function close(): void {
             </div>
             <div class="buttonWrapper">
                 <button class="button" @click="cancel">{{$t('generic.cancel')}}</button>
-                <button class="button" @click="createVariable" :disabled="!isValid">{{$t('logic_editor.create')}}</button>
+                <button class="button" @click="confirm" :disabled="!isValid">{{editVarInfo ? $t('logic_editor.edit') : $t('logic_editor.create')}}</button>
             </div>
         </div>
     </div>
@@ -131,7 +163,7 @@ function close(): void {
 <style scoped>
 @import '../common/formStyles.css';
 
-.DialogNewVariable{
+.DialogVariable{
     position: absolute;
     left: 0;
     top: 0;

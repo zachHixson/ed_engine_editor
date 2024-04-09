@@ -10,12 +10,19 @@ import {
     iNodeTemplate,
     iOutput,
     Instance_Object,
-    CATEGORY_ID
+    CATEGORY_ID,
 } from "./core";
+
+//types needed for node editor API, which is the only place the engine code has to know about editor types
+//@ts-ignore
+import type Undo_Store from '@src/components/common/Undo_Store';
+//@ts-ignore
+import type { iActionStore } from '@src/components/common/Undo_Store';
 
 type Graph = {};
 type Connection = {};
 type iNodeAPI = {};
+export type ActionCallback<T> = (args: T, commit: boolean) => (Partial<T> | void);
 
 interface iNode_Base extends iNodeLifecycleEvents {
     template: iNodeTemplate;
@@ -26,6 +33,7 @@ interface iNode_Base extends iNodeLifecycleEvents {
 }
 
 export interface iNodeLifecycleEvents {
+    registerActions?: (editorAPI: iEditorAPI)=>void; //Fired once per template each time the node editor is opened
     init?: ()=>void; // Fired on constructor
     beforeSave?: ()=>void;
     afterSave?: (saveData: iNodeSaveData)=>void;
@@ -39,6 +47,7 @@ export interface iNodeLifecycleEvents {
     onBeforeMount?: ()=>void;
     onMount?: ()=>void;
     onNewVariable?: ()=>void;
+    onEdit?: ()=>void;
     onInput?: (event: InputEvent)=>void;
     onMove?: ()=>void;
     onNewConnection?: (connection: iNodeConnection, isUndo?: boolean)=>void;
@@ -97,6 +106,7 @@ export interface iEditorNode extends iNode_Base {
     outputs: Map<string, iEditorNodeOutput>;
     parentScript: iEditorLogic;
     editorCanDelete: boolean;
+    showEditButton: boolean;
     editorAPI: iEditorAPI;
     domRef: HTMLDivElement | null;
 
@@ -111,6 +121,7 @@ export interface iEditorNode extends iNode_Base {
     method(methodName: string, data?: any): any;
     getInput<T>(inputName: string): T;
     emit(eventName: string, data?: any): void;
+    refresh(): void;
 }
 
 export interface iNodeConnection {
@@ -120,9 +131,10 @@ export interface iNodeConnection {
     startSocketId: string | null;
     endSocketId: string | null;
     disconnectedFrom: string | null;
+    emit: (...args: any)=>void;
 }
 
-export interface iNewVarInfo {
+export interface iVarInfo {
     name: string,
     type: SOCKET_TYPE,
     isGlobal: boolean,
@@ -131,6 +143,7 @@ export interface iNewVarInfo {
 
 export interface iEditorAPI {
     editor: iAnyObj;
+    undoStore: Undo_Store<iActionStore>;
     globalVariableMap: Map<string, iEditorVariable>;
     gameDataStore: any;
     logicEditorStore: any;
@@ -150,9 +163,12 @@ export interface iEditorAPI {
     deleteConnections(connectionList: iNodeConnection[], commit?: boolean): void;
     forEachNode(callback: (...args: any)=>void, isGlobal: boolean): void;
     dialogConfirm(textInfo: {textId: string, vars: {[keys: string]: any}}, callback: (positive: boolean)=>void): void;
-    dialogNewVariable(callback: (positive: boolean, varInfo: iNewVarInfo)=>void): void;
+    dialogVariable(callback: (positive: boolean, varInfo: iVarInfo)=>void, edit?: iVarInfo): void;
     popLastCommit(): void;
     t(text: string): string;
+    nextTick(callback: ()=>void): void;
+    registerAction<T extends {}>(key: any, action: ActionCallback<T>, revert: ActionCallback<T>): void;
+    executeAction<T>(key: any, args: T, commit: boolean): void;
 }
 
 export interface iEngineLogic {

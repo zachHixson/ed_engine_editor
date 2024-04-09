@@ -20,6 +20,8 @@ import decoratorMap from '../decoratorMap';
 import categoryStyleMap from '../categoryStyleMap';
 import Core from '@/core';
 
+import editIcon from '@/assets/edit.svg';
+
 const { t, te } = useI18n();
 const { Vector } = Core;
 
@@ -133,6 +135,10 @@ function mouseUp(): void {
     isDragging.value = false;
 }
 
+function onEdit(): void {
+    props.nodeObj.onEdit && props.nodeObj.onEdit();
+}
+
 function setWidgetData(data: Core.iAnyObj, commit = false): void {
     const oldVal = props.nodeObj.widgetData;
     props.nodeObj.widgetData = data;
@@ -231,6 +237,11 @@ defineExpose({getRelinkInfo});
                     :src="decoratorIconPath"
                     v-tooltip="te(nodeObj.decoratorText!) ? t(nodeObj.decoratorText!, nodeObj.decoratorTextVars || {}): ''"></Svg>
             </div>
+            <button v-if="nodeObj.showEditButton" class="edit-btn" @click="onEdit">
+                <Svg
+                    :src="editIcon"
+                    style="width: 20px; height: 20px;"></Svg>
+            </button>
         </div>
         <div v-if="!!nodeObj.widget" class="widgetWrapper">
             <Widget
@@ -344,6 +355,22 @@ defineExpose({getRelinkInfo});
 .node-icon > *{
     width: 100%;
     height: 100%;
+}
+
+.edit-btn {
+    position: absolute;
+    right: 5px;
+    border: none;
+    background: none;
+    border-radius: 5px;
+}
+
+.edit-btn:hover {
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.edit-btn:active {
+    background: rgba(0, 0, 0, 0.1);
 }
 
 .separator{

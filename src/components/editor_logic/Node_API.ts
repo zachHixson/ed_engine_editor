@@ -4,16 +4,18 @@ import type Node from "./node_components/Node";
 import type Core from '@/core';
 import type Node_Connection from "./node_components/Node_Connection";
 import { useI18n } from "vue-i18n";
+import Undo_Store, { iActionStore } from "../common/Undo_Store";
 
 export type TextInfo = {textId: string, vars: {[keys: string]: any}};
 
 export default class Node_API implements Core.iEditorAPI {
-    _editor: any;
+    private _editor!: Core.iEditorAPI['editor'] | null;
 
-    gameDataStore = useGameDataStore();
-    logicEditorStore = useLogicEditorStore();
+    readonly gameDataStore = useGameDataStore();
+    readonly logicEditorStore = useLogicEditorStore();
 
-    get editor(){return this._editor};
+    get editor(){return this._editor!};
+    get undoStore(){return this.editor.undoStore as Undo_Store<iActionStore>};
     get globalVariableMap(){
         return this.logicEditorStore.globalVariableMap;
     };
@@ -101,7 +103,7 @@ export default class Node_API implements Core.iEditorAPI {
 
     cancelConnection(connection: Core.iNodeConnection): void {
         this.editor.revertMakeConnection({connectionObj: connection});
-        this.editor.undoStore.popLast();
+        this.undoStore.popLast();
     }
 
     getConnectedInputSocket(node: Core.iEditorNode, socketId: string, inputConnection?: Node_Connection): Core.iEditorNodeOutput | Core.iEditorNodeInput | undefined {
@@ -159,16 +161,30 @@ export default class Node_API implements Core.iEditorAPI {
         this.editor.emit('dialog-confirm', {textInfo, callback});
     }
 
-    dialogNewVariable(callback: (positive: boolean, varInfo: Core.iNewVarInfo)=>void): void {
-        this.editor.dialogNewVariable(callback);
+    dialogVariable(callback: (positive: boolean, varInfo: Core.iVarInfo)=>void, edit?: Core.iVarInfo): void {
+        this.editor.dialogVariable(callback, edit);
     }
 
     popLastCommit(){
-        return this.editor.undoStore.popLast();
+        return this.undoStore.popLast();
     }
 
     t(text: string): string {
         const { t } = useI18n();
         return t(text);
+    }
+
+    nextTick(callback: ()=>void): void {
+        this.editor.nextTick(callback);
+    }
+
+    registerAction<T extends {}>(key: any, action: Core.ActionCallback<T>, revert: Core.ActionCallback<T>): void {
+        this.editor.actionMap.set(key, action);
+        this.editor.revertMap.set(key, revert);
+    }
+
+    executeAction<T>(key: any, args: T, commit: boolean): void {
+        const data = this.editor.actionMap.get(key)(args, commit) ?? {};
+        this.undoStore.commit({action: key, data});
     }
 }

@@ -22,7 +22,9 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
     domRef: HTMLDivElement | null = null;
     pos: Core.Vector;
     editorCanDelete: boolean = true;
+    showEditButton: boolean = false;
 
+    registerActions: Core.iNodeLifecycleEvents['registerActions'];
     init: Core.iNodeLifecycleEvents['init'];
     onCreate: Core.iNodeLifecycleEvents['onCreate'];
     beforeSave: Core.iNodeLifecycleEvents['beforeSave'];
@@ -34,6 +36,7 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
     onBeforeMount: Core.iNodeLifecycleEvents['onBeforeMount'];
     onMount: Core.iNodeLifecycleEvents['onMount'];
     onNewVariable: Core.iNodeLifecycleEvents['onNewVariable'];
+    onEdit: Core.iNodeLifecycleEvents['onEdit'];
     onInput: Core.iNodeLifecycleEvents['onInput'];
     onMove: Core.iNodeLifecycleEvents['onMove'];
     onNewConnection: Core.iNodeLifecycleEvents['onNewConnection'];
@@ -65,6 +68,7 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
         this.pos = pos.clone();
 
         //bind lifecycle events
+        this.registerActions = template.registerActions?.bind(this);
         this.init = template.init?.bind(this);
         this.onCreate = template.onCreate?.bind(this);
         this.beforeSave = template.beforeSave?.bind(this);
@@ -76,6 +80,7 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
         this.onBeforeMount = template.onBeforeMount?.bind(this);
         this.onMount = template.onMount?.bind(this);
         this.onNewVariable = template.onNewVariable?.bind(this);
+        this.onEdit = template.onEdit?.bind(this);
         this.onInput = template.onInput?.bind(this);
         this.onMove = template.onMove?.bind(this);
         this.onNewConnection = template.onNewConnection?.bind(this);
@@ -212,5 +217,9 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
         }
 
         return input.value;
+    }
+
+    refresh(): void {
+        this.template.refresh && this.template.refresh.call(this);
     }
 };

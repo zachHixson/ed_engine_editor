@@ -19,7 +19,6 @@ export default function useNode(
     actionData: ActionData,
     state: LogicEditorState,
     clientToNavPos: (pos: Core.Vector)=>Core.Vector,
-    relinkConnections: ()=>void,
 ){
     const { nodeViewportRef } = domRefs;
     const { actionMap, revertMap, undoStore } = actionData;
@@ -227,12 +226,8 @@ export default function useNode(
             connection.graphId = props.selectedAsset.selectedGraphId;
             props.selectedAsset.addConnection(connection);
             connectionList.push(connection);
-            connection.startNode?.onRemoveConnection && connection.startNode?.onRemoveConnection(connection);
-            connection.endNode?.onRemoveConnection && connection.endNode?.onRemoveConnection(connection);
-        });
-
-        nextTick(()=>{
-            relinkConnections();
+            connection.startNode?.onRemoveConnection && connection.startNode.onRemoveConnection(connection);
+            connection.endNode?.onRemoveConnection && connection.endNode.onRemoveConnection(connection);
         });
 
         if (makeCommit){
@@ -325,10 +320,6 @@ export default function useNode(
                 connection.startNode?.onNewConnection && connection.startNode.onNewConnection(connection);
                 connection.endNode?.onNewConnection && connection.endNode.onNewConnection(connection);
             });
-        });
-    
-        nextTick(()=>{
-            relinkConnections();
         });
     }
     

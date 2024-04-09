@@ -20,7 +20,8 @@ export type ActionData = {
 
 export type LogicEditorState = {
     showNewVariableWindow: Ref<boolean>,
-    newVariableCallback: Ref<(positive: boolean, varInfo: Core.iNewVarInfo)=>void>,
+    variableEditInfo: Ref<Core.iVarInfo | null>,
+    variableCallback: Ref<(positive: boolean, varInfo: Core.iVarInfo)=>void>,
     navHotkeyTool: Ref<Core.NAV_TOOL_TYPE | null>,
     selectedNavTool: ComputedRef<Core.NAV_TOOL_TYPE | null>,
     showGraphs: WritableComputedRef<boolean>,
@@ -47,7 +48,7 @@ import type Node_Connection from '@/components/editor_logic/node_components/Node
 import Connection from '@/components/editor_logic/node_components/Connection.vue';
 import HotkeyMap from '@/components/common/HotkeyMap';
 import Undo_Store, { type iActionStore, useUndoHelpers } from '@/components/common/Undo_Store';
-import DialogNewVariable from './DialogNewVariable.vue';
+import DialogVariable from './DialogVariable.vue';
 import Svg from '@/components/common/Svg.vue';
 import NodeLibrary from './NodeLibrary.vue';
 import Graphs from './Graphs.vue';
@@ -78,6 +79,9 @@ const props = defineProps<{
     selectedAsset: Logic;
 }>();
 
+const connectionForceUpdateQueued = ref(false);
+const connectionForceUpdateKey = ref(0);
+
 const emit = defineEmits(['dialog-confirm']);
 
 const domRefs: DomRefs = {
@@ -98,7 +102,8 @@ const actionData: ActionData = {
 
 const state: LogicEditorState = {
     showNewVariableWindow: ref(false),
-    newVariableCallback: ref(()=>{}),
+    variableEditInfo: ref(null),
+    variableCallback: ref(()=>{}),
     navHotkeyTool: ref(null),
     selectedNavTool: computed(()=>logicEditorStore.getSelectedNavTool),
     showGraphs: computed({
@@ -117,7 +122,10 @@ const state: LogicEditorState = {
         return props.selectedAsset.graphNavState;
     }),
     visibleNodes: computed(()=>props.selectedAsset.nodes.filter(n => n.graphId == props.selectedAsset.selectedGraphId)),
-    visibleConnections: computed(()=>props.selectedAsset.connections.filter(n => n.graphId == props.selectedAsset.selectedGraphId)),
+    visibleConnections: computed(()=>{
+        (window as any).cfk = connectionForceUpdateKey.value;
+        return props.selectedAsset.connections.filter(n => n.graphId == props.selectedAsset.selectedGraphId)
+    }),
     selectedNodes: computed(()=>props.selectedAsset.selectedNodes),
     isDraggingNode: ref(false),
     inputActive: computed(()=>mainStore.getInputActive),
@@ -135,6 +143,10 @@ watch(()=>props.selectedAsset, ()=>{
         updateNodeBounds();
         actionData.undoStore.clear();
     });
+});
+
+watch(state.visibleConnections, ()=>{
+    nextTick(()=>relinkConnections());
 });
 
 const { stepForward, stepBackward } = useUndoHelpers(actionData.undoStore, actionData.actionMap, actionData.revertMap);
@@ -174,7 +186,6 @@ const {
     actionData,
     state,
     clientToNavPos,
-    relinkConnections,
 );
 
 const {
@@ -201,8 +212,12 @@ onBeforeMount(()=>{
         deleteNodes,
         revertMakeConnection,
         removeConnectionList,
-        dialogNewVariable,
+        relinkConnections,
+        dialogVariable,
+        nextTick,
         undoStore: actionData.undoStore,
+        actionMap: actionData.actionMap,
+        revertMap: actionData.revertMap,
         emit,
     };
 
@@ -229,6 +244,11 @@ onMounted(()=>{
     navChange(props.selectedAsset.graphNavState);
     relinkConnections();
     updateNodeBounds();
+
+    for (let i = 0; i < Core.NODE_LIST.length; i++){
+        const registerActions = Core.NODE_LIST[i].registerActions;
+        registerActions && registerActions(mainStore.getNodeAPI);
+    }
 });
 
 onBeforeUnmount(()=>{
@@ -297,13 +317,15 @@ function resize(): void {
     LogicMainEventBus.emit('nav-set-container-dimensions', dim);
 }
 
-function dialogNewVariable(callback: (positive: boolean, varInfo: Core.iNewVarInfo)=>void): void {
-    state.newVariableCallback.value = callback;
+function dialogVariable(callback: (positive: boolean, varInfo: Core.iVarInfo)=>void, edit?: Core.iVarInfo): void {
+    state.variableCallback.value = callback;
+    state.variableEditInfo.value = edit ?? null;
     state.showNewVariableWindow.value = true;
 }
 
-function dialogNewVariableClose(): void {
-    state.newVariableCallback.value = ()=>{};
+function dialogVariableClose(): void {
+    state.variableCallback.value = ()=>{};
+    state.variableEditInfo.value = null;
     state.showNewVariableWindow.value = false;
 }
 
@@ -323,6 +345,16 @@ function trashMouseUp(event: MouseEvent): void {
         deleteSelectedNodes();
         state.isDraggingNode.value = false;
     }
+}
+
+function queueForceConnectionUpdate(): void {
+    if (connectionForceUpdateQueued.value) return;
+
+    connectionForceUpdateQueued.value = true;
+    nextTick(()=>{
+        connectionForceUpdateKey.value++;
+        connectionForceUpdateQueued.value = false;
+    });
 }
 
 function actionChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeInputProps, makeCommit = true): void {
@@ -368,11 +400,12 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
 
 <template>
     <div class="logicMain">
-        <DialogNewVariable
-            v-show="state.showNewVariableWindow.value"
+        <DialogVariable
+            v-if="state.showNewVariableWindow.value"
             :selectedAsset="selectedAsset"
-            :callback="state.newVariableCallback.value"
-            @close="dialogNewVariableClose"/>
+            :edit-var-info="state.variableEditInfo.value"
+            :callback="state.variableCallback.value"
+            @close="dialogVariableClose"/>
         <ContextMenu
             v-if="contextMenuPosition != null"
             :position="contextMenuPosition"
@@ -406,7 +439,8 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
                     :navWrapper="($refs.nodeNav as HTMLDivElement)"
                     :allConnections="selectedAsset.connections"
                     :draggingConnection="(state.draggingConnection.value as Node_Connection)"
-                    @drag-start="dragConnection"/>
+                    @drag-start="dragConnection"
+                    @force-update="queueForceConnectionUpdate"/>
                 <Node
                     v-for="node in state.visibleNodes.value"
                     :key="`node,${selectedAsset.id},${selectedAsset.selectedGraphId},${node.nodeId}`"

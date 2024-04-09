@@ -25,7 +25,10 @@ const props = defineProps<{
     draggingConnection: Node_Connection | null,
 }>();
 
-const emit = defineEmits(['drag-start']);
+const emit = defineEmits([
+    'drag-start',
+    'force-update',
+]);
 
 const rootRef = ref<HTMLElement>();
 
@@ -54,6 +57,7 @@ onMounted(()=>{
         });
     }
     props.connectionObj.addEventListener('connection-update', update);
+    props.connectionObj.addEventListener('force-update', forceUpdate);
 });
 
 onBeforeUnmount(()=>{
@@ -61,6 +65,7 @@ onBeforeUnmount(()=>{
     window.removeEventListener('mousemove', mouseDrag);
     window.removeEventListener('mouseup', mouseUp);
     props.connectionObj.removeEventListener('connection-update', update);
+    props.connectionObj.removeEventListener('force-update', forceUpdate);
     props.connectionObj.componentDestructor();
 });
 
@@ -70,14 +75,18 @@ function registerConnectEvents(): void {
 }
 
 function relink(nodeInfoMap: Map<number, iRelinkInfo>): void {
-    const start = nodeInfoMap.get(props.connectionObj.startNode!.nodeId)!;
-    const end = nodeInfoMap.get(props.connectionObj.endNode!.nodeId)!;
-    const startSocketComp = start.outSockets.get(props.connectionObj.startSocketId!);
-    const endSocketComp = end.inSockets.get(props.connectionObj.endSocketId!);
+    const connectionObj = props.connectionObj;
 
-    props.connectionObj.canConnect = true;
-    props.connectionObj.startSocketEl = startSocketComp!.$refs.socketConnectionRef as HTMLElement;
-    props.connectionObj.endSocketEl = endSocketComp!.$refs.socketConnectionRef as HTMLElement;
+    if (!(connectionObj.startNode && connectionObj.endNode)) return;
+
+    const start = nodeInfoMap.get(connectionObj.startNode!.nodeId)!;
+    const end = nodeInfoMap.get(connectionObj.endNode!.nodeId)!;
+    const startSocketComp = start.outSockets.get(connectionObj.startSocketId!);
+    const endSocketComp = end.inSockets.get(connectionObj.endSocketId!);
+
+    connectionObj.canConnect = true;
+    connectionObj.startSocketEl = startSocketComp!.$refs.socketConnectionRef as HTMLElement;
+    connectionObj.endSocketEl = endSocketComp!.$refs.socketConnectionRef as HTMLElement;
 
     nextTick(()=>{
         update();
@@ -164,6 +173,10 @@ function updatePath(): void {
                     C ${startCoord.x + handleWidth + PADDING} ${startCoord.y + (vPaddingDir * PADDING)},
                     ${endCoord.x - handleWidth - PADDING} ${endCoord.y},
                     ${endCoord.x} ${endCoord.y}`;
+}
+
+function forceUpdate(): void {
+    emit('force-update');
 }
 
 function mouseDown(event: MouseEvent): void {

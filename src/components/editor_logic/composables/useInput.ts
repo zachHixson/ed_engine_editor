@@ -139,11 +139,13 @@ export default function useInput(
                 const rightNode = (!(socketOver.isInput) ? socketOver.node : connectionObj.startNode) as Node_Obj;
     
                 if (!checkLoop(leftNode, rightNode)){
+                    actionData.undoStore.startRecording();
                     makeConnection({connectionObj, socketOver});
                     return;
                 }
             }
     
+            actionData.undoStore.startRecording();
             removeConnection({connectionObj});
         }
     }
