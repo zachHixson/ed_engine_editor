@@ -414,10 +414,12 @@ function revertEditVariable({varNode, newVarInfo, oldVarInfo, oldInitValue}: Act
 }
 
 function determineConnected(this: iEditorNode){
-    const connection = this.editorAPI.getInputConnection(this, 'data') ?? this.editorAPI.getOutputConnections(this, 'data')[0];
-    const nameSocket = this.inputs.get('name')!;
-    nameSocket.disabled = !!connection;
-    this.onForceSocketUpdate.emit('name');
+    setTimeout(()=>{
+        const connection = this.editorAPI.getInputConnection(this, 'data') ?? this.editorAPI.getOutputConnections(this, 'data')[0];
+        const nameSocket = this.inputs.get('name')!;
+        nameSocket.disabled = !!connection;
+        this.onForceSocketUpdate.emit('name');
+    });
 }
 
 function validate(this: iEditorNode, textbox?: HTMLInputElement){
