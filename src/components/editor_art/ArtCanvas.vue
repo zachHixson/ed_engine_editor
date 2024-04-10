@@ -1,5 +1,13 @@
 <script lang="ts">
-export const ArtCanvasEventBus = new Core.Event_Bus();
+export const ArtCanvasEventBus = {
+    onMouseWheel: new Core.Event_Emitter<(event: WheelEvent)=>void>(),
+    onMouseMove: new Core.Event_Emitter<(event: MouseEvent)=>void>(),
+    onMouseDown: new Core.Event_Emitter<(event: MouseEvent)=>void>(),
+    onMouseUp: new Core.Event_Emitter<(event: MouseEvent)=>void>(),
+    onMouseEnter: new Core.Event_Emitter<()=>void>(),
+    onMouseLeave: new Core.Event_Emitter<(event: MouseEvent)=>void>(),
+    onNavSetContainerDimensions: new Core.Event_Emitter<({width, height}: {width: number, height: number})=>void>(),
+};
 </script>
 
 <script setup lang="ts">
@@ -7,7 +15,7 @@ import UndoPanel from '@/components/common/UndoPanel.vue';
 import NavControlPanel from '@/components/common/NavControlPanel.vue';
 import Art_Canvas_Renderer from './Art_Canvas_Renderer';
 
-import { ref, computed, watch, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
+import { ref, watch, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
 import type Tool_Base from './tools/Tool_Base';
 import { useArtEditorStore } from '@/stores/ArtEditor';
 import { ArtMainEventBus } from './ArtMain.vue';
@@ -74,7 +82,7 @@ watch(()=>props.spriteFrame, ()=>{
 });
 
 onBeforeMount(()=>{
-    ArtMainEventBus.addEventListener('resize', resize);
+    ArtMainEventBus.onResize.listen(resize);
 });
 
 onMounted(()=>{
@@ -87,21 +95,21 @@ onMounted(()=>{
     canvasRef.value!.addEventListener('mouseenter', mouseEnter);
     canvasRef.value!.addEventListener('mouseleave', mouseLeave);
 
-    ArtMainEventBus.addEventListener('update-frame-previews', updateSpriteTexture);
+    ArtMainEventBus.onUpdateFramePreviews.listen(updateSpriteTexture);
 
     maxZoom.value = getZoomBounds().max;
     resize();
 });
 
 onBeforeUnmount(()=>{
-    ArtMainEventBus.removeEventListener('resize', resize);
-    ArtMainEventBus.removeEventListener('update-frame-previews', updateSpriteTexture);
+    ArtMainEventBus.onResize.remove(resize);
+    ArtMainEventBus.onUpdateFramePreviews.remove(updateSpriteTexture);
     renderer!.destroy();
     renderer = null;
 });
 
 function mouseDown(event: MouseEvent): void {
-    ArtCanvasEventBus.emit('mouse-down', event);
+    ArtCanvasEventBus.onMouseDown.emit(event);
 
     if (navHotkeyTool.value == null){
         emit('mouse-down', event);
@@ -115,11 +123,11 @@ function mouseUp(event: MouseEvent): void {
         renderer!.mouseUp();
     }
 
-    ArtCanvasEventBus.emit('mouse-up');
+    ArtCanvasEventBus.onMouseUp.emit(event);
 }
 
 function mouseMove(event: MouseEvent): void {
-    ArtCanvasEventBus.emit('mouse-move', event);
+    ArtCanvasEventBus.onMouseMove.emit(event);
 
     if (navHotkeyTool.value == null){
         updateMouseCell(event);
@@ -128,19 +136,19 @@ function mouseMove(event: MouseEvent): void {
     }
 }
 
-function mouseEnter(event: MouseEvent): void {
-    ArtCanvasEventBus.emit('mouse-enter');
+function mouseEnter(): void {
+    ArtCanvasEventBus.onMouseEnter.emit();
     emit('mouse-enter');
 }
 
 function mouseLeave(event: MouseEvent): void {
     mouseMove(event);
-    ArtCanvasEventBus.emit('mouse-leave');
+    ArtCanvasEventBus.onMouseLeave.emit(event);
     emit('mouse-leave', event);
 }
 
 function wheel(event: WheelEvent): void {
-    ArtCanvasEventBus.emit('mouse-wheel', event);
+    ArtCanvasEventBus.onMouseWheel.emit(event);
     emit('mouse-wheel', event);
 }
 
@@ -154,7 +162,7 @@ function resize(): void {
         Math.max(wrapper.clientHeight, 1)
     );
 
-    ArtCanvasEventBus.emit('nav-set-container-dimensions', {width: wrapper.clientWidth, height: wrapper.clientHeight});
+    ArtCanvasEventBus.onNavSetContainerDimensions.emit({width: wrapper.clientWidth, height: wrapper.clientHeight});
 
     if (renderer){
         renderer.resize();

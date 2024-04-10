@@ -36,7 +36,7 @@ const isFirst = computed(()=>props.index == 0);
 const isLast = computed(()=>props.index >= props.sprite.frames.length - 1);
 
 onMounted(()=>{
-    AnimationPanelEventBus.addEventListener('frame-data-changed', checkRange);
+    AnimationPanelEventBus.onFrameDataChanged.listen(checkRange);
 
     nextTick(()=>{
         const canvas = canvasRef.value!;
@@ -52,7 +52,7 @@ onMounted(()=>{
 });
 
 onBeforeUnmount(()=>{
-    AnimationPanelEventBus.removeEventListener('frame-data-changed', checkRange);
+    AnimationPanelEventBus.onFrameDataChanged.remove(checkRange);
 });
 
 function checkRange(range?: number[]): void {

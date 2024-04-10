@@ -86,10 +86,10 @@ onBeforeMount(()=>{
 onMounted(()=>{
     props.nodeObj.setDomRef(rootRef.value!);
 
-    props.nodeObj.addEventListener('onMove', updateConnections);
-    props.nodeObj.addEventListener('recalcWidth', updateNodeSize);
-    props.nodeObj.addEventListener('force-update', forceUpdate);
-    props.nodeObj.addEventListener('update-connections', updateConnections);
+    props.nodeObj.onEditorMove.listen(updateConnections);
+    props.nodeObj.onRecalcWidth.listen(updateNodeSize);
+    props.nodeObj.onForceUpdate.listen(forceUpdate);
+    props.nodeObj.onUpdateConnections.listen(updateConnections);
     window.addEventListener('mouseup', mouseUp);
 
     updateNodeSize();
@@ -98,10 +98,10 @@ onMounted(()=>{
 
 onBeforeUnmount(()=>{
     window.removeEventListener('mouseup', mouseUp);
-    props.nodeObj.removeEventListener('onMove', updateConnections);
-    props.nodeObj.removeEventListener('recalcWidth', updateNodeSize);
-    props.nodeObj.removeEventListener('force-update', forceUpdate);
-    props.nodeObj.removeEventListener('update-connections', updateConnections);
+    props.nodeObj.onEditorMove.remove(updateConnections);
+    props.nodeObj.onRecalcWidth.remove(updateNodeSize);
+    props.nodeObj.onForceUpdate.remove(forceUpdate);
+    props.nodeObj.onUpdateConnections.remove(updateConnections);
     props.nodeObj.onBeforeUnmount && props.nodeObj.onBeforeUnmount();
 });
 

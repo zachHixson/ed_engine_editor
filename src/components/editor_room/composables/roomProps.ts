@@ -32,7 +32,7 @@ export function useRoomProps(args: iActionArguments){
         const bgColorHasChanged = !oldState.bgColor.compare(args.props.selectedRoom.bgColor);
     
         if (bgColorHasChanged){
-            RoomMainEventBus.emit('bgColorChanged');
+            RoomMainEventBus.onBgColorChanged.emit();
         }
     
         if (makeCommit){
@@ -56,7 +56,7 @@ export function useRoomProps(args: iActionArguments){
         Object.assign(args.props.selectedRoom, oldState);
     
         if (!curBG.compare(args.props.selectedRoom.bgColor)){
-            RoomMainEventBus.emit('bgColorChanged');
+            RoomMainEventBus.onBgColorChanged.emit();
         }
     }
 

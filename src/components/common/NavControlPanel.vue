@@ -24,7 +24,15 @@ const props = defineProps<{
     contentsBounds: number[],
     unitScale: number,
     dpiScale: number,
-    parentEventBus: Core.Event_Bus,
+    parentEventBus: {
+        onMouseDown?: Core.Event_Emitter<(event: MouseEvent)=>void>,
+        onMouseUp?: Core.Event_Emitter<(event: MouseEvent)=>void>,
+        onMouseMove?: Core.Event_Emitter<(event: MouseEvent)=>void>,
+        onMouseWheel?: Core.Event_Emitter<(event: WheelEvent)=>void>,
+        onMouseEnter?: Core.Event_Emitter<()=>void>,
+        onMouseLeave?: Core.Event_Emitter<(event: MouseEvent)=>void>,
+        onNavSetContainerDimensions?: Core.Event_Emitter<({width, height}: {width: number, height: number})=>void>,
+    },
     invertYAxis?: boolean,
 }>();
 
@@ -73,25 +81,25 @@ onMounted(()=>{
     hotkeyMap.bindKey(['control', 'lmb'], setHotkeyTool, [NAV_TOOL_TYPE.ZOOM], setHotkeyTool, [null]);
     hotkeyMap.bindKey(['control', 'f'], centerView);
 
-    props.parentEventBus.addEventListener('mouse-wheel', scroll);
-    props.parentEventBus.addEventListener('mouse-move', mouseMove);
-    props.parentEventBus.addEventListener('mouse-down', mouseDown);
-    props.parentEventBus.addEventListener('mouse-up', mouseUp);
-    props.parentEventBus.addEventListener('mouse-enter', mouseEnter);
-    props.parentEventBus.addEventListener('mouse-leave', mouseLeave);
-    props.parentEventBus.addEventListener('nav-set-container-dimensions', setContainerDimensions);
+    props.parentEventBus.onMouseWheel?.listen(scroll);
+    props.parentEventBus.onMouseMove?.listen(mouseMove);
+    props.parentEventBus.onMouseDown?.listen(mouseDown);
+    props.parentEventBus.onMouseUp?.listen(mouseUp);
+    props.parentEventBus.onMouseEnter?.listen(mouseEnter);
+    props.parentEventBus.onMouseLeave?.listen(mouseLeave);
+    props.parentEventBus.onNavSetContainerDimensions?.listen(setContainerDimensions);
 });
 
 onBeforeUnmount(()=>{
     window.removeEventListener('keydown', hotkeyDown as EventListener);
     window.removeEventListener('keyup', hotkeyUp as EventListener);
-    props.parentEventBus.removeEventListener('mouse-wheel', scroll);
-    props.parentEventBus.removeEventListener('mouse-move', mouseMove);
-    props.parentEventBus.removeEventListener('mouse-down', mouseDown);
-    props.parentEventBus.removeEventListener('mouse-up', mouseUp);
-    props.parentEventBus.removeEventListener('mouse-enter', mouseEnter);
-    props.parentEventBus.removeEventListener('mouse-leave', mouseLeave);
-    props.parentEventBus.removeEventListener('nav-set-container-dimensions', setContainerDimensions);
+    props.parentEventBus.onMouseWheel?.remove(scroll);
+    props.parentEventBus.onMouseMove?.remove(mouseMove);
+    props.parentEventBus.onMouseDown?.remove(mouseDown);
+    props.parentEventBus.onMouseUp?.remove(mouseUp);
+    props.parentEventBus.onMouseEnter?.remove(mouseEnter);
+    props.parentEventBus.onMouseLeave?.remove(mouseLeave);
+    props.parentEventBus.onNavSetContainerDimensions?.remove(setContainerDimensions);
 });
 
 function controlClick(control: typeof controls[number]): void {

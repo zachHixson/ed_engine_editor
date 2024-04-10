@@ -37,7 +37,7 @@ export function useCameraProps(args: iActionArguments){
 
         newState ??= Object.assign({}, args.props.selectedRoom.camera);
         Object.assign(args.props.selectedRoom.camera, newState);
-        RoomMainEventBus.emit('camera-changed');
+        RoomMainEventBus.onCameraChanged.emit();
     
         if (makeCommit){
             const cacheGet = (args.undoStore.cache.get('camera-start-pos') ?? oldState) as Partial<Core.Camera>;
@@ -49,7 +49,7 @@ export function useCameraProps(args: iActionArguments){
 
     function revertCameraChange({oldState}: CameraChangeProps): void {
         Object.assign(args.props.selectedRoom.camera, oldState);
-        RoomMainEventBus.emit('camera-changed');
+        RoomMainEventBus.onCameraChanged.emit();
     }
 
     args.toolMap.set(Core.ROOM_TOOL_TYPE.CAMERA, Camera_Tool);

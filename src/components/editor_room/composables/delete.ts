@@ -66,7 +66,7 @@ export function useDelete(args: iActionArguments){
         }
     
         if (instId != undefined){
-            const instRef = args.props.selectedRoom.removeInstance(instId);
+            const instRef = args.props.selectedRoom.removeInstance(instId)!;
     
             if (instRef == args.editorSelection.value){
                 args.editorSelection.value = null;
@@ -79,13 +79,13 @@ export function useDelete(args: iActionArguments){
                 args.undoStore.cache.set('delete_list', [instRef]);
             }
     
-            RoomMainEventBus.emit('instance-removed', instRef);
+            RoomMainEventBus.onInstanceRemoved.emit(instRef);
         }
     
         for (let i = 0; i < instRefList.length; i++){
             const inst = instRefList[i]
             args.props.selectedRoom.removeInstance(inst.id);
-            RoomMainEventBus.emit('instance-removed', inst);
+            RoomMainEventBus.onInstanceRemoved.emit(inst);
         }
     }
 
@@ -93,7 +93,7 @@ export function useDelete(args: iActionArguments){
         for (let i = 0; i < instRefList.length; i++){
             const instRef = instRefList[i];
             args.props.selectedRoom.addInstance(instRef);
-            RoomMainEventBus.emit('instance-added', instRef);
+            RoomMainEventBus.onInstanceAdded.emit(instRef);
         }
     }
 

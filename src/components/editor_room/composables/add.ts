@@ -137,7 +137,7 @@ export function useAdd(args: iActionArguments){
     
         for (let i = 0; i < instRefList.length; i++){
             args.props.selectedRoom.addInstance(instRefList[i]);
-            RoomMainEventBus.emit('instance-added', instRefList[i]);
+            RoomMainEventBus.onInstanceAdded.emit(instRefList[i]);
         }
     }
 
@@ -148,7 +148,7 @@ export function useAdd(args: iActionArguments){
     
         newExit.name = newExitName;
         
-        RoomMainEventBus.emit('instance-added', newExit);
+        RoomMainEventBus.onInstanceAdded.emit(newExit);
     
         if (makeCommit){
             const data = {exitRef: newExit, pos: pos.clone()} satisfies ExitAddProps;
@@ -168,7 +168,7 @@ export function useAdd(args: iActionArguments){
             }
     
             args.props.selectedRoom.removeInstance(instRef.id);
-            RoomMainEventBus.emit('instance-removed', instRef);
+            RoomMainEventBus.onInstanceRemoved.emit(instRef);
         }
     }
 
@@ -178,7 +178,7 @@ export function useAdd(args: iActionArguments){
         }
     
         args.props.selectedRoom.removeInstance(exitRef!.id);
-        RoomMainEventBus.emit('instance-removed', exitRef);
+        RoomMainEventBus.onInstanceRemoved.emit(exitRef!);
     }
 
     args.toolMap.set(Core.ROOM_TOOL_TYPE.ADD_BRUSH, Add_Brush);

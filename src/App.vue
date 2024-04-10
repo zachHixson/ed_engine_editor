@@ -1,5 +1,9 @@
 <script lang="ts">
-export const AppEventBus = new Core.Event_Bus();
+export const AppEventBus = {
+    onUpdateAsset: new Core.Event_Emitter<(id?: number)=>void>(),
+    onUpdateEditorTabs: new Core.Event_Emitter<()=>void>(),
+    onAssetDeleted: new Core.Event_Emitter<()=>void>(),
+}
 </script>
 
 <script setup lang="ts">
@@ -55,16 +59,16 @@ onMounted(()=>{
 });
 
 function updateAssetPreviews(id?: number): void {
-    AppEventBus.emit('update-asset', id);
+    AppEventBus.onUpdateAsset.emit(id);
 }
 
 function updateEditorAsset(): void {
-    AppEventBus.emit('update-editor-tabs');
+    AppEventBus.onUpdateEditorTabs.emit();
 }
 
 function updateAfterDeletion(): void {
     gameDataStore.purgeMissingReferences();
-    AppEventBus.emit('asset-deleted');
+    AppEventBus.onAssetDeleted.emit();
 }
 
 function newProject(): void {

@@ -9,8 +9,8 @@ export default class Transition_Fade extends Transition_Base {
     }
 
     start(roomId: number): void {
-        this.emit('load-room', roomId);
-        this.emit('complete');
+        this.onRoomLoad.emit(roomId);
+        this.onCompleted.emit();
     }
 
     render(): void {}

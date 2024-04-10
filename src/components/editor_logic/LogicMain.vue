@@ -37,7 +37,15 @@ export type LogicEditorState = {
     shiftDown: { value: boolean },
 }
 
-export const LogicMainEventBus = new Core.Event_Bus();
+export const LogicMainEventBus = {
+    onMouseDown: new Core.Event_Emitter<(event: MouseEvent)=>void>(),
+    onMouseUp: new Core.Event_Emitter<(event: MouseEvent)=>void>(),
+    onMouseMove: new Core.Event_Emitter<(event: MouseEvent)=>void>(),
+    onMouseWheel: new Core.Event_Emitter<(event: WheelEvent)=>void>(),
+    onMouseEnter: new Core.Event_Emitter<()=>void>(),
+    onMouseLeave: new Core.Event_Emitter<(event: MouseEvent)=>void>(),
+    onNavSetContainerDimensions: new Core.Event_Emitter<({width, height}: {width: number, height: number})=>void>,
+};
 </script>
 
 <script setup lang="ts">
@@ -314,7 +322,7 @@ function clientToNavPos(pos: Core.ConstVector): Core.Vector {
 function resize(): void {
     const { nodeViewportRef } = domRefs;
     const dim = {width: nodeViewportRef.value!.clientWidth, height: nodeViewportRef.value!.clientHeight};
-    LogicMainEventBus.emit('nav-set-container-dimensions', dim);
+    LogicMainEventBus.onNavSetContainerDimensions.emit(dim);
 }
 
 function dialogVariable(callback: (positive: boolean, varInfo: Core.iVarInfo)=>void, edit?: Core.iVarInfo): void {
@@ -372,7 +380,7 @@ function actionChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
         newVal
     });
 
-    !(makeCommit || widget) && node.emit('force-socket-update', socket.id);
+    !(makeCommit || widget) && node.onForceSocketUpdate.emit(socket.id);
 
     if (makeCommit){
         let data = {socket, widget, oldVal, newVal, node};
@@ -386,7 +394,7 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
     }
     else{
         socket.value = oldVal;
-        node.emit('force-socket-update', socket.id);
+        node.onForceSocketUpdate.emit(socket.id);
     }
     
     node.onValueChange && node.onValueChange({

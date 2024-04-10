@@ -105,7 +105,7 @@ const disabled = computed(()=>{
 });
 
 onMounted(()=>{
-    props.socket.node.addEventListener('force-socket-update', forceSocketUpdate);
+    props.socket.node.onForceSocketUpdate.listen(forceSocketUpdate);
     lastValue = props.socket.value;
 
     nextTick(()=>{
@@ -118,7 +118,7 @@ onMounted(()=>{
 });
 
 onBeforeUnmount(()=>{
-    props.socket.node.removeEventListener('force-socket-update', forceSocketUpdate);
+    props.socket.node.onForceSocketUpdate.remove(forceSocketUpdate);
 })
 
 function forceSocketUpdate(socketId: string | undefined): void {

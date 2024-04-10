@@ -4,7 +4,7 @@ import type Node_API from "../Node_API";
 
 const { Vector } = Core;
 
-export default class Node extends Core.EventListenerMixin(class {}) implements Core.iEditorNode {
+export default class Node {
     private _template: Core.iNodeTemplate;
     private _editorAPI: Node_API;
     private _dataCache: Map<number | string, any> = new Map();
@@ -54,10 +54,15 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
     decoratorText?: string;
     decoratorTextVars?: any;
 
+    onEditorMove = new Core.Event_Emitter<(newPos: Core.Vector)=>void>(this);
+    onForceUpdate = new Core.Event_Emitter<()=>void>(this);
+    onForceSocketUpdate = new Core.Event_Emitter<(socketName?: string)=>void>(this);
+    onUpdateConnections = new Core.Event_Emitter<()=>void>(this);
+    onRecalcWidth = new Core.Event_Emitter<()=>void>(this);
+
     constructor(templateId: string, id: number, pos: Core.ConstVector, parentScript: Logic, graphId: number, editorAPI: Node_API){
         const template = Core.NODE_MAP.get(templateId)!;
         
-        super();
         this._template = template;
         this.nodeId = id;
         this.isEvent = template.isEvent ?? false;
@@ -190,7 +195,7 @@ export default class Node extends Core.EventListenerMixin(class {}) implements C
         this.pos.copy(newPos);
         this.domRef!.style.left = this.pos.x + 'px';
         this.domRef!.style.top = this.pos.y + 'px';
-        this.emit('onMove', newPos.clone());
+        this.onEditorMove.emit(newPos.clone());
     }
 
     method(methodName: string, data: any): any {

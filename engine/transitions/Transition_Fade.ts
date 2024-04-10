@@ -82,14 +82,14 @@ export default class Transition_Fade extends Transition_Base {
         this._progress += deltaTime;
 
         if (this._progress > (DURATION / 2) && !this._transitioned){
-            this.emit('load-room', this._roomId);
+            this.onRoomLoad.emit(this._roomId);
             this._transitioned = true;
         }
 
         if (this._progress > DURATION){
             this._active = false;
             this._opacityUniform.set(0);
-            this.emit('complete');
+            this.onCompleted.emit();
         }
     }
 }

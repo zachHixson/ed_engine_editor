@@ -1,7 +1,7 @@
 import type Node from './Node';
 import Core from '@/core';
 
-export default class Node_Connection extends Core.EventListenerMixin(class {}) implements Core.iNodeConnection {
+export default class Node_Connection {
     private _disconnectedFrom: string | null = null;
     private _startSocketId: string | null = null;
     private _endSocketId: string | null = null;
@@ -15,8 +15,10 @@ export default class Node_Connection extends Core.EventListenerMixin(class {}) i
     endNode: Node | null;
     endSocketEl: HTMLElement | null;
 
+    onConnectionUpdate = new Core.Event_Emitter<()=>void>(this);
+    onForceUpdate = new Core.Event_Emitter<()=>void>(this);
+
     constructor(inpObj: Core.iAnyObj = {}){
-        super();
         this.id = inpObj.id;
         this.type = inpObj.type ?? null;
         this.graphId = inpObj.graphId;
@@ -100,6 +102,6 @@ export default class Node_Connection extends Core.EventListenerMixin(class {}) i
     }
 
     update(){
-        this.emit('connection-update');
+        this.onConnectionUpdate.emit();
     }
 };

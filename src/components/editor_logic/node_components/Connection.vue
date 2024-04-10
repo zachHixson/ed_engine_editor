@@ -56,16 +56,16 @@ onMounted(()=>{
             update();
         });
     }
-    props.connectionObj.addEventListener('connection-update', update);
-    props.connectionObj.addEventListener('force-update', forceUpdate);
+    props.connectionObj.onConnectionUpdate.listen(update);
+    props.connectionObj.onForceUpdate.listen(forceUpdate);
 });
 
 onBeforeUnmount(()=>{
     window.removeEventListener('mousemove', mouseMove);
     window.removeEventListener('mousemove', mouseDrag);
     window.removeEventListener('mouseup', mouseUp);
-    props.connectionObj.removeEventListener('connection-update', update);
-    props.connectionObj.removeEventListener('force-update', forceUpdate);
+    props.connectionObj.onConnectionUpdate.remove(update);
+    props.connectionObj.onForceUpdate.remove(forceUpdate);
     props.connectionObj.componentDestructor();
 });
 

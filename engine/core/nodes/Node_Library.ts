@@ -94,10 +94,10 @@ export const NODE_LIST: iNodeTemplate[] = [
                     }
 
                     this.outTriggers.delete(lastOutput);
-                    this.emit('force-update');
+                    this.onForceUpdate.emit();
 
                     setTimeout(()=>{
-                        this.emit('update-connections');
+                        this.onUpdateConnections.emit();
                     });
                 }
             };
@@ -108,9 +108,9 @@ export const NODE_LIST: iNodeTemplate[] = [
                     id: nextOutputName,
                     node: this,
                 });
-                this.emit('force-update');
+                this.onForceUpdate.emit();
                 setTimeout(()=>{
-                    this.emit('update-connections');
+                    this.onUpdateConnections.emit();
                 });
             };
             
@@ -202,7 +202,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                     const connectedSocket = connection ? this.editorAPI.getConnectedInputSocket(this, input.id, connection) : null;
                     typeChanged ||= type != input.type;
                     input.type = type == 'compare_type' ? SOCKET_TYPE.ASSET : SOCKET_TYPE.INSTANCE;
-                    typeChanged && this.emit('force-socket-update', input.id);
+                    typeChanged && this.onForceSocketUpdate.emit(input.id);
 
                     if (connection && connectedSocket && !canConvertSocket(connectedSocket.type, input.type)){
                         deleteConnections.push(connection);
@@ -322,12 +322,12 @@ export const NODE_LIST: iNodeTemplate[] = [
                 if (!canConvertSocket(socketType, connectedSocket.type)){
                     if (!this.editorAPI.undoStore.isRecording) return;
                     this.editorAPI.deleteConnections([connection], true);
-                    connection.emit('force-update');
+                    connection.onForceUpdate.emit();
                 }
             });
             this.editorAPI.nextTick(()=>{
-                this.emit('force-socket-update', 'list');
-                this.emit('force-socket-update', 'item');
+                this.onForceSocketUpdate.emit('list');
+                this.onForceSocketUpdate.emit('item');
             });
         },
         methods: {
@@ -402,13 +402,13 @@ export const NODE_LIST: iNodeTemplate[] = [
             if (deleteConnections.length > 0){
                 if (!this.editorAPI.undoStore.isRecording) return;
                 this.editorAPI.deleteConnections(deleteConnections, true);
-                deleteConnections[0].emit('force-update');
+                deleteConnections[0].onForceUpdate.emit();
             }
 
             this.editorAPI.nextTick(()=>{
-                this.emit('force-socket-update', 'list');
-                this.emit('force-socket-update', 'item');
-                this.emit('force-socket-update', '_o');
+                this.onForceSocketUpdate.emit('list');
+                this.onForceSocketUpdate.emit('item');
+                this.onForceSocketUpdate.emit('_o');
             });
         },
         methods: {
@@ -462,7 +462,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                 this.editorAPI.deleteConnections([srcConnection], isRecording);
             }
 
-            this.emit('force-socket-update', '_list');
+            this.onForceSocketUpdate.emit('_list');
         },
         methods: {
             getLength(this: iEngineNode, eventContext: iEventContext){

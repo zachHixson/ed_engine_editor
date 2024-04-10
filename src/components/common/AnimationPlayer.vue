@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Svg from '@/components/common/Svg.vue';
 
-import { ref, computed, watch, nextTick, onMounted } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import Core from '@/core';
 import playIcon from '@/assets/play.svg';
 import pauseIcon from '@/assets/pause.svg';
@@ -12,7 +12,12 @@ const props = defineProps<{
     fps: number,
     startFrame: number,
     loop: boolean,
-    parentEventBus: Core.Event_Bus
+    parentEventBus: {
+        onFrameDeleted?: Core.Event_Emitter<()=>void>,
+        onFPSChanged?: Core.Event_Emitter<()=>void>,
+        onFrameDataChanged?: Core.Event_Emitter<()=>void>,
+        onNewSpriteSelected?: Core.Event_Emitter<()=>void>,
+    }
 }>();
 
 const curFrameIdx = ref(0);
@@ -36,11 +41,18 @@ onMounted(()=>{
     Core.Draw.resizeCanvas(checkerBGBuff, canvas.width, canvas.height);
     Core.Draw.drawCheckerBG(checkerBGBuff, 4, "#B5B5B5", '#CCCCCC');
 
-    props.parentEventBus.addEventListener('frame-deleted', onFrameDelete);
-    props.parentEventBus.addEventListener('fps-changed', fpsChanged);
-    props.parentEventBus.addEventListener('frame-data-changed', frameDataChanged);
-    props.parentEventBus.addEventListener('new-sprite-selected', newSpriteSelection);
+    props.parentEventBus.onFrameDeleted?.listen(onFrameDelete);
+    props.parentEventBus.onFPSChanged?.listen(fpsChanged);
+    props.parentEventBus.onFrameDataChanged?.listen(frameDataChanged);
+    props.parentEventBus.onNewSpriteSelected?.listen(newSpriteSelection);
     newSpriteSelection();
+});
+
+onBeforeUnmount(()=>{
+    props.parentEventBus.onFrameDeleted?.remove(onFrameDelete);
+    props.parentEventBus.onFPSChanged?.remove(fpsChanged);
+    props.parentEventBus.onFrameDataChanged?.remove(frameDataChanged);
+    props.parentEventBus.onNewSpriteSelected?.remove(newSpriteSelection);
 });
 
 function drawFrame(): void {

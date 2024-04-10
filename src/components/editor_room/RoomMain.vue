@@ -2,7 +2,16 @@
 import type Tool_Base from './composables/Tool_Base';
 import type { Ref } from 'vue';
 
-export const RoomMainEventBus = new Core.Event_Bus();
+export const RoomMainEventBus = {
+    onResize: new Core.Event_Emitter<()=>void>(),
+    onBgColorChanged: new Core.Event_Emitter<()=>void>(),
+    onInstanceAdded: new Core.Event_Emitter<(instance: Core.Instance_Base)=>void>(),
+    onInstanceRemoved: new Core.Event_Emitter<(instance: Core.Instance_Base)=>void>(),
+    onInstanceChanged: new Core.Event_Emitter<(instance: Core.Instance_Base)=>void>(),
+    onCameraChanged: new Core.Event_Emitter<()=>void>(),
+    onRoomChanged: new Core.Event_Emitter<(newRoom?: Core.Room)=>void>(),
+    onGridStateChanged: new Core.Event_Emitter<(newState: boolean)=>void>(),
+};
 
 export type tActionMap = Map<Core.ROOM_ACTION, (data: any, commit?: boolean)=>void>;
 export type tToolMap = Map<Core.ROOM_TOOL_TYPE, typeof Tool_Base>;
@@ -161,7 +170,7 @@ watch(()=>mouse.inWindow, (newVal)=>hotkeyMap.enabled = newVal && !isInputActive
 onMounted(()=>{
     window.addEventListener('keydown', hotkeyDown as EventListener);
     window.addEventListener('keyup', hotkeyUp as EventListener);
-    AppEventBus.addEventListener('asset-deleted', refreshRoom as EventListener);
+    AppEventBus.onAssetDeleted.listen(refreshRoom);
 
     resize();
     bindHotkeys();
@@ -223,12 +232,12 @@ function bindHotkeys(): void {
 function refreshRoom(): void {
     props.selectedRoom.clearSpacialData();
     props.selectedRoom.initSpacialData();
-    RoomMainEventBus.emit('room-changed');
+    RoomMainEventBus.onRoomChanged.emit();
 }
 
 function resize(): void {
     nextTick(()=>{
-        RoomMainEventBus.emit('resize');
+        RoomMainEventBus.onResize.emit();
     });
 }
 
@@ -270,7 +279,7 @@ function mouseEvent(mEvent: imEvent): void {
 function toggleGrid(): void {
     const newState = !roomEditorStore.getGridState;
     roomEditorStore.setGridState(newState);
-    RoomMainEventBus.emit('grid-state-changed', newState);
+    RoomMainEventBus.onGridStateChanged.emit(newState);
 }
 </script>
 

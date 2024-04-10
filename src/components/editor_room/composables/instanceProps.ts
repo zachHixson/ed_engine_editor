@@ -12,7 +12,7 @@ export function useInstanceProps(args: iActionArguments){
     
         Object.assign(curInstance, newState);
         
-        RoomMainEventBus.emit('instance-changed', curInstance);
+        RoomMainEventBus.onInstanceChanged.emit(curInstance);
     
         if (makeCommit){
             let data = {newState, oldState, instRef: curInstance} satisfies InstanceChangeProps;
@@ -52,7 +52,7 @@ export function useInstanceProps(args: iActionArguments){
 
     function revertInstanceChange({oldState, instRef}: InstanceChangeProps): void {
         Object.assign(instRef!, oldState);
-        RoomMainEventBus.emit('instance-changed', instRef);
+        RoomMainEventBus.onInstanceChanged.emit(instRef!);
     }
     
     function revertInstanceGroupChange({add, groupName, newName, remove, oldIdx, instRef}: InstanceGroupChangeProps): void {

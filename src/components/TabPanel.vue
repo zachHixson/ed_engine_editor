@@ -49,7 +49,7 @@ const contextTabs = ref<iEditorTab[]>([editorTabs.room]);
 onMounted(()=>{
     updateEditorTabs();
     mainStore.setSelectedEditor(Core.EDITOR_ID.ROOM);
-    AppEventBus.addEventListener('update-editor-tabs', updateEditorTabs);
+    AppEventBus.onUpdateEditorTabs.listen(updateEditorTabs);
 });
 
 function updateEditorTabs(){

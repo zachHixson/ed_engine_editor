@@ -37,7 +37,7 @@ export default function useInput(
         dim: new Vector(),
     });
     const currentSocketOver = ref<iHoverSocket | null>(null);
-    const navControlPanelScroll = (event: WheelEvent)=>LogicMainEventBus.emit('mouse-wheel', event);
+    const navControlPanelScroll = (event: WheelEvent)=>LogicMainEventBus.onMouseWheel.emit(event);
     const contextMenuPosition = ref<Core.Vector | null>(null);
 
     onMounted(()=>{
@@ -96,7 +96,7 @@ export default function useInput(
         mouseDownPos.x = event.clientX;
         mouseDownPos.y = event.clientY;
         lastMouseDragPos.copy(mouseDownPos);
-        LogicMainEventBus.emit('mouse-down', event);
+        LogicMainEventBus.onMouseDown.emit(event);
     
         //position selection box
         if (event.button == 0 && event.target == event.currentTarget){
@@ -112,7 +112,7 @@ export default function useInput(
     
     function mouseUp(event: MouseEvent): void {
         isDraggingNode.value = false;
-        LogicMainEventBus.emit('mouse-up', event);
+        LogicMainEventBus.onMouseUp.emit(event);
         selectionBox.active = false;
         selectNodesInBox();
     
@@ -150,16 +150,16 @@ export default function useInput(
         }
     }
     
-    function mouseEnter(event: MouseEvent): void {
+    function mouseEnter(): void {
         if (!inputActive.value){
             hotkeyMap.mouseEnter();
         }
-        LogicMainEventBus.emit('mouse-enter', event);
+        LogicMainEventBus.onMouseEnter.emit();
     }
     
     function mouseLeave(event: MouseEvent): void {
         hotkeyMap.mouseLeave();
-        LogicMainEventBus.emit('mouse-leave', event);
+        LogicMainEventBus.onMouseLeave.emit(event);
     }
     
     function mouseMove(event: MouseEvent): void {
@@ -168,7 +168,7 @@ export default function useInput(
         const newOrigin = new Vector(event.clientX, event.clientY).subtract(vpOrigin);
         const selectionBoxDim = new Vector(event.clientX, event.clientY).subtract(mouseDownPos);
     
-        LogicMainEventBus.emit('mouse-move', event);
+        LogicMainEventBus.onMouseMove.emit(event);
         selectionBox.dim.copy(selectionBoxDim);
     
         //if rectangle dimensions are negative, set origin to mouse position

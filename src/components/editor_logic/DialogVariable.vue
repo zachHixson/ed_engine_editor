@@ -11,7 +11,6 @@ import Core from '@/core';
 
 import errorIcon from '@/assets/error_decorator.svg';
 import warningIcon from '@/assets/warning_decorator.svg';
-import Node_Connection from './node_components/Node_Connection';
 
 const CHAR_LIMIT = 50;
 

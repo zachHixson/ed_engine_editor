@@ -13,18 +13,15 @@ import Room_Edit_Renderer from './Room_Edit_Renderer';
 
 import {
     ref,
-    computed,
     watch,
     onMounted,
     onBeforeUnmount
 } from 'vue';
 import { useRoomEditorStore } from '@/stores/RoomEditor';
-import { useGameDataStore } from '@/stores/GameData';
 import { RoomMainEventBus } from './RoomMain.vue';
 import Core from '@/core';
 
 const roomEditorStore = useRoomEditorStore();
-const gameDataStore = useGameDataStore();
 
 const props = defineProps<{
     selectedRoom: Core.Room,
@@ -47,7 +44,16 @@ const emit = defineEmits([
 ]);
 
 //define data
-const RoomEditWindowEventBus = new Core.Event_Bus();
+const RoomEditWindowEventBus = {
+    onMouseDown: new Core.Event_Emitter<(event: MouseEvent)=>void>(),
+    onMouseUp: new Core.Event_Emitter<(event: MouseEvent)=>void>(),
+    onMouseMove: new Core.Event_Emitter<(event: MouseEvent)=>void>(),
+    onDblClick: new Core.Event_Emitter<(event: MouseEvent)=>void>(),
+    onMouseWheel: new Core.Event_Emitter<(event: MouseEvent)=>void>(),
+    onMouseEnter: new Core.Event_Emitter<()=>void>(),
+    onMouseLeave: new Core.Event_Emitter<()=>void>(),
+    onNavSetContainerDimensions: new Core.Event_Emitter<({width, height}: {width: number, height: number})=>void>,
+};
 const devicePixelRatio = window.devicePixelRatio;
 const contentsBounds = ref([0, 0, 0, 0]);
 let renderer: Room_Edit_Renderer;
@@ -58,8 +64,6 @@ let navHotkeyTool: Core.NAV_TOOL_TYPE | null = null;
 const canvasEl = ref<HTMLCanvasElement>();
 const editWindowRef = ref<HTMLDivElement>();
 const navControlPanel = ref();
-
-const checkAssetDeletion = computed(()=>gameDataStore.getAllObjects.length + gameDataStore.getAllSprites.length);
 
 watch(()=>props.editorSelection, ()=>setSelection());
 watch(()=>roomEditorStore.getGridState, (newVal)=>renderer.setGridVisibility(newVal));
@@ -79,14 +83,14 @@ onMounted(()=>{
     canvasEl.value!.addEventListener('wheel', mouseWheel);
     canvasEl.value!.addEventListener('mouseenter', mouseEnter);
     canvasEl.value!.addEventListener('mouseleave', mouseLeave);
-    RoomMainEventBus.addEventListener('resize', resize);
-    RoomMainEventBus.addEventListener('bgColorChanged', bgColorChanged);
-    RoomMainEventBus.addEventListener('instance-added', instanceAdded);
-    RoomMainEventBus.addEventListener('instance-removed', instanceRemoved);
-    RoomMainEventBus.addEventListener('instance-changed', instanceChanged);
-    RoomMainEventBus.addEventListener('camera-changed', cameraChanged);
-    RoomMainEventBus.addEventListener('room-changed', roomChange);
-    RoomMainEventBus.addEventListener('grid-state-changed', toggleGrid);
+    RoomMainEventBus.onResize.listen(resize);
+    RoomMainEventBus.onBgColorChanged.listen(bgColorChanged);
+    RoomMainEventBus.onInstanceAdded.listen(instanceAdded);
+    RoomMainEventBus.onInstanceRemoved.listen(instanceRemoved);
+    RoomMainEventBus.onInstanceChanged.listen(instanceChanged);
+    RoomMainEventBus.onCameraChanged.listen(cameraChanged);
+    RoomMainEventBus.onRoomChanged.listen(roomChange)
+    RoomMainEventBus.onGridStateChanged.listen(toggleGrid);
 
     if (props.selectedRoom){
         roomChange();
@@ -100,28 +104,28 @@ onBeforeUnmount(()=>{
     canvasEl.value!.removeEventListener('wheel', mouseWheel);
     canvasEl.value!.removeEventListener('mouseenter', mouseEnter);
     canvasEl.value!.removeEventListener('mouseleave', mouseLeave);
-    RoomMainEventBus.removeEventListener('resize', resize);
-    RoomMainEventBus.removeEventListener('bgColorChanged', bgColorChanged);
-    RoomMainEventBus.removeEventListener('instance-added', instanceAdded);
-    RoomMainEventBus.removeEventListener('instance-removed', instanceRemoved);
-    RoomMainEventBus.removeEventListener('instance-changed', instanceChanged);
-    RoomMainEventBus.removeEventListener('camera-changed', cameraChanged);
-    RoomMainEventBus.removeEventListener('room-changed', roomChange);
-    RoomMainEventBus.removeEventListener('grid-state-changed', toggleGrid);
+    RoomMainEventBus.onResize.remove(resize);
+    RoomMainEventBus.onBgColorChanged.remove(bgColorChanged);
+    RoomMainEventBus.onInstanceAdded.remove(instanceAdded);
+    RoomMainEventBus.onInstanceRemoved.remove(instanceRemoved);
+    RoomMainEventBus.onInstanceChanged.remove(instanceChanged);
+    RoomMainEventBus.onCameraChanged.remove(cameraChanged);
+    RoomMainEventBus.onRoomChanged.remove(roomChange)
+    RoomMainEventBus.onGridStateChanged.remove(toggleGrid);
 });
 
 function mouseDown(event: MouseEvent): void {
-    RoomEditWindowEventBus.emit('mouse-down', event);
+    RoomEditWindowEventBus.onMouseDown.emit(event);
     emitMouseEvent(event, Core.MOUSE_EVENT.DOWN);
 }
 
 function mouseUp(event: MouseEvent): void {
-    RoomEditWindowEventBus.emit('mouse-up', event);
+    RoomEditWindowEventBus.onMouseUp.emit(event);
     emitMouseEvent(event, Core.MOUSE_EVENT.UP);
 }
 
 function mouseMove(event: MouseEvent): void {
-    RoomEditWindowEventBus.emit('mouse-move', event);
+    RoomEditWindowEventBus.onMouseMove.emit(event);
     emitMouseEvent(event, Core.MOUSE_EVENT.MOVE);
     renderer.mouseMove(event);
 }
@@ -131,20 +135,20 @@ function mouseClick(event: MouseEvent): void {
 }
 
 function mouseDblClick(event: MouseEvent): void {
-    RoomEditWindowEventBus.emit('mouse-double-click', event);
+    RoomEditWindowEventBus.onDblClick.emit(event);
     emitMouseEvent(event, Core.MOUSE_EVENT.DOUBLE_CLICK);
 }
 
 function mouseWheel(event: MouseEvent): void {
-    RoomEditWindowEventBus.emit('mouse-wheel', event);
+    RoomEditWindowEventBus.onMouseWheel.emit(event);
 }
 
 function mouseEnter(event: MouseEvent): void {
-    RoomEditWindowEventBus.emit('mouse-enter', event);
+    RoomEditWindowEventBus.onMouseEnter.emit();
 }
 
 function mouseLeave(event: MouseEvent): void {
-    RoomEditWindowEventBus.emit('mouse-leave');
+    RoomEditWindowEventBus.onMouseLeave.emit();
     emitMouseEvent(event, Core.MOUSE_EVENT.LEAVE);
     mouseUp(event);
     renderer.mouseMove(event);
@@ -166,7 +170,7 @@ function resize(): void {
 
     Core.Draw.resizeHDPICanvas(canvasEl.value!, width, height);
 
-    RoomEditWindowEventBus.emit('nav-set-container-dimensions', {width: wrapper.clientWidth, height: wrapper.clientHeight});
+    RoomEditWindowEventBus.onNavSetContainerDimensions.emit({width: wrapper.clientWidth, height: wrapper.clientHeight})
 
     renderer?.resize();
 }

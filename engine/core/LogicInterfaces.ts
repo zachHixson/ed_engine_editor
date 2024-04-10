@@ -11,6 +11,7 @@ import {
     iOutput,
     Instance_Object,
     CATEGORY_ID,
+    Event_Emitter,
 } from "./core";
 
 //types needed for node editor API, which is the only place the engine code has to know about editor types
@@ -118,9 +119,14 @@ export interface iEditorNode extends iNode_Base {
     decoratorText?: string | null;
     stackDataIO?: boolean;
 
+    onEditorMove: Event_Emitter<(newPos: Vector)=>void>;
+    onForceUpdate: Event_Emitter<()=>void>;
+    onForceSocketUpdate: Event_Emitter<(socketName?: string)=>void>;
+    onUpdateConnections: Event_Emitter<()=>void>;
+    onRecalcWidth: Event_Emitter<()=>void>;
+
     method(methodName: string, data?: any): any;
     getInput<T>(inputName: string): T;
-    emit(eventName: string, data?: any): void;
     refresh(): void;
 }
 
@@ -131,7 +137,9 @@ export interface iNodeConnection {
     startSocketId: string | null;
     endSocketId: string | null;
     disconnectedFrom: string | null;
-    emit: (...args: any)=>void;
+
+    onConnectionUpdate: Event_Emitter<()=>void>;
+    onForceUpdate: Event_Emitter<()=>void>;
 }
 
 export interface iVarInfo {

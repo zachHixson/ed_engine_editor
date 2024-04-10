@@ -118,8 +118,8 @@ export class Instance_Exit extends Instance_Base {
             const transition = Instance_Exit.engine!.setTransition(this.transition);
             Instance_Exit.exitInstance = objInstance;
             Instance_Exit.engine!.enableInput = false;
-            transition.addEventListener('load-room', ()=>this._loadRoom(objInstance, instDirection), {once:true});
-            transition.addEventListener('complete', ()=>Instance_Exit.engine!.enableInput = true, {once: true});
+            transition.onRoomLoad.listen(()=>this._loadRoom(objInstance, instDirection), {once:true});
+            transition.onCompleted.listen(()=>Instance_Exit.engine!.enableInput = true, {once: true});
 
             if (Instance_Exit.exitInstance.objRef.keepCameraSettings){
                 Instance_Exit.exitCamera = Instance_Exit.engine!.room.camera;

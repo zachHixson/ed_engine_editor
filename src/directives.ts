@@ -1,6 +1,6 @@
 import type { DirectiveBinding } from 'vue';
 import { useMainStore } from './stores/Main';
-import { TooltipEventBus } from './components/common/Tooltip.vue';
+import Tooltip, { TooltipEventBus } from './components/common/Tooltip.vue';
 
 type ExpandedEl = HTMLElement & {[key: string | number | symbol]: any};
 
@@ -69,16 +69,16 @@ export const vTooltip = {
             const isGetter = typeof binding.value == 'function';
             const value = isGetter ? binding.value() : binding.value;
 
-            TooltipEventBus.emit('activate-tooltip', {
-                el,
+            TooltipEventBus.onActivateTooltip.emit({
+                el: (el as HTMLDivElement),
                 text: value,
-            })
+            });
         };
         el.mouseOutHandler = function(){
-            TooltipEventBus.emit('hide-tooltip');
+            TooltipEventBus.onHideTooltip.emit();
         };
         el.mouseDownHandler = function(){
-            TooltipEventBus.emit('mouse-down');
+            TooltipEventBus.onMouseDown.emit();
         };
 
         el.addEventListener('mouseover', el.mouseOverHandler);

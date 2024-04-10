@@ -1,5 +1,9 @@
 <script lang="ts">
-export const AnimationPanelEventBus = new Core.Event_Bus();
+export const AnimationPanelEventBus = {
+    onPlayAnimation: new Core.Event_Emitter<()=>void>(),
+    onStopAnimation: new Core.Event_Emitter<()=>void>(),
+    onFrameDataChanged: new Core.Event_Emitter<(range?: number[])=>void>(),
+};
 </script>
 
 <script setup lang="ts">
@@ -59,7 +63,7 @@ onMounted(()=>{
     window.addEventListener('keydown', hotkeyDown);
     window.addEventListener('keyup', hotkeyUp);
 
-    ArtMainEventBus.addEventListener('update-frame-previews', updateFramePreviews);
+    ArtMainEventBus.onUpdateFramePreviews.listen(updateFramePreviews);
 
     hotkeyMap.enabled = true;
     bindHotkeys();
@@ -69,7 +73,7 @@ onBeforeUnmount(()=>{
     window.removeEventListener('keydown', hotkeyDown);
     window.removeEventListener('keyup', hotkeyUp);
 
-    ArtMainEventBus.removeEventListener('update-frame-previews', updateFramePreviews);
+    ArtMainEventBus.onUpdateFramePreviews.remove(updateFramePreviews);
     
     artEditorStore.setAnimPanelState(isOpen.value);
 });
@@ -93,22 +97,22 @@ function bindHotkeys(): void {
     hotkeyMap.bindKey(['n'], toggleOpen);
     hotkeyMap.bindKey(['arrowleft'], prevFrame);
     hotkeyMap.bindKey(['arrowright'], nextFrame);
-    hotkeyMap.bindKey(['arrowdown'], ()=>AnimationPanelEventBus.emit('play-animation'));
-    hotkeyMap.bindKey(['escape'], ()=>AnimationPanelEventBus.emit('stop-animation'));
+    hotkeyMap.bindKey(['arrowdown'], ()=>AnimationPanelEventBus.onPlayAnimation.emit());
+    hotkeyMap.bindKey(['escape'], ()=>AnimationPanelEventBus.onStopAnimation.emit());
 }
 
 function toggleOpen(): void {
     isOpen.value = !isOpen.value;
 
     nextTick(()=>{
-        AnimationPanelEventBus.emit('frame-data-changed');
+        AnimationPanelEventBus.onFrameDataChanged.emit();
         emit('resized');
     })
 }
 
 function updateFramePreviews(range: number[] = [0, props.sprite.frames.length - 1]): void {
     if (isOpen.value){
-        AnimationPanelEventBus.emit('frame-data-changed', range);
+        AnimationPanelEventBus.onFrameDataChanged.emit(range);
 
         if (range.length == 1){
             range = [range[0], range[0] + 1];

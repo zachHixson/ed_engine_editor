@@ -184,8 +184,8 @@ export default [
                 valSocket.type = type;
                 outSocket.type = type;
                 outSocket.isList = isList;
-                this.emit('force-socket-update');
-                this.emit('recalcWidth');
+                this.onForceSocketUpdate.emit();
+                this.onRecalcWidth.emit();
             },
             editor_setVar(this: iEditorNode){
                 const varInfo = this.dataCache.get('varInfo');
@@ -419,7 +419,7 @@ function determineConnected(this: iEditorNode){
     const connection = this.editorAPI.getInputConnection(this, 'data') ?? this.editorAPI.getOutputConnections(this, 'data')[0];
     const nameSocket = this.inputs.get('name')!;
     nameSocket.disabled = !!connection;
-    this.emit('force-socket-update', 'name');
+    this.onForceSocketUpdate.emit('name');
 }
 
 function validate(this: iEditorNode, textbox?: HTMLInputElement){
@@ -452,7 +452,7 @@ function validate(this: iEditorNode, textbox?: HTMLInputElement){
     }
 
     this.dataCache.set('isValid', isValid);
-    this.emit('force-socket-update', 'data');
+    this.onForceSocketUpdate.emit('data');
 }
 
 function afterGameDataLoaded(this: GenericNode){
@@ -479,7 +479,7 @@ function onInput(this: iEditorNode, event: InputEvent){
 
 function onNewVariable(this: iEditorNode){
     this.method('validate');
-    this.emit('force-update');
+    this.onForceUpdate.emit();
 }
 
 function onBeforeDelete(this: iEditorNode){

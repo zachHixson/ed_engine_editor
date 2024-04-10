@@ -16,6 +16,7 @@ import {
     onBeforeUnmount
 } from 'vue';
 import { useAssetBrowserStore } from '@/stores/AssetBrowser';
+import type { AssetBrowserEventBus } from './AssetBrowser.vue';
 import type Core from '@/core';
 
 import renameIcon from '@/assets/rename.svg';
@@ -26,7 +27,7 @@ const assetBrowserStore = useAssetBrowserStore();
 const props = defineProps<{
     asset: Core.Asset_Base,
     defaultIcon: string,
-    assetBrowserEventBus: Core.Event_Bus;
+    assetBrowserEventBus: typeof AssetBrowserEventBus;
     wrapperElement: HTMLDivElement;
 }>();
 
@@ -54,15 +55,15 @@ const isSelected = computed(()=>{
 
 onMounted(()=>{
     assetRef.value!.addEventListener('dblclick', rename);
-    props.assetBrowserEventBus.addEventListener('scroll', calculateVisibility);
-    props.assetBrowserEventBus.addEventListener('draw-thumbnail', drawThumbnail);
+    props.assetBrowserEventBus.onScroll.listen(calculateVisibility);
+    props.assetBrowserEventBus.reqDrawThumbnail.listen(drawThumbnail);
     calculateVisibility();
 });
 
 onBeforeUnmount(()=>{
     document.removeEventListener('keydown', onEnterPress);
-    props.assetBrowserEventBus.removeEventListener('scroll', calculateVisibility);
-    props.assetBrowserEventBus.removeEventListener('draw-thumbnail', drawThumbnail);
+    props.assetBrowserEventBus.onScroll.remove(calculateVisibility);
+    props.assetBrowserEventBus.reqDrawThumbnail.remove(drawThumbnail);
 });
 
 function calculateVisibility(): void {

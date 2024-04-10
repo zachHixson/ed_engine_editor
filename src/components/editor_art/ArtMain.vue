@@ -1,5 +1,8 @@
 <script lang="ts">
-export const ArtMainEventBus = new Core.Event_Bus();
+export const ArtMainEventBus = {
+    onResize: new Core.Event_Emitter<()=>void>(),
+    onUpdateFramePreviews: new Core.Event_Emitter<(range?: number[])=>void>(),
+};
 </script>
 
 <script setup lang="ts">
@@ -88,7 +91,7 @@ onBeforeUnmount(()=> {
 });
 
 function resize(): void {
-    ArtMainEventBus.emit('resize');
+    ArtMainEventBus.onResize.emit();
 }
 
 function spriteDataChanged(): void {
@@ -99,7 +102,7 @@ function spriteDataChanged(): void {
 }
 
 function render(): void {
-    ArtMainEventBus.emit('update-frame-previews');
+    ArtMainEventBus.onUpdateFramePreviews.emit();
 }
 
 function framesMoved(): void {
@@ -166,13 +169,14 @@ function commitFullState(): void {
 }
 
 function undo(): void {
-    const prevStep = undoStore.stepBack() as any;
+    const prevStep = undoStore.stepBack() as iSpriteUndoData;
 
     if (prevStep && prevStep.spriteData){
         props.selectedAsset.setFramesFromArray(prevStep.spriteData);
     }
     else{
-        props.selectedAsset.setFramesFromArray(undoStore.initialState!.spriteData);
+        const initialState = undoStore.initialState! as iSpriteUndoData;
+        props.selectedAsset.setFramesFromArray(initialState.spriteData);
     }
 
     if (selectedFrameIdx.value > props.selectedAsset.frames.length - 1){
@@ -180,20 +184,20 @@ function undo(): void {
     }
     
     nextTick(()=>{
-        ArtMainEventBus.emit('update-frame-previews');
+        ArtMainEventBus.onUpdateFramePreviews.emit();
         emit('asset-changed', props.selectedAsset.id);
     });
 }
 
 function redo(): void {
-    const nextStep = undoStore.stepForward();
+    const nextStep = undoStore.stepForward() as iSpriteUndoData;
 
     if (nextStep && nextStep.spriteData){
         props.selectedAsset.setFramesFromArray(nextStep.spriteData);
     }
 
     nextTick(()=>{
-        ArtMainEventBus.emit('update-frame-previews');
+        ArtMainEventBus.onUpdateFramePreviews.emit();
         emit('asset-changed', props.selectedAsset.id);
     });
 }

@@ -1,5 +1,10 @@
 <script lang="ts">
-export const ObjectMainEventBus = new Core.Event_Bus();
+export const ObjectMainEventBus = {
+    onFrameDeleted: new Core.Event_Emitter<()=>void>(),
+    onFPSChanged: new Core.Event_Emitter<()=>void>(),
+    onFrameDataChanged: new Core.Event_Emitter<()=>void>(),
+    onNewSpriteSelected: new Core.Event_Emitter<()=>void>(),
+};
 </script>
 
 <script setup lang="ts">
@@ -82,7 +87,7 @@ function setObjectSprite(id: number) : void {
     }
 
     nextTick(()=>{
-        ObjectMainEventBus.emit('new-sprite-selected');
+        ObjectMainEventBus.onNewSpriteSelected.emit();
 
         if (props.selectedAsset.sprite){
             //triggers the frame count validation
@@ -95,7 +100,7 @@ function setObjectSprite(id: number) : void {
 
 function validateFPS(): void {
     props.selectedAsset.fps = Math.floor(props.selectedAsset.fps);
-    ObjectMainEventBus.emit('fps-changed');
+    ObjectMainEventBus.onFPSChanged.emit();
 }
 
 function groupChanged({add, groupName, newName, remove}: {add: boolean, groupName: string, newName: string, remove: boolean}): void {
@@ -138,7 +143,7 @@ function gotoLogicScript(){
     if (selectedScriptId == null) return;
 
     const selectedScript = gameDataStore.getAllLogic.find(s => s.id == selectedScriptId)!;
-    AssetBrowserEventBus.emit('select-asset', selectedScript);
+    AssetBrowserEventBus.onSelectAsset.emit(selectedScript);
 }
 </script>
 

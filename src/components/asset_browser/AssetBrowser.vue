@@ -1,5 +1,9 @@
 <script lang="ts">
-export const AssetBrowserEventBus = new Core.Event_Bus();
+export const AssetBrowserEventBus = {
+    onSelectAsset: new Core.Event_Emitter<(asset: Core.Asset_Base, catId?: Core.CATEGORY_ID)=>void>(),
+    onScroll: new Core.Event_Emitter<()=>void>(),
+    reqDrawThumbnail: new Core.Event_Emitter<(id?: number)=>void>(),
+};
 </script>
 
 <script setup lang="ts">
@@ -78,13 +82,13 @@ const selectedList = computed(()=>{
 });
 
 onMounted(()=>{
-    AppEventBus.addEventListener('update-asset', updateAsset);
-    AssetBrowserEventBus.addEventListener('select-asset', selectAsset);
+    AppEventBus.onUpdateAsset.listen(updateAsset);
+    AssetBrowserEventBus.onSelectAsset.listen(selectAsset);
 });
 
 onBeforeUnmount(()=>{
-    AppEventBus.removeEventListener('update-asset', updateAsset);
-    AssetBrowserEventBus.removeEventListener('select-asset', selectAsset);
+    AppEventBus.onUpdateAsset.remove(updateAsset);
+    AssetBrowserEventBus.onSelectAsset.remove(selectAsset);
 });
 
 function openCategory(category: typeof categories[number]): void {
@@ -150,7 +154,7 @@ function selectAdjacent(delAsset: Core.Asset_Base): void {
 }
 
 function updateAsset(id?: number): void {
-    AssetBrowserEventBus.emit('draw-thumbnail', id);
+    AssetBrowserEventBus.reqDrawThumbnail.emit(id);
 }
 
 function assetRenamed({asset, oldName}: iRenameEventProps): void {
@@ -181,8 +185,8 @@ function orderChanged(event: iChangeEventProps): void {
     }
 }
 
-function scrollHandler(event: Event): void {
-    AssetBrowserEventBus.emit('scroll');
+function scrollHandler(): void {
+    AssetBrowserEventBus.onScroll.emit();
 }
 </script>
 

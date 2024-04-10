@@ -36,7 +36,7 @@ function setInstProp(propObj: any): void {
         <div class="heading">{{ t('room_editor.sprite_properties_heading') }}</div>
         <div class="info" style="margin: var(--margin); margin-left: 0px;">
             <div>{{ t('room_editor.sprite_type') }}:</div>
-            <div>{{(selectedSprite as Core.Instance_Sprite).sprite.name}}</div>
+            <div>{{(selectedSprite as Core.Instance_Sprite).sprite?.name ?? t('generic.no_option')}}</div>
         </div>
         <div class="control">
             <label for="name">{{$t('room_editor.instance_name')}}:</label>

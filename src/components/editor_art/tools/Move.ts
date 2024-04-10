@@ -35,7 +35,7 @@ export default class Move extends Tool_Base {
         this._mouseDownPos.copy(this.mouseCell);
         this._moveBuffer.data.set(this.pixelBuff.data);
         this.pixelBuff.data.fill(0);
-        ArtMainEventBus.emit('update-frame-previews');
+        ArtMainEventBus.onUpdateFramePreviews.emit();
         this.updateCursorBuff();
     }
 

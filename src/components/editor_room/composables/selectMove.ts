@@ -117,12 +117,12 @@ export function useSelectMove(args: iActionArguments){
         }
     
         args.props.selectedRoom.setInstancePosition(instRef, newPos!);
-        RoomMainEventBus.emit('instance-changed', instRef);
+        RoomMainEventBus.onInstanceChanged.emit(instRef);
     }
 
     function revertMove({instRef, oldPos}: MoveProps): void {
         args.props.selectedRoom.setInstancePosition(instRef!, oldPos!);
-        RoomMainEventBus.emit('instance-changed', instRef);
+        RoomMainEventBus.onInstanceChanged.emit(instRef!);
     }
 
     args.toolMap.set(Core.ROOM_TOOL_TYPE.SELECT_MOVE, Select_Move);

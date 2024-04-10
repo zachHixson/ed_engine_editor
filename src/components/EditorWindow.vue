@@ -67,11 +67,11 @@ function dialogClose(positive: boolean): void {
 <template>
     <div class="editorWindow">
         <component ref="editor"
-        :is="currentEditor"
-        :selectedAsset="selectedAsset"
-        :selectedRoom="selectedRoom"
-        @asset-changed="emit('asset-changed', $event)"
-        @dialog-confirm="dialogConfirm" />
+            :is="currentEditor"
+            :selectedAsset="(selectedAsset as any)"
+            :selectedRoom="selectedRoom"
+            @asset-changed="emit('asset-changed', $event)"
+            @dialog-confirm="(dialogConfirm as unknown)" />
         <div v-if="dialogConfirmOpen" class="dialog-confirm-bg">
             <div class="dialog-confirm-box">
                 <div v-html="dialogConfirmText"></div>

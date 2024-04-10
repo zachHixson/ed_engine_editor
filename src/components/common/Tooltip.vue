@@ -1,5 +1,9 @@
 <script lang="ts">
-export const TooltipEventBus = new Core.Event_Bus();
+export const TooltipEventBus = {
+    onActivateTooltip: new Core.Event_Emitter<({el, text}: {el: HTMLDivElement, text: string})=>void>(),
+    onHideTooltip: new Core.Event_Emitter<()=>void>(),
+    onMouseDown: new Core.Event_Emitter<()=>void>(),
+};
 </script>
 
 <script setup lang="ts">
@@ -19,9 +23,9 @@ const text = ref('');
 let timeout = -1;
 
 onMounted(()=>{
-    TooltipEventBus.addEventListener('activate-tooltip', activateTooltip);
-    TooltipEventBus.addEventListener('hide-tooltip', hideTooltip);
-    TooltipEventBus.addEventListener('mouse-down', hideTooltip);
+    TooltipEventBus.onActivateTooltip.listen(activateTooltip);
+    TooltipEventBus.onHideTooltip.listen(hideTooltip);
+    TooltipEventBus.onMouseDown.listen(hideTooltip);
 });
 
 function activateTooltip({el, text: txt}: {el: HTMLDivElement, text: string}): void {
