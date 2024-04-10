@@ -107,8 +107,6 @@ export default [
 
             this.editorAPI.dialogVariable((positive, varInfo)=> {
                 if (!positive) return;
-
-                console.clear();
                 
                 const args: ActionEditVariable = {
                     varNode: this,

@@ -18,6 +18,7 @@ import { onMounted } from 'vue';
 import { useMainStore, PLAY_STATE } from './stores/Main';
 import { useGameDataStore } from './stores/GameData';
 import { useAssetBrowserStore } from './stores/AssetBrowser';
+import { useLogicEditorStore } from './stores/LogicEditor';
 import Core, { HTMLTemplate, EngineRawText } from '@/core';
 
 import licenseText from '@/../LICENSE.txt?raw';
@@ -26,6 +27,7 @@ import licenseText from '@/../LICENSE.txt?raw';
 const mainStore = useMainStore();
 const gameDataStore = useGameDataStore();
 const assetBrowserStore = useAssetBrowserStore();
+const logicEditorStore = useLogicEditorStore();
 
 const engineLicensePreamble = `
 ###################################################################
@@ -73,6 +75,7 @@ function updateAfterDeletion(): void {
 
 function newProject(): void {
     mainStore.newProject();
+    logicEditorStore.globalVariableMap.clear();
     resetUI();
 }
 
