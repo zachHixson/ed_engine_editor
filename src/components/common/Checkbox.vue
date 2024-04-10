@@ -5,8 +5,10 @@ import { ref, computed, watch } from 'vue';
 
 import checkIcon from '@/assets/checkmark.svg';
 
+type Bool = boolean | 1 | 0;
+
 const props = defineProps<{
-    value: boolean | null,
+    value: Bool | null,
     triple?: boolean,
     disabled?: boolean,
 }>();
@@ -25,7 +27,7 @@ const styles = computed(()=>{
     return outStyles.join(' ');
 });
 
-watch(()=>props.value, (newVal: boolean | null)=>state.value = newVal);
+watch(()=>props.value, (newVal: Bool | null)=>state.value = newVal);
 
 function onClick(): void {
     if (props.disabled) return;
