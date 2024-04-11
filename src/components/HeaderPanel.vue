@@ -42,11 +42,6 @@ const choices = [
     },
     {
         id: enumID++,
-        text: t('file_menu.prefs'),
-        method: getMenuAction(() => {console.log("Preferences")}),
-    },
-    {
-        id: enumID++,
         text: t('file_menu.about'),
         method: getMenuAction(() => {console.log("About")}),
     }
@@ -209,6 +204,9 @@ function packageGame(): void {
     top: 20px;
     left: 100%;
     z-index: 1000;
+    border-radius: 10px;
+    border: 1px solid black;
+    overflow: hidden;
 }
 
 .choice{
