@@ -14,6 +14,8 @@ const ICON_PADDING = 0.85;
 let iconsLoaded = false;
 
 export default class Room_Edit_Renderer {
+    private static MAX_SIZE = 8192;
+
     private _nextDrawCall: number | null = null;
     private _canvas: HTMLCanvasElement;
     private _navState: Core.NavState;
@@ -23,6 +25,7 @@ export default class Room_Edit_Renderer {
     private _instanceRenderer: Core.Instance_Renderer;
     private _iconRenderer: Core.Instance_Renderer;
     private _uiRenderer: UI_Renderer;
+    private _screenBounds = {min: new Vector(), max: new Vector()};
     private _viewMatrix = new Mat3();
     private _viewMatrixInv = new Mat3();
     private _viewMatrixNeedsUpdate = true;
@@ -52,10 +55,31 @@ export default class Room_Edit_Renderer {
 
     get CELL_PX_WIDTH(){return 50};
     get UNIT_WIDTH(){return this.CELL_PX_WIDTH / 16};
+    get screenBounds(){
+        if (this._viewMatrixNeedsUpdate) this._updateViewMatrix();
+        return this._screenBounds;
+    }
+
+    private _checkBounds(): void {
+        const camBounds = this.screenBounds;
+        const SIZE = Room_Edit_Renderer.MAX_SIZE / 2;
+
+        //correct position if out of bounds
+        const dx = Math.max(-SIZE - camBounds.min.x, 0.0) + Math.min(SIZE - camBounds.max.x, 0.0);
+        const dy = Math.max(-SIZE - camBounds.min.y, 0.0) + Math.min(SIZE - camBounds.max.y, 0.0);
+
+        if (dx != 0 || dy != 0){
+            this._navState.offset.x -= dx;
+            this._navState.offset.y -= dy;
+            this._viewMatrixNeedsUpdate = true;
+            this._updateViewMatrix();
+        }
+    }
 
     private _updateViewMatrix(): void {
         if (!this._viewMatrixNeedsUpdate) return;
 
+        //update matrix
         const zoom = this._navState.zoomFac * this.UNIT_WIDTH;
         const { x, y } = this._navState.offset;
         const dimensions = new Vector(this._gl.canvas.width / 2, this._gl.canvas.height / 2);
@@ -71,6 +95,12 @@ export default class Room_Edit_Renderer {
         this._instanceRenderer.updateViewMatrix(this._viewMatrix);
         this._iconRenderer.updateViewMatrix(this._viewMatrix);
         this._uiRenderer.updateViewMatrix(this._viewMatrix, this._viewMatrixInv);
+
+        //update screen bounds
+        const mat = this._viewMatrixInv.clone().transpose();
+        this._screenBounds.min.set(-1, -1).multiplyMat3(mat);
+        this._screenBounds.max.set(1, 1).multiplyMat3(mat);
+
         this._viewMatrixNeedsUpdate = false;
     }
 
@@ -245,6 +275,7 @@ export default class Room_Edit_Renderer {
 
     render(): void {
         this._updateViewMatrix();
+        this._checkBounds();
         this._gl.depthMask(true);
         this._gl.colorMask(false, false, false, true);
         this._gl.clear(this._gl.COLOR_BUFFER_BIT);
