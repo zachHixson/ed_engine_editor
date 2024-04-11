@@ -158,7 +158,7 @@ export default class Node_API implements Core.iEditorAPI {
     }
 
     dialogConfirm(textInfo: TextInfo, callback: (positive: boolean)=>any){
-        this.editor.emit('dialog-confirm', {textInfo, callback});
+        this.editor.emit('dialog-open', {confirmDialog: true, textInfo, callback});
     }
 
     dialogVariable(callback: (positive: boolean, varInfo: Core.iVarInfo)=>void, edit?: Core.iVarInfo): void {

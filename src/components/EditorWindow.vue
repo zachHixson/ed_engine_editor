@@ -11,6 +11,8 @@ import { useAssetBrowserStore } from '@/stores/AssetBrowser';
 import Core from '@/core';
 
 export interface DialogBoxProps {
+    confirmDialog?: boolean,
+    alertDialog?: boolean,
     textInfo: {
         textId: string,
         vars: {[keys: string]: any}
@@ -40,18 +42,20 @@ const currentEditor = computed(()=>{
 });
 const selectedAsset = computed(()=>assetBrowserStore.getSelectedAsset);
 const selectedRoom = computed(()=>assetBrowserStore.getSelectedRoom);
-const dialogConfirmText = computed(()=>t(dialogTextId.value, dialogTextVars.value!));
+const dialogText = computed(()=>t(dialogTextId.value, dialogTextVars.value!));
 
 watch(()=>mainStore.getSelectedEditor, ()=>dialogClose(false));
 watch(selectedAsset, ()=>dialogClose(false));
 
 const dialogConfirmOpen = ref<boolean>(false);
+const dialogAlertOpen = ref<boolean>(false);
 const dialogTextId = ref<string>('');
 const dialogTextVars = ref<Record<string, unknown>>();
 let dialogCallback: (positive: boolean)=>void = ()=>{};
 
-function dialogConfirm({textInfo, callback}: DialogBoxProps): void {
-    dialogConfirmOpen.value = true;
+function dialogOpen({confirmDialog, alertDialog, textInfo, callback}: DialogBoxProps): void {
+    dialogConfirmOpen.value = confirmDialog ?? false;
+    dialogAlertOpen.value = alertDialog ?? false;
     dialogTextId.value = textInfo.textId;
     dialogTextVars.value = textInfo.vars;
     dialogCallback = callback;
@@ -61,6 +65,7 @@ function dialogClose(positive: boolean): void {
     dialogCallback(positive);
     dialogCallback = ()=>{};
     dialogConfirmOpen.value = false;
+    dialogAlertOpen.value = false;
 }
 </script>
 
@@ -71,12 +76,20 @@ function dialogClose(positive: boolean): void {
             :selectedAsset="(selectedAsset as any)"
             :selectedRoom="selectedRoom"
             @asset-changed="emit('asset-changed', $event)"
-            @dialog-confirm="(dialogConfirm as unknown)" />
-        <div v-if="dialogConfirmOpen" class="dialog-confirm-bg">
-            <div class="dialog-confirm-box">
-                <div v-html="dialogConfirmText"></div>
+            @dialog-open="(dialogOpen as unknown)" />
+        <div v-if="dialogConfirmOpen" class="dialog-bg">
+            <div class="dialog-box">
+                <div v-html="dialogText"></div>
                 <div class="dialog-buttons">
                     <button @click="dialogClose(false)">{{ t('generic.cancel') }}</button>
+                    <button @click="dialogClose(true)">{{ t('generic.ok') }}</button>
+                </div>
+            </div>
+        </div>
+        <div v-if="dialogAlertOpen" class="dialog-bg">
+            <div class="dialog-box">
+                <div v-html="dialogText"></div>
+                <div class="dialog-buttons">
                     <button @click="dialogClose(true)">{{ t('generic.ok') }}</button>
                 </div>
             </div>
@@ -92,7 +105,7 @@ function dialogClose(positive: boolean): void {
     border-left: 2px solid var(--border);
 }
 
-.dialog-confirm-bg{
+.dialog-bg{
     position: absolute;
     display: flex;
     justify-content: center;
@@ -103,7 +116,7 @@ function dialogClose(positive: boolean): void {
     z-index: 2000;
 }
 
-.dialog-confirm-box{
+.dialog-box{
     padding: 10px;
     background: white;
     overflow: hidden;

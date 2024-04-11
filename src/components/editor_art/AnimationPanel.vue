@@ -39,6 +39,7 @@ const emit = defineEmits([
     'frame-moved',
     'frame-copied',
     'selected-frame-changed',
+    'dialog-open',
 ]);
 
 const frameListRef = ref<HTMLDivElement>();
@@ -125,7 +126,12 @@ function updateFramePreviews(range: number[] = [0, props.sprite.frames.length - 
 }
 
 function addFrame(): void {
-    let newFrameIdx = props.sprite.addFrame();
+    if (props.sprite.frames.length >= 4096) {
+        emit('dialog-open', {alertDialog: true, textInfo: {textId: 'art_editor.frame_limit'}, callback: ()=>{}});
+        return;
+    }
+
+    const newFrameIdx = props.sprite.addFrame();
     artEditorStore.selectFrame(newFrameIdx);
     emit('frame-added');
 
@@ -236,7 +242,7 @@ function frameOrderChanged(event: {itemIdx: number, newIdx: number}): void {
                         @frameCopied="frameCopied"
                         @frameMoved="frameMoved"/>
                 </DragList>
-                <button class="addFrame" @click="addFrame()" v-tooltip="t('art_editor.add_frame')">
+                <button class="addFrame" :style="props.sprite.frames.length >= 4096 ? 'background: gray':''" @click="addFrame()" v-tooltip="t('art_editor.add_frame')">
                     <Svg class="icon" :src="plusIcon"></Svg>
                 </button>
             </div>

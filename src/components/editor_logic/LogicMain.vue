@@ -90,7 +90,7 @@ const props = defineProps<{
 const connectionForceUpdateQueued = ref(false);
 const connectionForceUpdateKey = ref(0);
 
-const emit = defineEmits(['dialog-confirm']);
+const emit = defineEmits(['dialog-open']);
 
 const domRefs: DomRefs = {
     nodeViewportRef: ref(),

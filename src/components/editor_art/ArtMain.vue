@@ -32,7 +32,10 @@ const props = defineProps<{
     selectedAsset: Core.Sprite;
 }>();
 
-const emit = defineEmits(['asset-changed']);
+const emit = defineEmits([
+    'asset-changed',
+    'dialog-open',
+]);
 
 const undoStore = reactive(new Undo_Store<iSpriteUndoData>(32));
 const toolMap: Map<Core.ART_TOOL_TYPE, ()=>Tool_Base> = new Map();
@@ -236,7 +239,8 @@ function packageUndoData(): iSpriteUndoData {
             @frame-added="frameAdded()"
             @frame-deleted="commitFullState()"
             @frame-moved="framesMoved"
-            @frame-copied="commitFullState()" />
+            @frame-copied="commitFullState()"
+            @dialog-open="emit('dialog-open', $event)" />
     </div>
 </template>
 

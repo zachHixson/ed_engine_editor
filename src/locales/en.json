@@ -62,7 +62,8 @@
         "move_tool": "Move (M)",
         "eye_dropper_tool": "Eye Dropper (D)",
         "add_frame": "Add New Frame",
-        "delete_frame": "Delete Frame"
+        "delete_frame": "Delete Frame",
+        "frame_limit": "Wow, you've managed to reach the maximum amount of sprite frames! (4096)"
     },
     "object_editor":{
         "heading_sprite": "Drawing & Animation",
