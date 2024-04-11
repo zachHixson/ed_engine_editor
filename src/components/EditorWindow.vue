@@ -43,7 +43,7 @@ const selectedRoom = computed(()=>assetBrowserStore.getSelectedRoom);
 const dialogConfirmText = computed(()=>t(dialogTextId.value, dialogTextVars.value!));
 
 watch(()=>mainStore.getSelectedEditor, ()=>dialogClose(false));
-watch(selectedAsset, ()=>dialogClose(true));
+watch(selectedAsset, ()=>dialogClose(false));
 
 const dialogConfirmOpen = ref<boolean>(false);
 const dialogTextId = ref<string>('');
@@ -76,8 +76,8 @@ function dialogClose(positive: boolean): void {
             <div class="dialog-confirm-box">
                 <div v-html="dialogConfirmText"></div>
                 <div class="dialog-buttons">
-                    <button @click="dialogClose(false)">Cancel</button>
-                    <button @click="dialogClose(true)">OK</button>
+                    <button @click="dialogClose(false)">{{ t('generic.cancel') }}</button>
+                    <button @click="dialogClose(true)">{{ t('generic.ok') }}</button>
                 </div>
             </div>
         </div>

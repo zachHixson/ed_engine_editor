@@ -4,6 +4,7 @@
         "delete": "Delete",
         "new": "-- New --",
         "cancel": "Cancel",
+        "ok": "Ok",
         "search": "Search"
     },
     "editor_main":{
