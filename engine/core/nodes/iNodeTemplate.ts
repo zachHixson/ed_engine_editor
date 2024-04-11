@@ -8,6 +8,15 @@ export interface iNodeTemplate extends iNodeLifecycleEvents {
     category: string;
     isEvent?: boolean;
     doNotCopy?: boolean;
+    reverseInputs?: boolean;
+    reverseOutputs?: boolean;
+    stackDataIO?: boolean;
+    inputBoxWidth?: number;
+    decoratorIcon?: string;
+    decoratorText?: string;
+    decoratorTextVars?: any;
+    editorCanDelete?: boolean;
+    showEditButton?: boolean;
     inTriggers?: Array<iInTrigger>;
     outTriggers?: Array<string>;
     inputs?: Array<iInput>;

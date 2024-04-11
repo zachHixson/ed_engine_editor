@@ -373,7 +373,7 @@ function actionChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
         socket.value = newVal;
     }
 
-    node.onValueChange && node.onValueChange({
+    node.onValueChange({
         socketId: widget ? -1 : socket.id,
         widget,
         oldVal,
@@ -397,7 +397,7 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
         node.onForceSocketUpdate.emit(socket.id);
     }
     
-    node.onValueChange && node.onValueChange({
+    node.onValueChange({
         socketId: widget ? -1 : socket.id,
         widget,
         newVal,

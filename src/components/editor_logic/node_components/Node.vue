@@ -80,7 +80,7 @@ const categoryStyle = computed(()=>categoryStyleMap.get(props.nodeObj.template.c
 const decoratorIconPath = computed(()=>decoratorMap.get(props.nodeObj.decoratorIcon!)!);
 
 onBeforeMount(()=>{
-    props.nodeObj.onBeforeMount && props.nodeObj.onBeforeMount();
+    props.nodeObj.onBeforeMount();
 });
 
 onMounted(()=>{
@@ -93,7 +93,7 @@ onMounted(()=>{
     window.addEventListener('mouseup', mouseUp);
 
     updateNodeSize();
-    props.nodeObj.onMount && props.nodeObj.onMount();
+    props.nodeObj.onMount();
 });
 
 onBeforeUnmount(()=>{
@@ -102,7 +102,7 @@ onBeforeUnmount(()=>{
     props.nodeObj.onRecalcWidth.remove(updateNodeSize);
     props.nodeObj.onForceUpdate.remove(forceUpdate);
     props.nodeObj.onUpdateConnections.remove(updateConnections);
-    props.nodeObj.onBeforeUnmount && props.nodeObj.onBeforeUnmount();
+    props.nodeObj.onBeforeUnmount();
 });
 
 function updateNodeSize(): void {
@@ -136,7 +136,7 @@ function mouseUp(): void {
 }
 
 function onEdit(): void {
-    props.nodeObj.onEdit && props.nodeObj.onEdit();
+    props.nodeObj.onEdit();
 }
 
 function setWidgetData(data: Core.iAnyObj, commit = false): void {
@@ -181,7 +181,7 @@ function socketValueChanged(event: iValueChanged): void {
 }
 
 function onInput(event: InputEvent): void {
-    props.nodeObj.onInput && props.nodeObj.onInput(event);
+    props.nodeObj.onInput(event);
     forceUpdate();
 }
 

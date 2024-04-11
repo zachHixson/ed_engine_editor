@@ -24,28 +24,6 @@ export default class Node {
     editorCanDelete: boolean = true;
     showEditButton: boolean = false;
 
-    registerActions: Core.iNodeLifecycleEvents['registerActions'];
-    init: Core.iNodeLifecycleEvents['init'];
-    onCreate: Core.iNodeLifecycleEvents['onCreate'];
-    beforeSave: Core.iNodeLifecycleEvents['beforeSave'];
-    afterSave: Core.iNodeLifecycleEvents['afterSave'];
-    beforeLoad: Core.iNodeLifecycleEvents['beforeLoad'];
-    afterLoad: Core.iNodeLifecycleEvents['afterLoad'];
-    logicLoaded: Core.iNodeLifecycleEvents['logicLoaded'];
-    afterGameDataLoaded: Core.iNodeLifecycleEvents['afterGameDataLoaded'];
-    onBeforeMount: Core.iNodeLifecycleEvents['onBeforeMount'];
-    onMount: Core.iNodeLifecycleEvents['onMount'];
-    onNewVariable: Core.iNodeLifecycleEvents['onNewVariable'];
-    onEdit: Core.iNodeLifecycleEvents['onEdit'];
-    onInput: Core.iNodeLifecycleEvents['onInput'];
-    onMove: Core.iNodeLifecycleEvents['onMove'];
-    onNewConnection: Core.iNodeLifecycleEvents['onNewConnection'];
-    onRemoveConnection: Core.iNodeLifecycleEvents['onRemoveConnection'];
-    onValueChange: Core.iNodeLifecycleEvents['onValueChange'];
-    onDeleteStopped: Core.iNodeLifecycleEvents['onDeleteStopped'];
-    onBeforeDelete: Core.iNodeLifecycleEvents['onBeforeDelete'];
-    onBeforeUnmount: Core.iNodeLifecycleEvents['onBeforeUnmount'];
-
     reverseInputs?: boolean;
     reverseOutputs?: boolean;
     stackDataIO?: boolean;
@@ -53,6 +31,7 @@ export default class Node {
     decoratorIcon?: string;
     decoratorText?: string;
     decoratorTextVars?: any;
+    doNotCopy?: boolean = false;
 
     onEditorMove = new Core.Event_Emitter<(newPos: Core.Vector)=>void>(this);
     onForceUpdate = new Core.Event_Emitter<()=>void>(this);
@@ -72,27 +51,17 @@ export default class Node {
         this._editorAPI = editorAPI;
         this.pos = pos.clone();
 
-        //bind lifecycle events
-        this.registerActions = template.registerActions?.bind(this);
-        this.init = template.init?.bind(this);
-        this.onCreate = template.onCreate?.bind(this);
-        this.beforeSave = template.beforeSave?.bind(this);
-        this.afterSave = template.afterSave?.bind(this);
-        this.beforeLoad = template.beforeLoad?.bind(this);
-        this.afterLoad = template.afterLoad?.bind(this);
-        this.logicLoaded = template.logicLoaded?.bind(this);
-        this.afterGameDataLoaded = template.afterGameDataLoaded?.bind(this);
-        this.onBeforeMount = template.onBeforeMount?.bind(this);
-        this.onMount = template.onMount?.bind(this);
-        this.onNewVariable = template.onNewVariable?.bind(this);
-        this.onEdit = template.onEdit?.bind(this);
-        this.onInput = template.onInput?.bind(this);
-        this.onMove = template.onMove?.bind(this);
-        this.onNewConnection = template.onNewConnection?.bind(this);
-        this.onRemoveConnection = template.onRemoveConnection?.bind(this);
-        this.onValueChange = template.onValueChange?.bind(this);
-        this.onDeleteStopped = template.onDeleteStopped?.bind(this);
-        this.onBeforeDelete = template.onBeforeDelete?.bind(this);
+        //Load template props
+        this.reverseInputs =  this.template.reverseInputs;
+        this.reverseOutputs =  this.template.reverseOutputs;
+        this.stackDataIO =  this.template.stackDataIO;
+        this.inputBoxWidth =  this.template.inputBoxWidth;
+        this.decoratorIcon =  this.template.decoratorIcon;
+        this.decoratorText =  this.template.decoratorText;
+        this.decoratorTextVars =  this.template.decoratorTextVars;
+        this.editorCanDelete = this.template.editorCanDelete ?? this.editorCanDelete;
+        this.showEditButton = this.template.showEditButton ?? this.showEditButton;
+        this.doNotCopy = this.template.doNotCopy ?? this.doNotCopy;
 
         //map template to node
         template.inTriggers?.forEach(trigger => {
@@ -127,7 +96,7 @@ export default class Node {
             this.outputs.set(output.id, Object.assign({node: this}, output));
         });
 
-        this.init && this.init();
+        this.init();
     }
 
     get template(){return this._template}
@@ -135,8 +104,88 @@ export default class Node {
     get editorAPI(){return this._editorAPI}
     get dataCache(){return this._dataCache}
 
+    init(): void {
+        this.template.init?.call(this);
+    }
+
+    onCreate(): void {
+        (this.template.onCreate as ()=>void)?.call(this);
+    }
+
+    beforeSave(): void {
+        this.template.beforeSave?.call(this);
+    }
+
+    afterSave(saveData: Core.iNodeSaveData): void {
+        this.template.afterSave?.call(this, saveData);
+    }
+
+    beforeLoad(saveData: Core.iNodeSaveData): void {
+        this.template.beforeLoad?.call(this, saveData);
+    }
+
+    afterLoad(saveData: Core.iNodeSaveData): void {
+        this.template.afterLoad?.call(this, saveData);
+    }
+
+    logicLoaded(logic: Core.iEditorLogic | Core.iEngineLogic): void {
+        this.template.logicLoaded?.call(this, logic);
+    }
+
+    afterGameDataLoaded(): void {
+        this.template.afterGameDataLoaded?.call(this);
+    }
+
+    onBeforeMount(): void {
+        this.template.onBeforeMount?.call(this);
+    }
+
+    onMount(): void {
+        this.template.onMount?.call(this);
+    }
+
+    onNewVariable(): void {
+        this.template.onNewVariable?.call(this);
+    }
+
+    onEdit(): void {
+        this.template.onEdit?.call(this);
+    }
+
+    onInput(event: InputEvent): void {
+        this.template.onInput?.call(this, event);
+    }
+
+    onMove(): void {
+        this.template.onMove?.call(this);
+    }
+
+    onNewConnection(connection: Core.iNodeConnection, isUndo?: boolean): void {
+        this.template.onNewConnection?.call(this, connection, isUndo);
+    }
+
+    onRemoveConnection(connection: Core.iNodeConnection, isUndo?: boolean): void {
+        this.template.onRemoveConnection?.call(this, connection, isUndo);
+    }
+
+    onValueChange(value: any): void {
+        this.template.onValueChange?.call(this, value);
+    }
+
+    onDeleteStopped(protectedNodes: Core.iEditorNode[]): void {
+        this.template.onDeleteStopped?.call(this, protectedNodes);
+    }
+
+    onBeforeDelete(): void {
+        this.template.onBeforeDelete?.call(this);
+    }
+
+    onBeforeUnmount(): void {
+        this.template.onBeforeUnmount?.call(this);
+    }
+
     toSaveData(): Core.iNodeSaveData {
-        this.beforeSave && this.beforeSave();
+        this.beforeSave();
 
         const outObj: Core.iNodeSaveData = {
             tId: this.templateId,
@@ -153,7 +202,7 @@ export default class Node {
             outObj.widg = JSON.parse(JSON.stringify(this.widgetData));
         }
 
-        this.afterSave && this.afterSave(outObj);
+        this.afterSave(outObj);
 
         return outObj;
     }
@@ -164,7 +213,7 @@ export default class Node {
     }
 
     private _loadSaveData(data: Core.iNodeSaveData): Node {
-        this.beforeLoad && this.beforeLoad(data);
+        this.beforeLoad(data);
 
         if (data.widg){
             this.widgetData = data.widg;
@@ -176,7 +225,7 @@ export default class Node {
             nodeInput.value = input.value;
         });
 
-        this.afterLoad && this.afterLoad(data);
+        this.afterLoad(data);
 
         return this;
     }

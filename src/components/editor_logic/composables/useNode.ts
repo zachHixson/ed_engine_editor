@@ -135,11 +135,11 @@ export default function useNode(
             deselectAllNodes();
         }
     
-        protectedNodes.forEach(node => node.onDeleteStopped && node.onDeleteStopped(protectedNodes));
+        protectedNodes.forEach(node => node.onDeleteStopped(protectedNodes));
     }
 
     function copySelectedToClipboard(): void {
-        const nodesToCopy = selectedNodes.value.filter(node => !node.template.doNotCopy);
+        const nodesToCopy = selectedNodes.value.filter(node => !node.doNotCopy);
 
         if (nodesToCopy.length <= 0) return;
 
@@ -189,7 +189,7 @@ export default function useNode(
             undoStore.commit({action: Core.LOGIC_ACTION.ADD_NODE, data});
         }
     
-        if (!nodeRef) newNode.onCreate && (newNode.onCreate as ()=>void)();
+        if (!nodeRef) newNode.onCreate();
     }
 
     function actionPasteNodes(_:{}, makeCommit = true): void {
@@ -226,8 +226,8 @@ export default function useNode(
             connection.graphId = props.selectedAsset.selectedGraphId;
             props.selectedAsset.addConnection(connection);
             connectionList.push(connection);
-            connection.startNode?.onRemoveConnection && connection.startNode.onRemoveConnection(connection);
-            connection.endNode?.onRemoveConnection && connection.endNode.onRemoveConnection(connection);
+            connection.startNode?.onRemoveConnection(connection);
+            connection.endNode?.onRemoveConnection(connection);
         });
 
         if (makeCommit){
@@ -260,12 +260,12 @@ export default function useNode(
                 if (!connectionMapGet.length) connectionRefMap.set(node.parentScript, connectionMapGet);
                 connectionMapGet.push(connection);
                 node.parentScript.removeConnection(connection.id);
-                connection.startNode?.onRemoveConnection && connection.startNode?.onRemoveConnection(connection);
-                connection.endNode?.onRemoveConnection && connection.endNode?.onRemoveConnection(connection);
+                connection.startNode?.onRemoveConnection(connection);
+                connection.endNode?.onRemoveConnection(connection);
             });
     
             //delete node
-            node.onBeforeDelete && node.onBeforeDelete();
+            node.onBeforeDelete();
             node.parentScript.deleteNode(node);
         });
     
@@ -303,7 +303,7 @@ export default function useNode(
     }
 
     function revertAddNode({nodeRef}: ActionAddNodeProps): void {
-        nodeRef!.onBeforeDelete && nodeRef!.onBeforeDelete();
+        nodeRef!.onBeforeDelete();
         props.selectedAsset.deleteNode(nodeRef!);
     }
     
@@ -317,8 +317,8 @@ export default function useNode(
         connectionRefMap!.forEach((connectionList, parentScript) => {
             connectionList.forEach(connection => {
                 parentScript.addConnection(connection);
-                connection.startNode?.onNewConnection && connection.startNode.onNewConnection(connection);
-                connection.endNode?.onNewConnection && connection.endNode.onNewConnection(connection);
+                connection.startNode?.onNewConnection(connection);
+                connection.endNode?.onNewConnection(connection);
             });
         });
     }

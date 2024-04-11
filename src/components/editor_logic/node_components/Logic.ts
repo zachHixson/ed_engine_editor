@@ -88,7 +88,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
 
         //dispatch node event
         this.nodes.forEach(node => {
-            node.logicLoaded && node.logicLoaded(this);
+            node.logicLoaded(this);
         });
 
         return this;

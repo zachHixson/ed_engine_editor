@@ -86,22 +86,21 @@ export default class Logic implements iEngineLogic {
     dispatchOnCreate(instance: Instance_Object): void {
         for (let i = 0; i < this._nodes.length; i++){
             const curNode = this._nodes[i];
-            const method = curNode.template.onCreate as (this: iEngineNode, eventContext: iEventContext)=>void;
-            method?.call(curNode, this.createEventContext(instance));
+            curNode.onCreate(this.createEventContext(instance));
         }
     }
 
     dispatchLogicLoaded(): void {
         for (let i = 0; i < this._nodes.length; i++){
             const curNode = this._nodes[i];
-            curNode.template.logicLoaded?.call(curNode, this);
+            curNode.logicLoaded(this);
         }
     }
 
     dispatchAfterGameDataLoaded(): void {
         for (let i = 0; i < this._nodes.length; i++){
             const curNode = this._nodes[i];
-            curNode.template.afterGameDataLoaded?.call(curNode);
+            curNode.afterGameDataLoaded();
         }
     }
 

@@ -1,4 +1,5 @@
 import {
+    iEditorLogic,
     iEngineLogic,
     iEngineNode,
     iNodeTemplate,
@@ -111,6 +112,18 @@ export default class Node implements iEngineNode {
     private _getOutputData(outputName: string, eventContext: iEventContext): any {
         const methodName = this.outputs.get(outputName)?.execute;
         return this.methods.get(methodName!)?.call(this, eventContext);
+    }
+
+    logicLoaded(logic: iEditorLogic | iEngineLogic): void {
+        this.template.logicLoaded?.call(this, logic);
+    }
+
+    afterGameDataLoaded(): void {
+        this.template.afterGameDataLoaded?.call(this);
+    }
+
+    onCreate(context: iEventContext): void {
+        (this.template.onCreate as (this: iEngineNode, ctx: iEventContext)=>void)?.call(this, context);
     }
 
     executeEvent(data: any, eventContext: iEventContext): void {

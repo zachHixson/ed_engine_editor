@@ -16,10 +16,12 @@ export default [
         id: 'create_variable',
         category: 'variables',
         doNotCopy: true,
+        editorCanDelete: false,
+        reverseOutputs: true,
         inputs: [
-            {id: '_varName', type: SOCKET_TYPE.INFO, hideSocket: true},
-            {id: '_varType', type: SOCKET_TYPE.INFO, hideSocket: true},
-            {id: 'initial_value', type: SOCKET_TYPE.NUMBER, default: 0, hideSocket: true},
+            {id: '_varName', type: SOCKET_TYPE.INFO, hideSocket: true, enableDecorators: true},
+            {id: '_varType', type: SOCKET_TYPE.INFO, hideSocket: true, enableDecorators: true},
+            {id: 'initial_value', type: SOCKET_TYPE.NUMBER, default: 0, hideSocket: true, flipInput: true},
         ],
         outputs: [
             {id: '_value', type: SOCKET_TYPE.ANY, execute: 'getValue'}
@@ -35,16 +37,6 @@ export default [
                 actionEditVariable,
                 revertEditVariable
             );
-        },
-        init(this: GenericNode){
-            if (isEngineNode(this)) return;
-
-            this.editorCanDelete = false;
-            this.reverseOutputs = true;
-            this.showEditButton = true;
-            this.inputs.get('_varName')!.enableDecorators = true;
-            this.inputs.get('_varType')!.enableDecorators = true;
-            this.inputs.get('initial_value')!.flipInput = true;
         },
         onCreate(this: GenericNode){
             if (isEngineNode(this)) return;
@@ -209,20 +201,18 @@ export default [
     {// Set Variable
         id: 'set_variable',
         category: 'variables',
+        inputBoxWidth: 6,
         inTriggers: [
             {id: '_i', execute: 'setVar'},
         ],
         outTriggers: ['_o'],
         inputs: [
-            {id: 'name', type: SOCKET_TYPE.STRING, default: '', hideSocket: true},
+            {id: 'name', type: SOCKET_TYPE.STRING, default: '', hideSocket: true, enableDecorators: true},
             {id: 'data', type: SOCKET_TYPE.ANY, default: null, disabled: true, hideInput: true},
         ],
         init(this: GenericNode){
-            if (!isEngineNode(this)){
-                this.inputBoxWidth = 6;
-                this.inputs.get('name')!.enableDecorators = true;
-                document.addEventListener('onNewVariable', this.onNewVariable as EventListener);
-            }
+            if (isEngineNode(this)) return;
+            document.addEventListener('onNewVariable', this.onNewVariable as EventListener);
         },
         onInput: onInput,
         afterGameDataLoaded: afterGameDataLoaded,
@@ -263,19 +253,16 @@ export default [
     {// Get Variable
         id: 'get_variable',
         category: 'variables',
+        inputBoxWidth: 6,
+        stackDataIO: true,
         inputs: [
-            {id: 'name', type: SOCKET_TYPE.STRING, default: '', hideSocket: true},
+            {id: 'name', type: SOCKET_TYPE.STRING, default: '', hideSocket: true, flipInput: true},
         ],
         outputs: [
             {id: 'data', type: SOCKET_TYPE.ANY, disabled: true, execute: 'getVar'},
         ],
         init(this: GenericNode){
             if (isEngineNode(this)) return;
-            
-            const nameInput = this.inputs.get('name')!;
-            nameInput.flipInput = true;
-            this.inputBoxWidth = 6;
-            this.stackDataIO = true;
             document.addEventListener('onNewVariable', this.onNewVariable as EventListener);
         },
         onInput: onInput,

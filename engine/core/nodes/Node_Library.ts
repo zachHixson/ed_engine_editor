@@ -247,6 +247,7 @@ export const NODE_LIST: iNodeTemplate[] = [
     {// count_loop
         id: 'count_loop',
         category: 'actual',
+        stackDataIO: true,
         inputs: [
             {id: 'count', type: SOCKET_TYPE.NUMBER, default: 1},
         ],
@@ -257,10 +258,6 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: '_i', execute: 'runLoop'},
         ],
         outTriggers: ['_o'],
-        init(this: GenericNode){
-            if (isEngineNode(this)) return;
-            this.stackDataIO = true;
-        },
         methods: {
             runLoop(this: iEngineNode, eventContext: iEventContext){
                 const count = this.getInput<number>('count', eventContext);
@@ -281,6 +278,7 @@ export const NODE_LIST: iNodeTemplate[] = [
     {// list_loop
         id: 'list_loop',
         category: 'actual',
+        stackDataIO: true,
         inputs: [
             {id: 'list', type: SOCKET_TYPE.ANY, hideInput: true, isList: true, default: []},
         ],
@@ -292,10 +290,6 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: '_i', execute: 'runLoop'},
         ],
         outTriggers: ['_o'],
-        init(this: GenericNode){
-            if (isEngineNode(this)) return;
-            this.stackDataIO = true;
-        },
         onNewConnection(this: iEditorNode){
             setTimeout(()=>this.refresh());
         },
@@ -792,6 +786,7 @@ export const NODE_LIST: iNodeTemplate[] = [
     {// Get Instances
         id: 'get_instances',
         category: 'actual',
+        stackDataIO: true,
         inputs: [
             {id: 'name', type: SOCKET_TYPE.STRING, default: ''},
             {id: 'group', type: SOCKET_TYPE.STRING, default: ''},
@@ -800,11 +795,6 @@ export const NODE_LIST: iNodeTemplate[] = [
         outputs: [
             {id: 'instances', type: SOCKET_TYPE.INSTANCE, isList: true, execute: 'getInstances'},
         ],
-        init(this: GenericNode){
-            if (isEngineNode(this)) return;
-
-            this.stackDataIO = true;
-        },
         methods: {
             getInstances(this: iEngineNode, eventContext: iEventContext){
                 const name = this.getInput<string>('name', eventContext);
@@ -856,6 +846,7 @@ export const NODE_LIST: iNodeTemplate[] = [
     {// Raycast
         id: 'raycast',
         category: 'actual',
+        stackDataIO: true,
         widget: {
             id: 'direction',
             type: WIDGET.DIRECTION,
@@ -872,10 +863,6 @@ export const NODE_LIST: iNodeTemplate[] = [
         outputs: [
             {id: 'instances', type: SOCKET_TYPE.INSTANCE, isList: true, execute: 'raycast'},
         ],
-        init(this: GenericNode){
-            if (isEngineNode(this)) return;
-            this.stackDataIO = true;
-        },
         methods: {
             raycast(this: iEngineNode, eventContext: iEventContext){
                 const widgetDir = this.widgetData;
@@ -921,6 +908,7 @@ export const NODE_LIST: iNodeTemplate[] = [
     {// Broadcast Message
         id: 'broadcast_message',
         category: 'actual',
+        inputBoxWidth: 6,
         inTriggers: [
             {id: '_i', execute: 'broadcastMessage'},
         ],
@@ -929,11 +917,6 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'name', type: SOCKET_TYPE.STRING, default: ''},
             {id: 'global', type: SOCKET_TYPE.BOOL, default: false},
         ],
-        init(this: GenericNode){
-            if (!isEngineNode(this)){
-                this.inputBoxWidth = 6;
-            }
-        },
         methods: {
             broadcastMessage(this: iEngineNode, eventContext: iEventContext){
                 const name = this.getInput<string>('name', eventContext);
@@ -955,6 +938,7 @@ export const NODE_LIST: iNodeTemplate[] = [
     {// Timer
         id: 'timer',
         category: 'actual',
+        stackDataIO: true,
         inputs: [
             {id: 'duration', type: SOCKET_TYPE.NUMBER, required: true, default: 0},
             {id: 'step', type: SOCKET_TYPE.NUMBER, required: true, default: 0},
@@ -970,11 +954,6 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'reset', execute: 'reset'},
         ],
         outTriggers: ['immediate', 'started', 'tick', 'complete'],
-        init(this: GenericNode){
-            if (!isEngineNode(this)){
-                this.stackDataIO = true;
-            }
-        },
         methods: {
             start(this: iEngineNode, eventContext: iEventContext){
                 const oldData = this.dataCache.get(eventContext.instance.id);
@@ -1063,6 +1042,7 @@ export const NODE_LIST: iNodeTemplate[] = [
     {// Random Number
         id: 'random_number',
         category: 'actual',
+        stackDataIO: true,
         inputs: [
             {id: 'lower', type: SOCKET_TYPE.NUMBER, required: true, default: 0},
             {id: 'upper', type: SOCKET_TYPE.NUMBER, required: true, default: 1},
@@ -1071,10 +1051,6 @@ export const NODE_LIST: iNodeTemplate[] = [
         outputs: [
             {id: 'number', type: SOCKET_TYPE.NUMBER, execute: 'getNum'},
         ],
-        init(this: GenericNode){
-            if (isEngineNode(this)) return;
-            this.stackDataIO = true;
-        },
         methods: {
             getNum(this: iEngineNode, eventContext: iEventContext){
                 const lower = this.getInput<number>('lower', eventContext);
