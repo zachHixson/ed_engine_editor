@@ -67,6 +67,8 @@ function dialogClose(positive: boolean): void {
     dialogConfirmOpen.value = false;
     dialogAlertOpen.value = false;
 }
+
+defineExpose({dialogOpen});
 </script>
 
 <template>

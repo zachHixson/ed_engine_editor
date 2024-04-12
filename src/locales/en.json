@@ -46,7 +46,8 @@
         "object_prefix": "Object_",
         "logic_prefix": "Logic_",
         "room_prefix": "Room_",
-        "no_assets": "No assets in this list yet"
+        "no_assets": "No assets in this list yet",
+        "confirm_delete": "You are about to delete \"{assetName}.\" Are you sure?"
     },
     "art_editor":{
         "small_brush": "Small Brush (1)",

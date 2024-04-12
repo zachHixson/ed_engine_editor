@@ -19,6 +19,8 @@ import { useGameDataStore } from '@/stores/GameData';
 import Core from '@/core';
 import type { iChangeEventProps } from '@/components/common/DragList.vue';
 import type { iRenameEventProps } from './Asset.vue';
+import type { DialogBoxProps } from '@/components/EditorWindow.vue';
+
 import spriteIcon from '@/assets/sprite_icon.svg';
 import objectIcon from '@/assets/object_icon.svg';
 import logicIcon from '@/assets/logic.svg';
@@ -30,7 +32,11 @@ const { t } = useI18n();
 const assetBrowserStore = useAssetBrowserStore();
 const gameDataStore = useGameDataStore();
 
-const emit = defineEmits(['asset-deleted', 'asset-selected']);
+const emit = defineEmits([
+    'asset-deleted',
+    'asset-selected',
+    'dialog-open',
+]);
 
 const slideWrapperRef = ref<HTMLDivElement>();
 const assetListRef = ref<HTMLDivElement>();
@@ -113,17 +119,32 @@ function addAsset(): void {
 }
 
 function deleteAsset(asset: Core.Asset_Base): void {
-    const isRoom = asset.category_ID == Core.CATEGORY_ID.ROOM;
-    const selectedAsset = isRoom ? assetBrowserStore.getSelectedRoom : assetBrowserStore.getSelectedAsset;
+    const props: DialogBoxProps = {
+        confirmDialog: true,
+        textInfo: {
+            textId: 'asset_browser.confirm_delete',
+            vars: {
+                assetName: asset.name,
+            }
+        },
+        callback: (positive)=>{
+            if (!positive) return;
 
-    //if the selected asset was deleted, shift the selection to the adjacent asset
-    if (selectedAsset && asset.id == selectedAsset.id){
-        selectAdjacent(asset);
-    }
+            const isRoom = asset.category_ID == Core.CATEGORY_ID.ROOM;
+            const selectedAsset = isRoom ? assetBrowserStore.getSelectedRoom : assetBrowserStore.getSelectedAsset;
 
-    //Actually delete the asset from Vuex
-    gameDataStore.deleteAsset(asset.category_ID, asset.id);
-    emit('asset-deleted');
+            //if the selected asset was deleted, shift the selection to the adjacent asset
+            if (selectedAsset && asset.id == selectedAsset.id){
+                selectAdjacent(asset);
+            }
+
+            //Actually delete the asset from Vuex
+            gameDataStore.deleteAsset(asset.category_ID, asset.id);
+            emit('asset-deleted');
+        },
+    };
+
+    emit('dialog-open', props);
 }
 
 function selectAsset(asset: Core.Asset_Base, catId?: Core.CATEGORY_ID): void {

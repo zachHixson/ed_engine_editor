@@ -10,7 +10,7 @@ export const AppEventBus = {
 import HeaderPanel from './components/HeaderPanel.vue';
 import TabPanel from './components/TabPanel.vue';
 import AssetBrowser from './components/asset_browser/AssetBrowser.vue';
-import EditorWindow from './components/EditorWindow.vue';
+import EditorWindow, { type DialogBoxProps } from './components/EditorWindow.vue';
 import PlayWindow from './components/PlayWindow.vue';
 import Tooltip from './components/common/Tooltip.vue';
 
@@ -42,6 +42,7 @@ const engineLicensePreamble = `
 `;
 
 const autoSaving = ref(false);
+const editorWindowEl = ref<InstanceType<typeof EditorWindow>>();
 
 onMounted(()=>{
     const autoLoadData = localStorage.getItem('autoLoad');
@@ -139,6 +140,10 @@ async function autoSave(){
     const saveData = mainStore.getSaveData();
     localStorage.setItem('autoLoad', saveData);
 }
+
+function dialogOpen(props: DialogBoxProps){
+    editorWindowEl.value!.dialogOpen(props);
+}
 </script>
 
 <template>
@@ -150,8 +155,11 @@ async function autoSave(){
             @save-project="saveProject"
             @package-game="packageGame" />
         <TabPanel class="TabPanel" ref="tabPanel"/>
-        <AssetBrowser class="assetBrowser" ref="assetBrowser" @asset-selected="updateEditorAsset" @asset-deleted="updateAfterDeletion" />
-        <EditorWindow class="editorWindow" ref="editorWindow" @asset-changed="updateAssetPreviews"/>
+        <AssetBrowser class="assetBrowser" ref="assetBrowser"
+            @asset-selected="updateEditorAsset"
+            @asset-deleted="updateAfterDeletion"
+            @dialog-open="dialogOpen" />
+        <EditorWindow class="editorWindow" ref="editorWindowEl" @asset-changed="updateAssetPreviews"/>
         <transition name="playWindow">
             <PlayWindow v-if="mainStore.getPlayState != PLAY_STATE.NOT_PLAYING" class="playWindow" />
         </transition>
