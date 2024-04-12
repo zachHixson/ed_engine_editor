@@ -16,7 +16,9 @@
         "logic_tab" : "Logic",
         "run" : "Play",
         "debug" : "Debug",
-        "package": "Export"
+        "package": "Export",
+        "autosaving": "Auto-Saving",
+        "saved": "Saved"
     },
     "file_menu":{
         "new": "New",

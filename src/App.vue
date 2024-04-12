@@ -14,7 +14,7 @@ import EditorWindow from './components/EditorWindow.vue';
 import PlayWindow from './components/PlayWindow.vue';
 import Tooltip from './components/common/Tooltip.vue';
 
-import { onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useMainStore, PLAY_STATE } from './stores/Main';
 import { useGameDataStore } from './stores/GameData';
 import { useAssetBrowserStore } from './stores/AssetBrowser';
@@ -22,12 +22,14 @@ import { useLogicEditorStore } from './stores/LogicEditor';
 import Core, { HTMLTemplate, EngineRawText } from '@/core';
 
 import licenseText from '@/../LICENSE.txt?raw';
+import { useI18n } from 'vue-i18n';
 
 //stores
 const mainStore = useMainStore();
 const gameDataStore = useGameDataStore();
 const assetBrowserStore = useAssetBrowserStore();
 const logicEditorStore = useLogicEditorStore();
+const { t } = useI18n();
 
 const engineLicensePreamble = `
 ###################################################################
@@ -39,6 +41,8 @@ const engineLicensePreamble = `
 ###################################################################
 `;
 
+const autoSaving = ref(false);
+
 onMounted(()=>{
     const autoLoadData = localStorage.getItem('autoLoad');
 
@@ -47,17 +51,32 @@ onMounted(()=>{
 
     //setup debug commands
     (<any>window).setAutoLoad = ()=>{
-        const saveData = mainStore.getSaveData();
-        localStorage.setItem('autoLoad', saveData);
+        autoSave();
     };
     (<any>window).clearAutoLoad = ()=>{
         localStorage.setItem('autoLoad', '');
+    };
+    (<any>window).enableAutoSave = ()=>{
+        localStorage.removeItem('disableAutoSave');
+    };
+    (<any>window).disableAutoSave = ()=>{
+        localStorage.setItem('disableAutoSave', 'true');
     };
 
     //Load autoLoad project
     if (autoLoadData){
         openProject(autoLoadData);
     }
+
+    //start auto save timer
+    setInterval(()=>{
+        if (localStorage.getItem('disableAutoSave')) return;
+
+        autoSaving.value = true;
+        autoSave().then(()=>{
+            setTimeout(()=>autoSaving.value = false, 3000);
+        });
+    }, 60000);
 });
 
 function updateAssetPreviews(id?: number): void {
@@ -115,6 +134,11 @@ function saveAs(data: string, fileName: string){
     link.click();
     URL.revokeObjectURL(link.href);
 }
+
+async function autoSave(){
+    const saveData = mainStore.getSaveData();
+    localStorage.setItem('autoLoad', saveData);
+}
 </script>
 
 <template>
@@ -132,6 +156,14 @@ function saveAs(data: string, fileName: string){
             <PlayWindow v-if="mainStore.getPlayState != PLAY_STATE.NOT_PLAYING" class="playWindow" />
         </transition>
         <Tooltip />
+        <div class="autosave-box" :class="autoSaving ? 'autosave-box-open':''">
+            <div class="progress">
+                ...
+            </div>
+            <div class="text">
+                {{ t('editor_main.autosaving') }}
+            </div>
+        </div>
     </div>
     <!--Preloaded icons-->
     <div hidden>
@@ -216,5 +248,24 @@ html, body{
 .playWindow-enter-from,
 .playWindow-leave-to{
     top: 100%;
+}
+
+.autosave-box{
+    position: absolute;
+    right: 0;
+    bottom: -100%;
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+    background: white;
+    padding: 10px;
+    margin: 20px;
+    border-radius: 10px;
+    transition: bottom 1s;
+}
+
+.autosave-box-open{
+    right: 0;
+    bottom: 0;
 }
 </style>
