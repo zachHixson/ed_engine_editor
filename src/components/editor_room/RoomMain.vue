@@ -156,6 +156,8 @@ const redoLength = computed<number>(()=>undoStore.redoLength);
 
 //watchers
 watch(()=>props.selectedRoom, (newRoom, oldRoom)=>{
+    if (!newRoom) return;
+    
     newRoom.initSpacialData();
 
     if (newRoom && oldRoom && newRoom.id != oldRoom.id){
@@ -190,7 +192,7 @@ onBeforeUnmount(()=>{
     window.removeEventListener('keydown', hotkeyDown as (e: Event)=>void);
     window.removeEventListener('keydown', hotkeyUp as (e: Event)=>void);
 
-    props.selectedRoom.clearSpacialData();
+    props.selectedRoom?.clearSpacialData();
 });
 
 //Methods
@@ -230,6 +232,8 @@ function bindHotkeys(): void {
 }
 
 function refreshRoom(): void {
+    if (!props.selectedRoom) return;
+    
     props.selectedRoom.clearSpacialData();
     props.selectedRoom.initSpacialData();
     RoomMainEventBus.onRoomChanged.emit();
