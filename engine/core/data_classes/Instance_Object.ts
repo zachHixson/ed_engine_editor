@@ -42,7 +42,7 @@ export class Instance_Object extends Instance_Base{
         super(id, pos);
 
         this._objRef = objRef;
-        this.sprite = this._objRef.sprite;
+        this._sprite = this._objRef.sprite;
         this.name = this._objRef.name + '_' + this.id;
         this.collisionOverride = COLLISION_OVERRIDE.KEEP;
 
@@ -63,6 +63,7 @@ export class Instance_Object extends Instance_Base{
 
     get objRef(){return this._objRef};
     set objRef(obj: Game_Object){this._objRef = obj};
+    get sprite(){return window.IS_ENGINE ? this._sprite : this._objRef.sprite};
     get userDepth(){return this.zDepthOverride ?? this._objRef.zDepth};
     get zDepth(){return (this.userDepth / 100) + this.depthOffset};
     get hasEditorFrame(){
