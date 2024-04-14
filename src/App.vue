@@ -153,7 +153,8 @@ function dialogOpen(props: DialogBoxProps){
             @new-project="newProject"
             @open-project="openProject"
             @save-project="saveProject"
-            @package-game="packageGame" />
+            @package-game="packageGame"
+            @dialog-open="dialogOpen" />
         <TabPanel class="TabPanel" ref="tabPanel"/>
         <AssetBrowser class="assetBrowser" ref="assetBrowser"
             @asset-selected="updateEditorAsset"

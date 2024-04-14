@@ -43,11 +43,17 @@ const choices = [
     {
         id: enumID++,
         text: t('file_menu.about'),
-        method: getMenuAction(() => {console.log("About")}),
+        method: getMenuAction(openAboutMenu),
     }
 ];
 
-const emit = defineEmits(['new-project', 'save-project', 'open-project', 'package-game']);
+const emit = defineEmits([
+    'new-project',
+    'save-project',
+    'open-project',
+    'package-game',
+    'dialog-open',
+]);
 
 const projName = computed({
     get(): string {
@@ -133,6 +139,21 @@ function packageGame(): void {
     emit('package-game');
 }
 
+function openAboutMenu(): void {
+    emit('dialog-open', {
+        alertDialog: true,
+        textInfo: {
+            textId: `
+                <div style=\"display: block; width: 200px; height: 100px;\">
+                    <h3>${t('file_menu.about')}:</h3>
+                    Zach Hixson <br />
+                    2024 <br />
+                    <a href="${t('file_menu.github_link')}" target="_blank">Github</a>
+                </div>
+            `,
+        }
+    });
+}
 </script>
 
 <template>

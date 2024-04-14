@@ -25,7 +25,8 @@
         "open": "Open",
         "save": "Save",
         "export": "Export Game",
-        "about": "About"
+        "about": "About",
+        "github_link": "https://github.com/zachHixson/ed_engine_editor"
     },
     "navigation":{
         "pan_tool": "Pan (Space + Drag)",

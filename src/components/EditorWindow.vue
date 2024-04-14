@@ -58,7 +58,7 @@ function dialogOpen({confirmDialog, alertDialog, textInfo, callback}: DialogBoxP
     dialogAlertOpen.value = alertDialog ?? false;
     dialogTextId.value = textInfo.textId;
     dialogTextVars.value = textInfo.vars;
-    dialogCallback = callback;
+    dialogCallback = callback ?? (()=>{});
 }
 
 function dialogClose(positive: boolean): void {
