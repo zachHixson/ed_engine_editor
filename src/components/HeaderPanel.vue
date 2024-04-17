@@ -42,16 +42,31 @@ const choices = [
     },
     {
         id: enumID++,
+        text: t('file_menu.report_bug'),
+        method: getMenuAction(()=>window.open(t('file_menu.github_bug_report', '_blank'))),
+    },
+    {
+        id: enumID++,
         text: t('file_menu.about'),
         method: getMenuAction(openAboutMenu),
     }
 ];
+
+//insert welcome menu if not in portable mode
+if (location.hostname != ''){
+    choices.splice(choices.length - 1, 0, {
+        id: enumID++,
+        text: t('file_menu.show_welcome'),
+        method: getMenuAction(openWelcome),
+    });
+}
 
 const emit = defineEmits([
     'new-project',
     'save-project',
     'open-project',
     'package-game',
+    'open-welcome',
     'dialog-open',
 ]);
 
@@ -137,6 +152,10 @@ const loadProjectFile = (event: Event): void => {
 
 function packageGame(): void {
     emit('package-game');
+}
+
+function openWelcome(): void {
+    emit('open-welcome');
 }
 
 function openAboutMenu(): void {

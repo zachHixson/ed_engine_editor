@@ -12,6 +12,7 @@ import TabPanel from './components/TabPanel.vue';
 import AssetBrowser from './components/asset_browser/AssetBrowser.vue';
 import EditorWindow, { type DialogBoxProps } from './components/EditorWindow.vue';
 import PlayWindow from './components/PlayWindow.vue';
+import WelcomeModal from './components/WelcomeModal.vue';
 import Tooltip from './components/common/Tooltip.vue';
 
 import { ref, onMounted } from 'vue';
@@ -43,6 +44,7 @@ const engineLicensePreamble = `
 
 const autoSaving = ref(false);
 const editorWindowEl = ref<InstanceType<typeof EditorWindow>>();
+const welcomeDialogEl = ref<InstanceType<typeof WelcomeModal>>();
 
 onMounted(()=>{
     const autoLoadData = localStorage.getItem('autoLoad');
@@ -154,6 +156,7 @@ function dialogOpen(props: DialogBoxProps){
             @open-project="openProject"
             @save-project="saveProject"
             @package-game="packageGame"
+            @open-welcome="welcomeDialogEl?.openModal()"
             @dialog-open="dialogOpen" />
         <TabPanel class="TabPanel" ref="tabPanel"/>
         <AssetBrowser class="assetBrowser" ref="assetBrowser"
@@ -164,6 +167,7 @@ function dialogOpen(props: DialogBoxProps){
         <transition name="playWindow">
             <PlayWindow v-if="mainStore.getPlayState != PLAY_STATE.NOT_PLAYING" class="playWindow" />
         </transition>
+        <WelcomeModal ref="welcomeDialogEl" @demo-opened="openProject($event)"></WelcomeModal>
         <Tooltip />
         <div class="autosave-box" :class="autoSaving ? 'autosave-box-open':''">
             <div class="progress">

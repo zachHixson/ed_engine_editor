@@ -7,6 +7,15 @@
         "ok": "Ok",
         "search": "Search"
     },
+    "welcome_modal":{
+        "explore_demos": "Explore Demos",
+        "get_started": "Get Started!",
+        "hide_welcome": "Hide welcome screen from now on",
+        "demo_maze": "Maze (Easy)",
+        "demo_shooter": "Alien Blaster (Medium)",
+        "demo_platformer": "Platformer (Advanced)",
+        "demo_error": "Error loading demo"
+    },
     "editor_main":{
         "project_name": "Project Name:",
         "default_name": "Untitled Project",
@@ -25,8 +34,11 @@
         "open": "Open",
         "save": "Save",
         "export": "Export Game",
+        "report_bug": "Report bug",
+        "show_welcome": "Show Welcome",
         "about": "About",
-        "github_link": "https://github.com/zachHixson/ed_engine_editor"
+        "github_link": "https://github.com/zachHixson/ed_engine_editor",
+        "github_bug_report": "https://github.com/zachHixson/ed_engine_editor/issues"
     },
     "navigation":{
         "pan_tool": "Pan (Space + Drag)",
