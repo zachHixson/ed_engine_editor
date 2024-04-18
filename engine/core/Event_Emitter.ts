@@ -1,4 +1,6 @@
-import type { Options } from "./Dynamic_Event_Bus";
+export interface Options {
+    once?: boolean,
+}
 
 export class Event_Emitter <T extends (...args: any)=>void> {
     private _context: any;
