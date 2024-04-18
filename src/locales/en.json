@@ -11,8 +11,8 @@
         "explore_demos": "Explore Demos",
         "get_started": "Get Started!",
         "hide_welcome": "Hide welcome screen from now on",
-        "demo_maze": "Maze (Easy)",
-        "demo_shooter": "Alien Blaster (Medium)",
+        "demo_maze": "Treasure Hunter (Easy)",
+        "demo_space": "Alien Blaster (Medium)",
         "demo_platformer": "Platformer (Advanced)",
         "demo_error": "Error loading demo"
     },

@@ -12,6 +12,7 @@ node_modules
 dist
 _compiled
 _demos
+welcome_text.html
 dist-ssr
 coverage
 *.local

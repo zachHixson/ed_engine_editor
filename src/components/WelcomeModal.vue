@@ -2,7 +2,6 @@
 import { ref, onMounted } from 'vue';
 import Svg from './common/Svg.vue';
 
-import placeHolderIcon from '@/assets/animation.svg';
 import throbberIcon from '@/assets/throbber.svg';
 import { useI18n } from 'vue-i18n';
 
@@ -19,10 +18,23 @@ const showWelcome = ref(false);
 const showDemos = ref(false);
 const loadingDemo = ref(false);
 const loadingDemoError = ref(false);
+const welcomeText = ref<string>('');
+const demoNames = ref<string[]>([]);
 
 onMounted(()=>{
     if (showModal.value){
         showWelcome.value = true;
+
+        fetch('./welcome_text.html')
+            .then(res => {
+                if (!res.ok){
+                    console.error('Could not load welcome text');
+                    return '<h1 style="text-align: center">Welcome!</h1>';
+                }
+
+                return res.text();
+            })
+            .then(text => welcomeText.value = text);
     }
 });
 
@@ -42,6 +54,26 @@ function switchToDemos(): void {
     localStorage.setItem('hide-welcome', hideToggle.value ? 't' : 'f');
     showWelcome.value = false;
     showDemos.value = true;
+    loadingDemo.value = true;
+
+    fetch('./_demos/manifest.txt')
+        .then(res => {
+            if (!res.ok){
+                loadingDemoError.value = true;
+                loadingDemo.value = true;
+                return null;
+            }
+
+            return res.text();
+        })
+        .then(manifest => {
+            if (!manifest) return;
+
+            const names = manifest.split('\n');
+            demoNames.value = names;
+
+            loadingDemo.value = false;
+        });
 }
 
 function openDemo(demo: string): void {
@@ -65,7 +97,6 @@ function openDemo(demo: string): void {
             loadingDemo.value = false;
             closeModal();
             emit('demo-opened', fileContents);
-            console.log(fileContents);
         });
 }
 
@@ -83,10 +114,7 @@ defineExpose({openModal});
         <div class="background" :class="showModal ? 'bg-show' : ''">
             <Transition name="Twindow">
                 <div v-if="showWelcome" class="window" v-click-outside="clickOutside">
-                    <div class="text">
-                        <h1>Welcome!</h1>
-                        <p>Some kind of text</p>
-                    </div>
+                    <div class="text" v-html="welcomeText"></div>
                     <div class="controls">
                         <button @click="switchToDemos">{{ t('welcome_modal.explore_demos') }}</button>
                         <button class="get-started-btn" @click="closeModal">{{ t('welcome_modal.get_started') }}</button>
@@ -98,27 +126,22 @@ defineExpose({openModal});
                 </div>
             </Transition>
             <Transition name="Twindow">
-                <div v-if="showDemos" class="window">
+                <div v-if="showDemos" class="window" v-click-outside="clickOutside">
                     <div style="display: flex; flex-direction: row; justify-content: end;">
                         <button @click="closeModal">X</button>
                     </div>
                     <div v-if="!loadingDemo" class="demo-list">
-                        <button class="demo-btn" @click="openDemo('maze')">
-                            <Svg :src="placeHolderIcon" style="width: 50px; height: 50px;"></Svg>
-                            <p>{{ t('welcome_modal.demo_maze') }}</p>
-                        </button>
-                        <button class="demo-btn" @click="openDemo('space')">
-                            <Svg :src="placeHolderIcon" style="width: 50px; height: 50px;"></Svg>
-                            <p>{{ t('welcome_modal.demo_shooter') }}</p>
-                        </button>
-                        <button class="demo-btn" @click="openDemo('platformer')">
-                            <Svg :src="placeHolderIcon" style="width: 50px; height: 50px;"></Svg>
-                            <p>{{ t('welcome_modal.demo_platformer') }}</p>
+                        <button
+                            v-for="demo in demoNames"
+                            class="demo-btn"
+                            @click="openDemo(demo)" >
+                                <img :src="`./_demos/${demo}.svg`" style="width: 75px; height: 75px;" />
+                                <p>{{ t(`welcome_modal.demo_${demo}`) }}</p>
                         </button>
                     </div>
-                    <div v-if="loadingDemo" class="throbber-wrapper">
-                        <Svg v-if="!loadingDemoError" :src="throbberIcon" class="throbber"></Svg>
-                        <div v-if="loadingDemoError">{{ t('welcome_modal.demo_error') }}</div>
+                    <div v-show="loadingDemo" class="throbber-wrapper">
+                        <Svg v-show="!loadingDemoError" :src="throbberIcon" class="throbber"></Svg>
+                        <div v-show="loadingDemoError">{{ t('welcome_modal.demo_error') }}</div>
                     </div>
                 </div>
             </Transition>
@@ -142,7 +165,7 @@ defineExpose({openModal});
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.0);
-    transition: background-color 1s;
+    transition: background-color 0.3s;
     pointer-events: none;
 }
 
