@@ -284,7 +284,8 @@ defineExpose({socket: props.socket});
             :class="(disabled ? 'disabled' :'')"
             @mousedown="mouseDown"
             @mouseenter="mouseEnter"
-            @mouseleave="mouseLeave">
+            @mouseleave="mouseLeave"
+            v-tooltip="t(`node.${Core.Node_Enums.SOCKET_TYPE[socket.type]}`) + (socket.isList ? ' ' + t('node.list') : '')">
             <Svg
                 class="socket_icon_img"
                 :class="socket.isList ? 'socket_icon_img_list':''"

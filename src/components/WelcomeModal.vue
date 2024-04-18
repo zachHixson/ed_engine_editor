@@ -197,6 +197,7 @@ defineExpose({openModal});
 .window > .text {
     height: 100%;
     border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+    overflow: hidden;
     overflow-y: auto;
 }
 

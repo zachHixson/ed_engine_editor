@@ -1,6 +1,6 @@
-import type { DirectiveBinding } from 'vue';
+import { type DirectiveBinding } from 'vue';
 import { useMainStore } from './stores/Main';
-import Tooltip, { TooltipEventBus } from './components/common/Tooltip.vue';
+import { TooltipEventBus } from './components/common/Tooltip.vue';
 
 type ExpandedEl = HTMLElement & {[key: string | number | symbol]: any};
 
@@ -65,13 +65,13 @@ export const vInputActive = {
 //Popup global tooltip above components
 export const vTooltip = {
     beforeMount: function(el: ExpandedEl, binding: DirectiveBinding){
-        el.mouseOverHandler = function(){
-            const isGetter = typeof binding.value == 'function';
-            const value = isGetter ? binding.value() : binding.value;
+        const isGetter = typeof binding.value == 'function';
 
+        el.tooltipText = isGetter ? binding.value() : binding.value;
+        el.mouseOverHandler = function(){
             TooltipEventBus.onActivateTooltip.emit({
                 el: (el as HTMLDivElement),
-                text: value,
+                text: el.tooltipText,
             });
         };
         el.mouseOutHandler = function(){
@@ -84,6 +84,10 @@ export const vTooltip = {
         el.addEventListener('mouseover', el.mouseOverHandler);
         el.addEventListener('mouseout', el.mouseOutHandler);
         el.addEventListener('mousedown', el.mouseDownHandler);
+    },
+
+    updated: function(el: ExpandedEl, binding: DirectiveBinding){
+        el.tooltipText = binding.value;
     },
 
     unmounted: function(el: ExpandedEl){
