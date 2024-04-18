@@ -122,18 +122,20 @@ const socketConversionMap = (()=>{
     return scm;
 })();
 
-function needsConvert(fromType: SOCKET_TYPE, toType: SOCKET_TYPE){
+function needsConvert(fromType: SOCKET_TYPE, toType: SOCKET_TYPE): boolean {
     const anyToAny = fromType == ANY || toType == ANY;
     const sameType = fromType == toType;
 
     return !(sameType || anyToAny);
 }
 
-export function canConvertSocket(fromType: SOCKET_TYPE, toType: SOCKET_TYPE){
-    return !needsConvert(fromType, toType) || !!socketConversionMap.get(fromType)?.get(toType);
+export function canConvertSocket(fromType: SOCKET_TYPE, toType: SOCKET_TYPE): boolean {
+    const triggerCheck = !(+(!!fromType) ^ +(!!toType));
+    const hasConversionFunc = !!socketConversionMap.get(fromType)?.get(toType);
+    return triggerCheck && (!needsConvert(fromType, toType) || hasConversionFunc);
 }
 
-export function convertSocketType(fromType: SOCKET_TYPE, toType: SOCKET_TYPE, value: any){
+export function convertSocketType(fromType: SOCKET_TYPE, toType: SOCKET_TYPE, value: any): any {
     if (!needsConvert(fromType, toType)){
         return value;
     }
