@@ -1488,6 +1488,31 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
     },
+    {
+        id: 'get_distance',
+        category: 'movement',
+        inputs: [
+            {id: 'x1', type: SOCKET_TYPE.NUMBER, default: 0},
+            {id: 'y1', type: SOCKET_TYPE.NUMBER, default: 0},
+            {id: 'x2', type: SOCKET_TYPE.NUMBER, default: 0},
+            {id: 'y2', type: SOCKET_TYPE.NUMBER, default: 0},
+        ],
+        outputs: [
+            {id: 'distance', type: SOCKET_TYPE.NUMBER, execute: 'getDistance'},
+        ],
+        methods: {
+            getDistance(this: iEngineNode, eventContext: iEventContext){
+                const x1 = this.getInput<number>('x1', eventContext);
+                const y1 = this.getInput<number>('y1', eventContext);
+                const x2 = this.getInput<number>('x2', eventContext);
+                const y2 = this.getInput<number>('y2', eventContext);
+                const dx = x1 - x2;
+                const dy = y1 - y2;
+
+                return Math.sqrt(dx * dx + dy * dy);
+            },
+        },
+    },
     {// Set Physics
         id: 'set_physics',
         category: 'movement',
