@@ -73,11 +73,9 @@ export default function useNode(
         return navPos;
     }
     
-    function updateNodeBounds(): void {
-        const nodes = visibleNodes.value;
-    
+    function updateNodeBounds(nodes = visibleNodes.value): void {
         if (nodes.length == 0){
-            contentsBounds.forEach((i, idx) => contentsBounds[idx] = 0);
+            contentsBounds.forEach((_, idx) => contentsBounds[idx] = 0);
             return;
         }
     

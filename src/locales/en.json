@@ -5,7 +5,8 @@
         "new": "-- New --",
         "cancel": "Cancel",
         "ok": "Ok",
-        "search": "Search"
+        "search": "Search",
+        "fatalRuntimeError": "<span style=\"font-weight: bold;\">An error has occurred which has forced the game to stop.</span><br />Please contact the game's developer<br />or run game in debug mode."
     },
     "welcome_modal":{
         "explore_demos": "Explore Demos",
@@ -27,7 +28,9 @@
         "debug" : "Debug",
         "package": "Export",
         "autosaving": "Auto-Saving",
-        "saved": "Saved"
+        "saved": "Saved",
+        "fatalRuntimeError": "<span style=\"font-weight: bold;\">An error has occurred which has forced the game to stop.</span><br />Run the game in debug mode for more info.",
+        "nodeExceptionClick": "[double click to open node editor]"
     },
     "file_menu":{
         "new": "New",

@@ -15,7 +15,7 @@
             const { resizeHDPICanvas } = window.Exports.Core.Draw;
             const canvas = document.getElementById('canvas');
             const gameData = document.getElementById('gameData').innerHTML;
-            const engine = new Engine(canvas, gameData);
+            const engine = new Engine(canvas, gameData, {nodeException});
 
             delete window.Exports;
             engine.start();
@@ -31,6 +31,16 @@
             const dim = Math.min(document.body.clientWidth, document.body.clientHeight);
             resizeFunc(canvas, dim, dim);
         }
+
+        function nodeException(data){
+            if (data.fatal){
+                const el = document.getElementById('fatal-error');
+                el.style.display = 'flex';
+                el.classList.add('fatal-error-show');
+            }
+
+            console.error(data);
+        }
     </script>
     <style>
         html, body{
@@ -43,9 +53,27 @@
         }
 
         body{
+            position: relative;
             display: flex;
             justify-content: center;
             align-items: center;
+        }
+
+        #fatal-error{
+            display: none;
+        }
+
+        .fatal-error-show{
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.2);
         }
     </style>
 </head>
@@ -53,5 +81,6 @@
     <canvas id="canvas">
         //Error. This game requires HTML5 canvas. If you see this message update your browser
     </canvas>
+    <div id="fatal-error"><p>[fatalErrorMsg]</p></div>
 </body>
 </html>

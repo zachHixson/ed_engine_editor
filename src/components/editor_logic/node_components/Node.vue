@@ -31,6 +31,8 @@ const props = defineProps<{
     canDrag: boolean;
     selectedNodes: Node[];
     allConnections: Node_Connection[];
+    isErrorNode: boolean;
+    errorMsg?: string;
 }>();
 
 const emit = defineEmits([
@@ -222,7 +224,11 @@ defineExpose({getRelinkInfo});
 <template>
     <div ref="rootRef"
         class="node"
-        :style="isSelected ? 'border-color: var(--button-norm)' : ''"
+        :style="
+            (isSelected ? 'border-color: var(--button-norm);' : '') +
+            (isErrorNode ? 'border-color: red;' : '')
+            "
+        v-tooltip="isErrorNode ? props.errorMsg ?? '' : ''"
         @click="emit('node-clicked', {nodeObj, event: $event})"
         @mousedown="mouseDown">
         <div class="heading" :style="`border-color: ${categoryStyle.color}`">

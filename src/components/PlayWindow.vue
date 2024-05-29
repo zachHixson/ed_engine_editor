@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Svg from './common/Svg.vue';
 
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { useMainStore } from '@/stores/Main';
 import Core, { Engine } from '@/core';
 import { PLAY_STATE } from '@/stores/Main';
@@ -21,15 +21,20 @@ interface iConsoleLine {
     time: [string, string, string];
     level: Level;
     unread: boolean;
+    exceptionData?: Core.iNodeExceptionData;
 }
 
-const { t } = useI18n();
+const emit = defineEmits(['nodeException']);
+
 const mainStore = useMainStore();
+const { t } = useI18n();
 
 const canvasWrapper = ref<HTMLElement>();
 const canvas = ref<HTMLCanvasElement>();
+const debugConsoleRef = ref<HTMLDivElement>();
 const consoleOpen = ref(false);
 const consoleOuput = ref(new Array<iConsoleLine>());
+const fatalError = ref<boolean>(false);
 
 let engine: Engine | null = null;
 let resizeInterval: number;
@@ -44,6 +49,8 @@ const playState = computed<PLAY_STATE>({
 });
 const unreadLevelClass = computed<string>(()=>{
     let unreadLevel: Level | null = null;
+
+    if (consoleOpen.value) return '';
 
     consoleOuput.value.forEach(m => {
         if (!m.unread) return;
@@ -69,6 +76,7 @@ const unreadLevelClass = computed<string>(()=>{
 watch(consoleOpen, ()=>{
     if (consoleOpen.value){
         consoleOuput.value.forEach(m => m.unread = false);
+        dbgScrollToBottom();
     }
 });
 
@@ -97,6 +105,11 @@ function start(): void {
             nodeException,
         });
     }
+    else{
+        Object.assign(callbackArgs, {
+            nodeException: (data: Core.iNodeExceptionData)=>fatalError.value = data.fatal ?? false
+        });
+    }
 
     engine = new Engine(
         canvas.value!,
@@ -119,7 +132,7 @@ function padNum(num: number): string {
     return padding.slice(0, 2 - str.length).join('') + str;
 }
 
-function addLogMessage(textArr: string[], level: Level): void {
+function addLogMessage(textArr: string[], level: Level, exceptionData?: Core.iNodeExceptionData): void {
     const text = textArr.join(' ');
     const time = new Date();
     const h = padNum(time.getHours());
@@ -131,10 +144,20 @@ function addLogMessage(textArr: string[], level: Level): void {
         time: [h, m, s],
         level,
         unread: true,
+        exceptionData,
     });
 
     if (consoleOuput.value.length > 150){
         consoleOuput.value.splice(0, 1);
+    }
+
+    if (consoleOpen.value){
+        const listEl = debugConsoleRef.value?.querySelector('.console-message-list')!;
+        const listHeight = listEl.getBoundingClientRect().height;
+        
+        if (listEl.scrollTop >= (listEl.scrollHeight - listHeight)){
+            dbgScrollToBottom();
+        }
     }
 }
 
@@ -150,8 +173,21 @@ function error(...args: any): void {
     addLogMessage(args, Level.ERROR);
 }
 
-function nodeException(error: string, treeData: any): void {
-    addLogMessage([t(error)], Level.NODE_EXCEPTION);
+function dbgScrollToBottom(): void {
+    const listEl = debugConsoleRef.value?.querySelector('.console-message-list');
+    nextTick(()=>listEl?.scrollTo(0, listEl.scrollHeight));
+}
+
+function nodeException(data: Core.iNodeExceptionData): void {
+    const msgText = data.msgVars ? t(data.msgId, data.msgVars) : t(data.msgId);
+    addLogMessage([msgText, t('editor_main.nodeExceptionClick')], Level.NODE_EXCEPTION, data);
+    fatalError.value = data.fatal ?? false;
+    consoleOpen.value = true;
+}
+
+function openNodeException(data: Core.iNodeExceptionData): void {
+    close();
+    emit('nodeException', data);
 }
 
 function restart(){
@@ -186,8 +222,12 @@ function messageClassSelector(log: iConsoleLine): string {
         </div>
         <div ref="canvasWrapper" class="canvasWrapper">
             <canvas ref="canvas" class="canvas">//Error loading canvas</canvas>
+            <div v-if="fatalError" class="fatal-error">
+                <p style="text-align: center;" v-html="playState == PLAY_STATE.DEBUGGING ? '' : t('editor_main.fatalRuntimeError')"></p>
+            </div>
             <div
                 v-show="playState == PLAY_STATE.DEBUGGING"
+                ref="debugConsoleRef"
                 class="debug-console"
                 :class="consoleOpen ? 'debug-console-show':''">
                 <div class="closeBtn console-button" @click="consoleOpen = !consoleOpen">
@@ -203,7 +243,8 @@ function messageClassSelector(log: iConsoleLine): string {
                     <div
                         v-for="log in consoleOuput"
                         class="console-message"
-                        :class="messageClassSelector(log)">
+                        :class="messageClassSelector(log)"
+                        @dblclick="log.exceptionData ? openNodeException(log.exceptionData) : null">
                         <span class="console-time">{{ `[${log.time[0]}:${log.time[1]}:${log.time[2]}]` }}</span>
                         <span class="console-text">{{ log.message }}</span>
                     </div>
@@ -267,6 +308,18 @@ function messageClassSelector(log: iConsoleLine): string {
     position: absolute;
 }
 
+.fatal-error{
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.2);
+}
+
 .debug-console{
     position: absolute;
     top: 100%;
@@ -288,7 +341,6 @@ function messageClassSelector(log: iConsoleLine): string {
     width: 100%;
     overflow: hidden;
     overflow-y: auto;
-    padding: 5px;
     box-sizing: border-box;
 }
 
@@ -299,6 +351,10 @@ function messageClassSelector(log: iConsoleLine): string {
 
 .console-message{
     width: 100%;
+    padding: 3px;
+    padding-left: 0px;
+    padding-right: 0px;
+    padding: 5px;
 }
 
 .console-warn{
@@ -307,6 +363,10 @@ function messageClassSelector(log: iConsoleLine): string {
 
 .console-error{
     background: #FF000088;
+    border: 2px solid black;
+    border-radius: 5px;
+    padding: 5px;
+    box-sizing: border-box;
 }
 
 .console-button{

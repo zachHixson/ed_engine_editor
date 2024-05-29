@@ -23,6 +23,7 @@ import {
     Instance_Logic,
     MOUSE_EVENT,
     iEngineVariable,
+    iNodeExceptionData,
 } from '@engine/core/core';
 import iGameData from './iGameData';
 import getTransitions from './transitions/getTransitions';
@@ -44,7 +45,7 @@ interface iEngineCallbacks {
     log?: (...args: any)=>void
     warn?: (...args: any)=>void
     error?: (...args: any)=>void
-    nodeException?: (error: string, treeData: any)=>void;
+    nodeException?: (data: iNodeExceptionData)=>void;
     restart?: ()=>void
 }
 
@@ -97,7 +98,7 @@ export class Engine implements iEngineCallbacks {
     log: (...args: any)=>void = function(){console.log(...arguments)};
     warn: (...args: any)=>void = function(){console.warn(...arguments)};
     error: (...args: any)=>void = function(){console.error(...arguments)};
-    nodeException: (error: string, treeData: any)=>void = function(error: string, treeData: any){console.error(error)};
+    nodeException: (data: iNodeExceptionData)=>void = function(data: iNodeExceptionData){console.error(data)};
     restart: ()=>void = function(){location.reload()};
 
     constructor(canvas: HTMLCanvasElement, gameData: string, callbacks?: iEngineCallbacks){
@@ -195,7 +196,7 @@ export class Engine implements iEngineCallbacks {
                 this._dispatchCollisionEvents();
             }
             catch(e){
-                this.error(e);
+                console.error(e);
                 this.stop();
                 return;
             }

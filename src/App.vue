@@ -20,7 +20,8 @@ import { useMainStore, PLAY_STATE } from './stores/Main';
 import { useGameDataStore } from './stores/GameData';
 import { useAssetBrowserStore } from './stores/AssetBrowser';
 import { useLogicEditorStore } from './stores/LogicEditor';
-import Core, { HTMLTemplate, EngineRawText } from '@/core';
+import type Logic from './components/editor_logic/node_components/Logic';
+import Core, { HTMLTemplate, EngineRawText, Engine } from '@/core';
 
 import licenseText from '@/../LICENSE.txt?raw';
 import { useI18n } from 'vue-i18n';
@@ -118,7 +119,8 @@ function packageGame(): void {
         .replace('[title]', projectName)
         .replace('[engineLicense]', engineLicense)
         .replace('[engine]', EngineRawText)
-        .replace('[gameData]', gameData);
+        .replace('[gameData]', gameData)
+        .replace('[fatalErrorMsg]', t('generic.fatalRuntimeError'));
     saveAs(compiled, `${projectName}.html`);
 }
 
@@ -146,6 +148,16 @@ async function autoSave(){
 function dialogOpen(props: DialogBoxProps){
     editorWindowEl.value!.dialogOpen(props);
 }
+
+function nodeException(data: Parameters<Engine['nodeException']>[0]): void {
+    const logicAsset = gameDataStore.logic.find(l => l.id == data.logicId) as Logic;
+    assetBrowserStore.selectAsset(logicAsset);
+    mainStore.setSelectedEditor(Core.EDITOR_ID.LOGIC);
+    logicEditorStore.errorMsg = data.msgVars ? t(data.msgId, data.msgVars) : t(data.msgId);
+    logicEditorStore.errorNodes.splice(0, logicEditorStore.errorNodes.length);
+    logicEditorStore.errorNodes.push(...data.nodeIds);
+    updateEditorAsset();
+}
 </script>
 
 <template>
@@ -165,7 +177,7 @@ function dialogOpen(props: DialogBoxProps){
             @dialog-open="dialogOpen" />
         <EditorWindow class="editorWindow" ref="editorWindowEl" @asset-changed="updateAssetPreviews"/>
         <transition name="playWindow">
-            <PlayWindow v-if="mainStore.getPlayState != PLAY_STATE.NOT_PLAYING" class="playWindow" />
+            <PlayWindow v-if="mainStore.getPlayState != PLAY_STATE.NOT_PLAYING" class="playWindow" @node-exception="nodeException"/>
         </transition>
         <WelcomeModal ref="welcomeDialogEl" @demo-opened="openProject($event)"></WelcomeModal>
         <Tooltip />

@@ -142,6 +142,8 @@ const state: LogicEditorState = {
     shiftDown: { value: false },
 }
 
+const navControlRef = ref<InstanceType<typeof NavControlPanel>>();
+
 watch(state.inputActive, (newState: boolean)=>actionData.hotkeyMap.enabled = !newState);
 
 watch(()=>props.selectedAsset, ()=>{
@@ -155,6 +157,10 @@ watch(()=>props.selectedAsset, ()=>{
 
 watch(state.visibleConnections, ()=>{
     nextTick(()=>relinkConnections());
+});
+
+watch(logicEditorStore.errorNodes, ()=>{
+    focusOnErrorNodes();
 });
 
 const { stepForward, stepBackward } = useUndoHelpers(actionData.undoStore, actionData.actionMap, actionData.revertMap);
@@ -257,12 +263,18 @@ onMounted(()=>{
         const registerActions = Core.NODE_LIST[i].registerActions;
         registerActions && registerActions(mainStore.getNodeAPI);
     }
+
+    //Focus on nodes throwing error if there are any
+    if (logicEditorStore.errorNodes.length){
+        focusOnErrorNodes();
+    }
 });
 
 onBeforeUnmount(()=>{
     window.removeEventListener('resize', resize);
     mainStore.getNodeAPI.unMount();
     actionData.undoStore.destroy();
+    logicEditorStore.errorNodes = [];
 });
 
 function bindHotkeys(): void {
@@ -323,6 +335,14 @@ function resize(): void {
     const { nodeViewportRef } = domRefs;
     const dim = {width: nodeViewportRef.value!.clientWidth, height: nodeViewportRef.value!.clientHeight};
     LogicMainEventBus.onNavSetContainerDimensions.emit(dim);
+}
+
+function focusOnErrorNodes(){
+    const nodes = props.selectedAsset.nodes.filter(n => logicEditorStore.errorNodes.includes(n.nodeId));
+    updateNodeBounds(nodes);
+    navControlRef.value!.centerView();
+    updateNodeBounds();
+    nextTick(()=>navChange(props.selectedAsset.graphNavState));
 }
 
 function dialogVariable(callback: (positive: boolean, varInfo: Core.iVarInfo)=>void, edit?: Core.iVarInfo): void {
@@ -458,6 +478,8 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
                     :canDrag="state.nodeDraggingEnabled.value"
                     :selectedNodes="state.selectedNodes.value"
                     :allConnections="selectedAsset.connections"
+                    :isErrorNode="logicEditorStore.errorNodes.includes(node.nodeId)"
+                    :errorMsg="logicEditorStore.errorMsg ?? ''"
                     class="node"
                     @node-clicked="nodeClick"
                     @node-down="nodeDown"
@@ -501,7 +523,7 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
             </div>
             <div class="nav-control-wrapper">
                 <NavControlPanel
-                    ref="navControlPanel"
+                    ref="navControlRef"
                     class="nav-control"
                     :navState="state.curNavState.value!"
                     :selectedNavTool="state.selectedNavTool.value"

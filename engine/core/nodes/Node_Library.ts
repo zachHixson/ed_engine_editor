@@ -579,7 +579,12 @@ export const NODE_LIST: iNodeTemplate[] = [
                     case 'multiply_sym': return num1 * num2;
                     case 'divide_sym':
                         if (num2 == 0){
-                            this.engine.nodeException('Cannot divide by 0', null);
+                            this.engine.nodeException({
+                                msgId: 'div_zero',
+                                logicId: this.parentScript.id,
+                                nodeIds: [this.nodeId],
+                                fatal: true,
+                            });
                             return;
                         }
                         return num1 / num2;
@@ -702,18 +707,14 @@ export const NODE_LIST: iNodeTemplate[] = [
     {// Instance Properties
         id: 'instance_properties',
         category: 'actual',
+        stackDataIO: true,
         inputs: [
             {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
         ],
         outputs: [
             {id: 'Type', type: SOCKET_TYPE.ASSET, execute: 'getAsset'},
             {id: 'name', type: SOCKET_TYPE.STRING, execute: 'getName'},
-            {id: 'x', type: SOCKET_TYPE.NUMBER, execute: 'getX'},
-            {id: 'y', type: SOCKET_TYPE.NUMBER, execute: 'getY'},
         ],
-        onBeforeMount(this: iEditorNode){
-            this.stackDataIO = true;
-        },
         methods: {
             getAsset(this: iEngineNode, eventContext: iEventContext){
                 const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
@@ -721,14 +722,6 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
             getName(this: iEngineNode, eventContext: iEventContext){
                 return (this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance).name
-            },
-            getX(this: iEngineNode, eventContext: iEventContext){
-                console.warn('instance_properties.getX is deprecated, please use "get_position", node instead');
-                return (this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance).pos.x
-            },
-            getY(this: iEngineNode, eventContext: iEventContext){
-                console.warn('instance_properties.getY is deprecated, please use "get_position", node instead');
-                return (this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance).pos.y
             },
         },
     },
@@ -1455,11 +1448,11 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             getX(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.getInput<Instance_Base | undefined>('instance', eventContext) ?? eventContext.instance;
+                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance') ?? eventContext.instance;
                 return instance.pos.x;
             },
             getY(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.getInput<Instance_Base | undefined>('instance', eventContext) ?? eventContext.instance;
+                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance') ?? eventContext.instance;
                 return instance.pos.y;
             },
         },

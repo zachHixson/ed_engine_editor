@@ -226,6 +226,8 @@ function centerView(): void {
     props.navState.setOffset(midPoint);
     emit('nav-changed', props.navState);
 }
+
+defineExpose({centerView});
 </script>
 
 <template>

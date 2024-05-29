@@ -169,8 +169,29 @@ export default class Node implements iEngineNode {
         const trigger = this.outTriggers.get(outputId);
 
         if (trigger?.connection){
-            const node = trigger.connection.node as Node;
-            node._triggerInTrigger(trigger.connection.execute, eventContext);
+            try{
+                const node = trigger.connection.node as Node;
+                node._triggerInTrigger(trigger.connection.execute, eventContext);
+            }
+            catch(e){
+                console.error(e);
+                this.engine.stop();
+                return;
+            }
         }
+    }
+
+    throwOnNullInput<T>(inputName: string, eventContext: iEventContext, errorId: string): T {
+        const value = this.getInput(inputName, eventContext);
+
+        if (!(value == null && value == undefined) && !this.inputs.get(inputName)?.connection) return value;
+
+        this.engine.nodeException({
+            msgId: errorId,
+            logicId: this.parentScript.id,
+            nodeIds: [this.nodeId],
+            fatal: true,
+        });
+        throw new Error(errorId);
     }
 }

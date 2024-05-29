@@ -10,6 +10,8 @@ interface iState {
         nodeData: Core.iNodeSaveData[],
         connectionData: Core.iConnectionSaveData[],
     },
+    errorNodes: number[],
+    errorMsg: string | null,
 }
 
 export const useLogicEditorStore = defineStore({
@@ -24,6 +26,8 @@ export const useLogicEditorStore = defineStore({
             nodeData: [],
             connectionData: [],
         },
+        errorNodes: [],
+        errorMsg: null,
     }),
     
     getters: {

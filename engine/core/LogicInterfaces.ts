@@ -235,6 +235,7 @@ export interface iEngineNode extends iNode_Base {
     getWidgetData(): any;
     getInput<T>(inputName: string, eventContext: iEventContext, convertList?: boolean): T;
     triggerOutput(outputId: string, eventContext: iEventContext): void;
+    throwOnNullInput<T>(inputName: string, eventContext: iEventContext, errorId: string): T;
 }
 
 export type iEventContext = {eventKey: number, instance: Instance_Object};
@@ -263,4 +264,12 @@ export interface iConnectionSaveData {
     eSocId: string, //end socket ID
     sNodeId: number, //start node ID
     eNodeId: number, //end node ID
+}
+
+export interface iNodeExceptionData {
+    msgId: string;
+    msgVars?: {[key: string]: any};
+    logicId: number;
+    nodeIds: number[];
+    fatal?: boolean;
 }

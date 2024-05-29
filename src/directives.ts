@@ -68,7 +68,10 @@ export const vTooltip = {
         const isGetter = typeof binding.value == 'function';
 
         el.tooltipText = isGetter ? binding.value() : binding.value;
-        el.mouseOverHandler = function(){
+        el.mouseOverHandler = function(e: MouseEvent){
+            e.preventDefault();
+            e.stopPropagation();
+
             TooltipEventBus.onActivateTooltip.emit({
                 el: (el as HTMLDivElement),
                 text: el.tooltipText,
