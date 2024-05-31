@@ -3,6 +3,7 @@ import Svg from './common/Svg.vue';
 
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { useMainStore } from '@/stores/Main';
+import { useLogicEditorStore } from '@/stores/LogicEditor';
 import Core, { Engine } from '@/core';
 import { PLAY_STATE } from '@/stores/Main';
 import { useI18n } from 'vue-i18n';
@@ -10,10 +11,11 @@ import { useI18n } from 'vue-i18n';
 import terminalIcon from '@/assets/terminal.svg';
 
 enum Level {
-    LOG = 0,
-    WARN = 1,
-    ERROR = 2,
-    NODE_EXCEPTION = 3,
+    LOG,
+    WARN,
+    ERROR,
+    NODE_EXCEPTION,
+    FATAL_EXCEPTION,
 }
 
 interface iConsoleLine {
@@ -24,9 +26,10 @@ interface iConsoleLine {
     exceptionData?: Core.iNodeExceptionData;
 }
 
-const emit = defineEmits(['nodeException']);
+const emit = defineEmits(['openNodeException']);
 
 const mainStore = useMainStore();
+const logicEditorStore = useLogicEditorStore();
 const { t } = useI18n();
 
 const canvasWrapper = ref<HTMLElement>();
@@ -65,6 +68,8 @@ const unreadLevelClass = computed<string>(()=>{
     switch(unreadLevel){
         case Level.ERROR:
         case Level.NODE_EXCEPTION:
+            return 'console-badge-warn';
+        case Level.FATAL_EXCEPTION:
             return 'console-badge-error';
         case Level.WARN:
             return 'console-badge-warn';
@@ -180,14 +185,17 @@ function dbgScrollToBottom(): void {
 
 function nodeException(data: Core.iNodeExceptionData): void {
     const msgText = data.msgVars ? t(data.msgId, data.msgVars) : t(data.msgId);
-    addLogMessage([msgText, t('editor_main.nodeExceptionClick')], Level.NODE_EXCEPTION, data);
-    fatalError.value = data.fatal ?? false;
-    consoleOpen.value = true;
+    const excLvl = data.fatal ? Level.FATAL_EXCEPTION : Level.NODE_EXCEPTION;
+    const fatalErr = fatalError.value || (data.fatal ?? false);
+    addLogMessage([msgText, t('editor_main.nodeExceptionClick')], excLvl, data);
+    logicEditorStore.errors.push(data);
+    fatalError.value = fatalErr;
+    consoleOpen.value = fatalErr;
 }
 
-function openNodeException(data: Core.iNodeExceptionData): void {
+function openNodeException(nodeId: number, logicId: number): void {
     close();
-    emit('nodeException', data);
+    emit('openNodeException', {nodeId, logicId});
 }
 
 function restart(){
@@ -204,8 +212,11 @@ function messageClassSelector(log: iConsoleLine): string {
         case Level.WARN:
             return 'console-warn';
         case Level.ERROR:
-        case Level.NODE_EXCEPTION:
             return 'console-error';
+        case Level.NODE_EXCEPTION:
+            return 'console-exception';
+        case Level.FATAL_EXCEPTION:
+            return 'console-fatal-exception';
     }
 }
 </script>
@@ -244,7 +255,7 @@ function messageClassSelector(log: iConsoleLine): string {
                         v-for="log in consoleOuput"
                         class="console-message"
                         :class="messageClassSelector(log)"
-                        @dblclick="log.exceptionData ? openNodeException(log.exceptionData) : null">
+                        @dblclick="log.exceptionData ? openNodeException(log.exceptionData.nodeId, log.exceptionData.logicId) : null">
                         <span class="console-time">{{ `[${log.time[0]}:${log.time[1]}:${log.time[2]}]` }}</span>
                         <span class="console-text">{{ log.message }}</span>
                     </div>
@@ -362,6 +373,18 @@ function messageClassSelector(log: iConsoleLine): string {
 }
 
 .console-error{
+    background: #FF000088;
+}
+
+.console-exception{
+    background: #FFFF0088;
+    border: 2px solid black;
+    border-radius: 5px;
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+.console-fatal-exception{
     background: #FF000088;
     border: 2px solid black;
     border-radius: 5px;

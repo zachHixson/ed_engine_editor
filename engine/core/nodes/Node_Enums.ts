@@ -31,3 +31,5 @@ export enum COLLISION_EVENT {
     REPEAT,
     STOP,
 }
+
+export const THROWN = Symbol();

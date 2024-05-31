@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import type Core from '@/core';
 
-interface iState {
+export interface iState {
     selectedNavTool: Core.NAV_TOOL_TYPE | null,
     openCategory: string | null,
     graphPanelOpen: boolean,
@@ -10,8 +10,12 @@ interface iState {
         nodeData: Core.iNodeSaveData[],
         connectionData: Core.iConnectionSaveData[],
     },
-    errorNodes: number[],
-    errorMsg: string | null,
+    errors: {
+        nodeId: number,
+        msgId: string,
+        fatal?: boolean,
+    }[],
+    focusNodeId: number | null,
 }
 
 export const useLogicEditorStore = defineStore({
@@ -26,8 +30,8 @@ export const useLogicEditorStore = defineStore({
             nodeData: [],
             connectionData: [],
         },
-        errorNodes: [],
-        errorMsg: null,
+        errors: [],
+        focusNodeId: null,
     }),
     
     getters: {

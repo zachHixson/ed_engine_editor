@@ -16,6 +16,7 @@ import { useI18n } from 'vue-i18n';
 import type Node from './Node';
 import type Node_Connection from './Node_Connection';
 import type { iHoverSocket, iValueChanged } from './Socket.vue';
+import type { iState as LogicState } from '@/stores/LogicEditor';
 import decoratorMap from '../decoratorMap';
 import categoryStyleMap from '../categoryStyleMap';
 import Core from '@/core';
@@ -31,8 +32,7 @@ const props = defineProps<{
     canDrag: boolean;
     selectedNodes: Node[];
     allConnections: Node_Connection[];
-    isErrorNode: boolean;
-    errorMsg?: string;
+    errorData: LogicState['errors'][number] | undefined;
 }>();
 
 const emit = defineEmits([
@@ -225,10 +225,11 @@ defineExpose({getRelinkInfo});
     <div ref="rootRef"
         class="node"
         :style="
-            (isSelected ? 'border-color: var(--button-norm);' : '') +
-            (isErrorNode ? 'border-color: red;' : '')
+            (errorData?.fatal === false ? 'border-color: #FFA000; border-style: dashed;' : '') +
+            (errorData?.fatal === true ? 'border-color: red; border-style: dashed;' : '') + 
+            (isSelected ? 'border-color: var(--button-norm); border-style: solid;' : '')
             "
-        v-tooltip="isErrorNode ? props.errorMsg ?? '' : ''"
+        v-tooltip="errorData ? t('exception.' + props.errorData?.msgId) ?? '' : ''"
         @click="emit('node-clicked', {nodeObj, event: $event})"
         @mousedown="mouseDown">
         <div class="heading" :style="`border-color: ${categoryStyle.color}`">

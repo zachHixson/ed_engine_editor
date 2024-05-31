@@ -12,6 +12,7 @@ import {
     Instance_Object,
     CATEGORY_ID,
     Event_Emitter,
+    Node_Enums
 } from "./core";
 
 //types needed for node editor API, which is the only place the engine code has to know about editor types
@@ -235,7 +236,8 @@ export interface iEngineNode extends iNode_Base {
     getWidgetData(): any;
     getInput<T>(inputName: string, eventContext: iEventContext, convertList?: boolean): T;
     triggerOutput(outputId: string, eventContext: iEventContext): void;
-    throwOnNullInput<T>(inputName: string, eventContext: iEventContext, errorId: string): T;
+    throwOnNullInput<T>(inputName: string, eventContext: iEventContext, errorId: string, fatal?: boolean): T | typeof Node_Enums.THROWN | null;
+    throwOnNullInput<T>(inputName: string, eventContext: iEventContext, errorId: string, fatal: true): T | null;
 }
 
 export type iEventContext = {eventKey: number, instance: Instance_Object};
@@ -270,6 +272,6 @@ export interface iNodeExceptionData {
     msgId: string;
     msgVars?: {[key: string]: any};
     logicId: number;
-    nodeIds: number[];
+    nodeId: number;
     fatal?: boolean;
 }

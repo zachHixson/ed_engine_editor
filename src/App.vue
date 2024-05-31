@@ -149,13 +149,11 @@ function dialogOpen(props: DialogBoxProps){
     editorWindowEl.value!.dialogOpen(props);
 }
 
-function nodeException(data: Parameters<Engine['nodeException']>[0]): void {
-    const logicAsset = gameDataStore.logic.find(l => l.id == data.logicId) as Logic;
+function openNodeException({nodeId, logicId}: {nodeId: number, logicId: number}): void {
+    const logicAsset = gameDataStore.logic.find(l => l.id == logicId) as Logic;
     assetBrowserStore.selectAsset(logicAsset);
     mainStore.setSelectedEditor(Core.EDITOR_ID.LOGIC);
-    logicEditorStore.errorMsg = data.msgVars ? t(data.msgId, data.msgVars) : t(data.msgId);
-    logicEditorStore.errorNodes.splice(0, logicEditorStore.errorNodes.length);
-    logicEditorStore.errorNodes.push(...data.nodeIds);
+    logicEditorStore.focusNodeId = nodeId;
     updateEditorAsset();
 }
 </script>
@@ -177,7 +175,7 @@ function nodeException(data: Parameters<Engine['nodeException']>[0]): void {
             @dialog-open="dialogOpen" />
         <EditorWindow class="editorWindow" ref="editorWindowEl" @asset-changed="updateAssetPreviews"/>
         <transition name="playWindow">
-            <PlayWindow v-if="mainStore.getPlayState != PLAY_STATE.NOT_PLAYING" class="playWindow" @node-exception="nodeException"/>
+            <PlayWindow v-if="mainStore.getPlayState != PLAY_STATE.NOT_PLAYING" class="playWindow" @open-node-exception="openNodeException"/>
         </transition>
         <WelcomeModal ref="welcomeDialogEl" @demo-opened="openProject($event)"></WelcomeModal>
         <Tooltip />

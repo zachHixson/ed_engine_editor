@@ -159,7 +159,7 @@ watch(state.visibleConnections, ()=>{
     nextTick(()=>relinkConnections());
 });
 
-watch(logicEditorStore.errorNodes, ()=>{
+watch(logicEditorStore.errors, ()=>{
     focusOnErrorNodes();
 });
 
@@ -265,7 +265,7 @@ onMounted(()=>{
     }
 
     //Focus on nodes throwing error if there are any
-    if (logicEditorStore.errorNodes.length){
+    if (logicEditorStore.focusNodeId != null){
         focusOnErrorNodes();
     }
 });
@@ -274,7 +274,7 @@ onBeforeUnmount(()=>{
     window.removeEventListener('resize', resize);
     mainStore.getNodeAPI.unMount();
     actionData.undoStore.destroy();
-    logicEditorStore.errorNodes = [];
+    logicEditorStore.errors = [];
 });
 
 function bindHotkeys(): void {
@@ -338,8 +338,8 @@ function resize(): void {
 }
 
 function focusOnErrorNodes(){
-    const nodes = props.selectedAsset.nodes.filter(n => logicEditorStore.errorNodes.includes(n.nodeId));
-    updateNodeBounds(nodes);
+    const node = props.selectedAsset.nodes.find(n => logicEditorStore.focusNodeId == n.nodeId)!;
+    updateNodeBounds([node]);
     navControlRef.value!.centerView();
     updateNodeBounds();
     nextTick(()=>navChange(props.selectedAsset.graphNavState));
@@ -478,8 +478,7 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
                     :canDrag="state.nodeDraggingEnabled.value"
                     :selectedNodes="state.selectedNodes.value"
                     :allConnections="selectedAsset.connections"
-                    :isErrorNode="logicEditorStore.errorNodes.includes(node.nodeId)"
-                    :errorMsg="logicEditorStore.errorMsg ?? ''"
+                    :errorData="logicEditorStore.errors.find(e => e.nodeId == node.nodeId)"
                     class="node"
                     @node-clicked="nodeClick"
                     @node-down="nodeDown"

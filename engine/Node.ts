@@ -8,6 +8,7 @@ import {
     iNodeSaveData,
     iEngineNodeMethod,
     iEventContext,
+    Node_Enums,
 } from "@engine/core/core";
 import { iAnyObj } from "./core/interfaces";
 import { listConvert } from "./core/nodes/Socket_Conversions";
@@ -181,7 +182,7 @@ export default class Node implements iEngineNode {
         }
     }
 
-    throwOnNullInput<T>(inputName: string, eventContext: iEventContext, errorId: string): T {
+    throwOnNullInput<T>(inputName: string, eventContext: iEventContext, errorId: string, fatal: boolean = false): T | typeof Node_Enums.THROWN | null {
         const value = this.getInput(inputName, eventContext);
 
         if (!(value == null && value == undefined) && !this.inputs.get(inputName)?.connection) return value;
@@ -189,9 +190,14 @@ export default class Node implements iEngineNode {
         this.engine.nodeException({
             msgId: errorId,
             logicId: this.parentScript.id,
-            nodeIds: [this.nodeId],
-            fatal: true,
+            nodeId: this.nodeId,
+            fatal,
         });
-        throw new Error(errorId);
+
+        if (fatal){
+            throw new Error(errorId);
+        }
+
+        return Node_Enums.THROWN;
     }
 }

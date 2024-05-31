@@ -4,7 +4,7 @@ import Cat_Events from './Cat_Events';
 import Cat_Variables from './Cat_Variables';
 import { ConstVector, Vector } from '../Vector';
 import { iEditorNode, iEngineNode, iNodeConnection, iNodeSaveData, iEventContext } from '../LogicInterfaces';
-import { Asset_Base, Game_Object, Instance_Base, Instance_Object, Instance_Sprite, iEditorNodeInput, iEditorNodeOutput, Sprite, Util } from '../core';
+import { Asset_Base, Game_Object, Instance_Base, Instance_Object, Instance_Sprite, Sprite, Util, Node_Enums } from '../core';
 import { canConvertSocket, assetToInstance, instanceToAsset } from './Socket_Conversions';
 
 type SortableAsset = {sortOrder: number};
@@ -605,8 +605,13 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             removeInstance(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
-                this.engine.removeInstance(instance);
+                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false);
+
+                if (instance != Node_Enums.THROWN){
+                    const removeInst = instance ?? eventContext.instance;
+                    this.engine.removeInstance(removeInst);
+                }
+
                 this.triggerOutput('_o', eventContext);
             }
         },
@@ -1448,11 +1453,11 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             getX(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance') ?? eventContext.instance;
+                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', true) ?? eventContext.instance;
                 return instance.pos.x;
             },
             getY(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance') ?? eventContext.instance;
+                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', true) ?? eventContext.instance;
                 return instance.pos.y;
             },
         },
