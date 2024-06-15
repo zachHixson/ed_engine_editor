@@ -269,6 +269,7 @@ export interface iConnectionSaveData {
 }
 
 export interface iNodeExceptionData {
+    errorId: symbol;
     msgId: string;
     msgVars?: {[key: string]: any};
     logicId: number;

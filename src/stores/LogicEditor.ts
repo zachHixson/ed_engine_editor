@@ -1,6 +1,14 @@
 import { defineStore } from 'pinia';
 import type Core from '@/core';
 
+interface Error {
+    errorId: symbol,
+    nodeId: number,
+    logicId: number,
+    msgId: string,
+    fatal?: boolean,
+}
+
 export interface iState {
     selectedNavTool: Core.NAV_TOOL_TYPE | null,
     openCategory: string | null,
@@ -10,12 +18,7 @@ export interface iState {
         nodeData: Core.iNodeSaveData[],
         connectionData: Core.iConnectionSaveData[],
     },
-    errors: {
-        nodeId: number,
-        msgId: string,
-        fatal?: boolean,
-    }[],
-    focusNodeId: number | null,
+    errors: ReadonlyArray<Error>,
 }
 
 export const useLogicEditorStore = defineStore({
@@ -31,7 +34,6 @@ export const useLogicEditorStore = defineStore({
             connectionData: [],
         },
         errors: [],
-        focusNodeId: null,
     }),
     
     getters: {
@@ -49,6 +51,16 @@ export const useLogicEditorStore = defineStore({
         setClipboard(nodeData: Core.iNodeSaveData[], connectionData: Core.iConnectionSaveData[]){
             this.clipboard.nodeData = nodeData;
             this.clipboard.connectionData = connectionData;
+        },
+        addError(newError: Core.iNodeExceptionData){
+            (this.errors as Error[]).push(newError);
+        },
+        clearError(id: symbol){
+            const idx = this.errors.findIndex(e => e.errorId == id);
+            (this.errors as Error[]).splice(idx, 1);
+        },
+        clearAllErrors(){
+            (this.errors as Error[]).splice(0, this.errors.length);
         },
     }
 });

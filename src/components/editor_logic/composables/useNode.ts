@@ -1,4 +1,3 @@
-import { nextTick } from 'vue';
 import { default as Node_Obj } from '../node_components/Node';
 import type Logic from '../node_components/Logic';
 import Node_Connection from '../node_components/Node_Connection';

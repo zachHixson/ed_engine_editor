@@ -101,6 +101,7 @@ function start(): void {
 
         Core.Draw.resizeHDPICanvas(canvas.value!, minDim, minDim);
     }, 20);
+    logicEditorStore.clearAllErrors();
 
     if (playState.value == PLAY_STATE.DEBUGGING){
         Object.assign(callbackArgs, {
@@ -178,19 +179,19 @@ function error(...args: any): void {
     addLogMessage(args, Level.ERROR);
 }
 
-function dbgScrollToBottom(): void {
-    const listEl = debugConsoleRef.value?.querySelector('.console-message-list');
-    nextTick(()=>listEl?.scrollTo(0, listEl.scrollHeight));
-}
-
 function nodeException(data: Core.iNodeExceptionData): void {
     const msgText = data.msgVars ? t(data.msgId, data.msgVars) : t(data.msgId);
     const excLvl = data.fatal ? Level.FATAL_EXCEPTION : Level.NODE_EXCEPTION;
     const fatalErr = fatalError.value || (data.fatal ?? false);
     addLogMessage([msgText, t('editor_main.nodeExceptionClick')], excLvl, data);
-    logicEditorStore.errors.push(data);
+    logicEditorStore.addError(data);
     fatalError.value = fatalErr;
     consoleOpen.value = fatalErr;
+}
+
+function dbgScrollToBottom(): void {
+    const listEl = debugConsoleRef.value?.querySelector('.console-message-list');
+    nextTick(()=>listEl?.scrollTo(0, listEl.scrollHeight));
 }
 
 function openNodeException(nodeId: number, logicId: number): void {

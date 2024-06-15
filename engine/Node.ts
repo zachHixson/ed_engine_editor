@@ -188,6 +188,7 @@ export default class Node implements iEngineNode {
         if (!(value == null && value == undefined) && !this.inputs.get(inputName)?.connection) return value;
 
         this.engine.nodeException({
+            errorId: Symbol(),
             msgId: errorId,
             logicId: this.parentScript.id,
             nodeId: this.nodeId,

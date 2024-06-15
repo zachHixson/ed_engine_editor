@@ -24,7 +24,7 @@ const { t } = useI18n();
 const mainStore = useMainStore();
 const assetBrowserStore = useAssetBrowserStore();
 
-const emit = defineEmits(['asset-changed']);
+const emit = defineEmits(['asset-changed', 'open-node-exception']);
 
 const currentEditor = computed(()=>{
     switch(mainStore.getSelectedEditor){
@@ -78,7 +78,8 @@ defineExpose({dialogOpen});
             :selectedAsset="(selectedAsset as any)"
             :selectedRoom="selectedRoom"
             @asset-changed="emit('asset-changed', $event)"
-            @dialog-open="(dialogOpen as unknown)" />
+            @dialog-open="(dialogOpen as unknown)"
+            @open-node-exception="emit('open-node-exception', $event)" />
         <div v-if="dialogConfirmOpen" class="dialog-bg">
             <div class="dialog-box">
                 <div v-html="dialogText"></div>

@@ -61,9 +61,11 @@ import Svg from '@/components/common/Svg.vue';
 import NodeLibrary from './NodeLibrary.vue';
 import Graphs from './Graphs.vue';
 import ContextMenu from './ContextMenu.vue';
+import ErrorLog from './ErrorLog.vue';
 
 import { ref, reactive, computed, watch, nextTick, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
 import type { Ref, ComputedRef, WritableComputedRef } from 'vue';
+import { AppEventBus } from '@/App.vue';
 import { useMainStore } from '@/stores/Main';
 import { useLogicEditorStore } from '@/stores/LogicEditor';
 import type Logic from './node_components/Logic';
@@ -90,7 +92,7 @@ const props = defineProps<{
 const connectionForceUpdateQueued = ref(false);
 const connectionForceUpdateKey = ref(0);
 
-const emit = defineEmits(['dialog-open']);
+const emit = defineEmits(['dialog-open', 'open-node-exception']);
 
 const domRefs: DomRefs = {
     nodeViewportRef: ref(),
@@ -159,9 +161,7 @@ watch(state.visibleConnections, ()=>{
     nextTick(()=>relinkConnections());
 });
 
-watch(logicEditorStore.errors, ()=>{
-    focusOnErrorNodes();
-});
+const focusListener = (nodeId: number) => focusOnNodes([nodeId]);
 
 const { stepForward, stepBackward } = useUndoHelpers(actionData.undoStore, actionData.actionMap, actionData.revertMap);
 
@@ -249,6 +249,7 @@ onBeforeMount(()=>{
 
 onMounted(()=>{
     window.addEventListener('resize', resize);
+    AppEventBus.onOpenNodeException.listen(focusListener);
     
     resize();
 
@@ -263,18 +264,13 @@ onMounted(()=>{
         const registerActions = Core.NODE_LIST[i].registerActions;
         registerActions && registerActions(mainStore.getNodeAPI);
     }
-
-    //Focus on nodes throwing error if there are any
-    if (logicEditorStore.focusNodeId != null){
-        focusOnErrorNodes();
-    }
 });
 
 onBeforeUnmount(()=>{
     window.removeEventListener('resize', resize);
+    AppEventBus.onOpenNodeException.remove(focusListener);
     mainStore.getNodeAPI.unMount();
     actionData.undoStore.destroy();
-    logicEditorStore.errors = [];
 });
 
 function bindHotkeys(): void {
@@ -337,12 +333,18 @@ function resize(): void {
     LogicMainEventBus.onNavSetContainerDimensions.emit(dim);
 }
 
-function focusOnErrorNodes(){
-    const node = props.selectedAsset.nodes.find(n => logicEditorStore.focusNodeId == n.nodeId)!;
-    updateNodeBounds([node]);
-    navControlRef.value!.centerView();
-    updateNodeBounds();
-    nextTick(()=>navChange(props.selectedAsset.graphNavState));
+function focusOnNodes(nodeIds: number[]): void {
+    const nodes = props.selectedAsset.nodes.filter(n => nodeIds.includes(n.nodeId))!;
+    const graphId = nodes[0].graphId;
+
+    switchGraph(graphId);
+
+    nextTick(()=>{
+        updateNodeBounds(nodes);
+        navControlRef.value!.centerView();
+        updateNodeBounds();
+        nextTick(()=>navChange(props.selectedAsset.graphNavState));
+    });
 }
 
 function dialogVariable(callback: (positive: boolean, varInfo: Core.iVarInfo)=>void, edit?: Core.iVarInfo): void {
@@ -507,6 +509,7 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
                 <Svg :src="trashIcon"></Svg>
             </button>
         </div>
+        <ErrorLog @open-node-exception="emit('open-node-exception', $event);"></ErrorLog>
         <div class="graph-list-wrapper">
             <Graphs
                 :selected-asset="selectedAsset"

@@ -3,6 +3,7 @@ export const AppEventBus = {
     onUpdateAsset: new Core.Event_Emitter<(id?: number)=>void>(),
     onUpdateEditorTabs: new Core.Event_Emitter<()=>void>(),
     onAssetDeleted: new Core.Event_Emitter<()=>void>(),
+    onOpenNodeException: new Core.Event_Emitter<(nodeId: number, logicId: number)=>void>(),
 }
 </script>
 
@@ -15,7 +16,7 @@ import PlayWindow from './components/PlayWindow.vue';
 import WelcomeModal from './components/WelcomeModal.vue';
 import Tooltip from './components/common/Tooltip.vue';
 
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, nextTick } from 'vue';
 import { useMainStore, PLAY_STATE } from './stores/Main';
 import { useGameDataStore } from './stores/GameData';
 import { useAssetBrowserStore } from './stores/AssetBrowser';
@@ -153,8 +154,10 @@ function openNodeException({nodeId, logicId}: {nodeId: number, logicId: number})
     const logicAsset = gameDataStore.logic.find(l => l.id == logicId) as Logic;
     assetBrowserStore.selectAsset(logicAsset);
     mainStore.setSelectedEditor(Core.EDITOR_ID.LOGIC);
-    logicEditorStore.focusNodeId = nodeId;
     updateEditorAsset();
+    nextTick(()=>{
+        AppEventBus.onOpenNodeException.emit(nodeId, logicId);
+    });
 }
 </script>
 
@@ -173,7 +176,7 @@ function openNodeException({nodeId, logicId}: {nodeId: number, logicId: number})
             @asset-selected="updateEditorAsset"
             @asset-deleted="updateAfterDeletion"
             @dialog-open="dialogOpen" />
-        <EditorWindow class="editorWindow" ref="editorWindowEl" @asset-changed="updateAssetPreviews"/>
+        <EditorWindow class="editorWindow" ref="editorWindowEl" @asset-changed="updateAssetPreviews" @open-node-exception="openNodeException($event)"/>
         <transition name="playWindow">
             <PlayWindow v-if="mainStore.getPlayState != PLAY_STATE.NOT_PLAYING" class="playWindow" @open-node-exception="openNodeException"/>
         </transition>
