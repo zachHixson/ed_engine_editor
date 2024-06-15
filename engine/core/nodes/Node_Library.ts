@@ -580,9 +580,10 @@ export const NODE_LIST: iNodeTemplate[] = [
                     case 'divide_sym':
                         if (num2 == 0){
                             this.engine.nodeException({
+                                errorId: Symbol(),
                                 msgId: 'div_zero',
                                 logicId: this.parentScript.id,
-                                nodeIds: [this.nodeId],
+                                nodeId: this.nodeId,
                                 fatal: true,
                             });
                             return;
@@ -605,7 +606,7 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             removeInstance(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false);
+                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
 
                 if (instance != Node_Enums.THROWN){
                     const removeInst = instance ?? eventContext.instance;
@@ -722,11 +723,17 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             getAsset(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
+                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', true) ?? eventContext.instance;
                 return instanceToAsset(instance, this.engine.gameData);
             },
             getName(this: iEngineNode, eventContext: iEventContext){
-                return (this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance).name
+                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
+
+                if (instance == Node_Enums.THROWN){
+                    return '####';
+                }
+
+                return instance.name
             },
         },
     },
@@ -738,7 +745,7 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         outTriggers: ['_o'],
         inputs: [
-            {id: 'type', type: SOCKET_TYPE.ASSET, default: null, required: false},
+            {id: 'type', type: SOCKET_TYPE.ASSET, default: null, required: true},
             {id: 'x', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
             {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
             {id: 'relative', type: SOCKET_TYPE.BOOL, default: false},
@@ -749,6 +756,18 @@ export const NODE_LIST: iNodeTemplate[] = [
         methods: {
             spawnInstance(this: iEngineNode, eventContext: iEventContext){
                 const baseAsset = this.getInput<Asset_Base>('type', eventContext);
+
+                if (!baseAsset){
+                    this.engine.nodeException({
+                        errorId: Symbol(),
+                        msgId: 'null_asset',
+                        logicId: this.parentScript.id,
+                        nodeId: this.nodeId,
+                        fatal: true,
+                    });
+                    throw new Error('Asset type undefined');
+                }
+
                 const x = this.getInput<number>('x', eventContext);
                 const y = this.getInput<number>('y', eventContext);
                 const relative = this.getInput<boolean>('relative', eventContext);
@@ -770,7 +789,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                     instanceMap.set(eventContext, newInstance);
                 }
                 else{
-                    this.engine.warn('no_asset_specified');
+                    this.engine.warn('error_creating_asset');
                 }
 
                 this.triggerOutput('_o', eventContext);
@@ -836,7 +855,12 @@ export const NODE_LIST: iNodeTemplate[] = [
         methods: {
             isInGroup(this: iEngineNode, eventContext: iEventContext){
                 const group = this.getInput<string>('group', eventContext);
-                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
+                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
+
+                if (instance == Node_Enums.THROWN){
+                    return false;
+                }
+
                 return !!instance.groups.find(i => i == group);
             }
         }
@@ -1088,11 +1112,16 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             setSettings(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
+                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
                 const frame = parseInt(this.getInput<string>('frame', eventContext));
                 const fps = parseInt(this.getInput<string>('fps', eventContext));
                 const loop = this.getInput<boolean | null>('loop', eventContext);
                 const playing = this.getInput<boolean | null>('playing', eventContext);
+
+                if (!instance || instance == Node_Enums.THROWN){
+                    this.triggerOutput('_o', eventContext);
+                    return;
+                }
 
                 if (!isNaN(frame)){
                     instance.animFrame = frame;
@@ -1159,12 +1188,14 @@ export const NODE_LIST: iNodeTemplate[] = [
         },
         methods: {
             setSprite(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
+                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
                 const spriteId: number = this.widgetData;
                 const sprite = this.engine.gameData.sprites.find(s => s.id == spriteId);
 
-                instance.sprite = sprite ?? null;
-                this.engine.refreshRenderedInstance(instance);
+                if (instance != Node_Enums.THROWN){
+                    instance.sprite = sprite ?? null;
+                    this.engine.refreshRenderedInstance(instance);
+                }
 
                 this.triggerOutput('_o', eventContext);
             },
@@ -1184,13 +1215,15 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             flipSprite(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
+                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
                 const hFlip = this.getInput<boolean>('hFlip', eventContext);
                 const vFlip = this.getInput<boolean>('vFlip', eventContext);
 
-                instance.flipH = hFlip;
-                instance.flipV = vFlip;
-                instance.needsRenderUpdate = true;
+                if (instance != Node_Enums.THROWN){
+                    instance.flipH = hFlip;
+                    instance.flipV = vFlip;
+                    instance.needsRenderUpdate = true;
+                }
 
                 this.triggerOutput('_o', eventContext);
             },
@@ -1211,11 +1244,16 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             setPosition(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
+                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
                 const xInp = this.getInput<number & string>('x', eventContext);
                 const yInp = this.getInput<number & string>('y', eventContext);
                 const relative = this.getInput<boolean>('relative', eventContext);
                 let newPos: Vector;
+
+                if (instance == Node_Enums.THROWN){
+                    this.triggerOutput('_o', eventContext);
+                    return;
+                }
 
                 if (relative){
                     const offset = new Vector(
@@ -1253,10 +1291,16 @@ export const NODE_LIST: iNodeTemplate[] = [
         methods: {
             jumpTo(this: iEngineNode, eventContext: iEventContext){
                 const halfDim = Sprite.DIMENSIONS / 2;
-                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
+                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
                 const x = Math.round(this.getInput<number>('x', eventContext));
                 const y = Math.round(this.getInput<number>('y', eventContext));
                 const relative = this.getInput<boolean>('relative', eventContext);
+
+                if (instance == Node_Enums.THROWN){
+                    this.triggerOutput('_o', eventContext);
+                    return;
+                }
+
                 const desiredDest = relative ? new Vector(x, y).add(instance.pos) : new Vector(x, y).subtractScalar(halfDim);
 
                 //jump if no collision on instance
@@ -1357,10 +1401,13 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             setVelocity(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
+                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
                 const speed = this.getInput<number>('speed', eventContext);
                 const direction = Vector.fromArray(this.widgetData);
-                instance.velocity.copy(direction.multiplyScalar(speed));
+
+                if (instance != Node_Enums.THROWN){
+                    instance.velocity.copy(direction.multiplyScalar(speed));
+                }
 
                 this.triggerOutput('_o', eventContext);
             },
@@ -1386,12 +1433,14 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             moveDirection(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
+                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
                 const speed = this.getInput<number>('speed', eventContext);
                 const direction = Vector.fromArray(this.widgetData);
                 const velocity = direction.scale(speed);
 
-                instance.moveVector.add(velocity);
+                if (instance != Node_Enums.THROWN){
+                    instance.moveVector.add(velocity);
+                }
 
                 this.triggerOutput('_o', eventContext);
             },
@@ -1417,10 +1466,13 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             push(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
+                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
                 const strength = this.getInput<number>('strength', eventContext);
                 const force = Vector.fromArray(this.widgetData).scale(strength);
-                instance.applyForce(force);
+
+                if (instance != Node_Enums.THROWN){
+                    instance.applyForce(force);
+                }
 
                 this.triggerOutput('_o', eventContext);
             },
@@ -1477,11 +1529,11 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             getX(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.getInput<Instance_Base | undefined>('instance', eventContext) ?? eventContext.instance;
+                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', true) ?? eventContext.instance;
                 return instance.totalVelocity.x;
             },
             getY(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.getInput<Instance_Base | undefined>('instance', eventContext) ?? eventContext.instance;
+                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', true) ?? eventContext.instance;
                 return instance.totalVelocity.y;
             },
         },
@@ -1525,9 +1577,14 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             setPhysics(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.getInput<Instance_Base>('instance', eventContext) ?? eventContext.instance;
+                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? (eventContext.instance as Instance_Base);
                 const solid = this.getInput<boolean | null>('solid', eventContext);
                 const gravity = this.getInput<boolean | null>('gravity', eventContext);
+
+                if (instance == Node_Enums.THROWN){
+                    this.triggerOutput('_o', eventContext);
+                    return;
+                }
 
                 if (solid != null){
                     instance.isSolid = solid;
