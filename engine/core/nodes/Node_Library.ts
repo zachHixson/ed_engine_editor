@@ -186,8 +186,19 @@ export const NODE_LIST: iNodeTemplate[] = [
         ],
         methods: {
             getResult(this: iEngineNode, eventContext: iEventContext){
-                const i1 = this.getInput<Asset_Base>('_i1', eventContext);
-                const i2 = this.getInput<Asset_Base>('_i2', eventContext);
+                const i1 = this.getInput<Asset_Base | null>('_i1', eventContext);
+                const i2 = this.getInput<Asset_Base | null>('_i2', eventContext);
+
+                if (i1 == null || i2 == null){
+                    this.engine.nodeException({
+                        errorId: Symbol(),
+                        msgId: 'null_asset',
+                        logicId: this.parentScript.id,
+                        nodeId: this.nodeId,
+                        fatal: false,
+                    });
+                    return false;
+                }
 
                 return i1?.id == i2?.id;
             },
@@ -816,7 +827,8 @@ export const NODE_LIST: iNodeTemplate[] = [
             getInstances(this: iEngineNode, eventContext: iEventContext){
                 const name = this.getInput<string>('name', eventContext);
                 const group = this.getInput<string>('group', eventContext);
-                const type = this.getInput<Asset_Base>('type', eventContext);
+                const typeGet = this.throwOnNullInput<Asset_Base | null>('type', eventContext, 'null_asset', false);
+                const type = typeGet == Node_Enums.THROWN ? null : typeGet;
                 const instances: Instance_Base[] = [];
                 const intersect = type && group;
 
