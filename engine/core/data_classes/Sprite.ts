@@ -170,39 +170,10 @@ export class Sprite extends Asset_Base {
 
     compressFrames(frames: ImageData[]): string[][] {
         const hexFrames = frames.map(frame => this._imgDataToHex(frame));
-        const tempCompressed = this._compTemporal(hexFrames);
-        const frameCompressed = this._compFrame(tempCompressed);
-        return frameCompressed;
+        return this._compFrameData(hexFrames);
     }
 
-    private _compTemporal(frameList: string[][]): string[][] {
-        for (let i = 0; i < frameList.length; i++){
-            let curRange = 0;
-            let isSame = true;
-
-            //look ahead and find a range of identical frames
-            for (let checkFrame = i + 1; checkFrame < frameList.length && isSame; checkFrame++){
-                if (this.compareFrames(frameList[i], frameList[checkFrame])){
-                    curRange++;
-                }
-                else{
-                    isSame = false;
-                }
-
-                checkFrame++;
-            }
-
-            //Replace range of identical frames with marker to indicate how many frames to be duplicated
-            if (curRange > 0){
-                frameList.splice(i + 1, curRange, [curRange.toString()]);
-                i += 1;
-            }
-        }
-
-        return frameList;
-    }
-
-    private _compFrame(frameList: string[][]): string[][] {
+    private _compFrameData(frameList: string[][]): string[][] {
         for (let i = 0; i < frameList.length; i++){
             //Find full frame
             if (frameList[i].length > 1){
@@ -211,7 +182,7 @@ export class Sprite extends Asset_Base {
                     let curRange = 0;
                     let isSame = true;
                     
-                    //Check current pixel against nex pixels until a different one is found
+                    //Check current pixel against next pixels until a different one is found
                     for (let check = p + 1; check < frameList[i].length && isSame; check++){
                         if (frameList[i][p] == frameList[i][check]){
                             curRange++;
@@ -234,30 +205,10 @@ export class Sprite extends Asset_Base {
     }
 
     decompressFrames(frames: string[][]): string[][] {
-        const tempDecom = this._decompTemporal(frames);
-        return this._decompFrame(frames);
+        return this._decompFrameData(frames);
     }
 
-    private _decompTemporal(frameList: (string[] | string)[]): string[][] {
-        const decomped = [...frameList];
-
-        for (let i = 0; i < decomped.length; i++){
-            //Find marker
-            if (decomped[i].length == 1){
-                const range = parseInt(decomped[i] as string);
-                
-                //Insert range of duplicates in place of the marker
-                if (range > 0){
-                    const dupedFrames = new Array(range).fill([...decomped[i - 1]]);
-                    decomped.splice(i, 1, ...dupedFrames);
-                }
-            }
-        }
-
-        return decomped as string[][];
-    }
-
-    private _decompFrame(frameList: string[][]): string[][] {
+    private _decompFrameData(frameList: string[][]): string[][] {
         const decomped = [...frameList];
 
         for (let i = 0; i < decomped.length; i++){
