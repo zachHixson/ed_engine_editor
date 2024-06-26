@@ -237,7 +237,7 @@ export interface iEngineNode extends iNode_Base {
     getInput<T>(inputName: string, eventContext: iEventContext, convertList?: boolean): T;
     triggerOutput(outputId: string, eventContext: iEventContext): void;
     throwOnNullInput<T>(inputName: string, eventContext: iEventContext, errorId: string, fatal?: boolean): T | typeof Node_Enums.THROWN | null;
-    throwOnNullInput<T>(inputName: string, eventContext: iEventContext, errorId: string, fatal: true): T | null;
+    throwOnNullInput<T>(inputName: string, eventContext: iEventContext, errorId: string, fatal: true, rejectNoConnection?: boolean): T | null;
 }
 
 export type iEventContext = {eventKey: number, instance: Instance_Object};

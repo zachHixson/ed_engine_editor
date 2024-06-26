@@ -1,6 +1,5 @@
 import { iAnyObj } from "../interfaces";
 import { SOCKET_TYPE, WIDGET } from "./Node_Enums";
-import { Instance_Object } from "../core";
 import { iEventContext, iNodeLifecycleEvents, iEditorNodeMethod, iEngineNodeMethod } from "../LogicInterfaces";
 
 export interface iNodeTemplate extends iNodeLifecycleEvents {

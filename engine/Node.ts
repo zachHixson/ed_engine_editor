@@ -182,10 +182,12 @@ export default class Node implements iEngineNode {
         }
     }
 
-    throwOnNullInput<T>(inputName: string, eventContext: iEventContext, errorId: string, fatal: boolean = false): T | typeof Node_Enums.THROWN | null {
+    throwOnNullInput<T>(inputName: string, eventContext: iEventContext, errorId: string, fatal: boolean = false, rejectNoConnection: boolean = false): T | typeof Node_Enums.THROWN | null {
         const value = this.getInput(inputName, eventContext);
+        const hasVal = !(value == null && value == undefined);
+        const returnNull = !(rejectNoConnection || this.inputs.get(inputName)?.connection);
 
-        if (!(value == null && value == undefined) && !this.inputs.get(inputName)?.connection) return value;
+        if (hasVal || returnNull) return value;
 
         this.engine.nodeException({
             errorId: Symbol(),
