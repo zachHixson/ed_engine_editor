@@ -643,6 +643,8 @@ export class Engine implements iEngineCallbacks {
         if (instance.renderable){
             this._renderer.removeInstance(instance);
         }
+
+        instance.needsRenderUpdate = false;
     }
 
     setInstancePosition = (instance: Instance_Base, pos: Vector): void =>{
