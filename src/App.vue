@@ -117,13 +117,25 @@ function openProject(data: string): void {
             alertDialog: true,
             textInfo: {
                 textId: 'editor_main.error_opening_html'
-            },
-        })
+            }
+        });
         return;
     }
 
-    mainStore.loadSaveData(loadData);
-    resetUI();
+    try {
+        mainStore.loadSaveData(loadData);
+        resetUI();
+    }
+    catch (e) {
+        console.error(e);
+
+        dialogOpen({
+            alertDialog: true,
+            textInfo: {
+                textId: 'editor_main.error_reading_project'
+            }
+        });
+    }
 }
 
 function saveProject(): void {

@@ -29,7 +29,8 @@
         "package": "Export",
         "autosaving": "Auto-Saving",
         "saved": "Saved",
-        "error_opening_html": "An error occurred when attempting to open the project. Please make sure the file you selected is a game exported using Ed, and not another file.",
+        "error_opening_html": "<span style=\"font-weight: bold;\">An error occurred when trying to open the project.</span><br />Please make sure the file you selected is a game exported using Ed, and not another file.",
+        "error_reading_project": "<span style=\"font-weight: bold;\">An error occurred when trying to read the project data.</span><br />The project file you are trying to open might be corrupt.",
         "fatalRuntimeError": "<span style=\"font-weight: bold;\">An error has occurred which has forced the game to stop.</span><br />Run the game in debug mode for more info.",
         "nodeExceptionClick": "[double click to open node editor]"
     },

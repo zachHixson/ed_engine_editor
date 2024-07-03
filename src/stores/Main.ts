@@ -79,7 +79,14 @@ export const useMainStore = defineStore({
         loadSaveData(projString: string){
             const assetBrowserStore = useAssetBrowserStore();
             const gameDataStore = useGameDataStore();
-            const loadObj: Core.iSerializedGameData = JSON.parse(projString) || {};
+            let loadObj: Core.iSerializedGameData;
+            
+            try {
+                loadObj = JSON.parse(projString);
+            }
+            catch (e) {
+                throw new Error('Error parsing JSON data');
+            }
 
             this.projectName = loadObj.projectName;
             Core.ID_Generator.setID(loadObj.newestID);
