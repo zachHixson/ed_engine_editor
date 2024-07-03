@@ -22,7 +22,7 @@ import { useGameDataStore } from './stores/GameData';
 import { useAssetBrowserStore } from './stores/AssetBrowser';
 import { useLogicEditorStore } from './stores/LogicEditor';
 import type Logic from './components/editor_logic/node_components/Logic';
-import Core, { HTMLTemplate, EngineRawText, Engine } from '@/core';
+import Core, { HTMLTemplate, EngineRawText } from '@/core';
 
 import licenseText from '@/../LICENSE.txt?raw';
 import { useI18n } from 'vue-i18n';
@@ -103,8 +103,26 @@ function newProject(): void {
     resetUI();
 }
 
-function openProject(data: any): void {
-    mainStore.loadSaveData(data);
+function openProject(data: string): void {
+    const isHtml = data.slice(0, 16) == HTMLTemplate.slice(0, 16);
+    const loadData = isHtml ? (()=>{
+        //Extract project data from HTML file
+        const el = document.createElement('div');
+        el.innerHTML = data;
+        return el.querySelector('#gameData')?.innerHTML;
+    })() : data;
+
+    if (!loadData){
+        dialogOpen({
+            alertDialog: true,
+            textInfo: {
+                textId: 'editor_main.error_opening_html'
+            },
+        })
+        return;
+    }
+
+    mainStore.loadSaveData(loadData);
     resetUI();
 }
 

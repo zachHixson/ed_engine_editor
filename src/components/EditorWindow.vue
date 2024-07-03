@@ -15,9 +15,9 @@ export interface DialogBoxProps {
     alertDialog?: boolean,
     textInfo: {
         textId: string,
-        vars: {[keys: string]: any}
+        vars?: {[keys: string]: any}
     },
-    callback: (...args: any)=>void,
+    callback?: (...args: any)=>void,
 }
 
 const { t } = useI18n();
@@ -42,7 +42,7 @@ const currentEditor = computed(()=>{
 });
 const selectedAsset = computed(()=>assetBrowserStore.getSelectedAsset);
 const selectedRoom = computed(()=>assetBrowserStore.getSelectedRoom);
-const dialogText = computed(()=>t(dialogTextId.value, dialogTextVars.value!));
+const dialogText = computed(()=>dialogTextVars.value ? t(dialogTextId.value, dialogTextVars.value!) : t(dialogTextId.value));
 
 watch(()=>mainStore.getSelectedEditor, ()=>dialogClose(false));
 watch(selectedAsset, ()=>dialogClose(false));
