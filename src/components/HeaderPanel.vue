@@ -177,7 +177,7 @@ function openAboutMenu(): void {
 
 <template>
     <div class="headerPanel">
-        <button class="fileMenu" @click="(event)=>{event.stopPropagation(); fileVisible = !fileVisible}"
+        <button class="fileMenu" @click="(event: MouseEvent)=>{event.stopPropagation(); fileVisible = !fileVisible}"
             v-click-outside="closeFileMenu">
             Ed
             <div ref="dropDown" class="dropDown" v-show="fileVisible">
@@ -244,7 +244,7 @@ function openAboutMenu(): void {
     top: 20px;
     left: 100%;
     z-index: 1000;
-    border-radius: 10px;
+    border-radius: 0px 10px 10px 10px;
     border: 1px solid black;
     overflow: hidden;
 }

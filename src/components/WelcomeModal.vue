@@ -26,18 +26,20 @@ const demoNames = ref<string[]>([]);
 onMounted(()=>{
     if (showModal.value){
         showWelcome.value = true;
-
-        fetch('./welcome_text.html')
-            .then(res => {
-                if (!res.ok){
-                    console.error('Could not load welcome text');
-                    return '<h1 style="text-align: center">Welcome!</h1>';
-                }
-
-                return res.text();
-            })
-            .then(text => welcomeText.value = text);
     }
+
+    if (isPortable) return;
+
+    fetch('./welcome_text.html')
+        .then(res => {
+            if (!res.ok){
+                console.error('Could not load welcome text');
+                return '<h1 style="text-align: center">Welcome!</h1>';
+            }
+
+            return res.text();
+        })
+        .then(text => welcomeText.value = text);
 });
 
 function openModal(): void {
