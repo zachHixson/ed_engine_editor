@@ -537,6 +537,18 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
     },
+    {// Note
+        id: 'note',
+        category: 'actual',
+        widget: {
+            id: 'text',
+            type: WIDGET.TEXT_AREA,
+        },
+        onMount(this: iEditorNode){
+            const el = this.domRef!;
+            el.style.background = '#0088ff10';
+        },
+    },
     {// Key Input
         id: 'key_input',
         category: 'actual',
@@ -1550,7 +1562,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
     },
-    {
+    {// Get Distance
         id: 'get_distance',
         category: 'movement',
         inputs: [
