@@ -2,8 +2,10 @@
 import { ref, onMounted } from 'vue';
 import Svg from './common/Svg.vue';
 
-import throbberIcon from '@/assets/throbber.svg';
 import { useI18n } from 'vue-i18n';
+
+import xIcon from '@/assets/x.svg';
+import throbberIcon from '@/assets/throbber.svg';
 
 const emit = defineEmits([
     'demo-opened',
@@ -128,7 +130,9 @@ defineExpose({openModal});
             <Transition name="Twindow">
                 <div v-if="showDemos" class="window" v-click-outside="clickOutside">
                     <div style="display: flex; flex-direction: row; justify-content: end;">
-                        <button @click="closeModal">X</button>
+                        <button style="width: 25px; height: 25px;" @click="closeModal">
+                            <Svg style="width: 100%; height: 100%" :src="xIcon"></Svg>
+                        </button>
                     </div>
                     <div v-if="!loadingDemo" class="demo-list">
                         <button

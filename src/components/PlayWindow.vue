@@ -8,6 +8,7 @@ import Core, { Engine } from '@/core';
 import { PLAY_STATE } from '@/stores/Main';
 import { useI18n } from 'vue-i18n';
 
+import xIcon from '@/assets/x.svg';
 import terminalIcon from '@/assets/terminal.svg';
 
 enum Level {
@@ -229,7 +230,7 @@ function messageClassSelector(log: iConsoleLine): string {
                 {{playState == PLAY_STATE.PLAYING ? $t('editor_main.run') : $t('editor_main.debug')}}
             </div>
             <button class="closeBtn" @click="close">
-                X
+                <Svg style="width: 100%; height: 100%" :src="xIcon"></Svg>
             </button>
         </div>
         <div ref="canvasWrapper" class="canvasWrapper">
