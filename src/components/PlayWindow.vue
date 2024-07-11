@@ -22,6 +22,7 @@ enum Level {
 interface iConsoleLine {
     message: string;
     time: [string, string, string];
+    src: string[];
     level: Level;
     unread: boolean;
     exceptionData?: Core.iNodeExceptionData;
@@ -139,8 +140,7 @@ function padNum(num: number): string {
     return padding.slice(0, 2 - str.length).join('') + str;
 }
 
-function addLogMessage(textArr: string[], level: Level, exceptionData?: Core.iNodeExceptionData): void {
-    const text = textArr.join(' ');
+function addLogMessage(src: string[], text: string, level: Level, exceptionData?: Core.iNodeExceptionData): void {
     const time = new Date();
     const h = padNum(time.getHours());
     const m = padNum(time.getMinutes());
@@ -149,6 +149,7 @@ function addLogMessage(textArr: string[], level: Level, exceptionData?: Core.iNo
     consoleOuput.value.push({
         message: text,
         time: [h, m, s],
+        src,
         level,
         unread: true,
         exceptionData,
@@ -168,23 +169,23 @@ function addLogMessage(textArr: string[], level: Level, exceptionData?: Core.iNo
     }
 }
 
-function log(...args: any): void {
-    addLogMessage(args, Level.LOG);
+function log(src: string[], data: string): void {
+    addLogMessage(src, data, Level.LOG);
 }
 
-function warn(...args: any): void {
-    addLogMessage(args, Level.WARN);
+function warn(src: string[], data: string): void {
+    addLogMessage(src, data, Level.WARN);
 }
 
-function error(...args: any): void {
-    addLogMessage(args, Level.ERROR);
+function error(src: string[], data: string): void {
+    addLogMessage(src, data, Level.ERROR);
 }
 
 function nodeException(data: Core.iNodeExceptionData): void {
     const msgText = data.msgVars ? t(data.msgId, data.msgVars) : t(data.msgId);
     const excLvl = data.fatal ? Level.FATAL_EXCEPTION : Level.NODE_EXCEPTION;
     const fatalErr = fatalError.value || (data.fatal ?? false);
-    addLogMessage([msgText, t('editor_main.nodeExceptionClick')], excLvl, data);
+    addLogMessage([], msgText + t('editor_main.nodeExceptionClick'), excLvl, data);
     logicEditorStore.addError(data);
     fatalError.value = fatalErr;
     consoleOpen.value = fatalErr;
@@ -258,7 +259,7 @@ function messageClassSelector(log: iConsoleLine): string {
                         class="console-message"
                         :class="messageClassSelector(log)"
                         @dblclick="log.exceptionData ? openNodeException(log.exceptionData.nodeId, log.exceptionData.logicId) : null">
-                        <span class="console-time">{{ `[${log.time[0]}:${log.time[1]}:${log.time[2]}]` }}</span>
+                        <span class="console-time">{{ `[${log.time[0]}:${log.time[1]}:${log.time[2]}] ${log.src.join(':')}` }}</span>
                         <span class="console-text">{{ log.message }}</span>
                     </div>
                 </div>

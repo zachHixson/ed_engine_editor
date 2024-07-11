@@ -41,10 +41,12 @@ enum KEY_STATE {
     NONE = 'NONE',
 }
 
+type ConsoleLog = [src: string[], data: string];
+
 interface iEngineCallbacks {
-    log?: (...args: any)=>void
-    warn?: (...args: any)=>void
-    error?: (...args: any)=>void
+    log?: (...args: ConsoleLog)=>void
+    warn?: (...args: ConsoleLog)=>void
+    error?: (...args: ConsoleLog)=>void
     nodeException?: (data: iNodeExceptionData)=>void;
     restart?: ()=>void
 }
@@ -62,6 +64,18 @@ interface iCollisionMapping {
 }
 
 export class Engine implements iEngineCallbacks {
+    private static _defaultConsoleFormat(...args: ConsoleLog): string {
+        let output = '';
+
+        if (args[0].length > 0){
+            output += `[${args[0].join(':')}]`;
+        }
+
+        output += args[1];
+
+        return output;
+    }
+
     static readonly VERSION = '0.1.0';
     static readonly DEFAULT_ACTION_KEY = 'Space';
 
@@ -95,9 +109,15 @@ export class Engine implements iEngineCallbacks {
     enableInput = true;
     enableUpdate = true;
 
-    log: (...args: any)=>void = function(){console.log(...arguments)};
-    warn: (...args: any)=>void = function(){console.warn(...arguments)};
-    error: (...args: any)=>void = function(){console.error(...arguments)};
+    log: (...args: ConsoleLog)=>void = function(src, data){
+        console.log(Engine._defaultConsoleFormat(src, data));
+    };
+    warn: (...args: ConsoleLog)=>void = function(src, data){
+        console.warn(Engine._defaultConsoleFormat(src, data));
+    };
+    error: (...args: ConsoleLog)=>void = function(src, data){
+        console.error(Engine._defaultConsoleFormat(src, data));
+    };
     nodeException: (data: iNodeExceptionData)=>void = function(data: iNodeExceptionData){console.error(data)};
     restart: ()=>void = function(){location.reload()};
 
@@ -520,7 +540,7 @@ export class Engine implements iEngineCallbacks {
 
         //load first room
         if (this._gameData.rooms.length <= 0){
-            this.error('No rooms found in game data');
+            this.error(['Engine'], 'No rooms found in game data');
             this.stop();
             return;
         }

@@ -182,6 +182,8 @@ export interface iEditorAPI {
 
 export interface iEngineLogic {
     id: number;
+    name: string;
+    graphNames: Map<number, string>;
     category_ID: CATEGORY_ID;
     events: Map<string, iEngineNode[]>;
     localVariableDefaults: Map<string, any>;
@@ -229,6 +231,7 @@ export interface iEngineNode extends iNode_Base {
     inputs: Map<string, iEngineInput>;
     outputs: Map<string, iEngineOutput>;
     parentScript: iEngineLogic;
+    graphId: number;
 
     engine: Engine;
 

@@ -507,6 +507,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             log(this: iEngineNode, eventContext: iEventContext){
                 const label = this.getInput<string>('label', eventContext);
                 const data = this.getInput<any>('_data', eventContext, false);
+                let src = [this.parentScript.name];
                 let output = '';
 
                 if (label.length) output += label;
@@ -531,7 +532,12 @@ export const NODE_LIST: iNodeTemplate[] = [
                     output += data;
                 }
 
-                this.engine.log(output);
+                // Only include graph ID if there is more than one graph
+                if (this.parentScript.graphNames.size > 1){
+                    src.push(this.parentScript.graphNames.get(this.graphId) ?? '! No Graph ID !');
+                }
+
+                this.engine.log(src, output);
 
                 this.triggerOutput('_o', eventContext);
             },
@@ -812,7 +818,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                     instanceMap.set(eventContext, newInstance);
                 }
                 else{
-                    this.engine.warn('error_creating_asset');
+                    this.engine.warn([this.parentScript.name, this.parentScript.graphNames.get(this.graphId) ?? '! No graph ID !'], 'error_creating_asset');
                 }
 
                 this.triggerOutput('_o', eventContext);

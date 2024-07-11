@@ -22,6 +22,7 @@ export default class Node implements iEngineNode {
     template: iNodeTemplate;
     nodeId: number;
     parentScript: iEngineLogic;
+    graphId: number;
     engine: Engine;
     isEvent: boolean;
     widgetData: iAnyObj | null = null;
@@ -43,6 +44,7 @@ export default class Node implements iEngineNode {
         this.template = template;
         this.nodeId = nodeData.nId;
         this.parentScript = logic;
+        this.graphId = nodeData.gId;
         this.isEvent = template.isEvent ?? false;
         this.widgetData = nodeData.widg ?? null;
         this._stackTrace = {parentScriptId: this.parentScript.id, nodeId: this.nodeId};

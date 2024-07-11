@@ -23,12 +23,18 @@ export default class Logic implements iEngineLogic {
     private _localVariableDefaults: Map<string, {value: any, type: SOCKET_TYPE, isList: boolean}> = new Map();
 
     id: number;
+    name: string;
+    graphNames = new Map<number, string>();
     events: Map<string, Node[]> = new Map();
 
     constructor(logicData: iLogicSaveData, engine: Engine){
         this.id = logicData.id;
+        this.name = logicData.name;
 
         const nodeMap = new Map<number, Node>();
+
+        //populate graph name map
+        logicData.graphs.forEach(({name, id}) => this.graphNames.set(id, name));
 
         //create all nodes
         logicData.nodes.forEach((nodeData: iNodeSaveData) => {
