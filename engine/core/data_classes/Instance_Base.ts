@@ -71,7 +71,7 @@ export abstract class Instance_Base{
 
     //Rendering getters
     get sprite(){return this._sprite};
-    set sprite(sprite: Sprite | null){this._sprite = sprite};
+    set sprite(newSprite: Sprite | null){this._sprite = newSprite};
     get renderable(){return !!this.sprite};
     get hasEditorFrame(){return false};
     get startFrame(){return 0};
