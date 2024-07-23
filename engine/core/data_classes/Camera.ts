@@ -94,8 +94,11 @@ export class Camera{
     private _moveFollow(deltaTime: number, room: Room): void {
         const target = room.instances.find(
             instance => instance.id == this.followObjId
-        )!;
-        const targetPos = target.pos.clone().addScalar(8)
+        );
+
+        if (!target) return;
+
+        const targetPos = target.pos.clone().addScalar(8);
 
         switch(this.followType){
             case FOLLOW_TYPES.SMART:
