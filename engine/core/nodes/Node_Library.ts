@@ -671,15 +671,17 @@ export const NODE_LIST: iNodeTemplate[] = [
                 const shouldPause = this.getInput<boolean>('pause_game', eventContext);
                 const isFullscreen = this.getInput<boolean>('fullscreen', eventContext);
                 const text = textBox ? textBox : textArea;
+                const dialogBox = this.engine.openDialogBox(text, shouldPause, isFullscreen, interactKey);
 
-                this.engine.openDialogBox(text, shouldPause, isFullscreen, userClosed => {
+                dialogBox.onClose.listen(userClosed => {
                     if (!userClosed){
                         this.engine.warn([this.parentScript.name, this.parentScript.graphNames.get(this.graphId) ?? ''], 'double_dialog');
                         return;
                     }
 
                     this.triggerOutput('dialog_closed', eventContext);
-                }, interactKey);
+                }, {once:true});
+
                 this.triggerOutput('immediate', eventContext);
             },
         },

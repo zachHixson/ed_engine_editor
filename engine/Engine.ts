@@ -1,5 +1,6 @@
 import Renderer from './Renderer';
 import Logic from './Logic';
+import Dialog_Base from './text/Dialog_Base';
 import Dialog_Box from './text/Dialog_Box';
 import Dialog_Fullscreen from './text/Dialog_Fullscreen';
 import {
@@ -31,7 +32,6 @@ import Transition_Base, { TRANSITION } from './transitions/Transition_Base';
 import { SOCKET_TYPE } from './core/nodes/Node_Enums';
 
 import * as Physics from './Physics';
-
 export * as Core from '@engine/core/core';
 
 enum KEY_STATE {
@@ -586,7 +586,8 @@ export class Engine implements iEngineCallbacks {
     triggerEnding = (endingText: string): void =>{
         this.enableInput = false;
         this.enableUpdate = false;
-        this._dialogFullscreen.open(endingText, Engine.DEFAULT_ACTION_KEY, ()=>this.restart());
+        this._dialogFullscreen.onClose.listen(()=>this.restart(), {once:true});
+        this._dialogFullscreen.open(endingText, Engine.DEFAULT_ACTION_KEY);
     }
 
     registerCollision = (sourceInstance: Instance_Base, collisionInstance: Instance_Base, normal?: Vector, force = false): void =>{
@@ -723,23 +724,20 @@ export class Engine implements iEngineCallbacks {
         return this._globalVariables.get(varname);
     }
 
-    openDialogBox = (text: string, pause: boolean, fullscreen: boolean, closeCallback: (userClosed: boolean)=>void, interactionKey = Engine.DEFAULT_ACTION_KEY): void =>{
-        const wrappedCallback = (userClosed: boolean)=>{
+    openDialogBox = (text: string, pause: boolean, fullscreen: boolean, interactionKey = Engine.DEFAULT_ACTION_KEY): Dialog_Base =>{
+        const dialogBox = fullscreen ? this._dialogFullscreen : this._dialogBox;
+        
+        dialogBox.onOpen.listen(()=>{
+            this.enableInput = false;
+            this.enableUpdate = !pause;
+        }, {once:true});
+        dialogBox.onClose.listen(()=>{
             this.enableInput = true;
             this.enableUpdate = true;
+        }, {once:true});
+        dialogBox.open(text, interactionKey);
 
-            closeCallback(userClosed);
-        }
-        
-        this.enableInput = false;
-        this.enableUpdate = !pause;
-
-        if (fullscreen){
-            this._dialogFullscreen.open(text, interactionKey, wrappedCallback);
-        }
-        else{
-            this._dialogBox.open(text, interactionKey, wrappedCallback);
-        }
+        return dialogBox;
     }
 
     broadcastMessage = (name: string): void => {

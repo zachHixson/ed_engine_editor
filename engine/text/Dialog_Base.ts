@@ -1,4 +1,5 @@
 import Font_Renderer from "./Font_Renderer";
+import { Event_Emitter } from "@engine/core/Event_Emitter";
 
 export default abstract class Dialog_Base {
 
@@ -17,8 +18,9 @@ export default abstract class Dialog_Base {
     protected _progress: number = 0;
     protected _arrowAnim: number = 0;
     protected _active: boolean = false;
-    protected _onCloseCallback: (userClosed: boolean)=>void = (u)=>{};
     protected _interactKey: string = 'Space';
+    protected _onOpen = new Event_Emitter<()=>void>();
+    protected _onClose = new Event_Emitter<(userClosed: boolean)=>void>();
 
     private _previousText: String | null = null;
     
@@ -30,6 +32,9 @@ export default abstract class Dialog_Base {
         this._progress = 0;
         this._arrowAnim = 0;
     }
+
+    get onOpen() {return this._onOpen}
+    get onClose() {return this._onClose}
 
     get text() {return this.fontRenderer.text}
     set text(txt: string){
@@ -75,7 +80,7 @@ export default abstract class Dialog_Base {
         return texture;
     }
 
-    open(text: string, interactKey: string, closeCallback: (userClosed: boolean)=>void): void {
+    open(text: string, interactKey: string): void {
         //close previous dialog box to prevent overlap
         if (this._active){
             const userClosed = text != this._previousText; //prevent edge case where two of the same dialog boxes get triggered on same frame
@@ -84,10 +89,11 @@ export default abstract class Dialog_Base {
 
         this.text = text;
         this._interactKey = interactKey;
-        this._onCloseCallback = closeCallback;
         this._active = true;
         this._setProgress(0);
         this._previousText = this.text;
+
+        this.onOpen.emit();
 
         setTimeout(()=>{
             this._previousText = null;
@@ -98,7 +104,6 @@ export default abstract class Dialog_Base {
 
     checkInteractKey(key: string): boolean {
         if (this._active && key == this._interactKey){
-            console.log("interacted")
             this.nextPage();
             return true;
         }

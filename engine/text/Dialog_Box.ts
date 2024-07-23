@@ -133,7 +133,7 @@ export default class Dialog_Box extends Dialog_Base {
 
     close(userClosed: boolean): void {
         this._active = false;
-        this._onCloseCallback(userClosed);
+        this.onClose.emit(userClosed);
     }
 
     render(delta: number): void {
