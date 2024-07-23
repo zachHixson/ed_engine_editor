@@ -131,9 +131,9 @@ export default class Dialog_Box extends Dialog_Base {
         this._yOffsetUniform.set(0.15);
     }
 
-    close(): void {
+    close(userClosed: boolean): void {
         this._active = false;
-        this._onCloseCallback();
+        this._onCloseCallback(userClosed);
     }
 
     render(delta: number): void {

@@ -1,6 +1,7 @@
 import Font_Renderer from "./Font_Renderer";
 
 export default abstract class Dialog_Base {
+
     static get DIALOG_ARROW_BITMAP(){return [
         0,0,0,0,0,0,0,0,
         0,0,0,0,0,0,0,0,
@@ -16,8 +17,10 @@ export default abstract class Dialog_Base {
     protected _progress: number = 0;
     protected _arrowAnim: number = 0;
     protected _active: boolean = false;
-    protected _onCloseCallback: ()=>void = ()=>{};
+    protected _onCloseCallback: (userClosed: boolean)=>void = (u)=>{};
     protected _interactKey: string = 'Space';
+
+    private _previousText: String | null = null;
     
     abstract fontRenderer: Font_Renderer;
 
@@ -72,9 +75,11 @@ export default abstract class Dialog_Base {
         return texture;
     }
 
-    open(text: string, interactKey: string, closeCallback: ()=>void): void {
+    open(text: string, interactKey: string, closeCallback: (userClosed: boolean)=>void): void {
+        //close previous dialog box to prevent overlap
         if (this._active){
-            this.close();
+            const userClosed = text != this._previousText; //prevent edge case where two of the same dialog boxes get triggered on same frame
+            this.close(userClosed);
         }
 
         this.text = text;
@@ -82,12 +87,18 @@ export default abstract class Dialog_Base {
         this._onCloseCallback = closeCallback;
         this._active = true;
         this._setProgress(0);
+        this._previousText = this.text;
+
+        setTimeout(()=>{
+            this._previousText = null;
+        });
     }
 
-    abstract close(): void;
+    abstract close(userClosed: boolean): void;
 
     checkInteractKey(key: string): boolean {
         if (this._active && key == this._interactKey){
+            console.log("interacted")
             this.nextPage();
             return true;
         }
@@ -106,7 +117,7 @@ export default abstract class Dialog_Base {
 
         if (pageFinished){
             if (lastPage){
-                this.close();
+                this.close(true);
             }
             else{
                 this._setProgress(0);

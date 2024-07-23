@@ -723,12 +723,12 @@ export class Engine implements iEngineCallbacks {
         return this._globalVariables.get(varname);
     }
 
-    openDialogBox = (text: string, pause: boolean, fullscreen: boolean, closeCallback: ()=>void, interactionKey = Engine.DEFAULT_ACTION_KEY): void =>{
-        const wrappedCallback = ()=>{
+    openDialogBox = (text: string, pause: boolean, fullscreen: boolean, closeCallback: (userClosed: boolean)=>void, interactionKey = Engine.DEFAULT_ACTION_KEY): void =>{
+        const wrappedCallback = (userClosed: boolean)=>{
             this.enableInput = true;
             this.enableUpdate = true;
 
-            closeCallback();
+            closeCallback(userClosed);
         }
         
         this.enableInput = false;

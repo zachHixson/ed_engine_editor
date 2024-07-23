@@ -200,7 +200,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                     return false;
                 }
 
-                return i1?.id == i2?.id;
+                return i1.id == i2.id;
             },
             editor_setSocketType(this: iEditorNode){
                 const type = this.widgetData;
@@ -672,8 +672,13 @@ export const NODE_LIST: iNodeTemplate[] = [
                 const isFullscreen = this.getInput<boolean>('fullscreen', eventContext);
                 const text = textBox ? textBox : textArea;
 
-                this.engine.openDialogBox(text, shouldPause, isFullscreen, ()=>{
-                    this.triggerOutput('dialog_closed', eventContext)
+                this.engine.openDialogBox(text, shouldPause, isFullscreen, userClosed => {
+                    if (!userClosed){
+                        this.engine.warn([this.parentScript.name, this.parentScript.graphNames.get(this.graphId) ?? ''], 'double_dialog');
+                        return;
+                    }
+
+                    this.triggerOutput('dialog_closed', eventContext);
                 }, interactKey);
                 this.triggerOutput('immediate', eventContext);
             },

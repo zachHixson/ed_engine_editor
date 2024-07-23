@@ -90,9 +90,9 @@ export default class Dialog_Fullscreen extends Dialog_Base{
         this.fontRenderer.fontSize = 2.5;
     }
 
-    close(): void {
+    close(userClosed: boolean): void {
         this._active = false;
-        this._onCloseCallback();
+        this._onCloseCallback(userClosed);
     }
 
     render(delta: number): void {
