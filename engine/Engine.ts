@@ -659,9 +659,9 @@ export class Engine implements iEngineCallbacks {
     }
 
     removeInstance = (instance: Instance_Base): void =>{
-        this.room!.removeInstance(instance.id);
+        const wasRemoved = !!this.room!.removeInstance(instance.id);
 
-        if (instance.renderable){
+        if (wasRemoved && instance.renderable){
             this._renderer.removeInstance(instance);
         }
 
