@@ -138,6 +138,15 @@ export default function useNode(
     function copySelectedToClipboard(): void {
         const nodesToCopy = selectedNodes.value.filter(node => !node.doNotCopy);
 
+        if (nodesToCopy.length < selectedNodes.value.length){
+            logicEditorStore.addError({
+                errorId: Symbol(),
+                logicId: selectedNodes.value[0].parentScript.id,
+                nodeId: selectedNodes.value[0].nodeId,
+                msgId: 'node.nodes_not_copied',
+                fatal: false,
+            });
+        }
         if (nodesToCopy.length <= 0) return;
 
         const nodeMap = new Map<number, Node_Obj>();

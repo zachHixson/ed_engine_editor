@@ -187,4 +187,12 @@ export default class Node_API implements Core.iEditorAPI {
         const data = this.editor.actionMap.get(key)(args, commit) ?? {};
         this.undoStore.commit({action: key, data});
     }
+
+    pushNodeException(data: Core.iNodeExceptionData): void {
+        this.logicEditorStore.addError(data);
+    }
+
+    clearNodeException(errorId: symbol): void {
+        this.logicEditorStore.clearError(errorId);
+    }
 }

@@ -233,18 +233,40 @@ export default [
             const upStreamSocket = this.editorAPI.getConnectedInputSocket(this, 'data', upStreamConnection)!;
             const dataSocket = this.inputs.get('data')!;
             
-            if (!canConvertSocket(upStreamSocket.type, dataSocket.type)){
+            if (!(canConvertSocket(upStreamSocket.type, dataSocket.type) && this.dataCache.get('isValid'))){
                 const isRecording = this.editorAPI.undoStore.isRecording;
                 this.editorAPI.deleteConnections([upStreamConnection], isRecording);
+
+                this.editorAPI.pushNodeException({
+                    errorId: Symbol.for(this.nodeId.toString() + 'connection_deleted'),
+                    msgId: 'node.connection_deleted',
+                    logicId: this.parentScript.id,
+                    nodeId: this.nodeId,
+                    fatal: false,
+                });
             }
         },
         methods: {
             setVar(this: iEngineNode, eventContext: iEventContext){
                 const varName = this.getInput<string>('name', eventContext);
                 const data = this.getInput<any>('data', eventContext);
-                const isGlobal = this.engine.getGlobalVariable(varName) !== undefined;
+                const isGlobal = this.engine.getGlobalVariable(varName) !== null;
+                const isDefined = !!(isGlobal || eventContext.instance.getLocalVariable(varName));
 
-                isGlobal ? this.engine.setGlobalVariable(varName, data) : eventContext.instance.setLocalVariable(varName, data);
+                if (isDefined){
+                    isGlobal ? this.engine.setGlobalVariable(varName, data) : eventContext.instance.setLocalVariable(varName, data);
+                }
+                else{
+                    this.engine.nodeException({
+                        errorId: Symbol.for(this.nodeId.toString() + 'no_variable_found'),
+                        msgId: 'node.error_var_not_found',
+                        msgVars: [varName],
+                        logicId: this.parentScript.id,
+                        nodeId: this.nodeId,
+                        fatal: false,
+                    });
+                }
+
                 this.triggerOutput('_o', eventContext);
             },
             validate,
@@ -290,8 +312,26 @@ export default [
                 if (!canConvertSocket(type, socket.type)){
                     const isRecording = this.editorAPI.undoStore.isRecording;
                     this.editorAPI.deleteConnections([connection], isRecording);
+
+                    this.editorAPI.pushNodeException({
+                        errorId: Symbol.for(this.nodeId.toString() + 'connection_deleted'),
+                        msgId: 'node.connection_deleted',
+                        logicId: this.parentScript.id,
+                        nodeId: this.nodeId,
+                        fatal: false,
+                    });
                 }
             });
+
+            if (!this.dataCache.get('isValid')){
+                this.editorAPI.pushNodeException({
+                    errorId: Symbol.for(this.nodeId.toString() + 'connection_deleted'),
+                    msgId: 'node.connection_deleted',
+                    logicId: this.parentScript.id,
+                    nodeId: this.nodeId,
+                    fatal: false,
+                });
+            }
         },
         methods: {
             getVar(this: iEngineNode, eventContext: iEventContext){
@@ -299,8 +339,17 @@ export default [
                 const isGlobal = this.engine.getGlobalVariable(varName);
                 const variable = isGlobal ? this.engine.getGlobalVariable(varName) : eventContext.instance.getLocalVariable(varName);
                 
-                if (variable == undefined){
-                    return null;
+                //this condition should be impossible due to being unable to connect a non-existant variable
+                if (variable == null){
+                    this.engine.nodeException({
+                        errorId: Symbol.for(this.nodeId.toString() + 'no_variable_found'),
+                        msgId: 'node.error_var_not_found',
+                        msgVars: [varName],
+                        logicId: this.parentScript.id,
+                        nodeId: this.nodeId,
+                        fatal: true,
+                    });
+                    throw new Error(`attempt to read from ${isGlobal ? 'global' : 'local'} variable ${varName} which does not exist`);
                 }
 
                 return variable.value;
@@ -410,32 +459,50 @@ function determineConnected(this: iEditorNode){
 }
 
 function validate(this: iEditorNode, textbox?: HTMLInputElement){
+    const noVariableFoundKey = Symbol.for(this.nodeId.toString() + 'no_variable_found');
     const dataSocket = this.inputs.get('data') || this.outputs.get('data')!;
     const varName = textbox?.value ?? this.getInput<string>('name');
     const globalGet = this.editorAPI.getGlobalVariable(varName);
     const localGet = this.parentScript.getLocalVariable(varName);
     const isValid = !!globalGet || !!localGet;
 
-    this.decoratorIcon = null;
-
     if (isValid){
         const variable = localGet ?? globalGet!;
 
+        //Warn of a possible name conflict between local and global variables
         if (!!globalGet && !!localGet){
-            this.decoratorIcon = 'warning_decorator';
-            this.decoratorText = 'logic_editor.local_global_name_warning';
+            this.editorAPI.pushNodeException({
+                errorId: Symbol.for(this.nodeId.toString() + 'global_local_conflict'),
+                msgId: 'logic_editor.local_global_name_warning',
+                logicId: this.parentScript.id,
+                nodeId: this.nodeId,
+                fatal: false,
+            });
         }
 
         dataSocket.disabled = false;
         dataSocket.type = variable.type;
         dataSocket.isList = variable.isList;
+        this.editorAPI.clearNodeException(noVariableFoundKey);
     }
     else if (varName.length){
         dataSocket.disabled = true;
         dataSocket.type = SOCKET_TYPE.ANY;
         dataSocket.isList = false;
-        this.decoratorIcon = 'error_decorator';
-        this.decoratorText = 'node.error_var_not_found';
+
+        this.editorAPI.pushNodeException({
+            errorId: noVariableFoundKey,
+            msgId: 'node.error_var_not_found',
+            msgVars: [varName],
+            logicId: this.parentScript.id,
+            nodeId: this.nodeId,
+            fatal: false,
+            onClearCallback: ()=>{
+                setTimeout(()=>{
+                    validate.call(this, textbox)
+                });
+            },
+        });
     }
 
     this.dataCache.set('isValid', isValid);

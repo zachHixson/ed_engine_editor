@@ -119,6 +119,7 @@ export interface iEditorNode extends iNode_Base {
     decoratorIcon?: string | null;
     decoratorText?: string | null;
     stackDataIO?: boolean;
+    doNotCopy?: boolean;
 
     onEditorMove: Event_Emitter<(newPos: Vector)=>void>;
     onForceUpdate: Event_Emitter<()=>void>;
@@ -178,6 +179,8 @@ export interface iEditorAPI {
     nextTick(callback: ()=>void): void;
     registerAction<T extends {}>(key: any, action: ActionCallback<T>, revert: ActionCallback<T>): void;
     executeAction<T>(key: any, args: T, commit: boolean): void;
+    pushNodeException(data: iNodeExceptionData): void;
+    clearNodeException(errorId: symbol): void;
 }
 
 export interface iEngineLogic {
@@ -278,4 +281,5 @@ export interface iNodeExceptionData {
     logicId: number;
     nodeId: number;
     fatal?: boolean;
+    onClearCallback?: (data: iNodeExceptionData)=>void;
 }

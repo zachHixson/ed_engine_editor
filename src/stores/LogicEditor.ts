@@ -1,14 +1,6 @@
 import { defineStore } from 'pinia';
 import type Core from '@/core';
 
-interface Error {
-    errorId: symbol,
-    nodeId: number,
-    logicId: number,
-    msgId: string,
-    fatal?: boolean,
-}
-
 export interface iState {
     selectedNavTool: Core.NAV_TOOL_TYPE | null,
     openCategory: string | null,
@@ -18,7 +10,7 @@ export interface iState {
         nodeData: Core.iNodeSaveData[],
         connectionData: Core.iConnectionSaveData[],
     },
-    errors: ReadonlyArray<Error>,
+    errors: ReadonlyArray<Core.iNodeExceptionData>,
 }
 
 export const useLogicEditorStore = defineStore({
@@ -52,15 +44,26 @@ export const useLogicEditorStore = defineStore({
             this.clipboard.nodeData = nodeData;
             this.clipboard.connectionData = connectionData;
         },
-        addError(newError: Core.iNodeExceptionData){
-            (this.errors as Error[]).push(newError);
+        addError(newError: Core.iNodeExceptionData) {
+            const errors = this.errors as Core.iNodeExceptionData[];
+
+            for (let i = 0; i < errors.length; i++){
+                if (errors[i].errorId == newError.errorId) return;
+            }
+
+            (this.errors as Core.iNodeExceptionData[]).push(newError);
         },
         clearError(id: symbol){
             const idx = this.errors.findIndex(e => e.errorId == id);
-            (this.errors as Error[]).splice(idx, 1);
+            if (idx < 0) return;
+            const error = this.errors[idx];
+            if (error.onClearCallback) error.onClearCallback(error);
+            (this.errors as Core.iNodeExceptionData[]).splice(idx, 1);
         },
         clearAllErrors(){
-            (this.errors as Error[]).splice(0, this.errors.length);
+            const errors = this.errors as Core.iNodeExceptionData[];
+            errors.forEach(e => {if (e.onClearCallback) e.onClearCallback(e)});
+            errors.splice(0, this.errors.length);
         },
     }
 });
