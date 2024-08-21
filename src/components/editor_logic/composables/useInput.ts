@@ -99,7 +99,7 @@ export default function useInput(
         LogicMainEventBus.onMouseDown.emit(event);
     
         //position selection box
-        if (event.button == 0 && event.target == event.currentTarget){
+        if (event.button == 0 && event.target == event.currentTarget && logicEditorStore.getSelectedNavTool == null){
             const vpBounds = nodeViewportRef.value!.getBoundingClientRect();
             const vpOrigin = new Vector(vpBounds.left, vpBounds.top);
             const startPos = new Vector(event.clientX, event.clientY).subtract(vpOrigin);
