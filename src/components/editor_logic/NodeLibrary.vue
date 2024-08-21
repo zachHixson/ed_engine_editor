@@ -20,8 +20,8 @@ const searchValue = ref<string>('');
 const nodeCategories = computed(()=>{
     const categories: string[] = [];
 
-    for (let i = 0; i < Core.NODE_LIST.length; i++){
-        let curNode = Core.NODE_LIST[i];
+    for (let i = 0; i < Core.NodeList.length; i++){
+        let curNode = Core.NodeList[i];
 
         if (!categories.includes(curNode.category)){
             categories.push(curNode.category);
@@ -39,13 +39,13 @@ const showPanel = computed(()=>selectedCategory.value != null);
 const filteredNodes = computed(()=>{
     if (selectedCategory.value == 'search'){
         if (searchValue.value.trim().length > 0){
-            return Core.NODE_LIST.filter(node => node.id.includes(searchValue.value.toLowerCase()));
+            return Core.NodeList.filter(node => node.id.includes(searchValue.value.toLowerCase()));
         }
 
-        return Core.NODE_LIST;
+        return Core.NodeList;
     }
 
-    return Core.NODE_LIST.filter(node => node.category == selectedCategory.value);
+    return Core.NodeList.filter(node => node.category == selectedCategory.value);
 });
 
 function tabClick(category: string): void {

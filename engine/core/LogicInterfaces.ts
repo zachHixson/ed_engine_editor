@@ -31,7 +31,8 @@ interface iNode_Base extends iNodeLifecycleEvents {
     nodeId: number;
     isEvent: boolean;
     widgetData?: any;
-    dataCache: Map<number | string, any>;
+    setNodeData<T>(data: T): T;
+    getNodeData<T>(): T;
 }
 
 export interface iNodeLifecycleEvents {
@@ -127,7 +128,6 @@ export interface iEditorNode extends iNode_Base {
     onUpdateConnections: Event_Emitter<()=>void>;
     onRecalcWidth: Event_Emitter<()=>void>;
 
-    method(methodName: string, data?: any): any;
     getInput<T>(inputName: string): T;
     refresh(): void;
 }
@@ -199,7 +199,7 @@ export interface iEngineLogic {
 }
 
 export interface iEngineInTrigger {
-    execute: string,
+    execute(eventContext: iEventContext, data: any): void,
     node: iEngineNode,
     connection: iEngineOutTrigger | null,
 };
@@ -220,7 +220,7 @@ export interface iEngineOutput {
     connection: iEngineInput | null,
     node: iEngineNode,
     type: SOCKET_TYPE,
-    execute: string,
+    execute(eventContext: iEventContext, data: any): void,
     isList?: boolean,
 };
 
@@ -238,7 +238,6 @@ export interface iEngineNode extends iNode_Base {
 
     engine: Engine;
 
-    method(methodName: string, eventContext: iEventContext, data?: any): any;
     getWidgetData(): any;
     getInput<T>(inputName: string, eventContext: iEventContext, convertList?: boolean): T;
     triggerOutput(outputId: string, eventContext: iEventContext): void;

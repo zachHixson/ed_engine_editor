@@ -4,7 +4,7 @@ import {
     iEngineNode,
     iNodeTemplate,
     convertSocketType,
-    NODE_MAP,
+    NodeMap,
     iNodeSaveData,
     iEngineNodeMethod,
     iEventContext,
@@ -16,8 +16,7 @@ import Engine from "./Engine";
 import Logic from "./Logic";
 
 export default class Node implements iEngineNode {
-    private _dataCache: Map<number | string, any> = new Map();
-    private _stackTrace: {parentScriptId: number, nodeId: number};
+    private _nodeData: unknown = null as unknown;
 
     template: iNodeTemplate;
     nodeId: number;
@@ -32,10 +31,9 @@ export default class Node implements iEngineNode {
     inputs: iEngineNode["inputs"] = new Map();
     outputs: iEngineNode["outputs"] = new Map();
     execute: ((eventContext: iEventContext, data: any)=>void) | null = null;
-    methods: Map<string, iEngineNodeMethod> = new Map();
 
     constructor(nodeData: iNodeSaveData, logic: Logic, engine: Engine){
-        const template = NODE_MAP.get(nodeData.tId)!;
+        const template = NodeMap.get(nodeData.tId)!;
 
         this.engine = engine;
 
@@ -47,7 +45,6 @@ export default class Node implements iEngineNode {
         this.graphId = nodeData.gId;
         this.isEvent = template.isEvent ?? false;
         this.widgetData = nodeData.widg ?? null;
-        this._stackTrace = {parentScriptId: this.parentScript.id, nodeId: this.nodeId};
 
         template.inTriggers?.forEach(trigger => {
             const {execute} = trigger;
@@ -98,23 +95,13 @@ export default class Node implements iEngineNode {
             this.execute = template.execute;
         }
 
-        for (let method in template.methods){
-            this.methods.set(method, template.methods[method] as iEngineNodeMethod);
-        }
-
         this.template.afterLoad?.call(this, nodeData);
         this.template.init?.call(this);
     }
 
-    get dataCache(){return this._dataCache ?? {}};
-
-    private _triggerInTrigger(executeName: string, eventContext: iEventContext): void {
-        this.methods.get(executeName)?.call(this, eventContext);
-    }
-
     private _getOutputData(outputName: string, eventContext: iEventContext): any {
-        const methodName = this.outputs.get(outputName)?.execute;
-        return this.methods.get(methodName!)?.call(this, eventContext);
+        const outputMethod = this.outputs.get(outputName)?.execute;
+        return outputMethod?.call(this, eventContext, null);
     }
 
     logicLoaded(logic: iEditorLogic | iEngineLogic): void {
@@ -145,10 +132,6 @@ export default class Node implements iEngineNode {
         }
     }
 
-    method(methodName: string, data?: any): any {
-        return this.methods.get(methodName)?.call(this, data);
-    }
-
     getWidgetData(): any {
         return this.widgetData;
     }
@@ -174,7 +157,7 @@ export default class Node implements iEngineNode {
         if (trigger?.connection){
             try{
                 const node = trigger.connection.node as Node;
-                node._triggerInTrigger(trigger.connection.execute, eventContext);
+                trigger.connection.execute.call(node, eventContext, null);
             }
             catch(e){
                 console.error(e);
@@ -204,5 +187,14 @@ export default class Node implements iEngineNode {
         }
 
         return Node_Enums.THROWN;
+    }
+
+    setNodeData<T>(data: T): T {
+        this._nodeData = data;
+        return this._nodeData as T;
+    }
+
+    getNodeData<T>(): T {
+        return this._nodeData as T;
     }
 }

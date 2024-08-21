@@ -1,6 +1,6 @@
 import { iAnyObj } from "../interfaces";
 import { SOCKET_TYPE, WIDGET } from "./Node_Enums";
-import { iEventContext, iNodeLifecycleEvents, iEditorNodeMethod, iEngineNodeMethod } from "../LogicInterfaces";
+import { iEventContext, iNodeLifecycleEvents, iEditorNodeMethod, iEngineNodeMethod, iEngineNode } from "../LogicInterfaces";
 
 export interface iNodeTemplate extends iNodeLifecycleEvents {
     id: string;
@@ -32,7 +32,7 @@ export interface iNodeTemplate extends iNodeLifecycleEvents {
 
 export interface iInTrigger {
     id: string;
-    execute: string;
+    execute: (this: iEngineNode, eventContext: iEventContext)=>any;
 };
 
 export interface iInput {
@@ -56,7 +56,7 @@ export interface iInput {
 export interface iOutput {
     id: string;
     type: SOCKET_TYPE;
-    execute: string;
+    execute: (this: iEngineNode, eventContext: iEventContext)=>any;
     isList?: boolean;
     disabled?: boolean;
 };

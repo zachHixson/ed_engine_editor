@@ -1,45 +1,53 @@
 import {SOCKET_TYPE, WIDGET} from './Node_Enums';
 import { iNodeTemplate } from './iNodeTemplate';
-import Cat_Events from './Cat_Events';
-import Cat_Variables from './Cat_Variables';
 import { ConstVector, Vector } from '../Vector';
 import { iEditorNode, iEngineNode, iNodeConnection, iNodeSaveData, iEventContext } from '../LogicInterfaces';
 import { Asset_Base, Game_Object, Instance_Base, Instance_Object, Instance_Sprite, Sprite, Util, Node_Enums } from '../core';
 import { canConvertSocket, assetToInstance, instanceToAsset } from './Socket_Conversions';
 
+import Cat_Events from './Cat_Events';
+import Cat_Variables from './Cat_Variables';
+
 type SortableAsset = {sortOrder: number};
 
 export type GenericNode = iEditorNode | iEngineNode;
 
-export function isEngineNode(node: any): node is iEngineNode {
-    return !!node.engine;
-}
+export const NodeList: iNodeTemplate[] = [];
 
-export const NODE_LIST: iNodeTemplate[] = [
-    ...Cat_Events,
-    {// Branch
+{// Branch
+    function checkCondition(this: iEngineNode, eventContext: iEventContext): void {
+        const conditionVal = this.getInput<boolean>('condition', eventContext);
+        const out = conditionVal ? 'true' : 'false';
+        this.triggerOutput(out, eventContext);
+    }
+
+    const branch = {
         id: 'branch',
         category: 'actual',
         inTriggers: [
-            {id: '_i', execute: 'checkCondition'},
+            {id: '_i', execute: checkCondition},
         ],
         outTriggers: ['true', 'false'],
         inputs: [
             {id: 'condition', type: SOCKET_TYPE.BOOL, default: false},
         ],
-        methods: {
-            checkCondition(this: iEngineNode, eventContext: iEventContext){
-                const conditionVal = this.getInput<boolean>('condition', eventContext);
-                const out = conditionVal ? 'true' : 'false';
-                this.triggerOutput(out, eventContext);
-            },
-        },
-    },
-    {// Sequence
+    };
+    NodeList.push(branch);
+}
+
+{// Sequence
+    function startSequence(this: iEngineNode, eventContext: iEventContext): void {
+        for (let i = 0; i < this.outTriggers.size; i++){
+            const id = '#' + (i + 1);
+            this.triggerOutput(id, eventContext);
+        }
+    }
+
+    const sequence = {
         id: 'sequence',
         category: 'actual',
         inTriggers: [
-            {id: '_i', execute: 'startSequence'},
+            {id: '_i', execute: startSequence},
         ],
         outTriggers: ['#1', '#2'],
         afterSave(this: iEditorNode, saveData: iNodeSaveData){
@@ -48,7 +56,7 @@ export const NODE_LIST: iNodeTemplate[] = [
         afterLoad(this: iEditorNode, saveData: iNodeSaveData){
             const outputNumber = saveData.d;
             this.outTriggers.clear();
-
+    
             for (let i = 0; i < outputNumber; i++){
                 const id = '#' + (i + 1);
                 this.outTriggers.set(id, {
@@ -61,7 +69,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             const wrapper = document.createElement('div');
             const removeBtn = document.createElement('button');
             const addBtn = document.createElement('button');
-
+    
             wrapper.style.cssText = `
                 display: flex;
                 flex-direction: row;
@@ -69,7 +77,7 @@ export const NODE_LIST: iNodeTemplate[] = [
                 gap: 3px;
                 padding: 5px;
             `;
-
+    
             removeBtn.style.cssText = `
                 display: flex;
                 justify-content: center;
@@ -83,25 +91,25 @@ export const NODE_LIST: iNodeTemplate[] = [
             
             removeBtn.innerHTML = '-';
             addBtn.innerHTML = '+';
-
+    
             removeBtn.onclick = ()=>{
                 if (this.outTriggers.size > 1){
                     const lastOutput = '#' + this.outTriggers.size;
                     const connections = this.editorAPI.getOutputConnections(this, lastOutput);
-
+    
                     if (connections.length){
                         this.editorAPI.deleteConnections(connections, false);
                     }
-
+    
                     this.outTriggers.delete(lastOutput);
                     this.onForceUpdate.emit();
-
+    
                     setTimeout(()=>{
                         this.onUpdateConnections.emit();
                     });
                 }
             };
-
+    
             addBtn.onclick = ()=>{
                 const nextOutputName = '#' + (this.outTriggers.size + 1);
                 this.outTriggers.set(nextOutputName, {
@@ -116,19 +124,30 @@ export const NODE_LIST: iNodeTemplate[] = [
             
             wrapper.append(removeBtn);
             wrapper.append(addBtn);
-
+    
             this.domRef!.append(wrapper);
         },
-        methods: {
-            startSequence(this: iEngineNode, eventContext: iEventContext){
-                for (let i = 0; i < this.outTriggers.size; i++){
-                    const id = '#' + (i + 1);
-                    this.triggerOutput(id, eventContext);
-                }
-            }
+    };
+    NodeList.push(sequence);
+}
+
+{// Compare
+    function compare(this: iEngineNode, eventContext: iEventContext): boolean {
+        const compareFunc = this.getWidgetData();
+        const inp1 = this.getInput<number>('_inp1', eventContext);
+        const inp2 = this.getInput<number>('_inp2', eventContext);
+
+        switch(compareFunc){
+            case 'equal_sym': return inp1 == inp2;
+            case 'gt': return inp1 > inp2;
+            case 'lt': return inp1 < inp2;
+            case 'gte': return inp1 >= inp2;
+            case 'lte': return inp1 <= inp2;
+            default: return false;
         }
-    },
-    {// Compare
+    }
+
+    const compareNode = {
         id: 'compare_numbers',
         category: 'actual',
         inputs: [
@@ -143,25 +162,53 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
         outputs: [
-            {id: 'equal', type: SOCKET_TYPE.BOOL, execute: 'compare'},
+            {id: 'equal', type: SOCKET_TYPE.BOOL, execute: compare},
         ],
-        methods: {
-            compare(this: iEngineNode, eventContext: iEventContext){
-                const compareFunc = this.getWidgetData();
-                const inp1 = this.getInput<number>('_inp1', eventContext);
-                const inp2 = this.getInput<number>('_inp2', eventContext);
+    };
+    NodeList.push(compareNode);
+}
 
-                switch(compareFunc){
-                    case 'equal_sym': return inp1 == inp2;
-                    case 'gt': return inp1 > inp2;
-                    case 'lt': return inp1 < inp2;
-                    case 'gte': return inp1 >= inp2;
-                    case 'lte': return inp1 <= inp2;
-                }
-            },
-        },
-    },
-    {// Compare Instances
+{// Compare Instances
+    function getResult(this: iEngineNode, eventContext: iEventContext): boolean {
+        const i1 = this.getInput<Asset_Base | null>('_i1', eventContext);
+        const i2 = this.getInput<Asset_Base | null>('_i2', eventContext);
+
+        if (i1 == null || i2 == null){
+            this.engine.nodeException({
+                errorId: Symbol(),
+                msgId: 'null_asset',
+                logicId: this.parentScript.id,
+                nodeId: this.nodeId,
+                fatal: false,
+            });
+            return false;
+        }
+
+        return i1.id == i2.id;
+    }
+
+    function editor_setSocketType(this: iEditorNode): void {
+        const type = this.widgetData;
+        const deleteConnections: iNodeConnection[] = [];
+        let typeChanged = false;
+
+        //change socket icons
+        this.inputs?.forEach(input => {
+            const connection = this.editorAPI.getInputConnection(this, input.id);
+            const connectedSocket = connection ? this.editorAPI.getConnectedInputSocket(this, input.id, connection) : null;
+            typeChanged ||= type != input.type;
+            input.type = type == 'compare_type' ? SOCKET_TYPE.ASSET : SOCKET_TYPE.INSTANCE;
+            typeChanged && this.onForceSocketUpdate.emit(input.id);
+
+            if (connection && connectedSocket && !canConvertSocket(connectedSocket.type, input.type)){
+                deleteConnections.push(connection);
+            }
+        });
+
+        typeChanged && deleteConnections.length && this.editorAPI.deleteConnections(deleteConnections, true);
+    }
+
+    const compareInstance = {
         id: 'compare_instances',
         category: 'actual',
         widget: {
@@ -172,59 +219,37 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
         onBeforeMount(this: iEditorNode){
-            this.method('editor_setSocketType');
+            editor_setSocketType.call(this);
         },
         onValueChange(this: iEditorNode){
-            this.method('editor_setSocketType');
+            editor_setSocketType.call(this);
         },
         inputs: [
             {id: '_i1', type: SOCKET_TYPE.ASSET, default: null},
             {id: '_i2', type: SOCKET_TYPE.ASSET, default: null},
         ],
         outputs: [
-            {id: 'result', type: SOCKET_TYPE.BOOL, execute: 'getResult'},
+            {id: 'result', type: SOCKET_TYPE.BOOL, execute: getResult},
         ],
-        methods: {
-            getResult(this: iEngineNode, eventContext: iEventContext){
-                const i1 = this.getInput<Asset_Base | null>('_i1', eventContext);
-                const i2 = this.getInput<Asset_Base | null>('_i2', eventContext);
+    };
+    NodeList.push(compareInstance);
+}
 
-                if (i1 == null || i2 == null){
-                    this.engine.nodeException({
-                        errorId: Symbol(),
-                        msgId: 'null_asset',
-                        logicId: this.parentScript.id,
-                        nodeId: this.nodeId,
-                        fatal: false,
-                    });
-                    return false;
-                }
+{// Logic
+    function result(this: iEngineNode, eventContext: iEventContext): boolean {
+        const logicFunc = this.getWidgetData();
+        const inp1 = this.getInput<boolean>('_inp1', eventContext);
+        const inp2 = this.getInput<boolean>('_inp2', eventContext);
 
-                return i1.id == i2.id;
-            },
-            editor_setSocketType(this: iEditorNode){
-                const type = this.widgetData;
-                const deleteConnections: iNodeConnection[] = [];
-                let typeChanged = false;
+        switch(logicFunc){
+            case 'and': return inp1 && inp2;
+            case 'or': return inp1 || inp2;
+            case 'xor': return !!(+inp1 ^ +inp2);
+            default: return false;
+        }
+    };
 
-                //change socket icons
-                this.inputs?.forEach(input => {
-                    const connection = this.editorAPI.getInputConnection(this, input.id);
-                    const connectedSocket = connection ? this.editorAPI.getConnectedInputSocket(this, input.id, connection) : null;
-                    typeChanged ||= type != input.type;
-                    input.type = type == 'compare_type' ? SOCKET_TYPE.ASSET : SOCKET_TYPE.INSTANCE;
-                    typeChanged && this.onForceSocketUpdate.emit(input.id);
-
-                    if (connection && connectedSocket && !canConvertSocket(connectedSocket.type, input.type)){
-                        deleteConnections.push(connection);
-                    }
-                });
-
-                typeChanged && deleteConnections.length && this.editorAPI.deleteConnections(deleteConnections, true);
-            }
-        },
-    },
-    {// Logic
+    const logic = {
         id: 'logic',
         category: 'actual',
         widget: {
@@ -239,23 +264,33 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: '_inp2', type: SOCKET_TYPE.BOOL, default: false},
         ],
         outputs: [
-            {id: '_result', type: SOCKET_TYPE.BOOL, execute: 'result'},
+            {id: '_result', type: SOCKET_TYPE.BOOL, execute: result},
         ],
-        methods: {
-            result(this: iEngineNode, eventContext: iEventContext){
-                const logicFunc = this.getWidgetData();
-                const inp1 = this.getInput<boolean>('_inp1', eventContext);
-                const inp2 = this.getInput<boolean>('_inp2', eventContext);
+    };
+    NodeList.push(logic);
+}
 
-                switch(logicFunc){
-                    case 'and': return inp1 && inp2;
-                    case 'or': return inp1 || inp2;
-                    case 'xor': return !!(+inp1 ^ +inp2);
-                }
-            },
-        },
-    },
-    {// count_loop
+{// count_loop
+    type NodeData = Map<number, {index: number, length: number}>;
+
+    function runLoop(this: iEngineNode, eventContext: iEventContext): void {
+        const count = this.getInput<number>('count', eventContext);
+        const nodeData = this.getNodeData<NodeData>();
+
+        for (let i = 0; i < count; i++){
+            nodeData.set(eventContext.eventKey, {index: i, length: count})
+            this.triggerOutput('_o', eventContext);
+        }
+
+        nodeData.delete(eventContext.eventKey);
+    }
+
+    function getIndex(this: iEngineNode, eventContext: iEventContext): number {
+        const data = this.getNodeData<NodeData>().get(eventContext.eventKey);
+        return data?.index ?? 0;
+    }
+
+    const countLoop = {
         id: 'count_loop',
         category: 'actual',
         stackDataIO: true,
@@ -263,30 +298,50 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'count', type: SOCKET_TYPE.NUMBER, default: 1},
         ],
         outputs: [
-            {id: 'index', type: SOCKET_TYPE.NUMBER, execute: 'getIndex'},
+            {id: 'index', type: SOCKET_TYPE.NUMBER, execute: getIndex},
         ],
         inTriggers: [
-            {id: '_i', execute: 'runLoop'},
+            {id: '_i', execute: runLoop},
         ],
         outTriggers: ['_o'],
-        methods: {
-            runLoop(this: iEngineNode, eventContext: iEventContext){
-                const count = this.getInput<number>('count', eventContext);
+        init(this: GenericNode){
+            if (!isEngineNode(this)) return;
 
-                for (let i = 0; i < count; i++){
-                    this.dataCache.set(eventContext.eventKey, {index: i, length: count});
-                    this.triggerOutput('_o', eventContext);
-                }
-
-                this.dataCache.delete(eventContext.eventKey);
-            },
-            getIndex(this: iEngineNode, eventContext: iEventContext){
-                const data = this.dataCache.get(eventContext.eventKey);
-                return data?.index ?? 0;
-            },
+            this.setNodeData<NodeData>(new Map());
         },
-    },
-    {// list_loop
+    };
+    NodeList.push(countLoop);
+    
+}
+
+{// list_loop
+    type NodeData = Map<number, {index: number, item: any}>;
+
+    function runLoop(this: iEngineNode, eventContext: iEventContext): void {
+        const list = this.getInput<any[]>('list', eventContext);
+        const nodeData = this.getNodeData<NodeData>();
+
+        if (list && list.length){
+            for (let i = 0; i < list.length; i++){
+                nodeData.set(eventContext.eventKey, {index: i, item: list[i]});
+                this.triggerOutput('_o', eventContext);
+            }
+        }
+
+        nodeData.delete(eventContext.eventKey);
+    }
+
+    function getIndex(this: iEngineNode, eventContext: iEventContext): number {
+        const data = this.getNodeData<NodeData>().get(eventContext.eventKey);
+        return data?.index ?? 0;
+    }
+
+    function getItem(this: iEngineNode, eventContext: iEventContext): number | null {
+        const data = this.getNodeData<NodeData>().get(eventContext.eventKey);
+        return data?.item ?? null;
+    }
+
+    const listLoop = {
         id: 'list_loop',
         category: 'actual',
         stackDataIO: true,
@@ -294,13 +349,17 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'list', type: SOCKET_TYPE.ANY, hideInput: true, isList: true, default: []},
         ],
         outputs: [
-            {id: 'index', type: SOCKET_TYPE.NUMBER, execute: 'getIndex'},
-            {id: 'item', type: SOCKET_TYPE.ANY, execute: 'getItem'},
+            {id: 'index', type: SOCKET_TYPE.NUMBER, execute: getIndex},
+            {id: 'item', type: SOCKET_TYPE.ANY, execute: getItem},
         ],
         inTriggers: [
-            {id: '_i', execute: 'runLoop'},
+            {id: '_i', execute: runLoop},
         ],
         outTriggers: ['_o'],
+        init(this: GenericNode){
+            if (!isEngineNode(this)) return;
+            this.setNodeData<NodeData>(new Map());
+        },
         onNewConnection(this: iEditorNode){
             setTimeout(()=>this.refresh());
         },
@@ -335,30 +394,31 @@ export const NODE_LIST: iNodeTemplate[] = [
                 this.onForceSocketUpdate.emit('item');
             });
         },
-        methods: {
-            runLoop(this: iEngineNode, eventContext: iEventContext){
-                const list = this.getInput<any[]>('list', eventContext);
+    }
+    NodeList.push(listLoop);
+}
 
-                if (list && list.length){
-                    for (let i = 0; i < list.length; i++){
-                        this.dataCache.set(eventContext.eventKey, {index: i, item: list[i]});
-                        this.triggerOutput('_o', eventContext);
-                    }
-                }
+{// Add to List
+    function getList(this: iEngineNode, eventContext: iEventContext): any[] {
+        const list = this.getInput<any[]>('list', eventContext);
+        const item = this.getInput<any>('item', eventContext);
+        const outputList = [...list];
 
-                this.dataCache.delete(eventContext.eventKey);
-            },
-            getIndex(this: iEngineNode, eventContext: iEventContext){
-                const data = this.dataCache.get(eventContext.eventKey);
-                return data?.index ?? 0;
-            },
-            getItem(this: iEngineNode, eventContext: iEventContext){
-                const data = this.dataCache.get(eventContext.eventKey);
-                return data?.item ?? null;
-            },
-        },
-    },
-    {// Add to List
+        (item != null) && outputList.push(item);
+
+        return outputList;
+    }
+
+    function editor_validateConnection(this: iEditorNode, connection: iNodeConnection, forward: boolean): boolean {
+        const thisType = this.inputs.get('list')!.type;
+        const otherSocketId = forward ? connection.endSocketId! : connection.startSocketId!;
+        const otherSocketList = forward ? connection.endNode!.inputs : connection.startNode!.outputs;
+        const otherSocketType = otherSocketList.get(otherSocketId)!.type;
+
+        return forward ? canConvertSocket(thisType, otherSocketType) : canConvertSocket(otherSocketType, thisType);
+    }
+
+    const addToList = {
         id: 'add_to_list',
         category: 'actual',
         inputs: [
@@ -366,7 +426,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'item', type: SOCKET_TYPE.ANY, hideInput: true, default: null},
         ],
         outputs: [
-            {id: '_o', type: SOCKET_TYPE.ANY, isList: true, execute: 'getList'},
+            {id: '_o', type: SOCKET_TYPE.ANY, isList: true, execute: getList},
         ],
         onMount(this: iEditorNode){
             this.refresh();
@@ -392,14 +452,14 @@ export const NODE_LIST: iNodeTemplate[] = [
             itemInput.type = type;
             listOutput.type = type;
 
-            if (itemInputConnection && !this.method('editor_validateConnection', [itemInputConnection, false])){
+            if (itemInputConnection && !editor_validateConnection.call(this, itemInputConnection, false)){
                 deleteConnections.push(itemInputConnection);
             }
             
             listOutputConnections.forEach(c => {
                 c.endNode?.refresh();
                 
-                if (!this.method('editor_validateConnection', [c, true])){
+                if (!editor_validateConnection.call(this, c, true)){
                     deleteConnections.push(c);
                 }
             });
@@ -416,34 +476,25 @@ export const NODE_LIST: iNodeTemplate[] = [
                 this.onForceSocketUpdate.emit('_o');
             });
         },
-        methods: {
-            getList(this: iEngineNode, eventContext: iEventContext){
-                const list = this.getInput<any[]>('list', eventContext);
-                const item = this.getInput<any>('item', eventContext);
-                const outputList = [...list];
+    };
+    NodeList.push(addToList);
+}
 
-                (item != null) && outputList.push(item);
+{// List Length
+    function getLength(this: iEngineNode, eventContext: iEventContext): number {
+        const list = this.getInput<any[] | null>('_list', eventContext);
 
-                return outputList;
-            },
-            editor_validateConnection(this: iEditorNode, [connection, forward] : [iNodeConnection, boolean]): boolean {
-                const thisType = this.inputs.get('list')!.type;
-                const otherSocketId = forward ? connection.endSocketId! : connection.startSocketId!;
-                const otherSocketList = forward ? connection.endNode!.inputs : connection.startNode!.outputs;
-                const otherSocketType = otherSocketList.get(otherSocketId)!.type;
+        return list?.length ?? 0;
+    }
 
-                return forward ? canConvertSocket(thisType, otherSocketType) : canConvertSocket(otherSocketType, thisType);
-            }
-        },
-    },
-    {// List Length
+    const listLength = {
         id: 'list_length',
         category: 'actual',
         inputs: [
             {id: '_list', type: SOCKET_TYPE.ANY, hideInput: true, isList: true, default: null},
         ],
         outputs: [
-            {id: 'length', type: SOCKET_TYPE.NUMBER, execute: 'getLength'},
+            {id: 'length', type: SOCKET_TYPE.NUMBER, execute: getLength},
         ],
         onBeforeMount(this: iEditorNode){
             this.refresh();
@@ -469,81 +520,84 @@ export const NODE_LIST: iNodeTemplate[] = [
 
             this.onForceSocketUpdate.emit('_list');
         },
-        methods: {
-            getLength(this: iEngineNode, eventContext: iEventContext){
-                const list = this.getInput<any[] | null>('_list', eventContext);
+    };
+    NodeList.push(listLength);
+}
 
-                return list?.length ?? 0;
-            },
-        }
-    },
-    {// Not
+{// Not
+    function not(this: iEngineNode, eventContext: iEventContext): boolean {
+        return !this.getInput<boolean>('_inp', eventContext);
+    }
+
+    const notNode = {
         id: 'not',
         category: 'actual',
         inputs: [
             {id: '_inp', type: SOCKET_TYPE.BOOL, default: false},
         ],
         outputs: [
-            {id: '_out', type: SOCKET_TYPE.BOOL, execute: 'not'},
+            {id: '_out', type: SOCKET_TYPE.BOOL, execute: not},
         ],
-        methods: {
-            not(this: iEngineNode, eventContext: iEventContext){
-                return !this.getInput<boolean>('_inp', eventContext);
-            },
-        },
-    },
-    {// Debug Log
+    };
+    NodeList.push(notNode);
+}
+
+{// Debug Log
+    function log(this: iEngineNode, eventContext: iEventContext): void {
+        const label = this.getInput<string>('label', eventContext);
+        const data = this.getInput<any>('_data', eventContext, false);
+        let src = [this.parentScript.name];
+        let output = '';
+
+        if (label.length) output += label;
+
+        if (Array.isArray(data)){
+            let arrayString = '';
+
+            if (data[0].name){
+                const arrayNames = data.map(o => `{ ${convertObjectToString(o)} }`);
+                arrayString = arrayNames.join(', ');
+            }
+            else{
+                data.join(', ');
+            }
+
+            output += `[${arrayString}]`;
+        }
+        else if (data?.name){
+            output += `{ ${convertObjectToString(data[0])} }`;
+        }
+        else if (data != null){
+            output += data;
+        }
+
+        // Only include graph ID if there is more than one graph
+        if (this.parentScript.graphNames.size > 1){
+            src.push(this.parentScript.graphNames.get(this.graphId) ?? '! No Graph ID !');
+        }
+
+        this.engine.log(src, output);
+
+        this.triggerOutput('_o', eventContext);
+    }
+
+    const debugLog = {
         id: 'debug_log',
         category: 'actual',
         inTriggers: [
-            {id: '_i', execute: 'log'}
+            {id: '_i', execute: log}
         ],
         outTriggers: ['_o'],
         inputs: [
             {id: 'label', type: SOCKET_TYPE.STRING, default: ''},
             {id: '_data', type: SOCKET_TYPE.ANY, default: null},
         ],
-        methods: {
-            log(this: iEngineNode, eventContext: iEventContext){
-                const label = this.getInput<string>('label', eventContext);
-                const data = this.getInput<any>('_data', eventContext, false);
-                let src = [this.parentScript.name];
-                let output = '';
+    };
+    NodeList.push(debugLog);
+}
 
-                if (label.length) output += label;
-
-                if (Array.isArray(data)){
-                    let arrayString = '';
-
-                    if (data[0].name){
-                        const arrayNames = data.map(o => `{ ${convertObjectToString(o)} }`);
-                        arrayString = arrayNames.join(', ');
-                    }
-                    else{
-                        data.join(', ');
-                    }
-
-                    output += `[${arrayString}]`;
-                }
-                else if (data?.name){
-                    output += `{ ${convertObjectToString(data[0])} }`;
-                }
-                else if (data != null){
-                    output += data;
-                }
-
-                // Only include graph ID if there is more than one graph
-                if (this.parentScript.graphNames.size > 1){
-                    src.push(this.parentScript.graphNames.get(this.graphId) ?? '! No Graph ID !');
-                }
-
-                this.engine.log(src, output);
-
-                this.triggerOutput('_o', eventContext);
-            },
-        },
-    },
-    {// Note
+{// Note
+    const node = {
         id: 'note',
         category: 'actual',
         widget: {
@@ -554,8 +608,24 @@ export const NODE_LIST: iNodeTemplate[] = [
             const el = this.domRef!;
             el.style.background = '#0088ff10';
         },
-    },
-    {// Key Input
+    };
+    NodeList.push(node);
+}
+
+{// Key Input
+    function getKey(this: iEngineNode): string {
+        return this.getWidgetData().code ?? '';
+    }
+
+    function isDown(this: iEngineNode): boolean {
+        const keymap = this.engine.keyMap;
+        const input = this.getWidgetData().code;
+        const mapCheck = keymap.get(input);
+
+        return mapCheck == 'down' || mapCheck == 'pressed';
+    }
+
+    const keyInput = {
         id: 'key_input',
         category: 'actual',
         widget: {
@@ -563,23 +633,42 @@ export const NODE_LIST: iNodeTemplate[] = [
             type: WIDGET.KEY,
         },
         outputs: [
-            {id: 'key', type: SOCKET_TYPE.STRING, execute: 'getKey'},
-            {id: 'is_down', type: SOCKET_TYPE.BOOL, execute: 'isDown'},
+            {id: 'key', type: SOCKET_TYPE.STRING, execute: getKey},
+            {id: 'is_down', type: SOCKET_TYPE.BOOL, execute: isDown},
         ],
-        methods: {
-            getKey(this: iEngineNode){
-                return this.getWidgetData().code ?? '';
-            },
-            isDown(this: iEngineNode){
-                const keymap = this.engine.keyMap;
-                const input = this.getWidgetData().code;
-                const mapCheck = keymap.get(input);
+    };
+    NodeList.push(keyInput);
+}
 
-                return mapCheck == 'down' || mapCheck == 'pressed';
-            },
-        },
-    },
-    {// Math
+{// Math
+    function compute(this: iEngineNode, eventContext: iEventContext): number {
+        const mathFunc = this.getWidgetData();
+        const num1= this.getInput<number>('_num1', eventContext);
+        const num2= this.getInput<number>('_num2', eventContext);
+
+        switch(mathFunc){
+            case 'add_sym': return num1 + num2;
+            case 'subtract_sym': return num1 - num2;
+            case 'multiply_sym': return num1 * num2;
+            case 'divide_sym':
+                if (num2 == 0){
+                    this.engine.nodeException({
+                        errorId: Symbol(),
+                        msgId: 'div_zero',
+                        logicId: this.parentScript.id,
+                        nodeId: this.nodeId,
+                        fatal: false,
+                    });
+                    return 0;
+                }
+                return num1 / num2;
+            case 'power': return Math.pow(num1, num2);
+        }
+
+        return 0;
+    }
+
+    const math = {
         id: 'math',
         category: 'actual',
         widget: {
@@ -594,59 +683,61 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: '_num2', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
         ],
         outputs: [
-            {id: '_out', type: SOCKET_TYPE.NUMBER, execute: 'compute'},
+            {id: '_out', type: SOCKET_TYPE.NUMBER, execute: compute},
         ],
-        methods: {
-            compute(this: iEngineNode, eventContext: iEventContext){
-                const mathFunc = this.getWidgetData();
-                const num1= this.getInput<number>('_num1', eventContext);
-                const num2= this.getInput<number>('_num2', eventContext);
+    };
+    NodeList.push(math);
+}
 
-                switch(mathFunc){
-                    case 'add_sym': return num1 + num2;
-                    case 'subtract_sym': return num1 - num2;
-                    case 'multiply_sym': return num1 * num2;
-                    case 'divide_sym':
-                        if (num2 == 0){
-                            this.engine.nodeException({
-                                errorId: Symbol(),
-                                msgId: 'div_zero',
-                                logicId: this.parentScript.id,
-                                nodeId: this.nodeId,
-                                fatal: true,
-                            });
-                            return;
-                        }
-                        return num1 / num2;
-                    case 'power': return Math.pow(num1, num2);
-                }
-            },
-        },
-    },
-    {// Remove Instance
+{// Remove Instance
+    function removeInstance(this: iEngineNode, eventContext: iEventContext): void {
+        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
+
+        if (instance != Node_Enums.THROWN){
+            const removeInst = instance ?? eventContext.instance;
+            this.engine.removeInstance(removeInst);
+        }
+
+        this.triggerOutput('_o', eventContext);
+    }
+
+    const removeInstanceNode = {
         id: 'remove_instance',
         category: 'actual',
         inTriggers: [
-            {id: '_i', execute: 'removeInstance'},
+            {id: '_i', execute: removeInstance},
         ],
         outTriggers: ['_o'],
         inputs: [
             {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
         ],
-        methods: {
-            removeInstance(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
+    };
+    NodeList.push(removeInstanceNode);
+}
 
-                if (instance != Node_Enums.THROWN){
-                    const removeInst = instance ?? eventContext.instance;
-                    this.engine.removeInstance(removeInst);
-                }
+{// Dialog Box
+    function startDialog(this: iEngineNode, eventContext: iEventContext): void {
+        const textArea = this.getWidgetData();
+        const textBox = this.getInput<string>('text', eventContext);
+        const interactKey = this.getInput<string>('interaction_key', eventContext) ?? 'Space';
+        const shouldPause = this.getInput<boolean>('pause_game', eventContext);
+        const isFullscreen = this.getInput<boolean>('fullscreen', eventContext);
+        const text = textBox ? textBox : textArea;
+        const dialogBox = this.engine.openDialogBox(text, shouldPause, isFullscreen, interactKey);
 
-                this.triggerOutput('_o', eventContext);
+        dialogBox.onClose.listen(userClosed => {
+            if (!userClosed){
+                this.engine.warn([this.parentScript.name, this.parentScript.graphNames.get(this.graphId) ?? ''], 'double_dialog');
+                return;
             }
-        },
-    },
-    {// Dialog Box
+
+            this.triggerOutput('dialog_closed', eventContext);
+        }, {once:true});
+
+        this.triggerOutput('immediate', eventContext);
+    }
+
+    const dialogBox = {
         id: 'dialog_box',
         category: 'actual',
         widget: {
@@ -654,7 +745,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             type: WIDGET.TEXT_AREA,
         },
         inTriggers: [
-            {id: '_i', execute: 'startDialog'},
+            {id: '_i', execute: startDialog},
         ],
         outTriggers: ['immediate', 'dialog_closed'],
         inputs: [
@@ -663,30 +754,19 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'pause_game', type: SOCKET_TYPE.BOOL, default: false},
             {id: 'fullscreen', type: SOCKET_TYPE.BOOL, default: false},
         ],
-        methods: {
-            startDialog(this: iEngineNode, eventContext: iEventContext){
-                const textArea = this.getWidgetData();
-                const textBox = this.getInput<string>('text', eventContext);
-                const interactKey = this.getInput<string>('interaction_key', eventContext) ?? 'Space';
-                const shouldPause = this.getInput<boolean>('pause_game', eventContext);
-                const isFullscreen = this.getInput<boolean>('fullscreen', eventContext);
-                const text = textBox ? textBox : textArea;
-                const dialogBox = this.engine.openDialogBox(text, shouldPause, isFullscreen, interactKey);
+    };
+    NodeList.push(dialogBox);
+}
 
-                dialogBox.onClose.listen(userClosed => {
-                    if (!userClosed){
-                        this.engine.warn([this.parentScript.name, this.parentScript.graphNames.get(this.graphId) ?? ''], 'double_dialog');
-                        return;
-                    }
+{// Object Input
+    function getObject(this: iEngineNode): Game_Object | null {
+        const objects = this.engine.gameData.objects;
+        const selectedObjectId = this.widgetData;
 
-                    this.triggerOutput('dialog_closed', eventContext);
-                }, {once:true});
+        return objects.find(o => o.id == selectedObjectId) ?? null;
+    }
 
-                this.triggerOutput('immediate', eventContext);
-            },
-        },
-    },
-    {// Object Input
+    const objectInput = {
         id:'object_input',
         category: 'actual',
         widget: {
@@ -699,7 +779,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
         outputs: [
-            { id: '_o', type: SOCKET_TYPE.ASSET, execute: 'getObject' },
+            { id: '_o', type: SOCKET_TYPE.ASSET, execute: getObject },
         ],
         onBeforeMount(this: iEditorNode){
             const genericNoOption = {
@@ -725,28 +805,42 @@ export const NODE_LIST: iNodeTemplate[] = [
 
             this.widget.options.items = [genericNoOption, ...objects];
         },
-        methods: {
-            getObject(this: iEngineNode){
-                const objects = this.engine.gameData.objects;
-                const selectedObjectId = this.widgetData;
+    };
+    NodeList.push(objectInput);
+}
 
-                return objects.find(o => o.id == selectedObjectId) ?? null;
-            },
-        }
-    },
-    {// Get Self
+{// Get Self
+    function getSelf(this: iEngineNode, eventContext: iEventContext): Instance_Object {
+        return eventContext.instance;
+    }
+
+    const getSelfNode = {
         id: 'get_self',
         category: 'actual',
         outputs: [
-            {id: 'self', type: SOCKET_TYPE.INSTANCE, execute: 'getSelf'},
+            {id: 'self', type: SOCKET_TYPE.INSTANCE, execute: getSelf},
         ],
-        methods: {
-            getSelf(this: iEngineNode, eventContext: iEventContext){
-                return eventContext.instance;
-            },
-        },
-    },
-    {// Instance Properties
+    };
+    NodeList.push(getSelfNode);
+}
+
+{// Instance Properties
+    function getAsset(this: iEngineNode, eventContext: iEventContext): ReturnType<typeof instanceToAsset> {
+        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', true) ?? eventContext.instance;
+        return instanceToAsset(instance, this.engine.gameData);
+    }
+
+    function getName(this: iEngineNode, eventContext: iEventContext): string {
+        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
+
+        if (instance == Node_Enums.THROWN){
+            return '####';
+        }
+
+        return instance.name
+    }
+
+    const instanceProperties = {
         id: 'instance_properties',
         category: 'actual',
         stackDataIO: true,
@@ -754,30 +848,60 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
         ],
         outputs: [
-            {id: 'Type', type: SOCKET_TYPE.ASSET, execute: 'getAsset'},
-            {id: 'name', type: SOCKET_TYPE.STRING, execute: 'getName'},
+            {id: 'Type', type: SOCKET_TYPE.ASSET, execute: getAsset},
+            {id: 'name', type: SOCKET_TYPE.STRING, execute: getName},
         ],
-        methods: {
-            getAsset(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', true) ?? eventContext.instance;
-                return instanceToAsset(instance, this.engine.gameData);
-            },
-            getName(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
+    };
+    NodeList.push(instanceProperties);
+}
 
-                if (instance == Node_Enums.THROWN){
-                    return '####';
-                }
+{// Spawn Instance
+    type NodeData = WeakMap<iEventContext, Instance_Base>;
 
-                return instance.name
-            },
-        },
-    },
-    {// Spawn Instance
+    function spawnInstance(this: iEngineNode, eventContext: iEventContext): void {
+        const baseAsset = this.getInput<Asset_Base>('type', eventContext);
+
+        if (!baseAsset){
+            this.engine.nodeException({
+                errorId: Symbol(),
+                msgId: 'null_asset',
+                logicId: this.parentScript.id,
+                nodeId: this.nodeId,
+                fatal: true,
+            });
+            throw new Error('Asset type undefined');
+        }
+
+        const x = this.getInput<number>('x', eventContext);
+        const y = this.getInput<number>('y', eventContext);
+        const relative = this.getInput<boolean>('relative', eventContext);
+        const pos = relative ? new Vector(x, y).add(eventContext.instance.pos) : new Vector(x, y);
+        const nextId = this.engine.room.curInstId;
+        const newInstance = assetToInstance(baseAsset, nextId, pos);
+        let instanceMap = this.getNodeData<NodeData>();
+
+        if (newInstance){
+            newInstance.setEngine(this.engine);
+            this.engine.addInstance(newInstance);
+            newInstance.onCreate();
+            instanceMap.set(eventContext, newInstance);
+        }
+        else{
+            this.engine.warn([this.parentScript.name, this.parentScript.graphNames.get(this.graphId) ?? '! No graph ID !'], 'error_creating_asset');
+        }
+
+        this.triggerOutput('_o', eventContext);
+    }
+
+    function getAsset(this: iEngineNode, eventContext: iEventContext): Instance_Base | null {
+        return this.getNodeData<NodeData>().get(eventContext) ?? null;
+    }
+
+    const spawnInstanceNode = {
         id: 'spawn_instance',
         category: 'actual',
         inTriggers: [
-            {id: '_i', execute: 'spawnInstance'}
+            {id: '_i', execute: spawnInstance}
         ],
         outTriggers: ['_o'],
         inputs: [
@@ -787,56 +911,47 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'relative', type: SOCKET_TYPE.BOOL, default: false},
         ],
         outputs: [
-            {id: 'instance', type: SOCKET_TYPE.INSTANCE, execute: 'getAsset'},
+            {id: 'instance', type: SOCKET_TYPE.INSTANCE, execute: getAsset},
         ],
-        methods: {
-            spawnInstance(this: iEngineNode, eventContext: iEventContext){
-                const baseAsset = this.getInput<Asset_Base>('type', eventContext);
+        init(this: GenericNode){
+            if (!isEngineNode(this)) return;
+            this.setNodeData<NodeData>(new WeakMap());
+        },
+    };
+    NodeList.push(spawnInstanceNode);
+}
 
-                if (!baseAsset){
-                    this.engine.nodeException({
-                        errorId: Symbol(),
-                        msgId: 'null_asset',
-                        logicId: this.parentScript.id,
-                        nodeId: this.nodeId,
-                        fatal: true,
-                    });
-                    throw new Error('Asset type undefined');
+{// Get Instances
+    function getInstances(this: iEngineNode, eventContext: iEventContext): Instance_Base[] {
+        const name = this.getInput<string>('name', eventContext);
+        const group = this.getInput<string>('group', eventContext);
+        const typeGet = this.throwOnNullInput<Asset_Base | null>('type', eventContext, 'null_asset', false);
+        const type = typeGet == Node_Enums.THROWN ? null : typeGet;
+        const instances: Instance_Base[] = [];
+        const intersect = type && group;
+
+        this.engine.room.instances.forEach(instance => {
+            if (instance.name == name){
+                instances.push(instance);
+                return;
+            }
+
+            if (intersect){
+                if (instance.sourceId == type.id && instance.isInGroup(group)){
+                    instances.push(instance);
                 }
-
-                const x = this.getInput<number>('x', eventContext);
-                const y = this.getInput<number>('y', eventContext);
-                const relative = this.getInput<boolean>('relative', eventContext);
-                const pos = relative ? new Vector(x, y).add(eventContext.instance.pos) : new Vector(x, y);
-                const nextId = this.engine.room.curInstId;
-                const newInstance = assetToInstance(baseAsset, nextId, pos);
-                let instanceMap = this.dataCache.get('instanceMap');
-
-                //create instanceMap
-                if (!instanceMap){
-                    instanceMap = new WeakMap();
-                    this.dataCache.set('instanceMap', instanceMap);
+            }
+            else{
+                if (instance.sourceId == type?.id || instance.isInGroup(group)){
+                    instances.push(instance);
                 }
+            }
+        });
 
-                if (newInstance){
-                    newInstance.setEngine(this.engine);
-                    this.engine.addInstance(newInstance);
-                    newInstance.onCreate();
-                    instanceMap.set(eventContext, newInstance);
-                }
-                else{
-                    this.engine.warn([this.parentScript.name, this.parentScript.graphNames.get(this.graphId) ?? '! No graph ID !'], 'error_creating_asset');
-                }
+        return instances;
+    }
 
-                this.triggerOutput('_o', eventContext);
-            },
-            getAsset(this: iEngineNode, eventContext: iEventContext){
-                const instanceMap = this.dataCache.get('instanceMap');
-                return instanceMap.get(eventContext) ?? null;
-            },
-        }
-    },
-    {// Get Instances
+    const getInstancesNode = {
         id: 'get_instances',
         category: 'actual',
         stackDataIO: true,
@@ -846,40 +961,25 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'type', type: SOCKET_TYPE.ASSET, default: null},
         ],
         outputs: [
-            {id: 'instances', type: SOCKET_TYPE.INSTANCE, isList: true, execute: 'getInstances'},
+            {id: 'instances', type: SOCKET_TYPE.INSTANCE, isList: true, execute: getInstances},
         ],
-        methods: {
-            getInstances(this: iEngineNode, eventContext: iEventContext){
-                const name = this.getInput<string>('name', eventContext);
-                const group = this.getInput<string>('group', eventContext);
-                const typeGet = this.throwOnNullInput<Asset_Base | null>('type', eventContext, 'null_asset', false);
-                const type = typeGet == Node_Enums.THROWN ? null : typeGet;
-                const instances: Instance_Base[] = [];
-                const intersect = type && group;
+    };
+    NodeList.push(getInstancesNode);
+}
 
-                this.engine.room.instances.forEach(instance => {
-                    if (instance.name == name){
-                        instances.push(instance);
-                        return;
-                    }
+{// Is In Group
+    function isInGroup(this: iEngineNode, eventContext: iEventContext): boolean {
+        const group = this.getInput<string>('group', eventContext);
+        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
 
-                    if (intersect){
-                        if (instance.sourceId == type.id && instance.isInGroup(group)){
-                            instances.push(instance);
-                        }
-                    }
-                    else{
-                        if (instance.sourceId == type?.id || instance.isInGroup(group)){
-                            instances.push(instance);
-                        }
-                    }
-                });
+        if (instance == Node_Enums.THROWN){
+            return false;
+        }
 
-                return instances;
-            }
-        },
-    },
-    {// Is In Group
+        return !!instance.groups.find(i => i == group);
+    }
+
+    const isInGroupNode = {
         id: 'is_in_group',
         category: 'actual',
         inputs: [
@@ -887,22 +987,54 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'instance', type: SOCKET_TYPE.INSTANCE, required: true, default: null}
         ],
         outputs: [
-            {id: '_o', type: SOCKET_TYPE.BOOL, execute: 'isInGroup'},
+            {id: '_o', type: SOCKET_TYPE.BOOL, execute: isInGroup},
         ],
-        methods: {
-            isInGroup(this: iEngineNode, eventContext: iEventContext){
-                const group = this.getInput<string>('group', eventContext);
-                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
+    };
+    NodeList.push(isInGroupNode);
+}
 
-                if (instance == Node_Enums.THROWN){
-                    return false;
-                }
+{// Raycast
+    function raycast(this: iEngineNode, eventContext: iEventContext): Instance_Base[] {
+        const widgetDir = this.widgetData;
+        const startX = this.getInput<number>('start_x', eventContext);
+        const startY = this.getInput<number>('start_y', eventContext);
+        const distance = this.getInput<number>('distance', eventContext);
+        const onlySolid = this.getInput<boolean>('only_solid', eventContext);
+        const startPos = new Vector(
+            startX || eventContext.instance.pos.x,
+            startY || eventContext.instance.pos.y,
+        );
+        const ignoreSelf = (startX || true) || (startY || true);
+        const rayVector = new Vector(widgetDir[0], widgetDir[1]).multiplyScalar(distance);
+        const nearInstances = this.engine.room.getInstancesInRadius(startPos, distance)
+            .filter(i => {
+                const selfCheck = !ignoreSelf || i.id != eventContext.instance.id;
+                const solidCheck = !onlySolid || i.isSolid;
+                return selfCheck && solidCheck;
+            });
+        const halfSpriteDim = Sprite.DIMENSIONS / 2;
+        const spriteDim = new Vector(halfSpriteDim, halfSpriteDim);
+        const collisions: Instance_Base[] = [];
 
-                return !!instance.groups.find(i => i == group);
-            }
+        for (let i = 0; i < nearInstances.length; i++){
+            const curInstance = nearInstances[i];
+            const curInstancePos = curInstance.pos.clone()
+            const intersect = Util.projectSVF(startPos, rayVector, curInstancePos, spriteDim);
+
+            intersect && collisions.push(curInstance);
         }
-    },
-    {// Raycast
+
+        collisions.sort((a, b)=>{
+            const aDist = a.pos.distanceNoSqrt(startPos);
+            const bDist = b.pos.distanceNoSqrt(startPos);
+
+            return aDist - bDist;
+        });
+
+        return collisions;
+    }
+
+    const raycastNode = {
         id: 'raycast',
         category: 'actual',
         stackDataIO: true,
@@ -920,81 +1052,145 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'only_solid', type: SOCKET_TYPE.BOOL, default: false},
         ],
         outputs: [
-            {id: 'instances', type: SOCKET_TYPE.INSTANCE, isList: true, execute: 'raycast'},
+            {id: 'instances', type: SOCKET_TYPE.INSTANCE, isList: true, execute: raycast},
         ],
-        methods: {
-            raycast(this: iEngineNode, eventContext: iEventContext){
-                const widgetDir = this.widgetData;
-                const startX = this.getInput<number>('start_x', eventContext);
-                const startY = this.getInput<number>('start_y', eventContext);
-                const distance = this.getInput<number>('distance', eventContext);
-                const onlySolid = this.getInput<boolean>('only_solid', eventContext);
-                const startPos = new Vector(
-                    startX || eventContext.instance.pos.x,
-                    startY || eventContext.instance.pos.y,
-                );
-                const ignoreSelf = (startX || true) || (startY || true);
-                const rayVector = new Vector(widgetDir[0], widgetDir[1]).multiplyScalar(distance);
-                const nearInstances = this.engine.room.getInstancesInRadius(startPos, distance)
-                    .filter(i => {
-                        const selfCheck = !ignoreSelf || i.id != eventContext.instance.id;
-                        const solidCheck = !onlySolid || i.isSolid;
-                        return selfCheck && solidCheck;
-                    });
-                const halfSpriteDim = Sprite.DIMENSIONS / 2;
-                const spriteDim = new Vector(halfSpriteDim, halfSpriteDim);
-                const collisions: Instance_Base[] = [];
+    };
+    NodeList.push(raycastNode);
+}
 
-                for (let i = 0; i < nearInstances.length; i++){
-                    const curInstance = nearInstances[i];
-                    const curInstancePos = curInstance.pos.clone()
-                    const intersect = Util.projectSVF(startPos, rayVector, curInstancePos, spriteDim);
+{// Broadcast Message
+    function broadcastMessage(this: iEngineNode, eventContext: iEventContext): void {
+        const name = this.getInput<string>('name', eventContext);
+        const global = this.getInput<boolean>('global', eventContext);
 
-                    intersect && collisions.push(curInstance);
-                }
+        if (name.trim().length < 0) return;
+        
+        if (global){
+            this.engine.broadcastMessage(name);
+        }
+        else{
+            eventContext.instance.executeNodeEvent('e_message', {name});
+        }
 
-                collisions.sort((a, b)=>{
-                    const aDist = a.pos.distanceNoSqrt(startPos);
-                    const bDist = b.pos.distanceNoSqrt(startPos);
+        this.triggerOutput('_o', eventContext);
+    }
 
-                    return aDist - bDist;
-                });
-
-                return collisions;
-            }
-        },
-    },
-    {// Broadcast Message
+    const broadCastMessageNode = {
         id: 'broadcast_message',
         category: 'actual',
         inputBoxWidth: 6,
         inTriggers: [
-            {id: '_i', execute: 'broadcastMessage'},
+            {id: '_i', execute: broadcastMessage},
         ],
         outTriggers: ['_o'],
         inputs: [
             {id: 'name', type: SOCKET_TYPE.STRING, default: ''},
             {id: 'global', type: SOCKET_TYPE.BOOL, default: false},
         ],
-        methods: {
-            broadcastMessage(this: iEngineNode, eventContext: iEventContext){
-                const name = this.getInput<string>('name', eventContext);
-                const global = this.getInput<boolean>('global', eventContext);
+    };
+    NodeList.push(broadCastMessageNode);
+}
 
-                if (name.trim().length < 0) return;
-                
-                if (global){
-                    this.engine.broadcastMessage(name);
-                }
-                else{
-                    eventContext.instance.executeNodeEvent('e_message', {name});
-                }
+{// Timer
+    type NodeData = Map<number, {
+        duration: number,
+        step: number,
+        progress: number,
+        lastTickGap: number,
+        active: boolean,
+        complete: boolean,
+    }>;
 
-                this.triggerOutput('_o', eventContext);
+    function start(this: iEngineNode, eventContext: iEventContext): void {
+        const nodeData = this.getNodeData<NodeData>();
+        const oldData = nodeData.get(eventContext.instance.id);
+
+        if (oldData && !oldData.complete){
+            oldData.active = true;
+            this.triggerOutput('immediate', eventContext);
+            return;
+        }
+
+        const duration = this.getInput<number>('duration', eventContext) * 1000;
+        const step = this.getInput<number>('step', eventContext) * 1000;
+        const data = {
+            duration,
+            step,
+            progress: 0,
+            lastTickGap: 0,
+            active: true,
+            complete: false,
+        };
+        const tickLoop = ()=>{
+            const deltaTimeMS = this.engine.deltaTime * 1000;
+
+            if (!data) return;
+            
+            if (!this.engine.isRunning) return;
+
+            if (!data.active){
+                data.lastTickGap = data.step;
+                return;
             }
-        },
-    },
-    {// Timer
+
+            data.progress = Math.min(data.progress + deltaTimeMS, data.duration);
+
+            if (data.progress >= data.duration){
+                data.complete = true;
+                this.triggerOutput('complete', eventContext);
+                this.triggerOutput('tick', eventContext);
+                nodeData.delete(eventContext.instance.id);
+                return;
+            }
+
+            if (deltaTimeMS > data.step || data.lastTickGap >= data.step){
+                this.triggerOutput('tick', eventContext);
+                data.lastTickGap = 0;
+            }
+            else{
+                data.lastTickGap += deltaTimeMS;
+            }
+
+            requestAnimationFrame(tickLoop);
+        }
+
+        nodeData.set(eventContext.instance.id, data);
+        requestAnimationFrame(tickLoop);
+        this.triggerOutput('started', eventContext);
+        this.triggerOutput('immediate', eventContext);
+    }
+
+    function pause(this: iEngineNode, eventContext: iEventContext): void {
+        const data = this.getNodeData<NodeData>().get(eventContext.instance.id);
+        
+        if (data){
+            data.active = false;
+        }
+
+        this.triggerOutput('immediate', eventContext);
+    }
+
+    function reset(this: iEngineNode, eventContext: iEventContext): void {
+        this.getNodeData<NodeData>().delete(eventContext.instance.id);
+        this.triggerOutput('immediate', eventContext);
+    }
+
+    function getElapsed(this: iEngineNode, eventContext: iEventContext): number {
+        const data = this.getNodeData<NodeData>().get(eventContext.instance.id);
+        return data ? Math.round(data.progress / 10) / 100 : 0;
+    }
+
+    function getRemaining(this: iEngineNode, eventContext: iEventContext): number {
+        const data = this.getNodeData<NodeData>().get(eventContext.instance.id);
+        return data ? Math.round((data.duration - data.progress) / 10) / 100 : 0;
+    }
+
+    function getPercent(this: iEngineNode, eventContext: iEventContext): number {
+        const data = this.getNodeData<NodeData>().get(eventContext.instance.id);
+        return data ? data.progress / data.duration : 0;
+    }
+
+    const timer = {
         id: 'timer',
         category: 'actual',
         stackDataIO: true,
@@ -1003,102 +1199,35 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'step', type: SOCKET_TYPE.NUMBER, required: true, default: 0},
         ],
         outputs: [
-            {id: 'elapsed', type: SOCKET_TYPE.NUMBER, execute: 'getElapsed'},
-            {id: 'remaining', type: SOCKET_TYPE.NUMBER, execute: 'getRemaining'},
-            {id: 'percent', type: SOCKET_TYPE.NUMBER, execute: 'getPercent'},
+            {id: 'elapsed', type: SOCKET_TYPE.NUMBER, execute: getElapsed},
+            {id: 'remaining', type: SOCKET_TYPE.NUMBER, execute: getRemaining},
+            {id: 'percent', type: SOCKET_TYPE.NUMBER, execute: getPercent},
         ],
         inTriggers: [
-            {id: 'start', execute: 'start'},
-            {id: 'pause', execute: 'pause'},
-            {id: 'reset', execute: 'reset'},
+            {id: 'start', execute: start},
+            {id: 'pause', execute: pause},
+            {id: 'reset', execute: reset},
         ],
         outTriggers: ['immediate', 'started', 'tick', 'complete'],
-        methods: {
-            start(this: iEngineNode, eventContext: iEventContext){
-                const oldData = this.dataCache.get(eventContext.instance.id);
-
-                if (oldData && !oldData.complete){
-                    oldData.active = true;
-                    this.triggerOutput('immediate', eventContext);
-                    return;
-                }
-
-                const duration = this.getInput<number>('duration', eventContext) * 1000;
-                const step = this.getInput<number>('step', eventContext) * 1000;
-                const data = {
-                    duration,
-                    step,
-                    progress: 0,
-                    lastTickGap: 0,
-                    active: true,
-                    complete: false,
-                };
-                const tickLoop = ()=>{
-                    const deltaTimeMS = this.engine.deltaTime * 1000;
-
-                    if (!data) return;
-                    
-                    if (!this.engine.isRunning) return;
-
-                    if (!data.active){
-                        data.lastTickGap = data.step;
-                        return;
-                    }
-
-                    data.progress = Math.min(data.progress + deltaTimeMS, data.duration);
-
-                    if (data.progress >= data.duration){
-                        data.complete = true;
-                        this.triggerOutput('complete', eventContext);
-                        this.triggerOutput('tick', eventContext);
-                        this.dataCache.delete(eventContext.instance.id);
-                        return;
-                    }
-
-                    if (deltaTimeMS > data.step || data.lastTickGap >= data.step){
-                        this.triggerOutput('tick', eventContext);
-                        data.lastTickGap = 0;
-                    }
-                    else{
-                        data.lastTickGap += deltaTimeMS;
-                    }
-
-                    requestAnimationFrame(tickLoop);
-                }
-
-                this.dataCache.set(eventContext.instance.id, data);
-                requestAnimationFrame(tickLoop);
-                this.triggerOutput('started', eventContext);
-                this.triggerOutput('immediate', eventContext);
-            },
-            pause(this: iEngineNode, eventContext: iEventContext){
-                const data = this.dataCache.get(eventContext.instance.id);
-                
-                if (data){
-                    data.active = false;
-                }
-
-                this.triggerOutput('immediate', eventContext);
-            },
-            reset(this: iEngineNode, eventContext: iEventContext){
-                this.dataCache.delete(eventContext.instance.id);
-                this.triggerOutput('immediate', eventContext);
-            },
-            getElapsed(this: iEngineNode, eventContext: iEventContext){
-                const data = this.dataCache.get(eventContext.instance.id);
-                return data ? Math.round(data.progress / 10) / 100 : 0;
-            },
-            getRemaining(this: iEngineNode, eventContext: iEventContext){
-                const data = this.dataCache.get(eventContext.instance.id);
-                return data ? Math.round((data.duration - data.progress) / 10) / 100 : 0;
-            },
-            getPercent(this: iEngineNode, eventContext: iEventContext){
-                const data = this.dataCache.get(eventContext.instance.id);
-                return data ? data.progress / data.duration : 0;
-            },
+        init(this: GenericNode){
+            if (!isEngineNode(this)) return;
+            this.setNodeData<NodeData>(new Map());
         },
-    },
-    {// Random Number
+    };
+    NodeList.push(timer);
+}
+
+{// Random Number
+    function getNum(this: iEngineNode, eventContext: iEventContext): number {
+        const lower = this.getInput<number>('lower', eventContext);
+        const upper = this.getInput<number>('upper', eventContext);
+        const round = this.getInput<boolean>('round', eventContext);
+        const num = Math.random() * (upper - lower) + lower;
+
+        return round ? Math.round(num) : num;
+    }
+
+    const randomNumber = {
         id: 'random_number',
         category: 'actual',
         stackDataIO: true,
@@ -1108,36 +1237,66 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'round', type: SOCKET_TYPE.BOOL, default: false},
         ],
         outputs: [
-            {id: 'number', type: SOCKET_TYPE.NUMBER, execute: 'getNum'},
+            {id: 'number', type: SOCKET_TYPE.NUMBER, execute: getNum},
         ],
-        methods: {
-            getNum(this: iEngineNode, eventContext: iEventContext){
-                const lower = this.getInput<number>('lower', eventContext);
-                const upper = this.getInput<number>('upper', eventContext);
-                const round = this.getInput<boolean>('round', eventContext);
-                const num = Math.random() * (upper - lower) + lower;
+    };
+    NodeList.push(randomNumber);
+}
 
-                return round ? Math.round(num) : num;
-            }
-        }
-    },
-    {// Restart
+{// Restart
+    function restartGame(this: iEngineNode): void {
+        this.engine.restart();
+    }
+
+    const restartGameNode = {
         id: 'restart_game',
         category: 'actual',
         inTriggers: [
-            {id: '_i', execute: 'restartGame'},
+            {id: '_i', execute: restartGame},
         ],
-        methods: {
-            restartGame(this: iEngineNode){
-                this.engine.restart();
-            },
-        },
-    },
-    {// Set Animation Playback
+    };
+    NodeList.push(restartGameNode);
+}
+
+{// Set Animation Playback
+    function setSettings(this: iEngineNode, eventContext: iEventContext): void {
+        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
+        const frame = parseInt(this.getInput<string>('frame', eventContext));
+        const fps = parseInt(this.getInput<string>('fps', eventContext));
+        const loop = this.getInput<boolean | null>('loop', eventContext);
+        const playing = this.getInput<boolean | null>('playing', eventContext);
+
+        if (!instance || instance == Node_Enums.THROWN){
+            this.triggerOutput('_o', eventContext);
+            return;
+        }
+
+        if (!isNaN(frame)){
+            instance.animFrame = frame;
+        }
+        
+        if (!isNaN(fps)){
+            instance.fpsOverride = fps;
+        }
+        
+        if (loop != null){
+            instance.animLoopOverride = loop;
+        }
+        
+        if (playing != null){
+            instance.animPlaying = playing;
+        }
+
+        instance.needsRenderUpdate = true;
+
+        this.triggerOutput('_o', eventContext);
+    }
+
+    const setAnimationPlayback = {
         id: 'set_animation_playback',
         category: 'drawing',
         inTriggers: [
-            {id: '_i', execute: 'setSettings'},
+            {id: '_i', execute: setSettings},
         ],
         outTriggers: ['_o'],
         inputs: [
@@ -1147,42 +1306,25 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'loop', type: SOCKET_TYPE.BOOL, default: null, triple: true},
             {id: 'playing', type: SOCKET_TYPE.BOOL, default: null, triple: true},
         ],
-        methods: {
-            setSettings(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
-                const frame = parseInt(this.getInput<string>('frame', eventContext));
-                const fps = parseInt(this.getInput<string>('fps', eventContext));
-                const loop = this.getInput<boolean | null>('loop', eventContext);
-                const playing = this.getInput<boolean | null>('playing', eventContext);
+    };
+    NodeList.push(setAnimationPlayback);
+}
 
-                if (!instance || instance == Node_Enums.THROWN){
-                    this.triggerOutput('_o', eventContext);
-                    return;
-                }
+{// Set Sprite
+    function setSprite(this: iEngineNode, eventContext: iEventContext): void {
+        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
+        const spriteId: number = this.widgetData;
+        const sprite = this.engine.gameData.sprites.find(s => s.id == spriteId);
 
-                if (!isNaN(frame)){
-                    instance.animFrame = frame;
-                }
-                
-                if (!isNaN(fps)){
-                    instance.fpsOverride = fps;
-                }
-                
-                if (loop != null){
-                    instance.animLoopOverride = loop;
-                }
-                
-                if (playing != null){
-                    instance.animPlaying = playing;
-                }
+        if (instance != Node_Enums.THROWN){
+            instance.sprite = sprite ?? null;
+            this.engine.refreshRenderedInstance(instance);
+        }
 
-                instance.needsRenderUpdate = true;
+        this.triggerOutput('_o', eventContext);
+    }
 
-                this.triggerOutput('_o', eventContext);
-            },
-        },
-    },
-    {// Set Sprite
+    const setSpriteNode = {
         id: 'set_sprite',
         category: 'drawing',
         widget: {
@@ -1195,7 +1337,7 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
         inTriggers: [
-            {id: '_i', execute: 'setSprite'},
+            {id: '_i', execute: setSprite},
         ],
         outTriggers: ['_o'],
         inputs: [
@@ -1223,26 +1365,30 @@ export const NODE_LIST: iNodeTemplate[] = [
 
             this.widget.options.items = [genericNoOption, ...sprites];
         },
-        methods: {
-            setSprite(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
-                const spriteId: number = this.widgetData;
-                const sprite = this.engine.gameData.sprites.find(s => s.id == spriteId);
+    };
+    NodeList.push(setSpriteNode);
+}
 
-                if (instance != Node_Enums.THROWN){
-                    instance.sprite = sprite ?? null;
-                    this.engine.refreshRenderedInstance(instance);
-                }
+{// Flip Sprite
+    function flipSprite(this: iEngineNode, eventContext: iEventContext): void {
+        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
+        const hFlip = this.getInput<boolean>('hFlip', eventContext);
+        const vFlip = this.getInput<boolean>('vFlip', eventContext);
 
-                this.triggerOutput('_o', eventContext);
-            },
-        },
-    },
-    {// Flip Sprite
+        if (instance != Node_Enums.THROWN){
+            instance.flipH = hFlip;
+            instance.flipV = vFlip;
+            instance.needsRenderUpdate = true;
+        }
+
+        this.triggerOutput('_o', eventContext);
+    }
+
+    const flipSpriteNode = {
         id: 'flip_sprite',
         category: 'drawing',
         inTriggers: [
-            {id: '_i', execute: 'flipSprite'},
+            {id: '_i', execute: flipSprite},
         ],
         outTriggers: ['_o'],
         inputs: [
@@ -1250,27 +1396,47 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'hFlip', type: SOCKET_TYPE.BOOL, default: false},
             {id: 'vFlip', type: SOCKET_TYPE.BOOL, default: false},
         ],
-        methods: {
-            flipSprite(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
-                const hFlip = this.getInput<boolean>('hFlip', eventContext);
-                const vFlip = this.getInput<boolean>('vFlip', eventContext);
+    };
+    NodeList.push(flipSpriteNode);
+}
 
-                if (instance != Node_Enums.THROWN){
-                    instance.flipH = hFlip;
-                    instance.flipV = vFlip;
-                    instance.needsRenderUpdate = true;
-                }
+{// Set Position
+    function setPosition(this: iEngineNode, eventContext: iEventContext): void {
+        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
+        const xInp = this.getInput<number & string>('x', eventContext);
+        const yInp = this.getInput<number & string>('y', eventContext);
+        const relative = this.getInput<boolean>('relative', eventContext);
+        let newPos: Vector;
 
-                this.triggerOutput('_o', eventContext);
-            },
-        },
-    },
-    {// Set Position
+        if (instance == Node_Enums.THROWN){
+            this.triggerOutput('_o', eventContext);
+            return;
+        }
+
+        if (relative){
+            const offset = new Vector(
+                xInp === '' ? 0 : xInp,
+                yInp === '' ? 0 : yInp
+            );
+            newPos = offset.add(instance.pos);
+        }
+        else{
+            newPos = new Vector(
+                xInp === '' ? instance.pos.x : xInp,
+                yInp === '' ? instance.pos.y : yInp
+            );
+        }
+
+        this.engine.setInstancePosition(eventContext.instance, newPos);
+        
+        this.triggerOutput('_o', eventContext);
+    }
+
+    const setPostionNode = {
         id: 'set_position',
         category: 'movement',
         inTriggers: [
-            {id: '_i', execute: 'setPosition'},
+            {id: '_i', execute: setPosition},
         ],
         outTriggers: ['_o'],
         inputs: [
@@ -1279,44 +1445,108 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'y', type: SOCKET_TYPE.NUMBER, default: '', required: false},
             {id: 'relative', type: SOCKET_TYPE.BOOL, default: false},
         ],
-        methods: {
-            setPosition(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
-                const xInp = this.getInput<number & string>('x', eventContext);
-                const yInp = this.getInput<number & string>('y', eventContext);
-                const relative = this.getInput<boolean>('relative', eventContext);
-                let newPos: Vector;
+    };
+    NodeList.push(setPostionNode);
+}
 
-                if (instance == Node_Enums.THROWN){
-                    this.triggerOutput('_o', eventContext);
-                    return;
-                }
+{// Jump To
+    function jumpTo(this: iEngineNode, eventContext: iEventContext): void {
+        const halfDim = Sprite.DIMENSIONS / 2;
+        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
+        const x = Math.round(this.getInput<number>('x', eventContext));
+        const y = Math.round(this.getInput<number>('y', eventContext));
+        const relative = this.getInput<boolean>('relative', eventContext);
 
-                if (relative){
-                    const offset = new Vector(
-                        xInp === '' ? 0 : xInp,
-                        yInp === '' ? 0 : yInp
-                    );
-                    newPos = offset.add(instance.pos);
-                }
-                else{
-                    newPos = new Vector(
-                        xInp === '' ? instance.pos.x : xInp,
-                        yInp === '' ? instance.pos.y : yInp
-                    );
-                }
+        if (instance == Node_Enums.THROWN){
+            this.triggerOutput('_o', eventContext);
+            return;
+        }
 
-                this.engine.setInstancePosition(eventContext.instance, newPos);
-                
-                this.triggerOutput('_o', eventContext);
-            },
-        },
-    },
-    {// Jump To
+        const desiredDest = relative ? new Vector(x, y).add(instance.pos) : new Vector(x, y).subtractScalar(halfDim);
+
+        //jump if no collision on instance
+        if (!instance.isSolid){
+            this.engine.setInstancePosition(instance, desiredDest);
+            this.triggerOutput('_o', eventContext);
+            return;
+        }
+
+        //round starting position to nearest integer
+        instance.pos.round();
+
+        //setup raycast check
+        const NORM_OFFSET = 0.0001;
+        const instCenter = instance.pos.clone().addScalar(halfDim);
+        const checkDim = new Vector(Sprite.DIMENSIONS, Sprite.DIMENSIONS).subtractScalar(NORM_OFFSET); //boxes are made slightly smaller to allow for 1 tile wide paths
+        const velocity = desiredDest.clone().subtract(instance.pos);
+        const nearBodies = this.engine.room.getInstancesInRadius(instance.pos, velocity.length())
+            .filter(i => {
+                const selfCheck = i.id != instance.id;
+                return selfCheck && i.isSolid;
+            });
+        
+        let nearestDist = instance.pos.distanceNoSqrt(desiredDest);
+        let nearestDest = desiredDest.addScalar(halfDim);
+        let nearestCastResult: ReturnType<typeof Util.projectSVF> | null = null;
+
+        //raycast against all instances in vacinity using minkowski addition
+        for (let i = 0; i < nearBodies.length; i++){
+            const curBody = nearBodies[i];
+            const curCenter = curBody.pos.clone().addScalar(halfDim);
+            const raycastResult = Util.projectSVF(instCenter, velocity, curCenter, checkDim);
+
+            if (!raycastResult) continue;
+
+            const checkDist = instCenter.distanceNoSqrt(raycastResult.point);
+
+            if (checkDist < nearestDist){
+                nearestDist = checkDist;
+                nearestDest = raycastResult.point;
+                nearestCastResult = raycastResult;
+            }
+        }
+
+        //jump if no ray collisions
+        if (!nearestCastResult){
+            this.engine.setInstancePosition(instance, nearestDest.subtractScalar(halfDim));
+            this.triggerOutput('_o', eventContext);
+            return;
+        }
+
+        //final collision point is offset 
+        const normalOffset = nearestCastResult.normal.clone().scale(NORM_OFFSET);
+        const finalDest = nearestDest
+            .subtractScalar(halfDim)
+            .add(normalOffset);
+        
+        //round single axis based on direction of collision normal
+        finalDest.x = nearestCastResult.normal.x ? Math.round(finalDest.x) : finalDest.x;
+        finalDest.y = nearestCastResult.normal.y ? Math.round(finalDest.y) : finalDest.y;
+
+        //set instance position and continue to next node
+        this.engine.setInstancePosition(instance, finalDest);
+        this.triggerOutput('_o', eventContext);
+    }
+
+    function checkExitBacktrack(this: iEngineNode, eventContext: iEventContext, newPos: ConstVector): boolean {
+        if (!(eventContext.instance.prevExit && eventContext.instance.prevExit?.exit.detectBacktracking)) return false;
+
+        const direction = newPos.clone().subtract(eventContext.instance.pos).normalize();
+        const dot = direction.dot(eventContext.instance.prevExit.direction.clone().multiplyScalar(-1));
+
+        if (dot > 0.75) {
+            eventContext.instance.prevExit.exit.triggerExit(eventContext.instance, direction);
+            return true;
+        }
+
+        return false;
+    }
+
+    const jumpToNode = {
         id: 'jump_to',
         category: 'movement',
         inTriggers: [
-            {id: '_i', execute: 'jumpTo'},
+            {id: '_i', execute: jumpTo},
         ],
         outTriggers: ['_o'],
         inputs: [
@@ -1325,100 +1555,24 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
             {id: 'relative', type: SOCKET_TYPE.BOOL, default: false},
         ],
-        methods: {
-            jumpTo(this: iEngineNode, eventContext: iEventContext){
-                const halfDim = Sprite.DIMENSIONS / 2;
-                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
-                const x = Math.round(this.getInput<number>('x', eventContext));
-                const y = Math.round(this.getInput<number>('y', eventContext));
-                const relative = this.getInput<boolean>('relative', eventContext);
+    };
+    NodeList.push(jumpToNode);
+}
 
-                if (instance == Node_Enums.THROWN){
-                    this.triggerOutput('_o', eventContext);
-                    return;
-                }
+{// Set Velocity
+    function setVelocity(this: iEngineNode, eventContext: iEventContext): void {
+        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
+        const speed = this.getInput<number>('speed', eventContext);
+        const direction = Vector.fromArray(this.widgetData);
 
-                const desiredDest = relative ? new Vector(x, y).add(instance.pos) : new Vector(x, y).subtractScalar(halfDim);
+        if (instance != Node_Enums.THROWN){
+            instance.velocity.copy(direction.multiplyScalar(speed));
+        }
 
-                //jump if no collision on instance
-                if (!instance.isSolid){
-                    this.engine.setInstancePosition(instance, desiredDest);
-                    this.triggerOutput('_o', eventContext);
-                    return;
-                }
+        this.triggerOutput('_o', eventContext);
+    }
 
-                //round starting position to nearest integer
-                instance.pos.round();
-
-                //setup raycast check
-                const NORM_OFFSET = 0.0001;
-                const instCenter = instance.pos.clone().addScalar(halfDim);
-                const checkDim = new Vector(Sprite.DIMENSIONS, Sprite.DIMENSIONS).subtractScalar(NORM_OFFSET); //boxes are made slightly smaller to allow for 1 tile wide paths
-                const velocity = desiredDest.clone().subtract(instance.pos);
-                const nearBodies = this.engine.room.getInstancesInRadius(instance.pos, velocity.length())
-                    .filter(i => {
-                        const selfCheck = i.id != instance.id;
-                        return selfCheck && i.isSolid;
-                    });
-                
-                let nearestDist = instance.pos.distanceNoSqrt(desiredDest);
-                let nearestDest = desiredDest.addScalar(halfDim);
-                let nearestCastResult: ReturnType<typeof Util.projectSVF> | null = null;
-
-                //raycast against all instances in vacinity using minkowski addition
-                for (let i = 0; i < nearBodies.length; i++){
-                    const curBody = nearBodies[i];
-                    const curCenter = curBody.pos.clone().addScalar(halfDim);
-                    const raycastResult = Util.projectSVF(instCenter, velocity, curCenter, checkDim);
-
-                    if (!raycastResult) continue;
-
-                    const checkDist = instCenter.distanceNoSqrt(raycastResult.point);
-
-                    if (checkDist < nearestDist){
-                        nearestDist = checkDist;
-                        nearestDest = raycastResult.point;
-                        nearestCastResult = raycastResult;
-                    }
-                }
-
-                //jump if no ray collisions
-                if (!nearestCastResult){
-                    this.engine.setInstancePosition(instance, nearestDest.subtractScalar(halfDim));
-                    this.triggerOutput('_o', eventContext);
-                    return;
-                }
-
-                //final collision point is offset 
-                const normalOffset = nearestCastResult.normal.clone().scale(NORM_OFFSET);
-                const finalDest = nearestDest
-                    .subtractScalar(halfDim)
-                    .add(normalOffset);
-                
-                //round single axis based on direction of collision normal
-                finalDest.x = nearestCastResult.normal.x ? Math.round(finalDest.x) : finalDest.x;
-                finalDest.y = nearestCastResult.normal.y ? Math.round(finalDest.y) : finalDest.y;
-
-                //set instance position and continue to next node
-                this.engine.setInstancePosition(instance, finalDest);
-                this.triggerOutput('_o', eventContext);
-            },
-            checkExitBacktrack(this: iEngineNode, eventContext: iEventContext, newPos: ConstVector): boolean {
-                if (!(eventContext.instance.prevExit && eventContext.instance.prevExit?.exit.detectBacktracking)) return false;
-
-                const direction = newPos.clone().subtract(eventContext.instance.pos).normalize();
-                const dot = direction.dot(eventContext.instance.prevExit.direction.clone().multiplyScalar(-1));
-
-                if (dot > 0.75) {
-                    eventContext.instance.prevExit.exit.triggerExit(eventContext.instance, direction);
-                    return true;
-                }
-
-                return false;
-            },
-        },
-    },
-    {// Set Velocity
+    const setVelocityNode = {
         id: 'set_velocity',
         category: 'movement',
         widget: {
@@ -1429,28 +1583,32 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
         inTriggers: [
-            {id: '_i', execute: 'setVelocity'}
+            {id: '_i', execute: setVelocity}
         ],
         outTriggers: ['_o'],
         inputs: [
             {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
             {id: 'speed', type: SOCKET_TYPE.NUMBER, default: 10, required: true},
         ],
-        methods: {
-            setVelocity(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
-                const speed = this.getInput<number>('speed', eventContext);
-                const direction = Vector.fromArray(this.widgetData);
+    };
+    NodeList.push(setVelocityNode);
+}
 
-                if (instance != Node_Enums.THROWN){
-                    instance.velocity.copy(direction.multiplyScalar(speed));
-                }
+{// Move Direction
+    function moveDirection(this: iEngineNode, eventContext: iEventContext): void {
+        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
+        const speed = this.getInput<number>('speed', eventContext);
+        const direction = Vector.fromArray(this.widgetData);
+        const velocity = direction.scale(speed);
 
-                this.triggerOutput('_o', eventContext);
-            },
-        },
-    },
-    {// Move Direction
+        if (instance != Node_Enums.THROWN){
+            instance.moveVector.add(velocity);
+        }
+
+        this.triggerOutput('_o', eventContext);
+    }
+
+    const moveDirectionNode = {
         id: 'move_direction',
         category: 'movement',
         widget: {
@@ -1461,29 +1619,31 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
         inTriggers: [
-            {id: '_i', execute: 'moveDirection'},
+            {id: '_i', execute: moveDirection},
         ],
         outTriggers: ['_o'],
         inputs: [
             {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
             {id: 'speed', type: SOCKET_TYPE.NUMBER, default: 1, required: true},
         ],
-        methods: {
-            moveDirection(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
-                const speed = this.getInput<number>('speed', eventContext);
-                const direction = Vector.fromArray(this.widgetData);
-                const velocity = direction.scale(speed);
+    };
+    NodeList.push(moveDirectionNode);
+}
 
-                if (instance != Node_Enums.THROWN){
-                    instance.moveVector.add(velocity);
-                }
+{// Push Direction
+    function push(this: iEngineNode, eventContext: iEventContext): void {
+        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
+        const strength = this.getInput<number>('strength', eventContext);
+        const force = Vector.fromArray(this.widgetData).scale(strength);
 
-                this.triggerOutput('_o', eventContext);
-            },
-        },
-    },
-    {// Push Direction
+        if (instance != Node_Enums.THROWN){
+            instance.applyForce(force);
+        }
+
+        this.triggerOutput('_o', eventContext);
+    }
+
+    const pushDirection = {
         id: 'push_direction',
         category: 'movement',
         widget: {
@@ -1494,40 +1654,44 @@ export const NODE_LIST: iNodeTemplate[] = [
             },
         },
         inTriggers: [
-            {id: '_i', execute: 'push'},
+            {id: '_i', execute: push},
         ],
         outTriggers: ['_o'],
         inputs: [
             {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
             {id: 'strength', type: SOCKET_TYPE.NUMBER, default: 1, required: true},
         ],
-        methods: {
-            push(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
-                const strength = this.getInput<number>('strength', eventContext);
-                const force = Vector.fromArray(this.widgetData).scale(strength);
+    };
+    NodeList.push(pushDirection);
+}
 
-                if (instance != Node_Enums.THROWN){
-                    instance.applyForce(force);
-                }
+{// Is On Ground
+    function onGround(this: iEngineNode, eventContext: iEventContext): boolean {
+        return eventContext.instance.onGround;
+    }
 
-                this.triggerOutput('_o', eventContext);
-            },
-        },
-    },
-    {// Is On Ground
+    const isOnGround = {
         id: 'is_on_ground',
         category: 'movement',
         outputs: [
-            {id: '_o', type: SOCKET_TYPE.BOOL, execute: 'onGround'},
+            {id: '_o', type: SOCKET_TYPE.BOOL, execute: onGround},
         ],
-        methods: {
-            onGround(this: iEngineNode, eventContext: iEventContext){
-                return eventContext.instance.onGround;
-            },
-        },
-    },
-    {// Get Position
+    };
+    NodeList.push(isOnGround);
+}
+
+{// Get Position
+    function getX(this: iEngineNode, eventContext: iEventContext): number {
+        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', true) ?? eventContext.instance;
+        return instance.pos.x;
+    }
+
+    function getY(this: iEngineNode, eventContext: iEventContext): number {
+        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', true) ?? eventContext.instance;
+        return instance.pos.y;
+    }
+
+    const getPosition = {
         id: 'get_position',
         category: 'movement',
         onBeforeMount(this: iEditorNode){
@@ -1537,21 +1701,25 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
         ],
         outputs: [
-            {id: 'X', type: SOCKET_TYPE.NUMBER, execute: 'getX'},
-            {id: 'Y', type: SOCKET_TYPE.NUMBER, execute: 'getY'},
+            {id: 'X', type: SOCKET_TYPE.NUMBER, execute: getX},
+            {id: 'Y', type: SOCKET_TYPE.NUMBER, execute: getY},
         ],
-        methods: {
-            getX(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', true) ?? eventContext.instance;
-                return instance.pos.x;
-            },
-            getY(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', true) ?? eventContext.instance;
-                return instance.pos.y;
-            },
-        },
-    },
-    {// Get Velocity
+    };
+    NodeList.push(getPosition);
+}
+
+{// Get Velocity
+    function getX(this: iEngineNode, eventContext: iEventContext): number {
+        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', true) ?? eventContext.instance;
+        return instance.totalVelocity.x;
+    }
+
+    function getY(this: iEngineNode, eventContext: iEventContext): number {
+        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', true) ?? eventContext.instance;
+        return instance.totalVelocity.y;
+    }
+
+    const getVelocity = {
         id: 'get_velocity',
         category: 'movement',
         onBeforeMount(this: iEditorNode){
@@ -1561,21 +1729,26 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
         ],
         outputs: [
-            {id: 'X', type: SOCKET_TYPE.NUMBER, execute: 'getX'},
-            {id: 'Y', type: SOCKET_TYPE.NUMBER, execute: 'getY'},
+            {id: 'X', type: SOCKET_TYPE.NUMBER, execute: getX},
+            {id: 'Y', type: SOCKET_TYPE.NUMBER, execute: getY},
         ],
-        methods: {
-            getX(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', true) ?? eventContext.instance;
-                return instance.totalVelocity.x;
-            },
-            getY(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', true) ?? eventContext.instance;
-                return instance.totalVelocity.y;
-            },
-        },
-    },
-    {// Get Distance
+    };
+    NodeList.push(getVelocity);
+}
+
+{// Get Distance
+    function getDistance(this: iEngineNode, eventContext: iEventContext): number {
+        const x1 = this.getInput<number>('x1', eventContext);
+        const y1 = this.getInput<number>('y1', eventContext);
+        const x2 = this.getInput<number>('x2', eventContext);
+        const y2 = this.getInput<number>('y2', eventContext);
+        const dx = x1 - x2;
+        const dy = y1 - y2;
+
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    const getDistanceNode = {
         id: 'get_distance',
         category: 'movement',
         inputs: [
@@ -1585,26 +1758,39 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'y2', type: SOCKET_TYPE.NUMBER, default: 0},
         ],
         outputs: [
-            {id: 'distance', type: SOCKET_TYPE.NUMBER, execute: 'getDistance'},
+            {id: 'distance', type: SOCKET_TYPE.NUMBER, execute: getDistance},
         ],
-        methods: {
-            getDistance(this: iEngineNode, eventContext: iEventContext){
-                const x1 = this.getInput<number>('x1', eventContext);
-                const y1 = this.getInput<number>('y1', eventContext);
-                const x2 = this.getInput<number>('x2', eventContext);
-                const y2 = this.getInput<number>('y2', eventContext);
-                const dx = x1 - x2;
-                const dy = y1 - y2;
+    };
+    NodeList.push(getDistanceNode);
+}
 
-                return Math.sqrt(dx * dx + dy * dy);
-            },
-        },
-    },
-    {// Set Physics
+{// Set Physics
+    function setPhysics(this: iEngineNode, eventContext: iEventContext): void {
+        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? (eventContext.instance as Instance_Base);
+        const solid = this.getInput<boolean | null>('solid', eventContext);
+        const gravity = this.getInput<boolean | null>('gravity', eventContext);
+
+        if (instance == Node_Enums.THROWN){
+            this.triggerOutput('_o', eventContext);
+            return;
+        }
+
+        if (solid != null){
+            instance.isSolid = solid;
+        }
+
+        if (gravity != null){
+            instance.applyGravity = gravity;
+        }
+
+        this.triggerOutput('_o', eventContext);
+    }
+
+    const setPhysicsNode = {
         id: 'set_physics',
         category: 'movement',
         inTriggers: [
-            {id: '_i', execute: 'setPhysics'},
+            {id: '_i', execute: setPhysics},
         ],
         outTriggers: ['_o'],
         inputs: [
@@ -1612,37 +1798,23 @@ export const NODE_LIST: iNodeTemplate[] = [
             {id: 'solid', type: SOCKET_TYPE.BOOL, triple: true, default: null},
             {id: 'gravity', type: SOCKET_TYPE.BOOL, triple: true, default: null},
         ],
-        methods: {
-            setPhysics(this: iEngineNode, eventContext: iEventContext){
-                const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? (eventContext.instance as Instance_Base);
-                const solid = this.getInput<boolean | null>('solid', eventContext);
-                const gravity = this.getInput<boolean | null>('gravity', eventContext);
+    };
+    NodeList.push(setPhysicsNode);
+}
 
-                if (instance == Node_Enums.THROWN){
-                    this.triggerOutput('_o', eventContext);
-                    return;
-                }
+//add additional node libraries to list
+NodeList.unshift(...Cat_Events);
+NodeList.push(...Cat_Variables);
 
-                if (solid != null){
-                    instance.isSolid = solid;
-                }
+export const NodeMap = new Map<string, iNodeTemplate>();
 
-                if (gravity != null){
-                    instance.applyGravity = gravity;
-                }
-
-                this.triggerOutput('_o', eventContext);
-            }
-        }
-    },
-    ...Cat_Variables,
-];
-
-export const NODE_MAP = new Map<string, iNodeTemplate>();
-
-NODE_LIST.forEach(node => {
-    NODE_MAP.set(node.id, node);
+NodeList.forEach(node => {
+    NodeMap.set(node.id, node);
 });
+
+export function isEngineNode(node: any): node is iEngineNode {
+    return !!node.engine;
+}
 
 function convertObjectToString(obj: any): string {
     const output = [];

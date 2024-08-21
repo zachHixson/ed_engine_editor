@@ -260,8 +260,8 @@ onMounted(()=>{
     relinkConnections();
     updateNodeBounds();
 
-    for (let i = 0; i < Core.NODE_LIST.length; i++){
-        const registerActions = Core.NODE_LIST[i].registerActions;
+    for (let i = 0; i < Core.NodeList.length; i++){
+        const registerActions = Core.NodeList[i].registerActions;
         registerActions && registerActions(mainStore.getNodeAPI);
     }
 });

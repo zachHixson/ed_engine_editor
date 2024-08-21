@@ -5,40 +5,87 @@ import { MOUSE_EVENT } from '../Enums';
 import { Vector } from '../Vector';
 import { isEngineNode } from './Node_Library';
 import { type GenericNode } from './Node_Library';
-import { InstanceAnimEvent } from '../core';
+import { Instance_Base, InstanceAnimEvent } from '../core';
 
-export default [
-    {// Create
+const catEvents: iNodeTemplate[] = [];
+export default catEvents;
+
+{// Create
+    const create = {
         id: 'e_create',
         isEvent: true,
         category: 'events',
         outTriggers: ['_o'],
-    },
-    {// Update
+    };
+    catEvents.push(create);
+}
+
+{// Update
+    function getDelta(this: iEngineNode): number {
+        return this.engine.deltaTime;
+    }
+
+    const update = {
         id: 'e_update',
         isEvent: true,
         category: 'events',
         outTriggers: ['_o'],
         outputs: [
-            {id: 'delta_time', type: SOCKET_TYPE.NUMBER, execute: 'getDelta'},
+            {id: 'delta_time', type: SOCKET_TYPE.NUMBER, execute: getDelta},
         ],
-        methods: {
-            getDelta(this: iEngineNode){
-                return this.engine.deltaTime;
-            },
-        },
-    },
-    {// Mouse Button
+    };
+    catEvents.push(update);
+}
+
+{// Mouse Button
+    type NodeData = {
+        lastData: {
+            type: MOUSE_EVENT.DOWN | MOUSE_EVENT.UP,
+            buttons: number,
+            pos: Vector,
+            instances: Instance_Base[],
+        } | undefined,
+        downPos: Vector | undefined,
+    };
+
+    function which(this: iEngineNode): number {
+        const eventData = this.getNodeData<NodeData>().lastData;
+        return eventData?.buttons ?? 0;
+    }
+
+    function x(this: iEngineNode): number {
+        const eventData = this.getNodeData<NodeData>().lastData;
+        return eventData?.pos.x ?? 0;
+    }
+
+    function y(this: iEngineNode): number {
+        const eventData = this.getNodeData<NodeData>().lastData;
+        return eventData?.pos.y ?? 0;
+    }
+
+    function object(this: iEngineNode): Instance_Base | null {
+        const eventData = this.getNodeData<NodeData>().lastData;
+        return eventData?.instances[0] ?? null;
+    }
+
+    const mouseBtn = {
         id: 'e_mouse_button',
         isEvent: true,
         category: 'events',
         outTriggers: ['button_down', 'button_up', 'button_click'],
         outputs: [
-            {id: 'which_button', type: SOCKET_TYPE.NUMBER, execute: 'which'},
-            {id: 'x', type: SOCKET_TYPE.NUMBER, execute: 'x'},
-            {id: 'y', type: SOCKET_TYPE.NUMBER, execute: 'y'},
-            {id: 'object', type: SOCKET_TYPE.INSTANCE, execute: 'object'},
+            {id: 'which_button', type: SOCKET_TYPE.NUMBER, execute: which},
+            {id: 'x', type: SOCKET_TYPE.NUMBER, execute: x},
+            {id: 'y', type: SOCKET_TYPE.NUMBER, execute: y},
+            {id: 'object', type: SOCKET_TYPE.INSTANCE, execute: object},
         ],
+        init(this: GenericNode){
+            if (!isEngineNode(this)) return;
+            this.setNodeData<NodeData>({
+                lastData: undefined,
+                downPos: undefined,
+            });
+        },
         execute(this: iEngineNode, eventContext: iEventContext, data: any){
             const lBtn = !!(data.buttons & 0b001);
             const mBtn = !!(data.buttons & 0b010);
@@ -48,14 +95,14 @@ export default [
             if (mBtn) data.button = 2;
             if (rBtn) data.button = 3;
 
-            this.dataCache.set('lastData', data);
+            this.getNodeData<NodeData>().lastData = data;
 
             if (data.type == MOUSE_EVENT.DOWN){
-                this.dataCache.set('downPos', data.pos.clone());
+                this.getNodeData<NodeData>().downPos = data.pos.clone();
                 this.triggerOutput('button_down', eventContext);
             }
             else if (data.type == MOUSE_EVENT.UP){
-                const downPos = this.dataCache.get('downPos') as Vector | undefined;
+                const downPos = this.getNodeData<NodeData>().downPos;
 
                 if (downPos && downPos.equalTo(data.pos)){
                     this.triggerOutput('button_click', eventContext);
@@ -65,44 +112,34 @@ export default [
                 }
             }
         },
-        methods: {
-            which(this: iEngineNode){
-                const eventData = this.dataCache.get('lastData');
-                return eventData?.button ?? 0;
-            },
-            x(this: iEngineNode){
-                const eventData = this.dataCache.get('lastData');
-                return eventData?.pos.x ?? 0;
-            },
-            y(this: iEngineNode){
-                const eventData = this.dataCache.get('lastData');
-                return eventData?.pos.y ?? 0;
-            },
-            object(this: iEngineNode){
-                const eventData = this.dataCache.get('lastData');
-                return eventData?.instances[0] ?? null;
-            },
-        },
-    },
-    {// Mouse Move
+    };
+    catEvents.push(mouseBtn);
+}
+
+{// Mouse Move
+    function x(this: iEngineNode): number {
+        return this.engine.mouse.pos.x;
+    }
+
+    function y(this: iEngineNode): number {
+        return this.engine.mouse.pos.y;
+    }
+
+    const mouseMove = {
         id: 'e_mouse_move',
         isEvent: true,
         category: 'events',
         outTriggers: ['_o'],
         outputs: [
-            {id: 'e_mouse_move_out_x', type: SOCKET_TYPE.NUMBER, execute: 'x'},
-            {id: 'e_mouse_move_out_y', type: SOCKET_TYPE.NUMBER, execute: 'y'},
+            {id: 'e_mouse_move_out_x', type: SOCKET_TYPE.NUMBER, execute: x},
+            {id: 'e_mouse_move_out_y', type: SOCKET_TYPE.NUMBER, execute: y},
         ],
-        methods: {
-            x(this: iEngineNode){
-                return this.engine.mouse.pos.x;
-            },
-            y(this: iEngineNode){
-                return this.engine.mouse.pos.y;
-            },
-        },
-    },
-    {// Keyboard
+    };
+    catEvents.push(mouseMove);
+}
+
+{// Keyboard
+    const keyboard = {
         id: 'e_keyboard',
         isEvent: true,
         category: 'events',
@@ -128,22 +165,37 @@ export default [
                 }
             }
         },
-    },
-    {// Collision
+    };
+    catEvents.push(keyboard);
+}
+
+{// Collision
+    type NodeData = Map<number, any>;
+
+    function getObject(this: iEngineNode, eventContext: iEventContext): Instance_Base | null {
+        const nodeData = this.getNodeData<NodeData>().get(eventContext.eventKey);
+        return nodeData?.instance ?? null;
+    }
+
+    const collision = {
         id: 'e_collision',
         isEvent: true,
         category: 'events',
         outTriggers: ['start', 'repeat', 'stop'],
         outputs: [
-            {id: 'object', type: SOCKET_TYPE.INSTANCE, execute: 'getObject'},
+            {id: 'object', type: SOCKET_TYPE.INSTANCE, execute: getObject},
         ],
         init(this: GenericNode){
-            if (isEngineNode(this)) return;
+            if (isEngineNode(this)) {
+                this.setNodeData<NodeData>(new Map());
+                return;
+            }
+            
             this.stackDataIO = true;
         },
-        execute(this: iEngineNode, eventContext: iEventContext, data){
+        execute(this: iEngineNode, eventContext: iEventContext, data: any){
             //Dispatch collision event
-            this.dataCache.set(eventContext.eventKey, data);
+            this.getNodeData<NodeData>().set(eventContext.eventKey, data);
 
             switch (data.type){
                 case COLLISION_EVENT.START:
@@ -157,23 +209,33 @@ export default [
                     break;
             }
 
-            this.dataCache.delete(eventContext.eventKey);
+            this.getNodeData<NodeData>().delete(eventContext.eventKey);
         },
-        methods: {
-            getObject(this: iEngineNode, eventContext: iEventContext){
-                const cacheData = this.dataCache.get(eventContext.eventKey);
-                return cacheData?.instance ?? null;
-            },
-        },
-    },
-    {// Animation
+    };
+    catEvents.push(collision);
+}
+
+{// Animation
+    function getPlaying(this: iEngineNode, eventContext: iEventContext): boolean {
+        return eventContext.instance.animPlaying;
+    }
+
+    function getFrame(this: iEngineNode, eventContext: iEventContext): number {
+        return eventContext.instance.animFrame;
+    }
+
+    function getFPS(this: iEngineNode, eventContext: iEventContext): number {
+        return eventContext.instance.fps;
+    }
+
+    const animation = {
         id: 'e_animation',
         isEvent: true,
         category: 'events',
         outputs: [
-            {id: 'is_playing', type: SOCKET_TYPE.BOOL, execute: 'getPlaying'},
-            {id: 'frame', type: SOCKET_TYPE.NUMBER, execute: 'getFrame'},
-            {id: 'fps', type: SOCKET_TYPE.NUMBER, execute: 'getFPS'},
+            {id: 'is_playing', type: SOCKET_TYPE.BOOL, execute: getPlaying},
+            {id: 'frame', type: SOCKET_TYPE.NUMBER, execute: getFrame},
+            {id: 'fps', type: SOCKET_TYPE.NUMBER, execute: getFPS},
         ],
         outTriggers: ['start', 'stop', 'tick', 'finished'],
         execute(this: iEngineNode, eventContext: iEventContext, data: InstanceAnimEvent){
@@ -192,19 +254,12 @@ export default [
                     break;
             }
         },
-        methods: {
-            getPlaying(this: iEngineNode, eventContext: iEventContext){
-                return eventContext.instance.animPlaying;
-            },
-            getFrame(this: iEngineNode, eventContext: iEventContext){
-                return eventContext.instance.animFrame;
-            },
-            getFPS(this: iEngineNode, eventContext: iEventContext){
-                return eventContext.instance.fps;
-            }
-        }
-    },
-    {// Message
+    };
+    catEvents.push(animation);
+}
+
+{// Message
+    const message = {
         id: 'e_message',
         isEvent: true,
         category: 'events',
@@ -226,5 +281,6 @@ export default [
                 this.triggerOutput('_o', eventContext);
             }
         },
-    },
-] as iNodeTemplate[];
+    };
+    catEvents.push(message);
+}

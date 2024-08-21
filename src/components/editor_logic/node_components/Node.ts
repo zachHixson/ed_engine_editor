@@ -7,7 +7,7 @@ const { Vector } = Core;
 export default class Node {
     private _template: Core.iNodeTemplate;
     private _editorAPI: Node_API;
-    private _dataCache: Map<number | string, any> = new Map();
+    private _nodeData: unknown = null as unknown;
 
     nodeId: number;
     isEvent: boolean;
@@ -40,7 +40,7 @@ export default class Node {
     onRecalcWidth = new Core.Event_Emitter<()=>void>(this);
 
     constructor(templateId: string, id: number, pos: Core.ConstVector, parentScript: Logic, graphId: number, editorAPI: Node_API){
-        const template = Core.NODE_MAP.get(templateId)!;
+        const template = Core.NodeMap.get(templateId)!;
         
         this._template = template;
         this.nodeId = id;
@@ -102,7 +102,6 @@ export default class Node {
     get template(){return this._template}
     get templateId(){return this._template.id}
     get editorAPI(){return this._editorAPI}
-    get dataCache(){return this._dataCache}
 
     init(): void {
         this.template.init?.call(this);
@@ -247,17 +246,6 @@ export default class Node {
         this.onEditorMove.emit(newPos.clone());
     }
 
-    method(methodName: string, data: any): any {
-        const method = this.template.methods![methodName] as Core.iEditorNodeMethod;
-
-        if (!method){
-            console.error(`Could not find method "${methodName}" in template ${this.templateId}`);
-            return;
-        }
-
-        return method.call(this, data);
-    }
-
     getInput(inputName: string): any {
         const input = this.inputs.get(inputName);
 
@@ -275,5 +263,14 @@ export default class Node {
 
     refresh(): void {
         this.template.refresh && this.template.refresh.call(this);
+    }
+
+    setNodeData<T>(data: T): T {
+        this._nodeData = data;
+        return this._nodeData as T;
+    }
+
+    getNodeData<T>(): T {
+        return this._nodeData as T;
     }
 };
