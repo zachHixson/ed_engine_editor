@@ -181,6 +181,7 @@ export default class Node {
 
     onBeforeUnmount(): void {
         this.template.onBeforeUnmount?.call(this);
+        this.domRef = null;
     }
 
     toSaveData(): Core.iNodeSaveData {

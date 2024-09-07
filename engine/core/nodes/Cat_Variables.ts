@@ -7,13 +7,16 @@ import { canConvertSocket } from './Socket_Conversions';
 
 type ActionCreateVariable = {varNode: iEditorNode, varInfo: iVarInfo};
 type ActionEditVariable = {varNode: iEditorNode, newVarInfo: iVarInfo, oldVarInfo: iVarInfo, oldInitValue: any};
+type GetSetNodeData = {
+    isValid: boolean,
+    onNewVariableCB: ()=>void,
+};
 
 const ActionCreateVariableKey = Symbol('create variable');
 const ActionEditVariableKey = Symbol('edit variable');
 
 const catVariables: iNodeTemplate[] = [];
 export default catVariables;
-
 
 {// Create Variable
     function getValue(this: iEngineNode, eventContext: iEventContext): any {
@@ -225,8 +228,6 @@ export default catVariables;
 }
 
 {// Set Variable
-    type IsValid = boolean;
-
     function setVar(this: iEngineNode, eventContext: iEventContext): void {
         const varName = this.getInput<string>('name', eventContext);
         const data = this.getInput<any>('data', eventContext);
@@ -264,7 +265,12 @@ export default catVariables;
         ],
         init(this: GenericNode){
             if (isEngineNode(this)) return;
-            document.addEventListener('onNewVariable', this.onNewVariable as EventListener);
+            const nodeData = {
+                isValid: false,
+                onNewVariableCB: this.onNewVariable!.bind(this),
+            };
+            this.setNodeData<GetSetNodeData>(nodeData);
+            document.addEventListener('onNewVariable', nodeData.onNewVariableCB as EventListener);
         },
         onInput: onInput,
         afterGameDataLoaded: afterGameDataLoaded,
@@ -275,7 +281,11 @@ export default catVariables;
         onNewConnection: determineConnected,
         onRemoveConnection: determineConnected,
         onBeforeDelete: onBeforeDelete,
-        onBeforeUnmount: onBeforeUnmount,
+        onBeforeUnmount(this: iEditorNode){
+            const cb = this.getNodeData<GetSetNodeData>().onNewVariableCB;
+            document.removeEventListener('onNewVariable', cb as EventListener);
+            this.editorAPI.clearNodeException(getNoVariableFoundKey(this));
+        },
         refresh(this: iEditorNode){
             const upStreamConnection = this.editorAPI.getInputConnection(this, 'data');
             validate.call(this);
@@ -285,7 +295,7 @@ export default catVariables;
             const upStreamSocket = this.editorAPI.getConnectedInputSocket(this, 'data', upStreamConnection)!;
             const dataSocket = this.inputs.get('data')!;
             
-            if (!(canConvertSocket(upStreamSocket.type, dataSocket.type) && this.getNodeData<IsValid>())){
+            if (!(canConvertSocket(upStreamSocket.type, dataSocket.type) && this.getNodeData<GetSetNodeData>().isValid)){
                 const isRecording = this.editorAPI.undoStore.isRecording;
                 this.editorAPI.deleteConnections([upStreamConnection], isRecording);
 
@@ -308,7 +318,7 @@ export default catVariables;
     function getVar(this: iEngineNode, eventContext: iEventContext): void {
         const varName = this.getInput<string>('name', eventContext);
         const isGlobal = this.engine.getGlobalVariable(varName);
-        const variable = isGlobal ? this.engine.getGlobalVariable(varName) : eventContext.instance.getLocalVariable(varName);
+        const variable = isGlobal ? isGlobal : eventContext.instance.getLocalVariable(varName);
         
         //this condition should be impossible due to being unable to connect a non-existant variable
         if (variable == null){
@@ -339,7 +349,12 @@ export default catVariables;
         ],
         init(this: GenericNode){
             if (isEngineNode(this)) return;
-            document.addEventListener('onNewVariable', this.onNewVariable as EventListener);
+            const nodeData = {
+                isValid: false,
+                onNewVariableCB: this.onNewVariable!.bind(this),
+            };
+            this.setNodeData<GetSetNodeData>(nodeData);
+            document.addEventListener('onNewVariable', nodeData.onNewVariableCB as EventListener);
         },
         onInput: onInput,
         afterGameDataLoaded: afterGameDataLoaded,
@@ -351,7 +366,11 @@ export default catVariables;
         onNewConnection: determineConnected,
         onRemoveConnection: determineConnected,
         onBeforeDelete: onBeforeDelete,
-        onBeforeUnmount: onBeforeUnmount,
+        onBeforeUnmount(this: iEditorNode){
+            const cb = this.getNodeData<GetSetNodeData>().onNewVariableCB;
+            document.removeEventListener('onNewVariable', cb as EventListener);
+            this.editorAPI.clearNodeException(getNoVariableFoundKey(this));
+        },
         refresh(this: iEditorNode){
             const downStream = this.editorAPI.getOutputConnections(this, 'data');
 
@@ -482,8 +501,12 @@ function determineConnected(this: iEditorNode){
     });
 }
 
+function getNoVariableFoundKey(node: GenericNode): symbol {
+    return Symbol.for(node.nodeId.toString() + 'no_variable_found');
+}
+
 function validate(this: iEditorNode, textbox?: HTMLInputElement){
-    const noVariableFoundKey = Symbol.for(this.nodeId.toString() + 'no_variable_found');
+    const noVariableFoundKey = getNoVariableFoundKey(this);
     const dataSocket = this.inputs.get('data') || this.outputs.get('data')!;
     const varName = textbox?.value ?? this.getInput<string>('name');
     const globalGet = this.editorAPI.getGlobalVariable(varName);
@@ -523,13 +546,14 @@ function validate(this: iEditorNode, textbox?: HTMLInputElement){
             fatal: false,
             onClearCallback: ()=>{
                 setTimeout(()=>{
+                    if (!this.domRef) return;
                     validate.call(this, textbox)
                 });
             },
         });
     }
 
-    this.setNodeData<boolean>(isValid);
+    this.getNodeData<GetSetNodeData>().isValid = isValid;
     this.onForceSocketUpdate.emit('data');
 }
 
@@ -561,9 +585,5 @@ function onNewVariable(this: iEditorNode){
 }
 
 function onBeforeDelete(this: iEditorNode){
-    document.removeEventListener('onNewVariable', this.onNewVariable as EventListener);
-}
-
-function onBeforeUnmount(this: iEditorNode){
     document.removeEventListener('onNewVariable', this.onNewVariable as EventListener);
 }

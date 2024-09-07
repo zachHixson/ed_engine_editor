@@ -189,7 +189,7 @@ export interface iEngineLogic {
     graphNames: Map<number, string>;
     category_ID: CATEGORY_ID;
     events: Map<string, iEngineNode[]>;
-    localVariableDefaults: Map<string, any>;
+    localVariableDefaults: Map<string, iEngineVariable>;
 
     setLocalVariableDefault(name: string, value: any, type: SOCKET_TYPE, isList: boolean): void;
     executeEvent(eventName: string, instance: Instance_Object, data: any): void;

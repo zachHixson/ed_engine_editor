@@ -49,7 +49,8 @@ export class Instance_Object extends Instance_Base{
         //engine props
         if (window.IS_ENGINE){
             this.lastPos = this.pos.clone();
-            this.localVariables = new Map(this.logic?.localVariableDefaults);
+            this.localVariables = new Map<string, iEngineVariable>();
+            this.initLocalVariables();
 
             if (this._objRef){
                 this.animFrame = this._objRef.startFrame;
@@ -203,7 +204,9 @@ export class Instance_Object extends Instance_Base{
     }
 
     initLocalVariables(): void {
-        this.localVariables = new Map(this.logic?.localVariableDefaults);
+        this.logic?.localVariableDefaults.forEach((varDef, name) => {
+            this.localVariables.set(name, Object.assign({}, varDef));
+        });
     }
 
     setLocalVariable(name: string, value: any): void {
