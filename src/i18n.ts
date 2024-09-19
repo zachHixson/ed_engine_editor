@@ -7,5 +7,5 @@ export default createI18n({
   fallbackLocale: 'en',
   messages: {en},
   warnHtmlMessage: false,
-  missingWarn: false,
+  missingWarn: true,
 })

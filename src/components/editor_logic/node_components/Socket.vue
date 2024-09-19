@@ -80,7 +80,7 @@ const isConnected = computed(()=>(!!props.parentConnections.find(c => {
     return connectedInput || connectedOutput;
 }) && !!hasSize));
 const canConnect = computed(()=>!(isConnected.value && (isTrigger.value != props.isInput)));
-const required = computed(()=>!!props.socket.required ?? true);
+const required = computed(()=>!!props.socket.required);
 const iconMap = new Map<Core.Node_Enums.SOCKET_TYPE, string>([
     [Core.Node_Enums.SOCKET_TYPE.ANY, socketAnyIcon],
     [Core.Node_Enums.SOCKET_TYPE.NUMBER, socketNumberIcon],

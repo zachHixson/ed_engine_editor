@@ -57,7 +57,7 @@ function tabClick(category: string): void {
 <template>
     <div class="node-library">
         <div v-if="showPanel" class="library-panel">
-            <div class="library-heading">{{ selectedCategory }}</div>
+            <div class="library-heading">{{ t('logic_editor.' + selectedCategory) }}</div>
             <div v-if="selectedCategory == 'search'" class="search-wrapper">
                 <input class="search-box" type="text" style="width: 100%" :placeholder="t('generic.search')" v-model="searchValue"/>
             </div>
@@ -70,13 +70,15 @@ function tabClick(category: string): void {
                     <div class="node-icon">
                         <Svg :src="categoryStyleMap.get(node.category)?.icon ?? ''"></Svg>
                     </div>
-                    <div class="node-text">{{ node.id }}</div>
+                    <div class="node-text">{{ t('node.' + node.id) }}</div>
                 </div>
             </div>
         </div>
         <div class="tab-list">
             <div class="tab"
-                :style="selectedCategory == 'search' ? 'width: 35px':''"
+                :style="`
+                    ${selectedCategory == 'search' ? 'width: 35px;':''}
+                    border-color: #00000000;`"
                 @click="tabClick('search')"
                 v-tooltip="t('logic_editor.search')">
                 <div v-if="selectedCategory == 'search'" class="line-erase"></div>

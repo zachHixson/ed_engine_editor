@@ -10,7 +10,7 @@ import SearchDropdown from '@/components/common/SearchDropdown.vue';
 import { computed, nextTick, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
+const { t, te } = useI18n();
 
 const props = defineProps<{
     widget: any,
@@ -30,14 +30,17 @@ const enumOptions = computed(()=>{
     return props.widget.options.items;
 });
 const selectWidth = computed(()=>{
-    if (enumOptions.value.length <= 0) return '20px';
+    if (enumOptions.value.length <= 0) return '40px';
     
     textSizeCtx.font = '15px Arial';
 
-    let largest = textSizeCtx.measureText(t('node.' + enumOptions.value[0].value)).width;
+    const nodeKey = 'node.' + enumOptions.value[0].value;
+    const nodeText = te(nodeKey) ? t(nodeKey) : '';
+    let largest = textSizeCtx.measureText(nodeText).width;
 
     enumOptions.value.forEach(({ value }: {value: string}) => {
-        const curText = t('node.' + value);
+        const key = 'node.' + value
+        const curText = te(key) ? t(key) : '';
         const curLength = textSizeCtx.measureText(curText).width;
 
         if (curLength > largest){
@@ -45,7 +48,7 @@ const selectWidth = computed(()=>{
         }
     });
 
-    largest = Math.min((largest * 2), 160);
+    largest = Math.max(Math.min((largest * 2), 160), 50);
 
     return `${largest + 15}px`;
 });

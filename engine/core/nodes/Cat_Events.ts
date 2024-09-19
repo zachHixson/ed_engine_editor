@@ -75,8 +75,8 @@ export default catEvents;
         outTriggers: ['button_down', 'button_up', 'button_click'],
         outputs: [
             {id: 'which_button', type: SOCKET_TYPE.NUMBER, execute: which},
-            {id: 'x', type: SOCKET_TYPE.NUMBER, execute: x},
-            {id: 'y', type: SOCKET_TYPE.NUMBER, execute: y},
+            {id: 'x_pos', type: SOCKET_TYPE.NUMBER, execute: x},
+            {id: 'y_pos', type: SOCKET_TYPE.NUMBER, execute: y},
             {id: 'object', type: SOCKET_TYPE.INSTANCE, execute: object},
         ],
         init(this: GenericNode){
@@ -131,8 +131,8 @@ export default catEvents;
         category: 'events',
         outTriggers: ['_o'],
         outputs: [
-            {id: 'e_mouse_move_out_x', type: SOCKET_TYPE.NUMBER, execute: x},
-            {id: 'e_mouse_move_out_y', type: SOCKET_TYPE.NUMBER, execute: y},
+            {id: 'x_pos', type: SOCKET_TYPE.NUMBER, execute: x},
+            {id: 'y_pos', type: SOCKET_TYPE.NUMBER, execute: y},
         ],
     };
     catEvents.push(mouseMove);
