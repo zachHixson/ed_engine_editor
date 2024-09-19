@@ -113,6 +113,12 @@ export default catMovement;
             }
         }
 
+        //Check for backtrack through exit
+        if (checkExitBacktrack.call(this, eventContext, nearestDest.clone().subtractScalar(halfDim))){
+            this.triggerOutput('_o', eventContext);
+            return;
+        }
+
         //jump if no ray collisions
         if (!nearestCastResult){
             this.engine.setInstancePosition(instance, nearestDest.subtractScalar(halfDim));
