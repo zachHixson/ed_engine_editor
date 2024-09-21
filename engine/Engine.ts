@@ -25,6 +25,7 @@ import {
     MOUSE_EVENT,
     iEngineVariable,
     iNodeExceptionData,
+    Event_Emitter,
 } from '@engine/core/core';
 import iGameData from './iGameData';
 import getTransitions from './transitions/getTransitions';
@@ -108,6 +109,8 @@ export class Engine implements iEngineCallbacks {
 
     enableInput = true;
     enableUpdate = true;
+
+    onStop = new Event_Emitter<()=>void>();
 
     log: (...args: ConsoleLog)=>void = function(src, data){
         console.log(Engine._defaultConsoleFormat(src, data));
@@ -560,6 +563,8 @@ export class Engine implements iEngineCallbacks {
         this._update();
         requestAnimationFrame(this._updateLoop);
         window.IS_ENGINE = false;
+
+        Instance_Exit.bindEngineEvents(this);
     }
 
     stop = (): void =>{
@@ -571,7 +576,7 @@ export class Engine implements iEngineCallbacks {
         this._globalVariables = new Map();
         this._timeStart = -1;
         window.IS_ENGINE = false;
-        Instance_Exit.engine = null;
+        this.onStop.emit();
     }
 
     getRoomData = (roomId: number): Room | undefined => {

@@ -27,6 +27,12 @@ export class Instance_Exit extends Instance_Base {
     static exitInstance: Instance_Object | null;
     static exitCamera: Camera | null;
     static destExit: Instance_Exit | null;
+    static bindEngineEvents(engine: Engine): void {
+        engine.onStop.listen(()=>{
+            this.resetState();
+            this.engine = null;
+        }, {once: true});
+    }
     static resetState(): void {
         Instance_Exit.exitInstance?.clearPrevExit();
         Instance_Exit.exitInstance = null;
