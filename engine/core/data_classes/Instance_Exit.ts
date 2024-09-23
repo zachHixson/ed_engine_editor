@@ -93,7 +93,9 @@ export class Instance_Exit extends Instance_Base {
         }
 
         if (Instance_Exit.exitCamera){
+            const oldPos = engine.room.camera.pos.clone();
             engine.room.camera.copyCameraSettings(Instance_Exit.exitCamera);
+            engine.room.camera.pos.copy(oldPos);
         }
     }
 

@@ -214,9 +214,9 @@ export class Engine implements iEngineCallbacks {
             try{
                 this._updateInstances();
                 this._updateAnimations();
-                this._updateCamera();
                 this._mapInstanceOverlaps();
                 this._dispatchCollisionEvents();
+                this._updateCamera();
             }
             catch(e){
                 console.error(e);

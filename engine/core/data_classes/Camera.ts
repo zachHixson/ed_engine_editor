@@ -180,20 +180,19 @@ export class Camera{
 
         switch(this.moveType){
             case MOVE_TYPES.LOCKED:
-                this.velocity.x = 0;
-                this.velocity.y = 0;
+                this.velocity.set(0, 0);
                 break;
 
             case MOVE_TYPES.FOLLOW:
                 this._moveFollow(deltaTime, room);
-                updateMatrixCallback();
                 break;
             
             case MOVE_TYPES.SCROLL:
                 this._moveScroll(deltaTime);
-                updateMatrixCallback();
                 break;
         }
+
+        updateMatrixCallback();
     }
 
     copyCameraSettings(camera: Camera): void {
