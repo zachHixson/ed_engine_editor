@@ -91,6 +91,7 @@ export default catMovement;
                 const selfCheck = i.id != instance.id;
                 return selfCheck && i.isSolid;
             });
+        const raycastBodies: {body: Instance_Base, checkDist: number}[] = [];
         
         let nearestDist = instance.pos.distanceNoSqrt(desiredDest);
         let nearestDest = desiredDest.addScalar(halfDim);
@@ -106,11 +107,30 @@ export default catMovement;
 
             const checkDist = instCenter.distanceNoSqrt(raycastResult.point);
 
+            //keep track of which objects might possibly be overlapping
+            if (checkDist <= nearestDist){
+                raycastBodies.push({
+                    body: curBody,
+                    checkDist,
+                });
+            }
+
             if (checkDist < nearestDist){
                 nearestDist = checkDist;
                 nearestDest = raycastResult.point;
                 nearestCastResult = raycastResult;
             }
+        }
+
+        //register collisions
+        for (let i = 0; i < raycastBodies.length; i++){
+            const {body, checkDist} = raycastBodies[i];
+
+            if (checkDist > nearestDist) continue;
+
+            const normal = velocity.clone().normalize();
+            this.engine.registerCollision(instance, body, normal);
+            this.engine.registerCollision(body, instance, normal.clone().scale(-1));
         }
 
         //Check for backtrack through exit
