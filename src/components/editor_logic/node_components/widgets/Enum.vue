@@ -38,9 +38,9 @@ const selectWidth = computed(()=>{
     const nodeText = te(nodeKey) ? t(nodeKey) : '';
     let largest = textSizeCtx.measureText(nodeText).width;
 
-    enumOptions.value.forEach(({ value }: {value: string}) => {
+    enumOptions.value.forEach(({ name, value }: {value: string}) => {
         const key = 'node.' + value
-        const curText = te(key) ? t(key) : '';
+        const curText = te(key) ? t(key) : name;
         const curLength = textSizeCtx.measureText(curText).width;
 
         if (curLength > largest){
@@ -48,9 +48,9 @@ const selectWidth = computed(()=>{
         }
     });
 
-    largest = Math.max(Math.min((largest * 2), 160), 50);
+    largest = Math.min(Math.max(largest, 50), 160);
 
-    return `${largest + 15}px`;
+    return `${largest + 20}px`;
 });
 const enumValue = computed(()=>props.widgetData ?? enumOptions.value[0]);
 const showSearch = computed(()=>props.widget.options.showSearch);
