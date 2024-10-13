@@ -15,14 +15,14 @@ export function useInstanceProps(args: iActionArguments){
         RoomMainEventBus.onInstanceChanged.emit(curInstance);
     
         if (makeCommit){
-            let data = {newState, oldState, instRef: curInstance} satisfies InstanceChangeProps;
+            const data = {newState, oldState, instRef: curInstance} satisfies InstanceChangeProps;
             args.undoStore.commit({action: Core.ROOM_ACTION.INSTANCE_CHANGE, data});
         }
     }
     
     function actionInstanceGroupChange(
         {add, groupName, newName, remove, oldIdx, instRef}: InstanceGroupChangeProps, makeCommit = true
-    ): void{
+    ): void {
         let groups;
     
         if (instRef){

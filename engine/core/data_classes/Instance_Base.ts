@@ -16,6 +16,7 @@ export interface iInstanceBaseSaveData {
     name: string;
     type: string;
     pos: [number, number];
+    zOvr: number | '',
     groups: string[];
     strtFrm: number | '';
     fps: number | '';
@@ -37,6 +38,7 @@ export abstract class Instance_Base{
 
     protected _sprite: Sprite | null = null;
     protected _onGround: boolean = false;
+    protected _zDepthOverride: number | null = null;
 
     id: number;
     name: string;
@@ -46,7 +48,6 @@ export abstract class Instance_Base{
     moveVector: Vector = new Vector(0, 0);
     groups: string[] = [];
     depthOffset: number = 0;
-    depthOverride: number | null = null;
     needsRenderUpdate = false;
     startFrameOverride: number | null = null;
     fpsOverride: number | null = null;
@@ -83,13 +84,17 @@ export abstract class Instance_Base{
         this.animPlayingOverride = playing;
         this.onAnimationChange(this.animPlayingOverride ? InstanceAnimEvent.START : InstanceAnimEvent.STOP);
     };
-    get userDepth(){return 0};
-    get zDepth(){
-        return (this.depthOverride ?? 0) + this.depthOffset;
-    };
-    set zDepth(val){};
-    get zDepthOverride(){return 0};
-    set zDepthOverride(val: number | null){};
+    get userDepth(){return this._zDepthOverride ?? 0};
+    get zDepth(){return (this.userDepth / 100) + this.depthOffset};
+    get zDepthOverride(){return this._zDepthOverride}
+    set zDepthOverride(newDepth: number | null){
+        if (newDepth == null){
+            this._zDepthOverride = null;
+        }
+        else{
+            this._zDepthOverride = Math.max(Math.min(newDepth, 99), -99);
+        }
+    }
 
     //Logic Getters
     get isSolid(){return false};
@@ -227,6 +232,7 @@ export abstract class Instance_Base{
         this.id = data.id;
         this.name = data.name;
         this.pos = Vector.fromArray(data.pos);
+        this._zDepthOverride = data.zOvr != '' ? data.zOvr : null;
         this.groups = data.groups;
         this.startFrameOverride = data.strtFrm === '' ? null : data.strtFrm;
         this.fpsOverride = data.fps === '' ? null : data.fps;
@@ -242,6 +248,7 @@ export abstract class Instance_Base{
             name: this.name,
             type: this.TYPE,
             pos: this.pos.toArray(),
+            zOvr: this._zDepthOverride ?? '',
             groups: this.groups,
             strtFrm: this.startFrameOverride ?? '',
             fps: this.fpsOverride ?? '',

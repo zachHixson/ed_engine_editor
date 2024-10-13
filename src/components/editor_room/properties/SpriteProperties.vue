@@ -45,8 +45,8 @@ function setInstProp(propObj: any): void {
         </div>
         <div class="control">
             <label for="custDepth">{{$t('room_editor.custom_depth')}}:</label>
-            <input id="custDepth" type="number" :value="selectedSprite.zDepth" v-tooltip="$t('room_editor.tt_cust_depth')"
-                @change="setInstProp({zDepth: nanToNull(parseInt(($event.target as any).value))})" v-input-active/>
+            <input id="custDepth" type="number" :value="selectedSprite.zDepthOverride ?? ''" v-tooltip="$t('room_editor.tt_cust_depth')"
+                @change="setInstProp({zDepthOverride: nanToNull(parseInt(($event.target as any).value))})" v-input-active/>
         </div>
         <Collapsible
             heading-text="Animation Settings">

@@ -12,7 +12,6 @@ export class Instance_Sprite extends Instance_Base {
     static DEFAULT_SPRITE_ICON = [new ImageData(Sprite.DIMENSIONS, Sprite.DIMENSIONS)];
 
     private _useIcon = false;
-    private _zDepth = 0;
 
     startFrameOverride: number = 0;
     fpsOverride: number = 6;
@@ -44,11 +43,6 @@ export class Instance_Sprite extends Instance_Base {
     }
     get frameDataId(){return this._useIcon || !this.renderable ? Instance_Sprite.DEFAULT_SPRITE_ICON_ID : this.sprite!.id}
     get frameData(){return this._useIcon || !this.renderable ? Instance_Sprite.DEFAULT_SPRITE_ICON : this.sprite!.frames}
-
-    get zDepth(){return this._zDepth + this.depthOffset}
-    set zDepth(newDepth: number){
-        this._zDepth = Math.max(Math.min(newDepth, 99), -99);
-    }
 
     override clone(): Instance_Sprite {
         const clone = new Instance_Sprite(0, new Vector(), this.sprite);

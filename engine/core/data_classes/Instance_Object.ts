@@ -30,7 +30,6 @@ export class Instance_Object extends Instance_Base{
         exit: Instance_Exit,
         direction: ConstVector,
     } | null = null;
-    private _zDepthOverride: number | null = null;
     private _useIcon = false;
 
     gravityOverride: boolean | null = null;
@@ -65,7 +64,6 @@ export class Instance_Object extends Instance_Base{
     get objRef(){return this._objRef};
     set objRef(obj: Game_Object){this._objRef = obj};
     get userDepth(){return this.zDepthOverride ?? this._objRef.zDepth};
-    get zDepth(){return (this.userDepth / 100) + this.depthOffset};
     get hasEditorFrame(){
         this._useIcon = this.sprite?.frameIsEmpty(this.startFrame) ?? true;
         return !this._useIcon;
@@ -116,16 +114,6 @@ export class Instance_Object extends Instance_Base{
 
     get prevExit(){return this._prevExit}
 
-    get zDepthOverride(){return this._zDepthOverride}
-    set zDepthOverride(newDepth: number | null){
-        if (newDepth == null){
-            this._zDepthOverride = null;
-        }
-        else{
-            this._zDepthOverride = Math.max(Math.min(newDepth, 99), -99);
-        }
-    }
-
     override onCreate(): void {
         super.onCreate();
         this.logic?.dispatchOnCreate(this);
@@ -166,7 +154,6 @@ export class Instance_Object extends Instance_Base{
         return {
             ...baseData,
             objId: this._objRef.id,
-            zOvr: this.zDepthOverride ?? '',
             collOvr: this.collisionOverride,
         };
     }
