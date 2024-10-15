@@ -196,7 +196,10 @@ export default class Node {
             {},
         ];
 
-        this.inputs.forEach(({id, value}) => outObj[4].push([id, value]));
+        this.inputs.forEach(({id, value}) => {
+            const outValue = typeof value == 'boolean' ? +value : value;
+            outObj[4].push([id, outValue]);
+        });
 
         if (this.widget){
             outObj[5] = JSON.parse(JSON.stringify(this.widgetData));

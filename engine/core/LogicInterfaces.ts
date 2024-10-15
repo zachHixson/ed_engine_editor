@@ -148,8 +148,8 @@ export interface iNodeConnection {
 export interface iVarInfo {
     name: string,
     type: SOCKET_TYPE,
-    isGlobal: boolean,
-    isList: boolean,
+    isGlobal: boolean | 1 | 0,
+    isList: boolean | 1 | 0,
 }
 
 export interface iEditorAPI {

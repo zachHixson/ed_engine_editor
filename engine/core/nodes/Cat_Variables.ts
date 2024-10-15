@@ -138,8 +138,8 @@ export default catVariables;
             const valueInput = saveData[4].find((input: iAnyObj) => input[0] == 'initial_value')!;
             const varInfo = Object.assign({}, this.getNodeData<iVarInfo>());
 
-            varInfo.isGlobal = !!varInfo.isGlobal;
-            varInfo.isList = !!varInfo.isList;
+            varInfo.isGlobal = varInfo.isGlobal ? 1 : 0;
+            varInfo.isList = varInfo.isList ? 1 : 0;
             
             saveData[6] = varInfo;
             saveData[4] = [valueInput];
