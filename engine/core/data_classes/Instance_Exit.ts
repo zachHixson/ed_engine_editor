@@ -1,5 +1,5 @@
 import { ConstVector, Vector } from '../Vector';
-import { iCollisionEvent, iInstanceBaseSaveData, Instance_Base } from './Instance_Base';
+import { iCollisionEvent, tInstanceBaseSaveData, Instance_Base } from './Instance_Base';
 import {INSTANCE_TYPE} from '../Enums';
 import { Instance_Object } from './Instance_Object';
 import { Game_Object } from './Game_Object';
@@ -8,15 +8,17 @@ import Engine from '@engine/Engine';
 import { COLLISION_EVENT } from '../nodes/Node_Enums';
 import { TRANSITION } from '@engine/transitions/Transition_Base';
 import { Room } from './Room';
+import type { Label } from './Asset_Base';
 
-export interface iExitSaveData extends iInstanceBaseSaveData {
-    btrack: 0 | 1;
-    end: 0 | 1;
-    dRoom: number | '';
-    dExit: number | '';
-    trans: TRANSITION;
-    dialog: string;
-}
+export type tExitSaveData = [
+    ...tInstanceBaseSaveData,
+    Label<0 | 1, 'Detect Backtrack'>,
+    Label<0 | 1, 'Is Ending'>,
+    Label<number | '', 'Destination Room ID'>,
+    Label<number | '', 'Destination Exit ID'>,
+    Label<TRANSITION, 'Transition Type'>,
+    Label<string, 'Ending Dialog'>,
+]
 
 export class Instance_Exit extends Instance_Base {
     static EXIT_ICON_ID = 'EXIT_ICON';
@@ -144,16 +146,16 @@ export class Instance_Exit extends Instance_Base {
         return clone;
     }
 
-    override toSaveData(): iExitSaveData {
-        return {
+    override toSaveData(): tExitSaveData {
+        return [
             ...this.getBaseSaveData(),
-            btrack: (+this.detectBacktracking) as (0 | 1),
-            end: (+this.isEnding) as 0 | 1,
-            dRoom: this.destinationRoom === null ? '' : this.destinationRoom,
-            dExit: this.destinationExit === null ? '' : this.destinationExit,
-            trans: this.transition,
-            dialog: this.endingDialog,
-        };
+            (+this.detectBacktracking) as (0 | 1),
+            (+this.isEnding) as 0 | 1,
+            this.destinationRoom === null ? '' : this.destinationRoom,
+            this.destinationExit === null ? '' : this.destinationExit,
+            this.transition,
+            this.endingDialog,
+        ];
     }
 
     override needsPurge(roomMap: Map<number, Room>): boolean {
@@ -171,11 +173,11 @@ export class Instance_Exit extends Instance_Base {
         return false;
     }
 
-    static fromSaveData(data: iExitSaveData): Instance_Exit {
+    static fromSaveData(data: tExitSaveData): Instance_Exit {
         return new Instance_Exit(data.id, Vector.fromArray(data.pos))._loadSaveData(data);
     }
 
-    private _loadSaveData(data: iExitSaveData): Instance_Exit {
+    private _loadSaveData(data: tExitSaveData): Instance_Exit {
         this.loadBaseSaveData(data);
         this.detectBacktracking = !!data.btrack;
         this.isEnding = !!data.end;

@@ -1,30 +1,32 @@
-import { Asset_Base, iAssetSaveData } from './Asset_Base';
-import { NavState, iNavSaveData } from '../NavState';
-import { Camera, iCameraSaveData } from './Camera';
+import { Asset_Base, tAssetSaveData } from './Asset_Base';
+import { NavState, tNavSaveData } from '../NavState';
+import { Camera, tCameraSaveData } from './Camera';
 import { Spacial_Collection } from '../Spacial_Collection';
 import { CATEGORY_ID, INSTANCE_TYPE } from '../Enums';
 import { Color } from '../Draw';
-import { Instance_Exit, iExitSaveData } from './Instance_Exit';
+import { Instance_Exit, tExitSaveData } from './Instance_Exit';
 import { Sprite } from './Sprite';
 import { Game_Object } from './Game_Object';
-import { iObjectInstanceSaveData, Instance_Object } from './Instance_Object';
+import { tObjectInstanceSaveData, Instance_Object } from './Instance_Object';
 import { ConstVector, Vector } from '../Vector';
-import { Instance_Base, iInstanceBaseSaveData } from './Instance_Base';
+import { Instance_Base, tInstanceBaseSaveData } from './Instance_Base';
 import { Linked_List } from '../Linked_List';
-import { Instance_Sprite, iInstanceSpriteSaveData } from './Instance_Sprite';
-import { Instance_Logic, iInstanceLogicSaveData } from './Instance_Logic';
+import { Instance_Sprite, tInstanceSpriteSaveData } from './Instance_Sprite';
+import { Instance_Logic, tInstanceLogicSaveData } from './Instance_Logic';
 import { iEngineLogic } from '../LogicInterfaces';
 import { iEditorLogic } from '../LogicInterfaces';
+import type { Label } from './Asset_Base';
 
-export interface iRoomSaveData extends iAssetSaveData {
-    cam: iCameraSaveData;
-    inst: iInstanceBaseSaveData[],
-    bg: string,
-    pers: 0 | 1,
-    uGrav: 0 | 1,
-    grav: number,
-    nav: iNavSaveData,
-}
+export type tRoomSaveData = [
+    ...tAssetSaveData,
+    Label<tCameraSaveData, 'Camera Data'>,
+    Label<tInstanceBaseSaveData[], 'Instance Data List'>,
+    Label<string, 'BG Color'>,
+    Label<0 | 1, 'Persist Toggle'>,
+    Label<0 | 1, 'Gravity Toggle'>,
+    Label<number, 'Gravity Strength'>,
+    Label<tNavSaveData, 'Nav Data'>,
+]
 
 export class Room extends Asset_Base {
     private static _curInstId: number = 0;
@@ -51,24 +53,24 @@ export class Room extends Asset_Base {
         return clone;
     }
 
-    toSaveData(): iRoomSaveData {
-        return {
+    toSaveData(): tRoomSaveData {
+        return [
             ...this.getBaseAssetData(),
-            cam: this.camera.toSaveData(),
-            inst: this.instances.toArray().map(i => i.toSaveData()),
-            bg: this.bgColor.toHex().replace('#', ''),
-            pers: +this.persist as (0 | 1),
-            uGrav: +this.useGravity as (0 | 1),
-            grav: this.gravity,
-            nav: this.navState.toSaveData(),
-        } satisfies iRoomSaveData;
+            this.camera.toSaveData(),
+            this.instances.toArray().map(i => i.toSaveData()),
+            this.bgColor.toHex().replace('#', ''),
+            +this.persist as (0 | 1),
+            +this.useGravity as (0 | 1),
+            this.gravity,
+            this.navState.toSaveData(),
+        ];
     }
 
-    static fromSaveData(data: iRoomSaveData, assetMap: Map<CATEGORY_ID, Map<number, Asset_Base | iEngineLogic>>): Room {
+    static fromSaveData(data: tRoomSaveData, assetMap: Map<CATEGORY_ID, Map<number, Asset_Base | iEngineLogic>>): Room {
         return new Room()._loadSaveData(data, assetMap);
     }
 
-    private _loadSaveData(data: iRoomSaveData, assetMap: Map<CATEGORY_ID, Map<number, Asset_Base | iEngineLogic>>){
+    private _loadSaveData(data: tRoomSaveData, assetMap: Map<CATEGORY_ID, Map<number, Asset_Base | iEngineLogic>>){
         const instancesSerial = data.inst;
 
         this.loadBaseAssetData(data);
@@ -85,19 +87,19 @@ export class Room extends Asset_Base {
                 switch(curInstance.type){
                     case INSTANCE_TYPE.SPRITE:
                         return Instance_Sprite.fromSaveData(
-                            instancesSerial[i] as iInstanceSpriteSaveData,
+                            instancesSerial[i] as tInstanceSpriteSaveData,
                             assetMap.get(CATEGORY_ID.SPRITE) as Map<number, Sprite>
                         );
                     case INSTANCE_TYPE.OBJECT:
                         return Instance_Object.fromSaveData(
-                            instancesSerial[i] as iObjectInstanceSaveData,
+                            instancesSerial[i] as tObjectInstanceSaveData,
                             assetMap.get(CATEGORY_ID.OBJECT) as Map<number, Game_Object>
                         );
                     case INSTANCE_TYPE.EXIT:
-                        return Instance_Exit.fromSaveData(curInstance as iExitSaveData);
+                        return Instance_Exit.fromSaveData(curInstance as tExitSaveData);
                     case INSTANCE_TYPE.LOGIC:
                         const logicInstance = Instance_Logic.fromSaveData(
-                            curInstance as iInstanceLogicSaveData,
+                            curInstance as tInstanceLogicSaveData,
                             assetMap.get(CATEGORY_ID.OBJECT) as Map<number, Game_Object>
                         );
                         const logicMap = assetMap.get(CATEGORY_ID.LOGIC);

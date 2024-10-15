@@ -6,7 +6,7 @@ import {
     iAssetSaveData,
     iInput,
     iInTrigger,
-    iNavSaveData,
+    tNavSaveData,
     iNodeTemplate,
     iOutput,
     Instance_Object,
@@ -249,7 +249,7 @@ export type iEventContext = {eventKey: number, instance: Instance_Object};
 
 export interface iLogicSaveData extends iAssetSaveData {
     selectedGraphId: number,
-    graphs: Array<{id: number, name: string, nav: iNavSaveData}>,
+    graphs: Array<{id: number, name: string, nav: tNavSaveData}>,
     nodes: iNodeSaveData[],
     connections: iConnectionSaveData[],
 }

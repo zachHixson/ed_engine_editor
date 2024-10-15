@@ -1,11 +1,13 @@
 import { INSTANCE_TYPE } from "../Enums";
 import { Vector } from "../Vector";
-import { Instance_Base, iInstanceBaseSaveData } from "./Instance_Base";
+import { Instance_Base, tInstanceBaseSaveData } from "./Instance_Base";
 import { Sprite } from "./Sprite";
+import type { Label } from "./Asset_Base";
 
-export interface iInstanceSpriteSaveData extends iInstanceBaseSaveData {
-    sId: number;
-}
+export type tInstanceSpriteSaveData = [
+    ...tInstanceBaseSaveData,
+    Label<number, 'Sprite ID'>
+]
 
 export class Instance_Sprite extends Instance_Base {
     static DEFAULT_SPRITE_ICON_ID = 'SPRITE_ICON';
@@ -52,11 +54,11 @@ export class Instance_Sprite extends Instance_Base {
         return clone;
     }
 
-    override toSaveData(): iInstanceSpriteSaveData {
-        return {
+    override toSaveData(): tInstanceSpriteSaveData {
+        return [
             ...this.getBaseSaveData(),
-            sId: this.sprite?.id ?? -1,
-        };
+            this.sprite?.id ?? -1,
+        ];
     }
 
     override needsPurge(spriteMap: Map<number, any>): boolean {
@@ -64,7 +66,7 @@ export class Instance_Sprite extends Instance_Base {
         return !spriteMap.get(this.sprite.id);
     }
 
-    static fromSaveData(data: iInstanceSpriteSaveData, spriteMap: Map<number, Sprite>): Instance_Sprite {
+    static fromSaveData(data: tInstanceSpriteSaveData, spriteMap: Map<number, Sprite>): Instance_Sprite {
         const spriteAsset = data.sId >= 0 ? spriteMap.get(data.sId)! : null;
         const newSprite = new Instance_Sprite(data.id, Vector.fromArray(data.pos), spriteAsset);
         newSprite.loadBaseSaveData(data);

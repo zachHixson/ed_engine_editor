@@ -1,18 +1,19 @@
-import { Vector } from "../Vector";
-import { Sprite } from "./Sprite";
-import { Room } from "./Room";
-import { Instance_Base } from "./Instance_Base";
+import { Vector } from '../Vector';
+import { Sprite } from './Sprite';
+import { Room } from './Room';
+import { Label } from './Asset_Base';
+import { Instance_Base } from './Instance_Base';
 
-export interface iCameraSaveData {
-    size: number,
-    pos: { x: number, y: number },
-    vel: { x: number, y: number },
-    move: MOVE_TYPES,
-    sDir: SCROLL_DIRS;
-    sSpeed: number;
-    fObjId: number | null;
-    fType: FOLLOW_TYPES;
-}
+export type tCameraSaveData = [
+    Label<number, 'Size'>,
+    Label<[number, number], 'Position'>,
+    Label<[number, number], 'Velocity'>,
+    Label<MOVE_TYPES, 'Move Type'>,
+    Label<SCROLL_DIRS, 'Scroll Direction'>,
+    Label<number, 'Scroll Speed'>,
+    Label<number | '', 'Follow Object Id'>,
+    Label<FOLLOW_TYPES, 'Follow Type'>,
+]
 
 enum MOVE_TYPES {
     LOCKED = 'L',
@@ -61,24 +62,24 @@ export class Camera{
         return clone;
     }
 
-    toSaveData(): iCameraSaveData {
-        return {
-            size: this._size,
-            pos: this.pos.toObject(),
-            vel: this.velocity.toObject(),
-            move: this.moveType,
-            sDir: this.scrollDir,
-            sSpeed: this.scrollSpeed,
-            fObjId: this.followObjId,
-            fType: this.followType,
-        } satisfies iCameraSaveData;
+    toSaveData(): tCameraSaveData {
+        return [
+            this._size,
+            this.pos.toArray(),
+            this.velocity.toArray(),
+            this.moveType,
+            this.scrollDir,
+            this.scrollSpeed,
+            this.followObjId ?? '',
+            this.followType,
+        ];
     }
 
-    static fromSaveData(data: iCameraSaveData): Camera {
+    static fromSaveData(data: tCameraSaveData): Camera {
         return new Camera()._loadSaveData(data);
     }
 
-    private _loadSaveData(data: iCameraSaveData): Camera {
+    private _loadSaveData(data: tCameraSaveData): Camera {
         this._size = data.size;
         this.pos = Vector.fromObject(data.pos);
         this.velocity = Vector.fromObject(data.vel);

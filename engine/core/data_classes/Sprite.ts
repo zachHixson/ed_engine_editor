@@ -1,12 +1,14 @@
 import {CATEGORY_ID} from '../Enums';
 import {createCanvas, hexToRGBA, RGBAToHex} from '../Draw';
-import { Asset_Base, iAssetSaveData } from './Asset_Base';
-import { NavState, iNavSaveData } from '../NavState';
+import { Asset_Base, tAssetSaveData } from './Asset_Base';
+import { NavState, tNavSaveData } from '../NavState';
+import type { Label } from './Asset_Base';
 
-export interface iSpriteSaveData extends iAssetSaveData {
-    frames: string[],
-    nav: iNavSaveData,
-}
+export type tSpriteSaveData = [
+    ...tAssetSaveData,
+    Label<string[], 'Frame List'>,
+    Label<tNavSaveData, 'Nav Save Data'>,
+]
 
 export class Sprite extends Asset_Base {
     static get DIMENSIONS(){return 16}
@@ -27,19 +29,19 @@ export class Sprite extends Asset_Base {
         return this.frameIsEmpty(0) ? null : this.drawToCanvas(0);
     }
     
-    toSaveData(): iSpriteSaveData {
-        return {
+    toSaveData(): tSpriteSaveData {
+        return [
             ...this.getBaseAssetData(),
-            frames: this.compressFrames(this.getFramesCopy()).map(f => f.join(',')),
-            nav: this.navState.toSaveData(),
-        } satisfies iSpriteSaveData;
+            this.compressFrames(this.getFramesCopy()).map(f => f.join(',')),
+            this.navState.toSaveData(),
+         ];
     }
 
-    static fromSaveData(data: iSpriteSaveData): Sprite {
+    static fromSaveData(data: tSpriteSaveData): Sprite {
         return new Sprite()._loadSaveData(data);
     }
 
-    private _loadSaveData(data: iSpriteSaveData): Sprite {
+    private _loadSaveData(data: tSpriteSaveData): Sprite {
         const splitFrames = data.frames.map(f => f.split(','));
         const hexFrames = this.decompressFrames(splitFrames);
         const imgDataFrames = new Array(hexFrames.length);

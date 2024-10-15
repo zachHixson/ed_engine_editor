@@ -1,8 +1,9 @@
-import { INSTANCE_TYPE } from "../Enums";
-import { ConstVector, Vector } from "../Vector";
-import { Draw } from "../core";
-import { Sprite, Util, Node_Enums } from "../core";
+import { INSTANCE_TYPE } from '../Enums';
+import { ConstVector, Vector } from '../Vector';
+import { Draw } from '../core';
+import { Sprite, Util, Node_Enums } from '../core';
 import type Engine from '@engine/Engine';
+import type { Label } from './Asset_Base';
 
 export enum InstanceAnimEvent {
     START = 1,
@@ -11,18 +12,18 @@ export enum InstanceAnimEvent {
     FINISHED,
 }
 
-export interface iInstanceBaseSaveData {
-    id: number;
-    name: string;
-    type: string;
-    pos: [number, number];
-    zOvr: number | '',
-    groups: string[];
-    strtFrm: number | '';
-    fps: number | '';
-    loop: 0 | 1 | 2;
-    play: 0 | 1 | 2;
-}
+export type tInstanceBaseSaveData = [
+    Label<number, 'ID'>,
+    Label<string, 'Name'>,
+    Label<string, 'Instance Type'>,
+    Label<[number, number], 'Position'>,
+    Label<number | '', 'Z Depth Override'>,
+    Label<string[], 'Groups'>,
+    Label<number | '', 'Start Frame'>,
+    Label<number | '', 'Playback FPS Override'>,
+    Label<0 | 1 | 2, 'Loop Override'>,
+    Label<0 | 1 | 2, 'Is_Playing override'>,
+]
 
 export interface iCollisionEvent {
     type: Node_Enums.COLLISION_EVENT,
@@ -228,7 +229,7 @@ export abstract class Instance_Base{
         this.pos.copy(newPos);
     }
 
-    loadBaseSaveData(data: iInstanceBaseSaveData): void {
+    loadBaseSaveData(data: tInstanceBaseSaveData): void {
         this.id = data.id;
         this.name = data.name;
         this.pos = Vector.fromArray(data.pos);
@@ -242,19 +243,19 @@ export abstract class Instance_Base{
         this.animFrame = this.startFrame;
     }
 
-    getBaseSaveData(): iInstanceBaseSaveData {
-        return {
-            id: this.id,
-            name: this.name,
-            type: this.TYPE,
-            pos: this.pos.toArray(),
-            zOvr: this._zDepthOverride ?? '',
-            groups: this.groups,
-            strtFrm: this.startFrameOverride ?? '',
-            fps: this.fpsOverride ?? '',
-            loop: this.animLoopOverride === null ? 0 : +this.animLoopOverride + 1 as (1 | 2),
-            play: this.animPlayingOverride === null ? 0 : +this.animPlayingOverride + 1 as (1 | 2),
-        } satisfies iInstanceBaseSaveData;
+    getBaseSaveData(): tInstanceBaseSaveData {
+        return [
+            this.id,
+            this.name,
+            this.TYPE,
+            this.pos.toArray(),
+            this._zDepthOverride ?? '',
+            this.groups,
+            this.startFrameOverride ?? '',
+            this.fpsOverride ?? '',
+            this.animLoopOverride === null ? 0 : +this.animLoopOverride + 1 as (1 | 2),
+            this.animPlayingOverride === null ? 0 : +this.animPlayingOverride + 1 as (1 | 2),
+        ];
     }
 
     drawThumbnail(canvas: HTMLCanvasElement): void {

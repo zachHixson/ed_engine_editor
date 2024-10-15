@@ -10,7 +10,7 @@ const { t } = i18n.global;
 interface iGraphSaveData {
     id: number;
     name: string;
-    nav: Core.iNavSaveData;
+    nav: Core.tNavSaveData;
 }
 
 export default class Logic extends Core.Asset_Base implements Core.iEditorLogic {

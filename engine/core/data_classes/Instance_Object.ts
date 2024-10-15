@@ -3,14 +3,18 @@ import { ConstVector, Vector } from '../Vector';
 import { Sprite } from './Sprite';
 import { Instance_Exit } from './Instance_Exit';
 import { Game_Object } from './Game_Object';
-import { InstanceAnimEvent, iCollisionEvent, iInstanceBaseSaveData, Instance_Base } from './Instance_Base';
+import { InstanceAnimEvent, iCollisionEvent, tInstanceBaseSaveData, Instance_Base } from './Instance_Base';
 import { iEngineVariable } from '../LogicInterfaces';
+import type { Label } from './Asset_Base';
 
-export interface iObjectInstanceSaveData extends iInstanceBaseSaveData {
-    objId: number;
-    zOvr: number | '';
-    collOvr: COLLISION_OVERRIDE;
-}
+export type tObjectInstanceSaveData = [
+    ...tInstanceBaseSaveData,
+    Label<number, 'Source Object ID'>,
+    Label<number | '', 'Z Depth Override'>,
+    Label<COLLISION_OVERRIDE, 'Collision Override'>,
+
+    ...any[], //Hack to allow Instance_Logic to extend this type
+]
 
 enum COLLISION_OVERRIDE {
     KEEP = 'K',
@@ -148,28 +152,27 @@ export class Instance_Object extends Instance_Base{
         return clone;
     }
 
-    override toSaveData(): iObjectInstanceSaveData {
-        const baseData = this.getBaseSaveData();
-
-        return {
-            ...baseData,
-            objId: this._objRef.id,
-            collOvr: this.collisionOverride,
-        };
+    override toSaveData(): tObjectInstanceSaveData {
+        return [
+            ...this.getBaseSaveData(),
+            this._objRef.id,
+            this._zDepthOverride ?? '',
+            this.collisionOverride,
+        ];
     }
 
     override needsPurge(objectMap: Map<number, any>): boolean {
         return !objectMap.get(this._objRef.id);
     }
 
-    static fromSaveData(data: iObjectInstanceSaveData, objMap: Map<number, Game_Object>): Instance_Object {
+    static fromSaveData(data: tObjectInstanceSaveData, objMap: Map<number, Game_Object>): Instance_Object {
         const newObj = new Instance_Object(data.id, Vector.fromArray(data.pos), objMap.get(data.objId)!);
         newObj._loadSaveData(data);
 
         return newObj;
     }
 
-    private _loadSaveData(data: iObjectInstanceSaveData): void {
+    private _loadSaveData(data: tObjectInstanceSaveData): void {
         this.loadBaseSaveData(data);
         this.zDepthOverride = data.zOvr == '' ? null : data.zOvr;
         this.collisionOverride = data.collOvr;

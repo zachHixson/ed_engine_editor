@@ -9,7 +9,7 @@ export interface iNavState {
     matrix: Mat3;
 }
 
-export type iNavSaveData = [number, number, number];
+export type tNavSaveData = [number, number, number];
 
 export class NavState implements iNavState {
     private static _defaultMatrix = [1, 0, 0, 0, 1, 0, 0, 0, 1];
@@ -78,7 +78,7 @@ export class NavState implements iNavState {
         ];
     }
 
-    static fromSaveData(navData: iNavSaveData): NavState {
+    static fromSaveData(navData: tNavSaveData): NavState {
         const newNavState = new NavState();
         newNavState.setOffset(new Vector(navData[0], navData[1]));
         newNavState.setZoom(navData[2]);

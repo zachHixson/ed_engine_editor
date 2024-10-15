@@ -1,24 +1,25 @@
-import { Asset_Base, iAssetSaveData } from './Asset_Base';
+import { Asset_Base, tAssetSaveData, Label } from './Asset_Base';
 import {CATEGORY_ID} from '../Enums';
 import { Sprite } from './Sprite';
 import { iEngineLogic } from '../LogicInterfaces';
 
-export interface iGameObjectSaveData extends iAssetSaveData {
-    strtFrm: number
-    sprId: number | '';
-    fps: number;
-    loop: 0 | 1;
-    play: 0 | 1;
-    zDepth: number;
-    solid: 0 | 1;
-    grav: 0 | 1;
-    trigEx: 0 | 1;
-    exBeh: EXIT_TYPES;
-    kpCam: 0 | 1;
-    custLog: 0 | 1;
-    lScrId: number | '';
-    groups: string[];
-}
+export type tGameObjectSaveData = [
+    ...tAssetSaveData,
+    Label<number, 'Start Frame'>,
+    Label<number | '', 'Sprite ID'>,
+    Label<number, 'Anim FPS'>,
+    Label<0 | 1, 'Loop Anim'>,
+    Label<0 | 1, 'Play Anim'>,
+    Label<number, 'Object zDepth'>,
+    Label<0 | 1, 'Is Solid'>,
+    Label<0 | 1, 'Use Gravity'>,
+    Label<0 | 1, 'Trigger Exits'>,
+    Label<EXIT_TYPES, 'Exit Behavior'>,
+    Label<0 | 1, 'Keep Camera Settings'>,
+    Label<0 | 1, 'Custom Logic'>,
+    Label<number | '', 'Logic Script ID'>,
+    Label<string[], 'Groups'>,
+]
 
 enum EXIT_TYPES {
     TO_DESTINATION = 'TD',
@@ -67,31 +68,31 @@ export class Game_Object extends Asset_Base {
         return clone;
     }
 
-    toSaveData(): iGameObjectSaveData {
-        return {
+    toSaveData(): tGameObjectSaveData {
+        return [
             ...this.getBaseAssetData(),
-            strtFrm: this._startFrame,
-            sprId: this.sprite?.id ?? '',
-            fps: this.fps,
-            loop: +this.animLoop as (0 | 1),
-            play: +this.animPlaying as (0 | 1),
-            zDepth: this.zDepth,
-            solid: +this.isSolid as (0 | 1),
-            grav: +this.applyGravity as (0 | 1),
-            trigEx: +this.triggerExits as (0 | 1),
-            exBeh: this.exitBehavior,
-            kpCam: +this.keepCameraSettings as (0 | 1),
-            custLog: +this.customLogic as (0 | 1),
-            lScrId: this.logicScriptId ?? '',
-            groups: this.groups,
-        };
+            this._startFrame,
+            this.sprite?.id ?? '',
+            this.fps,
+            +this.animLoop as (0 | 1),
+            +this.animPlaying as (0 | 1),
+            this.zDepth,
+            +this.isSolid as (0 | 1),
+            +this.applyGravity as (0 | 1),
+            +this.triggerExits as (0 | 1),
+            this.exitBehavior,
+            +this.keepCameraSettings as (0 | 1),
+            +this.customLogic as (0 | 1),
+            this.logicScriptId ?? '',
+            this.groups,
+        ];
     }
 
-    static fromSaveData(data: iGameObjectSaveData, spriteMap: Map<number, Sprite>): Game_Object {
+    static fromSaveData(data: tGameObjectSaveData, spriteMap: Map<number, Sprite>): Game_Object {
         return new Game_Object()._loadSaveData(data, spriteMap);
     }
 
-    private _loadSaveData(data: iGameObjectSaveData, spriteMap: Map<number, Sprite>, logicMap?: Map<number, iEngineLogic>): Game_Object {
+    private _loadSaveData(data: tGameObjectSaveData, spriteMap: Map<number, Sprite>, logicMap?: Map<number, iEngineLogic>): Game_Object {
         this.loadBaseAssetData(data);
         this._startFrame = data.strtFrm;
         this.sprite = data.sprId ? spriteMap.get(data.sprId)! : null;
