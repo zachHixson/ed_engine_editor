@@ -61,7 +61,7 @@ export class Instance_Logic extends Instance_Object {
         return [
             ...super.toSaveData(),
             this.logicId,
-        ] as tInstanceLogicSaveData;
+        ];
     }
 
     override needsPurge(logicMap: Map<number, any>): boolean {

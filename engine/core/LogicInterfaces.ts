@@ -3,7 +3,7 @@ import { SOCKET_TYPE } from "./nodes/Node_Enums";
 import { Vector } from "./Vector";
 import Engine from "@engine/Engine";
 import {
-    iAssetSaveData,
+    tAssetSaveData,
     iInput,
     iInTrigger,
     tNavSaveData,
@@ -12,7 +12,8 @@ import {
     Instance_Object,
     CATEGORY_ID,
     Event_Emitter,
-    Node_Enums
+    Node_Enums,
+    Label,
 } from "./core";
 
 //types needed for node editor API, which is the only place the engine code has to know about editor types
@@ -39,9 +40,9 @@ export interface iNodeLifecycleEvents {
     registerActions?: (editorAPI: iEditorAPI)=>void; //Fired once per template each time the node editor is opened
     init?: ()=>void; // Fired on constructor
     beforeSave?: ()=>void;
-    afterSave?: (saveData: iNodeSaveData)=>void;
-    beforeLoad?: (saveData: iNodeSaveData)=>void;
-    afterLoad?: (saveData: iNodeSaveData)=>void;
+    afterSave?: (saveData: tNodeSaveData)=>void;
+    beforeLoad?: (saveData: tNodeSaveData)=>void;
+    afterLoad?: (saveData: tNodeSaveData)=>void;
     logicLoaded?: (logic: iEditorLogic | iEngineLogic)=>void;
     afterGameDataLoaded?: ()=>void;
     onCreate?: // Fired when instance is spawned, or when editor node is created
@@ -247,31 +248,39 @@ export interface iEngineNode extends iNode_Base {
 
 export type iEventContext = {eventKey: number, instance: Instance_Object};
 
-export interface iLogicSaveData extends iAssetSaveData {
-    selectedGraphId: number,
-    graphs: Array<{id: number, name: string, nav: tNavSaveData}>,
-    nodes: iNodeSaveData[],
-    connections: iConnectionSaveData[],
-}
+export type tLogicSaveData = [
+    ...tAssetSaveData,
+    Label<number, 'Selected Graph ID'>,
+    Label<Array<[
+        Label<number, 'ID'>,
+        Label<string, 'Name'>,
+        Label<tNavSaveData, 'Nav Save Data'>,
+    ]>, 'Graph List'>,
+    Label<tNodeSaveData[], 'Node Data List'>,
+    Label<tConnectionSaveData[], 'Connection Data List'>,
+]
 
-export interface iNodeSaveData {
-    tId: string, //templateId
-    nId: number, //nodeId
-    gId: number, //groupId
-    pos: { x: number, y: number },
-    inp: { id: string, value: any }[], //inputs
-    widg: any, //widgetData
-    d?: any, //extra save data appended by node
-}
+export type tNodeSaveData = [
+    Label<string, 'Template ID'>,
+    Label<number, 'Node ID'>,
+    Label<number, 'Graph ID'>,
+    Label<[number, number], 'Position'>,
+    Label<[
+        Label<string, 'ID'>,
+        Label<any, 'Value'>,
+    ][], 'Inputs'>,
+    Label<any, 'Widget Data'>,
+    Label<any, 'Extra save data appended by node'>?,
+]
 
-export interface iConnectionSaveData {
-    id: number,
-    gId: number, //group ID
-    sSocId: string, //start socket ID
-    eSocId: string, //end socket ID
-    sNodeId: number, //start node ID
-    eNodeId: number, //end node ID
-}
+export type tConnectionSaveData = [
+    Label<number, 'ID'>,
+    Label<number, 'Graph ID'>,
+    Label<string, 'Start Socket ID'>,
+    Label<string, 'End Socket ID'>,
+    Label<number, 'Start Node ID'>,
+    Label<number, 'End Node ID'>,
+]
 
 export interface iNodeExceptionData {
     errorId: symbol;

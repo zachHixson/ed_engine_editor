@@ -115,15 +115,15 @@ export default class Node {
         this.template.beforeSave?.call(this);
     }
 
-    afterSave(saveData: Core.iNodeSaveData): void {
+    afterSave(saveData: Core.tNodeSaveData): void {
         this.template.afterSave?.call(this, saveData);
     }
 
-    beforeLoad(saveData: Core.iNodeSaveData): void {
+    beforeLoad(saveData: Core.tNodeSaveData): void {
         this.template.beforeLoad?.call(this, saveData);
     }
 
-    afterLoad(saveData: Core.iNodeSaveData): void {
+    afterLoad(saveData: Core.tNodeSaveData): void {
         this.template.afterLoad?.call(this, saveData);
     }
 
@@ -184,22 +184,22 @@ export default class Node {
         this.domRef = null;
     }
 
-    toSaveData(): Core.iNodeSaveData {
+    toSaveData(): Core.tNodeSaveData {
         this.beforeSave();
 
-        const outObj: Core.iNodeSaveData = {
-            tId: this.templateId,
-            nId: this.nodeId,
-            gId: this.graphId,
-            pos: this.pos.clone().multiplyScalar(100).divideScalar(100).floor(),
-            inp: [],
-            widg: {},
-        };
+        const outObj: Core.tNodeSaveData = [
+            this.templateId,
+            this.nodeId,
+            this.graphId,
+            this.pos.clone().multiplyScalar(100).divideScalar(100).floor().toArray(),
+            [],
+            {},
+        ];
 
-        this.inputs.forEach(({id, value}) => outObj.inp.push({id, value}));
+        this.inputs.forEach(({id, value}) => outObj[4].push([id, value]));
 
         if (this.widget){
-            outObj.widg = JSON.parse(JSON.stringify(this.widgetData));
+            outObj[5] = JSON.parse(JSON.stringify(this.widgetData));
         }
 
         this.afterSave(outObj);
@@ -207,12 +207,12 @@ export default class Node {
         return outObj;
     }
 
-    static fromSaveData(data: Core.iNodeSaveData, parentScript: Logic, nodeAPI: Node_API): Node {
+    static fromSaveData(data: Core.tNodeSaveData, parentScript: Logic, nodeAPI: Node_API): Node {
         const node = new Node(data.tId, data.nId, Vector.fromObject(data.pos), parentScript, data.gId, nodeAPI);
         return node._loadSaveData(data);
     }
 
-    private _loadSaveData(data: Core.iNodeSaveData): Node {
+    private _loadSaveData(data: Core.tNodeSaveData): Node {
         this.beforeLoad(data);
 
         if (data.widg){

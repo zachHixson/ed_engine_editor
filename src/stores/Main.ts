@@ -48,7 +48,7 @@ export const useMainStore = defineStore({
                 objects: gameDataStore.getObjectSaveData(),
                 rooms: gameDataStore.getRoomSaveData(),
                 logic: gameDataStore.getLogicSaveData(),
-            } satisfies Core.iSerializedGameData;
+            } satisfies Core.tSerializedGameData;
 
             return JSON.stringify(saveObj);
         },
@@ -79,7 +79,7 @@ export const useMainStore = defineStore({
         loadSaveData(projString: string){
             const assetBrowserStore = useAssetBrowserStore();
             const gameDataStore = useGameDataStore();
-            let loadObj: Core.iSerializedGameData;
+            let loadObj: Core.tSerializedGameData;
             
             try {
                 loadObj = JSON.parse(projString);

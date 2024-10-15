@@ -7,11 +7,11 @@ import type Node_API from '../Node_API';
 const { Vector } = Core;
 const { t } = i18n.global;
 
-interface iGraphSaveData {
-    id: number;
-    name: string;
-    nav: Core.tNavSaveData;
-}
+type tGraphSaveData = [
+    Core.Label<number, 'ID'>,
+    Core.Label<string, 'Name'>,
+    Core.Label<Core.tNavSaveData, 'Nav Save Data'>,
+]
 
 export default class Logic extends Core.Asset_Base implements Core.iEditorLogic {
     private _nextGraphId: number = 0;
@@ -49,21 +49,21 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
         this.graphs[this.selectedGraphId].navState.copy(newState);
     }
 
-    toSaveData(): Core.iLogicSaveData {
-        return {
+    toSaveData(): Core.tLogicSaveData {
+        return [
             ...this.getBaseAssetData(),
-            selectedGraphId: this.selectedGraphId,
-            graphs: this.graphs.map(g => g.toSaveData()),
-            nodes: this.nodes.map(n => n.toSaveData()),
-            connections: this.connections.map(c => c.toSaveData()),
-        } satisfies Core.iLogicSaveData;
+            this.selectedGraphId,
+            this.graphs.map(g => g.toSaveData()),
+            this.nodes.map(n => n.toSaveData()),
+            this.connections.map(c => c.toSaveData()),
+        ];
     }
 
-    static fromSaveData(data: Core.iLogicSaveData, nodeAPI: Node_API): Logic {
+    static fromSaveData(data: Core.tLogicSaveData, nodeAPI: Node_API): Logic {
         return new Logic()._loadSaveData(data, nodeAPI);
     }
 
-    private _loadSaveData(data: Core.iLogicSaveData, nodeAPI: Node_API): Logic {
+    private _loadSaveData(data: Core.tLogicSaveData, nodeAPI: Node_API): Logic {
         const nodeMap = new Map<number, Node>();
 
         this.loadBaseAssetData(data);
@@ -212,15 +212,15 @@ class Graph {
         this.navState =  new Core.NavState();
     }
 
-    toSaveData(): iGraphSaveData {
-        return {
-            id: this.id,
-            name: this.name,
-            nav: this.navState.toSaveData(),
-        }
+    toSaveData(): tGraphSaveData {
+        return [
+            this.id,
+            this.name,
+            this.navState.toSaveData(),
+        ];
     }
 
-    static fromSaveData(data: iGraphSaveData): Graph {
+    static fromSaveData(data: tGraphSaveData): Graph {
         const newGraph = new Graph(data.id);
         newGraph.name = data.name;
         newGraph.navState = Core.NavState.fromSaveData(data.nav);

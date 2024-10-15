@@ -5,8 +5,7 @@ import {
     iNodeTemplate,
     convertSocketType,
     NodeMap,
-    iNodeSaveData,
-    iEngineNodeMethod,
+    tNodeSaveData,
     iEventContext,
     Node_Enums,
 } from "@engine/core/core";
@@ -32,7 +31,7 @@ export default class Node implements iEngineNode {
     outputs: iEngineNode["outputs"] = new Map();
     execute: ((eventContext: iEventContext, data: any)=>void) | null = null;
 
-    constructor(nodeData: iNodeSaveData, logic: Logic, engine: Engine){
+    constructor(nodeData: tNodeSaveData, logic: Logic, engine: Engine){
         const template = NodeMap.get(nodeData.tId)!;
 
         this.engine = engine;

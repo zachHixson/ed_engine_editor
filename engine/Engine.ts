@@ -9,7 +9,7 @@ import {
     Sprite,
     Game_Object,
     Instance_Base,
-    iSerializedGameData,
+    tSerializedGameData,
     iAnyObj,
     Vector,
     ConstVector,
@@ -350,10 +350,10 @@ export class Engine implements iEngineCallbacks {
     }
 
     private _parseGameData = (gameData: string): iGameData => {
-        type serialSprite = iSerializedGameData["sprites"][number];
-        type serialObject = iSerializedGameData["objects"][number];
-        type serialRoom = iSerializedGameData["rooms"][number];
-        type serialLogic = iSerializedGameData["logic"][number];
+        type serialSprite = tSerializedGameData["sprites"][number];
+        type serialObject = tSerializedGameData["objects"][number];
+        type serialRoom = tSerializedGameData["rooms"][number];
+        type serialLogic = tSerializedGameData["logic"][number];
 
         const loadedData = {} as iGameData;
         const spriteMap = new Map<number, Sprite>();

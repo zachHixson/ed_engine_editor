@@ -1,7 +1,7 @@
 import {CATEGORY_ID} from '../Enums';
 import {ID_Generator} from '../ID_Generator';
 
-export type Label<T, N> = Partial<T | {Label: N}>;
+export type Label<T, N> = T & {Label?: N};
 
 export type tAssetSaveData = [
     Label<number, 'ID'>,

@@ -31,9 +31,9 @@ export const useGameDataStore = defineStore({
         getAllObjects: (state): Core.Game_Object[] => state.objects as Core.Game_Object[],
         getAllLogic: (state): Logic[] => state.logic as Logic[],
         getAllRooms: (state): Core.Room[] => state.rooms as Core.Room[],
-        getSpriteSaveData: (state) => (): Core.iSpriteSaveData[] => state.sprites.map(s => s.toSaveData()),
-        getObjectSaveData: (state) => (): Core.iGameObjectSaveData[] => state.objects.map(o => o.toSaveData()),
-        getRoomSaveData: (state) => (): Core.iRoomSaveData[] => state.rooms.map(r => r.toSaveData()),
+        getSpriteSaveData: (state) => (): Core.tSpriteSaveData[] => state.sprites.map(s => s.toSaveData()),
+        getObjectSaveData: (state) => (): Core.tGameObjectSaveData[] => state.objects.map(o => o.toSaveData()),
+        getRoomSaveData: (state) => (): Core.tRoomSaveData[] => state.rooms.map(r => r.toSaveData()),
         getLogicSaveData: (state) => (): any => state.logic.map(r => r.toSaveData()),
     },
 
@@ -114,7 +114,7 @@ export const useGameDataStore = defineStore({
                 }
             }
         },
-        loadSaveData(loadObj: Core.iSerializedGameData, nodeAPI: Node_API){
+        loadSaveData(loadObj: Core.tSerializedGameData, nodeAPI: Node_API){
             const spriteMap = new Map<number, Core.Sprite>();
             const objectMap = new Map<number, Core.Game_Object>();
             const assetMap = new Map<Core.CATEGORY_ID, Map<number, Core.Asset_Base>>([

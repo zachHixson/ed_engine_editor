@@ -3,16 +3,15 @@ import Engine from './Engine';
 import {
     Instance_Object,
     iEngineLogic,
-    iLogicSaveData,
+    tLogicSaveData,
     iEngineOutTrigger,
     iEngineOutput,
     iEngineInTrigger,
     iEngineInput,
-    iNodeSaveData,
+    tNodeSaveData,
     CATEGORY_ID,
-iEngineNode,
-iConnectionSaveData,
-iEventContext,
+    tConnectionSaveData,
+    iEventContext,
 } from '@engine/core/core';
 import { SOCKET_TYPE } from './core/nodes/Node_Enums';
 
@@ -27,7 +26,7 @@ export default class Logic implements iEngineLogic {
     graphNames = new Map<number, string>();
     events: Map<string, Node[]> = new Map();
 
-    constructor(logicData: iLogicSaveData, engine: Engine){
+    constructor(logicData: tLogicSaveData, engine: Engine){
         this.id = logicData.id;
         this.name = logicData.name;
 
@@ -37,7 +36,7 @@ export default class Logic implements iEngineLogic {
         logicData.graphs.forEach(({name, id}) => this.graphNames.set(id, name));
 
         //create all nodes
-        logicData.nodes.forEach((nodeData: iNodeSaveData) => {
+        logicData.nodes.forEach((nodeData: tNodeSaveData) => {
             const newNode = new Node(nodeData, this, engine);
             nodeMap.set(nodeData.nId, newNode);
             this._nodes.push(newNode);
@@ -55,7 +54,7 @@ export default class Logic implements iEngineLogic {
         });
 
         //create and link connections
-        logicData.connections.forEach((connection: iConnectionSaveData) => {
+        logicData.connections.forEach((connection: tConnectionSaveData) => {
             const {sNodeId, eNodeId, sSocId, eSocId} = connection;
             const startNode = nodeMap.get(sNodeId)!;
             const endNode = nodeMap.get(eNodeId)!;

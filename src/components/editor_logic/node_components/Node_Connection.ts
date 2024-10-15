@@ -64,24 +64,24 @@ export default class Node_Connection {
         this.endSocketEl = null;
     }
 
-    toSaveData(): Core.iConnectionSaveData {
+    toSaveData(): Core.tConnectionSaveData {
         const {id, graphId, startNode, endNode} = this;
         const startSocketId = this.startSocketId!;
         const endSocketId = this.endSocketId!;
         const startNodeId = startNode!.nodeId;
         const endNodeId = endNode!.nodeId;
 
-        return {
-            id: id,
-            gId: graphId,
-            sSocId: startSocketId,
-            eSocId: endSocketId,
-            sNodeId: startNodeId,
-            eNodeId: endNodeId,
-        } satisfies Core.iConnectionSaveData;
+        return [
+            id,
+            graphId,
+            startSocketId,
+            endSocketId,
+            startNodeId,
+            endNodeId,
+        ];
     }
 
-    static fromSaveData(data: Core.iConnectionSaveData, nodeMap: Map<number, Node>): Node_Connection {
+    static fromSaveData(data: Core.tConnectionSaveData, nodeMap: Map<number, Node>): Node_Connection {
         const { id, gId, sSocId, eSocId, sNodeId, eNodeId } = data;
         const newData = {
             id,
@@ -94,7 +94,7 @@ export default class Node_Connection {
         return new Node_Connection(newData)._loadSaveData(data, nodeMap);
     }
 
-    private _loadSaveData(data: Core.iConnectionSaveData, nodeMap: Map<number, Node>){
+    private _loadSaveData(data: Core.tConnectionSaveData, nodeMap: Map<number, Node>){
         this.startNode = nodeMap.get(data.sNodeId)!;
         this.endNode = nodeMap.get(data.eNodeId)!;
 
