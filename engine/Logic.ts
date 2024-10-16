@@ -65,10 +65,6 @@ export default class Logic implements iEngineLogic {
             endNode.inTriggers.forEach((iTrigger, key) => allEndSockets.set(key, iTrigger));
             endNode.inputs.forEach((input, key) => allEndSockets.set(key, input));
 
-            if (allStartSockets.size == 0){
-                debugger;
-            }
-
             allStartSockets.get(connection[2])!.connection = allEndSockets.get(connection[3])!;
             allEndSockets.get(connection[3])!.connection = allStartSockets.get(connection[2])!;
         });
