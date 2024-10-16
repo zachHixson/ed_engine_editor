@@ -174,17 +174,17 @@ export class Instance_Exit extends Instance_Base {
     }
 
     static fromSaveData(data: tExitSaveData): Instance_Exit {
-        return new Instance_Exit(data.id, Vector.fromArray(data.pos))._loadSaveData(data);
+        return new Instance_Exit(data[0], Vector.fromArray(data[3]))._loadSaveData(data);
     }
 
     private _loadSaveData(data: tExitSaveData): Instance_Exit {
         this.loadBaseSaveData(data);
-        this.detectBacktracking = !!data.btrack;
-        this.isEnding = !!data.end;
-        this.destinationRoom = data.dRoom === '' ? null : data.dRoom;
-        this.destinationExit = data.dExit === '' ? null : data.dExit;
-        this.transition = data.trans;
-        this.endingDialog = data.dialog;
+        this.detectBacktracking = !!data[10];
+        this.isEnding = !!data[11];
+        this.destinationRoom = data[12] === '' ? null : data[12];
+        this.destinationExit = data[13] === '' ? null : data[13];
+        this.transition = data[14];
+        this.endingDialog = data[15];
 
         return this;
     }

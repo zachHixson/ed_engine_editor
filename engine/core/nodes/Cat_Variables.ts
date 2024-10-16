@@ -65,7 +65,7 @@ export default catVariables;
         
         valSocket.type = type;
         outSocket.type = type;
-        outSocket.isList = isList;
+        outSocket.isList = !!isList;
         this.onForceSocketUpdate.emit();
         this.onRecalcWidth.emit();
     }
@@ -77,10 +77,10 @@ export default catVariables;
         const {name, type, isGlobal, isList} = varInfo;
         
         if (isGlobal){
-            this.editorAPI.setGlobalVariable(name, type, isList);
+            this.editorAPI.setGlobalVariable(name, type, !!isList);
         }
         else{
-            this.parentScript.setLocalVariable(name, type, isList);
+            this.parentScript.setLocalVariable(name, type, !!isList);
         }
     }
 
@@ -145,7 +145,7 @@ export default catVariables;
             saveData[4] = [valueInput];
         },
         afterLoad(this: GenericNode, saveData: tNodeSaveData){
-            const varInfo = saveData.d;
+            const varInfo = saveData[6];
 
             varInfo.isGlobal = !!varInfo.isGlobal;
             varInfo.isList = !!varInfo.isList;
@@ -471,7 +471,7 @@ function actionEditVariable(args: ActionEditVariable): Partial<ActionEditVariabl
     
     //Update data if type changed
     if (newVarInfo.type != oldVarInfo.type){
-        const getSetNodes = varNode.editorAPI.getVariableUsage(oldVarInfo.name, null, oldVarInfo.isGlobal);
+        const getSetNodes = varNode.editorAPI.getVariableUsage(oldVarInfo.name, null, !!oldVarInfo.isGlobal);
         
         getSetNodes.forEach(node => node.refresh());
     }
@@ -484,7 +484,7 @@ function revertEditVariable({varNode, newVarInfo, oldVarInfo, oldInitValue}: Act
     varNode.refresh();
 
     if (newVarInfo.type != oldVarInfo.type){
-        const getSetNodes = varNode.editorAPI.getVariableUsage(newVarInfo.name, null, newVarInfo.isGlobal);
+        const getSetNodes = varNode.editorAPI.getVariableUsage(newVarInfo.name, null, !!newVarInfo.isGlobal);
         const valSocket = varNode.inputs.get('initial_value')!;
 
         getSetNodes.forEach(node => node.refresh());

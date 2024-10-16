@@ -211,21 +211,21 @@ export default class Node {
     }
 
     static fromSaveData(data: Core.tNodeSaveData, parentScript: Logic, nodeAPI: Node_API): Node {
-        const node = new Node(data.tId, data.nId, Vector.fromObject(data.pos), parentScript, data.gId, nodeAPI);
+        const node = new Node(data[0], data[1], Vector.fromArray(data[3]), parentScript, data[2], nodeAPI);
         return node._loadSaveData(data);
     }
 
     private _loadSaveData(data: Core.tNodeSaveData): Node {
         this.beforeLoad(data);
 
-        if (data.widg){
-            this.widgetData = data.widg;
+        if (data[5]){
+            this.widgetData = data[5];
         }
 
-        data.inp.forEach(input => {
-            const nodeInput = this.inputs.get(input.id);
+        data[4].forEach(input => {
+            const nodeInput = this.inputs.get(input[0]);
             if (!nodeInput) return;
-            nodeInput.value = input.value;
+            nodeInput.value = input[1];
         });
 
         this.afterLoad(data);

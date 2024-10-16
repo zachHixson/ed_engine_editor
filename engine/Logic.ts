@@ -27,26 +27,26 @@ export default class Logic implements iEngineLogic {
     events: Map<string, Node[]> = new Map();
 
     constructor(logicData: tLogicSaveData, engine: Engine){
-        this.id = logicData.id;
-        this.name = logicData.name;
+        this.id = logicData[0];
+        this.name = logicData[1];
 
         const nodeMap = new Map<number, Node>();
 
         //populate graph name map
-        logicData.graphs.forEach(({name, id}) => this.graphNames.set(id, name));
+        logicData[4].forEach((graphData) => this.graphNames.set(graphData[0], graphData[1]));
 
         //create all nodes
-        logicData.nodes.forEach((nodeData: tNodeSaveData) => {
+        logicData[5].forEach((nodeData: tNodeSaveData) => {
             const newNode = new Node(nodeData, this, engine);
-            nodeMap.set(nodeData.nId, newNode);
+            nodeMap.set(nodeData[1], newNode);
             this._nodes.push(newNode);
 
             if (newNode.isEvent){
-                let eventArr = this.events.get(nodeData.tId);
+                let eventArr = this.events.get(nodeData[0]);
 
                 if (!eventArr){
                     eventArr = [];
-                    this.events.set(nodeData.tId, eventArr);
+                    this.events.set(nodeData[0], eventArr);
                 }
 
                 eventArr.push(newNode);
@@ -54,10 +54,9 @@ export default class Logic implements iEngineLogic {
         });
 
         //create and link connections
-        logicData.connections.forEach((connection: tConnectionSaveData) => {
-            const {sNodeId, eNodeId, sSocId, eSocId} = connection;
-            const startNode = nodeMap.get(sNodeId)!;
-            const endNode = nodeMap.get(eNodeId)!;
+        logicData[6].forEach((connection: tConnectionSaveData) => {
+            const startNode = nodeMap.get(connection[4])!;
+            const endNode = nodeMap.get(connection[5])!;
             const allStartSockets = new Map<string, iEngineOutTrigger | iEngineOutput>();
             const allEndSockets = new Map<string, iEngineInTrigger | iEngineInput>();
 
@@ -66,8 +65,12 @@ export default class Logic implements iEngineLogic {
             endNode.inTriggers.forEach((iTrigger, key) => allEndSockets.set(key, iTrigger));
             endNode.inputs.forEach((input, key) => allEndSockets.set(key, input));
 
-            allStartSockets.get(sSocId!)!.connection = allEndSockets.get(eSocId!)!;
-            allEndSockets.get(eSocId!)!.connection = allStartSockets.get(sSocId!)!;
+            if (allStartSockets.size == 0){
+                debugger;
+            }
+
+            allStartSockets.get(connection[2])!.connection = allEndSockets.get(connection[3])!;
+            allEndSockets.get(connection[3])!.connection = allStartSockets.get(connection[2])!;
         });
     }
 

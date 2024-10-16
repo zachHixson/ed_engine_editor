@@ -47,7 +47,7 @@ export default catFlow;
             saveData[6] = this.outTriggers.size;
         },
         afterLoad(this: iEditorNode, saveData: tNodeSaveData){
-            const outputNumber = saveData.d;
+            const outputNumber = saveData[6];
             this.outTriggers.clear();
     
             for (let i = 0; i < outputNumber; i++){

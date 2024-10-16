@@ -67,8 +67,8 @@ export class Instance_Sprite extends Instance_Base {
     }
 
     static fromSaveData(data: tInstanceSpriteSaveData, spriteMap: Map<number, Sprite>): Instance_Sprite {
-        const spriteAsset = data.sId >= 0 ? spriteMap.get(data.sId)! : null;
-        const newSprite = new Instance_Sprite(data.id, Vector.fromArray(data.pos), spriteAsset);
+        const spriteAsset = data[10] >= 0 ? spriteMap.get(data[10])! : null;
+        const newSprite = new Instance_Sprite(data[0], Vector.fromArray(data[3]), spriteAsset);
         newSprite.loadBaseSaveData(data);
         return newSprite;
     }

@@ -71,35 +71,35 @@ export class Room extends Asset_Base {
     }
 
     private _loadSaveData(data: tRoomSaveData, assetMap: Map<CATEGORY_ID, Map<number, Asset_Base | iEngineLogic>>){
-        const instancesSerial = data.inst;
+        const instancesSerial: tInstanceBaseSaveData[] = data[4];
 
         this.loadBaseAssetData(data);
-        this.camera = Camera.fromSaveData(data.cam);
-        this.navState = NavState.fromSaveData(data.nav);
-        this.bgColor = new Color().fromHex(data.bg);
-        this.persist = !!data.pers;
-        this.useGravity = !!data.uGrav;
-        this.gravity = data.grav;
+        this.camera = Camera.fromSaveData(data[3]);
+        this.bgColor = new Color().fromHex(data[5]);
+        this.persist = !!data[6];
+        this.useGravity = !!data[7];
+        this.gravity = data[8];
+        this.navState = NavState.fromSaveData(data[9]);
 
         for (let i = 0; i < instancesSerial.length; i++){
             const curInstance = instancesSerial[i];
             const newInstance: Instance_Base = (()=>{
-                switch(curInstance.type){
+                switch(curInstance[2]){
                     case INSTANCE_TYPE.SPRITE:
                         return Instance_Sprite.fromSaveData(
-                            instancesSerial[i] as tInstanceSpriteSaveData,
+                            instancesSerial[i] as unknown as tInstanceSpriteSaveData,
                             assetMap.get(CATEGORY_ID.SPRITE) as Map<number, Sprite>
                         );
                     case INSTANCE_TYPE.OBJECT:
                         return Instance_Object.fromSaveData(
-                            instancesSerial[i] as tObjectInstanceSaveData,
+                            instancesSerial[i] as unknown as tObjectInstanceSaveData,
                             assetMap.get(CATEGORY_ID.OBJECT) as Map<number, Game_Object>
                         );
                     case INSTANCE_TYPE.EXIT:
-                        return Instance_Exit.fromSaveData(curInstance as tExitSaveData);
+                        return Instance_Exit.fromSaveData(curInstance as unknown as tExitSaveData);
                     case INSTANCE_TYPE.LOGIC:
                         const logicInstance = Instance_Logic.fromSaveData(
-                            curInstance as tInstanceLogicSaveData,
+                            curInstance as unknown as tInstanceLogicSaveData,
                             assetMap.get(CATEGORY_ID.OBJECT) as Map<number, Game_Object>
                         );
                         const logicMap = assetMap.get(CATEGORY_ID.LOGIC);

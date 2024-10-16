@@ -19,11 +19,12 @@ export type tInstanceBaseSaveData = [
     Label<[number, number], 'Position'>,
     Label<number | '', 'Z Depth Override'>,
     Label<string[], 'Groups'>,
-    Label<number | '', 'Start Frame'>,
+    Label<number | '', 'Start Frame Override'>,
     Label<number | '', 'Playback FPS Override'>,
     Label<0 | 1 | 2, 'Loop Override'>,
     Label<0 | 1 | 2, 'Is_Playing override'>,
 ]
+type tExtendableInstanceBaseSaveData = [...tInstanceBaseSaveData, ...any[]];
 
 export interface iCollisionEvent {
     type: Node_Enums.COLLISION_EVENT,
@@ -229,16 +230,16 @@ export abstract class Instance_Base{
         this.pos.copy(newPos);
     }
 
-    loadBaseSaveData(data: tInstanceBaseSaveData): void {
-        this.id = data.id;
-        this.name = data.name;
-        this.pos = Vector.fromArray(data.pos);
-        this._zDepthOverride = data.zOvr != '' ? data.zOvr : null;
-        this.groups = data.groups;
-        this.startFrameOverride = data.strtFrm === '' ? null : data.strtFrm;
-        this.fpsOverride = data.fps === '' ? null : data.fps;
-        this.animLoopOverride = data.loop === 0 ? null : !!(data.loop - 1);
-        this.animPlayingOverride = data.play === 0 ? null : !!(data.play - 1);
+    loadBaseSaveData(data: tExtendableInstanceBaseSaveData): void {
+        this.id = data[0];
+        this.name = data[1];
+        this.pos = Vector.fromArray(data[3]);
+        this._zDepthOverride = data[4] != '' ? data[4] : null;
+        this.groups = data[5];
+        this.startFrameOverride = data[6] === '' ? null : data[6];
+        this.fpsOverride = data[7] === '' ? null : data[7];
+        this.animLoopOverride = data[8] === 0 ? null : !!(data[8] - 1);
+        this.animPlayingOverride = data[9] === 0 ? null : !!(data[9] - 1);
 
         this.animFrame = this.startFrame;
     }

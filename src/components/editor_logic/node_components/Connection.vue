@@ -20,7 +20,6 @@ const { Vector } = Core;
 const props = defineProps<{
     connectionObj: Node_Connection,
     clientToNavSpace: (pos: Core.Vector)=>Core.Vector,
-    navWrapper: HTMLDivElement,
     allConnections: Node_Connection[],
     draggingConnection: Node_Connection | null,
 }>();

@@ -94,21 +94,21 @@ export class Game_Object extends Asset_Base {
 
     private _loadSaveData(data: tGameObjectSaveData, spriteMap: Map<number, Sprite>, logicMap?: Map<number, iEngineLogic>): Game_Object {
         this.loadBaseAssetData(data);
-        this._startFrame = data.strtFrm;
-        this.sprite = data.sprId ? spriteMap.get(data.sprId)! : null;
-        this.fps = data.fps;
-        this.animLoop = !!data.loop;
-        this.animPlaying = !!data.play;
-        this.zDepth = data.zDepth;
-        this.isSolid = !!data.solid;
-        this.applyGravity = !!data.grav;
-        this.triggerExits = !!data.trigEx;
-        this.exitBehavior = data.exBeh;
-        this.keepCameraSettings = !!data.kpCam;
-        this.customLogic = !!data.custLog;
-        this.logicScriptId = data.lScrId == '' ? null : data.lScrId;
+        this._startFrame = data[3];
+        this.sprite = data[4] ? spriteMap.get(data[4])! : null;
+        this.fps = data[5];
+        this.animLoop = !!data[6];
+        this.animPlaying = !!data[7];
+        this.zDepth = data[8];
+        this.isSolid = !!data[9];
+        this.applyGravity = !!data[10];
+        this.triggerExits = !!data[11];
+        this.exitBehavior = data[12];
+        this.keepCameraSettings = !!data[13];
+        this.customLogic = !!data[14];
+        this.logicScriptId = data[15] == '' ? null : data[15];
         this.logicScript = logicMap?.get(this.logicScriptId!) ?? null;
-        this.groups = data.groups;
+        this.groups = data[16];
         return this;
     }
 

@@ -7,13 +7,13 @@ import { InstanceAnimEvent, iCollisionEvent, tInstanceBaseSaveData, Instance_Bas
 import { iEngineVariable } from '../LogicInterfaces';
 import type { Label } from './Asset_Base';
 
-export type tObjectInstanceSaveData = [
+export type tObjectInstanceSaveData<T extends Array<any> = any[]> = [
     ...tInstanceBaseSaveData,
     Label<number, 'Source Object ID'>,
     Label<number | '', 'Z Depth Override'>,
     Label<COLLISION_OVERRIDE, 'Collision Override'>,
 
-    ...any[], //Hack to allow Instance_Logic to extend this type
+    ...T, //Allows this type to be extendible by inherited instance classes
 ]
 
 enum COLLISION_OVERRIDE {
@@ -166,7 +166,7 @@ export class Instance_Object extends Instance_Base{
     }
 
     static fromSaveData(data: tObjectInstanceSaveData, objMap: Map<number, Game_Object>): Instance_Object {
-        const newObj = new Instance_Object(data.id, Vector.fromArray(data.pos), objMap.get(data.objId)!);
+        const newObj = new Instance_Object(data[0], Vector.fromArray(data[3]), objMap.get(data[10])!);
         newObj._loadSaveData(data);
 
         return newObj;
@@ -174,8 +174,8 @@ export class Instance_Object extends Instance_Base{
 
     private _loadSaveData(data: tObjectInstanceSaveData): void {
         this.loadBaseSaveData(data);
-        this.zDepthOverride = data.zOvr == '' ? null : data.zOvr;
-        this.collisionOverride = data.collOvr;
+        this.zDepthOverride = data[11] == '' ? null : data[11];
+        this.collisionOverride = data[12];
     }
 
     executeNodeEvent(eventName: string, data?: any): void {

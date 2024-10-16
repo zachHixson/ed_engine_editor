@@ -42,12 +42,12 @@ export class Sprite extends Asset_Base {
     }
 
     private _loadSaveData(data: tSpriteSaveData): Sprite {
-        const splitFrames = data.frames.map(f => f.split(','));
+        const splitFrames = data[3].map(f => f.split(','));
         const hexFrames = this.decompressFrames(splitFrames);
         const imgDataFrames = new Array(hexFrames.length);
 
         this.loadBaseAssetData(data);
-        this.navState = NavState.fromSaveData(data.nav);
+        this.navState = NavState.fromSaveData(data[4]);
 
         for (let i = 0; i < hexFrames.length; i++){
             imgDataFrames[i] = this._hexToImageData(splitFrames[i]);

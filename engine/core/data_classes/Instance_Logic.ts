@@ -6,7 +6,7 @@ import { INSTANCE_TYPE } from "../Enums";
 import type { Label } from "./Asset_Base";
 
 export type tInstanceLogicSaveData = [
-    ...tObjectInstanceSaveData,
+    ...tObjectInstanceSaveData<[]>,
     Label<number, 'Logic ID'>
 ]
 
@@ -61,7 +61,7 @@ export class Instance_Logic extends Instance_Object {
         return [
             ...super.toSaveData(),
             this.logicId,
-        ];
+        ] as tInstanceLogicSaveData;
     }
 
     override needsPurge(logicMap: Map<number, any>): boolean {
@@ -69,15 +69,15 @@ export class Instance_Logic extends Instance_Object {
     }
 
     static fromSaveData(data: tInstanceLogicSaveData, objMap: Map<number, Game_Object>): Instance_Logic {
-        const instance = new Instance_Logic(data.id, Vector.fromArray(data.pos), data.lId, data.name);
+        const instance = new Instance_Logic(data[0], Vector.fromArray(data[3]), data[13], data[1]);
 
-        instance.name = data.name;
+        instance.name = data[1];
 
-        if (data.objId >= 0){
-            instance._objRef = objMap.get(data.objId)!;
+        if (data[10] >= 0){
+            instance._objRef = objMap.get(data[10])!;
         }
 
-        instance.logicId = data.lId;
+        instance.logicId = data[13];
 
         return instance;
     }

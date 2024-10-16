@@ -1,13 +1,27 @@
 import type Node from './Node';
 import Core from '@/core';
 
+type tConnectionConstructor = {
+    id: number,
+} & Partial<{
+    type: Core.Node_Enums.SOCKET_TYPE,
+    graphId: number,
+    canConnect: boolean,
+    startNode: Node | null,
+    startSocketId: string | null,
+    startSocketEl: HTMLElement | null,
+    endNode: Node | null,
+    endSocketId: string | null,
+    endSocketEl: HTMLElement | null,
+}>
+
 export default class Node_Connection {
     private _disconnectedFrom: string | null = null;
     private _startSocketId: string | null = null;
     private _endSocketId: string | null = null;
 
     id: number;
-    type: Core.Node_Enums.SOCKET_TYPE;
+    type: Core.Node_Enums.SOCKET_TYPE | null;
     graphId: number;
     canConnect: boolean;
     startNode: Node | null;
@@ -18,11 +32,11 @@ export default class Node_Connection {
     onConnectionUpdate = new Core.Event_Emitter<()=>void>(this);
     onForceUpdate = new Core.Event_Emitter<()=>void>(this);
 
-    constructor(inpObj: Core.iAnyObj = {}){
+    constructor(inpObj: tConnectionConstructor){
         this.id = inpObj.id;
         this.type = inpObj.type ?? null;
-        this.graphId = inpObj.graphId;
-        this.canConnect = inpObj.canConnect;
+        this.graphId = inpObj.graphId ?? 0;
+        this.canConnect = inpObj.canConnect ?? true;
         this.startNode = inpObj.startNode ?? null;
         this.startSocketId = inpObj.startSocketId ?? null;
         this.startSocketEl = inpObj.startSocketEl ?? null;
@@ -82,21 +96,18 @@ export default class Node_Connection {
     }
 
     static fromSaveData(data: Core.tConnectionSaveData, nodeMap: Map<number, Node>): Node_Connection {
-        const { id, gId, sSocId, eSocId, sNodeId, eNodeId } = data;
-        const newData = {
-            id,
-            graphId: gId,
-            startSocketId: sSocId,
-            endSocketId: eSocId,
-            startNodeId: sNodeId,
-            eNodeId: eNodeId,
+        const newData : tConnectionConstructor = {
+            id: data[0],
+            graphId: data[1],
+            startSocketId: data[2],
+            endSocketId: data[3],
         };
         return new Node_Connection(newData)._loadSaveData(data, nodeMap);
     }
 
     private _loadSaveData(data: Core.tConnectionSaveData, nodeMap: Map<number, Node>){
-        this.startNode = nodeMap.get(data.sNodeId)!;
-        this.endNode = nodeMap.get(data.eNodeId)!;
+        this.startNode = nodeMap.get(data[4])!;
+        this.endNode = nodeMap.get(data[5])!;
 
         return this;
     }

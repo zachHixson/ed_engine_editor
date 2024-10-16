@@ -466,7 +466,6 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
                     :ref="domRefs.connectionRefs"
                     :connectionObj="connection"
                     :clientToNavSpace="clientToNavPos"
-                    :navWrapper="($refs.nodeNav as HTMLDivElement)"
                     :allConnections="selectedAsset.connections"
                     :draggingConnection="(state.draggingConnection.value as Node_Connection)"
                     @drag-start="dragConnection"

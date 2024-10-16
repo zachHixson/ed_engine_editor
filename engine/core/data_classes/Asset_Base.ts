@@ -8,6 +8,7 @@ export type tAssetSaveData = [
     Label<string, 'Name'>,
     Label<number, 'SortOrder'>,
 ]
+type tExtendableBaseSaveData = [...tAssetSaveData, ...any[]];
 
 export abstract class Asset_Base {
     id: number = ID_Generator.newID();
@@ -17,10 +18,10 @@ export abstract class Asset_Base {
     abstract get category_ID(): CATEGORY_ID;
     get thumbnail(): HTMLCanvasElement | null {return null}
 
-    loadBaseAssetData(data: tAssetSaveData): void {
-        this.id = data.id;
-        this.name = data.name;
-        this.sortOrder = data.sort;
+    loadBaseAssetData(data: tExtendableBaseSaveData): void {
+        this.id = data[0];
+        this.name = data[1];
+        this.sortOrder = data[2];
     }
     
     getBaseAssetData(): tAssetSaveData {

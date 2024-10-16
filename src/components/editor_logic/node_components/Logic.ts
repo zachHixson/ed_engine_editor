@@ -68,12 +68,12 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
 
         this.loadBaseAssetData(data);
 
-        this.graphs = data.graphs.map(graph => {
-            this._nextGraphId = Math.max(this._nextGraphId, graph.id + 1);
+        this.graphs = data[4].map(graph => {
+            this._nextGraphId = Math.max(this._nextGraphId, graph[0] + 1);
             return Graph.fromSaveData(graph);
         });
-        this.nodes = data.nodes.map(nodeData => {
-            this._nextNodeId = Math.max(this._nextNodeId, nodeData.nId + 1);
+        this.nodes = data[5].map(nodeData => {
+            this._nextNodeId = Math.max(this._nextNodeId, nodeData[1] + 1);
             return Node.fromSaveData(nodeData, this, nodeAPI);
         });
 
@@ -81,8 +81,8 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
             nodeMap.set(node.nodeId, node);
         });
 
-        this.connections = data.connections.map(connectionData => {
-            this._nextConnectionId = Math.max(this._nextConnectionId, connectionData.id + 1);
+        this.connections = data[6].map(connectionData => {
+            this._nextConnectionId = Math.max(this._nextConnectionId, connectionData[0] + 1);
             return Node_Connection.fromSaveData(connectionData, nodeMap);
         });
 
@@ -221,9 +221,9 @@ class Graph {
     }
 
     static fromSaveData(data: tGraphSaveData): Graph {
-        const newGraph = new Graph(data.id);
-        newGraph.name = data.name;
-        newGraph.navState = Core.NavState.fromSaveData(data.nav);
+        const newGraph = new Graph(data[0]);
+        newGraph.name = data[1];
+        newGraph.navState = Core.NavState.fromSaveData(data[2]);
         return newGraph;
     }
 }

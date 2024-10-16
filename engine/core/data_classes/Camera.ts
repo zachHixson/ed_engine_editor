@@ -80,14 +80,14 @@ export class Camera{
     }
 
     private _loadSaveData(data: tCameraSaveData): Camera {
-        this._size = data.size;
-        this.pos = Vector.fromObject(data.pos);
-        this.velocity = Vector.fromObject(data.vel);
-        this.moveType = data.move;
-        this.scrollDir = data.sDir;
-        this.scrollSpeed = data.sSpeed;
-        this.followObjId = data.fObjId;
-        this.followType = data.fType;
+        this._size = data[0];
+        this.pos = Vector.fromArray(data[1]);
+        this.velocity = Vector.fromArray(data[2]);
+        this.moveType = data[3];
+        this.scrollDir = data[4];
+        this.scrollSpeed = data[5];
+        this.followObjId = data[6] != '' ? data[6] : null;
+        this.followType = data[7];
 
         return this;
     }
