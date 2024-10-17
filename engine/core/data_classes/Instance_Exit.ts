@@ -1,5 +1,5 @@
 import { ConstVector, Vector } from '../Vector';
-import { iCollisionEvent, tInstanceBaseSaveData, Instance_Base } from './Instance_Base';
+import { iCollisionEvent, sInstanceBaseSaveData, Instance_Base } from './Instance_Base';
 import {INSTANCE_TYPE} from '../Enums';
 import { Instance_Object } from './Instance_Object';
 import { Game_Object } from './Game_Object';
@@ -8,17 +8,17 @@ import Engine from '@engine/Engine';
 import { COLLISION_EVENT } from '../nodes/Node_Enums';
 import { TRANSITION } from '@engine/transitions/Transition_Base';
 import { Room } from './Room';
-import type { Label } from './Asset_Base';
+import { Struct, GetKeyTypesFrom } from '../Struct';
 
-export type tExitSaveData = [
-    ...tInstanceBaseSaveData,
-    Label<0 | 1, 'Detect Backtrack'>,
-    Label<0 | 1, 'Is Ending'>,
-    Label<number | '', 'Destination Room ID'>,
-    Label<number | '', 'Destination Exit ID'>,
-    Label<TRANSITION, 'Transition Type'>,
-    Label<string, 'Ending Dialog'>,
-]
+export const sExitSaveData = [
+    ...sInstanceBaseSaveData,
+    ['detectBacktrack',Struct.getDataType<0 | 1>()],
+    ['isEnding', Struct.getDataType<0 | 1>()],
+    ['destRoomID', Struct.getDataType<number | ''>()],
+    ['destRoomExit', Struct.getDataType<number | ''>()],
+    ['transiType', Struct.getDataType<TRANSITION>()],
+    ['endingDialog', String()],
+] as const;
 
 export class Instance_Exit extends Instance_Base {
     static EXIT_ICON_ID = 'EXIT_ICON';
@@ -146,7 +146,7 @@ export class Instance_Exit extends Instance_Base {
         return clone;
     }
 
-    override toSaveData(): tExitSaveData {
+    override toSaveData(): GetKeyTypesFrom<typeof sExitSaveData> {
         return [
             ...this.getBaseSaveData(),
             (+this.detectBacktracking) as (0 | 1),
@@ -173,18 +173,25 @@ export class Instance_Exit extends Instance_Base {
         return false;
     }
 
-    static fromSaveData(data: tExitSaveData): Instance_Exit {
+    static fromSaveData(data: GetKeyTypesFrom<typeof sExitSaveData>): Instance_Exit {
         return new Instance_Exit(data[0], Vector.fromArray(data[3]))._loadSaveData(data);
     }
 
-    private _loadSaveData(data: tExitSaveData): Instance_Exit {
+    private _loadSaveData(data: GetKeyTypesFrom<typeof sExitSaveData>): Instance_Exit {
         this.loadBaseSaveData(data);
-        this.detectBacktracking = !!data[10];
-        this.isEnding = !!data[11];
-        this.destinationRoom = data[12] === '' ? null : data[12];
-        this.destinationExit = data[13] === '' ? null : data[13];
-        this.transition = data[14];
-        this.endingDialog = data[15];
+
+        const dataObj = Struct.objFromArr(sExitSaveData, data);
+
+        if (!dataObj){
+            throw new Error('Error loading Exit data');
+        }
+
+        this.detectBacktracking = !!dataObj.detectBacktrack;
+        this.isEnding = !!dataObj.isEnding;
+        this.destinationRoom = dataObj.destRoomID === '' ? null : dataObj.destRoomID;
+        this.destinationExit = dataObj.destRoomExit === '' ? null : dataObj.destRoomExit;
+        this.transition = dataObj.transiType;
+        this.endingDialog = dataObj.endingDialog;
 
         return this;
     }

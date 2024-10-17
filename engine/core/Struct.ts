@@ -1,9 +1,9 @@
-export type sStruct = readonly (readonly [PropertyKey, any, boolean?])[];
-export type GetKeyTypesFrom<T extends sStruct> = { [I in keyof T]: T[I][1] }
-export type GetObjectTypeFrom<T extends sStruct> = { [I in `${number}` & keyof T as T[I][0]]: T[I][1] }
+export type tStruct = readonly (readonly [PropertyKey, any, boolean?])[];
+export type GetKeyTypesFrom<T extends tStruct> = { [I in keyof T]: T[I][1] }
+export type GetObjectTypeFrom<T extends tStruct> = { [I in `${number}` & keyof T as T[I][0]]: T[I][1] }
 
 export class Struct {
-    static objFromArr<S extends sStruct>(struct: S, arr: GetKeyTypesFrom<S>): GetObjectTypeFrom<S> | null {
+    static objFromArr<S extends tStruct>(struct: S, arr: GetKeyTypesFrom<S>): GetObjectTypeFrom<S> | null {
         const outObj: any = {};
 
         for (let i = 0; i < struct.length; i++){
@@ -18,7 +18,7 @@ export class Struct {
         return outObj;
     }
 
-    static arrFromObj<S extends sStruct>(struct: S, obj: GetObjectTypeFrom<S>): GetKeyTypesFrom<S> | null{
+    static arrFromObj<S extends tStruct>(struct: S, obj: GetObjectTypeFrom<S>): GetKeyTypesFrom<S> | null{
         const outArr: any = new Array(struct.length);
 
         for (let i = 0; i < struct.length; i++){
@@ -29,7 +29,7 @@ export class Struct {
         return outArr;
     }
 
-    static assignFromArray<S extends sStruct, D extends GetObjectTypeFrom<S>>(struct: S, destObj: D, srcArr: GetKeyTypesFrom<S>): D | null{
+    static assignFromArray<S extends tStruct, D extends GetObjectTypeFrom<S>>(struct: S, destObj: D, srcArr: GetKeyTypesFrom<S>): D | null{
         const dObj = destObj as any;
 
         for (let i = 0; i < struct.length; i++){
@@ -45,6 +45,8 @@ export class Struct {
 
         return destObj;
     }
+
+    static getDataType<T>(): T {return null as any}
 }
 
 //Testing

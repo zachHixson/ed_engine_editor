@@ -129,11 +129,11 @@ export class Vector implements ConstVector {
         return new Vector(this.x, this.y);
     }
 
-    static fromArray(arr: number[]): Vector {
+    static fromArray(arr: readonly [number, number]): Vector {
         return new Vector().fromArray(arr);
     }
 
-    fromArray(arr: number[]): Vector {
+    fromArray(arr: readonly [number, number]): Vector {
         this.x = arr[0] ?? 0;
         this.y = arr[1] ?? 0;
         return this;

@@ -1,31 +1,32 @@
-import { Asset_Base, tAssetSaveData, Label } from './Asset_Base';
+import { Asset_Base, sAssetSaveData } from './Asset_Base';
 import {CATEGORY_ID} from '../Enums';
 import { Sprite } from './Sprite';
 import { iEngineLogic } from '../LogicInterfaces';
-
-export type tGameObjectSaveData = [
-    ...tAssetSaveData,
-    Label<number, 'Start Frame'>,
-    Label<number | '', 'Sprite ID'>,
-    Label<number, 'Anim FPS'>,
-    Label<0 | 1, 'Loop Anim'>,
-    Label<0 | 1, 'Play Anim'>,
-    Label<number, 'Object zDepth'>,
-    Label<0 | 1, 'Is Solid'>,
-    Label<0 | 1, 'Use Gravity'>,
-    Label<0 | 1, 'Trigger Exits'>,
-    Label<EXIT_TYPES, 'Exit Behavior'>,
-    Label<0 | 1, 'Keep Camera Settings'>,
-    Label<0 | 1, 'Custom Logic'>,
-    Label<number | '', 'Logic Script ID'>,
-    Label<string[], 'Groups'>,
-]
+import { Struct, GetKeyTypesFrom } from '../Struct';
 
 enum EXIT_TYPES {
     TO_DESTINATION = 'TD',
     KEEP_POSITION = 'KP',
     TRANSITION_ONLY = 'TO',
 };
+
+export const sGameObjectSaveData = [
+    ...sAssetSaveData,
+    ['startFrame', Number()],
+    ['spriteID', Struct.getDataType<number | ''>()],
+    ['animFPS', Number()],
+    ['loopAnim', 0 | 1],
+    ['playAnim', 0 | 1],
+    ['zDepth', Number()],
+    ['isSolid', 0 | 1],
+    ['useGravity', 0 | 1],
+    ['triggerExits', 0 | 1],
+    ['exitBehavior', Struct.getDataType<EXIT_TYPES>()],
+    ['keepCameraSettings', 0 | 1],
+    ['customLogic', 0 | 1],
+    ['logicScriptID', Struct.getDataType<number | ''>()],
+    ['groupList', Struct.getDataType<string[]>()],
+] as const;
 
 export class Game_Object extends Asset_Base {
     static get EXIT_TYPES(){return EXIT_TYPES}
@@ -68,7 +69,7 @@ export class Game_Object extends Asset_Base {
         return clone;
     }
 
-    toSaveData(): tGameObjectSaveData {
+    toSaveData(): GetKeyTypesFrom<typeof sGameObjectSaveData> {
         return [
             ...this.getBaseAssetData(),
             this._startFrame,
@@ -88,27 +89,34 @@ export class Game_Object extends Asset_Base {
         ];
     }
 
-    static fromSaveData(data: tGameObjectSaveData, spriteMap: Map<number, Sprite>): Game_Object {
+    static fromSaveData(data: GetKeyTypesFrom<typeof sGameObjectSaveData>, spriteMap: Map<number, Sprite>): Game_Object {
         return new Game_Object()._loadSaveData(data, spriteMap);
     }
 
-    private _loadSaveData(data: tGameObjectSaveData, spriteMap: Map<number, Sprite>, logicMap?: Map<number, iEngineLogic>): Game_Object {
+    private _loadSaveData(data: GetKeyTypesFrom<typeof sGameObjectSaveData>, spriteMap: Map<number, Sprite>, logicMap?: Map<number, iEngineLogic>): Game_Object {
         this.loadBaseAssetData(data);
-        this._startFrame = data[3];
-        this.sprite = data[4] ? spriteMap.get(data[4])! : null;
-        this.fps = data[5];
-        this.animLoop = !!data[6];
-        this.animPlaying = !!data[7];
-        this.zDepth = data[8];
-        this.isSolid = !!data[9];
-        this.applyGravity = !!data[10];
-        this.triggerExits = !!data[11];
-        this.exitBehavior = data[12];
-        this.keepCameraSettings = !!data[13];
-        this.customLogic = !!data[14];
-        this.logicScriptId = data[15] == '' ? null : data[15];
+
+        const dataObj = Struct.objFromArr(sGameObjectSaveData, data);
+
+        if (!dataObj){
+            throw new Error('Error loading Game_Object from file');
+        }
+
+        this._startFrame = dataObj.startFrame;
+        this.sprite = dataObj.spriteID ? spriteMap.get(dataObj.spriteID)! : null;
+        this.fps = dataObj.animFPS;
+        this.animLoop = !!dataObj.loopAnim;
+        this.animPlaying = !!dataObj.playAnim;
+        this.zDepth = dataObj.zDepth;
+        this.isSolid = !!dataObj.isSolid;
+        this.applyGravity = !!dataObj.useGravity;
+        this.triggerExits = !!dataObj.triggerExits;
+        this.exitBehavior = dataObj.exitBehavior;
+        this.keepCameraSettings = !!dataObj.keepCameraSettings;
+        this.customLogic = !!dataObj.customLogic;
+        this.logicScriptId = dataObj.logicScriptID == '' ? null : dataObj.logicScriptID;
         this.logicScript = logicMap?.get(this.logicScriptId!) ?? null;
-        this.groups = data[16];
+        this.groups = dataObj.groupList;
         return this;
     }
 

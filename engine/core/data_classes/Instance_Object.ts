@@ -3,18 +3,18 @@ import { ConstVector, Vector } from '../Vector';
 import { Sprite } from './Sprite';
 import { Instance_Exit } from './Instance_Exit';
 import { Game_Object } from './Game_Object';
-import { InstanceAnimEvent, iCollisionEvent, tInstanceBaseSaveData, Instance_Base } from './Instance_Base';
+import { InstanceAnimEvent, iCollisionEvent, sInstanceBaseSaveData, Instance_Base } from './Instance_Base';
 import { iEngineVariable } from '../LogicInterfaces';
-import type { Label } from './Asset_Base';
+import { Struct, GetKeyTypesFrom } from '../Struct';
 
-export type tObjectInstanceSaveData<T extends Array<any> = any[]> = [
-    ...tInstanceBaseSaveData,
-    Label<number, 'Source Object ID'>,
-    Label<number | '', 'Z Depth Override'>,
-    Label<COLLISION_OVERRIDE, 'Collision Override'>,
+export const sObjectInstanceSaveData = [
+    ...sInstanceBaseSaveData,
+    ['srcObjID', Number()],
+    ['zDepthOver', Struct.getDataType<number | ''>()],
+    ['collOver', Struct.getDataType<COLLISION_OVERRIDE>()],
+] as const;
 
-    ...T, //Allows this type to be extendible by inherited instance classes
-]
+console.log(sObjectInstanceSaveData);
 
 enum COLLISION_OVERRIDE {
     KEEP = 'K',
@@ -152,7 +152,7 @@ export class Instance_Object extends Instance_Base{
         return clone;
     }
 
-    override toSaveData(): tObjectInstanceSaveData {
+    override toSaveData(): GetKeyTypesFrom<typeof sObjectInstanceSaveData> {
         return [
             ...this.getBaseSaveData(),
             this._objRef.id,
@@ -165,17 +165,31 @@ export class Instance_Object extends Instance_Base{
         return !objectMap.get(this._objRef.id);
     }
 
-    static fromSaveData(data: tObjectInstanceSaveData, objMap: Map<number, Game_Object>): Instance_Object {
-        const newObj = new Instance_Object(data[0], Vector.fromArray(data[3]), objMap.get(data[10])!);
-        newObj._loadSaveData(data);
+    static fromSaveData(data: [string, unknown][], objMap: Map<number, Game_Object>): Instance_Object {
+        const objData = data as unknown as GetKeyTypesFrom<typeof sObjectInstanceSaveData>
+        const dataObj = Struct.objFromArr(sObjectInstanceSaveData, objData);
+
+        if (!dataObj){
+            throw new Error('Error loading object instance from save data');
+        }
+
+        const newObj = new Instance_Object(dataObj.id, Vector.fromArray(dataObj.pos), objMap.get(dataObj.srcObjID)!);
+        newObj._loadSaveData(objData);
 
         return newObj;
     }
 
-    private _loadSaveData(data: tObjectInstanceSaveData): void {
+    private _loadSaveData(data: GetKeyTypesFrom<typeof sObjectInstanceSaveData>): void {
         this.loadBaseSaveData(data);
-        this.zDepthOverride = data[11] == '' ? null : data[11];
-        this.collisionOverride = data[12];
+
+        const dataObj = Struct.objFromArr(sObjectInstanceSaveData, data);
+
+        if (!dataObj){
+            throw new Error('Error loading save object instance save data');
+        }
+
+        this.zDepthOverride = dataObj.zDepthOver == '' ? null : dataObj.zDepthOver;
+        this.collisionOverride = dataObj.collOver;
     }
 
     executeNodeEvent(eventName: string, data?: any): void {
