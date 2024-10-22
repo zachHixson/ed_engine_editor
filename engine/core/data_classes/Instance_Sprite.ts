@@ -1,13 +1,13 @@
 import { INSTANCE_TYPE } from "../Enums";
 import { Vector } from "../Vector";
-import { Instance_Base, tInstanceBaseSaveData } from "./Instance_Base";
+import { Instance_Base, sInstanceBaseSaveData } from "./Instance_Base";
 import { Sprite } from "./Sprite";
-import type { Label } from "./Asset_Base";
+import { Struct, GetKeyTypesFrom } from "../Struct";
 
-export type tInstanceSpriteSaveData = [
-    ...tInstanceBaseSaveData,
-    Label<number, 'Sprite ID'>
-]
+export const sInstanceSpriteSaveData = [
+    ...sInstanceBaseSaveData,
+    ['spriteID', Number()],
+] as const;
 
 export class Instance_Sprite extends Instance_Base {
     static DEFAULT_SPRITE_ICON_ID = 'SPRITE_ICON';
@@ -54,7 +54,7 @@ export class Instance_Sprite extends Instance_Base {
         return clone;
     }
 
-    override toSaveData(): tInstanceSpriteSaveData {
+    override toSaveData(): GetKeyTypesFrom<typeof sInstanceSpriteSaveData> {
         return [
             ...this.getBaseSaveData(),
             this.sprite?.id ?? -1,
@@ -66,9 +66,15 @@ export class Instance_Sprite extends Instance_Base {
         return !spriteMap.get(this.sprite.id);
     }
 
-    static fromSaveData(data: tInstanceSpriteSaveData, spriteMap: Map<number, Sprite>): Instance_Sprite {
-        const spriteAsset = data[10] >= 0 ? spriteMap.get(data[10])! : null;
-        const newSprite = new Instance_Sprite(data[0], Vector.fromArray(data[3]), spriteAsset);
+    static fromSaveData(data: GetKeyTypesFrom<typeof sInstanceSpriteSaveData>, spriteMap: Map<number, Sprite>): Instance_Sprite {
+        const dataObj = Struct.objFromArr(sInstanceSpriteSaveData, data);
+
+        if (!dataObj){
+            throw new Error('Error loading sprite instance from save data');
+        }
+
+        const spriteAsset = dataObj.spriteID >= 0 ? spriteMap.get(dataObj.spriteID)! : null;
+        const newSprite = new Instance_Sprite(dataObj.id, Vector.fromArray(dataObj.pos), spriteAsset);
         newSprite.loadBaseSaveData(data);
         return newSprite;
     }

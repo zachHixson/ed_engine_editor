@@ -115,15 +115,15 @@ export default class Node {
         this.template.beforeSave?.call(this);
     }
 
-    afterSave(saveData: Core.tNodeSaveData): void {
+    afterSave(saveData: Core.GetKeyTypesFrom<typeof Core.sNodeSaveData>): void {
         this.template.afterSave?.call(this, saveData);
     }
 
-    beforeLoad(saveData: Core.tNodeSaveData): void {
+    beforeLoad(saveData: Core.GetKeyTypesFrom<typeof Core.sNodeSaveData>): void {
         this.template.beforeLoad?.call(this, saveData);
     }
 
-    afterLoad(saveData: Core.tNodeSaveData): void {
+    afterLoad(saveData: Core.GetKeyTypesFrom<typeof Core.sNodeSaveData>): void {
         this.template.afterLoad?.call(this, saveData);
     }
 
@@ -184,15 +184,17 @@ export default class Node {
         this.domRef = null;
     }
 
-    toSaveData(): Core.tNodeSaveData {
+    toSaveData(): Core.GetKeyTypesFrom<typeof Core.sNodeSaveData> {
         this.beforeSave();
 
-        const outObj: Core.tNodeSaveData = [
+        const widgetData = this.widget ? JSON.parse(JSON.stringify(this.widgetData)) : {}
+        const outObj: Core.GetKeyTypesFrom<typeof Core.sNodeSaveData> = [
             this.templateId,
             this.nodeId,
             this.graphId,
             this.pos.clone().multiplyScalar(100).divideScalar(100).floor().toArray(),
             [],
+            widgetData,
             {},
         ];
 
@@ -201,21 +203,17 @@ export default class Node {
             outObj[4].push([id, outValue]);
         });
 
-        if (this.widget){
-            outObj[5] = JSON.parse(JSON.stringify(this.widgetData));
-        }
-
         this.afterSave(outObj);
 
         return outObj;
     }
 
-    static fromSaveData(data: Core.tNodeSaveData, parentScript: Logic, nodeAPI: Node_API): Node {
+    static fromSaveData(data: Core.GetKeyTypesFrom<typeof Core.sNodeSaveData>, parentScript: Logic, nodeAPI: Node_API): Node {
         const node = new Node(data[0], data[1], Vector.fromArray(data[3]), parentScript, data[2], nodeAPI);
         return node._loadSaveData(data);
     }
 
-    private _loadSaveData(data: Core.tNodeSaveData): Node {
+    private _loadSaveData(data: Core.GetKeyTypesFrom<typeof Core.sNodeSaveData>): Node {
         this.beforeLoad(data);
 
         if (data[5]){

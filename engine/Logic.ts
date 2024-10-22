@@ -3,15 +3,17 @@ import Engine from './Engine';
 import {
     Instance_Object,
     iEngineLogic,
-    tLogicSaveData,
+    sLogicSaveData,
     iEngineOutTrigger,
     iEngineOutput,
     iEngineInTrigger,
     iEngineInput,
-    tNodeSaveData,
+    sNodeSaveData,
     CATEGORY_ID,
-    tConnectionSaveData,
+    sConnectionSaveData,
     iEventContext,
+    Struct,
+    GetKeyTypesFrom,
 } from '@engine/core/core';
 import { SOCKET_TYPE } from './core/nodes/Node_Enums';
 
@@ -26,27 +28,39 @@ export default class Logic implements iEngineLogic {
     graphNames = new Map<number, string>();
     events: Map<string, Node[]> = new Map();
 
-    constructor(logicData: tLogicSaveData, engine: Engine){
-        this.id = logicData[0];
-        this.name = logicData[1];
+    constructor(logicData: GetKeyTypesFrom<typeof sLogicSaveData>, engine: Engine){
+        const dataObj = Struct.objFromArr(sLogicSaveData, logicData);
+
+        if (!dataObj){
+            throw new Error('Error reading logic script from save data');
+        }
+
+        this.id = dataObj.id;
+        this.name = dataObj.name;
 
         const nodeMap = new Map<number, Node>();
 
         //populate graph name map
-        logicData[4].forEach((graphData) => this.graphNames.set(graphData[0], graphData[1]));
+        dataObj.graphList.forEach((graphData) => this.graphNames.set(graphData[0], graphData[1]));
 
         //create all nodes
-        logicData[5].forEach((nodeData: tNodeSaveData) => {
+        dataObj.nodeDataList.forEach((nodeData: GetKeyTypesFrom<typeof sNodeSaveData>) => {
+            const nodeObj = Struct.objFromArr(sNodeSaveData, nodeData);
+
+            if (!nodeObj){
+                throw new Error('Error reading node from save data');
+            }
+
             const newNode = new Node(nodeData, this, engine);
-            nodeMap.set(nodeData[1], newNode);
+            nodeMap.set(nodeObj.nodeID, newNode);
             this._nodes.push(newNode);
 
             if (newNode.isEvent){
-                let eventArr = this.events.get(nodeData[0]);
+                let eventArr = this.events.get(nodeObj.templateID);
 
                 if (!eventArr){
                     eventArr = [];
-                    this.events.set(nodeData[0], eventArr);
+                    this.events.set(nodeObj.templateID, eventArr);
                 }
 
                 eventArr.push(newNode);
@@ -54,9 +68,15 @@ export default class Logic implements iEngineLogic {
         });
 
         //create and link connections
-        logicData[6].forEach((connection: tConnectionSaveData) => {
-            const startNode = nodeMap.get(connection[4])!;
-            const endNode = nodeMap.get(connection[5])!;
+        dataObj.connectionDataList.forEach((connection: GetKeyTypesFrom<typeof sConnectionSaveData>) => {
+            const connectionObj = Struct.objFromArr(sConnectionSaveData, connection);
+
+            if (!connectionObj){
+                throw new Error('Error reading node connection from save data');
+            }
+
+            const startNode = nodeMap.get(connectionObj.startNodeID)!;
+            const endNode = nodeMap.get(connectionObj.endNodeID)!;
             const allStartSockets = new Map<string, iEngineOutTrigger | iEngineOutput>();
             const allEndSockets = new Map<string, iEngineInTrigger | iEngineInput>();
 
@@ -65,8 +85,8 @@ export default class Logic implements iEngineLogic {
             endNode.inTriggers.forEach((iTrigger, key) => allEndSockets.set(key, iTrigger));
             endNode.inputs.forEach((input, key) => allEndSockets.set(key, input));
 
-            allStartSockets.get(connection[2])!.connection = allEndSockets.get(connection[3])!;
-            allEndSockets.get(connection[3])!.connection = allStartSockets.get(connection[2])!;
+            allStartSockets.get(connection[2])!.connection = allEndSockets.get(connectionObj.endSocketID)!;
+            allEndSockets.get(connection[3])!.connection = allStartSockets.get(connectionObj.startSocketID)!;
         });
     }
 

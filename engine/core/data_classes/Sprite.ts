@@ -1,14 +1,14 @@
 import {CATEGORY_ID} from '../Enums';
 import {createCanvas, hexToRGBA, RGBAToHex} from '../Draw';
-import { Asset_Base, tAssetSaveData } from './Asset_Base';
+import { Asset_Base, sAssetSaveData } from './Asset_Base';
 import { NavState, tNavSaveData } from '../NavState';
-import type { Label } from './Asset_Base';
+import { Struct, GetKeyTypesFrom } from '../Struct';
 
-export type tSpriteSaveData = [
-    ...tAssetSaveData,
-    Label<string[], 'Frame List'>,
-    Label<tNavSaveData, 'Nav Save Data'>,
-]
+export const sSpriteSaveData = [
+    ...sAssetSaveData,
+    ['frameList', [] as string[]],
+    ['navSaveData', [] as unknown as tNavSaveData],
+] as const;
 
 export class Sprite extends Asset_Base {
     static get DIMENSIONS(){return 16}
@@ -29,7 +29,7 @@ export class Sprite extends Asset_Base {
         return this.frameIsEmpty(0) ? null : this.drawToCanvas(0);
     }
     
-    toSaveData(): tSpriteSaveData {
+    toSaveData(): GetKeyTypesFrom<typeof sSpriteSaveData> {
         return [
             ...this.getBaseAssetData(),
             this.compressFrames(this.getFramesCopy()).map(f => f.join(',')),
@@ -37,17 +37,23 @@ export class Sprite extends Asset_Base {
          ];
     }
 
-    static fromSaveData(data: tSpriteSaveData): Sprite {
+    static fromSaveData(data: GetKeyTypesFrom<typeof sSpriteSaveData>): Sprite {
         return new Sprite()._loadSaveData(data);
     }
 
-    private _loadSaveData(data: tSpriteSaveData): Sprite {
-        const splitFrames = data[3].map(f => f.split(','));
+    private _loadSaveData(data: GetKeyTypesFrom<typeof sSpriteSaveData>): Sprite {
+        const dataObj = Struct.objFromArr(sSpriteSaveData, data);
+
+        if (!dataObj){
+            throw new Error('Error loading sprite from save data');
+        }
+
+        const splitFrames = dataObj.frameList.map(f => f.split(','));
         const hexFrames = this.decompressFrames(splitFrames);
         const imgDataFrames = new Array(hexFrames.length);
 
         this.loadBaseAssetData(data);
-        this.navState = NavState.fromSaveData(data[4]);
+        this.navState = NavState.fromSaveData(dataObj.navSaveData);
 
         for (let i = 0; i < hexFrames.length; i++){
             imgDataFrames[i] = this._hexToImageData(splitFrames[i]);

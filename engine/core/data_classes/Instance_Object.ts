@@ -14,8 +14,6 @@ export const sObjectInstanceSaveData = [
     ['collOver', Struct.getDataType<COLLISION_OVERRIDE>()],
 ] as const;
 
-console.log(sObjectInstanceSaveData);
-
 enum COLLISION_OVERRIDE {
     KEEP = 'K',
     FORCE = 'F',

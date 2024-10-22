@@ -3,7 +3,7 @@ import { SOCKET_TYPE } from "./nodes/Node_Enums";
 import { Vector } from "./Vector";
 import Engine from "@engine/Engine";
 import {
-    tAssetSaveData,
+    sAssetSaveData,
     iInput,
     iInTrigger,
     tNavSaveData,
@@ -13,7 +13,8 @@ import {
     CATEGORY_ID,
     Event_Emitter,
     Node_Enums,
-    Label,
+    Struct,
+    GetKeyTypesFrom,
 } from "./core";
 
 //types needed for node editor API, which is the only place the engine code has to know about editor types
@@ -40,9 +41,9 @@ export interface iNodeLifecycleEvents {
     registerActions?: (editorAPI: iEditorAPI)=>void; //Fired once per template each time the node editor is opened
     init?: ()=>void; // Fired on constructor
     beforeSave?: ()=>void;
-    afterSave?: (saveData: tNodeSaveData)=>void;
-    beforeLoad?: (saveData: tNodeSaveData)=>void;
-    afterLoad?: (saveData: tNodeSaveData)=>void;
+    afterSave?: (saveData: GetKeyTypesFrom<typeof sNodeSaveData>)=>void;
+    beforeLoad?: (saveData: GetKeyTypesFrom<typeof sNodeSaveData>)=>void;
+    afterLoad?: (saveData: GetKeyTypesFrom<typeof sNodeSaveData>)=>void;
     logicLoaded?: (logic: iEditorLogic | iEngineLogic)=>void;
     afterGameDataLoaded?: ()=>void;
     onCreate?: // Fired when instance is spawned, or when editor node is created
@@ -248,39 +249,35 @@ export interface iEngineNode extends iNode_Base {
 
 export type iEventContext = {eventKey: number, instance: Instance_Object};
 
-export type tLogicSaveData = [
-    ...tAssetSaveData,
-    Label<number, 'Selected Graph ID'>,
-    Label<Array<[
-        Label<number, 'ID'>,
-        Label<string, 'Name'>,
-        Label<tNavSaveData, 'Nav Save Data'>,
-    ]>, 'Graph List'>,
-    Label<tNodeSaveData[], 'Node Data List'>,
-    Label<tConnectionSaveData[], 'Connection Data List'>,
-]
+export const sLogicSaveData = [
+    ...sAssetSaveData,
+    ['selectedGraphID', Number()],
+    ['graphList', [] as unknown as (readonly [number, string, tNavSaveData])[]],
+    ['nodeDataList', Struct.getDataType<Array<GetKeyTypesFrom<typeof sNodeSaveData>>>()],
+    ['connectionDataList', Struct.getDataType<Array<GetKeyTypesFrom<typeof sConnectionSaveData>>>()],
+] as const;
 
-export type tNodeSaveData = [
-    Label<string, 'Template ID'>,
-    Label<number, 'Node ID'>,
-    Label<number, 'Graph ID'>,
-    Label<[number, number], 'Position'>,
-    Label<[
-        Label<string, 'ID'>,
-        Label<any, 'Value'>,
-    ][], 'Inputs'>,
-    Label<any, 'Widget Data'>,
-    Label<any, 'Extra save data appended by node'>?,
-]
+export const sNodeSaveData = [
+    ['templateID', String()],
+    ['nodeID', Number()],
+    ['graphID', Number()],
+    ['pos', [Number(), Number()]],
+    ['inputs', new Array<[
+        string,
+        any,
+    ]>()],
+    ['widgetData', Struct.getDataType<any>()],
+    ['extra', Struct.getDataType<any>()],
+] as const;
 
-export type tConnectionSaveData = [
-    Label<number, 'ID'>,
-    Label<number, 'Graph ID'>,
-    Label<string, 'Start Socket ID'>,
-    Label<string, 'End Socket ID'>,
-    Label<number, 'Start Node ID'>,
-    Label<number, 'End Node ID'>,
-]
+export const sConnectionSaveData = [
+    ['ID', Number()],
+    ['graphID', Number()],
+    ['startSocketID', String()],
+    ['endSocketID', String()],
+    ['startNodeID', Number()],
+    ['endNodeID', Number()],
+] as const;
 
 export interface iNodeExceptionData {
     errorId: symbol;

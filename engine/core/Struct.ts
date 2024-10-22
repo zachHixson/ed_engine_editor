@@ -48,37 +48,3 @@ export class Struct {
 
     static getDataType<T>(): T {return null as any}
 }
-
-//Testing
-// const saveDataStruct = [
-//     ["ID", Number()],
-//     ["name", String()],
-//     ["someBool", Boolean()],
-// ] as const;
-
-// console.log(
-//     'Object from Array',
-//     Struct.objFromArr(saveDataStruct, [3, 'hello', false])
-// )
-
-// console.log(
-//     'Array from object',
-//     Struct.arrFromObj(saveDataStruct, {ID: 3, name: 'arrName', someBool: true})
-// )
-
-// class ATestClass {
-//     ID: number;
-//     name: string;
-//     someBool: boolean;
-
-//     constructor(){
-//         this.ID = Math.floor(Math.random() * 10);
-//         this.name = 'Default';
-//         this.someBool = Math.random() * 2 > 1;
-//     }
-// }
-
-// console.log(
-//     'Assign load struct array into object',
-//     Struct.assignFromArray(saveDataStruct, new ATestClass(), [6, 'new name', false])
-// )

@@ -78,7 +78,7 @@ export default class Node_Connection {
         this.endSocketEl = null;
     }
 
-    toSaveData(): Core.tConnectionSaveData {
+    toSaveData(): Core.GetKeyTypesFrom<typeof Core.sConnectionSaveData> {
         const {id, graphId, startNode, endNode} = this;
         const startSocketId = this.startSocketId!;
         const endSocketId = this.endSocketId!;
@@ -95,19 +95,31 @@ export default class Node_Connection {
         ];
     }
 
-    static fromSaveData(data: Core.tConnectionSaveData, nodeMap: Map<number, Node>): Node_Connection {
+    static fromSaveData(data: Core.GetKeyTypesFrom<typeof Core.sConnectionSaveData>, nodeMap: Map<number, Node>): Node_Connection {
+        const dataObj = Core.Struct.objFromArr(Core.sConnectionSaveData, data);
+
+        if (!dataObj){
+            throw new Error('Error reading node connection from save data');
+        }
+
         const newData : tConnectionConstructor = {
-            id: data[0],
-            graphId: data[1],
-            startSocketId: data[2],
-            endSocketId: data[3],
+            id: dataObj.ID,
+            graphId: dataObj.graphID,
+            startSocketId: dataObj.startSocketID,
+            endSocketId: dataObj.endSocketID,
         };
         return new Node_Connection(newData)._loadSaveData(data, nodeMap);
     }
 
-    private _loadSaveData(data: Core.tConnectionSaveData, nodeMap: Map<number, Node>){
-        this.startNode = nodeMap.get(data[4])!;
-        this.endNode = nodeMap.get(data[5])!;
+    private _loadSaveData(data: Core.GetKeyTypesFrom<typeof Core.sConnectionSaveData>, nodeMap: Map<number, Node>){
+        const dataObj = Core.Struct.objFromArr(Core.sConnectionSaveData, data);
+
+        if (!dataObj){
+            throw new Error('Error reading node connection from save data');
+        }
+
+        this.startNode = nodeMap.get(dataObj.startNodeID)!;
+        this.endNode = nodeMap.get(dataObj.endNodeID)!;
 
         return this;
     }

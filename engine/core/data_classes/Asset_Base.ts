@@ -22,13 +22,13 @@ export abstract class Asset_Base {
     }
     
     getBaseAssetData(): GetKeyTypesFrom<typeof sAssetSaveData> {
-        const outObj = Struct.arrFromObj(sAssetSaveData, this);
+        const outArr = Struct.arrFromObj(sAssetSaveData, this);
 
-        if (!outObj){
+        if (!outArr){
             throw new Error('Error reading base asset data');
         }
 
-        return outObj;
+        return outArr;
     }
 
     abstract toSaveData(): any;

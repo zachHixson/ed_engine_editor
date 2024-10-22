@@ -10,9 +10,6 @@ export const sInstanceLogicSaveData = [
     ['logicId', Number()],
 ] as const;
 
-console.log(sObjectInstanceSaveData);
-console.log(sInstanceLogicSaveData)
-
 export class Instance_Logic extends Instance_Object {
     private static readonly _placeHolderObject = (()=>{
         const obj = new Game_Object();
