@@ -5,9 +5,11 @@ import {
     iNodeTemplate,
     convertSocketType,
     NodeMap,
-    tNodeSaveData,
+    sNodeSaveData,
     iEventContext,
     Node_Enums,
+    GetKeyTypesFrom,
+    Struct,
 } from "@engine/core/core";
 import { iAnyObj } from "./core/interfaces";
 import { listConvert } from "./core/nodes/Socket_Conversions";
@@ -31,19 +33,25 @@ export default class Node implements iEngineNode {
     outputs: iEngineNode["outputs"] = new Map();
     execute: ((eventContext: iEventContext, data: any)=>void) | null = null;
 
-    constructor(nodeData: tNodeSaveData, logic: Logic, engine: Engine){
-        const template = NodeMap.get(nodeData[0])!;
+    constructor(nodeSaveData: GetKeyTypesFrom<typeof sNodeSaveData>, logic: Logic, engine: Engine){
+        const nodeData = Struct.objFromArr(sNodeSaveData, nodeSaveData);
+
+        if (!nodeData){
+            throw new Error('Error reading node from save data');
+        }
+
+        const template = NodeMap.get(nodeData.templateID)!;
 
         this.engine = engine;
 
-        template.beforeLoad?.call(this, nodeData);
+        template.beforeLoad?.call(this, nodeSaveData);
         
         this.template = template;
-        this.nodeId = nodeData[1];
+        this.nodeId = nodeData.nodeID;
         this.parentScript = logic;
-        this.graphId = nodeData[2];
+        this.graphId = nodeData.graphID;
         this.isEvent = template.isEvent ?? false;
-        this.widgetData = nodeData[5] ?? null;
+        this.widgetData = nodeData.widgetData ?? null;
 
         template.inTriggers?.forEach(trigger => {
             const {execute} = trigger;
@@ -82,7 +90,7 @@ export default class Node implements iEngineNode {
             });
         })
 
-        nodeData[4].forEach(srcInput => {
+        nodeData.inputs.forEach(srcInput => {
             this.inputs.get(srcInput[0])!.value = srcInput[1];
         });
 
@@ -94,7 +102,7 @@ export default class Node implements iEngineNode {
             this.execute = template.execute;
         }
 
-        this.template.afterLoad?.call(this, nodeData);
+        this.template.afterLoad?.call(this, nodeSaveData);
         this.template.init?.call(this);
     }
 

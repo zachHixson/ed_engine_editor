@@ -1,4 +1,4 @@
-import {INSTANCE_TYPE} from '../Enums';
+import { INSTANCE_TYPE } from '../Enums';
 import { ConstVector, Vector } from '../Vector';
 import { Sprite } from './Sprite';
 import { Instance_Exit } from './Instance_Exit';
