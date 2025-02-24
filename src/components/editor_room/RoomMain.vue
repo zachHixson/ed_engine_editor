@@ -68,6 +68,7 @@ import eraserIcon from '@/assets/eraser.svg';
 import cameraIcon from '@/assets/camera.svg';
 import exitIcon from '@/assets/exit.svg';
 import gearIcon from '@/assets/gear.svg';
+import noIcon from '@/assets/no.svg';
 
 const { ROOM_TOOL_TYPE } = Core;
 
@@ -144,7 +145,20 @@ const propertiesOpen = computed<boolean>({
         roomEditorStore.setPropPanelState(newVal);
     }
 });
-const propertiesIcon = computed(()=>tools.find(t => t.tool == roomEditorStore.selectedTool)!.icon);
+const propertiesIcon = computed(()=>{
+    const selected = roomEditorStore.selectedTool;
+
+    if (!selected) return noIcon;
+
+    const tool = tools.find(t => t.tool == selected);
+
+    if (!tool || !tool.icon) {
+        console.error('Cannot find icon for properties tab');
+        return noIcon;
+    }
+
+    return tool.icon;
+});
 const isRoomSelected = computed<boolean>(()=>props.selectedRoom != null);
 const cssBG = computed<string>(()=>{
     const color =  props.selectedRoom?.bgColor.toHex() ?? '#FFFFFF'

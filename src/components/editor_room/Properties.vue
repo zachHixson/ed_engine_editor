@@ -82,10 +82,11 @@ const showExitProps = computed(()=>(
     (props.selectedTool == Core.ROOM_TOOL_TYPE.SELECT_MOVE || props.selectedTool == Core.ROOM_TOOL_TYPE.EXIT)
 ));
 const showRoomProps = computed(()=>props.selectedTool == Core.ROOM_TOOL_TYPE.ROOM_PROPERTIES);
-const showPlaceHolder = computed(()=>
+const showNoSelection = computed(()=>
     (props.selectedTool == Core.ROOM_TOOL_TYPE.SELECT_MOVE || props.selectedTool == Core.ROOM_TOOL_TYPE.EXIT) &&
     !props.selectedInstance
 );
+const showNoToolProps = computed(()=>!props.selectedTool);
 </script>
 
 <template>
@@ -134,7 +135,8 @@ const showPlaceHolder = computed(()=>
             @room-prop-set="emit('room-prop-set', $event)"
             @room-bg-changed="emit('room-bg-changed', $event)"
             @room-bg-change-end="emit('room-bg-change-end', $event)"></RoomProperties>
-        <div v-show="showPlaceHolder" class="noProps">{{$t('room_editor.no_props')}}</div>
+        <div v-show="showNoSelection" class="noProps">{{$t('room_editor.no_selection')}}</div>
+        <div v-show="showNoToolProps" class="noProps">{{$t('room_editor.no_tool_props')}}</div>
     </div>
 </template>
 
