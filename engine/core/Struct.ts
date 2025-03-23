@@ -1,6 +1,6 @@
 export type tStruct = readonly (readonly [PropertyKey, any, boolean?])[];
-export type GetKeyTypesFrom<T extends tStruct> = { [I in keyof T]: T[I][1] }
-export type GetObjectTypeFrom<T extends tStruct> = { [I in `${number}` & keyof T as T[I][0]]: T[I][1] }
+export type GetKeyTypesFrom<T extends tStruct> = { -readonly [I in keyof T]: T[I][1] }
+export type GetObjectTypeFrom<T extends tStruct> = { -readonly [I in `${number}` & keyof T as T[I][0]]: T[I][1] }
 
 export class Struct {
     static objFromArr<S extends tStruct>(struct: S, arr: GetKeyTypesFrom<S>): GetObjectTypeFrom<S> | null {

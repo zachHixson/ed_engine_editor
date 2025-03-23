@@ -12,7 +12,6 @@ import {
     tSerializedGameData,
     iAnyObj,
     Vector,
-    ConstVector,
     Instance_Object,
     Util,
     INSTANCE_TYPE,
@@ -474,7 +473,7 @@ export class Engine implements iEngineCallbacks {
         }
     }
 
-    private _screenToWorldPos = (pos: ConstVector): Vector =>{
+    private _screenToWorldPos = (pos: Readonly<Vector>): Vector =>{
         const p = pos.clone();
 
         //convert to clip space
@@ -681,7 +680,7 @@ export class Engine implements iEngineCallbacks {
         }
     }
 
-    translateInstance = (instance: Instance_Base, velocity: ConstVector): void => {
+    translateInstance = (instance: Instance_Base, velocity: Readonly<Vector>): void => {
         const vel = velocity.clone().scale(this._deltaTime);
         const newPos = instance.pos.clone().add(vel);
         this.setInstancePosition(instance, newPos);

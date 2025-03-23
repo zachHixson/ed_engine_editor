@@ -1,6 +1,6 @@
 import { iNodeTemplate } from "./iNodeTemplate";
 import {SOCKET_TYPE, WIDGET} from './Node_Enums';
-import { ConstVector, Vector } from '../Vector';
+import { Vector } from '../Vector';
 import { iEditorNode, iEngineNode, iEventContext } from '../LogicInterfaces';
 import { Instance_Base, Sprite, Util, Node_Enums } from '../core';
 
@@ -161,7 +161,7 @@ export default catMovement;
         this.triggerOutput('_o', eventContext);
     }
 
-    function checkExitBacktrack(this: iEngineNode, eventContext: iEventContext, newPos: ConstVector): boolean {
+    function checkExitBacktrack(this: iEngineNode, eventContext: iEventContext, newPos: Readonly<Vector>): boolean {
         if (!(eventContext.instance.prevExit && eventContext.instance.prevExit?.exit.detectBacktracking)) return false;
 
         const direction = newPos.clone().subtract(eventContext.instance.pos).normalize();

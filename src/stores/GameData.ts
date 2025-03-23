@@ -31,9 +31,9 @@ export const useGameDataStore = defineStore({
         getAllObjects: (state): Core.Game_Object[] => state.objects as Core.Game_Object[],
         getAllLogic: (state): Logic[] => state.logic as Logic[],
         getAllRooms: (state): Core.Room[] => state.rooms as Core.Room[],
-        getSpriteSaveData: (state) => (): Core.tSpriteSaveData[] => state.sprites.map(s => s.toSaveData()),
-        getObjectSaveData: (state) => (): Core.tGameObjectSaveData[] => state.objects.map(o => o.toSaveData()),
-        getRoomSaveData: (state) => (): Core.tRoomSaveData[] => state.rooms.map(r => r.toSaveData()),
+        getSpriteSaveData: (state) => (): Core.GetKeyTypesFrom<typeof Core.sSpriteSaveData>[] => state.sprites.map(s => s.toSaveData()),
+        getObjectSaveData: (state) => (): Core.GetKeyTypesFrom<typeof Core.sGameObjectSaveData>[] => state.objects.map(o => o.toSaveData()),
+        getRoomSaveData: (state) => (): Core.GetKeyTypesFrom<typeof Core.sRoomSaveData>[] => state.rooms.map(r => r.toSaveData()),
         getLogicSaveData: (state) => (): any => state.logic.map(r => r.toSaveData()),
     },
 

@@ -8,7 +8,7 @@ import type { imEvent } from '../RoomEditWindow.vue';
 import { checkNameCollisions } from '../Properties.vue';
 
 type AddProps = {newInstance?: Core.Instance_Base, instRefList?: Core.Instance_Base[], pos?: Core.Vector};
-type ExitAddProps = {exitRef?: Core.Instance_Exit, pos: Core.ConstVector};
+type ExitAddProps = {exitRef?: Core.Instance_Exit, pos: Readonly<Core.Vector>};
 
 const t = i18n.global.t;
 
@@ -39,7 +39,7 @@ export function useAdd(args: iActionArguments){
             }
         }
 
-        private _instanceFromCopy(pos: Core.ConstVector): Core.Instance_Base | null {
+        private _instanceFromCopy(pos: Readonly<Core.Vector>): Core.Instance_Base | null {
             const selectedInstance = args.editorSelection.value;
 
             if (!selectedInstance) return null;
@@ -72,7 +72,7 @@ export function useAdd(args: iActionArguments){
             if (sourceId == undefined) return;
 
             const instancesInCell = roomEditorStore.addBrushOverlap ? [] : this._getInstancesAtPos(mEvent.worldCell, sourceId);
-            const newCell = !this._curCell?.equalTo(mEvent.worldCell) ?? true;
+            const newCell = this._curCell ? !this._curCell.equalTo(mEvent.worldCell) : true;
     
             if (this._mouseDown && newCell && !instancesInCell.length){
                 const createFunc = roomEditorStore.addBrushCopy ? this._instanceFromCopy : this._instanceFromAsset;

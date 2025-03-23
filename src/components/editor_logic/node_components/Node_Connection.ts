@@ -120,6 +120,7 @@ export default class Node_Connection {
 
         this.startNode = nodeMap.get(dataObj.startNodeID)!;
         this.endNode = nodeMap.get(dataObj.endNodeID)!;
+        this.type = this.startNode.template.outputs?.find(i => i.id == this.startSocketId)?.type ?? null;
 
         return this;
     }

@@ -11,7 +11,7 @@ export default class Move extends Tool_Base {
         super();
     }
 
-    private _clipBounds(arr: number[], offset: Core.ConstVector): void {
+    private _clipBounds(arr: number[], offset: Readonly<Core.Vector>): void {
         const min = offset.clone()
         const max = min.clone().addScalar(Core.Sprite.DIMENSIONS);
 

@@ -8,7 +8,7 @@ import { Instance_Exit, sExitSaveData } from './Instance_Exit';
 import { Sprite } from './Sprite';
 import { Game_Object } from './Game_Object';
 import { Instance_Object } from './Instance_Object';
-import { ConstVector, Vector } from '../Vector';
+import { Vector } from '../Vector';
 import { Instance_Base, sInstanceBaseSaveData } from './Instance_Base';
 import { Linked_List } from '../Linked_List';
 import { Instance_Sprite, sInstanceSpriteSaveData } from './Instance_Sprite';
@@ -185,7 +185,7 @@ export class Room extends Asset_Base {
         return instance;
     }
 
-    setInstancePosition(instRef: Instance_Base, newPos: ConstVector): void {
+    setInstancePosition(instRef: Instance_Base, newPos: Readonly<Vector>): void {
         instRef.setPosition(newPos);
         this._spacialCollection?.updatePosition(instRef.id);
     }

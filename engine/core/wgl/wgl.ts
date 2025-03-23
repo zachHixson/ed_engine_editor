@@ -174,7 +174,7 @@ export class Attribute {
         this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._buffer);
     }
 
-    set(data: ArrayBuffer, size = 1, type: number = this._gl.FLOAT, normalize = false, offset = 0, stride = 0, hint = this._gl.STATIC_DRAW): void {
+    set(data: ArrayBufferView, size = 1, type: number = this._gl.FLOAT, normalize = false, offset = 0, stride = 0, hint = this._gl.STATIC_DRAW): void {
         this._gl.useProgram(this._program);
         this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._buffer);
         this._gl.bufferData(this._gl.ARRAY_BUFFER, data, hint);

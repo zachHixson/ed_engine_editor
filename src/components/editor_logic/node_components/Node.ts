@@ -39,7 +39,7 @@ export default class Node {
     onUpdateConnections = new Core.Event_Emitter<()=>void>(this);
     onRecalcWidth = new Core.Event_Emitter<()=>void>(this);
 
-    constructor(templateId: string, id: number, pos: Core.ConstVector, parentScript: Logic, graphId: number, editorAPI: Node_API){
+    constructor(templateId: string, id: number, pos: Readonly<Core.Vector>, parentScript: Logic, graphId: number, editorAPI: Node_API){
         const template = Core.NodeMap.get(templateId)!;
         
         this._template = template;
@@ -187,7 +187,7 @@ export default class Node {
     toSaveData(): Core.GetKeyTypesFrom<typeof Core.sNodeSaveData> {
         this.beforeSave();
 
-        const widgetData = this.widget ? JSON.parse(JSON.stringify(this.widgetData)) : {}
+        const widgetData = this.widget ? JSON.parse(JSON.stringify(this.widgetData ?? {})) : {}
         const outObj: Core.GetKeyTypesFrom<typeof Core.sNodeSaveData> = [
             this.templateId,
             this.nodeId,
@@ -241,7 +241,7 @@ export default class Node {
         this.domRef.style.top = this.pos.y + 'px';
     }
 
-    setPos(newPos: Core.ConstVector): void {
+    setPos(newPos: Readonly<Core.Vector>): void {
         this.pos.copy(newPos);
         this.domRef!.style.left = this.pos.x + 'px';
         this.domRef!.style.top = this.pos.y + 'px';

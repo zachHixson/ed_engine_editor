@@ -76,7 +76,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
 
         this.graphs = dataObj.graphList.map(graph => {
             this._nextGraphId = Math.max(this._nextGraphId, graph[0] + 1);
-            return Graph.fromSaveData(graph);
+            return Graph.fromSaveData(graph as unknown as any);
         });
         this.nodes = dataObj.nodeDataList.map(nodeData => {
             this._nextNodeId = Math.max(this._nextNodeId, nodeData[1] + 1);

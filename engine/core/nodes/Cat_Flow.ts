@@ -1,5 +1,6 @@
 import { iNodeTemplate } from "./iNodeTemplate";
-import { iEngineNode, iEditorNode, tNodeSaveData, iEventContext, iNodeConnection } from "../LogicInterfaces";
+import { GetKeyTypesFrom, Struct } from '../Struct';
+import { iEngineNode, iEditorNode, sNodeSaveData, iEventContext, iNodeConnection } from "../LogicInterfaces";
 import { canConvertSocket } from './Socket_Conversions';
 import { SOCKET_TYPE, WIDGET } from "./Node_Enums";
 import { Asset_Base, GenericNode, isEngineNode } from "../core";
@@ -43,11 +44,11 @@ export default catFlow;
             {id: '_i', execute: startSequence},
         ],
         outTriggers: ['#1', '#2'],
-        afterSave(this: iEditorNode, saveData: tNodeSaveData){
+        afterSave(this: iEditorNode, saveData: GetKeyTypesFrom<typeof sNodeSaveData>){
             saveData[6] = this.outTriggers.size;
         },
-        afterLoad(this: iEditorNode, saveData: tNodeSaveData){
-            const outputNumber = saveData[6];
+        afterLoad(this: iEditorNode, saveData: GetKeyTypesFrom<typeof sNodeSaveData>){
+            const outputNumber = saveData[6] as number;
             this.outTriggers.clear();
     
             for (let i = 0; i < outputNumber; i++){
@@ -684,7 +685,8 @@ export default catFlow;
 
 {// Dialog Box
     function startDialog(this: iEngineNode, eventContext: iEventContext): void {
-        const textArea = this.getWidgetData();
+        const widgetData = this.getWidgetData();
+        const textArea = Object.keys(widgetData).length > 0 ? widgetData : "";
         const textBox = this.getInput<string>('text', eventContext);
         const interactKey = this.getInput<string>('interaction_key', eventContext) ?? 'Space';
         const shouldPause = this.getInput<boolean>('pause_game', eventContext);

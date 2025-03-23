@@ -1,22 +1,6 @@
 import { Mat3 } from "./Mat3";
 
-export interface ConstVector {
-    readonly x: number;
-    readonly y: number;
-    clone(): Vector;
-    dot(vec: ConstVector): number;
-    cross(vec: ConstVector): number;
-    distanceTo(vec: ConstVector): number;
-    distanceNoSqrt(vec: ConstVector): number;
-    length(): number;
-    lengthNoSqrt(): number;
-    magnitude(): number;
-    equalTo(vec: ConstVector): boolean;
-    toObject(): {x: number, y: number};
-    toArray(): [number, number];
-};
-
-export class Vector implements ConstVector {
+export class Vector {
     x: number;
     y: number;
 
@@ -25,7 +9,7 @@ export class Vector implements ConstVector {
         this.y = y;
     }
 
-    add(vec: ConstVector): Vector {
+    add(vec: Readonly<Vector>): Vector {
         this.x += vec.x;
         this.y += vec.y;
         return this;
@@ -37,7 +21,7 @@ export class Vector implements ConstVector {
         return this;
     }
 
-    subtract(vec: ConstVector): Vector {
+    subtract(vec: Readonly<Vector>): Vector {
         this.x -= vec.x;
         this.y -= vec.y;
         return this;
@@ -49,7 +33,7 @@ export class Vector implements ConstVector {
         return this;
     }
 
-    multiply(vec: ConstVector): Vector {
+    multiply(vec: Readonly<Vector>): Vector {
         this.x *= vec.x;
         this.y *= vec.y;
         return this;
@@ -75,7 +59,7 @@ export class Vector implements ConstVector {
         return this.scale(scalar);
     }
 
-    divide(vec: ConstVector): Vector {
+    divide(vec: Readonly<Vector>): Vector {
         this.x /= vec.x;
         this.y /= vec.y;
         return this;
@@ -87,11 +71,11 @@ export class Vector implements ConstVector {
         return this;
     }
 
-    dot(vec: ConstVector): number {
+    dot(vec: Readonly<Vector>): number {
         return this.x * vec.x + this.y * vec.y;
     }
 
-    cross(vec: ConstVector): number {
+    cross(vec: Readonly<Vector>): number {
         return this.x * vec.y - this.y * vec.x;
     }
 
@@ -182,26 +166,26 @@ export class Vector implements ConstVector {
         return this;
     }
 
-    equalTo(vec: ConstVector): boolean {
+    equalTo(vec: Readonly<Vector>): boolean {
         return (
             this.x == vec.x &&
             this.y == vec.y
         );
     }
 
-    distanceTo(vec: ConstVector): number {
+    distanceTo(vec: Readonly<Vector>): number {
         const dx = this.x - vec.x;
         const dy = this.y - vec.y;
         return Math.sqrt(dx * dx + dy * dy);
     }
 
-    distanceNoSqrt(vec: ConstVector): number {
+    distanceNoSqrt(vec: Readonly<Vector>): number {
         const dx = this.x - vec.x;
         const dy = this.y - vec.y;
         return dx * dx + dy * dy;
     }
 
-    randomize(lb: ConstVector, ub: ConstVector): Vector {
+    randomize(lb: Readonly<Vector>, ub: Readonly<Vector>): Vector {
         const dx = ub.x - lb.x;
         const dy = ub.y - lb.y;
         this.x = Math.random() * dx + lb.x;

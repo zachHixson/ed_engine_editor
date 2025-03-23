@@ -7,8 +7,8 @@ export interface iState {
     graphPanelOpen: boolean,
     globalVariableMap: Map<string, Core.iEditorVariable>,
     clipboard: {
-        nodeData: Core.tNodeSaveData[],
-        connectionData: Core.tConnectionSaveData[],
+        nodeData: typeof Core.sNodeSaveData[],
+        connectionData: typeof Core.sConnectionSaveData[],
     },
     errors: ReadonlyArray<Core.iNodeExceptionData>,
 }
@@ -40,7 +40,7 @@ export const useLogicEditorStore = defineStore({
         selectNavTool(newTool: Core.NAV_TOOL_TYPE | null){ this.selectedNavTool = newTool },
         setOpenCategory(category: string | null){ this.openCategory = category },
         setGraphPanelState(newState: boolean){ this.graphPanelOpen = newState },
-        setClipboard(nodeData: Core.tNodeSaveData[], connectionData: Core.tConnectionSaveData[]){
+        setClipboard(nodeData: typeof Core.sNodeSaveData[], connectionData: typeof Core.sConnectionSaveData[]){
             this.clipboard.nodeData = nodeData;
             this.clipboard.connectionData = connectionData;
         },

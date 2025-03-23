@@ -153,7 +153,7 @@ function emitValueChanged(newVal: any): void {
 }
 
 function mouseDown(event: MouseEvent): void {
-    const connection = new Node_Connection();
+    const connection = new Node_Connection({id: 0});
 
     event.stopPropagation();
 

@@ -306,7 +306,7 @@ function navChange(newState: Core.NavState): void {
     vpEl.style.backgroundPosition = `left ${center.x}px top ${center.y}px`;
 }
 
-function clientToNavPos(pos: Core.ConstVector): Core.Vector {
+function clientToNavPos(pos: Readonly<Core.Vector>): Core.Vector {
     /*
         - Calculate mouse's viewport position (based on "client space", so that the hierarchy is irrelivent)
         - Calculate the mouse's position in the navWrapper in percentage (EX: x:50%, y:25%)

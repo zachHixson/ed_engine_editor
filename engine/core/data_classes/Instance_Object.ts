@@ -1,5 +1,5 @@
 import { INSTANCE_TYPE } from '../Enums';
-import { ConstVector, Vector } from '../Vector';
+import { Vector } from '../Vector';
 import { Sprite } from './Sprite';
 import { Instance_Exit } from './Instance_Exit';
 import { Game_Object } from './Game_Object';
@@ -30,7 +30,7 @@ export class Instance_Object extends Instance_Base{
     private _hasCollisionEvent: boolean | null = null;
     private _prevExit: {
         exit: Instance_Exit,
-        direction: ConstVector,
+        direction: Readonly<Vector>,
     } | null = null;
     private _useIcon = false;
 
@@ -39,7 +39,7 @@ export class Instance_Object extends Instance_Base{
     localVariables: Map<string, iEngineVariable> = new Map();
     exposedProps: Map<string, any> = new Map();
 
-    constructor(id: number, pos: ConstVector, objRef: Game_Object){
+    constructor(id: number, pos: Readonly<Vector>, objRef: Game_Object){
         super(id, pos);
 
         this._objRef = objRef;
@@ -194,7 +194,7 @@ export class Instance_Object extends Instance_Base{
         this.logic?.executeEvent(eventName, this, data);
     }
 
-    setPrevExit(exit: Instance_Exit, direction: ConstVector): void {
+    setPrevExit(exit: Instance_Exit, direction: Readonly<Vector>): void {
         this._prevExit = {
             exit,
             direction,

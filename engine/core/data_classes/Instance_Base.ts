@@ -1,5 +1,5 @@
 import { INSTANCE_TYPE } from '../Enums';
-import { ConstVector, Vector } from '../Vector';
+import { Vector } from '../Vector';
 import { Draw } from '../core';
 import { Sprite, Util, Node_Enums } from '../core';
 import { Struct, GetKeyTypesFrom } from '../Struct';
@@ -59,7 +59,7 @@ export abstract class Instance_Base{
     flipV: boolean = false;
     backAnim = 1;
 
-    constructor(id: number, pos: ConstVector = new Vector()){
+    constructor(id: number, pos: Readonly<Vector> = new Vector()){
         this.id = id;
         this.name = this.id.toString();
         this.pos = pos.clone();
@@ -104,7 +104,7 @@ export abstract class Instance_Base{
     get onGround(){return this._onGround};
     get applyGravity(){return false};
     set applyGravity(newVal: boolean){};
-    get totalVelocity(){return this._cachedTotalVelocity as ConstVector};
+    get totalVelocity(){return this._cachedTotalVelocity as Readonly<Vector>};
     abstract get frameDataId(): number | string;
     abstract get frameData(): Array<ImageData>;
 
@@ -225,7 +225,7 @@ export abstract class Instance_Base{
         }
     }
 
-    setPosition(newPos: ConstVector): void {
+    setPosition(newPos: Readonly<Vector>): void {
         this.lastPos.copy(this.pos);
         this.pos.copy(newPos);
     }

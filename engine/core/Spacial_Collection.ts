@@ -1,5 +1,5 @@
 import { Linked_List, Node as LL_Node } from "./Linked_List";
-import { ConstVector, Vector } from "./Vector";
+import { Vector } from "./Vector";
 import { mod } from './Util';
 import { iAnyObj } from "./interfaces";
 
@@ -70,7 +70,7 @@ export class Spacial_Collection<T extends iSpacialObject> {
         return this._map.get(id)?.data ?? null;
     }
 
-    getByRadius(pos: ConstVector, radius: number): T[] {
+    getByRadius(pos: Readonly<Vector>, radius: number): T[] {
         const surveyCellCount = Math.floor(Math.max(radius, this._cellDimensions) / this._cellDimensions);
         const surveyGridSize = surveyCellCount * 2 + 1;
         const startPos = pos.clone().subtractScalar(surveyCellCount * this._cellDimensions);

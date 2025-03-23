@@ -1,4 +1,4 @@
-import { Instance_Base, Vector, Util, Sprite, ConstVector } from './core/core';
+import { Instance_Base, Vector, Util, Sprite } from './core/core';
 
 export type MoveResult = {
     point: Vector,
@@ -14,7 +14,7 @@ export type RaycastResult = {
 
 const INV_SPR_DIM = 1 / Sprite.DIMENSIONS;
 
-export function raycast(pos: ConstVector, instanceList: Instance_Base[], velocity: ConstVector): RaycastResult[] {
+export function raycast(pos: Readonly<Vector>, instanceList: Instance_Base[], velocity: Readonly<Vector>): RaycastResult[] {
     const collisionDim = new Vector(Sprite.DIMENSIONS, Sprite.DIMENSIONS);
     const normVel = velocity.clone().normalize();
     const results: RaycastResult[] = [];
@@ -37,7 +37,7 @@ export function raycast(pos: ConstVector, instanceList: Instance_Base[], velocit
     return results;
 }
 
-export function move(startPoint: ConstVector, worldInstances: Instance_Base[], velocity: ConstVector): MoveResult {
+export function move(startPoint: Readonly<Vector>, worldInstances: Instance_Base[], velocity: Readonly<Vector>): MoveResult {
     const velOffset = velocity.clone().normalize().scale(0.001);
     const instCenter = startPoint.clone().add(velOffset);
     const rayHits = raycast(instCenter, worldInstances, velocity);
@@ -94,7 +94,7 @@ export function move(startPoint: ConstVector, worldInstances: Instance_Base[], v
     };
 }
 
-function holeCheck(point: ConstVector, worldInstances: Instance_Base[], velocity: ConstVector): {start: Vector, direction: Vector} | null {
+function holeCheck(point: Readonly<Vector>, worldInstances: Instance_Base[], velocity: Readonly<Vector>): {start: Vector, direction: Vector} | null {
     /*
         General Idea:
             - If the player is aligned to one axis (i.e. they are butting up against a wall, floor, or ceiling)
@@ -143,7 +143,7 @@ function holeCheck(point: ConstVector, worldInstances: Instance_Base[], velocity
     return null;
 }
 
-export function moveAndSlide(startPoint: ConstVector, worldInstances: Instance_Base[], velocity: ConstVector): MoveResult {
+export function moveAndSlide(startPoint: Readonly<Vector>, worldInstances: Instance_Base[], velocity: Readonly<Vector>): MoveResult {
     const moveResult = move(startPoint, worldInstances, velocity);
     
     //Calculate adjusted velocity

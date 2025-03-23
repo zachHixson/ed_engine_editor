@@ -90,7 +90,7 @@ export default function useConnection(
         connectionObj.endNode?.onRemoveConnection(connectionObj);
     
         if (makeCommit){
-            const data = {connectionObj: Object.assign(new Node_Connection(), connectionObj)};
+            const data = {connectionObj: Object.assign(new Node_Connection({id: 0}), connectionObj)};
             const prevSocket = undoStore.cache.get('prev_socket');
     
             Object.assign(data.connectionObj, prevSocket);
@@ -110,7 +110,7 @@ export default function useConnection(
         }
 
         if (makeCommit){
-            const clonedList = connectionObjList.map(connection => Object.assign(new Node_Connection(), connection));
+            const clonedList = connectionObjList.map(connection => Object.assign(new Node_Connection({id: 0}), connection));
             const connectionObjMap = new Map<Logic, Node_Connection[]>
             const data = {connectionObjList, connectionObjMap};
 

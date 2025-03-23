@@ -251,7 +251,7 @@ function centerFromBounds(bounds: {top: number, bottom: number, left: number, ri
     return midPoint;
 }
 
-function navToSVGSpace(point: Core.ConstVector): Core.Vector {
+function navToSVGSpace(point: Readonly<Core.Vector>): Core.Vector {
     return point.clone().subtract(cssOrigin.value);
 }
 
