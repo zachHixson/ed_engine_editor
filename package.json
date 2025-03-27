@@ -18,6 +18,7 @@
   "dependencies": {
     "@intlify/unplugin-vue-i18n": "^0.8.1",
     "@vue/cli-shared-utils": "^5.0.8",
+    "canvas": "^3.1.0",
     "pinia": "^2.0.28",
     "vue": "^3.2.45",
     "vue-i18n": "^11.1.2"
