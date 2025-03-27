@@ -1,6 +1,5 @@
 import { fileURLToPath, URL } from 'node:url'
 import filterReplace from 'vite-plugin-filter-replace';
-import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 import svgLoader from 'vite-svg-loader';
 
@@ -37,7 +36,6 @@ export default defineConfig(({mode}) => {
     ];
     const plugins = [
         vue(),
-        VueI18nPlugin({}),
         filterReplace(filterReplaceArgs, {
             enforce: 'pre',
             apply: 'build',

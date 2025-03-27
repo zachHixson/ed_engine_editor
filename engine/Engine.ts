@@ -34,6 +34,12 @@ import { SOCKET_TYPE } from './core/nodes/Node_Enums';
 import * as Physics from './Physics';
 export * as Core from '@engine/core/core';
 
+declare global {
+    interface Window {
+        IS_ENGINE: boolean;
+    }
+}
+
 enum KEY_STATE {
     DOWN = 'down',
     PRESSED = 'pressed',

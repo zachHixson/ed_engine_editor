@@ -7,7 +7,10 @@
       "@/*": ["./src/*"],
       "@compiled/*": ["./_compiled/*"],
       "@engine/*": ["./engine/*"]
-    }
+    },
+    "importsNotUsedAsValues": "remove",
+    "preserveValueImports": false,
+    "lib": ["DOM", "DOM.Iterable", "es2018"]
   },
 
   "references": [

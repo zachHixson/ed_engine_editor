@@ -102,7 +102,7 @@ export class Atlas {
         return this._lastFoundIdx;
     }
 
-    private _calculateOffsetPosition(offset: number): number[] {
+    private _calculateOffsetPosition(offset: number): [number, number] {
         const idx = offset * this._tileSize;
         const x = idx % this._atlasSize;
         const y = Math.floor(idx / this._atlasSize) * this._tileSize;

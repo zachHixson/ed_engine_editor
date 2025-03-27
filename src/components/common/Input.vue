@@ -46,7 +46,7 @@ function onBlur(event: FocusEvent): void {
     emit('blur', event);
 }
 
-function onChange(event: InputEvent): void {
+function onChange(event: Event): void {
     const target = event.target as HTMLInputElement;
     const parsedVal = parseFloat(target.value);
 
