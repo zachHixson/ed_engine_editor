@@ -151,8 +151,8 @@ export default function useNode(
 
         const nodeMap = new Map<number, Node_Obj>();
         const connectionList= nodesToCopy[0].parentScript.connections;
-        const nodeData: Core.tNodeSaveData[] = [];
-        const connectionData: Core.tConnectionSaveData[] = [];
+        const nodeData: typeof Core.sNodeSaveData[] = [];
+        const connectionData: typeof Core.sConnectionSaveData[] = [];
         const boundsCenter = new Vector(0, 0);
 
         //calculate node bounds
@@ -223,9 +223,9 @@ export default function useNode(
         });
 
         connectionData.forEach(data => {
-            const modifiedData = Object.assign({}, data);
-            modifiedData.sNodeId = idMap.get(modifiedData.sNodeId)!;
-            modifiedData.eNodeId = idMap.get(modifiedData.eNodeId)!;
+            const modifiedData = data;
+            modifiedData[4] = idMap.get(modifiedData[4])!;
+            modifiedData[5] = idMap.get(modifiedData[5])!;
 
             const connection = Node_Connection.fromSaveData(modifiedData, nodeMap);
             connection.id = 0;

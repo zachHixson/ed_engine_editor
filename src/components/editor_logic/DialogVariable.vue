@@ -82,8 +82,8 @@ onMounted(()=>{
     if (props.editVarInfo){
         varName.value = props.editVarInfo.name;
         type.value = props.editVarInfo.type;
-        isGlobal.value = props.editVarInfo.isGlobal;
-        isList.value = props.editVarInfo.isList;
+        isGlobal.value = !!props.editVarInfo.isGlobal;
+        isList.value = !!props.editVarInfo.isList;
     }
 });
 
