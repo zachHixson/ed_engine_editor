@@ -1,14 +1,17 @@
 import { defineStore } from 'pinia';
 import type Core from '@/core';
 
+type NodeDataArr = Core.GetKeyTypesFrom<typeof Core.sNodeSaveData>;
+type ConnectionDataArr = Core.GetKeyTypesFrom<typeof Core.sConnectionSaveData>
+
 export interface iState {
     selectedNavTool: Core.NAV_TOOL_TYPE | null,
     openCategory: string | null,
     graphPanelOpen: boolean,
     globalVariableMap: Map<string, Core.iEditorVariable>,
     clipboard: {
-        nodeData: typeof Core.sNodeSaveData[],
-        connectionData: typeof Core.sConnectionSaveData[],
+        nodeData: NodeDataArr[],
+        connectionData: ConnectionDataArr[],
     },
     errors: ReadonlyArray<Core.iNodeExceptionData>,
 }
@@ -40,7 +43,7 @@ export const useLogicEditorStore = defineStore({
         selectNavTool(newTool: Core.NAV_TOOL_TYPE | null){ this.selectedNavTool = newTool },
         setOpenCategory(category: string | null){ this.openCategory = category },
         setGraphPanelState(newState: boolean){ this.graphPanelOpen = newState },
-        setClipboard(nodeData: typeof Core.sNodeSaveData[], connectionData: typeof Core.sConnectionSaveData[]){
+        setClipboard(nodeData: NodeDataArr[], connectionData: ConnectionDataArr[]){
             this.clipboard.nodeData = nodeData;
             this.clipboard.connectionData = connectionData;
         },

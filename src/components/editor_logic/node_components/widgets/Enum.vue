@@ -38,7 +38,7 @@ const selectWidth = computed(()=>{
     const nodeText = te(nodeKey) ? t(nodeKey) : '';
     let largest = textSizeCtx.measureText(nodeText).width;
 
-    enumOptions.value.forEach(({ name, value }: {value: string}) => {
+    enumOptions.value.forEach(({ name, value }: {name: string, value: string}) => {
         const key = 'node.' + value
         const curText = te(key) ? t(key) : name;
         const curLength = textSizeCtx.measureText(curText).width;
