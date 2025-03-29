@@ -25,7 +25,6 @@ export * from './Spacial_Collection';
 export * as Util from './Util';
 export * from './Vector';
 export * from './Mat3';
-export * from './Struct';
 
 export * as WGL from './wgl/wgl';
 export * from './wgl/Instance_Renderer';

@@ -1,4 +1,4 @@
-import { sGameObjectSaveData, sRoomSaveData, sSpriteSaveData, sLogicSaveData, GetKeyTypesFrom } from "./core";
+import { SpriteSave, GameObjectSave, RoomSave, LogicSave } from '@compiled/SaveTypes';
 
 export type iAnyObj = {[key: string | number | symbol]: any};
 
@@ -8,8 +8,8 @@ export type tSerializedGameData = {
     newestID: number,
     selectedRoomId: number | null,
     startRoom: number | null,
-    sprites: GetKeyTypesFrom<typeof sSpriteSaveData>[],
-    objects: GetKeyTypesFrom<typeof sGameObjectSaveData>[],
-    rooms: GetKeyTypesFrom<typeof sRoomSaveData>[],
-    logic: GetKeyTypesFrom<typeof sLogicSaveData>[],
+    sprites: SpriteSave[],
+    objects: GameObjectSave[],
+    rooms: RoomSave[],
+    logic: LogicSave[],
 }

@@ -3,16 +3,9 @@ import { Vector } from '../Vector';
 import { Sprite } from './Sprite';
 import { Instance_Exit } from './Instance_Exit';
 import { Game_Object } from './Game_Object';
-import { InstanceAnimEvent, iCollisionEvent, sInstanceBaseSaveData, Instance_Base } from './Instance_Base';
+import { InstanceAnimEvent, iCollisionEvent, Instance_Base } from './Instance_Base';
 import { iEngineVariable } from '../LogicInterfaces';
-import { Struct, GetKeyTypesFrom } from '../Struct';
-
-export const sObjectInstanceSaveData = [
-    ...sInstanceBaseSaveData,
-    ['srcObjID', Number()],
-    ['zDepthOver', Struct.getDataType<number | ''>()],
-    ['collOver', Struct.getDataType<COLLISION_OVERRIDE>()],
-] as const;
+import { InstanceObjectSave, InstanceObjectSaveId } from '@compiled/SaveTypes';
 
 enum COLLISION_OVERRIDE {
     KEEP = 'K',
@@ -20,7 +13,7 @@ enum COLLISION_OVERRIDE {
     IGNORE = 'I',
 };
 
-export class Instance_Object extends Instance_Base{
+export class Instance_Object extends Instance_Base {
     static DEFAULT_INSTANCE_ICON_ID = 'INSTANCE_ICON';
     static DEFAULT_INSTANCE_ICON = [new ImageData(Sprite.DIMENSIONS, Sprite.DIMENSIONS)];
     static COLLISION_OVERRIDES = COLLISION_OVERRIDE;
@@ -150,7 +143,7 @@ export class Instance_Object extends Instance_Base{
         return clone;
     }
 
-    override toSaveData(): GetKeyTypesFrom<typeof sObjectInstanceSaveData> {
+    override toSaveData(): InstanceObjectSave {
         return [
             ...this.getBaseSaveData(),
             this._objRef.id,
@@ -163,31 +156,22 @@ export class Instance_Object extends Instance_Base{
         return !objectMap.get(this._objRef.id);
     }
 
-    static fromSaveData(data: [string, unknown][], objMap: Map<number, Game_Object>): Instance_Object {
-        const objData = data as unknown as GetKeyTypesFrom<typeof sObjectInstanceSaveData>
-        const dataObj = Struct.objFromArr(sObjectInstanceSaveData, objData);
-
-        if (!dataObj){
-            throw new Error('Error loading object instance from save data');
-        }
-
-        const newObj = new Instance_Object(dataObj.id, Vector.fromArray(dataObj.pos), objMap.get(dataObj.srcObjID)!);
-        newObj._loadSaveData(objData);
+    static fromSaveData(data: [...InstanceObjectSave, ...any[]], objMap: Map<number, Game_Object>): Instance_Object {
+        const newObj = new Instance_Object(
+            data[InstanceObjectSaveId.id],
+            Vector.fromArray(data[InstanceObjectSaveId.pos]),
+            objMap.get(data[InstanceObjectSaveId.srcObjID])!
+        );
+        newObj._loadSaveData(data);
 
         return newObj;
     }
 
-    private _loadSaveData(data: GetKeyTypesFrom<typeof sObjectInstanceSaveData>): void {
+    private _loadSaveData(data: [...InstanceObjectSave, ...any[]]): void {
         this.loadBaseSaveData(data);
 
-        const dataObj = Struct.objFromArr(sObjectInstanceSaveData, data);
-
-        if (!dataObj){
-            throw new Error('Error loading save object instance save data');
-        }
-
-        this.zDepthOverride = dataObj.zDepthOver == '' ? null : dataObj.zDepthOver;
-        this.collisionOverride = dataObj.collOver;
+        this.zDepthOverride = data[InstanceObjectSaveId.zDepthOver] == '' ? null : data[InstanceObjectSaveId.zDepthOver];
+        this.collisionOverride = data[InstanceObjectSaveId.collOver] as COLLISION_OVERRIDE;
     }
 
     executeNodeEvent(eventName: string, data?: any): void {

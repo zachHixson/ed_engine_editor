@@ -1,13 +1,8 @@
 import { INSTANCE_TYPE } from "../Enums";
 import { Vector } from "../Vector";
-import { Instance_Base, sInstanceBaseSaveData } from "./Instance_Base";
+import { Instance_Base } from "./Instance_Base";
 import { Sprite } from "./Sprite";
-import { Struct, GetKeyTypesFrom } from "../Struct";
-
-export const sInstanceSpriteSaveData = [
-    ...sInstanceBaseSaveData,
-    ['spriteID', Number()],
-] as const;
+import { InstanceSpriteSave, InstanceSpriteSaveId } from "@compiled/SaveTypes";
 
 export class Instance_Sprite extends Instance_Base {
     static DEFAULT_SPRITE_ICON_ID = 'SPRITE_ICON';
@@ -54,7 +49,7 @@ export class Instance_Sprite extends Instance_Base {
         return clone;
     }
 
-    override toSaveData(): GetKeyTypesFrom<typeof sInstanceSpriteSaveData> {
+    override toSaveData(): InstanceSpriteSave {
         return [
             ...this.getBaseSaveData(),
             this.sprite?.id ?? -1,
@@ -66,15 +61,12 @@ export class Instance_Sprite extends Instance_Base {
         return !spriteMap.get(this.sprite.id);
     }
 
-    static fromSaveData(data: GetKeyTypesFrom<typeof sInstanceSpriteSaveData>, spriteMap: Map<number, Sprite>): Instance_Sprite {
-        const dataObj = Struct.objFromArr(sInstanceSpriteSaveData, data);
-
-        if (!dataObj){
-            throw new Error('Error loading sprite instance from save data');
-        }
-
-        const spriteAsset = dataObj.spriteID >= 0 ? spriteMap.get(dataObj.spriteID)! : null;
-        const newSprite = new Instance_Sprite(dataObj.id, Vector.fromArray(dataObj.pos), spriteAsset);
+    static fromSaveData(data: InstanceSpriteSave, spriteMap: Map<number, Sprite>): Instance_Sprite {
+        const id = data[InstanceSpriteSaveId.id];
+        const spriteID = data[InstanceSpriteSaveId.spriteID];
+        const pos = data[InstanceSpriteSaveId.pos];
+        const spriteAsset = spriteID >= 0 ? spriteMap.get(spriteID)! : null;
+        const newSprite = new Instance_Sprite(id, Vector.fromArray(pos), spriteAsset);
         newSprite.loadBaseSaveData(data);
         return newSprite;
     }

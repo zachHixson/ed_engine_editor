@@ -1,5 +1,5 @@
 import { Vector } from '../Vector';
-import { iCollisionEvent, sInstanceBaseSaveData, Instance_Base } from './Instance_Base';
+import { iCollisionEvent, Instance_Base } from './Instance_Base';
 import {INSTANCE_TYPE} from '../Enums';
 import { Instance_Object } from './Instance_Object';
 import { Game_Object } from './Game_Object';
@@ -8,17 +8,7 @@ import Engine from '@engine/Engine';
 import { COLLISION_EVENT } from '../nodes/Node_Enums';
 import { TRANSITION } from '@engine/transitions/Transition_Base';
 import { Room } from './Room';
-import { Struct, GetKeyTypesFrom } from '../Struct';
-
-export const sExitSaveData = [
-    ...sInstanceBaseSaveData,
-    ['detectBacktrack',Struct.getDataType<0 | 1>()],
-    ['isEnding', Struct.getDataType<0 | 1>()],
-    ['destRoomID', Struct.getDataType<number | ''>()],
-    ['destRoomExit', Struct.getDataType<number | ''>()],
-    ['transiType', Struct.getDataType<TRANSITION>()],
-    ['endingDialog', String()],
-] as const;
+import { ExitSave, ExitSaveId } from '@compiled/SaveTypes';
 
 export class Instance_Exit extends Instance_Base {
     static EXIT_ICON_ID = 'EXIT_ICON';
@@ -146,7 +136,7 @@ export class Instance_Exit extends Instance_Base {
         return clone;
     }
 
-    override toSaveData(): GetKeyTypesFrom<typeof sExitSaveData> {
+    override toSaveData(): ExitSave {
         return [
             ...this.getBaseSaveData(),
             (+this.detectBacktracking) as (0 | 1),
@@ -173,25 +163,19 @@ export class Instance_Exit extends Instance_Base {
         return false;
     }
 
-    static fromSaveData(data: GetKeyTypesFrom<typeof sExitSaveData>): Instance_Exit {
+    static fromSaveData(data: ExitSave): Instance_Exit {
         return new Instance_Exit(data[0], Vector.fromArray(data[3]))._loadSaveData(data);
     }
 
-    private _loadSaveData(data: GetKeyTypesFrom<typeof sExitSaveData>): Instance_Exit {
+    private _loadSaveData(data: ExitSave): Instance_Exit {
         this.loadBaseSaveData(data);
 
-        const dataObj = Struct.objFromArr(sExitSaveData, data);
-
-        if (!dataObj){
-            throw new Error('Error loading Exit data');
-        }
-
-        this.detectBacktracking = !!dataObj.detectBacktrack;
-        this.isEnding = !!dataObj.isEnding;
-        this.destinationRoom = dataObj.destRoomID === '' ? null : dataObj.destRoomID;
-        this.destinationExit = dataObj.destRoomExit === '' ? null : dataObj.destRoomExit;
-        this.transition = dataObj.transiType;
-        this.endingDialog = dataObj.endingDialog;
+        this.detectBacktracking = !!data[ExitSaveId.detectBacktrack];
+        this.isEnding = !!data[ExitSaveId.isEnding];
+        this.destinationRoom = data[ExitSaveId.destRoomID] === '' ? null : data[ExitSaveId.destRoomID];
+        this.destinationExit = data[ExitSaveId.destRoomExit] === '' ? null : data[ExitSaveId.destRoomExit];
+        this.transition = data[ExitSaveId.transiType] as TRANSITION;
+        this.endingDialog = data[ExitSaveId.endingDialog];
 
         return this;
     }

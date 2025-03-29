@@ -1,14 +1,9 @@
 import { Vector } from "../Vector";
-import { Instance_Object, sObjectInstanceSaveData } from "./Instance_Object";
+import { Instance_Object } from "./Instance_Object";
 import { Game_Object } from "./Game_Object";
 import { iEngineLogic } from "../LogicInterfaces";
 import { INSTANCE_TYPE } from "../Enums";
-import { Struct, GetKeyTypesFrom } from "../Struct";
-
-export const sInstanceLogicSaveData = [
-    ...sObjectInstanceSaveData,
-    ['logicId', Number()],
-] as const;
+import { InstanceLogicSave, InstanceLogicSaveId, InstanceObjectSave } from "@compiled/SaveTypes";
 
 export class Instance_Logic extends Instance_Object {
     private static readonly _placeHolderObject = (()=>{
@@ -57,36 +52,35 @@ export class Instance_Logic extends Instance_Object {
         return clone;
     }
 
-    override toSaveData(): GetKeyTypesFrom<typeof sObjectInstanceSaveData> {
+    override toSaveData(): InstanceObjectSave {
         const saveObj = [
             ...super.toSaveData(),
             this.logicId,
-        ] as GetKeyTypesFrom<typeof sInstanceLogicSaveData>;
+        ] as InstanceLogicSave;
 
-        return saveObj as any;
+        return saveObj as unknown as InstanceObjectSave;
     }
 
     override needsPurge(logicMap: Map<number, any>): boolean {
         return !logicMap.get(this.logicId);
     }
 
-    static fromSaveData(data: [string, unknown][], objMap: Map<number, Game_Object>): Instance_Logic {
-        const logData = data as unknown as GetKeyTypesFrom<typeof sInstanceLogicSaveData>;
-        const dataObj = Struct.objFromArr(sInstanceLogicSaveData, logData);
+    static fromSaveData(data: InstanceLogicSave, objMap: Map<number, Game_Object>): Instance_Logic {
+        const instance = new Instance_Logic(
+            data[InstanceLogicSaveId.id],
+            Vector.fromArray(data[InstanceLogicSaveId.pos]),
+            data[InstanceLogicSaveId.logicId],
+            data[InstanceLogicSaveId.name]
+        );
+        const srcObjId = data[InstanceLogicSaveId.srcObjID];
 
-        if (!dataObj){
-            throw new Error('Error loading Logic instance from save data');
+        instance.name = data[InstanceLogicSaveId.name];
+
+        if (srcObjId >= 0){
+            instance._objRef = objMap.get(srcObjId)!;
         }
 
-        const instance = new Instance_Logic(dataObj.id, Vector.fromArray(dataObj.pos), dataObj.logicId, dataObj.name);
-
-        instance.name = dataObj.name;
-
-        if (dataObj.srcObjID >= 0){
-            instance._objRef = objMap.get(dataObj.srcObjID)!;
-        }
-
-        instance.logicId = dataObj.logicId;
+        instance.logicId = data[InstanceLogicSaveId.logicId];
 
         return instance;
     }

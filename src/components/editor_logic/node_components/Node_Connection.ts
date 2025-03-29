@@ -1,5 +1,6 @@
 import type Node from './Node';
 import Core from '@/core';
+import { ConnectionSave, ConnectionSaveId } from '@compiled/SaveTypes';
 
 type tConnectionConstructor = {
     id: number,
@@ -78,7 +79,7 @@ export default class Node_Connection {
         this.endSocketEl = null;
     }
 
-    toSaveData(): Core.GetKeyTypesFrom<typeof Core.sConnectionSaveData> {
+    toSaveData(): ConnectionSave {
         const {id, graphId, startNode, endNode} = this;
         const startSocketId = this.startSocketId!;
         const endSocketId = this.endSocketId!;
@@ -95,31 +96,19 @@ export default class Node_Connection {
         ];
     }
 
-    static fromSaveData(data: Core.GetKeyTypesFrom<typeof Core.sConnectionSaveData>, nodeMap: Map<number, Node>): Node_Connection {
-        const dataObj = Core.Struct.objFromArr(Core.sConnectionSaveData, data);
-
-        if (!dataObj){
-            throw new Error('Error reading node connection from save data');
-        }
-
+    static fromSaveData(data: ConnectionSave, nodeMap: Map<number, Node>): Node_Connection {
         const newData : tConnectionConstructor = {
-            id: dataObj.ID,
-            graphId: dataObj.graphID,
-            startSocketId: dataObj.startSocketID,
-            endSocketId: dataObj.endSocketID,
+            id: data[ConnectionSaveId.ID],
+            graphId: data[ConnectionSaveId.graphID],
+            startSocketId: data[ConnectionSaveId.startSocketID],
+            endSocketId: data[ConnectionSaveId.endSocketID],
         };
         return new Node_Connection(newData)._loadSaveData(data, nodeMap);
     }
 
-    private _loadSaveData(data: Core.GetKeyTypesFrom<typeof Core.sConnectionSaveData>, nodeMap: Map<number, Node>){
-        const dataObj = Core.Struct.objFromArr(Core.sConnectionSaveData, data);
-
-        if (!dataObj){
-            throw new Error('Error reading node connection from save data');
-        }
-
-        this.startNode = nodeMap.get(dataObj.startNodeID)!;
-        this.endNode = nodeMap.get(dataObj.endNodeID)!;
+    private _loadSaveData(data: ConnectionSave, nodeMap: Map<number, Node>){
+        this.startNode = nodeMap.get(data[ConnectionSaveId.startNodeID])!;
+        this.endNode = nodeMap.get(data[ConnectionSaveId.endNodeID])!;
         this.type = this.startNode.template.outputs?.find(i => i.id == this.startSocketId)?.type ?? null;
 
         return this;

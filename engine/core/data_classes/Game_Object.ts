@@ -1,32 +1,14 @@
-import { Asset_Base, sAssetSaveData } from './Asset_Base';
+import { Asset_Base } from './Asset_Base';
 import {CATEGORY_ID} from '../Enums';
 import { Sprite } from './Sprite';
 import { iEngineLogic } from '../LogicInterfaces';
-import { Struct, GetKeyTypesFrom } from '../Struct';
+import { GameObjectSave, GameObjectSaveId } from '@compiled//SaveTypes';
 
 enum EXIT_TYPES {
     TO_DESTINATION = 'TD',
     KEEP_POSITION = 'KP',
     TRANSITION_ONLY = 'TO',
 };
-
-export const sGameObjectSaveData = [
-    ...sAssetSaveData,
-    ['startFrame', Number()],
-    ['spriteID', Struct.getDataType<number | ''>()],
-    ['animFPS', Number()],
-    ['loopAnim', 0 | 1],
-    ['playAnim', 0 | 1],
-    ['zDepth', Number()],
-    ['isSolid', 0 | 1],
-    ['useGravity', 0 | 1],
-    ['triggerExits', 0 | 1],
-    ['exitBehavior', Struct.getDataType<EXIT_TYPES>()],
-    ['keepCameraSettings', 0 | 1],
-    ['customLogic', 0 | 1],
-    ['logicScriptID', Struct.getDataType<number | ''>()],
-    ['groupList', Struct.getDataType<string[]>()],
-] as const;
 
 export class Game_Object extends Asset_Base {
     static get EXIT_TYPES(){return EXIT_TYPES}
@@ -69,7 +51,7 @@ export class Game_Object extends Asset_Base {
         return clone;
     }
 
-    toSaveData(): GetKeyTypesFrom<typeof sGameObjectSaveData> {
+    toSaveData(): GameObjectSave {
         return [
             ...this.getBaseAssetData(),
             this._startFrame,
@@ -89,34 +71,28 @@ export class Game_Object extends Asset_Base {
         ];
     }
 
-    static fromSaveData(data: GetKeyTypesFrom<typeof sGameObjectSaveData>, spriteMap: Map<number, Sprite>): Game_Object {
+    static fromSaveData(data: GameObjectSave, spriteMap: Map<number, Sprite>): Game_Object {
         return new Game_Object()._loadSaveData(data, spriteMap);
     }
 
-    private _loadSaveData(data: GetKeyTypesFrom<typeof sGameObjectSaveData>, spriteMap: Map<number, Sprite>, logicMap?: Map<number, iEngineLogic>): Game_Object {
+    private _loadSaveData(data: GameObjectSave, spriteMap: Map<number, Sprite>, logicMap?: Map<number, iEngineLogic>): Game_Object {
         this.loadBaseAssetData(data);
 
-        const dataObj = Struct.objFromArr(sGameObjectSaveData, data);
-
-        if (!dataObj){
-            throw new Error('Error loading Game_Object from file');
-        }
-
-        this._startFrame = dataObj.startFrame;
-        this.sprite = dataObj.spriteID ? spriteMap.get(dataObj.spriteID)! : null;
-        this.fps = dataObj.animFPS;
-        this.animLoop = !!dataObj.loopAnim;
-        this.animPlaying = !!dataObj.playAnim;
-        this.zDepth = dataObj.zDepth;
-        this.isSolid = !!dataObj.isSolid;
-        this.applyGravity = !!dataObj.useGravity;
-        this.triggerExits = !!dataObj.triggerExits;
-        this.exitBehavior = dataObj.exitBehavior;
-        this.keepCameraSettings = !!dataObj.keepCameraSettings;
-        this.customLogic = !!dataObj.customLogic;
-        this.logicScriptId = dataObj.logicScriptID == '' ? null : dataObj.logicScriptID;
+        this._startFrame = data[GameObjectSaveId.startFrame];
+        this.sprite = data[GameObjectSaveId.spriteID] ? spriteMap.get(data[GameObjectSaveId.spriteID])! : null;
+        this.fps = data[GameObjectSaveId.animFPS];
+        this.animLoop = !!data[GameObjectSaveId.loopAnim];
+        this.animPlaying = !!data[GameObjectSaveId.playAnim];
+        this.zDepth = data[GameObjectSaveId.zDepth];
+        this.isSolid = !!data[GameObjectSaveId.isSolid];
+        this.applyGravity = !!data[GameObjectSaveId.useGravity];
+        this.triggerExits = !!data[GameObjectSaveId.triggerExits];
+        this.exitBehavior = data[GameObjectSaveId.exitBehavior] as EXIT_TYPES;
+        this.keepCameraSettings = !!data[GameObjectSaveId.keepCameraSettings];
+        this.customLogic = !!data[GameObjectSaveId.customLogic];
+        this.logicScriptId = data[GameObjectSaveId.logicScriptID] == '' ? null : data[GameObjectSaveId.logicScriptID];
         this.logicScript = logicMap?.get(this.logicScriptId!) ?? null;
-        this.groups = dataObj.groupList;
+        this.groups = data[GameObjectSaveId.groupList];
         return this;
     }
 

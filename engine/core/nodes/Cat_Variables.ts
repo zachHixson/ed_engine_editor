@@ -1,10 +1,10 @@
 import { iNodeTemplate } from './iNodeTemplate';
 import {SOCKET_TYPE, SOCKET_DEFAULT} from './Node_Enums';
-import { iEditorNode, iEngineNode, sNodeSaveData, iEventContext, iVarInfo, iEditorAPI } from '../LogicInterfaces';
+import { iEditorNode, iEngineNode, iEventContext, iVarInfo, iEditorAPI } from '../LogicInterfaces';
 import { iAnyObj } from '../interfaces';
 import { isEngineNode, type GenericNode } from './Node_Library';
 import { canConvertSocket } from './Socket_Conversions';
-import { GetKeyTypesFrom } from '../Struct';
+import { NodeSave, NodeSaveId } from '@compiled/SaveTypes';
 
 type ActionCreateVariable = {varNode: iEditorNode, varInfo: iVarInfo};
 type ActionEditVariable = {varNode: iEditorNode, newVarInfo: iVarInfo, oldVarInfo: iVarInfo, oldInitValue: any};
@@ -135,18 +135,18 @@ export default catVariables;
                 }
             });
         },
-        afterSave(this: iEditorNode, saveData: GetKeyTypesFrom<typeof sNodeSaveData>){
+        afterSave(this: iEditorNode, saveData: NodeSave){
             const valueInput = saveData[4].find((input: iAnyObj) => input[0] == 'initial_value')!;
             const varInfo = Object.assign({}, this.getNodeData<iVarInfo>());
 
             varInfo.isGlobal = varInfo.isGlobal ? 1 : 0;
             varInfo.isList = varInfo.isList ? 1 : 0;
             
-            saveData[6] = varInfo;
-            saveData[4][0] = valueInput;
+            saveData[NodeSaveId.extra] = varInfo;
+            saveData[NodeSaveId.inputs][0] = valueInput;
         },
-        afterLoad(this: GenericNode, saveData: GetKeyTypesFrom<typeof sNodeSaveData>){
-            const varInfo = saveData[6];
+        afterLoad(this: GenericNode, saveData: NodeSave){
+            const varInfo = saveData[NodeSaveId.extra];
 
             varInfo.isGlobal = !!varInfo.isGlobal;
             varInfo.isList = !!varInfo.isList;

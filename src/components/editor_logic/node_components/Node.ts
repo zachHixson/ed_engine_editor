@@ -1,6 +1,7 @@
 import Core from '@/core';
 import type Logic from "./Logic";
 import type Node_API from "../Node_API";
+import { NodeSave, NodeSaveId } from '@compiled/SaveTypes';
 
 const { Vector } = Core;
 
@@ -115,15 +116,15 @@ export default class Node {
         this.template.beforeSave?.call(this);
     }
 
-    afterSave(saveData: Core.GetKeyTypesFrom<typeof Core.sNodeSaveData>): void {
+    afterSave(saveData: NodeSave): void {
         this.template.afterSave?.call(this, saveData);
     }
 
-    beforeLoad(saveData: Core.GetKeyTypesFrom<typeof Core.sNodeSaveData>): void {
+    beforeLoad(saveData: NodeSave): void {
         this.template.beforeLoad?.call(this, saveData);
     }
 
-    afterLoad(saveData: Core.GetKeyTypesFrom<typeof Core.sNodeSaveData>): void {
+    afterLoad(saveData: NodeSave): void {
         this.template.afterLoad?.call(this, saveData);
     }
 
@@ -184,11 +185,11 @@ export default class Node {
         this.domRef = null;
     }
 
-    toSaveData(): Core.GetKeyTypesFrom<typeof Core.sNodeSaveData> {
+    toSaveData(): NodeSave {
         this.beforeSave();
 
         const widgetData = this.widget ? JSON.parse(JSON.stringify(this.widgetData ?? {})) : {}
-        const outObj: Core.GetKeyTypesFrom<typeof Core.sNodeSaveData> = [
+        const outObj: NodeSave = [
             this.templateId,
             this.nodeId,
             this.graphId,
@@ -200,7 +201,7 @@ export default class Node {
 
         this.inputs.forEach(({id, value}) => {
             const outValue = typeof value == 'boolean' ? +value : value;
-            outObj[4].push([id, outValue]);
+            outObj[NodeSaveId.inputs].push([id, outValue]);
         });
 
         this.afterSave(outObj);
@@ -208,19 +209,26 @@ export default class Node {
         return outObj;
     }
 
-    static fromSaveData(data: Core.GetKeyTypesFrom<typeof Core.sNodeSaveData>, parentScript: Logic, nodeAPI: Node_API): Node {
-        const node = new Node(data[0], data[1], Vector.fromArray(data[3]), parentScript, data[2], nodeAPI);
+    static fromSaveData(data: NodeSave, parentScript: Logic, nodeAPI: Node_API): Node {
+        const node = new Node(
+            data[NodeSaveId.templateID],
+            data[NodeSaveId.nodeID],
+            Vector.fromArray(data[NodeSaveId.pos]),
+            parentScript,
+            data[NodeSaveId.graphID],
+            nodeAPI
+        );
         return node._loadSaveData(data);
     }
 
-    private _loadSaveData(data: Core.GetKeyTypesFrom<typeof Core.sNodeSaveData>): Node {
+    private _loadSaveData(data: NodeSave): Node {
         this.beforeLoad(data);
 
-        if (data[5]){
-            this.widgetData = data[5];
+        if (data[NodeSaveId.widgetData]){
+            this.widgetData = data[NodeSaveId.widgetData];
         }
 
-        data[4].forEach(input => {
+        data[NodeSaveId.inputs].forEach(input => {
             const nodeInput = this.inputs.get(input[0]);
             if (!nodeInput) return;
             nodeInput.value = input[1];

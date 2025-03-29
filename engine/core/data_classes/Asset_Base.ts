@@ -1,13 +1,6 @@
 import {CATEGORY_ID} from '../Enums';
 import {ID_Generator} from '../ID_Generator';
-import { Struct, GetKeyTypesFrom } from '../Struct';
-
-export const sAssetSaveData = [
-    ['id', Number()],
-    ['name', String()],
-    ['sortOrder', Number()],
-] as const;
-type tExtendableBaseSaveData = readonly [...typeof sAssetSaveData, ...[string, unknown][]];
+import { AssetSave, AssetSaveId } from '@compiled/SaveTypes';
 
 export abstract class Asset_Base {
     id: number = ID_Generator.newID();
@@ -17,18 +10,18 @@ export abstract class Asset_Base {
     abstract get category_ID(): CATEGORY_ID;
     get thumbnail(): HTMLCanvasElement | null {return null}
 
-    loadBaseAssetData(data: GetKeyTypesFrom<tExtendableBaseSaveData>): void {
-        Struct.assignFromArray(sAssetSaveData, this, data as unknown as GetKeyTypesFrom<typeof sAssetSaveData>);
+    loadBaseAssetData(data: [...AssetSave, ...any[]]): void {
+        this.id = data[AssetSaveId.id];
+        this.name = data[AssetSaveId.name];
+        this.sortOrder = data[AssetSaveId.sortOrder];
     }
     
-    getBaseAssetData(): GetKeyTypesFrom<typeof sAssetSaveData> {
-        const outArr = Struct.arrFromObj(sAssetSaveData, this);
-
-        if (!outArr){
-            throw new Error('Error reading base asset data');
-        }
-
-        return outArr;
+    getBaseAssetData(): AssetSave {
+        return [
+            this.id,
+            this.name,
+            this.sortOrder,
+        ];
     }
 
     abstract toSaveData(): any;

@@ -1,4 +1,4 @@
-import {getSpriteDimensions, get2DIdx} from './Util';
+import {get2DIdx} from './Util';
 import {clamp} from './Util';
 
 export function drawCheckerBG(canvas: HTMLCanvasElement, checkerSize: number, lightCol: string = '#AAA', darkCol: string = '#CCC'): void {

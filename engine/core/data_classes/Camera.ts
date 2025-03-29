@@ -2,7 +2,7 @@ import { Vector } from '../Vector';
 import { Sprite } from './Sprite';
 import { Room } from './Room';
 import { Instance_Base } from './Instance_Base';
-import { Struct, GetKeyTypesFrom } from '../Struct';
+import { CameraSave, CameraSaveId } from '@compiled/SaveTypes';
 
 enum MOVE_TYPES {
     LOCKED = 'L',
@@ -22,17 +22,6 @@ enum FOLLOW_TYPES {
     CENTERED = 'C',
     TILED = 'T',
 };
-
-export const sCameraSaveData = [
-    ['_size', Number()],
-    ['pos', [Number(), Number()]],
-    ['vel', [Number(), Number()]],
-    ['moveType', Struct.getDataType<MOVE_TYPES>()],
-    ['scrollDir', Struct.getDataType<SCROLL_DIRS>()],
-    ['scrollSpeed', Number()],
-    ['followObjId', Struct.getDataType<number | ''>()],
-    ['followType', Struct.getDataType<FOLLOW_TYPES>()],
-] as const;
 
 export class Camera{
     private _size: number = 15;
@@ -62,7 +51,7 @@ export class Camera{
         return clone;
     }
 
-    toSaveData(): GetKeyTypesFrom<typeof sCameraSaveData> {
+    toSaveData(): CameraSave {
         return [
             this._size,
             this.pos.toArray(),
@@ -75,25 +64,21 @@ export class Camera{
         ];
     }
 
-    static fromSaveData(data: GetKeyTypesFrom<typeof sCameraSaveData>): Camera {
+    static fromSaveData(data: CameraSave): Camera {
         return new Camera()._loadSaveData(data);
     }
 
-    private _loadSaveData(data: GetKeyTypesFrom<typeof sCameraSaveData>): Camera {
-        const dataObj = Struct.objFromArr(sCameraSaveData, data);
+    private _loadSaveData(data: CameraSave): Camera {
+        const followObjId = data[CameraSaveId.followObjId];
 
-        if (!dataObj){
-            throw 'Error loading Camera from save data';
-        }
-
-        this._size = dataObj._size;
-        this.pos = Vector.fromArray(dataObj.pos);
-        this.velocity = Vector.fromArray(dataObj.vel);
-        this.moveType = dataObj.moveType;
-        this.scrollDir = dataObj.scrollDir;
-        this.scrollSpeed = dataObj.scrollSpeed;
-        this.followObjId = dataObj.followObjId != '' ? dataObj.followObjId : null;
-        this.followType = dataObj.followType;
+        this._size = data[CameraSaveId._size];
+        this.pos = Vector.fromArray(data[CameraSaveId.pos]);
+        this.velocity = Vector.fromArray(data[CameraSaveId.vel]);
+        this.moveType = data[CameraSaveId.moveType] as MOVE_TYPES;
+        this.scrollDir = data[CameraSaveId.scrollDir] as SCROLL_DIRS;
+        this.scrollSpeed = data[CameraSaveId.scrollSpeed];
+        this.followObjId = followObjId != '' ? followObjId : null;
+        this.followType = data[CameraSaveId.followType] as FOLLOW_TYPES;
 
         return this;
     }

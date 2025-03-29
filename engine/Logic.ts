@@ -3,18 +3,14 @@ import Engine from './Engine';
 import {
     Instance_Object,
     iEngineLogic,
-    sLogicSaveData,
     iEngineOutTrigger,
     iEngineOutput,
     iEngineInTrigger,
     iEngineInput,
-    sNodeSaveData,
     CATEGORY_ID,
-    sConnectionSaveData,
     iEventContext,
-    Struct,
-    GetKeyTypesFrom,
 } from '@engine/core/core';
+import { ConnectionSave, ConnectionSaveId, LogicSave, LogicSaveId, NodeSave, NodeSaveId } from '@compiled/SaveTypes';
 import { SOCKET_TYPE } from './core/nodes/Node_Enums';
 
 export default class Logic implements iEngineLogic {
@@ -28,39 +24,30 @@ export default class Logic implements iEngineLogic {
     graphNames = new Map<number, string>();
     events: Map<string, Node[]> = new Map();
 
-    constructor(logicData: GetKeyTypesFrom<typeof sLogicSaveData>, engine: Engine){
-        const dataObj = Struct.objFromArr(sLogicSaveData, logicData);
-
-        if (!dataObj){
-            throw new Error('Error reading logic script from save data');
-        }
-
-        this.id = dataObj.id;
-        this.name = dataObj.name;
+    constructor(logicData: LogicSave, engine: Engine){
+        this.id = logicData[LogicSaveId.id];
+        this.name = logicData[LogicSaveId.name];
 
         const nodeMap = new Map<number, Node>();
+        const graphList = logicData[LogicSaveId.graphList];
+        const nodeDataList = logicData[LogicSaveId.nodeDataList];
+        const connectionDataList = logicData[LogicSaveId.connectionDataList];
 
         //populate graph name map
-        dataObj.graphList.forEach((graphData) => this.graphNames.set(graphData[0], graphData[1]));
+        graphList.forEach(graphData => this.graphNames.set(graphData[0], graphData[1]));
 
         //create all nodes
-        dataObj.nodeDataList.forEach((nodeData: GetKeyTypesFrom<typeof sNodeSaveData>) => {
-            const nodeObj = Struct.objFromArr(sNodeSaveData, nodeData);
-
-            if (!nodeObj){
-                throw new Error('Error reading node from save data');
-            }
-
+        nodeDataList.forEach((nodeData: NodeSave) => {
             const newNode = new Node(nodeData, this, engine);
-            nodeMap.set(nodeObj.nodeID, newNode);
+            nodeMap.set(nodeData[NodeSaveId.nodeID], newNode);
             this._nodes.push(newNode);
 
             if (newNode.isEvent){
-                let eventArr = this.events.get(nodeObj.templateID);
+                let eventArr = this.events.get(nodeData[NodeSaveId.templateID]);
 
                 if (!eventArr){
                     eventArr = [];
-                    this.events.set(nodeObj.templateID, eventArr);
+                    this.events.set(nodeData[NodeSaveId.templateID], eventArr);
                 }
 
                 eventArr.push(newNode);
@@ -68,25 +55,21 @@ export default class Logic implements iEngineLogic {
         });
 
         //create and link connections
-        dataObj.connectionDataList.forEach((connection: GetKeyTypesFrom<typeof sConnectionSaveData>) => {
-            const connectionObj = Struct.objFromArr(sConnectionSaveData, connection);
-
-            if (!connectionObj){
-                throw new Error('Error reading node connection from save data');
-            }
-
-            const startNode = nodeMap.get(connectionObj.startNodeID)!;
-            const endNode = nodeMap.get(connectionObj.endNodeID)!;
+        connectionDataList.forEach((connection: ConnectionSave) => {
+            const startNode = nodeMap.get(connection[ConnectionSaveId.startNodeID])!;
+            const endNode = nodeMap.get(connection[ConnectionSaveId.endNodeID])!;
             const allStartSockets = new Map<string, iEngineOutTrigger | iEngineOutput>();
             const allEndSockets = new Map<string, iEngineInTrigger | iEngineInput>();
+            const startSocketId = connection[ConnectionSaveId.startSocketID];
+            const endSocketID = connection[ConnectionSaveId.endSocketID];
 
             startNode.outTriggers.forEach((oTrigger, key) => allStartSockets.set(key, oTrigger));
             startNode.outputs.forEach((output, key) => allStartSockets.set(key, output));
             endNode.inTriggers.forEach((iTrigger, key) => allEndSockets.set(key, iTrigger));
             endNode.inputs.forEach((input, key) => allEndSockets.set(key, input));
 
-            allStartSockets.get(connection[2])!.connection = allEndSockets.get(connectionObj.endSocketID)!;
-            allEndSockets.get(connection[3])!.connection = allStartSockets.get(connectionObj.startSocketID)!;
+            allStartSockets.get(startSocketId)!.connection = allEndSockets.get(endSocketID)!;
+            allEndSockets.get(endSocketID)!.connection = allStartSockets.get(startSocketId)!;
         });
     }
 

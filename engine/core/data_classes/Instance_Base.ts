@@ -2,7 +2,7 @@ import { INSTANCE_TYPE } from '../Enums';
 import { Vector } from '../Vector';
 import { Draw } from '../core';
 import { Sprite, Util, Node_Enums } from '../core';
-import { Struct, GetKeyTypesFrom } from '../Struct';
+import { InstanceBaseSave, InstanceBaseSaveId } from '@compiled/SaveTypes';
 import type Engine from '@engine/Engine';
 
 export enum InstanceAnimEvent {
@@ -11,20 +11,6 @@ export enum InstanceAnimEvent {
     TICK,
     FINISHED,
 }
-
-export const sInstanceBaseSaveData = [
-    ['id', Number()],
-    ['name', String()],
-    ['instanceType', String()],
-    ['pos', [Number(), Number()]],
-    ['zDepthOverride', Struct.getDataType<number | ''>()],
-    ['groups', Struct.getDataType<string[]>()],
-    ['startFrameOverride', Struct.getDataType<number | ''>()],
-    ['fpsOverride', Struct.getDataType<number | ''>()],
-    ['animLoopOverride', Struct.getDataType<0 | 1 | 2>()],
-    ['animPlayingOverride', Struct.getDataType<0 | 1 | 2>()],
-] as const;
-type tExtendableInstanceBaseSaveData = readonly [...typeof sInstanceBaseSaveData, ...[string, unknown][]];
 
 export interface iCollisionEvent {
     type: Node_Enums.COLLISION_EVENT,
@@ -230,27 +216,21 @@ export abstract class Instance_Base{
         this.pos.copy(newPos);
     }
 
-    loadBaseSaveData(data: GetKeyTypesFrom<tExtendableInstanceBaseSaveData>): void {
-        const dataObj = Struct.objFromArr(sInstanceBaseSaveData, data as unknown as GetKeyTypesFrom<typeof sInstanceBaseSaveData>);
-
-        if (!dataObj){
-            throw new Error('Error reading base instance data');
-        }
-
-        this.id = dataObj.id;
-        this.name = dataObj.name;
-        this.pos = Vector.fromArray(dataObj.pos);
-        this._zDepthOverride = dataObj.zDepthOverride != '' ? dataObj.zDepthOverride : null;
-        this.groups = dataObj.groups;
-        this.startFrameOverride = dataObj.startFrameOverride === '' ? null : dataObj.startFrameOverride;
-        this.fpsOverride = dataObj.fpsOverride === '' ? null : dataObj.fpsOverride;
-        this.animLoopOverride = dataObj.animLoopOverride === 0 ? null : !!(dataObj.animLoopOverride - 1);
-        this.animPlayingOverride = dataObj.animPlayingOverride === 0 ? null : !!(dataObj.animPlayingOverride - 1);
+    loadBaseSaveData(data: [...InstanceBaseSave, ...any[]]): void {
+        this.id = data[InstanceBaseSaveId.id];
+        this.name = data[InstanceBaseSaveId.name];
+        this.pos = Vector.fromArray(data[InstanceBaseSaveId.pos]);
+        this._zDepthOverride = data[InstanceBaseSaveId.zDepthOverride] != '' ? data[InstanceBaseSaveId.zDepthOverride] : null;
+        this.groups = data[InstanceBaseSaveId.groups];
+        this.startFrameOverride = data[InstanceBaseSaveId.startFrameOverride] === '' ? null : data[InstanceBaseSaveId.startFrameOverride];
+        this.fpsOverride = data[InstanceBaseSaveId.fpsOverride] === '' ? null : data[InstanceBaseSaveId.fpsOverride];
+        this.animLoopOverride = data[InstanceBaseSaveId.animLoopOverride] === 0 ? null : !!(data[InstanceBaseSaveId.animLoopOverride] - 1);
+        this.animPlayingOverride = data[InstanceBaseSaveId.animPlayingOverride] === 0 ? null : !!(data[InstanceBaseSaveId.animPlayingOverride] - 1);
 
         this.animFrame = this.startFrame;
     }
 
-    getBaseSaveData(): GetKeyTypesFrom<typeof sInstanceBaseSaveData> {
+    getBaseSaveData(): InstanceBaseSave {
         return [
             this.id,
             this.name,

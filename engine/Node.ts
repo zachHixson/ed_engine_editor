@@ -5,16 +5,14 @@ import {
     iNodeTemplate,
     convertSocketType,
     NodeMap,
-    sNodeSaveData,
     iEventContext,
     Node_Enums,
-    GetKeyTypesFrom,
-    Struct,
 } from "@engine/core/core";
 import { iAnyObj } from "./core/interfaces";
 import { listConvert } from "./core/nodes/Socket_Conversions";
 import Engine from "./Engine";
 import Logic from "./Logic";
+import { NodeSave, NodeSaveId } from "@compiled/SaveTypes";
 
 export default class Node implements iEngineNode {
     private _nodeData: unknown = null as unknown;
@@ -33,25 +31,19 @@ export default class Node implements iEngineNode {
     outputs: iEngineNode["outputs"] = new Map();
     execute: ((eventContext: iEventContext, data: any)=>void) | null = null;
 
-    constructor(nodeSaveData: GetKeyTypesFrom<typeof sNodeSaveData>, logic: Logic, engine: Engine){
-        const nodeData = Struct.objFromArr(sNodeSaveData, nodeSaveData);
-
-        if (!nodeData){
-            throw new Error('Error reading node from save data');
-        }
-
-        const template = NodeMap.get(nodeData.templateID)!;
+    constructor(nodeSaveData: NodeSave, logic: Logic, engine: Engine){
+        const template = NodeMap.get(nodeSaveData[NodeSaveId.templateID])!;
 
         this.engine = engine;
 
         template.beforeLoad?.call(this, nodeSaveData);
         
         this.template = template;
-        this.nodeId = nodeData.nodeID;
+        this.nodeId = nodeSaveData[NodeSaveId.nodeID];
         this.parentScript = logic;
-        this.graphId = nodeData.graphID;
+        this.graphId = nodeSaveData[NodeSaveId.graphID];
         this.isEvent = template.isEvent ?? false;
-        this.widgetData = nodeData.widgetData ?? null;
+        this.widgetData = nodeSaveData[NodeSaveId.widgetData] ?? null;
 
         template.inTriggers?.forEach(trigger => {
             const {execute} = trigger;
@@ -90,7 +82,7 @@ export default class Node implements iEngineNode {
             });
         })
 
-        nodeData.inputs.forEach(srcInput => {
+        nodeSaveData[NodeSaveId.inputs].forEach(srcInput => {
             this.inputs.get(srcInput[0])!.value = srcInput[1];
         });
 

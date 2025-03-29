@@ -1,5 +1,6 @@
 import { Vector } from "./Vector";
 import { Mat3 } from "./Mat3";
+import { tNavSaveData } from "@compiled/SaveTypes";
 
 const PRECISION = 100;
 
@@ -8,8 +9,6 @@ export interface iNavState {
     zoomFac: number;
     matrix: Mat3;
 }
-
-export type tNavSaveData = [number, number, number];
 
 export class NavState implements iNavState {
     private static _defaultMatrix = [1, 0, 0, 0, 1, 0, 0, 0, 1];

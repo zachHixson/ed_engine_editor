@@ -3,15 +3,10 @@ import Node from './Node';
 import Node_Connection from './Node_Connection';
 import Core from '@/core';
 import type Node_API from '../Node_API';
+import { GraphSave, GraphSaveId, LogicSave, LogicSaveId } from '@compiled/SaveTypes';
 
 const { Vector } = Core;
 const { t } = i18n.global;
-
-const sGraphSaveData = [
-    ['ID', Number()],
-    ['name', String()],
-    ['navSaveData', Core.Struct.getDataType<Core.tNavSaveData>()],
-] as const;
 
 export default class Logic extends Core.Asset_Base implements Core.iEditorLogic {
     private _nextGraphId: number = 0;
@@ -49,7 +44,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
         this.graphs[this.selectedGraphId].navState.copy(newState);
     }
 
-    toSaveData(): Core.GetKeyTypesFrom<typeof Core.sLogicSaveData> {
+    toSaveData(): LogicSave {
         return [
             ...this.getBaseAssetData(),
             this.selectedGraphId,
@@ -59,26 +54,20 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
         ];
     }
 
-    static fromSaveData(data: Core.GetKeyTypesFrom<typeof Core.sLogicSaveData>, nodeAPI: Node_API): Logic {
+    static fromSaveData(data: LogicSave, nodeAPI: Node_API): Logic {
         return new Logic()._loadSaveData(data, nodeAPI);
     }
 
-    private _loadSaveData(data: Core.GetKeyTypesFrom<typeof Core.sLogicSaveData>, nodeAPI: Node_API): Logic {
-        const dataObj = Core.Struct.objFromArr(Core.sLogicSaveData, data);
-
-        if (!dataObj){
-            throw new Error('Error loading logic script from save data');
-        }
-
+    private _loadSaveData(data: LogicSave, nodeAPI: Node_API): Logic {
         const nodeMap = new Map<number, Node>();
 
         this.loadBaseAssetData(data);
 
-        this.graphs = dataObj.graphList.map(graph => {
+        this.graphs = data[LogicSaveId.graphList].map(graph => {
             this._nextGraphId = Math.max(this._nextGraphId, graph[0] + 1);
             return Graph.fromSaveData(graph as unknown as any);
         });
-        this.nodes = dataObj.nodeDataList.map(nodeData => {
+        this.nodes = data[LogicSaveId.nodeDataList].map(nodeData => {
             this._nextNodeId = Math.max(this._nextNodeId, nodeData[1] + 1);
             return Node.fromSaveData(nodeData, this, nodeAPI);
         });
@@ -87,7 +76,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
             nodeMap.set(node.nodeId, node);
         });
 
-        this.connections = dataObj.connectionDataList.map(connectionData => {
+        this.connections = data[LogicSaveId.connectionDataList].map(connectionData => {
             this._nextConnectionId = Math.max(this._nextConnectionId, connectionData[0] + 1);
             return Node_Connection.fromSaveData(connectionData, nodeMap);
         });
@@ -218,7 +207,7 @@ class Graph {
         this.navState =  new Core.NavState();
     }
 
-    toSaveData(): Core.GetKeyTypesFrom<typeof sGraphSaveData> {
+    toSaveData(): GraphSave {
         return [
             this.id,
             this.name,
@@ -226,10 +215,10 @@ class Graph {
         ];
     }
 
-    static fromSaveData(data: Core.GetKeyTypesFrom<typeof sGraphSaveData>): Graph {
-        const newGraph = new Graph(data[0]);
-        newGraph.name = data[1];
-        newGraph.navState = Core.NavState.fromSaveData(data[2]);
+    static fromSaveData(data: GraphSave): Graph {
+        const newGraph = new Graph(data[GraphSaveId.ID]);
+        newGraph.name = data[GraphSaveId.name];
+        newGraph.navState = Core.NavState.fromSaveData(data[GraphSaveId.navSaveData]);
         return newGraph;
     }
 }
