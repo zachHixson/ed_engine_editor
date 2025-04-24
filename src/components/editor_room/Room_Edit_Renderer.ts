@@ -189,7 +189,7 @@ export default class Room_Edit_Renderer {
     }
 
     addInstance(instance: Core.Instance_Base, backAnim: boolean): void {
-        const hasEditorFrame = instance.hasEditorFrame
+        const hasEditorFrame = instance.hasEditorFrame;
         const renderer = this._getRenderer(hasEditorFrame);
         const frame = hasEditorFrame ? instance.startFrame : 0;
 
