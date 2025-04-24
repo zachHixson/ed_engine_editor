@@ -360,7 +360,7 @@ function toggleGrid(): void {
             </div>
             <div v-show="propertiesOpen" class="propertiesContents">
                 <Properties
-                    ref="props"
+                    ref="propsPanel"
                     :selectedTool="roomEditorStore.getSelectedTool"
                     :selected-instance="(editorSelection as Core.Instance_Base)"
                     :camera="selectedRoom.camera"
