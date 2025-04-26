@@ -35,7 +35,7 @@ export class Room extends Asset_Base {
     get instances(){return this._instances}
 
     clone(): Room {
-        let clone = Object.assign(new Room(), this) as Room;
+        const clone = Object.assign(new Room(), this) as Room;
         clone.camera = this.camera.clone();
         clone._instances = this.instances.map(i => i.clone());
         clone.bgColor = Object.assign(new Color(), this.bgColor);

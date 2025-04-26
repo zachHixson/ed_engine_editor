@@ -135,14 +135,14 @@ function open(): void {
 }
 
 const loadProjectFile = (event: Event): void => {
-    let input = event.target as HTMLInputElement;
+    const input = event.target as HTMLInputElement;
 
     if (!input.files){
         return;
     }
 
     if ('files' in input && input.files.length > 0){
-        let reader = new FileReader();
+        const reader = new FileReader();
         reader.onload = () => {
             emit('open-project', reader.result);
         }

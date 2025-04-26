@@ -93,7 +93,7 @@ function advanceFrame(): void {
 
 function playAnimation(): void {
     if (props.sprite && animationLoop.value < 0 && props.fps > 0){
-        let intervalTime = 1000/props.fps;
+        const intervalTime = 1000/props.fps;
 
         animationLoop.value = setInterval(()=>{
             advanceFrame();

@@ -145,7 +145,7 @@ export class Sprite extends Asset_Base {
     }
 
     drawToCanvas(frameIdx: number = 0, canvas: HTMLCanvasElement = createCanvas(16, 16)): HTMLCanvasElement | null {
-        let frame = this.frames[frameIdx];
+        const frame = this.frames[frameIdx];
 
         if (!frame){
             return null;
@@ -215,7 +215,7 @@ export class Sprite extends Asset_Base {
 
                 //Splice in new array of duplicated pixels
                 if (range && rawVal.length < 6){
-                    let dupedPixels = new Array(range).fill(decomped[i][p - 1]);
+                    const dupedPixels = new Array(range).fill(decomped[i][p - 1]);
                     decomped[i].splice(p, 1, ...dupedPixels);
                     p += range;
                 }

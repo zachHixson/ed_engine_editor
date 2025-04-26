@@ -36,7 +36,7 @@ export function useDelete(args: iActionArguments){
         }
 
         override mouseMove(mEvent: imEvent): void {
-            let removedFromCell = this._last?.equalTo(mEvent.worldCell) ?? false;
+            const removedFromCell = this._last?.equalTo(mEvent.worldCell) ?? false;
 
             if (!removedFromCell && this._down){
                 const instances = args.props.selectedRoom.getInstancesInRadius(mEvent.worldCell, 0)

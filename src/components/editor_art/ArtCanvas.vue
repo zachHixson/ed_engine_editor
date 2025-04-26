@@ -178,7 +178,7 @@ function enableNav(navTool: Core.NAV_TOOL_TYPE): void {
 
 function getZoomBounds(): {min: number, max: number} {
     const canvas = canvasRef.value!;
-    let maxZoom = (Math.max(canvas.clientWidth, canvas.clientHeight) / CANVAS_WIDTH) * 2;
+    const maxZoom = (Math.max(canvas.clientWidth, canvas.clientHeight) / CANVAS_WIDTH) * 2;
     return {min: 0.5, max: maxZoom};
 }
 

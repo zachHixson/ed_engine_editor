@@ -21,7 +21,7 @@ const nodeCategories = computed(()=>{
     const categories: string[] = [];
 
     for (let i = 0; i < Core.NodeList.length; i++){
-        let curNode = Core.NodeList[i];
+        const curNode = Core.NodeList[i];
 
         if (!categories.includes(curNode.category)){
             categories.push(curNode.category);

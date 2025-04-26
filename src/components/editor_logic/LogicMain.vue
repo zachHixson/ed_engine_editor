@@ -405,7 +405,7 @@ function actionChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
     !(makeCommit || widget) && node.onForceSocketUpdate.emit(socket.id);
 
     if (makeCommit){
-        let data = {socket, widget, oldVal, newVal, node};
+        const data = {socket, widget, oldVal, newVal, node};
         actionData.undoStore.commit({action: Core.LOGIC_ACTION.CHANGE_INPUT, data});
     }
 }

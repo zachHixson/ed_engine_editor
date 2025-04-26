@@ -54,18 +54,18 @@ export function RGBAToHex(r: number = 0, g: number = 0, b: number = 0, a: number
     b = clamp(b, 0, 255);
     a = clamp(a, 0, 255);
     
-    let hexR = r.toString(16).padStart(2, '0');
-    let hexG = g.toString(16).padStart(2, '0');
-    let hexB = b.toString(16).padStart(2, '0');
-    let hexA = a.toString(16).padStart(2, '0');
+    const hexR = r.toString(16).padStart(2, '0');
+    const hexG = g.toString(16).padStart(2, '0');
+    const hexB = b.toString(16).padStart(2, '0');
+    const hexA = a.toString(16).padStart(2, '0');
 
     return '#' + hexR + hexG + hexB + hexA;
 };
 
 export function FastHSVToRGB(h: number, s: number, v: number, rgbObj: any): void {
-    let c = v * s;
-    let x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-    let m = v - c;
+    const c = v * s;
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    const m = v - c;
     let o1, o2, o3;
 
     if (0 <= h && h < 60){
@@ -117,12 +117,12 @@ export function HSVToRGB(h: number, s: number, v: number): {r: number, g: number
 }
 
 export function FastRGBToHSV(r: number, g: number, b: number, outObj: {hue: number, sat: number, val: number}): void {
-    let rp = r / 255;
-    let gp = g / 255;
-    let bp = b / 255;
-    let cmax = Math.max(rp, gp, bp);
-    let cmin = Math.min(rp, gp, bp);
-    let delta = cmax - cmin;
+    const rp = r / 255;
+    const gp = g / 255;
+    const bp = b / 255;
+    const cmax = Math.max(rp, gp, bp);
+    const cmin = Math.min(rp, gp, bp);
+    const delta = cmax - cmin;
     let hue;
     let sat;
     let val;

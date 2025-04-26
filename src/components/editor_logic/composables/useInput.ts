@@ -67,7 +67,7 @@ export default function useInput(
     });
 
     function mouseClick(event: MouseEvent): void {
-        let mouseUpPos = new Vector(event.clientX, event.clientY);
+        const mouseUpPos = new Vector(event.clientX, event.clientY);
     
         if (mouseUpPos.equalTo(mouseDownPos)){
             logicEditorStore.selectNavTool(null);

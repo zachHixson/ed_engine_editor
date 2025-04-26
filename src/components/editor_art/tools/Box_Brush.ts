@@ -51,10 +51,10 @@ export default class Box_Brush extends Tool_Base {
     }
 
     drawBox(vec1: Core.Vector, vec2: Core.Vector, thickness: number): void {
-        let x1 = Math.min(vec1.x, vec2.x);
-        let x2 = Math.max(vec1.x, vec2.x);
-        let y1 = Math.min(vec1.y, vec2.y);
-        let y2 = Math.max(vec1.y, vec2.y);
+        const x1 = Math.min(vec1.x, vec2.x);
+        const x2 = Math.max(vec1.x, vec2.x);
+        const y1 = Math.min(vec1.y, vec2.y);
+        const y2 = Math.max(vec1.y, vec2.y);
 
         for (let x = x1; x <= x2; x++){
             for (let y = y1; y <= y2; y++){

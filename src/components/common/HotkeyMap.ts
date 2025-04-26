@@ -92,7 +92,7 @@ export default class HotkeyMap{
 
     releaseEvents(event: MouseEvent & KeyboardEvent): void {
         for (let i = 0; i < this.active.length; i++){
-            let curEvent = this.active[i];
+            const curEvent = this.active[i];
 
             if (curEvent.keys.includes(event.key)){
                 event.preventDefault();

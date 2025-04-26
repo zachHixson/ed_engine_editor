@@ -149,7 +149,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
         let nodeIdx = -1;
 
         for (let i = 0; nodeIdx < 0 && i < this.nodes.length; i++){
-            let node = this.nodes[i];
+            const node = this.nodes[i];
 
             if (node.nodeId == nodeRef.nodeId){
                 nodeIdx = i;

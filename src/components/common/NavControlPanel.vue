@@ -131,7 +131,7 @@ function mouseMove(event: MouseEvent): void {
     mouse.position.y = event.clientY;
 
     if (hotkeyMap.checkKeys(['lmb', 'mmb'])){
-        let navTool = hotkeyTool ?? props.selectedNavTool;
+        const navTool = hotkeyTool ?? props.selectedNavTool;
         switch (navTool){
             case NAV_TOOL_TYPE.PAN:
                 pan();

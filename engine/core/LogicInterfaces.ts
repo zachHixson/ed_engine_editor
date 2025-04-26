@@ -246,36 +246,6 @@ export interface iEngineNode extends iNode_Base {
 
 export type iEventContext = {eventKey: number, instance: Instance_Object};
 
-// export const sLogicSaveData = [
-//     ...sAssetSaveData,
-//     ['selectedGraphID', Number()],
-//     ['graphList', [] as unknown as (readonly [number, string, tNavSaveData])[]],
-//     ['nodeDataList', Struct.getDataType<Array<GetKeyTypesFrom<typeof sNodeSaveData>>>()],
-//     ['connectionDataList', Struct.getDataType<Array<GetKeyTypesFrom<typeof sConnectionSaveData>>>()],
-// ] as const;
-
-// export const sNodeSaveData = [
-//     ['templateID', String()],
-//     ['nodeID', Number()],
-//     ['graphID', Number()],
-//     ['pos', [Number(), Number()]],
-//     ['inputs', new Array<[
-//         string,
-//         any,
-//     ]>()],
-//     ['widgetData', Struct.getDataType<any>()],
-//     ['extra', Struct.getDataType<any>()],
-// ] as const;
-
-// export const sConnectionSaveData = [
-//     ['ID', Number()],
-//     ['graphID', Number()],
-//     ['startSocketID', String()],
-//     ['endSocketID', String()],
-//     ['startNodeID', Number()],
-//     ['endNodeID', Number()],
-// ] as const;
-
 export interface iNodeExceptionData {
     errorId: symbol;
     msgId: string;

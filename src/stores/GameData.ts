@@ -57,30 +57,30 @@ export const useGameDataStore = defineStore({
         addAsset(category: Core.CATEGORY_ID){
             switch (category){
                 case Core.CATEGORY_ID.SPRITE:
-                    let spriteName = t(`asset_browser.sprite_prefix`) + getSuffixNum(this.sprites);
-                    let newSprite = new Core.Sprite();
+                    const spriteName = t(`asset_browser.sprite_prefix`) + getSuffixNum(this.sprites);
+                    const newSprite = new Core.Sprite();
                     newSprite.name = spriteName;
                     newSprite.sortOrder = this.sprites.length;
                     this.sprites.push(newSprite);
                     break;
                 case Core.CATEGORY_ID.OBJECT:
-                    let objName = t(`asset_browser.object_prefix`) + getSuffixNum(this.objects);
-                    let newObject = new Core.Game_Object();
+                    const objName = t(`asset_browser.object_prefix`) + getSuffixNum(this.objects);
+                    const newObject = new Core.Game_Object();
                     newObject.name = objName;
                     newObject.sortOrder = this.objects.length;
                     this.objects.push(newObject);
                     break;
                 case Core.CATEGORY_ID.LOGIC:
-                    let logicName = t(`asset_browser.logic_prefix`) + getSuffixNum(this.logic);
-                    let newLogic = new Logic();
+                    const logicName = t(`asset_browser.logic_prefix`) + getSuffixNum(this.logic);
+                    const newLogic = new Logic();
                     newLogic.name = logicName;
                     newLogic.sortOrder = this.logic.length;
                     newLogic.addGraph();
                     this.logic.push(newLogic);
                     break;
                 case Core.CATEGORY_ID.ROOM:
-                    let roomName = t(`asset_browser.room_prefix`) + getSuffixNum(this.rooms);
-                    let newRoom = new Core.Room();
+                    const roomName = t(`asset_browser.room_prefix`) + getSuffixNum(this.rooms);
+                    const newRoom = new Core.Room();
                     newRoom.name = roomName;
                     newRoom.sortOrder = this.rooms.length;
                     this.rooms.push(newRoom);
@@ -159,8 +159,8 @@ export const useGameDataStore = defineStore({
 
 function getSuffixNum(list: Core.Asset_Base[]){
     const PADDING = 2;
+    const nameList = list.map(l => l.name);
     let requiredDigits;
-    let nameList = list.map(l => l.name);
     let largest = Core.Util.getHighestEndingNumber(nameList);
     let output = "";
 

@@ -76,8 +76,8 @@ export default class Line_Brush extends Tool_Base {
         let offset = (slope >= 0) ? Math.min(offset1, offset2) : Math.max(offset1, offset2);
 
         for (let p = start; p <= end; p++){
-            let intOffset = Math.round(offset);
-            let pOrder = pOrderFunc(intOffset, p);
+            const intOffset = Math.round(offset);
+            const pOrder = pOrderFunc(intOffset, p);
 
             this.drawPoint(pOrder.x, pOrder.y);
             offset = offsetFunc(offset);
