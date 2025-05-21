@@ -229,7 +229,7 @@ defineExpose({getRelinkInfo});
             (errorData?.fatal === true ? 'border-color: red; border-style: dashed;' : '') + 
             (isSelected ? 'border-color: var(--button-norm); border-style: solid;' : '')
             "
-        v-tooltip="errorData ? t('exception.' + props.errorData?.msgId) ?? '' : ''"
+        v-tooltip="errorData ? t('' + props.errorData?.msgId) ?? '' : ''"
         @click="emit('node-clicked', {nodeObj, event: $event})"
         @mousedown="mouseDown">
         <div class="heading" :style="`border-color: ${categoryStyle.color}`">

@@ -122,8 +122,8 @@ function close(): void {
                     <label for="name">Name: </label>
                     <input id="name" type="text" v-model="varName" :maxlength="CHAR_LIMIT" autocomplete="off"/>
                     <div class="decorator-wrapper">
-                        <Svg v-show="nameError.length > 0" class="decorator" :src="errorIcon" v-tooltip="()=>nameError"></Svg>
-                        <Svg v-show="nameWarning.length > 0" class="decorator" :src="warningIcon" v-tooltip="()=>nameWarning"></Svg>
+                        <Svg v-show="nameError.length > 0" class="decorator" :src="errorIcon" v-tooltip="nameError"></Svg>
+                        <Svg v-show="nameWarning.length > 0" class="decorator" :src="warningIcon" v-tooltip="nameWarning"></Svg>
                     </div>
                 </div>
                 <div class="control">
@@ -135,7 +135,7 @@ function close(): void {
                         { name: t('logic_editor.instance'), id: Core.Node_Enums.SOCKET_TYPE.INSTANCE, value: Core.Node_Enums.SOCKET_TYPE.INSTANCE },
                     ]"></SearchDropdown>
                     <div class="decorator-wrapper">
-                        <Svg v-show="typeWarning.length > 0" class="decorator" :src="warningIcon" v-tooltip="()=>typeWarning"></Svg>
+                        <Svg v-show="typeWarning.length > 0" class="decorator" :src="warningIcon" v-tooltip="typeWarning"></Svg>
                     </div>
                 </div>
                 <div v-if="!editVarInfo" class="control">

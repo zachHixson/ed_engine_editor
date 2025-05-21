@@ -48,6 +48,66 @@ export default catVariables;
         editor_deleteVar.call(varNode);
     }
 
+    function actionEditVariable(this: iEditorNode, args: ActionEditVariable): Partial<ActionEditVariable> {
+        const {varNode, newVarInfo, oldVarInfo} = args;
+
+        //remove old var name from variable map
+        editor_deleteVar.call(varNode);
+
+        //update current node
+        varNode.setNodeData<iVarInfo>(newVarInfo);
+        varNode.refresh();
+
+        //update data if name changed
+        if (newVarInfo.name != oldVarInfo.name){
+            const getSetNodes = varNode.editorAPI.getVariableUsage(oldVarInfo.name, null, !!oldVarInfo.isGlobal);
+
+            //update all references to use new name
+            getSetNodes.forEach(node => {
+                node.inputs.get('name')!.value = newVarInfo.name;
+                node.refresh();
+            });
+        }
+        
+        //Update data if type changed
+        if (newVarInfo.type != oldVarInfo.type){
+            const getSetNodes = varNode.editorAPI.getVariableUsage(oldVarInfo.name, null, !!oldVarInfo.isGlobal);
+            
+            getSetNodes.forEach(node => node.refresh());
+        }
+
+        return args;
+    }
+
+    function revertEditVariable({varNode, newVarInfo, oldVarInfo, oldInitValue}: ActionEditVariable): void {
+        //remove old var name from variable map
+        editor_deleteVar.call(varNode);
+
+        //revert current node
+        varNode.setNodeData<iVarInfo>(oldVarInfo);
+        varNode.refresh();
+
+        //revert data if name changed
+        if (newVarInfo.name != oldVarInfo.name){
+            const getSetNodes = varNode.editorAPI.getVariableUsage(newVarInfo.name, null, !!newVarInfo.isGlobal);
+
+            //update all references to use new name
+            getSetNodes.forEach(node => {
+                node.inputs.get('name')!.value = oldVarInfo.name;
+                node.refresh();
+            });
+        }
+
+        //revert data if type changed
+        if (newVarInfo.type != oldVarInfo.type){
+            const getSetNodes = varNode.editorAPI.getVariableUsage(newVarInfo.name, null, !!newVarInfo.isGlobal);
+            const valSocket = varNode.inputs.get('initial_value')!;
+
+            getSetNodes.forEach(node => node.refresh());
+            valSocket.value = oldInitValue;
+        }
+    }
+
     function editor_initVarNode(this: iEditorNode): void {
         const {name, type, isGlobal, isList} = this.getNodeData<iVarInfo>();
         const nameSocket = this.inputs.get('_varName')!;
@@ -97,6 +157,7 @@ export default catVariables;
         category: 'variables',
         doNotCopy: true,
         editorCanDelete: false,
+        showEditButton: true,
         reverseOutputs: true,
         inputs: [
             {id: '_varName', type: SOCKET_TYPE.INFO, hideSocket: true, enableDecorators: true},
@@ -374,6 +435,13 @@ export default catVariables;
         },
         refresh(this: iEditorNode){
             const downStream = this.editorAPI.getOutputConnections(this, 'data');
+            const nodeExceptionData = {
+                errorId: Symbol.for(this.nodeId.toString() + 'connection_deleted'),
+                msgId: 'node.connection_deleted',
+                logicId: this.parentScript.id,
+                nodeId: this.nodeId,
+                fatal: false,
+            };
 
             validate.call(this);
 
@@ -387,24 +455,12 @@ export default catVariables;
                     const isRecording = this.editorAPI.undoStore.isRecording;
                     this.editorAPI.deleteConnections([connection], isRecording);
 
-                    this.editorAPI.pushNodeException({
-                        errorId: Symbol.for(this.nodeId.toString() + 'connection_deleted'),
-                        msgId: 'node.connection_deleted',
-                        logicId: this.parentScript.id,
-                        nodeId: this.nodeId,
-                        fatal: false,
-                    });
+                    this.editorAPI.pushNodeException(nodeExceptionData);
                 }
             });
 
             if (!this.getNodeData<IsValid>()){
-                this.editorAPI.pushNodeException({
-                    errorId: Symbol.for(this.nodeId.toString() + 'connection_deleted'),
-                    msgId: 'node.connection_deleted',
-                    logicId: this.parentScript.id,
-                    nodeId: this.nodeId,
-                    fatal: false,
-                });
+                this.editorAPI.pushNodeException(nodeExceptionData);
             }
         },
     };
@@ -463,34 +519,6 @@ export default catVariables;
         ],
     };
     catVariables.push(bool);
-}
-
-function actionEditVariable(args: ActionEditVariable): Partial<ActionEditVariable> {
-    const {varNode, newVarInfo, oldVarInfo} = args;
-    varNode.setNodeData<iVarInfo>(newVarInfo);
-    varNode.refresh();
-    
-    //Update data if type changed
-    if (newVarInfo.type != oldVarInfo.type){
-        const getSetNodes = varNode.editorAPI.getVariableUsage(oldVarInfo.name, null, !!oldVarInfo.isGlobal);
-        
-        getSetNodes.forEach(node => node.refresh());
-    }
-
-    return args;
-}
-
-function revertEditVariable({varNode, newVarInfo, oldVarInfo, oldInitValue}: ActionEditVariable): void {
-    varNode.setNodeData<iVarInfo>(oldVarInfo);
-    varNode.refresh();
-
-    if (newVarInfo.type != oldVarInfo.type){
-        const getSetNodes = varNode.editorAPI.getVariableUsage(newVarInfo.name, null, !!newVarInfo.isGlobal);
-        const valSocket = varNode.inputs.get('initial_value')!;
-
-        getSetNodes.forEach(node => node.refresh());
-        valSocket.value = oldInitValue;
-    }
 }
 
 function determineConnected(this: iEditorNode){
