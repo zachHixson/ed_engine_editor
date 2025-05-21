@@ -435,19 +435,13 @@ export default catVariables;
         },
         refresh(this: iEditorNode){
             const downStream = this.editorAPI.getOutputConnections(this, 'data');
-            const nodeExceptionData = {
-                errorId: Symbol.for(this.nodeId.toString() + 'connection_deleted'),
-                msgId: 'node.connection_deleted',
-                logicId: this.parentScript.id,
-                nodeId: this.nodeId,
-                fatal: false,
-            };
 
             validate.call(this);
 
             downStream.forEach(connection => {
                 const type = this.outputs.get('data')!.type;
                 const socket = connection.endNode!.inputs.get(connection.endSocketId!)!;
+                const exceptionId = Symbol.for(connection.id.toString() + 'connection_deleted');
 
                 connection.endNode!.refresh();
 
@@ -455,12 +449,24 @@ export default catVariables;
                     const isRecording = this.editorAPI.undoStore.isRecording;
                     this.editorAPI.deleteConnections([connection], isRecording);
 
-                    this.editorAPI.pushNodeException(nodeExceptionData);
+                    this.editorAPI.pushNodeException({
+                        errorId: exceptionId,
+                        msgId: 'node.connection_deleted',
+                        logicId: this.parentScript.id,
+                        nodeId: this.nodeId,
+                        fatal: false,
+                    });
                 }
             });
 
             if (!this.getNodeData<IsValid>()){
-                this.editorAPI.pushNodeException(nodeExceptionData);
+                this.editorAPI.pushNodeException({
+                    errorId: Symbol.for(this.nodeId.toString() + 'invalid_data'),
+                    msgId: 'node.invalid_data',
+                    logicId: this.parentScript.id,
+                    nodeId: this.nodeId,
+                    fatal: false,
+                });
             }
         },
     };

@@ -161,6 +161,9 @@ export default function useConnection(
                 logic.addConnection(c);
                 c.startNode?.onNewConnection(c, true);
                 c.endNode?.onNewConnection(c, true);
+                
+                //clear node exception
+                c.startNode!.editorAPI.clearNodeException(Symbol.for(c.id.toString() + 'connection_deleted'));
             });
         });
     }
