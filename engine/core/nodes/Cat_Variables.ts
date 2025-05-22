@@ -362,7 +362,7 @@ export default catVariables;
                 this.editorAPI.deleteConnections([upStreamConnection], isRecording);
 
                 this.editorAPI.pushNodeException({
-                    errorId: Symbol.for(this.nodeId.toString() + 'connection_deleted'),
+                    errorId: Symbol.for(upStreamConnection.id.toString() + 'connection_deleted'),
                     msgId: 'node.connection_deleted',
                     logicId: this.parentScript.id,
                     nodeId: this.nodeId,
@@ -441,7 +441,6 @@ export default catVariables;
             downStream.forEach(connection => {
                 const type = this.outputs.get('data')!.type;
                 const socket = connection.endNode!.inputs.get(connection.endSocketId!)!;
-                const exceptionId = Symbol.for(connection.id.toString() + 'connection_deleted');
 
                 connection.endNode!.refresh();
 
@@ -450,7 +449,7 @@ export default catVariables;
                     this.editorAPI.deleteConnections([connection], isRecording);
 
                     this.editorAPI.pushNodeException({
-                        errorId: exceptionId,
+                        errorId: Symbol.for(connection.id.toString() + 'connection_deleted'),
                         msgId: 'node.connection_deleted',
                         logicId: this.parentScript.id,
                         nodeId: this.nodeId,
