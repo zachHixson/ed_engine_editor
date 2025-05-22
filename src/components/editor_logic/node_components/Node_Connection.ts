@@ -1,6 +1,6 @@
 import type Node from './Node';
 import Core from '@/core';
-import { ConnectionSave, ConnectionSaveId } from '@compiled/SaveTypes';
+import { ConnectionSave as ConnectionSave_L, ConnectionSaveId } from '@compiled/SaveTypes';
 
 type tConnectionConstructor = {
     id: number,
@@ -79,24 +79,24 @@ export default class Node_Connection {
         this.endSocketEl = null;
     }
 
-    toSaveData(): ConnectionSave {
+    toSaveData(): Core.ConnectionSave {
         const {id, graphId, startNode, endNode} = this;
         const startSocketId = this.startSocketId!;
         const endSocketId = this.endSocketId!;
         const startNodeId = startNode!.nodeId;
         const endNodeId = endNode!.nodeId;
 
-        return [
-            id,
-            graphId,
-            startSocketId,
-            endSocketId,
-            startNodeId,
-            endNodeId,
-        ];
+        return {
+            ID: id,
+            graphID: graphId,
+            sSocID: startSocketId,
+            eSocID: endSocketId,
+            sNodeID: startNodeId,
+            eNodeID: endNodeId,
+        };
     }
 
-    static fromSaveData(data: ConnectionSave, nodeMap: Map<number, Node>): Node_Connection {
+    static fromSaveData(data: ConnectionSave_L, nodeMap: Map<number, Node>): Node_Connection {
         const newData : tConnectionConstructor = {
             id: data[ConnectionSaveId.ID],
             graphId: data[ConnectionSaveId.graphID],
@@ -106,7 +106,7 @@ export default class Node_Connection {
         return new Node_Connection(newData)._loadSaveData(data, nodeMap);
     }
 
-    private _loadSaveData(data: ConnectionSave, nodeMap: Map<number, Node>){
+    private _loadSaveData(data: ConnectionSave_L, nodeMap: Map<number, Node>){
         this.startNode = nodeMap.get(data[ConnectionSaveId.startNodeID])!;
         this.endNode = nodeMap.get(data[ConnectionSaveId.endNodeID])!;
         this.type = this.startNode.template.outputs?.find(i => i.id == this.startSocketId)?.type ?? null;

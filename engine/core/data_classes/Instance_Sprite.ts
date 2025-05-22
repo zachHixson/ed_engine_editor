@@ -1,8 +1,12 @@
 import { INSTANCE_TYPE } from "../Enums";
 import { Vector } from "../Vector";
-import { Instance_Base } from "./Instance_Base";
+import { Instance_Base, InstanceBaseSave } from "./Instance_Base";
 import { Sprite } from "./Sprite";
-import { InstanceSpriteSave, InstanceSpriteSaveId } from "@compiled/SaveTypes";
+import { InstanceSpriteSave as InstanceSpriteSave_L, InstanceSpriteSaveId } from "@compiled/SaveTypes";
+
+export type InstanceSpriteSave = InstanceBaseSave & {
+    sprID: number,
+};
 
 export class Instance_Sprite extends Instance_Base {
     static DEFAULT_SPRITE_ICON_ID = 'SPRITE_ICON';
@@ -50,10 +54,10 @@ export class Instance_Sprite extends Instance_Base {
     }
 
     override toSaveData(): InstanceSpriteSave {
-        return [
+        return {
             ...this.getBaseSaveData(),
-            this.sprite?.id ?? -1,
-        ];
+            sprID: this.sprite?.id ?? -1,
+        };
     }
 
     override needsPurge(spriteMap: Map<number, any>): boolean {
@@ -61,7 +65,7 @@ export class Instance_Sprite extends Instance_Base {
         return !spriteMap.get(this.sprite.id);
     }
 
-    static fromSaveData(data: InstanceSpriteSave, spriteMap: Map<number, Sprite>): Instance_Sprite {
+    static fromSaveData(data: InstanceSpriteSave_L, spriteMap: Map<number, Sprite>): Instance_Sprite {
         const id = data[InstanceSpriteSaveId.id];
         const spriteID = data[InstanceSpriteSaveId.spriteID];
         const pos = data[InstanceSpriteSaveId.pos];

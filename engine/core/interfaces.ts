@@ -1,4 +1,9 @@
-import { SpriteSave, GameObjectSave, RoomSave, LogicSave } from '@compiled/SaveTypes';
+import {
+    SpriteSave,
+    GameObjectSave,
+    RoomSave,
+    LogicSave,
+} from './core';
 
 export type iAnyObj = {[key: string | number | symbol]: any};
 

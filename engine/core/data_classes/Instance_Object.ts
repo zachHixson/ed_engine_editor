@@ -3,14 +3,20 @@ import { Vector } from '../Vector';
 import { Sprite } from './Sprite';
 import { Instance_Exit } from './Instance_Exit';
 import { Game_Object } from './Game_Object';
-import { InstanceAnimEvent, iCollisionEvent, Instance_Base } from './Instance_Base';
+import { InstanceAnimEvent, iCollisionEvent, Instance_Base, InstanceBaseSave } from './Instance_Base';
 import { iEngineVariable } from '../LogicInterfaces';
-import { InstanceObjectSave, InstanceObjectSaveId } from '@compiled/SaveTypes';
+import { InstanceObjectSave as InstanceObjectSave_L, InstanceObjectSaveId } from '@compiled/SaveTypes';
 
 enum COLLISION_OVERRIDE {
     KEEP = 'K',
     FORCE = 'F',
     IGNORE = 'I',
+};
+
+export type InstanceObjectSave = InstanceBaseSave & {
+    srcObjID: number,
+    zDepOvr: number | '',
+    colOvr: string,
 };
 
 export class Instance_Object extends Instance_Base {
@@ -145,19 +151,19 @@ export class Instance_Object extends Instance_Base {
     }
 
     override toSaveData(): InstanceObjectSave {
-        return [
+        return {
             ...this.getBaseSaveData(),
-            this._objRef.id,
-            this._zDepthOverride ?? '',
-            this.collisionOverride,
-        ];
+            srcObjID: this._objRef.id,
+            zDepOvr: this._zDepthOverride ?? '',
+            colOvr: this.collisionOverride,
+        };
     }
 
     override needsPurge(objectMap: Map<number, any>): boolean {
         return !objectMap.get(this._objRef.id);
     }
 
-    static fromSaveData(data: [...InstanceObjectSave, ...any[]], objMap: Map<number, Game_Object>): Instance_Object {
+    static fromSaveData(data: [...InstanceObjectSave_L, ...any[]], objMap: Map<number, Game_Object>): Instance_Object {
         const newObj = new Instance_Object(
             data[InstanceObjectSaveId.id],
             Vector.fromArray(data[InstanceObjectSaveId.pos]),
@@ -168,7 +174,7 @@ export class Instance_Object extends Instance_Base {
         return newObj;
     }
 
-    private _loadSaveData(data: [...InstanceObjectSave, ...any[]]): void {
+    private _loadSaveData(data: [...InstanceObjectSave_L, ...any[]]): void {
         this.loadBaseSaveData(data);
 
         this.zDepthOverride = data[InstanceObjectSaveId.zDepthOver] == '' ? null : data[InstanceObjectSaveId.zDepthOver];

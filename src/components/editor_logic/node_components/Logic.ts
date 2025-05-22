@@ -3,7 +3,7 @@ import Node from './Node';
 import Node_Connection from './Node_Connection';
 import Core from '@/core';
 import type Node_API from '../Node_API';
-import { GraphSave, GraphSaveId, LogicSave, LogicSaveId } from '@compiled/SaveTypes';
+import { GraphSave as GraphSave_L, GraphSaveId, LogicSave as LogicSave_L, LogicSaveId } from '@compiled/SaveTypes';
 
 const { Vector } = Core;
 const { t } = i18n.global;
@@ -44,21 +44,21 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
         this.graphs[this.selectedGraphId].navState.copy(newState);
     }
 
-    toSaveData(): LogicSave {
-        return [
+    toSaveData(): Core.LogicSave {
+        return {
             ...this.getBaseAssetData(),
-            this.selectedGraphId,
-            this.graphs.map(g => g.toSaveData()),
-            this.nodes.map(n => n.toSaveData()),
-            this.connections.map(c => c.toSaveData()),
-        ];
+            selGraphID: this.selectedGraphId,
+            graphLst: this.graphs.map(g => g.toSaveData()),
+            nodeDatLst: this.nodes.map(n => n.toSaveData()),
+            cncDatLst: this.connections.map(c => c.toSaveData()),
+        };
     }
 
-    static fromSaveData(data: LogicSave, nodeAPI: Node_API): Logic {
+    static fromSaveData(data: LogicSave_L, nodeAPI: Node_API): Logic {
         return new Logic()._loadSaveData(data, nodeAPI);
     }
 
-    private _loadSaveData(data: LogicSave, nodeAPI: Node_API): Logic {
+    private _loadSaveData(data: LogicSave_L, nodeAPI: Node_API): Logic {
         const nodeMap = new Map<number, Node>();
 
         this.loadBaseAssetData(data);
@@ -207,15 +207,15 @@ class Graph {
         this.navState =  new Core.NavState();
     }
 
-    toSaveData(): GraphSave {
-        return [
-            this.id,
-            this.name,
-            this.navState.toSaveData(),
-        ];
+    toSaveData(): Core.GraphSave {
+        return {
+            ID: this.id,
+            name: this.name,
+            navDat: this.navState.toSaveData(),
+        };
     }
 
-    static fromSaveData(data: GraphSave): Graph {
+    static fromSaveData(data: GraphSave_L): Graph {
         const newGraph = new Graph(data[GraphSaveId.ID]);
         newGraph.name = data[GraphSaveId.name];
         newGraph.navState = Core.NavState.fromSaveData(data[GraphSaveId.navSaveData]);

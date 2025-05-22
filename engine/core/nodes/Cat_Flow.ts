@@ -1,9 +1,9 @@
 import { iNodeTemplate } from "./iNodeTemplate";
-import { iEngineNode, iEditorNode, iEventContext, iNodeConnection } from "../LogicInterfaces";
+import { iEngineNode, iEditorNode, iEventContext, iNodeConnection, NodeSave } from "../LogicInterfaces";
 import { canConvertSocket } from './Socket_Conversions';
 import { SOCKET_TYPE, WIDGET } from "./Node_Enums";
 import { Asset_Base, GenericNode, isEngineNode } from "../core";
-import { NodeSave, NodeSaveId } from "@compiled/SaveTypes";
+import { NodeSave as NodeSave_L, NodeSaveId } from "@compiled/SaveTypes";
 
 const catFlow: iNodeTemplate[] = [];
 export default catFlow;
@@ -45,9 +45,9 @@ export default catFlow;
         ],
         outTriggers: ['#1', '#2'],
         afterSave(this: iEditorNode, saveData: NodeSave){
-            saveData[NodeSaveId.extra] = this.outTriggers.size;
+            saveData.ext = this.outTriggers.size;
         },
-        afterLoad(this: iEditorNode, saveData: NodeSave){
+        afterLoad(this: iEditorNode, saveData: NodeSave_L){
             const outputNumber = saveData[NodeSaveId.extra] as number;
             this.outTriggers.clear();
     

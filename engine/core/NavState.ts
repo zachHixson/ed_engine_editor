@@ -1,8 +1,9 @@
 import { Vector } from "./Vector";
 import { Mat3 } from "./Mat3";
-import { tNavSaveData } from "@compiled/SaveTypes";
 
 const PRECISION = 100;
+
+export type tNavSaveData = [number, number, number];
 
 export interface iNavState {
     offset: Vector;

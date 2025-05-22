@@ -9,8 +9,10 @@ import {
     iEngineInput,
     CATEGORY_ID,
     iEventContext,
+    LogicSave,
+    NodeSave,
+    ConnectionSave,
 } from '@engine/core/core';
-import { ConnectionSave, ConnectionSaveId, LogicSave, LogicSaveId, NodeSave, NodeSaveId } from '@compiled/SaveTypes';
 import { SOCKET_TYPE } from './core/nodes/Node_Enums';
 
 export default class Logic implements iEngineLogic {
@@ -25,13 +27,13 @@ export default class Logic implements iEngineLogic {
     events: Map<string, Node[]> = new Map();
 
     constructor(logicData: LogicSave, engine: Engine){
-        this.id = logicData[LogicSaveId.id];
-        this.name = logicData[LogicSaveId.name];
+        this.id = logicData.id;
+        this.name = logicData.name;
 
         const nodeMap = new Map<number, Node>();
-        const graphList = logicData[LogicSaveId.graphList];
-        const nodeDataList = logicData[LogicSaveId.nodeDataList];
-        const connectionDataList = logicData[LogicSaveId.connectionDataList];
+        const graphList = logicData.graphLst;
+        const nodeDataList = logicData.nodeDatLst;
+        const connectionDataList = logicData.cncDatLst;
 
         //populate graph name map
         graphList.forEach(graphData => this.graphNames.set(graphData[0], graphData[1]));
@@ -39,15 +41,15 @@ export default class Logic implements iEngineLogic {
         //create all nodes
         nodeDataList.forEach((nodeData: NodeSave) => {
             const newNode = new Node(nodeData, this, engine);
-            nodeMap.set(nodeData[NodeSaveId.nodeID], newNode);
+            nodeMap.set(nodeData.nodeID, newNode);
             this._nodes.push(newNode);
 
             if (newNode.isEvent){
-                let eventArr = this.events.get(nodeData[NodeSaveId.templateID]);
+                let eventArr = this.events.get(nodeData.tmplID);
 
                 if (!eventArr){
                     eventArr = [];
-                    this.events.set(nodeData[NodeSaveId.templateID], eventArr);
+                    this.events.set(nodeData.tmplID, eventArr);
                 }
 
                 eventArr.push(newNode);
@@ -56,12 +58,12 @@ export default class Logic implements iEngineLogic {
 
         //create and link connections
         connectionDataList.forEach((connection: ConnectionSave) => {
-            const startNode = nodeMap.get(connection[ConnectionSaveId.startNodeID])!;
-            const endNode = nodeMap.get(connection[ConnectionSaveId.endNodeID])!;
+            const startNode = nodeMap.get(connection.sNodeID)!;
+            const endNode = nodeMap.get(connection.eNodeID)!;
             const allStartSockets = new Map<string, iEngineOutTrigger | iEngineOutput>();
             const allEndSockets = new Map<string, iEngineInTrigger | iEngineInput>();
-            const startSocketId = connection[ConnectionSaveId.startSocketID];
-            const endSocketID = connection[ConnectionSaveId.endSocketID];
+            const startSocketId = connection.sSocID;
+            const endSocketID = connection.eSocID;
 
             startNode.outTriggers.forEach((oTrigger, key) => allStartSockets.set(key, oTrigger));
             startNode.outputs.forEach((output, key) => allStartSockets.set(key, output));

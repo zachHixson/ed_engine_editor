@@ -2,7 +2,7 @@ import { INSTANCE_TYPE } from '../Enums';
 import { Vector } from '../Vector';
 import { Draw } from '../core';
 import { Sprite, Util, Node_Enums } from '../core';
-import { InstanceBaseSave, InstanceBaseSaveId } from '@compiled/SaveTypes';
+import { InstanceBaseSave as InstanceBaseSave_L, InstanceBaseSaveId } from '@compiled/SaveTypes';
 import type Engine from '@engine/Engine';
 
 export enum InstanceAnimEvent {
@@ -17,6 +17,21 @@ export interface iCollisionEvent {
     instance: Instance_Base,
     normal?: Vector,
 }
+
+type vec = [number, number];
+
+export type InstanceBaseSave = {
+	id: number,
+	name: string,
+	instType: string,
+	pos: vec,
+	zDepOvr: number | '',
+	groups: Array<string>,
+	strtFrmOvr: number | '',
+	fpsOvr: number | '',
+	animLoopOvr: 0 | 1 | 2,
+	animPlayingOvr: 0 | 1 | 2,
+};
 
 export abstract class Instance_Base{
     private _animProgress: number = 0;
@@ -216,7 +231,7 @@ export abstract class Instance_Base{
         this.pos.copy(newPos);
     }
 
-    loadBaseSaveData(data: [...InstanceBaseSave, ...any[]]): void {
+    loadBaseSaveData(data: [...InstanceBaseSave_L, ...any[]]): void {
         this.id = data[InstanceBaseSaveId.id];
         this.name = data[InstanceBaseSaveId.name];
         this.pos = Vector.fromArray(data[InstanceBaseSaveId.pos]);
@@ -231,18 +246,18 @@ export abstract class Instance_Base{
     }
 
     getBaseSaveData(): InstanceBaseSave {
-        return [
-            this.id,
-            this.name,
-            this.TYPE,
-            this.pos.toArray(),
-            this._zDepthOverride ?? '',
-            this.groups,
-            this.startFrameOverride ?? '',
-            this.fpsOverride ?? '',
-            this.animLoopOverride === null ? 0 : +this.animLoopOverride + 1 as (1 | 2),
-            this.animPlayingOverride === null ? 0 : +this.animPlayingOverride + 1 as (1 | 2),
-        ];
+        return {
+            id: this.id,
+            name: this.name,
+            instType: this.TYPE,
+            pos: this.pos.toArray(),
+            zDepOvr: this._zDepthOverride ?? '',
+            groups: this.groups,
+            strtFrmOvr: this.startFrameOverride ?? '',
+            fpsOvr: this.fpsOverride ?? '',
+            animLoopOvr: this.animLoopOverride === null ? 0 : +this.animLoopOverride + 1 as (1 | 2),
+            animPlayingOvr: this.animPlayingOverride === null ? 0 : +this.animPlayingOverride + 1 as (1 | 2),
+        };
     }
 
     drawThumbnail(canvas: HTMLCanvasElement): void {

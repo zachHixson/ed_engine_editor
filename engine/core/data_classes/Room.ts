@@ -1,6 +1,6 @@
 import { Asset_Base } from './Asset_Base';
 import { NavState } from '../NavState';
-import { Camera } from './Camera';
+import { Camera, CameraSave } from './Camera';
 import { Spacial_Collection } from '../Spacial_Collection';
 import { CATEGORY_ID, INSTANCE_TYPE } from '../Enums';
 import { Color } from '../Draw';
@@ -9,13 +9,24 @@ import { Sprite } from './Sprite';
 import { Game_Object } from './Game_Object';
 import { Instance_Object } from './Instance_Object';
 import { Vector } from '../Vector';
-import { Instance_Base } from './Instance_Base';
+import { Instance_Base, InstanceBaseSave } from './Instance_Base';
 import { Linked_List } from '../Linked_List';
 import { Instance_Sprite } from './Instance_Sprite';
 import { Instance_Logic } from './Instance_Logic';
 import { iEngineLogic } from '../LogicInterfaces';
 import { iEditorLogic } from '../LogicInterfaces';
-import { ExitSave, InstanceBaseSaveId, InstanceLogicSave, InstanceObjectSave, InstanceSpriteSave, RoomSave, RoomSaveId } from '@compiled/SaveTypes';
+import { tNavSaveData } from '../NavState';
+import { ExitSave, InstanceBaseSaveId, InstanceLogicSave, InstanceObjectSave, InstanceSpriteSave, RoomSave as RoomSave_L, RoomSaveId } from '@compiled/SaveTypes';
+
+export type RoomSave = {
+    camDat: CameraSave,
+    instList: Array<InstanceBaseSave>,
+    bgCol: string,
+    persist: 1 | 0,
+    gravOn: 1 | 0,
+    gravStr: number,
+    navDat: tNavSaveData,
+};
 
 export class Room extends Asset_Base {
     private static _curInstId: number = 0;
@@ -43,23 +54,23 @@ export class Room extends Asset_Base {
     }
 
     toSaveData(): RoomSave {
-        return [
+        return {
             ...this.getBaseAssetData(),
-            this.camera.toSaveData(),
-            this.instances.toArray().map(i => i.toSaveData()),
-            this.bgColor.toHex().replace('#', ''),
-            +this.persist as (0 | 1),
-            +this.useGravity as (0 | 1),
-            this.gravity,
-            this.navState.toSaveData(),
-        ];
+            camDat: this.camera.toSaveData(),
+            instList: this.instances.toArray().map(i => i.toSaveData()),
+            bgCol: this.bgColor.toHex().replace('#', ''),
+            persist: +this.persist as (0 | 1),
+            gravOn: +this.useGravity as (0 | 1),
+            gravStr: this.gravity,
+            navDat: this.navState.toSaveData(),
+        };
     }
 
-    static fromSaveData(data: RoomSave, assetMap: Map<CATEGORY_ID, Map<number, Asset_Base | iEngineLogic>>): Room {
+    static fromSaveData(data: RoomSave_L, assetMap: Map<CATEGORY_ID, Map<number, Asset_Base | iEngineLogic>>): Room {
         return new Room()._loadSaveData(data, assetMap);
     }
 
-    private _loadSaveData(data: RoomSave, assetMap: Map<CATEGORY_ID, Map<number, Asset_Base | iEngineLogic>>){
+    private _loadSaveData(data: RoomSave_L, assetMap: Map<CATEGORY_ID, Map<number, Asset_Base | iEngineLogic>>){
         const instancesSerial = data[RoomSaveId.instanceList];
 
         this.loadBaseAssetData(data);

@@ -7,12 +7,12 @@ import {
     NodeMap,
     iEventContext,
     Node_Enums,
+    NodeSave,
 } from "@engine/core/core";
 import { iAnyObj } from "./core/interfaces";
 import { listConvert } from "./core/nodes/Socket_Conversions";
 import Engine from "./Engine";
 import Logic from "./Logic";
-import { NodeSave, NodeSaveId } from "@compiled/SaveTypes";
 
 export default class Node implements iEngineNode {
     private _nodeData: unknown = null as unknown;
@@ -32,18 +32,18 @@ export default class Node implements iEngineNode {
     execute: ((eventContext: iEventContext, data: any)=>void) | null = null;
 
     constructor(nodeSaveData: NodeSave, logic: Logic, engine: Engine){
-        const template = NodeMap.get(nodeSaveData[NodeSaveId.templateID])!;
+        const template = NodeMap.get(nodeSaveData.tmplID)!;
 
         this.engine = engine;
 
         template.beforeLoad?.call(this, nodeSaveData);
         
         this.template = template;
-        this.nodeId = nodeSaveData[NodeSaveId.nodeID];
+        this.nodeId = nodeSaveData.nodeID;
         this.parentScript = logic;
-        this.graphId = nodeSaveData[NodeSaveId.graphID];
+        this.graphId = nodeSaveData.graphID;
         this.isEvent = template.isEvent ?? false;
-        this.widgetData = nodeSaveData[NodeSaveId.widgetData] ?? null;
+        this.widgetData = nodeSaveData.wdgDat ?? null;
 
         template.inTriggers?.forEach(trigger => {
             const {execute} = trigger;
@@ -82,7 +82,7 @@ export default class Node implements iEngineNode {
             });
         })
 
-        nodeSaveData[NodeSaveId.inputs].forEach(srcInput => {
+        nodeSaveData.inps.forEach(srcInput => {
             this.inputs.get(srcInput[0])!.value = srcInput[1];
         });
 

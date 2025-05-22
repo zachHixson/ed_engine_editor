@@ -3,7 +3,6 @@ import Logic from '@/components/editor_logic/node_components/Logic';
 import type Node_API from '@/components/editor_logic/Node_API';
 import i18n from '@/i18n';
 import Core from '@/core';
-import { SpriteSave, GameObjectSave, RoomSave } from '@compiled/SaveTypes';
 
 const t = i18n.global.t;
 
@@ -32,9 +31,9 @@ export const useGameDataStore = defineStore({
         getAllObjects: (state): Core.Game_Object[] => state.objects as Core.Game_Object[],
         getAllLogic: (state): Logic[] => state.logic as Logic[],
         getAllRooms: (state): Core.Room[] => state.rooms as Core.Room[],
-        getSpriteSaveData: (state) => (): SpriteSave[] => state.sprites.map(s => s.toSaveData()),
-        getObjectSaveData: (state) => (): GameObjectSave[] => state.objects.map(o => o.toSaveData()),
-        getRoomSaveData: (state) => (): RoomSave[] => state.rooms.map(r => r.toSaveData()),
+        getSpriteSaveData: (state) => (): Core.SpriteSave[] => state.sprites.map(s => s.toSaveData()),
+        getObjectSaveData: (state) => (): Core.GameObjectSave[] => state.objects.map(o => o.toSaveData()),
+        getRoomSaveData: (state) => (): Core.RoomSave[] => state.rooms.map(r => r.toSaveData()),
         getLogicSaveData: (state) => (): any => state.logic.map(r => r.toSaveData()),
     },
 

@@ -5,7 +5,6 @@ import { useMainStore } from '@/stores/Main';
 import { useLogicEditorStore } from '@/stores/LogicEditor';
 import type { ActionData, DomRefs, LogicEditorState } from '../LogicMain.vue';
 import Core from '@/core';
-import { ConnectionSave, NodeSave, NodeSaveId } from '@compiled/SaveTypes';
 
 type ActionAddNodeProps = {templateId: string, nodeRef?: Node_Obj};
 type ActionDeleteNodesProps = {nodeRefList: Node_Obj[], connectionRefMap?: Map<Logic, Node_Connection[]>};
@@ -152,8 +151,8 @@ export default function useNode(
 
         const nodeMap = new Map<number, Node_Obj>();
         const connectionList= nodesToCopy[0].parentScript.connections;
-        const nodeData: NodeSave[] = [];
-        const connectionData: ConnectionSave[] = [];
+        const nodeData: Core.NodeSave[] = [];
+        const connectionData: Core.ConnectionSave[] = [];
         const boundsCenter = new Vector(0, 0);
 
         //calculate node bounds
@@ -167,8 +166,8 @@ export default function useNode(
         nodesToCopy.forEach(node => {
             const data = node.toSaveData();
 
-            data[NodeSaveId.pos][0] -= boundsCenter.x;
-            data[NodeSaveId.pos][1] -= boundsCenter.y;
+            data.pos[0] -= boundsCenter.x;
+            data.pos[1] -= boundsCenter.y;
 
             nodeMap.set(node.nodeId, node);
             nodeData.push(data);
@@ -225,8 +224,8 @@ export default function useNode(
 
         connectionData.forEach(data => {
             const modifiedData = data;
-            modifiedData[4] = idMap.get(modifiedData[4])!;
-            modifiedData[5] = idMap.get(modifiedData[5])!;
+            modifiedData.sNodeID = idMap.get(modifiedData.sNodeID)!;
+            modifiedData.eNodeID = idMap.get(modifiedData.eNodeID)!;
 
             const connection = Node_Connection.fromSaveData(modifiedData, nodeMap);
             connection.id = 0;

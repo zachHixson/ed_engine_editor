@@ -1,5 +1,5 @@
 import { Vector } from '../Vector';
-import { iCollisionEvent, Instance_Base } from './Instance_Base';
+import { iCollisionEvent, Instance_Base, InstanceBaseSave } from './Instance_Base';
 import {INSTANCE_TYPE} from '../Enums';
 import { Instance_Object } from './Instance_Object';
 import { Game_Object } from './Game_Object';
@@ -8,7 +8,16 @@ import Engine from '@engine/Engine';
 import { COLLISION_EVENT } from '../nodes/Node_Enums';
 import { TRANSITION } from '@engine/transitions/Transition_Base';
 import { Room } from './Room';
-import { ExitSave, ExitSaveId } from '@compiled/SaveTypes';
+import { ExitSave as ExitSave_L, ExitSaveId } from '@compiled/SaveTypes';
+
+export type ExitSave = InstanceBaseSave & {
+    detBktrk: 1 | 0,
+    isEnd: 1 | 0,
+    dstRmID: number | '',
+    dstRmExit: number | '',
+    trnsType: string,
+    endDlg: string,
+};
 
 export class Instance_Exit extends Instance_Base {
     static EXIT_ICON_ID = 'EXIT_ICON';
@@ -137,15 +146,15 @@ export class Instance_Exit extends Instance_Base {
     }
 
     override toSaveData(): ExitSave {
-        return [
+        return {
             ...this.getBaseSaveData(),
-            (+this.detectBacktracking) as (0 | 1),
-            (+this.isEnding) as 0 | 1,
-            this.destinationRoom === null ? '' : this.destinationRoom,
-            this.destinationExit === null ? '' : this.destinationExit,
-            this.transition,
-            this.endingDialog,
-        ];
+            detBktrk: (+this.detectBacktracking) as (0 | 1),
+            isEnd: (+this.isEnding) as 0 | 1,
+            dstRmID: this.destinationRoom === null ? '' : this.destinationRoom,
+            dstRmExit: this.destinationExit === null ? '' : this.destinationExit,
+            trnsType: this.transition,
+            endDlg: this.endingDialog,
+        };
     }
 
     override needsPurge(roomMap: Map<number, Room>): boolean {
@@ -163,11 +172,11 @@ export class Instance_Exit extends Instance_Base {
         return false;
     }
 
-    static fromSaveData(data: ExitSave): Instance_Exit {
+    static fromSaveData(data: ExitSave_L): Instance_Exit {
         return new Instance_Exit(data[0], Vector.fromArray(data[3]))._loadSaveData(data);
     }
 
-    private _loadSaveData(data: ExitSave): Instance_Exit {
+    private _loadSaveData(data: ExitSave_L): Instance_Exit {
         this.loadBaseSaveData(data);
 
         this.detectBacktracking = !!data[ExitSaveId.detectBacktrack];

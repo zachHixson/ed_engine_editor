@@ -1,8 +1,13 @@
 import {CATEGORY_ID} from '../Enums';
 import {createCanvas, hexToRGBA, RGBAToHex} from '../Draw';
-import { Asset_Base } from './Asset_Base';
-import { NavState } from '../NavState';
-import { SpriteSave, SpriteSaveId } from '@compiled/SaveTypes';
+import { Asset_Base, AssetSave } from './Asset_Base';
+import { NavState, tNavSaveData } from '../NavState';
+import { SpriteSave as SpriteSave_L, SpriteSaveId } from '@compiled/SaveTypes';
+
+export type SpriteSave = AssetSave & {
+    frmLst: Array<string>,
+    navDat: tNavSaveData,
+};
 
 export class Sprite extends Asset_Base {
     static get DIMENSIONS(){return 16}
@@ -24,18 +29,18 @@ export class Sprite extends Asset_Base {
     }
     
     toSaveData(): SpriteSave {
-        return [
+        return {
             ...this.getBaseAssetData(),
-            this.compressFrames(this.getFramesCopy()).map(f => f.join(',')),
-            this.navState.toSaveData(),
-         ];
+            frmLst: this.compressFrames(this.getFramesCopy()).map(f => f.join(',')),
+            navDat: this.navState.toSaveData(),
+        };
     }
 
-    static fromSaveData(data: SpriteSave): Sprite {
+    static fromSaveData(data: SpriteSave_L): Sprite {
         return new Sprite()._loadSaveData(data);
     }
 
-    private _loadSaveData(data: SpriteSave): Sprite {
+    private _loadSaveData(data: SpriteSave_L): Sprite {
         const splitFrames = data[SpriteSaveId.frameList].map(f => f.split(','));
         const hexFrames = this.decompressFrames(splitFrames);
         const imgDataFrames = new Array(hexFrames.length);

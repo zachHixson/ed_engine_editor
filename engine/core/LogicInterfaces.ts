@@ -11,6 +11,8 @@ import {
     CATEGORY_ID,
     Event_Emitter,
     Node_Enums,
+    tNavSaveData,
+    AssetSave,
 } from "./core";
 
 //types needed for node editor API, which is the only place the engine code has to know about editor types
@@ -18,12 +20,45 @@ import {
 import type Undo_Store from '@src/components/common/Undo_Store';
 //@ts-ignore
 import type { iActionStore } from '@src/components/common/Undo_Store';
-import { NodeSave } from "@compiled/SaveTypes";
+import { NodeSave as NodeSave_L } from "@compiled/SaveTypes";
 
 type Graph = {};
 type Connection = {};
 type iNodeAPI = {};
+type vec = [number, number];
 export type ActionCallback<T> = (args: T, commit: boolean) => (Partial<T> | void);
+
+export type ConnectionSave = {
+	ID: number,
+	graphID: number,
+	sSocID: string,
+	eSocID: string,
+	sNodeID: number,
+	eNodeID: number,
+};
+
+export type NodeSave = {
+    tmplID: string,
+    nodeID: number,
+    graphID: number,
+    pos: vec,
+    inps: Array<[string, any]>,
+    wdgDat: any,
+    ext: any,
+};
+
+export type GraphSave = {
+    ID: number,
+    name: string,
+    navDat: tNavSaveData,
+};
+
+export type LogicSave = AssetSave & {
+    selGraphID: number,
+    graphLst: Array<GraphSave>,
+    nodeDatLst: Array<NodeSave>,
+    cncDatLst: Array<ConnectionSave>,
+};
 
 interface iNode_Base extends iNodeLifecycleEvents {
     template: iNodeTemplate;
@@ -39,8 +74,8 @@ export interface iNodeLifecycleEvents {
     init?: ()=>void; // Fired on constructor
     beforeSave?: ()=>void;
     afterSave?: (saveData: NodeSave)=>void;
-    beforeLoad?: (saveData: NodeSave)=>void;
-    afterLoad?: (saveData: NodeSave)=>void;
+    beforeLoad?: (saveData: NodeSave_L)=>void;
+    afterLoad?: (saveData: NodeSave_L)=>void;
     logicLoaded?: (logic: iEditorLogic | iEngineLogic)=>void;
     afterGameDataLoaded?: ()=>void;
     onCreate?: // Fired when instance is spawned, or when editor node is created

@@ -2,7 +2,7 @@ import { Vector } from '../Vector';
 import { Sprite } from './Sprite';
 import { Room } from './Room';
 import { Instance_Base } from './Instance_Base';
-import { CameraSave, CameraSaveId } from '@compiled/SaveTypes';
+import { CameraSave as CameraSave_L, CameraSaveId } from '@compiled/SaveTypes';
 
 enum MOVE_TYPES {
     LOCKED = 'L',
@@ -21,6 +21,19 @@ enum FOLLOW_TYPES {
     SMART = 'S',
     CENTERED = 'C',
     TILED = 'T',
+};
+
+type vec = [number, number];
+
+export type CameraSave = {
+    _size: number,
+	pos: vec,
+	vel: vec,
+	moveType: string,
+	scrDir: string,
+	scrSpeed: number,
+	flwObjId: number | '',
+	flwType: string,
 };
 
 export class Camera{
@@ -52,23 +65,23 @@ export class Camera{
     }
 
     toSaveData(): CameraSave {
-        return [
-            this._size,
-            this.pos.toArray(),
-            this.velocity.toArray(),
-            this.moveType,
-            this.scrollDir,
-            this.scrollSpeed,
-            this.followObjId ?? '',
-            this.followType,
-        ];
+        return {
+            _size: this._size,
+            pos: this.pos.toArray(),
+            vel: this.velocity.toArray(),
+            moveType: this.moveType,
+            scrDir: this.scrollDir,
+            scrSpeed: this.scrollSpeed,
+            flwObjId: this.followObjId ?? '',
+            flwType: this.followType,
+        };
     }
 
-    static fromSaveData(data: CameraSave): Camera {
+    static fromSaveData(data: CameraSave_L): Camera {
         return new Camera()._loadSaveData(data);
     }
 
-    private _loadSaveData(data: CameraSave): Camera {
+    private _loadSaveData(data: CameraSave_L): Camera {
         const followObjId = data[CameraSaveId.followObjId];
 
         this._size = data[CameraSaveId._size];

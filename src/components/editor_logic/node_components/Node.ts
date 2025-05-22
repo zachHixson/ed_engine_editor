@@ -1,7 +1,7 @@
 import Core from '@/core';
 import type Logic from "./Logic";
 import type Node_API from "../Node_API";
-import { NodeSave, NodeSaveId } from '@compiled/SaveTypes';
+import { NodeSave as NodeSave_L, NodeSaveId } from '@compiled/SaveTypes';
 
 const { Vector } = Core;
 
@@ -116,15 +116,15 @@ export default class Node {
         this.template.beforeSave?.call(this);
     }
 
-    afterSave(saveData: NodeSave): void {
+    afterSave(saveData: Core.NodeSave): void {
         this.template.afterSave?.call(this, saveData);
     }
 
-    beforeLoad(saveData: NodeSave): void {
+    beforeLoad(saveData: NodeSave_L): void {
         this.template.beforeLoad?.call(this, saveData);
     }
 
-    afterLoad(saveData: NodeSave): void {
+    afterLoad(saveData: NodeSave_L): void {
         this.template.afterLoad?.call(this, saveData);
     }
 
@@ -185,23 +185,23 @@ export default class Node {
         this.domRef = null;
     }
 
-    toSaveData(): NodeSave {
+    toSaveData(): Core.NodeSave {
         this.beforeSave();
 
         const widgetData = this.widget ? JSON.parse(JSON.stringify(this.widgetData ?? {})) : {}
-        const outObj: NodeSave = [
-            this.templateId,
-            this.nodeId,
-            this.graphId,
-            this.pos.clone().multiplyScalar(100).divideScalar(100).floor().toArray(),
-            [],
-            widgetData,
-            {},
-        ];
+        const outObj: Core.NodeSave = {
+            tmplID: this.templateId,
+            nodeID: this.nodeId,
+            graphID: this.graphId,
+            pos: this.pos.clone().multiplyScalar(100).divideScalar(100).floor().toArray(),
+            inps: [],
+            wdgDat: widgetData,
+            ext: {},
+        };
 
         this.inputs.forEach(({id, value}) => {
             const outValue = typeof value == 'boolean' ? +value : value;
-            outObj[NodeSaveId.inputs].push([id, outValue]);
+            outObj.inps.push([id, outValue]);
         });
 
         this.afterSave(outObj);
@@ -209,7 +209,7 @@ export default class Node {
         return outObj;
     }
 
-    static fromSaveData(data: NodeSave, parentScript: Logic, nodeAPI: Node_API): Node {
+    static fromSaveData(data: NodeSave_L, parentScript: Logic, nodeAPI: Node_API): Node {
         const node = new Node(
             data[NodeSaveId.templateID],
             data[NodeSaveId.nodeID],
@@ -221,7 +221,7 @@ export default class Node {
         return node._loadSaveData(data);
     }
 
-    private _loadSaveData(data: NodeSave): Node {
+    private _loadSaveData(data: NodeSave_L): Node {
         this.beforeLoad(data);
 
         if (data[NodeSaveId.widgetData]){

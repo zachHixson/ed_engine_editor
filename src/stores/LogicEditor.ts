@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
 import type Core from '@/core';
-import { NodeSave, ConnectionSave } from '@compiled/SaveTypes';
 
 export interface iState {
     selectedNavTool: Core.NAV_TOOL_TYPE | null,
@@ -8,8 +7,8 @@ export interface iState {
     graphPanelOpen: boolean,
     globalVariableMap: Map<string, Core.iEditorVariable>,
     clipboard: {
-        nodeData: NodeSave[],
-        connectionData: ConnectionSave[],
+        nodeData: Core.NodeSave[],
+        connectionData: Core.ConnectionSave[],
     },
     errors: ReadonlyArray<Core.iNodeExceptionData>,
 }
@@ -41,7 +40,7 @@ export const useLogicEditorStore = defineStore({
         selectNavTool(newTool: Core.NAV_TOOL_TYPE | null){ this.selectedNavTool = newTool },
         setOpenCategory(category: string | null){ this.openCategory = category },
         setGraphPanelState(newState: boolean){ this.graphPanelOpen = newState },
-        setClipboard(nodeData: NodeSave[], connectionData: ConnectionSave[]){
+        setClipboard(nodeData: Core.NodeSave[], connectionData: Core.ConnectionSave[]){
             this.clipboard.nodeData = nodeData;
             this.clipboard.connectionData = connectionData;
         },

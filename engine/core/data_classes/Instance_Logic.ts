@@ -1,9 +1,13 @@
 import { Vector } from "../Vector";
-import { Instance_Object } from "./Instance_Object";
+import { Instance_Object, InstanceObjectSave } from "./Instance_Object";
 import { Game_Object } from "./Game_Object";
 import { iEngineLogic } from "../LogicInterfaces";
 import { INSTANCE_TYPE } from "../Enums";
-import { InstanceLogicSave, InstanceLogicSaveId, InstanceObjectSave } from "@compiled/SaveTypes";
+import { InstanceLogicSave as InstanceLogicSave_L, InstanceLogicSaveId } from "@compiled/SaveTypes";
+
+export type InstanceLogicSave = InstanceObjectSave & {
+    logId: number,
+};
 
 export class Instance_Logic extends Instance_Object {
     private static readonly _placeHolderObject = (()=>{
@@ -52,20 +56,18 @@ export class Instance_Logic extends Instance_Object {
         return clone;
     }
 
-    override toSaveData(): InstanceObjectSave {
-        const saveObj = [
+    override toSaveData(): InstanceLogicSave {
+        return {
             ...super.toSaveData(),
-            this.logicId,
-        ] as InstanceLogicSave;
-
-        return saveObj as unknown as InstanceObjectSave;
+            logId: this.logicId,
+        };
     }
 
     override needsPurge(logicMap: Map<number, any>): boolean {
         return !logicMap.get(this.logicId);
     }
 
-    static fromSaveData(data: InstanceLogicSave, objMap: Map<number, Game_Object>): Instance_Logic {
+    static fromSaveData(data: InstanceLogicSave_L, objMap: Map<number, Game_Object>): Instance_Logic {
         const instance = new Instance_Logic(
             data[InstanceLogicSaveId.id],
             Vector.fromArray(data[InstanceLogicSaveId.pos]),
