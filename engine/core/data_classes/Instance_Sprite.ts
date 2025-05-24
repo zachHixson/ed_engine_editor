@@ -2,7 +2,6 @@ import { INSTANCE_TYPE } from "../Enums";
 import { Vector } from "../Vector";
 import { Instance_Base, InstanceBaseSave } from "./Instance_Base";
 import { Sprite } from "./Sprite";
-import { InstanceSpriteSave as InstanceSpriteSave_L, InstanceSpriteSaveId } from "@compiled/SaveTypes";
 
 export type InstanceSpriteSave = InstanceBaseSave & {
     sprID: number,
@@ -65,10 +64,10 @@ export class Instance_Sprite extends Instance_Base {
         return !spriteMap.get(this.sprite.id);
     }
 
-    static fromSaveData(data: InstanceSpriteSave_L, spriteMap: Map<number, Sprite>): Instance_Sprite {
-        const id = data[InstanceSpriteSaveId.id];
-        const spriteID = data[InstanceSpriteSaveId.spriteID];
-        const pos = data[InstanceSpriteSaveId.pos];
+    static fromSaveData(data: InstanceSpriteSave, spriteMap: Map<number, Sprite>): Instance_Sprite {
+        const id = data.id;
+        const spriteID = data.sprID;
+        const pos = data.pos;
         const spriteAsset = spriteID >= 0 ? spriteMap.get(spriteID)! : null;
         const newSprite = new Instance_Sprite(id, Vector.fromArray(pos), spriteAsset);
         newSprite.loadBaseSaveData(data);

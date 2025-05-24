@@ -36,7 +36,7 @@ export default class Logic implements iEngineLogic {
         const connectionDataList = logicData.cncDatLst;
 
         //populate graph name map
-        graphList.forEach(graphData => this.graphNames.set(graphData[0], graphData[1]));
+        graphList.forEach(graphData => this.graphNames.set(graphData.ID, graphData.name));
 
         //create all nodes
         nodeDataList.forEach((nodeData: NodeSave) => {

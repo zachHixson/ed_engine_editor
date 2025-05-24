@@ -2,7 +2,6 @@ import { Vector } from '../Vector';
 import { Sprite } from './Sprite';
 import { Room } from './Room';
 import { Instance_Base } from './Instance_Base';
-import { CameraSave as CameraSave_L, CameraSaveId } from '@compiled/SaveTypes';
 
 enum MOVE_TYPES {
     LOCKED = 'L',
@@ -77,21 +76,21 @@ export class Camera{
         };
     }
 
-    static fromSaveData(data: CameraSave_L): Camera {
+    static fromSaveData(data: CameraSave): Camera {
         return new Camera()._loadSaveData(data);
     }
 
-    private _loadSaveData(data: CameraSave_L): Camera {
-        const followObjId = data[CameraSaveId.followObjId];
+    private _loadSaveData(data: CameraSave): Camera {
+        const followObjId = data.flwObjId;
 
-        this._size = data[CameraSaveId._size];
-        this.pos = Vector.fromArray(data[CameraSaveId.pos]);
-        this.velocity = Vector.fromArray(data[CameraSaveId.vel]);
-        this.moveType = data[CameraSaveId.moveType] as MOVE_TYPES;
-        this.scrollDir = data[CameraSaveId.scrollDir] as SCROLL_DIRS;
-        this.scrollSpeed = data[CameraSaveId.scrollSpeed];
+        this._size = data._size;
+        this.pos = Vector.fromArray(data.pos);
+        this.velocity = Vector.fromArray(data.vel);
+        this.moveType = data.moveType as MOVE_TYPES;
+        this.scrollDir = data.scrDir as SCROLL_DIRS;
+        this.scrollSpeed = data.scrSpeed;
         this.followObjId = followObjId != '' ? followObjId : null;
-        this.followType = data[CameraSaveId.followType] as FOLLOW_TYPES;
+        this.followType = data.flwType as FOLLOW_TYPES;
 
         return this;
     }

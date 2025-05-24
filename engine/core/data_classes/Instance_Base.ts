@@ -2,7 +2,6 @@ import { INSTANCE_TYPE } from '../Enums';
 import { Vector } from '../Vector';
 import { Draw } from '../core';
 import { Sprite, Util, Node_Enums } from '../core';
-import { InstanceBaseSave as InstanceBaseSave_L, InstanceBaseSaveId } from '@compiled/SaveTypes';
 import type Engine from '@engine/Engine';
 
 export enum InstanceAnimEvent {
@@ -231,16 +230,16 @@ export abstract class Instance_Base{
         this.pos.copy(newPos);
     }
 
-    loadBaseSaveData(data: [...InstanceBaseSave_L, ...any[]]): void {
-        this.id = data[InstanceBaseSaveId.id];
-        this.name = data[InstanceBaseSaveId.name];
-        this.pos = Vector.fromArray(data[InstanceBaseSaveId.pos]);
-        this._zDepthOverride = data[InstanceBaseSaveId.zDepthOverride] != '' ? data[InstanceBaseSaveId.zDepthOverride] : null;
-        this.groups = data[InstanceBaseSaveId.groups];
-        this.startFrameOverride = data[InstanceBaseSaveId.startFrameOverride] === '' ? null : data[InstanceBaseSaveId.startFrameOverride];
-        this.fpsOverride = data[InstanceBaseSaveId.fpsOverride] === '' ? null : data[InstanceBaseSaveId.fpsOverride];
-        this.animLoopOverride = data[InstanceBaseSaveId.animLoopOverride] === 0 ? null : !!(data[InstanceBaseSaveId.animLoopOverride] - 1);
-        this.animPlayingOverride = data[InstanceBaseSaveId.animPlayingOverride] === 0 ? null : !!(data[InstanceBaseSaveId.animPlayingOverride] - 1);
+    loadBaseSaveData(data: InstanceBaseSave): void {
+        this.id = data.id;
+        this.name = data.name;
+        this.pos = Vector.fromArray(data.pos);
+        this._zDepthOverride = data.zDepOvr != '' ? data.zDepOvr : null;
+        this.groups = data.groups;
+        this.startFrameOverride = data.strtFrmOvr === '' ? null : data.strtFrmOvr;
+        this.fpsOverride = data.fpsOvr === '' ? null : data.fpsOvr;
+        this.animLoopOverride = data.animLoopOvr === 0 ? null : !!(data.animLoopOvr - 1);
+        this.animPlayingOverride = data.animPlayingOvr === 0 ? null : !!(data.animPlayingOvr - 1);
 
         this.animFrame = this.startFrame;
     }

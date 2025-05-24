@@ -1,7 +1,6 @@
 import Core from '@/core';
 import type Logic from "./Logic";
 import type Node_API from "../Node_API";
-import { NodeSave as NodeSave_L, NodeSaveId } from '@compiled/SaveTypes';
 
 const { Vector } = Core;
 
@@ -120,11 +119,11 @@ export default class Node {
         this.template.afterSave?.call(this, saveData);
     }
 
-    beforeLoad(saveData: NodeSave_L): void {
+    beforeLoad(saveData: Core.NodeSave): void {
         this.template.beforeLoad?.call(this, saveData);
     }
 
-    afterLoad(saveData: NodeSave_L): void {
+    afterLoad(saveData: Core.NodeSave): void {
         this.template.afterLoad?.call(this, saveData);
     }
 
@@ -209,26 +208,26 @@ export default class Node {
         return outObj;
     }
 
-    static fromSaveData(data: NodeSave_L, parentScript: Logic, nodeAPI: Node_API): Node {
+    static fromSaveData(data: Core.NodeSave, parentScript: Logic, nodeAPI: Node_API): Node {
         const node = new Node(
-            data[NodeSaveId.templateID],
-            data[NodeSaveId.nodeID],
-            Vector.fromArray(data[NodeSaveId.pos]),
+            data.tmplID,
+            data.nodeID,
+            Vector.fromArray(data.pos),
             parentScript,
-            data[NodeSaveId.graphID],
+            data.graphID,
             nodeAPI
         );
         return node._loadSaveData(data);
     }
 
-    private _loadSaveData(data: NodeSave_L): Node {
+    private _loadSaveData(data: Core.NodeSave): Node {
         this.beforeLoad(data);
 
-        if (data[NodeSaveId.widgetData]){
-            this.widgetData = data[NodeSaveId.widgetData];
+        if (data.wdgDat){
+            this.widgetData = data.wdgDat;
         }
 
-        data[NodeSaveId.inputs].forEach(input => {
+        data.inps.forEach(input => {
             const nodeInput = this.inputs.get(input[0]);
             if (!nodeInput) return;
             nodeInput.value = input[1];

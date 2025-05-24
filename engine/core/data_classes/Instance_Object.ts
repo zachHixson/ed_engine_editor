@@ -5,7 +5,6 @@ import { Instance_Exit } from './Instance_Exit';
 import { Game_Object } from './Game_Object';
 import { InstanceAnimEvent, iCollisionEvent, Instance_Base, InstanceBaseSave } from './Instance_Base';
 import { iEngineVariable } from '../LogicInterfaces';
-import { InstanceObjectSave as InstanceObjectSave_L, InstanceObjectSaveId } from '@compiled/SaveTypes';
 
 enum COLLISION_OVERRIDE {
     KEEP = 'K',
@@ -163,22 +162,22 @@ export class Instance_Object extends Instance_Base {
         return !objectMap.get(this._objRef.id);
     }
 
-    static fromSaveData(data: [...InstanceObjectSave_L, ...any[]], objMap: Map<number, Game_Object>): Instance_Object {
+    static fromSaveData(data: InstanceObjectSave, objMap: Map<number, Game_Object>): Instance_Object {
         const newObj = new Instance_Object(
-            data[InstanceObjectSaveId.id],
-            Vector.fromArray(data[InstanceObjectSaveId.pos]),
-            objMap.get(data[InstanceObjectSaveId.srcObjID])!
+            data.id,
+            Vector.fromArray(data.pos),
+            objMap.get(data.srcObjID)!
         );
         newObj._loadSaveData(data);
 
         return newObj;
     }
 
-    private _loadSaveData(data: [...InstanceObjectSave_L, ...any[]]): void {
+    private _loadSaveData(data: InstanceObjectSave): void {
         this.loadBaseSaveData(data);
 
-        this.zDepthOverride = data[InstanceObjectSaveId.zDepthOver] == '' ? null : data[InstanceObjectSaveId.zDepthOver];
-        this.collisionOverride = data[InstanceObjectSaveId.collOver] as COLLISION_OVERRIDE;
+        this.zDepthOverride = data.zDepOvr == '' ? null : data.zDepOvr;
+        this.collisionOverride = data.colOvr as COLLISION_OVERRIDE;
     }
 
     executeNodeEvent(eventName: string, data?: any): void {

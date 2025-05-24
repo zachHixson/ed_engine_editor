@@ -3,7 +3,6 @@ import { iEngineNode, iEditorNode, iEventContext, iNodeConnection, NodeSave } fr
 import { canConvertSocket } from './Socket_Conversions';
 import { SOCKET_TYPE, WIDGET } from "./Node_Enums";
 import { Asset_Base, GenericNode, isEngineNode } from "../core";
-import { NodeSave as NodeSave_L, NodeSaveId } from "@compiled/SaveTypes";
 
 const catFlow: iNodeTemplate[] = [];
 export default catFlow;
@@ -47,8 +46,8 @@ export default catFlow;
         afterSave(this: iEditorNode, saveData: NodeSave){
             saveData.ext = this.outTriggers.size;
         },
-        afterLoad(this: iEditorNode, saveData: NodeSave_L){
-            const outputNumber = saveData[NodeSaveId.extra] as number;
+        afterLoad(this: iEditorNode, saveData: NodeSave){
+            const outputNumber = saveData.ext as number;
             this.outTriggers.clear();
     
             for (let i = 0; i < outputNumber; i++){

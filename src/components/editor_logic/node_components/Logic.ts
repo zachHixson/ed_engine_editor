@@ -3,7 +3,6 @@ import Node from './Node';
 import Node_Connection from './Node_Connection';
 import Core from '@/core';
 import type Node_API from '../Node_API';
-import { GraphSave as GraphSave_L, GraphSaveId, LogicSave as LogicSave_L, LogicSaveId } from '@compiled/SaveTypes';
 
 const { Vector } = Core;
 const { t } = i18n.global;
@@ -54,21 +53,21 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
         };
     }
 
-    static fromSaveData(data: LogicSave_L, nodeAPI: Node_API): Logic {
+    static fromSaveData(data: Core.LogicSave, nodeAPI: Node_API): Logic {
         return new Logic()._loadSaveData(data, nodeAPI);
     }
 
-    private _loadSaveData(data: LogicSave_L, nodeAPI: Node_API): Logic {
+    private _loadSaveData(data: Core.LogicSave, nodeAPI: Node_API): Logic {
         const nodeMap = new Map<number, Node>();
 
         this.loadBaseAssetData(data);
 
-        this.graphs = data[LogicSaveId.graphList].map(graph => {
-            this._nextGraphId = Math.max(this._nextGraphId, graph[0] + 1);
+        this.graphs = data.graphLst.map(graph => {
+            this._nextGraphId = Math.max(this._nextGraphId, graph.ID + 1);
             return Graph.fromSaveData(graph as unknown as any);
         });
-        this.nodes = data[LogicSaveId.nodeDataList].map(nodeData => {
-            this._nextNodeId = Math.max(this._nextNodeId, nodeData[1] + 1);
+        this.nodes = data.nodeDatLst.map(nodeData => {
+            this._nextNodeId = Math.max(this._nextNodeId, nodeData.nodeID + 1);
             return Node.fromSaveData(nodeData, this, nodeAPI);
         });
 
@@ -76,8 +75,8 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
             nodeMap.set(node.nodeId, node);
         });
 
-        this.connections = data[LogicSaveId.connectionDataList].map(connectionData => {
-            this._nextConnectionId = Math.max(this._nextConnectionId, connectionData[0] + 1);
+        this.connections = data.cncDatLst.map(connectionData => {
+            this._nextConnectionId = Math.max(this._nextConnectionId, connectionData.ID + 1);
             return Node_Connection.fromSaveData(connectionData, nodeMap);
         });
 
@@ -215,10 +214,10 @@ class Graph {
         };
     }
 
-    static fromSaveData(data: GraphSave_L): Graph {
-        const newGraph = new Graph(data[GraphSaveId.ID]);
-        newGraph.name = data[GraphSaveId.name];
-        newGraph.navState = Core.NavState.fromSaveData(data[GraphSaveId.navSaveData]);
+    static fromSaveData(data: Core.GraphSave): Graph {
+        const newGraph = new Graph(data.ID);
+        newGraph.name = data.name;
+        newGraph.navState = Core.NavState.fromSaveData(data.navDat);
         return newGraph;
     }
 }

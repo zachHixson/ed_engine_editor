@@ -1,6 +1,5 @@
 import type Node from './Node';
 import Core from '@/core';
-import { ConnectionSave as ConnectionSave_L, ConnectionSaveId } from '@compiled/SaveTypes';
 
 type tConnectionConstructor = {
     id: number,
@@ -96,19 +95,19 @@ export default class Node_Connection {
         };
     }
 
-    static fromSaveData(data: ConnectionSave_L, nodeMap: Map<number, Node>): Node_Connection {
+    static fromSaveData(data: Core.ConnectionSave, nodeMap: Map<number, Node>): Node_Connection {
         const newData : tConnectionConstructor = {
-            id: data[ConnectionSaveId.ID],
-            graphId: data[ConnectionSaveId.graphID],
-            startSocketId: data[ConnectionSaveId.startSocketID],
-            endSocketId: data[ConnectionSaveId.endSocketID],
+            id: data.ID,
+            graphId: data.graphID,
+            startSocketId: data.sSocID,
+            endSocketId: data.eSocID,
         };
         return new Node_Connection(newData)._loadSaveData(data, nodeMap);
     }
 
-    private _loadSaveData(data: ConnectionSave_L, nodeMap: Map<number, Node>){
-        this.startNode = nodeMap.get(data[ConnectionSaveId.startNodeID])!;
-        this.endNode = nodeMap.get(data[ConnectionSaveId.endNodeID])!;
+    private _loadSaveData(data: Core.ConnectionSave, nodeMap: Map<number, Node>){
+        this.startNode = nodeMap.get(data.sNodeID)!;
+        this.endNode = nodeMap.get(data.eNodeID)!;
         this.type = this.startNode.template.outputs?.find(i => i.id == this.startSocketId)?.type ?? null;
 
         return this;

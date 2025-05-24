@@ -1,24 +1,22 @@
-import { Asset_Base } from './Asset_Base';
-import { NavState } from '../NavState';
 import { Camera, CameraSave } from './Camera';
 import { Spacial_Collection } from '../Spacial_Collection';
 import { CATEGORY_ID, INSTANCE_TYPE } from '../Enums';
 import { Color } from '../Draw';
-import { Instance_Exit } from './Instance_Exit';
+import { Asset_Base, AssetSave } from './Asset_Base';
 import { Sprite } from './Sprite';
 import { Game_Object } from './Game_Object';
-import { Instance_Object } from './Instance_Object';
-import { Vector } from '../Vector';
 import { Instance_Base, InstanceBaseSave } from './Instance_Base';
+import { Instance_Sprite, InstanceSpriteSave } from './Instance_Sprite';
+import { Instance_Object, InstanceObjectSave } from './Instance_Object';
+import { Instance_Logic, InstanceLogicSave } from './Instance_Logic';
+import { Instance_Exit, ExitSave } from './Instance_Exit';
 import { Linked_List } from '../Linked_List';
-import { Instance_Sprite } from './Instance_Sprite';
-import { Instance_Logic } from './Instance_Logic';
+import { Vector } from '../Vector';
 import { iEngineLogic } from '../LogicInterfaces';
 import { iEditorLogic } from '../LogicInterfaces';
-import { tNavSaveData } from '../NavState';
-import { ExitSave, InstanceBaseSaveId, InstanceLogicSave, InstanceObjectSave, InstanceSpriteSave, RoomSave as RoomSave_L, RoomSaveId } from '@compiled/SaveTypes';
+import { NavState, tNavSaveData } from '../NavState';
 
-export type RoomSave = {
+export type RoomSave = AssetSave & {
     camDat: CameraSave,
     instList: Array<InstanceBaseSave>,
     bgCol: string,
@@ -66,25 +64,25 @@ export class Room extends Asset_Base {
         };
     }
 
-    static fromSaveData(data: RoomSave_L, assetMap: Map<CATEGORY_ID, Map<number, Asset_Base | iEngineLogic>>): Room {
+    static fromSaveData(data: RoomSave, assetMap: Map<CATEGORY_ID, Map<number, Asset_Base | iEngineLogic>>): Room {
         return new Room()._loadSaveData(data, assetMap);
     }
 
-    private _loadSaveData(data: RoomSave_L, assetMap: Map<CATEGORY_ID, Map<number, Asset_Base | iEngineLogic>>){
-        const instancesSerial = data[RoomSaveId.instanceList];
+    private _loadSaveData(data: RoomSave, assetMap: Map<CATEGORY_ID, Map<number, Asset_Base | iEngineLogic>>){
+        const instancesSerial = data.instList;
 
         this.loadBaseAssetData(data);
-        this.camera = Camera.fromSaveData(data[RoomSaveId.cameraData]);
-        this.bgColor = new Color().fromHex(data[RoomSaveId.bgCol]);
-        this.persist = !!data[RoomSaveId.persist];
-        this.useGravity = !!data[RoomSaveId.gravOn];
-        this.gravity = data[RoomSaveId.gravStrength];
-        this.navState = NavState.fromSaveData(data[RoomSaveId.navData]);
+        this.camera = Camera.fromSaveData(data.camDat);
+        this.bgColor = new Color().fromHex(data.bgCol);
+        this.persist = !!data.persist;
+        this.useGravity = !!data.gravOn;
+        this.gravity = data.gravStr;
+        this.navState = NavState.fromSaveData(data.navDat);
 
         for (let i = 0; i < instancesSerial.length; i++){
             const curInstance = instancesSerial[i];
             const newInstance: Instance_Base = (()=>{
-                switch(curInstance[InstanceBaseSaveId.instanceType]){
+                switch(curInstance.instType){
                     case INSTANCE_TYPE.SPRITE:
                         return Instance_Sprite.fromSaveData(
                             instancesSerial[i] as unknown as InstanceSpriteSave,

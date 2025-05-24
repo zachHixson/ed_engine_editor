@@ -2,7 +2,6 @@ import {CATEGORY_ID} from '../Enums';
 import {createCanvas, hexToRGBA, RGBAToHex} from '../Draw';
 import { Asset_Base, AssetSave } from './Asset_Base';
 import { NavState, tNavSaveData } from '../NavState';
-import { SpriteSave as SpriteSave_L, SpriteSaveId } from '@compiled/SaveTypes';
 
 export type SpriteSave = AssetSave & {
     frmLst: Array<string>,
@@ -36,17 +35,17 @@ export class Sprite extends Asset_Base {
         };
     }
 
-    static fromSaveData(data: SpriteSave_L): Sprite {
+    static fromSaveData(data: SpriteSave): Sprite {
         return new Sprite()._loadSaveData(data);
     }
 
-    private _loadSaveData(data: SpriteSave_L): Sprite {
-        const splitFrames = data[SpriteSaveId.frameList].map(f => f.split(','));
+    private _loadSaveData(data: SpriteSave): Sprite {
+        const splitFrames = data.frmLst.map(f => f.split(','));
         const hexFrames = this.decompressFrames(splitFrames);
         const imgDataFrames = new Array(hexFrames.length);
 
         this.loadBaseAssetData(data);
-        this.navState = NavState.fromSaveData(data[SpriteSaveId.navSaveData]);
+        this.navState = NavState.fromSaveData(data.navDat);
 
         for (let i = 0; i < hexFrames.length; i++){
             imgDataFrames[i] = this._hexToImageData(splitFrames[i]);

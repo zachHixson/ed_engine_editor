@@ -4,7 +4,6 @@ import { iEditorNode, iEngineNode, iEventContext, iVarInfo, iEditorAPI, NodeSave
 import { iAnyObj } from '../interfaces';
 import { isEngineNode, type GenericNode } from './Node_Library';
 import { canConvertSocket } from './Socket_Conversions';
-import { NodeSave as NodeSave_L, NodeSaveId } from '@compiled/SaveTypes';
 
 type ActionCreateVariable = {varNode: iEditorNode, varInfo: iVarInfo};
 type ActionEditVariable = {varNode: iEditorNode, newVarInfo: iVarInfo, oldVarInfo: iVarInfo, oldInitValue: any};
@@ -206,8 +205,8 @@ export default catVariables;
             saveData.ext = varInfo;
             saveData.inps[0] = valueInput;
         },
-        afterLoad(this: GenericNode, saveData: NodeSave_L){
-            const varInfo = saveData[NodeSaveId.extra];
+        afterLoad(this: GenericNode, saveData: NodeSave){
+            const varInfo = saveData.ext;
 
             varInfo.isGlobal = !!varInfo.isGlobal;
             varInfo.isList = !!varInfo.isList;

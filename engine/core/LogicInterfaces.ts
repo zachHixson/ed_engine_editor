@@ -20,7 +20,6 @@ import {
 import type Undo_Store from '@src/components/common/Undo_Store';
 //@ts-ignore
 import type { iActionStore } from '@src/components/common/Undo_Store';
-import { NodeSave as NodeSave_L } from "@compiled/SaveTypes";
 
 type Graph = {};
 type Connection = {};
@@ -74,8 +73,8 @@ export interface iNodeLifecycleEvents {
     init?: ()=>void; // Fired on constructor
     beforeSave?: ()=>void;
     afterSave?: (saveData: NodeSave)=>void;
-    beforeLoad?: (saveData: NodeSave_L)=>void;
-    afterLoad?: (saveData: NodeSave_L)=>void;
+    beforeLoad?: (saveData: NodeSave)=>void;
+    afterLoad?: (saveData: NodeSave)=>void;
     logicLoaded?: (logic: iEditorLogic | iEngineLogic)=>void;
     afterGameDataLoaded?: ()=>void;
     onCreate?: // Fired when instance is spawned, or when editor node is created

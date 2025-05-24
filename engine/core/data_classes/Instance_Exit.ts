@@ -8,7 +8,6 @@ import Engine from '@engine/Engine';
 import { COLLISION_EVENT } from '../nodes/Node_Enums';
 import { TRANSITION } from '@engine/transitions/Transition_Base';
 import { Room } from './Room';
-import { ExitSave as ExitSave_L, ExitSaveId } from '@compiled/SaveTypes';
 
 export type ExitSave = InstanceBaseSave & {
     detBktrk: 1 | 0,
@@ -172,19 +171,19 @@ export class Instance_Exit extends Instance_Base {
         return false;
     }
 
-    static fromSaveData(data: ExitSave_L): Instance_Exit {
-        return new Instance_Exit(data[0], Vector.fromArray(data[3]))._loadSaveData(data);
+    static fromSaveData(data: ExitSave): Instance_Exit {
+        return new Instance_Exit(data.id, Vector.fromArray(data.pos))._loadSaveData(data);
     }
 
-    private _loadSaveData(data: ExitSave_L): Instance_Exit {
+    private _loadSaveData(data: ExitSave): Instance_Exit {
         this.loadBaseSaveData(data);
 
-        this.detectBacktracking = !!data[ExitSaveId.detectBacktrack];
-        this.isEnding = !!data[ExitSaveId.isEnding];
-        this.destinationRoom = data[ExitSaveId.destRoomID] === '' ? null : data[ExitSaveId.destRoomID];
-        this.destinationExit = data[ExitSaveId.destRoomExit] === '' ? null : data[ExitSaveId.destRoomExit];
-        this.transition = data[ExitSaveId.transiType] as TRANSITION;
-        this.endingDialog = data[ExitSaveId.endingDialog];
+        this.detectBacktracking = !!data.detBktrk;
+        this.isEnding = !!data.isEnd;
+        this.destinationRoom = data.dstRmID === '' ? null : data.dstRmID;
+        this.destinationExit = data.dstRmExit === '' ? null : data.dstRmExit;
+        this.transition = data.trnsType as TRANSITION;
+        this.endingDialog = data.endDlg;
 
         return this;
     }

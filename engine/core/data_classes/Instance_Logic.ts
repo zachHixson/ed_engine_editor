@@ -3,7 +3,6 @@ import { Instance_Object, InstanceObjectSave } from "./Instance_Object";
 import { Game_Object } from "./Game_Object";
 import { iEngineLogic } from "../LogicInterfaces";
 import { INSTANCE_TYPE } from "../Enums";
-import { InstanceLogicSave as InstanceLogicSave_L, InstanceLogicSaveId } from "@compiled/SaveTypes";
 
 export type InstanceLogicSave = InstanceObjectSave & {
     logId: number,
@@ -67,22 +66,22 @@ export class Instance_Logic extends Instance_Object {
         return !logicMap.get(this.logicId);
     }
 
-    static fromSaveData(data: InstanceLogicSave_L, objMap: Map<number, Game_Object>): Instance_Logic {
+    static fromSaveData(data: InstanceLogicSave, objMap: Map<number, Game_Object>): Instance_Logic {
         const instance = new Instance_Logic(
-            data[InstanceLogicSaveId.id],
-            Vector.fromArray(data[InstanceLogicSaveId.pos]),
-            data[InstanceLogicSaveId.logicId],
-            data[InstanceLogicSaveId.name]
+            data.id,
+            Vector.fromArray(data.pos),
+            data.logId,
+            data.name
         );
-        const srcObjId = data[InstanceLogicSaveId.srcObjID];
+        const srcObjId = data.srcObjID;
 
-        instance.name = data[InstanceLogicSaveId.name];
+        instance.name = data.name;
 
         if (srcObjId >= 0){
             instance._objRef = objMap.get(srcObjId)!;
         }
 
-        instance.logicId = data[InstanceLogicSaveId.logicId];
+        instance.logicId = data.logId;
 
         return instance;
     }

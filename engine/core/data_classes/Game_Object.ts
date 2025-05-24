@@ -2,7 +2,6 @@ import { Asset_Base, AssetSave } from './Asset_Base';
 import {CATEGORY_ID} from '../Enums';
 import { Sprite } from './Sprite';
 import { iEngineLogic } from '../LogicInterfaces';
-import { GameObjectSave as GameObjectSave_L, GameObjectSaveId } from '@compiled//SaveTypes';
 
 enum EXIT_TYPES {
     TO_DESTINATION = 'TD',
@@ -88,28 +87,28 @@ export class Game_Object extends Asset_Base {
         };
     }
 
-    static fromSaveData(data: GameObjectSave_L, spriteMap: Map<number, Sprite>): Game_Object {
+    static fromSaveData(data: GameObjectSave, spriteMap: Map<number, Sprite>): Game_Object {
         return new Game_Object()._loadSaveData(data, spriteMap);
     }
 
-    private _loadSaveData(data: GameObjectSave_L, spriteMap: Map<number, Sprite>, logicMap?: Map<number, iEngineLogic>): Game_Object {
+    private _loadSaveData(data: GameObjectSave, spriteMap: Map<number, Sprite>, logicMap?: Map<number, iEngineLogic>): Game_Object {
         this.loadBaseAssetData(data);
 
-        this._startFrame = data[GameObjectSaveId.startFrame];
-        this.sprite = data[GameObjectSaveId.spriteID] ? spriteMap.get(data[GameObjectSaveId.spriteID])! : null;
-        this.fps = data[GameObjectSaveId.animFPS];
-        this.animLoop = !!data[GameObjectSaveId.loopAnim];
-        this.animPlaying = !!data[GameObjectSaveId.playAnim];
-        this.zDepth = data[GameObjectSaveId.zDepth];
-        this.isSolid = !!data[GameObjectSaveId.isSolid];
-        this.applyGravity = !!data[GameObjectSaveId.useGravity];
-        this.triggerExits = !!data[GameObjectSaveId.triggerExits];
-        this.exitBehavior = data[GameObjectSaveId.exitBehavior] as EXIT_TYPES;
-        this.keepCameraSettings = !!data[GameObjectSaveId.keepCameraSettings];
-        this.customLogic = !!data[GameObjectSaveId.customLogic];
-        this.logicScriptId = data[GameObjectSaveId.logicScriptID] == '' ? null : data[GameObjectSaveId.logicScriptID];
+        this._startFrame = data.strtFrm;
+        this.sprite = data.sprID ? spriteMap.get(data.sprID)! : null;
+        this.fps = data.animFPS;
+        this.animLoop = !!data.loopAnim;
+        this.animPlaying = !!data.playAnim;
+        this.zDepth = data.zDepth;
+        this.isSolid = !!data.isSolid;
+        this.applyGravity = !!data.useGrav;
+        this.triggerExits = !!data.tgrExit;
+        this.exitBehavior = data.exitBeh as EXIT_TYPES;
+        this.keepCameraSettings = !!data.keepCamSet;
+        this.customLogic = !!data.custLog;
+        this.logicScriptId = data.logScrID == '' ? null : data.logScrID;
         this.logicScript = logicMap?.get(this.logicScriptId!) ?? null;
-        this.groups = data[GameObjectSaveId.groupList];
+        this.groups = data.grpList;
         return this;
     }
 
