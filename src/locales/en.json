@@ -21,7 +21,7 @@
         "project_name": "Project Name:",
         "default_name": "Untitled Project",
         "room_tab" : "Room",
-        "art_tab" : "Art",
+        "art_tab" : "Drawing",
         "object_tab" : "Object",
         "logic_tab" : "Logic",
         "run" : "Play",
