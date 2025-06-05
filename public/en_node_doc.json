@@ -1,0 +1,234 @@
+{
+    "e_create": {
+        "desc": "Activates when instance is created",
+        "_o": "Trigger activates when instance is created"
+    },
+    "e_update": {
+        "desc": "Activates repeatedly while the game is run",
+        "_o": "Trigger activates repeatedly while the game is run",
+        "delta_time": "The time (in ms) since last update"
+    },
+    "e_mouse_button": {
+        "desc": "Activates when a mouse button is pressed",
+        "button_down": "Trigger activates while a mouse button is pressed down",
+        "button_up": "Trigger activates while a mouse button is released",
+        "button_click": "Trigger activates only once when a mouse button has been both pressed and released",
+        "which_button": "Represents which mouse button. <br />1: Left <br />2: Middle <br />3: Right",
+        "x_pos": "The X coordinate where the mouse button was pressed in the game world",
+        "y_pos": "The Y coordinate where the mouse button was pressed in the game world",
+        "instance": "The instance that was under the mouse cursor when the button was clicked (will be NULL if there was no instance)"
+    },
+    "e_mouse_move": {
+        "desc": "Activates when mouse is moved over game window",
+        "_o": "Trigger activates every time mouse is moved over game window",
+        "x_pos": "The X coordinate where the mouse cursor is in the game world",
+        "y_pos": "The Y coordinate where the mouse cursor is in the game world"
+    },
+    "e_keyboard": {
+        "desc": "Activates when a key on the keyboard is pressed",
+        "key_down": "Trigger activates once when a key is pressed",
+        "key_pressed": "Trigger activates repeatedly while a key is held",
+        "key_up": "Trigger activates once when a key is released"
+    },
+    "e_collision": {
+        "desc": "Activates when this instance collides with another instance",
+        "start": "Trigger activates at the start of a collision",
+        "repeat": "Trigger activates repeatedly during a collision",
+        "stop": "Trigger activates when a collision ends",
+        "instance": "The instance that this instance has collided with"
+    },
+    "e_animation": {
+        "desc": "Activates during various animation events",
+        "start": "Trigger activates when the animation starts playing",
+        "stop": "Trigger activates when the animation stops playing",
+        "tick": "Trigger activates every time the animation advances to the next frame",
+        "finished": "Trigger activates when the animation reaches the end"
+    },
+    "e_message": {
+        "desc": "Activates when a message is received",
+        "_o": "Trigger activates when the specified message is received",
+        "name": "The name of the message to listen for"
+    },
+
+    "branch": {
+        "desc": "Triggers one of two outputs based on a true/false condition",
+        "true": "Trigger activates if condition is true",
+        "false": "Trigger activates if condition is false",
+        "condition": "Determines which output is activated"
+    },
+    "sequence": {
+        "desc": "Activates multiple outputs in sequence"
+    },
+    "compare_numbers": {
+        "desc": "Compares two numbers and outputs a true/false value",
+        "_inp1": "First number to compare",
+        "_inp2": "Second number to compare",
+        "result": "True/false value representing the result of the comparison"
+    },
+    "compare_instances": {
+        "desc": "Compares two instances and outputs a true/false value",
+        "_i1": "First instance to compare",
+        "_i2": "Second instance to compare",
+        "result": "True/false value representing the result of the comparison"
+    },
+    "logic": {
+        "desc": "Performs boolean logic on two inputs",
+        "_inp1": "First boolean value",
+        "_inp2": "Second boolean value",
+        "result": "True/false value representing the result of the logic operation"
+    },
+    "count_loop": {
+        "desc": "Loops for as many times as specified",
+        "count": "The number of times to loop",
+        "index": "The current number of times this node has looped (starts at 0)",
+        "_o": "Trigger activates each loop"
+    },
+    "list_loop": {
+        "desc": "Loops once for each item in the provided list",
+        "list": "The loop will list once for each item in this list",
+        "index": "The current number of times this node has looped (starts at 0)",
+        "item": "The current item in the list that this loop is on",
+        "_o": "Trigger activates each loop"
+    },
+    "add_to_list": {
+        "desc": "Adds an item to a list",
+        "list": "The list to add the item to",
+        "item": "The item to add to the list",
+        "_o": "A new list with the item added"
+    },
+    "list_length": {
+        "desc": "Gets the length of a list",
+        "_list": "The list to get the length of",
+        "length": "The length of the provided list"
+    },
+    "not": {
+        "desc": "Gives the opposite of the provided boolean input",
+        "_inp": "Input boolean",
+        "_out": "The opposite value of the input boolean"
+    },
+    "debug_log": {
+        "desc": "Outputs a message to the debug console",
+        "label": "Label to display next to message",
+        "_data": "Value to output"
+    },
+    "note": {
+        "desc": "Makes logic tree more easily readable by adding note to editor. Has no in-game effect."
+    },
+    "key_input": {
+        "desc": "Checks if a key is currently down",
+        "key": "The text value of the key",
+        "is_down": "Whether the key is currently down"
+    },
+    "math": {
+        "desc": "Performs a math operation on two numbers",
+        "_num1": "First number",
+        "_num2": "Second number",
+        "_out": "The result of the selected math operation on the two numbers"
+    },
+    "dialog_box": {
+        "desc": "Displays an in-game text box",
+        "immediate": "Trigger activates immediately once the dialog-box is opened",
+        "dialog_closed": "Trigger activates once the dialog is closed",
+        "text": "Text to be displayed in dialog-box. If text is provided in the text-box above, any text from this input will be added to the end.",
+        "interaction_key": "Key to be used to advanced the dialog box. (Default is 'space')",
+        "pause_game": "Determines if the game should pause while the dialog-box is displayed",
+        "fullscreen": "Determines if the dialog-box takes up the entire screen"
+    },
+    "broadcast_message": {
+        "desc": "Broadcasts a message",
+        "_o": "Trigger activates immediately once message is broadcast",
+        "name": "The name of the message to be broadcast",
+        "global": "<b>True: </b>Broadcast message can be heard by all instances in the level<br /><b>False: </b>Broadcast message can only be heard by other nodes in this instance"
+    },
+    "timer": {
+        "desc": "A timer for triggering time based events",
+        "duration": "The amount of time (in seconds) before the timer ends",
+        "step": "The amount to increment the timer by",
+        "elapsed": "How much time has passed",
+        "remaining": "How much time is left before the timer ends",
+        "percent": "A value (between 0-1) that represents how much the timer as progressed",
+        "start": "Start the timer",
+        "pause": "Pause the timer",
+        "reset": "Reset the timer",
+        "immediate": "Trigger activates immediately after timer is started, paused, or reset",
+        "started": "Trigger activates immediately after timer is started",
+        "tick": "Trigger activates ever time the timer ticks",
+        "complete": "Trigger activates when the timer ends"
+    },
+    "random_number": {
+        "desc": "Generates a random number",
+        "lower": "The lower limit of the generated number",
+        "upper": "The upper limit of the generated number",
+        "round": "Determines if the output number should be rounded to the nearest whole number",
+        "number": "A random number"
+    },
+    "restart_game": {
+        "desc": "Restarts the game",
+        "_i": "Restarts the game"
+    },
+
+    "set_position": {
+        "desc": "Sets the position of an instance. Will not collide with instances along the way",
+        "_o": "Triggers immediately after position is set",
+        "instance": "The instance to set the position of (it will set the position of the current instance if no instance is provided)",
+        "x": "The new X coordinate of the instance",
+        "y": "The new Y coordinate of the instance",
+        "relative": "<b>True: </b>will add the provided coordinates to the instance's current position<br /><b>False: </b>sets the instance's world position"
+    },
+    "jump_to": {
+        "desc": "Sets the position of an instance. Will collide with instances along the way",
+        "_o": "Triggers immediately after position is set",
+        "instance": "The instance to set the position of (it will set the position of the current instance if no instance is provided)",
+        "x": "The new X coordinate of the instance",
+        "y": "The new Y coordinate of the instance",
+        "relative": "<b>True: </b>will add the provided coordinates to the instance's current position<br /><b>False: </b>sets the instance's world position"
+    },
+    "set_velocity": {
+        "desc": "Sets an instance to a continuous velocity",
+        "_o": "Triggers immediately after velocity is set",
+        "instance": "The instance to set the velocity of (it will set the velocity of the current instance if no instance is provided)",
+        "speed": "The speed to set the instance to"
+    },
+    "move_direction": {
+        "desc": "Moves an instance in a direction by a specified amount",
+        "_o": "Triggers immediately after instance is moved",
+        "instance": "The instance to move (it will move the current instance if no instance is provided)",
+        "speed": "The speed to move the instance"
+    },
+    "push_direction": {
+        "desc": "Applies a physics force to an instance in a specified direction",
+        "_o": "Triggers immediately after force is applied",
+        "instance": "The instance to push (it will push the current instance if no instance is provided)",
+        "strength": "The strength to push the instance"
+    },
+    "is_on_ground": {
+        "desc": "Returns a value for whether or not the instance has a collision underneath it"
+    },
+    "get_position": {
+        "desc": "Gets the position of an instance",
+        "instance": "The instance to get the position of (it will get the position of the current instance if no instance is provided)",
+        "x": "The X coordinate of the instance in the game world",
+        "y": "The Y coordinate of the instance in the game world"
+    },
+    "get_velocity": {
+        "desc": "Gets the velocity of an instance",
+        "instance": "The instance to get the velocity of (it will get the velocity of the current instance if no instance is provided)",
+        "x": "The X component of the instance's velocity",
+        "y": "The Y component of the instance's velocity"
+    },
+    "get_distance": {
+        "desc": "Gets the distance between two provided points",
+        "x1": "The X coordinate of the first point",
+        "y1": "The Y coordinate of the first point",
+        "x2": "The X coordinate of the second point",
+        "y2": "The Y coordinate of the second point",
+        "distance": "The distance between the two provided points"
+    },
+    "set_physics": {
+        "desc": "Sets the physics properties of an instance",
+        "_o": "Triggers immediately once properties are set",
+        "instance": "The instance to set the physics of (it will set the physics of the current instance if no instance is provided)",
+        "solid": "Determines if the instance will stop solid objects that collide with it.<br /><b>-: </b> means the instance will keep current settings",
+        "gravity": "Determines if the instance is affected by gravity.<br /><b>-: </b> means the instance will keep current settings"
+    }
+}

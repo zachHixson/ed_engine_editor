@@ -66,6 +66,7 @@ function tabClick(category: string): void {
                     v-for="node in filteredNodes"
                     class="node"
                     :style="`border-color: ${categoryStyleMap.get(node.category)?.color ?? 'var(--tool-panel-bg)'}`"
+                    v-tooltip="logicEditorStore.getNodeDoc(node.id)?.desc ?? ''"
                     @click="emit('node-clicked', node.id)">
                     <div class="node-icon">
                         <Svg :src="categoryStyleMap.get(node.category)?.icon ?? ''"></Svg>

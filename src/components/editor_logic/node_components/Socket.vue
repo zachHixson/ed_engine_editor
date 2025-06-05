@@ -45,6 +45,7 @@ const props = defineProps<{
     isInput: boolean;
     parentConnections: Node_Connection[];
     parentId: number;
+    desc: string | undefined;
 }>();
 
 const emit = defineEmits(['on-input', 'value-changed', 'mouse-down', 'socket-over']);
@@ -102,6 +103,19 @@ const decoratorIconPath = computed(()=>decoratorMap.get(decoratorIcon.value!)!);
 const disabled = computed(()=>{
     forceRefreshkey.value;
     return props.socket.disabled;
+});
+const tooltip = computed(()=>{
+    let out: string[] = [];
+
+    if (props.socket.type){
+        const type = t(`node.${Core.Node_Enums.SOCKET_TYPE[props.socket.type]}`) + (props.socket.isList ? ' ' + t('node.list') : '');
+        out.push(`<b>${t('node.type')}: </b>` + type);
+    }
+
+    if (props.desc){
+        out.push(props.desc);
+    }
+    return out.join('<br /><br />');
 });
 
 onMounted(()=>{
@@ -285,7 +299,7 @@ defineExpose({socket: props.socket});
             @mousedown="mouseDown"
             @mouseenter="mouseEnter"
             @mouseleave="mouseLeave"
-            v-tooltip="t(`node.${Core.Node_Enums.SOCKET_TYPE[socket.type]}`) + (socket.isList ? ' ' + t('node.list') : '')">
+            v-tooltip="tooltip">
             <Svg
                 class="socket_icon_img"
                 :class="socket.isList ? 'socket_icon_img_list':''"
@@ -301,7 +315,8 @@ defineExpose({socket: props.socket});
             class="trigger_icon"
             @mousedown="mouseDown"
             @mouseenter="mouseEnter"
-            @mouseleave="mouseLeave">
+            @mouseleave="mouseLeave"
+            v-tooltip="tooltip">
             <polygon points="3,3 17,10 3,16" :fill="isConnected ? 'white':''" stroke="#444444" stroke-width="2px"/>
         </svg>
     </div>

@@ -48,9 +48,16 @@ export default catEvents;
         downPos: Vector | undefined,
     };
 
+    const btnMap = {
+        2: 3,
+        4: 2,
+    };
+
     function which(this: iEngineNode): number {
         const eventData = this.getNodeData<NodeData>().lastData;
-        return eventData?.buttons ?? 0;
+        const btn = eventData?.buttons ?? 0;
+        const remap = (<any>btnMap)[btn] ?? btn;
+        return remap;
     }
 
     function x(this: iEngineNode): number {
@@ -63,7 +70,7 @@ export default catEvents;
         return eventData?.pos.y ?? 0;
     }
 
-    function object(this: iEngineNode): Instance_Base | null {
+    function instance(this: iEngineNode): Instance_Base | null {
         const eventData = this.getNodeData<NodeData>().lastData;
         return eventData?.instances[0] ?? null;
     }
@@ -77,7 +84,7 @@ export default catEvents;
             {id: 'which_button', type: SOCKET_TYPE.NUMBER, execute: which},
             {id: 'x_pos', type: SOCKET_TYPE.NUMBER, execute: x},
             {id: 'y_pos', type: SOCKET_TYPE.NUMBER, execute: y},
-            {id: 'object', type: SOCKET_TYPE.INSTANCE, execute: object},
+            {id: 'instance', type: SOCKET_TYPE.INSTANCE, execute: instance},
         ],
         init(this: GenericNode){
             if (!isEngineNode(this)) return;
@@ -172,7 +179,7 @@ export default catEvents;
 {// Collision
     type NodeData = Map<number, any>;
 
-    function getObject(this: iEngineNode, eventContext: iEventContext): Instance_Base | null {
+    function getInstance(this: iEngineNode, eventContext: iEventContext): Instance_Base | null {
         const nodeData = this.getNodeData<NodeData>().get(eventContext.eventKey);
         return nodeData?.instance ?? null;
     }
@@ -183,7 +190,7 @@ export default catEvents;
         category: 'events',
         outTriggers: ['start', 'repeat', 'stop'],
         outputs: [
-            {id: 'object', type: SOCKET_TYPE.INSTANCE, execute: getObject},
+            {id: 'instance', type: SOCKET_TYPE.INSTANCE, execute: getInstance},
         ],
         init(this: GenericNode){
             if (isEngineNode(this)) {
@@ -232,12 +239,12 @@ export default catEvents;
         id: 'e_animation',
         isEvent: true,
         category: 'events',
+        outTriggers: ['start', 'stop', 'tick', 'finished'],
         outputs: [
             {id: 'is_playing', type: SOCKET_TYPE.BOOL, execute: getPlaying},
             {id: 'frame', type: SOCKET_TYPE.NUMBER, execute: getFrame},
             {id: 'fps', type: SOCKET_TYPE.NUMBER, execute: getFPS},
         ],
-        outTriggers: ['start', 'stop', 'tick', 'finished'],
         execute(this: iEngineNode, eventContext: iEventContext, data: InstanceAnimEvent){
             switch(data){
                 case InstanceAnimEvent.START:

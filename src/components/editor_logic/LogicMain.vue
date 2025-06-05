@@ -480,6 +480,7 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
                     :selectedNodes="state.selectedNodes.value"
                     :allConnections="selectedAsset.connections"
                     :errorData="logicEditorStore.errors.find(e => e.nodeId == node.nodeId)"
+                    :desc="logicEditorStore.getNodeDoc(node.templateId)"
                     class="node"
                     @node-clicked="nodeClick"
                     @node-down="nodeDown"

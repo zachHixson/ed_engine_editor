@@ -33,6 +33,7 @@ const props = defineProps<{
     selectedNodes: Node[];
     allConnections: Node_Connection[];
     errorData: LogicState['errors'][number] | undefined;
+    desc: any | undefined;
 }>();
 
 const emit = defineEmits([
@@ -267,6 +268,7 @@ defineExpose({getRelinkInfo});
                     :isInput="true"
                     :parentConnections="connections"
                     :parentId="nodeObj.nodeId"
+                    :desc="desc ? desc[inTrigger.id] : undefined"
                     @mouse-down="socketDown"
                     @socket-over="socketOver"/>
             </div>
@@ -279,6 +281,7 @@ defineExpose({getRelinkInfo});
                     :isInput="false"
                     :parentConnections="connections"
                     :parentId="nodeObj.nodeId"
+                    :desc="desc ? desc[outTrigger.id] : undefined"
                     @mouse-down="socketDown"
                     @socket-over="socketOver"/>
             </div>
@@ -297,6 +300,7 @@ defineExpose({getRelinkInfo});
                     :isInput="true"
                     :parentConnections="connections"
                     :parentId="nodeObj.nodeId"
+                    :desc="desc ? desc[input.id] : undefined"
                     @mouse-down="socketDown"
                     @socket-over="socketOver"
                     @on-input="onInput"
@@ -314,6 +318,7 @@ defineExpose({getRelinkInfo});
                     :isInput="false"
                     :parentConnections="connections"
                     :parentId="nodeObj.nodeId"
+                    :desc="desc ? desc[output.id] : undefined"
                     @mouse-down="socketDown"
                     @socket-over="socketOver"/>
             </div>

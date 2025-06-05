@@ -11,6 +11,7 @@ import vue from '@vitejs/plugin-vue'
 
 // https://vitejs.dev/config/
 export default defineConfig(({mode}) => {
+    const isPortable = mode == 'portable';
     const filterReplaceArgs = [
         {
             filter: /core\.ts$/g,
@@ -34,6 +35,17 @@ export default defineConfig(({mode}) => {
             }
         }
     ];
+
+    if (!isPortable){
+        filterReplaceArgs.push({
+            filter: /App\.vue$/g,
+            replace: {
+                from: "import en_node_doc from '@public/en_node_doc.json?raw';",
+                to: "",
+            }
+        });
+    }
+
     const plugins = [
         vue(),
         filterReplace(filterReplaceArgs, {
@@ -43,7 +55,7 @@ export default defineConfig(({mode}) => {
     ];
     let base = '/';
 
-    if (mode == 'portable'){
+    if (isPortable){
         plugins.push(viteSingleFile({
             removeViteModuleLoader: true,
         }), svgLoader({
@@ -61,6 +73,7 @@ export default defineConfig(({mode}) => {
                 '@': fileURLToPath(new URL('./src', import.meta.url)),
                 '@compiled': fileURLToPath(new URL('./_compiled', import.meta.url)),
                 '@engine': fileURLToPath(new URL('./engine', import.meta.url)),
+                '@public': fileURLToPath(new URL('./public', import.meta.url)),
             }
         },
     }
