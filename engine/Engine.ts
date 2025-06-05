@@ -418,6 +418,7 @@ export class Engine implements iEngineCallbacks {
         this._canvas.addEventListener("mouseup", this._mouseUp);
         this._canvas.addEventListener("mousemove", this._mouseMove);
         this._canvas.addEventListener("mouseleave", this._mouseLeave);
+        this._canvas.addEventListener("contextmenu", this._contextMenu);
     }
 
     private _unbindInputEvents = ()=>{
@@ -428,6 +429,7 @@ export class Engine implements iEngineCallbacks {
         this._canvas.removeEventListener('mouseup', this._mouseUp);
         this._canvas.removeEventListener('mousemove', this._mouseMove);
         this._canvas.removeEventListener('mouseleave', this._mouseLeave);
+        this._canvas.removeEventListener('mouseleave', this._contextMenu);
     }
 
     private _visibilityChange = (): void => {
@@ -477,6 +479,10 @@ export class Engine implements iEngineCallbacks {
         if (this.mouse.down){
             this._mouseUp(e);
         }
+    }
+
+    private _contextMenu = (e: MouseEvent): void =>{
+        e.preventDefault();
     }
 
     private _screenToWorldPos = (pos: Readonly<Vector>): Vector =>{
