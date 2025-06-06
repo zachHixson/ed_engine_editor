@@ -36,8 +36,16 @@ export default defineConfig(({mode}) => {
         }
     ];
 
+    //removes conditional imports
     if (!isPortable){
         filterReplaceArgs.push(...[
+            {
+                filter: /App\.vue$/g,
+                replace: {
+                    from: "import en_node_doc from '@/public/en_node_doc.json?raw';",
+                    to: "",
+                }
+            },
             {
                 filter: /App\.vue$/g,
                 replace: {
