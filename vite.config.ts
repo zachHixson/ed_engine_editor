@@ -37,13 +37,22 @@ export default defineConfig(({mode}) => {
     ];
 
     if (!isPortable){
-        filterReplaceArgs.push({
-            filter: /App\.vue$/g,
-            replace: {
-                from: "import en_node_doc from '@public/en_node_doc.json?raw';",
-                to: "",
+        filterReplaceArgs.push(...[
+            {
+                filter: /App\.vue$/g,
+                replace: {
+                    from: "import en_node_doc from '@public/en_node_doc.json?raw';",
+                    to: "",
+                }
+            },
+            {
+                filter: /App\.vue$/g,
+                replace: {
+                    from: "./src/locales",
+                    to: "",
+                }
             }
-        });
+        ]);
     }
 
     const plugins = [
@@ -73,7 +82,6 @@ export default defineConfig(({mode}) => {
                 '@': fileURLToPath(new URL('./src', import.meta.url)),
                 '@compiled': fileURLToPath(new URL('./_compiled', import.meta.url)),
                 '@engine': fileURLToPath(new URL('./engine', import.meta.url)),
-                '@public': fileURLToPath(new URL('./public', import.meta.url)),
             }
         },
     }

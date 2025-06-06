@@ -5,7 +5,7 @@
   "scripts": {
     "build": "npm run build-engine && run-p type-check build:web",
     "build-portable": "npm run build-engine && run-p type-check build:portable",
-    "build:web": "vite build",
+    "build:web": "vite build && node scripts/copy_public.js",
     "build:portable": "vite build --mode portable",
     "build-font": "node scripts/build_font.js",
     "build-engine": "node scripts/build_engine.js",
