@@ -1,7 +1,7 @@
 const fs = require('fs');
 const outputPath = './dist/';
 const fileList = [
-    './src/locales/en_node_doc.json',
+    './src/public/en_node_doc.json',
 ];
 
 for (let i = 0; i < fileList.length; i++){

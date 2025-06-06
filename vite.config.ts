@@ -41,14 +41,7 @@ export default defineConfig(({mode}) => {
             {
                 filter: /App\.vue$/g,
                 replace: {
-                    from: "import en_node_doc from '@public/en_node_doc.json?raw';",
-                    to: "",
-                }
-            },
-            {
-                filter: /App\.vue$/g,
-                replace: {
-                    from: "./src/locales",
+                    from: "./src/public",
                     to: "",
                 }
             }

@@ -25,7 +25,7 @@ import type Logic from './components/editor_logic/node_components/Logic';
 import Core, { HTMLTemplate, EngineRawText } from '@/core';
 
 import licenseText from '@/../LICENSE.txt?raw';
-import en_node_doc from '@/locales/en_node_doc.json?raw';
+import en_node_doc from '@/public/en_node_doc.json?raw';
 import { useI18n } from 'vue-i18n';
 
 //stores
@@ -60,7 +60,7 @@ onMounted(()=>{
         logicEditorStore.setNodeDoc(en_node_doc);
     }
     else{
-        fetch('./src/locales/en_node_doc.json')
+        fetch('./src/public/en_node_doc.json')
             .then(res => {
                 if (!res.ok){
                     console.error('Could not load node doc');
