@@ -230,5 +230,99 @@
         "instance": "The instance to set the physics of (it will set the physics of the current instance if no instance is provided)",
         "solid": "Determines if the instance will stop solid objects that collide with it.<br /><b>-: </b> means the instance will keep current settings",
         "gravity": "Determines if the instance is affected by gravity.<br /><b>-: </b> means the instance will keep current settings"
+    },
+
+    "remove_instance": {
+        "desc": "Removes an instance from the game world",
+        "_o": "Triggers immediately after instance is removed",
+        "instance": "The instance to be removed"
+    },
+    "object_input": {
+        "desc": "Allows picking an object type",
+        "_o": "The type of object that was selected"
+    },
+    "get_self": {
+        "desc": "Gets a reference to the current instance",
+        "self": "A reference to the current instance"
+    },
+    "instance_properties": {
+        "desc": "Gets various properties of the current instance",
+        "type": "The type of the current instance",
+        "name": "The name of the current instance"
+    },
+    "spawn_instance": {
+        "desc": "Spawns an instance of the provided object",
+        "type": "The type of instance to spawn",
+        "x": "The X coordinate to spawn the instance in the game world",
+        "y": "The Y coordinate to spawn the instance in the game world",
+        "relative": "<b>True: </b>will add the provided coordinates to the instance's current position<br /><b>False: </b>sets the instance's world position"
+    },
+    "get_instances": {
+        "desc": "Gets a list of instances based on given info",
+        "name": "Search for instances with this name (optional)",
+        "group": "Search for instances within this group (optional)",
+        "type": "Search for instances with this type (optional)"
+    },
+    "is_in_group": {
+        "desc": "Checks if instance is in a group",
+        "group": "The name of the group to check",
+        "instance": "The instance to check",
+        "_o": "The result of whether or not the instance is in the specified group"
+    },
+    "raycast": {
+        "desc": "Sends out a ray and checks for collisions",
+        "start_x": "X coordinate where the ray should start. Default is the current instance's X coordinate.",
+        "start_y": "Y coordinate where the ray should start. Default is the current instance's Y coordinate.",
+        "distance": "Max distance of the ray",
+        "only_solid": "Only check collisions against solid objects",
+        "instances": "A list of instances that the ray intersected with"
+    },
+    "set_animation_playback": {
+        "desc": "Sets the animation properties of an instance",
+        "_o": "Triggers immediately after animation properties are set",
+        "instance": "Set the animation properties of this instance",
+        "frame": "Sets the current animation frame to this frame (starts at 0).<br ><br />Leaving the box empty will not result in any changes.",
+        "fps": "Sets the current frames per second of the animation.<br ><br />Leaving the box empty will not result in any changes.",
+        "loop": "Sets whether the animation should loop when it completes.<br /><br />- : will keep the current value.",
+        "is_playing": "Sets whether the animation is currently playing.<br /><br />- : will keep the current value."
+    },
+    "set_sprite": {
+        "desc": "Sets the drawing of an instance",
+        "_o": "Triggers immediately after drawing is set",
+        "instance": "The drawing of this instance will be changed (default is the current instance)"
+    },
+    "flip_sprite": {
+        "desc": "Flips the direction of an instance's drawing",
+        "instance": "The drawing of this instance will be flipped (default is the current instance)",
+        "hFlip": "Flip the drawing horizontally",
+        "vFlip": "Flip the drawing vertically"
+    },
+
+    "create_variable": {
+        "desc": "Creates a variable",
+        "_varName": "The name of the variable",
+        "_varType": "The type of the variable",
+        "initial_value": "The initial value of the variable",
+        "_value": "The current value of the variable"
+    },
+    "set_variable": {
+        "desc": "Sets a variable to a new value",
+        "_o": "Triggers immediately after the new value is set",
+        "name": "The name of the variable to set",
+        "data": "The new value to set the variable to"
+    },
+    "get_variable": {
+        "desc": "Gets the value of a variable",
+        "name": "The name of the variable to get the value of",
+        "data": "The current value of the variable"
+    },
+    "number": {
+        "desc": "A number input"
+    },
+    "string": {
+        "desc": "A string input"
+    },
+    "boolean": {
+        "desc": "A boolean (true/false) input"
     }
 }
