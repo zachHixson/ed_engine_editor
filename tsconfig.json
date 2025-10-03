@@ -1,22 +1,22 @@
 {
-  "extends": "@vue/tsconfig/tsconfig.web.json",
-  "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
-  "compilerOptions": {
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "paths": {
-      "@/*": ["./src/*"],
-      "@compiled/*": ["./_compiled/*"],
-      "@engine/*": ["./engine/*"]
+    "extends": "@vue/tsconfig/tsconfig.web.json",
+    "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
+    "compilerOptions": {
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "paths": {
+            "@/*": ["./src/*"],
+            "@compiled/*": ["./_compiled/*"],
+            "@engine/*": ["./engine/*"]
+        },
+        "importsNotUsedAsValues": "remove",
+        "preserveValueImports": false,
+        "lib": ["DOM", "DOM.Iterable", "es2018"]
     },
-    "importsNotUsedAsValues": "remove",
-    "preserveValueImports": false,
-    "lib": ["DOM", "DOM.Iterable", "es2018"]
-  },
 
-  "references": [
-    {
-      "path": "./tsconfig.config.json"
-    }
-  ]
+    "references": [
+        {
+            "path": "./tsconfig.config.json"
+        }
+    ]
 }
