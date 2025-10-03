@@ -2,6 +2,10 @@
   "extends": "@vue/tsconfig/tsconfig.node.json",
   "include": ["vite.config.*", "vitest.config.*", "cypress.config.*", "playwright.config.*"],
   "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "preserveValueImports": false,
+    "importsNotUsedAsValues": "remove",
     "composite": true,
     "types": ["node"],
     "verbatimModuleSyntax": true,
