@@ -58,20 +58,7 @@ export default defineConfig(({mode, command}) => {
 
     if (isPortable){
         filterReplaceArgs.push(...[
-            {
-                filter: /.*/,
-                replace: {
-                    from: "//#ifdef IS_WEB",
-                    to: "/*",
-                }
-            },
-            {
-                filter: /.*/,
-                replace: {
-                    from: "//#endif IS_WEB",
-                    to: "*/",
-                }
-            }
+            ...makeIfdef("IS_WEB"),
         ]);
 
         plugins.push(viteSingleFile({
