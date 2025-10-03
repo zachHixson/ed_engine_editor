@@ -57,31 +57,7 @@ onMounted(()=>{
 
     mainStore.newProject();
     updateEditorAsset();
-
-    //Load node tooltips for web and portable
-
-    //#ifdef IS_WEB
-        let doc_path = '/en_node_doc.json';
-
-        //#ifdef IS_DEV
-            doc_path = './src/public' + doc_path;
-        //#endif IS_DEV
-
-        fetch(doc_path)
-            .then(res => {
-                if (!res.ok){
-                    console.error('Could not load node doc');
-                    return '';
-                }
-
-                return res.text();
-            })
-            .then(text => logicEditorStore.setNodeDoc(text));
-    //#endif IS_WEB
-    
-    //#ifdef IS_PORTABLE
-        logicEditorStore.setNodeDoc(en_node_doc);
-    //#endif IS_PORTABLE
+    setNodeDoc();
 
     //setup debug commands
     (<any>window).setAutoLoad = ()=>{
@@ -124,6 +100,31 @@ function updateEditorAsset(): void {
 function updateAfterDeletion(): void {
     gameDataStore.purgeMissingReferences();
     AppEventBus.onAssetDeleted.emit();
+}
+
+function setNodeDoc(): void {
+    let doc_path = '/en_node_doc.json';
+
+    //#ifdef IS_DEV
+        doc_path = './src/public' + doc_path;
+    //#endif IS_DEV
+
+    //#ifdef IS_WEB
+        fetch(doc_path)
+            .then(res => {
+                if (!res.ok){
+                    console.error('Could not load node doc');
+                    return '';
+                }
+
+                return res.text();
+            })
+            .then(text => logicEditorStore.setNodeDoc(text));
+    //#endif IS_WEB
+    
+    //#ifdef IS_PORTABLE
+        logicEditorStore.setNodeDoc(en_node_doc);
+    //#endif IS_PORTABLE
 }
 
 function newProject(): void {
