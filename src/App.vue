@@ -21,12 +21,15 @@ import { useMainStore, PLAY_STATE } from './stores/Main';
 import { useGameDataStore } from './stores/GameData';
 import { useAssetBrowserStore } from './stores/AssetBrowser';
 import { useLogicEditorStore } from './stores/LogicEditor';
+import { useI18n } from 'vue-i18n';
 import type Logic from './components/editor_logic/node_components/Logic';
 import Core, { HTMLTemplate, EngineRawText } from '@/core';
 
 import licenseText from '@/../LICENSE.txt?raw';
-import en_node_doc from '@/public/en_node_doc.json?raw';
-import { useI18n } from 'vue-i18n';
+
+//#ifdef IS_PORTABLE
+    import en_node_doc from '@/public/en_node_doc.json?raw';
+//#endif IS_PORTABLE
 
 //stores
 const mainStore = useMainStore();
@@ -55,12 +58,16 @@ onMounted(()=>{
     mainStore.newProject();
     updateEditorAsset();
 
-    //Load node help tooltips
-    if (location.hostname == ''){
-        logicEditorStore.setNodeDoc(en_node_doc);
-    }
-    else{
-        fetch('./src/public/en_node_doc.json')
+    //Load node tooltips for web and portable
+
+    //#ifdef IS_WEB
+        let doc_path = '/en_node_doc.json';
+
+        //#ifdef IS_DEV
+            doc_path = './src/public' + doc_path;
+        //#endif IS_DEV
+
+        fetch(doc_path)
             .then(res => {
                 if (!res.ok){
                     console.error('Could not load node doc');
@@ -70,7 +77,11 @@ onMounted(()=>{
                 return res.text();
             })
             .then(text => logicEditorStore.setNodeDoc(text));
-    }
+    //#endif IS_WEB
+    
+    //#ifdef IS_PORTABLE
+        logicEditorStore.setNodeDoc(en_node_doc);
+    //#endif IS_PORTABLE
 
     //setup debug commands
     (<any>window).setAutoLoad = ()=>{

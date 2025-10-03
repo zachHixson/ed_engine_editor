@@ -9,63 +9,71 @@ import licenseText from './LICENSE.txt?raw';
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
+function makeIfdef(cvar: string) {
+    return [
+        {
+            filter: /.*/,
+            replace: {
+                from: `//#ifdef ${cvar}`,
+                to: '/*',
+            }
+        },
+        {
+            filter: /.*/,
+            replace: {
+                from: `//#endif ${cvar}`,
+                to: '*/',
+            }
+        },
+    ]
+}
+
 // https://vitejs.dev/config/
-export default defineConfig(({mode}) => {
+export default defineConfig(({mode, command}) => {
+    const isBuild = command == 'build';
     const isPortable = mode == 'portable';
-    const filterReplaceArgs = [
-        {
-            filter: /core\.ts$/g,
-            replace: {
-                from: "export { Engine } from '@engine/Engine'",
-                to: "export { Engine } from '@compiled/Engine'"
-            }
-        },
-        {
-            filter: /core\.ts$/g,
-            replace: {
-                from: "import * as Core from '@engine/core/core';",
-                to: "import {Core} from '@compiled/Engine'",
-            },
-        },
-        {
-            filter: /\.html$/g,
-            replace: {
-                from: "[license]",
-                to: licenseText,
-            }
-        }
-    ];
-
-    //removes conditional imports
-    if (!isPortable){
-        filterReplaceArgs.push(...[
-            {
-                filter: /App\.vue$/g,
-                replace: {
-                    from: "import en_node_doc from '@/public/en_node_doc.json?raw';",
-                    to: "",
-                }
-            },
-            {
-                filter: /App\.vue$/g,
-                replace: {
-                    from: "./src/public",
-                    to: "",
-                }
-            }
-        ]);
-    }
-
+    const filterReplaceArgs = [];
     const plugins = [
         vue(),
-        filterReplace(filterReplaceArgs, {
-            enforce: 'pre',
-            apply: 'build',
-        }),
     ];
     let base = '/';
 
+    if (isBuild){
+        filterReplaceArgs.push(...[
+            {
+                filter: /\.html$/g,
+                replace: {
+                    from: "[license]",
+                    to: licenseText,
+                }
+            },
+            ...makeIfdef("IS_DEV"),
+        ]);
+    }
+    else {
+        filterReplaceArgs.push(...[
+            ...makeIfdef("IS_BUILD"),
+        ]);
+    }
+
     if (isPortable){
+        filterReplaceArgs.push(...[
+            {
+                filter: /.*/,
+                replace: {
+                    from: "//#ifdef IS_WEB",
+                    to: "/*",
+                }
+            },
+            {
+                filter: /.*/,
+                replace: {
+                    from: "//#endif IS_WEB",
+                    to: "*/",
+                }
+            }
+        ]);
+
         plugins.push(viteSingleFile({
             removeViteModuleLoader: true,
         }), svgLoader({
@@ -74,6 +82,17 @@ export default defineConfig(({mode}) => {
 
         base = '.';
     }
+    else {
+        filterReplaceArgs.push(...[
+            ...makeIfdef("IS_PORTABLE"),
+        ]);
+    }
+
+    plugins.push(
+        filterReplace(filterReplaceArgs, {
+            enforce: 'pre'
+        })
+    );
 
     return {
         plugins,
