@@ -4,6 +4,7 @@ import Svg from '@/components/common/Svg.vue';
 
 import { ref, computed, nextTick } from 'vue';
 import { useLogicEditorStore } from '@/stores/LogicEditor';
+import { useI18nStore } from '@/stores/I18n';
 import type Logic from './node_components/Logic';
 
 import plusIcon from '@/assets/plus.svg';
@@ -11,6 +12,7 @@ import renameIcon from '@/assets/rename.svg';
 import trashIcon from '@/assets/trash.svg';
 
 const logicEditorStore = useLogicEditorStore();
+const { t } = useI18nStore();
 
 const props = defineProps<{
     selectedAsset: Logic;
@@ -72,7 +74,7 @@ function graphOrderChanged(event: iChangeEventProps): void {
 <template>
     <div v-show="logicEditorStore.isGraphPanelOpen" class="side-panel graph-list-library">
         <div class="side-panel-heading">
-            <div>{{$t('logic_editor.graph_panel_heading')}}</div>
+            <div>{{ t('logic_editor.graph_panel_heading') }}</div>
             <button class="add-graph-btn" @click="addGraph">
                 <Svg :src="plusIcon"></Svg>
             </button>

@@ -3,14 +3,14 @@ import Svg from '@/components/common/Svg.vue';
 
 import { ref, nextTick, computed, onMounted } from 'vue';
 import { useMainStore, PLAY_STATE } from '@/stores/Main';
-import { useI18n } from 'vue-i18n';
+import { useI18nStore } from '@/stores/I18n';
 import renameIcon from '@/assets/rename.svg';
 import packageIcon from '@/assets/package.svg';
 import debugIcon from '@/assets/debug.svg';
 import playIcon from '@/assets/play.svg';
 
 const mainStore = useMainStore();
-const { t } = useI18n();
+const { t } = useI18nStore();
 
 let enumID = 0;
 
@@ -22,44 +22,43 @@ const fileOpen = ref<HTMLElement>();
 const choices = [
     {
         id: enumID++,
-        text: t('file_menu.new'),
+        text: 'file_menu.new',
         method: getMenuAction(newProject),
     },
     {
         id: enumID++,
-        text: t('file_menu.open'),
+        text: 'file_menu.open',
         method: getMenuAction(open),
     },
     {
         id: enumID++,
-        text: t('file_menu.save'),
+        text: 'file_menu.save',
         method: getMenuAction(save),
     },
     {
         id: enumID++,
-        text: t('file_menu.export'),
+        text: 'file_menu.export',
         method: getMenuAction(packageGame),
     },
     {
         id: enumID++,
-        text: t('file_menu.report_bug'),
-        method: getMenuAction(()=>window.open(t('file_menu.github_bug_report', '_blank'))),
+        text: 'file_menu.report_bug',
+        method: getMenuAction(async ()=>window.open(t('file_menu.github_bug_report'), '_blank')?.focus()),
     },
+    //insert welcome menu if building for web
+    //#ifdef IS_WEB
+        {
+            id: enumID++,
+            text: 'file_menu.show_welcome',
+            method: getMenuAction(openWelcome),
+        },
+    //#endif IS_WEB
     {
         id: enumID++,
-        text: t('file_menu.about'),
+        text: 'file_menu.about',
         method: getMenuAction(openAboutMenu),
     }
 ];
-
-//insert welcome menu if not in portable mode
-if (location.hostname != ''){
-    choices.splice(choices.length - 1, 0, {
-        id: enumID++,
-        text: t('file_menu.show_welcome'),
-        method: getMenuAction(openWelcome),
-    });
-}
 
 const emit = defineEmits([
     'new-project',
@@ -185,11 +184,11 @@ function openAboutMenu(): void {
                     v-for="choice in choices"
                     :key="choice.id"
                     @click="choice.method"
-                    class="choice">{{choice.text}}</button>
+                    class="choice">{{ t(choice.text) }}</button>
             </div>
         </button>
         <div class="projNameBox">
-            <div class="projTitle">{{$t('editor_main.project_name')}}</div>
+            <div class="projTitle">{{ t('editor_main.project_name') }}</div>
             <div ref="displayEditBox" class="displayEditBox" v-click-outside="stopRenaming">
                 <div v-show="!isRenaming" ref="projNameDisplay" class="projNameDisplay">{{projName}}</div>
                 <input v-show="isRenaming" ref="projNameEdit" type="text" class="projNameEdit" v-model="projName" v-input-active/>
@@ -197,9 +196,9 @@ function openAboutMenu(): void {
             </div>
         </div>
         <div class="controls">
-            <button class="iconBtn" @click="packageGame" v-tooltip="$t('editor_main.package')"><Svg class="icon" :src="packageIcon"></Svg></button>
-            <button class="iconBtn" @click="playState = PLAY_STATE.DEBUGGING" v-tooltip="$t('editor_main.debug')"><Svg class="icon" :src="debugIcon"></Svg></button>
-            <button class="iconBtn" @click="playState = PLAY_STATE.PLAYING" v-tooltip="$t('editor_main.run')"><Svg class="icon" :src="playIcon"></Svg></button>
+            <button class="iconBtn" @click="packageGame" v-tooltip="t('editor_main.package')"><Svg class="icon" :src="packageIcon"></Svg></button>
+            <button class="iconBtn" @click="playState = PLAY_STATE.DEBUGGING" v-tooltip="t('editor_main.debug')"><Svg class="icon" :src="debugIcon"></Svg></button>
+            <button class="iconBtn" @click="playState = PLAY_STATE.PLAYING" v-tooltip="t('editor_main.run')"><Svg class="icon" :src="playIcon"></Svg></button>
         </div>
         <input type="file" ref="fileOpen" style="display: none" accept=".html, .edproj" @change="loadProjectFile"/>
     </div>

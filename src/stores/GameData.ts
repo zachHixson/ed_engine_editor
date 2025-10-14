@@ -1,10 +1,8 @@
 import { defineStore } from 'pinia';
+import { useI18nStore } from './I18n';
 import Logic from '@/components/editor_logic/node_components/Logic';
 import type Node_API from '@/components/editor_logic/Node_API';
-import i18n from '@/i18n';
 import Core from '@/core';
-
-const t = i18n.global.t;
 
 interface iState {
     startRoomId: number | null,
@@ -54,6 +52,8 @@ export const useGameDataStore = defineStore({
             this.rooms = rooms;
         },
         addAsset(category: Core.CATEGORY_ID){
+            const { t } = useI18nStore();
+            
             switch (category){
                 case Core.CATEGORY_ID.SPRITE:
                     const spriteName = t(`asset_browser.sprite_prefix`) + getSuffixNum(this.sprites);

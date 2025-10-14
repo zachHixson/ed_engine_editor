@@ -9,9 +9,9 @@ import {
     onMounted,
     onBeforeUnmount
 } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useI18nStore } from '@/stores/I18n';
 
-const { t } = useI18n();
+const { t } = useI18nStore();
 
 const props = defineProps<{
     undoLength: number,

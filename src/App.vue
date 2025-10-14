@@ -16,27 +16,24 @@ import PlayWindow from './components/PlayWindow.vue';
 import WelcomeModal from './components/WelcomeModal.vue';
 import Tooltip from './components/common/Tooltip.vue';
 
-import { ref, onMounted, nextTick } from 'vue';
+import { ref, onMounted, nextTick, onBeforeMount } from 'vue';
 import { useMainStore, PLAY_STATE } from './stores/Main';
 import { useGameDataStore } from './stores/GameData';
 import { useAssetBrowserStore } from './stores/AssetBrowser';
 import { useLogicEditorStore } from './stores/LogicEditor';
-import { useI18n } from 'vue-i18n';
+import { useI18nStore } from './stores/I18n';
 import type Logic from './components/editor_logic/node_components/Logic';
 import Core, { HTMLTemplate, EngineRawText } from '@/core';
 
 import licenseText from '@/../LICENSE.txt?raw';
-
-//#ifdef IS_PORTABLE
-    import en_node_doc from '@/public/en_node_doc.json?raw';
-//#endif IS_PORTABLE
 
 //stores
 const mainStore = useMainStore();
 const gameDataStore = useGameDataStore();
 const assetBrowserStore = useAssetBrowserStore();
 const logicEditorStore = useLogicEditorStore();
-const { t } = useI18n();
+const i18nStore = useI18nStore();
+const { t } = i18nStore;
 
 const engineLicensePreamble = `
 ###################################################################
@@ -52,12 +49,13 @@ const autoSaving = ref(false);
 const editorWindowEl = ref<InstanceType<typeof EditorWindow>>();
 const welcomeDialogEl = ref<InstanceType<typeof WelcomeModal>>();
 
+i18nStore.initLang();
+
 onMounted(()=>{
     const autoLoadData = localStorage.getItem('autoLoad');
 
     mainStore.newProject();
     updateEditorAsset();
-    setNodeDoc();
 
     //setup debug commands
     (<any>window).setAutoLoad = ()=>{
@@ -100,31 +98,6 @@ function updateEditorAsset(): void {
 function updateAfterDeletion(): void {
     gameDataStore.purgeMissingReferences();
     AppEventBus.onAssetDeleted.emit();
-}
-
-function setNodeDoc(): void {
-    let doc_path = '/en_node_doc.json';
-
-    //#ifdef IS_DEV
-        doc_path = './src/public' + doc_path;
-    //#endif IS_DEV
-
-    //#ifdef IS_WEB
-        fetch(doc_path)
-            .then(res => {
-                if (!res.ok){
-                    console.error('Could not load node doc');
-                    return '';
-                }
-
-                return res.text();
-            })
-            .then(text => logicEditorStore.setNodeDoc(text));
-    //#endif IS_WEB
-    
-    //#ifdef IS_PORTABLE
-        logicEditorStore.setNodeDoc(en_node_doc);
-    //#endif IS_PORTABLE
 }
 
 function newProject(): void {

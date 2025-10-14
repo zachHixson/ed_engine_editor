@@ -262,6 +262,7 @@
         "flow": "Flow",
         "movement": "Movement",
         "variables": "Variables",
+        "clear_error": "Clear Error",
         "clear_all_errors": "Clear All Errors"
     },
     "node":{

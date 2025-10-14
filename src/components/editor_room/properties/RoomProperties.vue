@@ -4,9 +4,11 @@ import ColorPicker from '@/components/common/ColorPicker.vue';
 
 import { ref, onMounted, watch } from 'vue';
 import { useGameDataStore } from '@/stores/GameData';
+import { useI18nStore } from '@/stores/I18n';
 import type Core from '@/core';
 
 const gameDataStore = useGameDataStore();
+const { t } = useI18nStore();
 
 const props = defineProps<{
     room: Core.Room;
@@ -46,10 +48,10 @@ function closeRoomBGColorEditor(): void {
 
 <template>
     <div class="propContents">
-        <div class="heading">{{$t('room_editor.room_properties_heading')}}</div>
+        <div class="heading">{{ t('room_editor.room_properties_heading') }}</div>
         <div class="control">
-            <label for="roomBGColor">{{$t('room_editor.bg_color')}}:</label>
-            <button id="roomBGColor" class="changeBgBtn" ref="bgColorBtn" v-tooltip="$t('room_editor.tt_room_background')"
+            <label for="roomBGColor">{{ t('room_editor.bg_color') }}:</label>
+            <button id="roomBGColor" class="changeBgBtn" ref="bgColorBtn" v-tooltip="t('room_editor.tt_room_background')"
                 @click="changeingBG = true">
                 <div v-if="changeingBG" ref="bgColorEditor" class="bgColorEditor">
                     <svg width="50" height="25" class="arrow">
@@ -66,23 +68,23 @@ function closeRoomBGColorEditor(): void {
             </button>
         </div>
         <div class="control">
-            <label for="roomPersist">{{$t('room_editor.persist')}}:</label>
-            <Checkbox id="roomPersist" class="custom-checkbox" :value="room.persist" v-tooltip="$t('room_editor.tt_room_persist')"
+            <label for="roomPersist">{{ t('room_editor.persist') }}:</label>
+            <Checkbox id="roomPersist" class="custom-checkbox" :value="room.persist" v-tooltip="t('room_editor.tt_room_persist')"
                 @change="setRoomProp({persist: ($event as any)})"/>
         </div>
         <div class="control">
-            <label for="roomUseGrav">{{$t('room_editor.enable_gravity')}}:</label>
-            <Checkbox id="roomUseGrav" class="custom-checkbox" :value="room.useGravity" v-tooltip="$t('room_editor.tt_room_use_gravity')"
+            <label for="roomUseGrav">{{ t('room_editor.enable_gravity') }}:</label>
+            <Checkbox id="roomUseGrav" class="custom-checkbox" :value="room.useGravity" v-tooltip="t('room_editor.tt_room_use_gravity')"
                 @change="setRoomProp({useGravity: ($event as any)})"/>
         </div>
         <div v-show="room.useGravity" class="control">
-            <label for="roomGrav">{{$t('room_editor.gravity')}}:</label>
-            <input id="roomGrav" type="number" step="any" :value="room.gravity" v-tooltip="$t('room_editor.tt_room_gravity')"
+            <label for="roomGrav">{{ t('room_editor.gravity') }}:</label>
+            <input id="roomGrav" type="number" step="any" :value="room.gravity" v-tooltip="t('room_editor.tt_room_gravity')"
                 @change="setRoomProp({gravity: parseFloat(($event.target as any).value)})" v-input-active/>
         </div>
         <div class="control">
-            <label for="roomSetStart">{{$t('room_editor.set_start_room')}}:</label>
-            <input id="roomSetStart" type="button" value="Set" v-tooltip="$t('room_editor.tt_room_starting_room')"
+            <label for="roomSetStart">{{ t('room_editor.set_start_room') }}:</label>
+            <input id="roomSetStart" type="button" value="Set" v-tooltip="t('room_editor.tt_room_starting_room')"
                 @click="gameDataStore.setStartRoomId(room.id)" />
         </div>
     </div>

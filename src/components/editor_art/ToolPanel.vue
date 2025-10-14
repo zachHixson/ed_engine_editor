@@ -5,9 +5,9 @@ import Tool from '@/components/common/Tool.vue';
 import Svg from '@/components/common/Svg.vue';
 
 import { computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { useMainStore } from '@/stores/Main';
 import { useArtEditorStore } from '@/stores/ArtEditor';
+import { useI18nStore } from '@/stores/I18n';
 import Core from '@/core';
 import smallBrushIcon from '@/assets/small_brush.svg';
 import mediumBrushIcon from '@/assets/medium_brush.svg';
@@ -24,9 +24,9 @@ import moveIcon from '@/assets/direction_arrows.svg';
 import eyeDropperIcon from '@/assets/eye_dropper.svg';
 import arrowIcon from '@/assets/arrow_01.svg';
 
-const { t } = useI18n();
 const mainStore = useMainStore();
 const artEditorStore = useArtEditorStore();
+const { t } = useI18nStore();
 
 const emit = defineEmits(['resized']);
 

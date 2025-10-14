@@ -4,9 +4,9 @@ import Svg from './common/Svg.vue';
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { useMainStore } from '@/stores/Main';
 import { useLogicEditorStore } from '@/stores/LogicEditor';
+import { useI18nStore } from '@/stores/I18n';
 import Core, { Engine } from '@/core';
 import { PLAY_STATE } from '@/stores/Main';
-import { useI18n } from 'vue-i18n';
 
 import xIcon from '@/assets/x.svg';
 import terminalIcon from '@/assets/terminal.svg';
@@ -32,7 +32,7 @@ const emit = defineEmits(['openNodeException']);
 
 const mainStore = useMainStore();
 const logicEditorStore = useLogicEditorStore();
-const { t } = useI18n();
+const { t } = useI18nStore();
 
 const canvasWrapper = ref<HTMLElement>();
 const canvas = ref<HTMLCanvasElement>();
@@ -228,7 +228,7 @@ function messageClassSelector(log: iConsoleLine): string {
     <div class="playWindow">
         <div class="headerBar">
             <div class="headerText">
-                {{playState == PLAY_STATE.PLAYING ? $t('editor_main.run') : $t('editor_main.debug')}}
+                {{ playState == PLAY_STATE.PLAYING ? t('editor_main.run') : t('editor_main.debug') }}
             </div>
             <button class="closeBtn" @click="close">
                 <Svg style="width: 100%; height: 100%" :src="xIcon"></Svg>

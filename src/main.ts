@@ -2,10 +2,9 @@ import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import App from './App.vue';
 
-import i18n from './i18n.js';
 import * as Directive from './directives';
 
-export const app = createApp(App).use(i18n);
+export const app = createApp(App);
 
 app.use(createPinia());
 app.directive('click-outside', Directive.vClickOutside);

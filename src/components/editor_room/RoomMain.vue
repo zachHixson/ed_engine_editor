@@ -48,9 +48,9 @@ import {
     onMounted,
     onBeforeUnmount
 } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { useMainStore } from '@/stores/Main';
 import { useRoomEditorStore } from '@/stores/RoomEditor';
+import { useI18nStore } from '@/stores/I18n';
 import { useAdd } from './composables/add';
 import { useSelectMove } from './composables/selectMove';
 import { useDelete } from './composables/delete';
@@ -73,9 +73,9 @@ import noIcon from '@/assets/no.svg';
 const { ROOM_TOOL_TYPE } = Core;
 
 //define stores
-const { t } = useI18n();
 const mainStore = useMainStore();
 const roomEditorStore = useRoomEditorStore();
+const { t } = useI18nStore();
 
 const props = defineProps<{
     selectedAsset: Core.Asset_Base;
@@ -316,7 +316,7 @@ function toggleGrid(): void {
             <Tool
                 :tool="0"
                 :icon="gridIcon"
-                :name="$t('room_editor.toggle_grid')"
+                :name="t('room_editor.toggle_grid')"
                 :toggled="roomEditorStore.getGridState"
                 @tool-clicked="toggleGrid"/>
         </div>
@@ -350,7 +350,7 @@ function toggleGrid(): void {
             @redo="stepForward"
             @mouseenter.native="mouse.inWindow = true"
             @mouseleave.native="mouse.inWindow = false"/>
-        <div v-else class="noRoomSelected">{{$t('room_editor.no_room_selected')}}</div>
+        <div v-else class="noRoomSelected">{{ t('room_editor.no_room_selected') }}</div>
         <div v-if="selectedRoom" class="propertyPanel" :class="{propertiesClosed : !propertiesOpen}">
             <div class="resizeBtnWrapper">
                 <button class="resizeBtn" @click="propertiesOpen = !propertiesOpen; resize()">

@@ -6,9 +6,9 @@ import SearchDropdown from '@/components/common/SearchDropdown.vue';
 
 import Core from '@/core';
 import { checkNameCollisions, nanToNull } from '../Properties.vue';
-import { useI18n } from 'vue-i18n';
+import { useI18nStore } from '@/stores/I18n';
 
-const { t } = useI18n();
+const { t } = useI18nStore();
 
 const props = defineProps<{
     selectedObject: Core.Instance_Object;
@@ -36,18 +36,18 @@ function setInstanceName(newName: string): void {
 
 <template>
     <div class="propContents">
-        <div class="heading">{{$t('room_editor.object_properties_heading')}}</div>
+        <div class="heading">{{ t('room_editor.object_properties_heading') }}</div>
         <div class="info" style="margin: var(--margin); margin-left: 0px;">
-            <div>{{$t('room_editor.object_type')}}:</div>
-            <div>{{(selectedObject as Core.Instance_Object).objRef.name}}</div>
+            <div>{{ t('room_editor.object_type') }}:</div>
+            <div>{{ (selectedObject as Core.Instance_Object).objRef.name }}</div>
         </div>
         <div class="control">
-            <label for="instName">{{$t('room_editor.instance_name')}}:</label>
-            <input id="instName" type="text" :value="selectedObject!.name" v-tooltip="$t('room_editor.tt_inst_name')"
+            <label for="instName">{{ t('room_editor.instance_name') }}:</label>
+            <input id="instName" type="text" :value="selectedObject!.name" v-tooltip="t('room_editor.tt_inst_name')"
                 @change="setInstanceName(($event.target as any).value)" v-input-active/>
         </div>
         <div class="control">
-            <label for="instCollisionOvrr">{{$t('room_editor.collision')}}:</label>
+            <label for="instCollisionOvrr">{{ t('room_editor.collision') }}:</label>
             <SearchDropdown
                 id="instCollisionOvrr"
                 class="custom-select"
@@ -58,12 +58,12 @@ function setInstanceName(newName: string): void {
                     { name: t('room_editor.off'), id: collisionOverrides.IGNORE, value: collisionOverrides.IGNORE},
                 ]"
                 @change="setInstProp({collisionOverride: $event})"
-                v-tooltip="$t('room_editor.tt_coll_ovr')"
+                v-tooltip="t('room_editor.tt_coll_ovr')"
                 ></SearchDropdown>
         </div>
         <div class="control">
-            <label for="instCustDepth">{{$t('room_editor.custom_depth')}}:</label>
-            <input id="instCustDepth" type="number" :value="(selectedObject as Core.Instance_Object).zDepthOverride" v-tooltip="$t('room_editor.tt_cust_depth')"
+            <label for="instCustDepth">{{ t('room_editor.custom_depth') }}:</label>
+            <input id="instCustDepth" type="number" :value="(selectedObject as Core.Instance_Object).zDepthOverride" v-tooltip="t('room_editor.tt_cust_depth')"
                 @change="setInstProp({zDepthOverride: nanToNull(parseInt(($event.target as any).value))})" v-input-active/>
         </div>
         <Collapsible
@@ -71,22 +71,22 @@ function setInstanceName(newName: string): void {
             <div class="collapsible-props">
                 <div class="control">
                     <label for="animPlay">{{ t('object_editor.is_playing') }}:</label>
-                    <Checkbox class="custom-checkbox" :value="selectedObject.animPlayingOverride" :triple="true" v-tooltip="$t('room_editor.tt_anim_play_triple')"
+                    <Checkbox class="custom-checkbox" :value="selectedObject.animPlayingOverride" :triple="true" v-tooltip="t('room_editor.tt_anim_play_triple')"
                         @change="setInstProp({animPlayingOverride: $event})"></Checkbox>
                 </div>
                 <div class="control">
                     <label for="loop">{{ t('object_editor.loop') }}:</label>
-                    <Checkbox class="custom-checkbox" :value="selectedObject.animLoopOverride" :triple="true" v-tooltip="$t('room_editor.tt_anim_loop_triple')"
+                    <Checkbox class="custom-checkbox" :value="selectedObject.animLoopOverride" :triple="true" v-tooltip="t('room_editor.tt_anim_loop_triple')"
                         @change="setInstProp({animLoopOverride: $event})"></Checkbox>
                 </div>
                 <div class="control">
-                    <label for="startframe">{{$t('object_editor.start_frame')}}:</label>
-                    <input id="startframe" type="number" :value="selectedObject.startFrameOverrideClamped" v-tooltip="$t('room_editor.tt_start_frame_nullable')"
+                    <label for="startframe">{{ t('object_editor.start_frame') }}:</label>
+                    <input id="startframe" type="number" :value="selectedObject.startFrameOverrideClamped" v-tooltip="t('room_editor.tt_start_frame_nullable')"
                         @change="setInstProp({startFrameOverrideClamped: nanToNull(parseInt(($event.target as any).value))})" v-input-active/>
                 </div>
                 <div class="control">
-                    <label for="fps">{{$t('object_editor.fps')}}:</label>
-                    <input id="fps" type="number" :value="selectedObject.fpsOverride" v-tooltip="$t('room_editor.tt_fps_nullable')"
+                    <label for="fps">{{ t('object_editor.fps') }}:</label>
+                    <input id="fps" type="number" :value="selectedObject.fpsOverride" v-tooltip="t('room_editor.tt_fps_nullable')"
                         @change="setInstProp({fpsOverride: nanToNull(parseInt(($event.target as any).value))})" v-input-active/>
                 </div>
             </div>

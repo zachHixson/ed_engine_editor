@@ -13,6 +13,7 @@ export interface iControl {
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useI18nStore } from '@/stores/I18n';
 
 const props = defineProps<{
     control: iControl,
@@ -20,6 +21,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['click']);
+const { t } = useI18nStore();
 
 const iconLoaded = ref<boolean>(true);
 
@@ -34,10 +36,10 @@ function onClick(): void {
         ref="navControl"
         @click="onClick"
         :class="{controlSelected : isSelected}"
-        v-tooltip="control.altText">
+        v-tooltip="t(control.altText)">
         <Svg v-show="iconLoaded" class="icon" ref="iconImg" :src="props.control.icon" @error="iconLoaded = false"></Svg>
         <div v-show="!iconLoaded" class="altText" ref="altText">
-            {{control.altText}}
+            {{ t(control.altText) }}
         </div>
     </div>
 </template>

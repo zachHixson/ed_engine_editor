@@ -12,7 +12,7 @@ import Widget from './Widget.vue';
 import Svg from '@/components/common/Svg.vue';
 
 import { ref, reactive, computed, nextTick, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useI18nStore } from '@/stores/I18n';
 import type Node from './Node';
 import type Node_Connection from './Node_Connection';
 import type { iHoverSocket, iValueChanged } from './Socket.vue';
@@ -23,7 +23,7 @@ import Core from '@/core';
 
 import editIcon from '@/assets/edit.svg';
 
-const { t, te } = useI18n();
+const { t, te } = useI18nStore();
 const { Vector } = Core;
 
 const props = defineProps<{

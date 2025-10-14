@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import Svg from './common/Svg.vue';
-
-import { useI18n } from 'vue-i18n';
+import { useI18nStore } from '@/stores/I18n';
 
 import xIcon from '@/assets/x.svg';
 import throbberIcon from '@/assets/throbber.svg';
@@ -10,8 +9,7 @@ import throbberIcon from '@/assets/throbber.svg';
 const emit = defineEmits([
     'demo-opened',
 ]);
-
-const { t } = useI18n();
+const { t } = useI18nStore();
 
 const isPortable = location.hostname == '';
 const hideToggle = ref<boolean>(localStorage.getItem('hide-welcome') == 't' && !isPortable);

@@ -1,12 +1,10 @@
 import { defineStore } from 'pinia';
 import {version as EDITOR_VERSION} from '@/../package.json';
-import i18n from '@/i18n';
 import Node_API from '@/components/editor_logic/Node_API';
 import { useGameDataStore } from './GameData';
 import { useAssetBrowserStore } from './AssetBrowser';
+import { useI18nStore } from './I18n';
 import Core from '@/core';
-
-const t = i18n.global.t;
 
 export enum PLAY_STATE {
     PLAYING,
@@ -26,7 +24,7 @@ export const useMainStore = defineStore({
     id: 'main',
 
     state: (): iState => ({
-        projectName: t('editor_main.default_name'),
+        projectName: useI18nStore().t('editor_main.default_name'),
         inputActive: false,
         playState: PLAY_STATE.NOT_PLAYING,
         nodeAPI: new Node_API(),
@@ -65,6 +63,7 @@ export const useMainStore = defineStore({
         newProject(){
             const assetBrowserStore = useAssetBrowserStore();
             const gameDataStore = useGameDataStore();
+            const { t } = useI18nStore();
 
             this.projectName = t('editor_main.default_name');
             gameDataStore.setSpriteList([]);

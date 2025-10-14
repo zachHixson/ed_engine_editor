@@ -2,15 +2,13 @@ import Tool_Base from './Tool_Base';
 import { RoomMainEventBus } from '../RoomMain.vue';
 import type { iActionArguments } from '../RoomMain.vue';
 import { useRoomEditorStore } from '@/stores/RoomEditor';
-import i18n from '@/i18n';
+import { useI18nStore } from '@/stores/I18n';
 import Core from '@/core';
 import type { imEvent } from '../RoomEditWindow.vue';
 import { checkNameCollisions } from '../Properties.vue';
 
 type AddProps = {newInstance?: Core.Instance_Base, instRefList?: Core.Instance_Base[], pos?: Core.Vector};
 type ExitAddProps = {exitRef?: Core.Instance_Exit, pos: Readonly<Core.Vector>};
-
-const t = i18n.global.t;
 
 export function useAdd(args: iActionArguments){
 
@@ -41,6 +39,7 @@ export function useAdd(args: iActionArguments){
 
         private _instanceFromCopy(pos: Readonly<Core.Vector>): Core.Instance_Base | null {
             const selectedInstance = args.editorSelection.value;
+            const { t } = useI18nStore();
 
             if (!selectedInstance) return null;
 
@@ -143,7 +142,7 @@ export function useAdd(args: iActionArguments){
 
     function actionExitAdd({exitRef, pos}: ExitAddProps, makeCommit = true): Core.Instance_Exit {
         const newExit = exitRef ?? new Core.Instance_Exit(args.props.selectedRoom.curInstId, pos);
-        const newExitName = t('room_editor.new_exit_prefix') + newExit.id;
+        const newExitName = useI18nStore().t('room_editor.new_exit_prefix') + newExit.id;
         args.props.selectedRoom.addInstance(newExit);
     
         newExit.name = newExitName;

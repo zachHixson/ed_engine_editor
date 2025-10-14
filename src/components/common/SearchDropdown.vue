@@ -3,11 +3,11 @@ import Svg from './Svg.vue';
 import VueCanvas from './VueCanvas.vue';
 
 import { ref, computed, watch, onMounted, nextTick } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useI18nStore } from '@/stores/I18n';
 
 import arrowIcon from '@/assets/arrow_01.svg';
 
-const { t } = useI18n();
+const { t } = useI18nStore();
 
 const props = withDefaults(defineProps<{
     items: Array<{

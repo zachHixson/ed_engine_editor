@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import GroupList from '@/components/common/GroupList.vue';
 
-import { watch, computed } from 'vue';
-import { checkNameCollisions, nanToNull } from '../Properties.vue';
-import { useI18n } from 'vue-i18n';
+import { computed } from 'vue';
+import { checkNameCollisions } from '../Properties.vue';
 import { useGameDataStore } from '@/stores/GameData';
+import { useI18nStore } from '@/stores/I18n';
 import type Core from '@/core';
 
-const { t } = useI18n();
+const { t } = useI18nStore();
 const gameDataStore = useGameDataStore();
 
 const props = defineProps<{

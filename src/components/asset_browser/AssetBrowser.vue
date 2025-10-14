@@ -13,9 +13,9 @@ import Svg from '@/components/common/Svg.vue';
 
 import { AppEventBus } from '@/App.vue';
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { useAssetBrowserStore } from '@/stores/AssetBrowser';
 import { useGameDataStore } from '@/stores/GameData';
+import { useI18nStore } from '@/stores/I18n';
 import Core from '@/core';
 import type { iChangeEventProps } from '@/components/common/DragList.vue';
 import type { iRenameEventProps } from './Asset.vue';
@@ -28,9 +28,9 @@ import roomIcon from '@/assets/room_icon.svg';
 import arrowIcon from '@/assets/arrow_01.svg';
 import plusIcon from '@/assets/plus.svg';
 
-const { t } = useI18n();
 const assetBrowserStore = useAssetBrowserStore();
 const gameDataStore = useGameDataStore();
+const { t } = useI18nStore();
 
 const emit = defineEmits([
     'asset-deleted',
@@ -43,22 +43,22 @@ const assetListRef = ref<HTMLDivElement>();
 const categories = [
     {
         cat_ID: Core.CATEGORY_ID.SPRITE,
-        text: t("asset_browser.sprites"),
+        text: 'asset_browser.sprites',
         icon: spriteIcon,
     },
     {
         cat_ID: Core.CATEGORY_ID.OBJECT,
-        text: t("asset_browser.objects"),
+        text: 'asset_browser.objects',
         icon: objectIcon,
     },
     {
         cat_ID: Core.CATEGORY_ID.LOGIC,
-        text: t("asset_browser.logic"),
+        text: 'asset_browser.logic',
         icon: logicIcon,
     },
     {
         cat_ID: Core.CATEGORY_ID.ROOM,
-        text: t("asset_browser.rooms"),
+        text: 'asset_browser.rooms',
         icon: roomIcon,
     }
 ];
@@ -221,7 +221,7 @@ function scrollHandler(): void {
                         :key="category.cat_ID">
                         <div class="cat_title">
                             <Svg class="cat_icon" :src="category.icon"></Svg>
-                            {{category.text}}
+                            {{ t(category.text) }}
                         </div>
                         <button class="btn" @click="openCategory(category)">
                             <Svg class="btn_icon" :src="arrowIcon" style="transform: rotate(90deg);"></Svg>
@@ -235,7 +235,7 @@ function scrollHandler(): void {
                                 <Svg class="btn_icon" :src="arrowIcon" style="transform: rotate(-90deg);"></Svg>
                             </button>
                             <Svg class="assetHeadingLogo" :src="selected_category.icon"></Svg>
-                            {{selected_category.text}}
+                            {{ t(selected_category.text) }}
                         </div>
                         <div class="rightHeading">
                             <button class="addButton btn" @click="addAsset">
@@ -256,7 +256,7 @@ function scrollHandler(): void {
                                 @select-asset="selectAsset"
                                 @renamed="assetRenamed" />
                         </DragList>
-                        <div v-if="selectedList.length <= 0">{{$t('asset_browser.no_assets')}}</div>
+                        <div v-if="selectedList.length <= 0">{{ t('asset_browser.no_assets') }}</div>
                     </div>
                 </div>
             </div>

@@ -3,12 +3,12 @@ import Svg from '@/components/common/Svg.vue';
 import SearchDropdown from '@/components/common/SearchDropdown.vue';
 
 import { computed } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useI18nStore } from '@/stores/I18n';
 import Core from '@/core';
 
 import eyedropperIcon from '@/assets/eye_dropper.svg';
 
-const { t } = useI18n();
+const { t } = useI18nStore();
 
 const props = defineProps<{
     selectedInstance: Core.Instance_Base | null;
@@ -34,14 +34,14 @@ function setFollowObj(): void {
 
 <template>
     <div class="propContents">
-        <div class="heading">{{$t('room_editor.camera_properties_heading')}}</div>
+        <div class="heading">{{ t('room_editor.camera_properties_heading') }}</div>
         <div class="control">
-            <label for="cameraSize">{{$t('room_editor.camera_size')}}:</label>
-            <input id="cameraSize" type="number" :value="camera.size" v-tooltip="$t('room_editor.tt_camera_size')"
+            <label for="cameraSize">{{ t('room_editor.camera_size') }}:</label>
+            <input id="cameraSize" type="number" :value="camera.size" v-tooltip="t('room_editor.tt_camera_size')"
                 @change="setCamProp({size: ($event.target as any).value}); ($event.target as any).value = camera.size" v-input-active/>
         </div>
         <div class="control">
-            <label for="camMoveType">{{$t('room_editor.camera_move_type')}}:</label>
+            <label for="camMoveType">{{ t('room_editor.camera_move_type') }}:</label>
             <SearchDropdown
                 id="camMoveType"
                 class="custom-select"
@@ -52,10 +52,10 @@ function setFollowObj(): void {
                     { name: t('room_editor.scroll'), id: Core.Camera.MOVE_TYPES.SCROLL, value: Core.Camera.MOVE_TYPES.SCROLL },
                 ]"
                 @change="setCamProp({moveType: $event})"
-                v-tooltip="$t('room_editor.tt_camera_move')"></SearchDropdown>
+                v-tooltip="t('room_editor.tt_camera_move')"></SearchDropdown>
         </div>
         <div v-show="camera.moveType == Core.Camera.MOVE_TYPES.SCROLL" class="control">
-            <label for="camScrollDir">{{$t('room_editor.scroll_dir')}}: </label>
+            <label for="camScrollDir">{{t('room_editor.scroll_dir')}}: </label>
             <SearchDropdown
                 id="camScrollDir"
                 class="custom-select"
@@ -67,15 +67,15 @@ function setFollowObj(): void {
                     { name: t('room_editor.right'), id: Core.Camera.SCROLL_DIRS.RIGHT, value: Core.Camera.SCROLL_DIRS.RIGHT },
                 ]"
                 @change="setCamProp({scrollDir: $event})"
-                v-tooltip="$t('room_editor.tt_camera_scroll_dir')"></SearchDropdown>
+                v-tooltip="t('room_editor.tt_camera_scroll_dir')"></SearchDropdown>
         </div>
         <div v-show="camera.moveType == Core.Camera.MOVE_TYPES.SCROLL" class="control">
-            <label for="camScrollSpeed">{{$t('room_editor.scroll_speed')}}: </label>
-            <input id="camScrollSpeed" type="number" step="any" :value="camera.scrollSpeed" v-tooltip="$t('room_editor.tt_camera_scroll_speed')"
+            <label for="camScrollSpeed">{{ t('room_editor.scroll_speed') }}: </label>
+            <input id="camScrollSpeed" type="number" step="any" :value="camera.scrollSpeed" v-tooltip="t('room_editor.tt_camera_scroll_speed')"
                 @change="setCamProp({scrollSpeed: parseFloat(($event.target as any).value)})" v-input-active/>
         </div>
         <div v-show="camera.moveType == Core.Camera.MOVE_TYPES.FOLLOW" class="control">
-            <label for="camFollowType">{{$t('room_editor.follow_type')}}: </label>
+            <label for="camFollowType">{{ t('room_editor.follow_type') }}: </label>
             <SearchDropdown
                 id="camFollowType"
                 class="custom-select"
@@ -86,13 +86,13 @@ function setFollowObj(): void {
                     { name: t('room_editor.tiled'), id: Core.Camera.FOLLOW_TYPES.TILED, value: Core.Camera.FOLLOW_TYPES.TILED },
                 ]"
                 @change="setCamProp({followType: $event})"
-                v-tooltip="$t('room_editor.tt_camera_follow_type')"></SearchDropdown>
+                v-tooltip="t('room_editor.tt_camera_follow_type')"></SearchDropdown>
         </div>
         <div v-show="camera.moveType == Core.Camera.MOVE_TYPES.FOLLOW" class="control">
-            <label for="camFollowObj">{{$t('room_editor.follow_obj')}}: </label>
+            <label for="camFollowObj">{{t('room_editor.follow_obj')}}: </label>
             <div class="followObjInfo">
                 <div class="followObjName" v-tooltip="()=>followObjName">{{ followObjName }}</div>
-                <button @click="setFollowObj" v-tooltip="$t('room_editor.tt_camera_follow_obj')">
+                <button @click="setFollowObj" v-tooltip="t('room_editor.tt_camera_follow_obj')">
                     <Svg :src="eyedropperIcon"></Svg>
                 </button>
             </div>

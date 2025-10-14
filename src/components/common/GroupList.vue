@@ -12,11 +12,11 @@ export interface iGroupChangedProps {
 import Svg from '@/components/common/Svg.vue';
 
 import { ref, nextTick } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useI18nStore } from '@/stores/I18n';
 import Core from '@/core';
 import plusIcon from '@/assets/plus.svg';
 
-const { t } = useI18n();
+const { t } = useI18nStore();
 
 const props = defineProps<{
     editList: string[],
@@ -72,7 +72,7 @@ function groupDeleted(group: string, idx: number, event: any): void {
 <template>
     <div class="editList">
         <div class="editListTitle">
-            {{$t('object_editor.groups')}}
+            {{ t('object_editor.groups') }}
         </div>
         <div ref="list" class="list">
             <div>

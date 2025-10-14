@@ -1,9 +1,9 @@
 import { useLogicEditorStore } from "@/stores/LogicEditor";
 import { useGameDataStore } from "@/stores/GameData";
+import { useI18nStore } from "@/stores/I18n";
 import type Node from "./node_components/Node";
 import type Core from '@/core';
 import type Node_Connection from "./node_components/Node_Connection";
-import { useI18n } from "vue-i18n";
 import Undo_Store, { iActionStore } from "../common/Undo_Store";
 
 export type TextInfo = {textId: string, vars: {[keys: string]: any}};
@@ -170,7 +170,7 @@ export default class Node_API implements Core.iEditorAPI {
     }
 
     t(text: string): string {
-        const { t } = useI18n();
+        const { t } = useI18nStore();
         return t(text);
     }
 

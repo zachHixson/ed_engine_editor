@@ -8,9 +8,9 @@ const textSizeCtx = (()=>{
 import SearchDropdown from '@/components/common/SearchDropdown.vue';
 
 import { computed, nextTick, onMounted } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useI18nStore } from '@/stores/I18n';
 
-const { t, te } = useI18n();
+const { t, te } = useI18nStore();
 
 const props = defineProps<{
     widget: any,

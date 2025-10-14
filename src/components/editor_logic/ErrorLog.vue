@@ -3,7 +3,7 @@ import Svg from '@/components/common/Svg.vue';
 
 import { ref, computed, watch } from 'vue';
 import { useLogicEditorStore } from '@/stores/LogicEditor';
-import { useI18n } from 'vue-i18n';
+import { useI18nStore } from '@/stores/I18n';
 
 import xIcon from '@/assets/x.svg';
 import errorIcon from '@/assets/error_decorator.svg';
@@ -11,8 +11,8 @@ import warningIcon from '@/assets/warning_decorator.svg';
 
 const emit = defineEmits(['open-node-exception']);
 
-const { t } = useI18n();
 const logicEditorStore = useLogicEditorStore();
+const { t } = useI18nStore();
 
 const errorListOpened = ref<boolean>(false);
 

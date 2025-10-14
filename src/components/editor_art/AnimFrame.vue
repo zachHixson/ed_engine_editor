@@ -3,6 +3,7 @@ import Svg from '@/components/common/Svg.vue';
 
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { useArtEditorStore } from '@/stores/ArtEditor';
+import { useI18nStore } from '@/stores/I18n';
 import { AnimationPanelEventBus } from './AnimationPanel.vue';
 import Core from '@/core';
 import trashIcon from '@/assets/trash.svg';
@@ -10,6 +11,7 @@ import copyIcon from '@/assets/copy.svg';
 import arrowIcon from '@/assets/arrow_01.svg';
 
 const artEditorStore = useArtEditorStore();
+const { t } = useI18nStore();
 
 const props = defineProps<{
     sprite: Core.Sprite,
@@ -137,7 +139,7 @@ function moveFrame(event: MouseEvent, dir: number): void {
             class="button deleteFrame"
             v-show="canDelete && hover"
             @click="deleteFrame"
-            v-tooltip="$t('art_editor.delete_frame')">
+            v-tooltip="t('art_editor.delete_frame')">
             <Svg class="btnIcon" :src="trashIcon" style="fill: none"></Svg>
         </button>
         <button

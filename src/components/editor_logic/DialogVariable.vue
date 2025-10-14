@@ -3,9 +3,9 @@ import Svg from '@/components/common/Svg.vue';
 import SearchDropdown from '../common/SearchDropdown.vue';
 
 import { ref, computed, onMounted } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { useMainStore } from '@/stores/Main';
 import { useLogicEditorStore } from '@/stores/LogicEditor';
+import { useI18nStore } from '@/stores/I18n';
 import type Logic from './node_components/Logic';
 import Core from '@/core';
 
@@ -14,9 +14,9 @@ import warningIcon from '@/assets/warning_decorator.svg';
 
 const CHAR_LIMIT = 50;
 
-const { t } = useI18n();
 const mainStore = useMainStore();
 const logicEditorStore = useLogicEditorStore();
+const { t } = useI18nStore();
 
 const props = defineProps<{
     selectedAsset: Logic,
@@ -115,7 +115,7 @@ function close(): void {
     <div class="DialogVariable">
         <div class="dialog">
             <div class="heading">
-                {{editVarInfo ? $t('logic_editor.edit_variable') : $t('logic_editor.new_variable')}}:
+                {{ editVarInfo ? t('logic_editor.edit_variable') : t('logic_editor.new_variable') }}:
             </div>
             <div class="controlsWrapper">
                 <div class="control">
@@ -127,7 +127,7 @@ function close(): void {
                     </div>
                 </div>
                 <div class="control">
-                    <label for="type">{{$t('logic_editor.type')}}: </label>
+                    <label for="type">{{ t('logic_editor.type') }}: </label>
                     <SearchDropdown id="type" :value="type" @change="type = $event" :items="[
                         { name: t('logic_editor.number'), id: Core.Node_Enums.SOCKET_TYPE.NUMBER, value: Core.Node_Enums.SOCKET_TYPE.NUMBER },
                         { name: t('logic_editor.string'), id: Core.Node_Enums.SOCKET_TYPE.STRING, value: Core.Node_Enums.SOCKET_TYPE.STRING },
@@ -139,21 +139,21 @@ function close(): void {
                     </div>
                 </div>
                 <div v-if="!editVarInfo" class="control">
-                    <label for="isGlobal">{{$t('logic_editor.is_global')}}: </label>
+                    <label for="isGlobal">{{ t('logic_editor.is_global') }}: </label>
                     <input id="isGlobal" type="checkbox" v-model="isGlobal" />
                 </div>
                 <div v-if="editVarInfo" class="control">
-                    <label for="isGlobal">{{$t('logic_editor.is_global')}}: </label>
+                    <label for="isGlobal">{{ t('logic_editor.is_global') }}: </label>
                     <input id="isGlobal" type="checkbox" v-model="isGlobal" disabled/>
                 </div>
                 <div class="control">
-                    <label for="isList">{{$t('logic_editor.is_list')}}: </label>
+                    <label for="isList">{{ t('logic_editor.is_list') }}: </label>
                     <input id="isList" type="checkbox" v-model="isList" />
                 </div>
             </div>
             <div class="buttonWrapper">
-                <button class="button" @click="cancel">{{$t('generic.cancel')}}</button>
-                <button class="button" @click="confirm" :disabled="!isValid">{{editVarInfo ? $t('logic_editor.edit') : $t('logic_editor.create')}}</button>
+                <button class="button" @click="cancel">{{ t('generic.cancel') }}</button>
+                <button class="button" @click="confirm" :disabled="!isValid">{{ editVarInfo ? t('logic_editor.edit') : t('logic_editor.create') }}</button>
             </div>
         </div>
     </div>

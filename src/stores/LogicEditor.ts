@@ -11,7 +11,6 @@ export interface iState {
         connectionData: Core.ConnectionSave[],
     },
     errors: ReadonlyArray<Core.iNodeExceptionData>,
-    nodeDoc: any,
 }
 
 export const useLogicEditorStore = defineStore({
@@ -27,7 +26,6 @@ export const useLogicEditorStore = defineStore({
             connectionData: [],
         },
         errors: [],
-        nodeDoc: {},
     }),
     
     getters: {
@@ -66,12 +64,6 @@ export const useLogicEditorStore = defineStore({
             const errors = this.errors as Core.iNodeExceptionData[];
             errors.forEach(e => {if (e.onClearCallback) e.onClearCallback(e)});
             errors.splice(0, this.errors.length);
-        },
-        setNodeDoc(rawJson: string){
-            this.nodeDoc = JSON.parse(rawJson);
-        },
-        getNodeDoc(templateId: string): any {
-            return this.nodeDoc[templateId];
         },
     }
 });

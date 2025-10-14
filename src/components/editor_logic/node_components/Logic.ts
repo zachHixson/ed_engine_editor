@@ -1,11 +1,10 @@
-import i18n from '@/i18n';
 import Node from './Node';
 import Node_Connection from './Node_Connection';
 import Core from '@/core';
 import type Node_API from '../Node_API';
+import { useI18nStore } from '@/stores/I18n';
 
 const { Vector } = Core;
-const { t } = i18n.global;
 
 export default class Logic extends Core.Asset_Base implements Core.iEditorLogic {
     private _nextGraphId: number = 0;
@@ -202,7 +201,7 @@ class Graph {
 
     constructor(id: number){
         this.id = id;
-        this.name =  t('logic_editor.graph_prefix') + this.id;
+        this.name =  useI18nStore().t('logic_editor.graph_prefix') + this.id;
         this.navState =  new Core.NavState();
     }
 

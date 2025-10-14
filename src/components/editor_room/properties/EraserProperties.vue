@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import Checkbox from '@/components/common/Checkbox.vue';
 import { useRoomEditorStore } from '@/stores/RoomEditor';
-import { useI18n } from 'vue-i18n';
+import { useI18nStore } from '@/stores/I18n';
 import type Core from '@/core';
 
-const { t } = useI18n();
+const { t } = useI18nStore();
 
 const roomEditorStore = useRoomEditorStore();
 

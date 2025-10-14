@@ -1,4 +1,4 @@
-import { fileURLToPath, URL } from 'node:url'
+import { fileURLToPath, URL } from 'node:url';
 import filterReplace from 'vite-plugin-filter-replace';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 import svgLoader from 'vite-svg-loader';
@@ -43,22 +43,22 @@ export default defineConfig(({mode, command}) => {
             {
                 filter: /\.html$/g,
                 replace: {
-                    from: "[license]",
+                    from: '[license]',
                     to: licenseText,
                 }
             },
-            ...makeIfdef("IS_DEV"),
+            ...makeIfdef('IS_DEV'),
         ]);
     }
     else {
         filterReplaceArgs.push(...[
-            ...makeIfdef("IS_BUILD"),
+            ...makeIfdef('IS_BUILD'),
         ]);
     }
 
     if (isPortable){
         filterReplaceArgs.push(...[
-            ...makeIfdef("IS_WEB"),
+            ...makeIfdef('IS_WEB'),
         ]);
 
         plugins.push(viteSingleFile({
@@ -71,7 +71,7 @@ export default defineConfig(({mode, command}) => {
     }
     else {
         filterReplaceArgs.push(...[
-            ...makeIfdef("IS_PORTABLE"),
+            ...makeIfdef('IS_PORTABLE'),
         ]);
     }
 

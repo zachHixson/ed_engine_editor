@@ -6,7 +6,6 @@ import zoomIcon from '@/assets/navigation_magglass.svg';
 import centerIcon from '@/assets/navigation_center.svg';
 
 import { onMounted, onBeforeUnmount } from 'vue';
-import { useI18n } from 'vue-i18n';
 import type { iControl } from './NavControl.vue';
 import Core from '@/core';
 
@@ -14,8 +13,6 @@ const ZOOM_SENSITIVITY = 0.03;
 const ZOOM_WHEEL_AMT = 0.8;
 
 const { NAV_TOOL_TYPE, Vector } = Core;
-
-const { t } = useI18n();
 
 const props = defineProps<{
     navState: Core.NavState,
@@ -41,19 +38,19 @@ const emit = defineEmits(['tool-selected', 'nav-changed', 'set-hotkey-tool']);
 const controls: iControl[] = [
     {
         id: NAV_TOOL_TYPE.PAN,
-        altText: t('navigation.pan_tool'),
+        altText: 'navigation.pan_tool',
         icon: panIcon,
         action: () => emit('tool-selected', NAV_TOOL_TYPE.PAN)
     },
     {
         id: Core.NAV_TOOL_TYPE.ZOOM,
-        altText: t('navigation.zoom_tool'),
+        altText: 'navigation.zoom_tool',
         icon: zoomIcon,
         action: () => emit('tool-selected', NAV_TOOL_TYPE.ZOOM)
     },
     {
         id: NAV_TOOL_TYPE.CENTER,
-        altText: t('navigation.center_view'),
+        altText: 'navigation.center_view',
         icon: centerIcon,
         action: () => centerView()
     }

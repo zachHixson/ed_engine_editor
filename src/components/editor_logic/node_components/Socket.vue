@@ -24,8 +24,8 @@ import Checkbox from '@/components/common/Checkbox.vue';
 import Input from '@/components/common/Input.vue';
 
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { useAssetBrowserStore } from '@/stores/AssetBrowser';
+import { useI18nStore } from '@/stores/I18n';
 import Core from '@/core';
 import socketAnyIcon from '@/assets/socket_any.svg';
 import socketNumberIcon from '@/assets/socket_number.svg';
@@ -37,8 +37,8 @@ import socketListIcon from '@/assets/list_icon.svg';
 import type Logic from './Logic';
 import decoratorMap from '../decoratorMap';
 
-const { t, te } = useI18n();
 const assetBrowserStore = useAssetBrowserStore();
+const { t, te } = useI18nStore();
 
 const props = defineProps<{
     socket: Core.iEditorNodeInput & {node: Node};

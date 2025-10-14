@@ -1,19 +1,18 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useLogicEditorStore } from '@/stores/LogicEditor';
+import { useI18nStore } from '@/stores/I18n';
 import Core from '@/core';
 import Svg from '@/components/common/Svg.vue';
 import categoryStyleMap from './categoryStyleMap';
-import { useI18n } from 'vue-i18n';
 
 import icon_magglass from '@/assets/navigation_magglass.svg';
 import icon_arrow from '@/assets/arrow_01.svg';
 
-const { t } = useI18n();
-
 const emit = defineEmits(['node-clicked']);
 
 const logicEditorStore = useLogicEditorStore();
+const { t, getNodeDoc } = useI18nStore();
 
 const searchValue = ref<string>('');
 
@@ -66,7 +65,7 @@ function tabClick(category: string): void {
                     v-for="node in filteredNodes"
                     class="node"
                     :style="`border-color: ${categoryStyleMap.get(node.category)?.color ?? 'var(--tool-panel-bg)'}`"
-                    v-tooltip="logicEditorStore.getNodeDoc(node.id)?.desc ?? ''"
+                    v-tooltip="getNodeDoc(node.id)?.desc ?? ''"
                     @click="emit('node-clicked', node.id)">
                     <div class="node-icon">
                         <Svg :src="categoryStyleMap.get(node.category)?.icon ?? ''"></Svg>

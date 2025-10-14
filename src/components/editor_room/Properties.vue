@@ -40,9 +40,11 @@ import RoomProperties from './properties/RoomProperties.vue';
 
 import { computed } from 'vue';
 import { useAssetBrowserStore } from '@/stores/AssetBrowser';
+import { useI18nStore } from '@/stores/I18n';
 import Core from '@/core';
 
 const assetBrowserStore = useAssetBrowserStore();
+const { t } = useI18nStore();
 
 const props = defineProps<{
     camera: Core.Camera,
@@ -135,8 +137,8 @@ const showNoToolProps = computed(()=>!props.selectedTool);
             @room-prop-set="emit('room-prop-set', $event)"
             @room-bg-changed="emit('room-bg-changed', $event)"
             @room-bg-change-end="emit('room-bg-change-end', $event)"></RoomProperties>
-        <div v-show="showNoSelection" class="noProps">{{$t('room_editor.no_selection')}}</div>
-        <div v-show="showNoToolProps" class="noProps">{{$t('room_editor.no_tool_props')}}</div>
+        <div v-show="showNoSelection" class="noProps">{{ t('room_editor.no_selection') }}</div>
+        <div v-show="showNoToolProps" class="noProps">{{ t('room_editor.no_tool_props') }}</div>
     </div>
 </template>
 

@@ -68,6 +68,7 @@ import type { Ref, ComputedRef, WritableComputedRef } from 'vue';
 import { AppEventBus } from '@/App.vue';
 import { useMainStore } from '@/stores/Main';
 import { useLogicEditorStore } from '@/stores/LogicEditor';
+import { useI18nStore } from '@/stores/I18n';
 import type Logic from './node_components/Logic';
 import type { default as Node_Obj } from './node_components/Node';
 import useConnection from './composables/useConnection';
@@ -83,6 +84,7 @@ type ActionChangeInputProps = {socket: GenericSocket, widget: boolean, oldVal: a
 
 const mainStore = useMainStore();
 const logicEditorStore = useLogicEditorStore();
+const { getNodeDoc } = useI18nStore();
 const { Vector } = Core;
 
 const props = defineProps<{
@@ -480,7 +482,7 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
                     :selectedNodes="state.selectedNodes.value"
                     :allConnections="selectedAsset.connections"
                     :errorData="logicEditorStore.errors.find(e => e.nodeId == node.nodeId)"
-                    :desc="logicEditorStore.getNodeDoc(node.templateId)"
+                    :desc="getNodeDoc(node.templateId)"
                     class="node"
                     @node-clicked="nodeClick"
                     @node-down="nodeDown"

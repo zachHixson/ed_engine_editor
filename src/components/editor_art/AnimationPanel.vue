@@ -14,17 +14,17 @@ import DragList from '@/components/common/DragList.vue';
 import Svg from '@/components/common/Svg.vue';
 
 import {ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { useMainStore } from '@/stores/Main';
 import { useArtEditorStore } from '@/stores/ArtEditor';
 import { ArtMainEventBus } from './ArtMain.vue';
+import { useI18nStore } from '@/stores/I18n';
 import Core from '@/core';
 import arrowIcon from '@/assets/arrow_01.svg';
 import animationIcon from '@/assets/animation.svg';
 import plusIcon from '@/assets/plus.svg';
 
 
-const { t } = useI18n();
+const { t } = useI18nStore();
 const mainStore = useMainStore();
 const artEditorStore = useArtEditorStore();
 

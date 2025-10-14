@@ -5,9 +5,9 @@ import ObjectEditor from './editor_object/ObjectMain.vue';
 import LogicEditor from './editor_logic/LogicMain.vue';
 
 import { ref, computed, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { useMainStore } from '@/stores/Main';
 import { useAssetBrowserStore } from '@/stores/AssetBrowser';
+import { useI18nStore } from '@/stores/I18n';
 import Core from '@/core';
 
 export interface DialogBoxProps {
@@ -20,9 +20,9 @@ export interface DialogBoxProps {
     callback?: (...args: any)=>void,
 }
 
-const { t } = useI18n();
 const mainStore = useMainStore();
 const assetBrowserStore = useAssetBrowserStore();
+const { t } = useI18nStore();
 
 const emit = defineEmits(['asset-changed', 'open-node-exception']);
 
