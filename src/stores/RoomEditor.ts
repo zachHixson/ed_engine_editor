@@ -13,9 +13,7 @@ interface iState {
     eraserSelectedType: boolean,
 }
 
-export const useRoomEditorStore = defineStore({
-    id: 'RoomEditor',
-
+export const useRoomEditorStore = defineStore('RoomEditor', {
     state: (): iState => ({
         selectedTool: Core.ROOM_TOOL_TYPE.ADD_BRUSH,
         selectedNavTool: null,

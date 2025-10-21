@@ -51,9 +51,7 @@ interface iState {
     }
 //#endif IS_WEB
 
-export const useI18nStore = defineStore({
-    id: 'i18n',
-
+export const useI18nStore = defineStore('i18n', {
     state: (): iState => ({
         langCode: DEFAULT_LANG_CODE,
         langText: DEFAULT_LANG_TEXT,

@@ -20,9 +20,7 @@ interface iState {
     selectedEditor: Core.EDITOR_ID,
 }
 
-export const useMainStore = defineStore({
-    id: 'main',
-
+export const useMainStore = defineStore('main', {
     state: (): iState => ({
         projectName: useI18nStore().t('editor_main.default_name'),
         inputActive: false,

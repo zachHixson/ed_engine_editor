@@ -6,9 +6,7 @@ interface iState {
     selectedRoom: Core.Room | null,
 }
 
-export const useAssetBrowserStore = defineStore({
-    id: 'AssetBrowser',
-
+export const useAssetBrowserStore = defineStore('AssetBrowser', {
     state: (): iState => ({
         selectedAsset: null,
         selectedRoom: null,

@@ -13,9 +13,7 @@ export interface iState {
     errors: ReadonlyArray<Core.iNodeExceptionData>,
 }
 
-export const useLogicEditorStore = defineStore({
-    id: 'LogicEditor',
-
+export const useLogicEditorStore = defineStore('LogicEditor', {
     state: (): iState => ({
         selectedNavTool: null,
         openCategory: null,

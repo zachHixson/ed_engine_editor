@@ -12,9 +12,7 @@ interface iState {
     rooms: Core.Room[]
 }
 
-export const useGameDataStore = defineStore({
-    id: 'GameData',
-
+export const useGameDataStore = defineStore('GameData', {
     state: (): iState => ({
         startRoomId: null,
         sprites: [],

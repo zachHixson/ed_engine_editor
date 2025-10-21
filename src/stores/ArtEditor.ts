@@ -11,9 +11,7 @@ interface iState {
     animPanelOpen: boolean,
 }
 
-export const useArtEditorStore = defineStore({
-    id: 'ArtEditor',
-
+export const useArtEditorStore = defineStore('ArtEditor', {
     state: (): iState => ({
         selectedColor: new Core.Draw.Color(255, 255, 255, 255),
         selectedSize: Core.ART_TOOL_SIZE.SMALL,
