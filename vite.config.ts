@@ -9,23 +9,48 @@ import licenseText from './LICENSE.txt?raw';
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-function makeIfdef(cvar: string) {
-    return [
-        {
-            filter: /.*/,
-            replace: {
-                from: `//#ifdef ${cvar}`,
-                to: '/*',
+type FilterArg = {
+    filter: string | RegExp,
+    replace: {
+        from: string,
+        to: string,
+    },
+};
+
+class IfDef {
+    private static _defines = new Array<string>();
+
+    static new(name: string, condition: boolean): void {
+        if (!condition) {
+            this._defines.push(name);
+        }
+    }
+
+    static getFilterArgs(): Array<FilterArg> {
+        const filter = /.*/;
+        const filterArgs = new Array<FilterArg>(this._defines.length * 2);
+
+        for (let i = 0; i < filterArgs.length; i += 2) {
+            const define = this._defines[i];
+
+            filterArgs[i] = {
+                filter,
+                replace: {
+                    from: `//#ifdef ${define}`,
+                    to: '/*',
+                }
+            };
+            filterArgs[i + 1] = {
+                filter,
+                replace: {
+                    from: `//#endif ${define}`,
+                    to: '*/',
+                }
             }
-        },
-        {
-            filter: /.*/,
-            replace: {
-                from: `//#endif ${cvar}`,
-                to: '*/',
-            }
-        },
-    ]
+        }
+
+        return filterArgs;
+    }
 }
 
 // https://vitejs.dev/config/
@@ -38,6 +63,11 @@ export default defineConfig(({mode, command}) => {
     ];
     let base = '/';
 
+    IfDef.new('IS_DEV', command == 'serve');
+    IfDef.new('IS_BUILD', isBuild);
+    IfDef.new('IS_PORTABLE', isPortable);
+    IfDef.new('IS_WEB', !isPortable);
+
     if (isBuild){
         filterReplaceArgs.push(...[
             {
@@ -47,20 +77,10 @@ export default defineConfig(({mode, command}) => {
                     to: licenseText,
                 }
             },
-            ...makeIfdef('IS_DEV'),
-        ]);
-    }
-    else {
-        filterReplaceArgs.push(...[
-            ...makeIfdef('IS_BUILD'),
         ]);
     }
 
     if (isPortable){
-        filterReplaceArgs.push(...[
-            ...makeIfdef('IS_WEB'),
-        ]);
-
         plugins.push(viteSingleFile({
             removeViteModuleLoader: true,
         }), svgLoader({
@@ -69,16 +89,14 @@ export default defineConfig(({mode, command}) => {
 
         base = '.';
     }
-    else {
-        filterReplaceArgs.push(...[
-            ...makeIfdef('IS_PORTABLE'),
-        ]);
-    }
+
+    filterReplaceArgs.push(...IfDef.getFilterArgs());
 
     plugins.push(
         filterReplace(filterReplaceArgs, {
             enforce: 'pre'
-        })
+        }),
+        
     );
 
     return {
