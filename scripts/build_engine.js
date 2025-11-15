@@ -29,7 +29,6 @@ require("esbuild")
             .replace(/'/g, "\\'")
             .replace(/"/g, "\\\"")
             .replace(/`/g, "\\\`")
-            .replace(/\n/g, "")
         }\`;
 
         export const HTMLTemplate = \`
