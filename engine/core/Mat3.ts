@@ -1,6 +1,5 @@
 export class Mat3 {
     private static _buffer1 = new Array<number>(9);
-    private static _buffer2 = new Array<number>(9);
 
     private _data = [
         1, 0, 0,
@@ -41,19 +40,30 @@ export class Mat3 {
     }
 
     multiply(mat: Mat3): Mat3 {
-        const buff = this._copyToDest(this._data, Mat3._buffer1);
+        let swap1;
+        let swap2;
+        let swap3;
 
-        this._data[0] = buff[0] * mat._data[0] + buff[1] * mat._data[3] + buff[2] * mat._data[6];
-        this._data[1] = buff[0] * mat._data[1] + buff[1] * mat._data[4] + buff[2] * mat._data[7];
-        this._data[2] = buff[0] * mat._data[2] + buff[1] * mat._data[5] + buff[2] * mat._data[8];
+        swap1 = this._data[0];
+        swap2 = this._data[1];
+        swap3 = this._data[2];
+        this._data[0] = swap1 * mat._data[0] + swap2 * mat._data[3] + swap3 * mat._data[6];
+        this._data[1] = swap1 * mat._data[1] + swap2 * mat._data[4] + swap3 * mat._data[7];
+        this._data[2] = swap1 * mat._data[2] + swap2 * mat._data[5] + swap3 * mat._data[8];
 
-        this._data[3] = buff[3] * mat._data[0] + buff[4] * mat._data[3] + buff[5] * mat._data[6];
-        this._data[4] = buff[3] * mat._data[1] + buff[4] * mat._data[4] + buff[5] * mat._data[7];
-        this._data[5] = buff[3] * mat._data[2] + buff[4] * mat._data[5] + buff[5] * mat._data[8];
+        swap1 = this._data[3];
+        swap2 = this._data[4];
+        swap3 = this._data[5];
+        this._data[3] = swap1 * mat._data[0] + swap2 * mat._data[3] + swap3 * mat._data[6];
+        this._data[4] = swap1 * mat._data[1] + swap2 * mat._data[4] + swap3 * mat._data[7];
+        this._data[5] = swap1 * mat._data[2] + swap2 * mat._data[5] + swap3 * mat._data[8];
 
-        this._data[6] = buff[6] * mat._data[0] + buff[7] * mat._data[3] + buff[8] * mat._data[6];
-        this._data[7] = buff[6] * mat._data[1] + buff[7] * mat._data[4] + buff[8] * mat._data[7];
-        this._data[8] = buff[6] * mat._data[2] + buff[7] * mat._data[5] + buff[8] * mat._data[8];
+        swap1 = this._data[6];
+        swap2 = this._data[7];
+        swap3 = this._data[8];
+        this._data[6] = swap1 * mat._data[0] + swap2 * mat._data[3] + swap3 * mat._data[6];
+        this._data[7] = swap1 * mat._data[1] + swap2 * mat._data[4] + swap3 * mat._data[7];
+        this._data[8] = swap1 * mat._data[2] + swap2 * mat._data[5] + swap3 * mat._data[8];
 
         return this;
     }
@@ -89,36 +99,43 @@ export class Mat3 {
         this._data[8] = original[0] * original[4] - original[3] * original[1];
 
         //transpose matrix and multiply all elements by inverse of the determinant
-        const swap = this._copyToDest(this._data, Mat3._buffer2);
         const invDet = 1 / det;
+        const original7 = this._data[7];
+        let swap;
 
         this._data[0] *= invDet;
         this._data[4] *= invDet;
         this._data[7] *= invDet;
 
-        this._data[1] = swap[3] * invDet;
-        this._data[3] = swap[1] * invDet;
+        swap = this._data[1];
+        this._data[1] = this._data[3] * invDet;
+        this._data[3] = swap * invDet;
 
-        this._data[2] = swap[6] * invDet;
-        this._data[6] = swap[2] * invDet;
+        swap = this._data[2];
+        this._data[2] = this._data[6] * invDet;
+        this._data[6] = swap * invDet;
 
-        this._data[5] = swap[7] * invDet;
-        this._data[7] = swap[5] * invDet;
+        swap = this._data[5];
+        this._data[5] = original7 * invDet;
+        this._data[7] = swap * invDet;
 
         return this;
     }
 
     transpose(): Mat3 {
-        const swap = this._copyToDest(this._data, Mat3._buffer1);
+        let swap;
 
-        this._data[1] = swap[3];
-        this._data[3] = swap[1];
+        swap = this._data[1];
+        this._data[1] = this._data[3];
+        this._data[3] = swap;
 
-        this._data[2] = swap[6];
-        this._data[6] = swap[2];
+        swap = this._data[2];
+        this._data[2] = this._data[6];
+        this._data[6] = swap;
 
-        this._data[5] = swap[7];
-        this._data[7] = swap[5];
+        swap = this._data[5];
+        this._data[5] = this._data[7];
+        this._data[7] = swap;
 
         return this;
     }
