@@ -1,5 +1,5 @@
 export class Mat3 {
-    private static _buffer1 = new Array<number>(9);
+    static readonly MAT3_LENGTH = 9;
 
     private _data = [
         1, 0, 0,
@@ -15,26 +15,20 @@ export class Mat3 {
 
     get data(){return this._data}
 
-    private _copyToDest(src: Array<number>, dest: Array<number>): Array<number> {
-        dest[0] = src[0];
-        dest[1] = src[1];
-        dest[2] = src[2];
-        dest[3] = src[3];
-        dest[4] = src[4];
-        dest[5] = src[5];
-        dest[6] = src[6];
-        dest[7] = src[7];
-        dest[8] = src[8];
-
-        return dest;
-    }
-
     set(data: Array<number>): Mat3 {
-        if (data.length != 9){
+        if (data.length != Mat3.MAT3_LENGTH){
             console.error('Error: Mat3 requires 9 element array, ' + data.length + ' provided');
         }
 
-        this._copyToDest(data, this._data);
+        this._data[0] = data[0];
+        this._data[1] = data[1];
+        this._data[2] = data[2];
+        this._data[3] = data[3];
+        this._data[4] = data[4];
+        this._data[5] = data[5];
+        this._data[6] = data[6];
+        this._data[7] = data[7];
+        this._data[8] = data[8];
 
         return this;
     }
@@ -85,18 +79,24 @@ export class Mat3 {
         }
 
         //calculate determinants using "matrix of minors" and apply "checkeerboard" +/-
-        const original = this._copyToDest(this._data, Mat3._buffer1);
-        this._data[0] = original[4] * original[8] - original[7] * original[5];
-        this._data[1] = -(original[3] * original[8] - original[6] * original[5]);
-        this._data[2] = original[3] * original[7] - original[6] * original[4];
+        const swap0 = this._data[0];
+        const swap1 = this._data[1];
+        const swap2 = this._data[2];
+        const swap3 = this._data[3];
+        const swap4 = this._data[4];
+        const swap5 = this._data[5];
 
-        this._data[3] = -(original[1] * original[8] - original[7] * original[2]);
-        this._data[4] = original[0] * original[8] - original[6] * original[2];
-        this._data[5] = -(original[0] * original[7] - original[6] * original[1]);
+        this._data[0] = swap4 * this._data[8] - this._data[7] * swap5;
+        this._data[1] = -(swap3 * this._data[8] - this._data[6] * swap5);
+        this._data[2] = swap3 * this._data[7] - this._data[6] * swap4;
 
-        this._data[6] = original[1] * original[5] - original[4] * original[2];
-        this._data[7] = -(original[0] * original[5] - original[3] * original[2]);
-        this._data[8] = original[0] * original[4] - original[3] * original[1];
+        this._data[3] = -(swap1 * this._data[8] - this._data[7] * swap2);
+        this._data[4] = swap0 * this._data[8] - this._data[6] * swap2;
+        this._data[5] = -(swap0 * this._data[7] - this._data[6] * swap1);
+
+        this._data[6] = swap1 * swap5 - swap4 * swap2;
+        this._data[7] = -(swap0 * swap5 - swap3 * swap2);
+        this._data[8] = swap0 * swap4 - swap3 * swap1;
 
         //transpose matrix and multiply all elements by inverse of the determinant
         const invDet = 1 / det;
