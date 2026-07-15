@@ -100,12 +100,11 @@ export class Mat3 {
 
         //transpose matrix and multiply all elements by inverse of the determinant
         const invDet = 1 / det;
-        const original7 = this._data[7];
         let swap;
 
         this._data[0] *= invDet;
         this._data[4] *= invDet;
-        this._data[7] *= invDet;
+        this._data[8] *= invDet;
 
         swap = this._data[1];
         this._data[1] = this._data[3] * invDet;
@@ -116,7 +115,7 @@ export class Mat3 {
         this._data[6] = swap * invDet;
 
         swap = this._data[5];
-        this._data[5] = original7 * invDet;
+        this._data[5] = this._data[7] * invDet;
         this._data[7] = swap * invDet;
 
         return this;
