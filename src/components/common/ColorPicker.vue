@@ -4,7 +4,7 @@ import Core from '@/core';
 
 const EXPAND = 1.15;
 
-const { Draw, Vector, WGL } = Core;
+const { Draw, Vec2, WGL } = Core;
 
 const props = defineProps<{
     color: Core.Draw.Color,
@@ -77,7 +77,7 @@ const cursorRef = ref<HTMLElement>();
 const valueCursorRef = ref<HTMLElement>();
 const valueCursorBGRef = ref<HTMLElement>();
 const wheelBuffer = Draw.createHDPICanvas(props.width, props.width) as HTMLCanvasElement;
-const cursorPos = new Vector(0, 0);
+const cursorPos = new Vec2(0, 0);
 const valuePos = ref(1);
 let selectedColor: Core.Draw.Color = props.color ?? new Draw.Color(255, 255, 255, 255);
 
@@ -140,14 +140,14 @@ function updateCursorPos(x: number, y: number): void {
     const canvas = canvasRef.value!;
     const halfCanvas = canvas.clientWidth / 2;
     const canvasBounds = canvas.getBoundingClientRect();
-    const cursorClientPos = new Vector(x, y);
-    const wheelClientPos = new Vector(canvasBounds.left, canvasBounds.top);
+    const cursorClientPos = new Vec2(x, y);
+    const wheelClientPos = new Vec2(canvasBounds.left, canvasBounds.top);
     const relCursorPos = cursorClientPos.subtract(wheelClientPos);
     const lengthBounds = halfCanvas - cursorRef.value!.clientWidth / 2 - 3;
 
     cursorPos.copy(relCursorPos);
     cursorPos.subtractScalar(halfCanvas);
-    
+
     if (cursorPos.length() > lengthBounds){
         cursorPos.normalize();
         cursorPos.multiplyScalar(lengthBounds);
@@ -182,8 +182,8 @@ function updateCursorColors(): void {
     const cursor = cursorRef.value!;
     const canvasBounds = canvas.getBoundingClientRect();
     const cursorBounds = cursor.getBoundingClientRect();
-    const canvasCenter = new Vector(canvasBounds.right + canvasBounds.left, canvasBounds.bottom + canvasBounds.top).divideScalar(2);
-    const cursorCenter = new Vector(cursorBounds.right + cursorBounds.left, cursorBounds.bottom + cursorBounds.top).divideScalar(2);
+    const canvasCenter = new Vec2(canvasBounds.right + canvasBounds.left, canvasBounds.bottom + canvasBounds.top).divideScalar(2);
+    const cursorCenter = new Vec2(cursorBounds.right + cursorBounds.left, cursorBounds.bottom + cursorBounds.top).divideScalar(2);
     const dirVector = cursorCenter.clone().subtract(canvasCenter);
     const h = ((Math.atan2(dirVector.y, dirVector.x) + Math.PI) / Math.PI) * 180;
     const s = dirVector.length() * EXPAND;
@@ -191,7 +191,7 @@ function updateCursorColors(): void {
     const rgb = Draw.HSVToRGB(h, Math.min(s / (canvas.width / 2), 1), 1.0);
     const hs = new Draw.Color(rgb.r, rgb.g, rgb.b);
     const hsv = new Draw.Color(Math.round(rgb.r * v), Math.round(rgb.g * v), Math.round(rgb.b * v));
-    
+
     selectedColor = hsv;
     cursor.style.background = selectedColor.toCSS();
     valueCursorBGRef.value!.style.background = selectedColor.toCSS();
@@ -200,12 +200,12 @@ function updateCursorColors(): void {
 
 function moveCursorToColor(rgba: Core.Draw.Color): void {
     const wheelBounds = canvasRef.value!.getBoundingClientRect();
-    const wheelPos = new Vector(wheelBounds.left, wheelBounds.top);
+    const wheelPos = new Vec2(wheelBounds.left, wheelBounds.top);
     const sliderX = sliderRef.value!.getBoundingClientRect().left;
     const halfCanvas = canvasRef.value!.clientWidth / 2;
     const hsv = Draw.RGBToHSV(rgba.r, rgba.g, rgba.b);
     const hueRad = hsv.hue * (Math.PI / 180);
-    const pos = new Vector(-Math.cos(hueRad), -Math.sin(hueRad)).multiplyScalar(hsv.sat * halfCanvas / EXPAND);
+    const pos = new Vec2(-Math.cos(hueRad), -Math.sin(hueRad)).multiplyScalar(hsv.sat * halfCanvas / EXPAND);
 
     pos.addScalar(halfCanvas);
     pos.add(wheelPos);

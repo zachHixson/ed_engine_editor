@@ -4,7 +4,8 @@ import Core from '@/core';
 import type Node_API from '../Node_API';
 import { useI18nStore } from '@/stores/I18n';
 
-const { Vector } = Core;
+const { Vec2 } = Core;
+type Vec2 = Core.Vec2;
 
 export default class Logic extends Core.Asset_Base implements Core.iEditorLogic {
     private _nextGraphId: number = 0;
@@ -34,7 +35,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
         return this.graphs.find(graph => graph.id == this.selectedGraphId)!.navState;
     }
     get defaultNavState(){return {
-        offset: new Vector(0, 0),
+        offset: new Vec2(0, 0),
         zoomFac: 1,
     }}
 
@@ -127,7 +128,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
             this.selectedGraphId = this.graphs[0].id;
             return;
         }
-        
+
         //select next graph in list if the deleted graph was the selected one
         if (id == this.selectedGraphId){
             const nextIdx = Math.min(this.graphs.length - 1, idx);
@@ -135,9 +136,9 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
         }
     }
 
-    addNode(templateId: string, pos: Core.Vector, nodeAPI: Node_API, nodeRef?: Node): Node {
+    addNode(templateId: string, pos: Vec2, nodeAPI: Node_API, nodeRef?: Node): Node {
         const newNode = nodeRef ?? new Node(templateId, this.nextNodeId, pos, this, this.selectedGraphId, nodeAPI);
-        
+
         this.nodes.push(newNode);
 
         return newNode
@@ -153,7 +154,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
                 nodeIdx = i;
             }
         }
-        
+
         this.nodes.splice(nodeIdx, 1);
     }
 

@@ -10,11 +10,11 @@ export default class Art_Canvas_Renderer{
 
         attribute vec2 a_position;
         attribute vec2 a_uv;
-        
+
         varying vec2 vUv;
         varying vec2 vScreenUv;
         varying float vPixelWidth;
-        
+
         void main(){
             //calculate vertex position
             vec3 vertPos = vec3(a_position, 1.0) * u_viewMatrix;
@@ -66,7 +66,7 @@ export default class Art_Canvas_Renderer{
             vec3 col = mix(vec3(bg), sprite.rgb, sprite.a);
             col = mix(col, preview.rgb, preview.a);
             col = mix(vec3(0.3), col, grid);
-            
+
             gl_FragColor = vec4(col, 1.0);
         }
     `;
@@ -135,7 +135,7 @@ export default class Art_Canvas_Renderer{
     private _updateViewMatrix(): void {
         const zoom = this._navState.zoomFac * Art_Canvas_Renderer.UNIT_WIDTH;
         const { x, y } = this._navState.offset;
-        const dimensions = new Core.Vector(this._canvas.width / 2, this._canvas.height / 2);
+        const dimensions = new Core.Vec2(this._canvas.width / 2, this._canvas.height / 2);
         const zoomMat = new Core.Mat3([zoom, 0, 0, 0, zoom, 0, 0, 0, 1]);
         const tranMat = new Core.Mat3([1, 0, x, 0, 1, y, 0, 0, 1]);
         const aspectMat = new Core.Mat3([

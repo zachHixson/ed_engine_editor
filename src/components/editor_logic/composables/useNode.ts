@@ -8,16 +8,17 @@ import Core from '@/core';
 
 type ActionAddNodeProps = {templateId: string, nodeRef?: Node_Obj};
 type ActionDeleteNodesProps = {nodeRefList: Node_Obj[], connectionRefMap?: Map<Logic, Node_Connection[]>};
-export type ActionMoveNodesProps = {nodeRefList: Node_Obj[], velocity: Readonly<Core.Vector>};
+export type ActionMoveNodesProps = {nodeRefList: Node_Obj[], velocity: Readonly<Vec2>};
 
-const { Vector } = Core;
+const { Vec2 } = Core;
+type Vec2 = Core.Vec2;
 
 export default function useNode(
     props: { selectedAsset: Logic },
     domRefs: DomRefs,
     actionData: ActionData,
     state: LogicEditorState,
-    clientToNavPos: (pos: Core.Vector)=>Core.Vector,
+    clientToNavPos: (pos: Vec2)=>Vec2,
 ){
     const { nodeViewportRef } = domRefs;
     const { actionMap, revertMap, undoStore } = actionData;
@@ -28,66 +29,66 @@ export default function useNode(
     const contentsBounds = [0, 0, 0, 0];
 
     function nodeClick({nodeObj, event}: {nodeObj: Node_Obj, event: MouseEvent}): void {
-        const mousePos = new Vector(event.clientX, event.clientY);
-    
+        const mousePos = new Vec2(event.clientX, event.clientY);
+
         if (mouseDownPos.distanceTo(mousePos) < 2){
             deselectAllNodes();
             selectedNodes.value.push(nodeObj);
         }
     }
-    
+
     function nodeDown(node: Node_Obj): void {
         const alreadySelected = !!selectedNodes.value.find(n => n.nodeId == node.nodeId);
         const navHotkeyActive = navHotkeyTool.value != null;
         const navToolSelected = logicEditorStore.getSelectedNavTool != null;
-    
+
         if (!alreadySelected) {
             if (!shiftDown.value){
                 deselectAllNodes();
             }
-    
+
             selectedNodes.value.push(node);
         }
-    
+
         if (!(navHotkeyActive || navToolSelected)){
             isDraggingNode.value = true;
         }
     }
-    
+
     function nodeMoveEnd(): void {
-        actionMoveNodes({nodeRefList: selectedNodes.value, velocity: new Vector()}, true);
+        actionMoveNodes({nodeRefList: selectedNodes.value, velocity: new Vec2()}, true);
         updateNodeBounds();
     }
 
-    function getNewNodePos(variation = 50): Core.Vector {
+    function getNewNodePos(variation = 50): Vec2 {
         const vpBounds = nodeViewportRef.value!.getBoundingClientRect();
-        const vpUl = new Vector(vpBounds.left, vpBounds.top);
-        const vpBr = new Vector(vpBounds.right, vpBounds.bottom);
+        const vpUl = new Vec2(vpBounds.left, vpBounds.top);
+        const vpBr = new Vec2(vpBounds.right, vpBounds.bottom);
         const midpoint = vpUl.clone().add(vpBr).divideScalar(2);
         const navPos = clientToNavPos(midpoint);
-        const ul = new Vector(-variation, -variation);
-        const br = new Vector(variation, variation);
-        navPos.add(new Vector(0, 0).randomize(ul, br));
-        
+        const ul = new Vec2(-variation, -variation);
+        const br = new Vec2(variation, variation);
+        navPos.add(new Vec2(0, 0).randomize(ul, br));
+
         return navPos;
     }
-    
+
     function updateNodeBounds(nodes = visibleNodes.value): void {
         if (nodes.length == 0){
             contentsBounds.forEach((_, idx) => contentsBounds[idx] = 0);
             return;
         }
-    
+
         //calculate client/screen space bounds
         const firstBoundingRect = nodes[0].domRef!.getBoundingClientRect();
-        const ul = new Vector(firstBoundingRect.left, firstBoundingRect.top);
-        const br = new Vector(firstBoundingRect.right, firstBoundingRect.bottom);
+        const ul = new Vec2(firstBoundingRect.left, firstBoundingRect.top);
+        const br = new Vec2(firstBoundingRect.right, firstBoundingRect.bottom);
         const vpBounds = nodeViewportRef.value!.getBoundingClientRect();
-        const vpSize = new Vector(vpBounds.right - vpBounds.left, vpBounds.bottom - vpBounds.top);
-        const vpOrigin = new Vector(vpBounds.left, vpBounds.top);
+        const vpSize = new Vec2(vpBounds.right - vpBounds.left, vpBounds.bottom - vpBounds.top);
+        const vpOrigin = new Vec2(vpBounds.left, vpBounds.top);
         const navZoom = props.selectedAsset.graphNavState.zoomFac;
         const navOrigin = props.selectedAsset.graphNavState.offset.clone().multiplyScalar(navZoom);
-    
+
         for (let i = 1; i < nodes.length; i++){
             const curNodeBounds = nodes[i].domRef!.getBoundingClientRect();
             ul.x = Math.min(ul.x, curNodeBounds.left);
@@ -95,43 +96,43 @@ export default function useNode(
             br.x = Math.max(br.x, curNodeBounds.right);
             br.y = Math.max(br.y, curNodeBounds.bottom);
         }
-    
+
         //align "world space" origin with center of viewport
         ul.subtract(navOrigin).subtract(vpOrigin).subtract(vpSize.clone().divideScalar(2));
         br.subtract(navOrigin).subtract(vpOrigin).subtract(vpSize.clone().divideScalar(2));
         ul.divideScalar(navZoom);
         br.divideScalar(navZoom);
-    
+
         //commit result
         contentsBounds[0] = ul.x;
         contentsBounds[1] = -ul.y;
         contentsBounds[2] = br.x;
         contentsBounds[3] = -br.y;
     }
-    
+
     function selectAllNodes(): void {
         selectedNodes.value.splice(0);
         selectedNodes.value.push(...props.selectedAsset.nodes);
     }
-    
+
     function deselectAllNodes(): void {
         selectedNodes.value.splice(0);
     }
-    
+
     function deleteSelectedNodes(): void {
         const protectedNodes: Node_Obj[] = [];
         const deletableNodes = selectedNodes.value.filter(node => {
             if (node.editorCanDelete) return true;
-    
+
             protectedNodes.push(node);
             return false;
         });
-    
+
         if (deletableNodes.length){
             actionDeleteNodes({nodeRefList: deletableNodes}, true);
             deselectAllNodes();
         }
-    
+
         protectedNodes.forEach(node => node.onDeleteStopped(protectedNodes));
     }
 
@@ -153,7 +154,7 @@ export default function useNode(
         const connectionList= nodesToCopy[0].parentScript.connections;
         const nodeData: Core.NodeSave[] = [];
         const connectionData: Core.ConnectionSave[] = [];
-        const boundsCenter = new Vector(0, 0);
+        const boundsCenter = new Vec2(0, 0);
 
         //calculate node bounds
         nodesToCopy.forEach(node => {
@@ -189,12 +190,12 @@ export default function useNode(
         const nodeAPI = mainStore.getNodeAPI;
         const pos = getNewNodePos();
         const newNode = props.selectedAsset.addNode(templateId, pos, nodeAPI, nodeRef);
-    
+
         if (makeCommit){
             const data = {templateId, nodeRef: newNode} satisfies ActionAddNodeProps;
             undoStore.commit({action: Core.LOGIC_ACTION.ADD_NODE, data});
         }
-    
+
         if (!nodeRef) newNode.onCreate();
     }
 
@@ -243,66 +244,66 @@ export default function useNode(
             undoStore.commit({action: Core.LOGIC_ACTION.PASTE, data});
         }
     }
-    
+
     function actionDeleteNodes({nodeRefList}: ActionDeleteNodesProps, makeCommit = true): void {
         const connectionRefMap: Map<Logic, Node_Connection[]> = new Map();
-    
+
         nodeRefList.forEach(node => {
             //find and delete connections attached to the node
             const currentConnections: Node_Connection[] = [];
-            
+
             node.parentScript.connections.forEach(connection => {
                 const startNodeId = connection.startNode!.nodeId;
                 const endNodeId = connection.endNode!.nodeId;
-    
+
                 if (startNodeId == node.nodeId || endNodeId == node.nodeId){
                     currentConnections.push(connection);
                 }
             });
-    
+
             currentConnections.forEach(connection => {
                 const connectionMapGet = connectionRefMap.get(node.parentScript) ?? [];
-    
+
                 if (!connectionMapGet.length) connectionRefMap.set(node.parentScript, connectionMapGet);
                 connectionMapGet.push(connection);
                 node.parentScript.removeConnection(connection.id);
                 connection.startNode?.onRemoveConnection(connection);
                 connection.endNode?.onRemoveConnection(connection);
             });
-    
+
             //delete node
             node.onBeforeDelete();
             node.parentScript.deleteNode(node);
         });
-    
+
         if (makeCommit){
             const data = {nodeRefList: [...nodeRefList], connectionRefMap} satisfies ActionDeleteNodesProps;
             undoStore.commit({action: Core.LOGIC_ACTION.DELETE_NODES, data});
         }
     }
-    
+
     function actionMoveNodes({nodeRefList, velocity}: ActionMoveNodesProps, makeCommit = true): void {
         if (makeCommit){
             const startVec = undoStore.cache.get('move_start');
-    
+
             if (startVec){
                 const totalVel = nodeRefList[0].pos.clone().subtract(startVec);
                 const data = {nodeRefList: [...nodeRefList], velocity: totalVel};
-    
+
                 undoStore.commit({action: Core.LOGIC_ACTION.MOVE, data});
                 undoStore.cache.delete('move_start');
             }
-    
+
             return;
         }
-    
+
         for (let i = 0; i < nodeRefList.length; i++){
             const curNode = nodeRefList[i];
             const newPos = curNode.pos.clone().add(velocity);
-    
+
             curNode.setPos(newPos);
         }
-    
+
         if (!undoStore.cache.get('move_start')){
             undoStore.cache.set('move_start', nodeRefList[0].pos.clone());
         }
@@ -312,14 +313,14 @@ export default function useNode(
         nodeRef!.onBeforeDelete();
         props.selectedAsset.deleteNode(nodeRef!);
     }
-    
+
     function revertDeleteNodes({nodeRefList, connectionRefMap}: ActionDeleteNodesProps): void {
         const nodeAPI = mainStore.getNodeAPI;
-    
+
         nodeRefList.forEach(node => {
-            node.parentScript.addNode(node.templateId, new Vector(), nodeAPI, node);
+            node.parentScript.addNode(node.templateId, new Vec2(), nodeAPI, node);
         });
-    
+
         connectionRefMap!.forEach((connectionList, parentScript) => {
             connectionList.forEach(connection => {
                 parentScript.addConnection(connection);
@@ -328,12 +329,12 @@ export default function useNode(
             });
         });
     }
-    
+
     function revertMoveNodes({nodeRefList, velocity}: ActionMoveNodesProps): void {
         for (let i = 0; i < nodeRefList.length; i++){
             const curNode = nodeRefList[i];
             const newPos = curNode.pos.clone().subtract(velocity);
-    
+
             curNode.setPos(newPos);
         }
     }

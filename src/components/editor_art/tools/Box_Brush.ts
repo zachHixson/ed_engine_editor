@@ -1,9 +1,12 @@
 import Tool_Base  from './Tool_Base';
 import Core from '@/core';
 
+const { Vec2 } = Core;
+type Vec2 = Core.Vec2;
+
 export default class Box_Brush extends Tool_Base {
     private isFilled: boolean;
-    private startPos: Core.Vector = new Core.Vector();
+    private startPos: Vec2 = new Vec2();
 
     constructor(isFilled = false){
         super();
@@ -50,7 +53,7 @@ export default class Box_Brush extends Tool_Base {
         }
     }
 
-    drawBox(vec1: Core.Vector, vec2: Core.Vector, thickness: number): void {
+    drawBox(vec1: Vec2, vec2: Vec2, thickness: number): void {
         const x1 = Math.min(vec1.x, vec2.x);
         const x2 = Math.max(vec1.x, vec2.x);
         const y1 = Math.min(vec1.y, vec2.y);

@@ -9,7 +9,8 @@ import type { ActionMakeConnectionProps, ActionRemoveConnectionProps } from './u
 import type { ActionMoveNodesProps } from './useNode';
 import type Logic from '../node_components/Logic';
 
-const { Vector } = Core;
+const { Vec2 } = Core;
+type Vec2 = Core.Vec2;
 
 export default function useInput(
     props: { selectedAsset: Logic },
@@ -17,7 +18,7 @@ export default function useInput(
     actionData: ActionData,
     state: LogicEditorState,
     deselectAllNodes: ()=>void,
-    clientToNavPos: (pos: Core.Vector)=>Core.Vector,
+    clientToNavPos: (pos: Vec2)=>Vec2,
     makeConnection: (props: ActionMakeConnectionProps, commit?: boolean)=>void,
     removeConnection: (props: ActionRemoveConnectionProps, commit?: boolean)=>void,
     moveNodes: (props: ActionMoveNodesProps, commit?: boolean)=>void,
@@ -27,18 +28,18 @@ export default function useInput(
     const { isDraggingNode, draggingConnection, inputActive, selectedNodes, visibleNodes, mouseDownPos, shiftDown } = state;
 
     const logicEditorStore = useLogicEditorStore();
-    
+
     const selectionBoxRef = ref<HTMLDivElement>();
 
-    const lastMouseDragPos = new Vector();
+    const lastMouseDragPos = new Vec2();
     const selectionBox = reactive({
         active: false,
-        origin: new Vector(),
-        dim: new Vector(),
+        origin: new Vec2(),
+        dim: new Vec2(),
     });
     const currentSocketOver = ref<iHoverSocket | null>(null);
     const navControlPanelScroll = (event: WheelEvent)=>LogicMainEventBus.onMouseWheel.emit(event);
-    const contextMenuPosition = ref<Core.Vector | null>(null);
+    const contextMenuPosition = ref<Vec2 | null>(null);
 
     onMounted(()=>{
         window.addEventListener('keydown', keyDown);
@@ -67,12 +68,12 @@ export default function useInput(
     });
 
     function mouseClick(event: MouseEvent): void {
-        const mouseUpPos = new Vector(event.clientX, event.clientY);
-    
+        const mouseUpPos = new Vec2(event.clientX, event.clientY);
+
         if (mouseUpPos.equalTo(mouseDownPos)){
             logicEditorStore.selectNavTool(null);
         }
-    
+
         if (
             event.target == event.currentTarget &&
             !shiftDown.value &&
@@ -81,41 +82,41 @@ export default function useInput(
             deselectAllNodes();
         }
     }
-    
+
     function keyDown(event: KeyboardEvent): void {
         hotkeyMap.keyDown(event);
         if (event.key == 'Shift') shiftDown.value = true;
     }
-    
+
     function keyUp(event: KeyboardEvent): void {
         hotkeyMap.keyUp(event);
         if (event.key == 'Shift') shiftDown.value = false;
     }
-    
+
     function mouseDown(event: MouseEvent): void {
         mouseDownPos.x = event.clientX;
         mouseDownPos.y = event.clientY;
         lastMouseDragPos.copy(mouseDownPos);
         LogicMainEventBus.onMouseDown.emit(event);
-    
+
         //position selection box
         if (event.button == 0 && event.target == event.currentTarget && logicEditorStore.getSelectedNavTool == null){
             const vpBounds = nodeViewportRef.value!.getBoundingClientRect();
-            const vpOrigin = new Vector(vpBounds.left, vpBounds.top);
-            const startPos = new Vector(event.clientX, event.clientY).subtract(vpOrigin);
-    
+            const vpOrigin = new Vec2(vpBounds.left, vpBounds.top);
+            const startPos = new Vec2(event.clientX, event.clientY).subtract(vpOrigin);
+
             selectionBox.active = true;
             selectionBox.origin.copy(startPos);
             selectionBox.dim.zero();
         }
     }
-    
+
     function mouseUp(event: MouseEvent): void {
         isDraggingNode.value = false;
         LogicMainEventBus.onMouseUp.emit(event);
         selectionBox.active = false;
         selectNodesInBox();
-    
+
         if (draggingConnection.value){
             const socketOver = currentSocketOver.value as iHoverSocket;
             const connectionObj = draggingConnection.value as Node_Connection;
@@ -124,9 +125,9 @@ export default function useInput(
             const isTrigger = startType == endType && startType == null;
             const typeMatch = isTrigger || Core.canConvertSocket(startType, endType);
             const directionMatch = !!connectionObj.startSocketEl == !!socketOver?.isInput;
-    
+
             draggingConnection.value = null;
-    
+
             if (
                 socketOver &&
                 typeMatch &&
@@ -137,58 +138,58 @@ export default function useInput(
             ){
                 const leftNode = ((socketOver.isInput) ? socketOver.node : connectionObj.endNode) as Node_Obj;
                 const rightNode = (!(socketOver.isInput) ? socketOver.node : connectionObj.startNode) as Node_Obj;
-    
+
                 if (!checkLoop(leftNode, rightNode)){
                     actionData.undoStore.startRecording();
                     makeConnection({connectionObj, socketOver});
                     return;
                 }
             }
-    
+
             actionData.undoStore.startRecording();
             removeConnection({connectionObj});
         }
     }
-    
+
     function mouseEnter(): void {
         if (!inputActive.value){
             hotkeyMap.mouseEnter();
         }
         LogicMainEventBus.onMouseEnter.emit();
     }
-    
+
     function mouseLeave(event: MouseEvent): void {
         hotkeyMap.mouseLeave();
         LogicMainEventBus.onMouseLeave.emit(event);
     }
-    
+
     function mouseMove(event: MouseEvent): void {
         const vpBounds = nodeViewportRef.value!.getBoundingClientRect();
-        const vpOrigin = new Vector(vpBounds.left, vpBounds.top);
-        const newOrigin = new Vector(event.clientX, event.clientY).subtract(vpOrigin);
-        const selectionBoxDim = new Vector(event.clientX, event.clientY).subtract(mouseDownPos);
-    
+        const vpOrigin = new Vec2(vpBounds.left, vpBounds.top);
+        const newOrigin = new Vec2(event.clientX, event.clientY).subtract(vpOrigin);
+        const selectionBoxDim = new Vec2(event.clientX, event.clientY).subtract(mouseDownPos);
+
         LogicMainEventBus.onMouseMove.emit(event);
         selectionBox.dim.copy(selectionBoxDim);
-    
+
         //if rectangle dimensions are negative, set origin to mouse position
         if (selectionBoxDim.x < 0){
             selectionBox.origin.x = newOrigin.x;
             selectionBox.dim.x = Math.abs(selectionBox.dim.x);
         }
-    
+
         if (selectionBoxDim.y < 0){
             selectionBox.origin.y = newOrigin.y;
             selectionBox.dim.y = Math.abs(selectionBox.dim.y);
         }
-    
+
         //calculate node velocity and move nodes if applicable
         if (isDraggingNode.value){
             const startPos = clientToNavPos(lastMouseDragPos);
-            const mousePos = new Vector(event.clientX, event.clientY);
+            const mousePos = new Vec2(event.clientX, event.clientY);
             const mouseNavPos = clientToNavPos(mousePos);
             const velocity = mouseNavPos.subtract(startPos);
-            
+
             moveNodes({nodeRefList: selectedNodes.value, velocity}, false);
             lastMouseDragPos.copy(mousePos);
         }
@@ -196,11 +197,11 @@ export default function useInput(
 
     function contextMenu(e: MouseEvent): void {
         const viewportDim = nodeViewportRef.value!.getBoundingClientRect();
-        const mousePos = new Vector(e.clientX - viewportDim.x, e.clientY - viewportDim.y);
+        const mousePos = new Vec2(e.clientX - viewportDim.x, e.clientY - viewportDim.y);
         e.preventDefault();
         contextMenuPosition.value = mousePos;
     }
-    
+
     function navToolSelected(newTool: Core.NAV_TOOL_TYPE): void {
         const logicEditorStore = useLogicEditorStore();
         logicEditorStore.selectNavTool(newTool);
@@ -213,7 +214,7 @@ export default function useInput(
             const overlapX = selectionBounds.right >= nodeBounds.left && nodeBounds.right >= selectionBounds.left;
             const overlapY = selectionBounds.bottom >= nodeBounds.top && nodeBounds.bottom >= selectionBounds.top;
             const isSelected = selectedNodes.value.find(n => n.nodeId == node.nodeId);
-    
+
             if (overlapX && overlapY && !isSelected){
                 selectedNodes.value.push(node);
             }
@@ -224,43 +225,43 @@ export default function useInput(
         const connectionMap = new Map();
         const checkedNodes = new Map();
         const connections = props.selectedAsset.connections;
-    
+
         for (let i = 0; i < connections.length - 1; i++){
             const connection = connections[i];
             const id = connection.startNode?.nodeId + '/' + connection.startSocketId;
             connectionMap.set(id, connection);
         }
-    
+
         checkedNodes.set(rightNode.nodeId, true);
-    
+
         return _checkLoop({endNode: leftNode}, connectionMap, checkedNodes);
     }
-    
+
     function _checkLoop(connection: {endNode: Node_Obj | null}, connectionMap: Map<string, Node_Connection>, checkedNodes: Map<number, boolean>): boolean {
         const curNode = connection.endNode!;
         const socketArr: {id: string}[] = [];
         let foundLoop = false;
-    
+
         if (checkedNodes.get(curNode.nodeId)){
             return true;
         }
-    
+
         checkedNodes.set(curNode.nodeId, true);
-    
+
         curNode.outTriggers?.forEach(trigger => socketArr.push(trigger));
         curNode.outputs?.forEach(output => socketArr.push(output));
-    
+
         for (let i = 0; !foundLoop && i < socketArr.length; i++){
             const socket = socketArr[i];
             const connectionPath = curNode.nodeId + '/' + socket.id;
             const nextConnection = connectionMap.get(connectionPath);
-    
+
             if (nextConnection){
                 const checkedNodesCopy = new Map(checkedNodes);
                 foundLoop ||= _checkLoop(nextConnection, connectionMap, checkedNodesCopy);
             }
         }
-    
+
         return !!foundLoop;
     }
 

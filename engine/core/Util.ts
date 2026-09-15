@@ -1,9 +1,9 @@
-import { Vector } from "./Vector";
+import { Vec2 } from "linearz";
 
 export interface iBoxCollision {
-    point: Vector;
-    normal: Vector;
-    lineSegment: [Vector, Vector];
+    point: Vec2;
+    normal: Vec2;
+    lineSegment: [Vec2, Vec2];
 }
 
 export function getHighestEndingNumber(list: string[]): number {
@@ -60,7 +60,7 @@ export function easeOutBack(x: number): number {
     return 1 + c3 * xm1 * xm1 * xm1 + c1 * xm1 * xm1;
 }
 
-export function projectSVF(sp: Readonly<Vector>, sv: Readonly<Vector>, bp: Readonly<Vector>, bd: Readonly<Vector>){
+export function projectSVF(sp: Readonly<Vec2>, sv: Readonly<Vec2>, bp: Readonly<Vec2>, bd: Readonly<Vec2>){
     /*
         Algorithm:
         - get SVF (signed vector field) of the box
@@ -75,7 +75,7 @@ export function projectSVF(sp: Readonly<Vector>, sv: Readonly<Vector>, bp: Reado
                     (i.e. both X and Y are negative)
         - Calculate normals based on simplified box SVF
         - Calculate if the point lies on a corner by checking if the box SVF X and Y are equal
-        
+
         NOTE: Vector objects are not used during the calculations because cloning them is very slow
     */
     const bSVFX = Math.abs(sp.x - bp.x) - bd.x;
@@ -102,15 +102,15 @@ export function projectSVF(sp: Readonly<Vector>, sv: Readonly<Vector>, bp: Reado
     const normalY = +(bSVFY * invAspect >= bSVFX) * (+(sp.y > bp.y) * 2 - 1) * +(offsetSVFX != 0);
 
     return (boxMask * distanceMask) > 0 ? {
-        point: new Vector(projectedPointX, projectedPointY),
-        offset: new Vector(projectSVFX, projectSVFY),
-        normal: new Vector(normalX, normalY),
+        point: new Vec2(projectedPointX, projectedPointY),
+        offset: new Vec2(projectSVFX, projectSVFY),
+        normal: new Vec2(normalX, normalY),
     } : null;
 }
 
-export function projectPointOnLine(p: Readonly<Vector>, lp: Readonly<Vector>, normal: Readonly<Vector>): Vector {
+export function projectPointOnLine(p: Readonly<Vec2>, lp: Readonly<Vec2>, normal: Readonly<Vec2>): Vec2 {
     const point = p.clone().subtract(lp);
-    const dest = new Vector(normal.y, normal.x);
+    const dest = new Vec2(normal.y, normal.x);
     const magnitude = point.dot(dest) / dest.magnitude();
     const projectedPoint = dest.multiplyScalar(magnitude);
     return projectedPoint.add(lp);

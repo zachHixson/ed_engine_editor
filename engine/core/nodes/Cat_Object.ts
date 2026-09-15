@@ -1,9 +1,9 @@
+import { Vec2 } from "linearz";
 import { iNodeTemplate } from "./iNodeTemplate";
 import { iEngineNode, iEditorNode, iEventContext} from "../LogicInterfaces";
 import { Instance_Base, Instance_Sprite, Instance_Object, Sprite, Game_Object, Node_Enums, Asset_Base, GenericNode, isEngineNode, Util } from "../core";
 import { assetToInstance, instanceToAsset } from './Socket_Conversions';
 import { SOCKET_TYPE, WIDGET } from "./Node_Enums";
-import { Vector } from '../Vector';
 
 type SortableAsset = {sortOrder: number};
 
@@ -153,7 +153,7 @@ export default catObject;
         const x = this.getInput<number>('x', eventContext);
         const y = this.getInput<number>('y', eventContext);
         const relative = this.getInput<boolean>('relative', eventContext);
-        const pos = relative ? new Vector(x, y).add(eventContext.instance.pos) : new Vector(x, y);
+        const pos = relative ? new Vec2(x, y).add(eventContext.instance.pos) : new Vec2(x, y);
         const nextId = this.engine.room.curInstId;
         const newInstance = assetToInstance(baseAsset, nextId, pos);
         let instanceMap = this.getNodeData<NodeData>();
@@ -278,12 +278,12 @@ export default catObject;
         const startY = this.getInput<number>('start_y', eventContext);
         const distance = this.getInput<number>('distance', eventContext);
         const onlySolid = this.getInput<boolean>('only_solid', eventContext);
-        const startPos = new Vector(
+        const startPos = new Vec2(
             startX || eventContext.instance.pos.x,
             startY || eventContext.instance.pos.y,
         );
         const ignoreSelf = (startX || true) || (startY || true);
-        const rayVector = new Vector(widgetDir[0], widgetDir[1]).multiplyScalar(distance);
+        const rayVector = new Vec2(widgetDir[0], widgetDir[1]).multiplyScalar(distance);
         const nearInstances = this.engine.room.getInstancesInRadius(startPos, distance)
             .filter(i => {
                 const selfCheck = !ignoreSelf || i.id != eventContext.instance.id;
@@ -291,7 +291,7 @@ export default catObject;
                 return selfCheck && solidCheck;
             });
         const halfSpriteDim = Sprite.DIMENSIONS / 2;
-        const spriteDim = new Vector(halfSpriteDim, halfSpriteDim);
+        const spriteDim = new Vec2(halfSpriteDim, halfSpriteDim);
         const collisions: Instance_Base[] = [];
 
         for (let i = 0; i < nearInstances.length; i++){
@@ -352,15 +352,15 @@ export default catObject;
         if (!isNaN(frame)){
             instance.animFrame = frame;
         }
-        
+
         if (!isNaN(fps)){
             instance.fpsOverride = fps;
         }
-        
+
         if (loop != null){
             instance.animLoopOverride = loop;
         }
-        
+
         if (playing != null){
             instance.animPlaying = playing;
         }

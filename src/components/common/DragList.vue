@@ -11,16 +11,16 @@ import Core from '@/core';
 
 const DRAG_DIST = 20;
 
-const { Vector } = Core;
+const { Vec2 } = Core;
 
 const emit = defineEmits(['order-changed']);
 
 const rootEl = shallowRef<HTMLDivElement>();
 const dragLineRef = shallowRef<HTMLDivElement>();
 const observer = new MutationObserver(onContentsChange);
-const mousePos = new Vector(-5, -5);
-const dragOffset = new Vector(0, 0);
-const mouseDownPos = new Vector(0, 0);
+const mousePos = new Vec2(-5, -5);
+const dragOffset = new Vec2(0, 0);
+const mouseDownPos = new Vec2(0, 0);
 let downEl: HTMLDivElement | null;
 let dragEl: HTMLDivElement | null;
 let elHeight: number = 0;
@@ -120,7 +120,7 @@ function mouseDown(event: MouseEvent): void {
     document.addEventListener('mouseup', mouseUp);
     mouseDownPos.set(event.clientX, event.clientY);
     downEl = topLevelEl;
-    dragOffset.copy(mouseDownPos).subtract(new Vector(elBounds.left, elBounds.top));
+    dragOffset.copy(mouseDownPos).subtract(new Vec2(elBounds.left, elBounds.top));
     elHeight = elBounds.bottom - elBounds.top;
 }
 
@@ -158,7 +158,7 @@ function mouseMove(event: MouseEvent): void {
     //check if mouse has started dragging
     if (mouseDownPos){
         const distance = mouseDownPos.distanceTo(mousePos);
-        
+
         if (distance > DRAG_DIST && !isDragging){
             dragStart();
         }
@@ -204,7 +204,7 @@ function dragStart(): void {
         hoverEl = downEl!.previousElementSibling as HTMLDivElement;
         hoverEl.style.height = (elHeight) + 'px';
     }
-    
+
     activateHoverBoundaries();
 }
 
@@ -242,7 +242,7 @@ function handleScroll(): void {
 
 function updateDragIdx(): void {
     const separators = rootEl.value!.querySelectorAll('.hover-boundary');
-    
+
     for (let i = 0; i < separators.length; i++){
         const hoverBoundary = separators[i] as HTMLDivElement;
         const bounds = hoverBoundary.getBoundingClientRect();

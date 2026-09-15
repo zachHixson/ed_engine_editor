@@ -1,18 +1,18 @@
+import { Vec2 } from 'linearz';
 import Renderer from '@engine/Renderer';
 import font from './Font';
-import { Vector } from '@engine/core/core';
 import { WGL } from '@engine/core/core';
 
 export default class Font_Renderer{
     private static readonly _planeGeo = WGL.createPlaneGeo().map(i => (i + 1) * 0.5);
     private static readonly _characterPositions = (()=>{
         const charHCount = font.width / font.charWidth;
-        const positionMap = new Map<string, Vector>();
+        const positionMap = new Map<string, Vec2>();
 
         for (let i = 0; i < font.charKey.length; i++){
             const x = (font.charWidth * i) % font.width;
             const y = Math.floor(i / charHCount) * font.charHeight;
-            positionMap.set(font.charKey[i], new Vector(x, y));
+            positionMap.set(font.charKey[i], new Vec2(x, y));
         }
 
         return positionMap;
@@ -79,11 +79,11 @@ export default class Font_Renderer{
     private _page: number = 0;
     private _fontSize: number = 1;
 
-    pos: Vector;
+    pos: Vec2;
     reveal: number = 0;
     splitPages: boolean = true;
 
-    constructor(gl: WebGL2RenderingContext, pos?: Readonly<Vector>, width?: number, height?: number){
+    constructor(gl: WebGL2RenderingContext, pos?: Readonly<Vec2>, width?: number, height?: number){
         this._gl = gl;
         this._program = WGL.compileProgram(
             this._gl,
@@ -108,7 +108,7 @@ export default class Font_Renderer{
 
         this._width = width ?? Renderer.SCREEN_RES;
         this._height = height ?? Renderer.SCREEN_RES;
-        this.pos = pos?.clone() ?? new Vector(0, 0);
+        this.pos = pos?.clone() ?? new Vec2(0, 0);
     }
 
     get text(){return this._text}
@@ -173,7 +173,7 @@ export default class Font_Renderer{
 
     get fontDim(){
         const {charWidth, charHeight} = font;
-        return new Vector(
+        return new Vec2(
             charWidth * this._fontSize,
             charHeight * this._fontSize
         );
@@ -245,7 +245,7 @@ export default class Font_Renderer{
             for (let i = 0; i < pages.length; i++){
                 pages[i] = [];
             }
-            
+
             for (let i = 0; i < lines.length; i++){
                 const pageIdx = Math.floor(i / linesPerPage);
                 pages[pageIdx].push(lines[i]);
@@ -264,17 +264,17 @@ export default class Font_Renderer{
 
         for (let l = 0; l < page.length; l++){
             const curLine = page[l];
-            
+
             for (let c = 0; c < curLine.length; c++){
                 const x = c * font.charWidth * this._fontSize;
                 const y = -l * font.charHeight * this._fontSize;
-                const charOffset = Font_Renderer._characterPositions.get(curLine[c]) ?? new Vector(0, 0);
+                const charOffset = Font_Renderer._characterPositions.get(curLine[c]) ?? new Vec2(0, 0);
 
                 positionBuffer[bufferIdx + 0] = x + this.pos.x;
                 positionBuffer[bufferIdx + 1] = y - this.pos.y;
                 offsetBuffer[bufferIdx + 0] = charOffset.x;
                 offsetBuffer[bufferIdx + 1] = charOffset.y;
-                
+
                 bufferIdx += 2;
             }
         }
@@ -300,7 +300,7 @@ export default class Font_Renderer{
     render(): void {
         this._gl.useProgram(this._program);
         this._gl.bindVertexArray(this._vao);
-        
+
         this._planeGeoAttrib.enable();
         this._positionAttrib.enable();
         this._charOffsetAttrib.enable();

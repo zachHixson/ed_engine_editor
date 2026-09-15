@@ -3,8 +3,11 @@ import { ref, computed, onMounted } from 'vue';
 import { useLogicEditorStore } from '@/stores/LogicEditor';
 import Core from '@/core';
 
+const { Vec2 } = Core;
+type Vec2 = Core.Vec2;
+
 const props = defineProps<{
-    position: Core.Vector,
+    position: Vec2,
 }>();
 
 const emit = defineEmits(['copy', 'paste']);

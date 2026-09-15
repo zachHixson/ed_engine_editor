@@ -1,4 +1,4 @@
-import { Vector } from "../Vector";
+import { Vec2 } from "linearz";
 import { Instance_Object, InstanceObjectSave } from "./Instance_Object";
 import { Game_Object } from "./Game_Object";
 import { iEngineLogic } from "../LogicInterfaces";
@@ -21,7 +21,7 @@ export class Instance_Logic extends Instance_Object {
     logicId: number;
     logicScript: iEngineLogic | null = null;
 
-    constructor(id: number, pos = new Vector(), logicScriptId: number, logicScriptName: string){
+    constructor(id: number, pos = new Vec2(), logicScriptId: number, logicScriptName: string){
         super(id, pos, Instance_Logic._placeHolderObject);
 
         this.name = logicScriptName + '_' + logicScriptId;
@@ -69,7 +69,7 @@ export class Instance_Logic extends Instance_Object {
     static fromSaveData(data: InstanceLogicSave, objMap: Map<number, Game_Object>): Instance_Logic {
         const instance = new Instance_Logic(
             data.id,
-            Vector.fromArray(data.pos),
+            Vec2.fromArray(data.pos),
             data.logId,
             data.name
         );

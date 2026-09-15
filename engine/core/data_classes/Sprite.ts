@@ -1,5 +1,5 @@
-import {CATEGORY_ID} from '../Enums';
-import {createCanvas, hexToRGBA, RGBAToHex} from '../Draw';
+import { CATEGORY_ID } from '../Enums';
+import { createCanvas, hexToRGBA, RGBAToHex } from '../Draw';
 import { Asset_Base, AssetSave } from './Asset_Base';
 import { NavState, tNavSaveData } from '../NavState';
 
@@ -26,7 +26,7 @@ export class Sprite extends Asset_Base {
     get thumbnail(): HTMLCanvasElement | null {
         return this.frameIsEmpty(0) ? null : this.drawToCanvas(0);
     }
-    
+
     toSaveData(): SpriteSave {
         return {
             ...this.getBaseAssetData(),
@@ -98,7 +98,7 @@ export class Sprite extends Asset_Base {
 
     getFramesCopy(): ImageData[] {
         const newFrames = new Array(this.frames.length);
-        
+
         for (let i = 0; i < newFrames.length; i++){
             const dimensions = this.frames[i].width;
             const dataCopy = Uint8ClampedArray.from(this.frames[i].data);
@@ -181,7 +181,7 @@ export class Sprite extends Asset_Base {
                 for (let p = 0; p < frameList[i].length; p++){
                     let curRange = 0;
                     let isSame = true;
-                    
+
                     //Check current pixel against next pixels until a different one is found
                     for (let check = p + 1; check < frameList[i].length && isSame; check++){
                         if (frameList[i][p] == frameList[i][check]){
@@ -237,7 +237,7 @@ export class Sprite extends Asset_Base {
             const hexPixel = hexFrame[i];
             const filled = hexPixel.length > 0;
             const rgba = filled ? hexToRGBA(hexFrame[i]) : {r: 0, g: 0, b: 0, a: 0};
-            
+
             imgData.data[imgDataIdx + 0] = rgba.r;
             imgData.data[imgDataIdx + 1] = rgba.g;
             imgData.data[imgDataIdx + 2] = rgba.b;

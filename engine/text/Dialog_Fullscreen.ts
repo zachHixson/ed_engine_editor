@@ -1,7 +1,8 @@
+import { Vec2 } from "linearz";
 import Renderer from "@engine/Renderer";
 import Font_Renderer from "./Font_Renderer";
 import Dialog_Base from "./Dialog_Base";
-import { Vector, WGL } from '@engine/core/core';
+import { WGL } from '@engine/core/core';
 
 const MARGIN = 5;
 const LETTERS_PER_SEC = 20;
@@ -83,7 +84,7 @@ export default class Dialog_Fullscreen extends Dialog_Base{
 
         this.fontRenderer = new Font_Renderer(
             this._gl,
-            new Vector(MARGIN, MARGIN),
+            new Vec2(MARGIN, MARGIN),
             backMargin, backMargin - 40
         );
 

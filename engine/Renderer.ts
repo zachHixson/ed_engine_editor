@@ -1,4 +1,5 @@
-import { Room, Instance_Renderer, Instance_Base, Mat3 } from "@engine/core/core";
+import { Mat3 } from "linearz";
+import { Room, Instance_Renderer, Instance_Base } from "@engine/core/core";
 
 export default class Renderer{
     static get SCREEN_RES(){return 240}
@@ -60,7 +61,7 @@ export default class Renderer{
     updateInstance = (instance: Instance_Base, newFrame?: number): void => {
         this._instanceRenderer.updateInstance(instance, newFrame);
     }
-    
+
     updateViewMatrix = (): void => {
         this._viewMatrixNeedsUpdate = true;
     }

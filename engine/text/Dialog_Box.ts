@@ -1,6 +1,7 @@
+import { Vec2 } from "linearz";
 import Renderer from "@engine/Renderer";
 import Font_Renderer from "./Font_Renderer";
-import { Vector, WGL } from "@engine/core/core";
+import { WGL } from "@engine/core/core";
 import Dialog_Base from "./Dialog_Base";
 
 const MARGIN = 0.016;
@@ -84,7 +85,7 @@ export default class Dialog_Box extends Dialog_Base {
     private _vao: WebGLVertexArrayObject;
 
     private _alignment: ALIGN = ALIGN.TOP;
-    
+
     fontRenderer: Font_Renderer;
 
     constructor(gl: WebGL2RenderingContext){
@@ -117,7 +118,7 @@ export default class Dialog_Box extends Dialog_Base {
         //setup font renderer
         this.fontRenderer = new Font_Renderer(
             this._gl,
-            new Vector(textMargin, textMargin),
+            new Vec2(textMargin, textMargin),
             backMargin
         );
 
@@ -150,7 +151,7 @@ export default class Dialog_Box extends Dialog_Base {
 
         this._gl.bindVertexArray(this._vao);
         this._gl.useProgram(this._program);
-        
+
         this._arrowAnimUniform.set(this._arrowAnim);
 
         this._geoAttrib.enable();

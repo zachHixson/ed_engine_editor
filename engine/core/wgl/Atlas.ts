@@ -1,4 +1,4 @@
-import { Vector } from '../Vector';
+import { Vec2 } from 'linearz';
 
 export class Atlas {
     private _gl: WebGL2RenderingContext;
@@ -138,15 +138,15 @@ export class Atlas {
         return this._getFreeIdx(length) != null;
     }
 
-    getImageOffset(id: number | string, frameOffset: number): Vector {
+    getImageOffset(id: number | string, frameOffset: number): Vec2 {
         const get = this._imageInfo.get(id);
 
         if (!get){
             console.warn('Warning: Could not find image id', id, 'in atlas, returning <0,0>');
-            return new Vector(0, 0);
+            return new Vec2(0, 0);
         }
 
-        return Vector.fromArray(this._calculateOffsetPosition(get.location + frameOffset));
+        return Vec2.fromArray(this._calculateOffsetPosition(get.location + frameOffset));
     }
 
     addImage(id: number | string, image: Array<ImageData>, incrementUsage = true): void {
@@ -154,7 +154,7 @@ export class Atlas {
             console.warn('Warning: Adding image that already exists in atlas. Use "atlas.checkExists" first');
             return;
         }
-        
+
         const freeIdx = this._lastFoundLength == image.length ? this._lastFoundIdx : this._getFreeIdx(image.length);
 
         if (freeIdx == null) {

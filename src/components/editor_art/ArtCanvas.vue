@@ -42,14 +42,14 @@ const emit = defineEmits([
 ]);
 
 const artEditorStore = useArtEditorStore();
-const { Vector } = Core;
+const { Vec2 } = Core;
 
 const artCanvasRef = ref<HTMLDivElement>();
 const canvasRef = ref<HTMLCanvasElement>();
 const navHotkeyTool = ref<Core.NAV_TOOL_TYPE | null>(null);
 const previewData: ImageData = new ImageData(Core.Sprite.DIMENSIONS, Core.Sprite.DIMENSIONS);
 const maxZoom = ref(2);
-const mouseCell = new Core.Vector(-20, -20);
+const mouseCell = new Core.Vec2(-20, -20);
 const devicePixelRatio = ref(window.devicePixelRatio);
 let renderer: Art_Canvas_Renderer | null = null;
 
@@ -200,8 +200,8 @@ function updateSpriteTexture(): void {
 }
 
 function updateMouseCell(event: MouseEvent): void {
-    const mousePos = new Vector(event.offsetX, event.offsetY).multiplyScalar(devicePixelRatio.value);
-    const windowDimensions = new Vector(canvasRef.value!.width, canvasRef.value!.height);
+    const mousePos = new Vec2(event.offsetX, event.offsetY).multiplyScalar(devicePixelRatio.value);
+    const windowDimensions = new Vec2(canvasRef.value!.width, canvasRef.value!.height);
 
     //convert from pixels to clip space
     mousePos.divide(windowDimensions).subtractScalar(0.5).multiplyScalar(2);
@@ -237,7 +237,7 @@ function updateMouseCell(event: MouseEvent): void {
             :dpiScale="devicePixelRatio"
             :parentEventBus="ArtCanvasEventBus"
             :invert-y-axis="true"
-            @nav-changed="renderer!.navChanged()"
+            @nav-changed="(renderer! as Art_Canvas_Renderer).navChanged()"
             @tool-selected="enableNav"
             @set-hotkey-tool="navHotkeyTool = $event"/>
     </div>

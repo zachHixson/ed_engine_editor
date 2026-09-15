@@ -1,5 +1,5 @@
-import {CATEGORY_ID} from '../Enums';
-import {ID_Generator} from '../ID_Generator';
+import { CATEGORY_ID } from '../Enums';
+import { ID_Generator } from '../ID_Generator';
 
 export type AssetSave = {
     id: number,
@@ -20,7 +20,7 @@ export abstract class Asset_Base {
         this.name = data.name;
         this.sortOrder = data.sort;
     }
-    
+
     getBaseAssetData(): AssetSave {
         return {
             id: this.id,

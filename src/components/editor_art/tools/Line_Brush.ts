@@ -1,11 +1,14 @@
 import Tool_Base from './Tool_Base';
 import Core from '@/core';
 
+const { Vec2 } = Core;
+
+type Vec2 = Core.Vec2;
 type OffsetFunc = (offset: number)=>number;
 type POrderFunc = (offset: number, p: number)=>{x:number, y:number};
 
 export default class Line_Brush extends Tool_Base {
-    private startPos: Core.Vector = new Core.Vector();
+    private startPos: Vec2 = new Vec2();
 
     mouseDown(event: MouseEvent): void {
         super.mouseDown(event);

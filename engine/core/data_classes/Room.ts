@@ -1,3 +1,4 @@
+import { Vec2 } from 'linearz';
 import { Camera, CameraSave } from './Camera';
 import { Spacial_Collection } from '../Spacial_Collection';
 import { CATEGORY_ID, INSTANCE_TYPE } from '../Enums';
@@ -11,7 +12,6 @@ import { Instance_Object, InstanceObjectSave } from './Instance_Object';
 import { Instance_Logic, InstanceLogicSave } from './Instance_Logic';
 import { Instance_Exit, ExitSave } from './Instance_Exit';
 import { Linked_List } from '../Linked_List';
-import { Vector } from '../Vector';
 import { iEngineLogic } from '../LogicInterfaces';
 import { iEditorLogic } from '../LogicInterfaces';
 import { NavState, tNavSaveData } from '../NavState';
@@ -38,7 +38,7 @@ export class Room extends Asset_Base {
     persist: boolean = false;
     useGravity: boolean = false;
     gravity: number = 9.81;
-    
+
     get category_ID(){return CATEGORY_ID.ROOM}
     get curInstId(){return Room._curInstId++}
     get instances(){return this._instances}
@@ -105,11 +105,11 @@ export class Room extends Asset_Base {
                         if (logicMap){
                             logicInstance.setLogic(assetMap.get(CATEGORY_ID.LOGIC) as Map<number, iEngineLogic>);
                         }
-                        
+
                         return logicInstance;
                 }
             })()!;
-            
+
             this.addInstance(newInstance)
             Room._curInstId = Math.max(newInstance.id + 1, Room._curInstId);
         }
@@ -160,7 +160,7 @@ export class Room extends Asset_Base {
         return this.instances.find(i => i.id == instId) ?? null;
     }
 
-    getInstancesInRadius(pos: Vector, radius: number): Instance_Base[] {
+    getInstancesInRadius(pos: Vec2, radius: number): Instance_Base[] {
         if (!this._spacialCollection) {
             this._noSpacialDataError();
             return [];
@@ -177,7 +177,7 @@ export class Room extends Asset_Base {
         return instance;
     }
 
-    setInstancePosition(instRef: Instance_Base, newPos: Readonly<Vector>): void {
+    setInstancePosition(instRef: Instance_Base, newPos: Readonly<Vec2>): void {
         instRef.setPosition(newPos);
         this._spacialCollection?.updatePosition(instRef.id);
     }

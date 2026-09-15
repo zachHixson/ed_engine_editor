@@ -24,11 +24,12 @@ import Core from '@/core';
 import editIcon from '@/assets/edit.svg';
 
 const { t, te } = useI18nStore();
-const { Vector } = Core;
+const { Vec2 } = Core;
+type Vec2 = Core.Vec2;
 
 const props = defineProps<{
     nodeObj: Node;
-    clientToNavSpace: (pos: Core.Vector)=>Core.Vector;
+    clientToNavSpace: (pos: Vec2)=>Vec2;
     canDrag: boolean;
     selectedNodes: Node[];
     allConnections: Node_Connection[];
@@ -52,7 +53,7 @@ const inputRefs = ref<InstanceType<typeof Socket>[]>([]);
 const outputRefs = ref<InstanceType<typeof Socket>[]>([]);
 const nodeObjRef = reactive(props.nodeObj);
 
-const dragOffset = new Vector();
+const dragOffset = new Vec2();
 const isDragging = ref(false);
 const forceUpdateKey = ref(0);
 
@@ -121,9 +122,9 @@ function mouseDown(event: MouseEvent): void {
         emit('node-down', props.nodeObj);
 
         if (props.canDrag){
-            const mousePos = new Vector(event.clientX, event.clientY);
+            const mousePos = new Vec2(event.clientX, event.clientY);
             const nodeBounds = rootRef.value!.getBoundingClientRect();
-            const nodeOrigin = new Vector(nodeBounds.left + nodeBounds.right, nodeBounds.top + nodeBounds.bottom).divideScalar(2);
+            const nodeOrigin = new Vec2(nodeBounds.left + nodeBounds.right, nodeBounds.top + nodeBounds.bottom).divideScalar(2);
             dragOffset.copy(nodeOrigin.clone().subtract(mousePos));
             isDragging.value = true;
         }
@@ -174,7 +175,7 @@ function socketOver(event: iHoverSocket): void {
     if (event){
         event.node = props.nodeObj;
     }
-    
+
     emit('socket-over', event);
 }
 
@@ -227,7 +228,7 @@ defineExpose({getRelinkInfo});
         class="node"
         :style="
             (errorData?.fatal === false ? 'border-color: #FFA000; border-style: dashed;' : '') +
-            (errorData?.fatal === true ? 'border-color: red; border-style: dashed;' : '') + 
+            (errorData?.fatal === true ? 'border-color: red; border-style: dashed;' : '') +
             (isSelected ? 'border-color: var(--button-norm); border-style: solid;' : '')
             "
         v-tooltip="errorData ? t('' + props.errorData?.msgId) ?? '' : ''"
@@ -289,7 +290,7 @@ defineExpose({getRelinkInfo});
         <div v-if="showTriggers && showDataSockets" class="separator"></div>
         <div v-if="showDataSockets" class="io" :style="nodeObj.stackDataIO ? 'flex-direction: column-reverse;':''">
             <div
-                class="socket-column" 
+                class="socket-column"
                 style="align-items: flex-start"
                 :style="nodeObj.reverseInputs ? 'flex-direction: column-reverse':''">
                 <Socket

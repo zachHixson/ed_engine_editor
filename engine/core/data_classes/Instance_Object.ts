@@ -1,5 +1,5 @@
+import { Vec2 } from 'linearz';
 import { INSTANCE_TYPE } from '../Enums';
-import { Vector } from '../Vector';
 import { Sprite } from './Sprite';
 import { Instance_Exit } from './Instance_Exit';
 import { Game_Object } from './Game_Object';
@@ -24,11 +24,11 @@ export class Instance_Object extends Instance_Base {
     static COLLISION_OVERRIDES = COLLISION_OVERRIDE;
 
     protected  _objRef: Game_Object;
-    
+
     private _hasCollisionEvent: boolean | null = null;
     private _prevExit: {
         exit: Instance_Exit,
-        direction: Readonly<Vector>,
+        direction: Readonly<Vec2>,
     } | null = null;
     private _useIcon = false;
 
@@ -37,7 +37,7 @@ export class Instance_Object extends Instance_Base {
     localVariables: Map<string, iEngineVariable> = new Map();
     exposedProps: Map<string, any> = new Map();
 
-    constructor(id: number, pos: Readonly<Vector>, objRef: Game_Object){
+    constructor(id: number, pos: Readonly<Vec2>, objRef: Game_Object){
         super(id, pos);
 
         this._objRef = objRef;
@@ -165,7 +165,7 @@ export class Instance_Object extends Instance_Base {
     static fromSaveData(data: InstanceObjectSave, objMap: Map<number, Game_Object>): Instance_Object {
         const newObj = new Instance_Object(
             data.id,
-            Vector.fromArray(data.pos),
+            Vec2.fromArray(data.pos),
             objMap.get(data.srcObjID)!
         );
         newObj._loadSaveData(data);
@@ -184,7 +184,7 @@ export class Instance_Object extends Instance_Base {
         this.logic?.executeEvent(eventName, this, data);
     }
 
-    setPrevExit(exit: Instance_Exit, direction: Readonly<Vector>): void {
+    setPrevExit(exit: Instance_Exit, direction: Readonly<Vec2>): void {
         this._prevExit = {
             exit,
             direction,

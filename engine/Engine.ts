@@ -1,3 +1,4 @@
+import { Vec2 } from 'linearz';
 import Renderer from './Renderer';
 import Logic from './Logic';
 import Dialog_Base from './text/Dialog_Base';
@@ -11,7 +12,6 @@ import {
     Instance_Base,
     tSerializedGameData,
     iAnyObj,
-    Vector,
     Instance_Object,
     Util,
     INSTANCE_TYPE,
@@ -61,7 +61,7 @@ interface iCollisionMapping {
     sourceInstance: Instance_Base,
     collisions: Map<number, {
         instance: Instance_Base,
-        normal?: Vector,
+        normal?: Vec2,
         startCollision: number,
         lastChecked: number,
         active: boolean,
@@ -103,8 +103,8 @@ export class Engine implements iEngineCallbacks {
     private _globalVariables: Map<string, iEngineVariable> = new Map();
     private _gameData: iGameData;
     private _mouse = {
-        screenPos: new Vector,
-        pos: new Vector(),
+        screenPos: new Vec2,
+        pos: new Vec2(),
         down: false,
         moved: false,
         buttons: 0,
@@ -170,7 +170,7 @@ export class Engine implements iEngineCallbacks {
         this._dispatchLogicEvent('e_before_destroy');
 
         this._loadedRoom && this._loadedRoom.clearSpacialData();
-        
+
         this._loadedRoom = room.persist ? room : room.clone();
         this._loadedRoom.initSpacialData();
         this._collisionMap = new Map();
@@ -182,7 +182,7 @@ export class Engine implements iEngineCallbacks {
             if (instance.renderable){
                 this._renderer.addInstance(instance);
             }
-            
+
             if (instance.TYPE == INSTANCE_TYPE.OBJECT || instance.TYPE == INSTANCE_TYPE.LOGIC){
                 const objInstance = instance as Instance_Object | Instance_Logic;
                 objInstance.initLocalVariables();
@@ -312,7 +312,7 @@ export class Engine implements iEngineCallbacks {
     private _mapInstanceOverlaps = (): void =>{
         this._loadedRoom!.instances.forEach(instance => {
             if (!instance.hasCollisionEvent) return;
-            
+
             const overlappingInstances = this.getInstancesOverlapping(instance);
 
             //iterate over overlapped instances and make collision entries
@@ -485,11 +485,11 @@ export class Engine implements iEngineCallbacks {
         e.preventDefault();
     }
 
-    private _screenToWorldPos = (pos: Readonly<Vector>): Vector =>{
+    private _screenToWorldPos = (pos: Readonly<Vec2>): Vec2 =>{
         const p = pos.clone();
 
         //convert to clip space
-        p.divide(new Vector(this._canvas.clientWidth, this._canvas.clientHeight));
+        p.divide(new Vec2(this._canvas.clientWidth, this._canvas.clientHeight));
         p.subtractScalar(0.5);
         p.multiplyScalar(2);
         p.y *= -1;
@@ -533,7 +533,7 @@ export class Engine implements iEngineCallbacks {
         this._nodeEventMap = new Map();
     }
 
-    private _filterOverlapping = ({id, pos, TYPE}: {id: number, pos: Vector, TYPE: INSTANCE_TYPE}): Instance_Base[] =>{
+    private _filterOverlapping = ({id, pos, TYPE}: {id: number, pos: Vec2, TYPE: INSTANCE_TYPE}): Instance_Base[] =>{
         const broadCheck = this.room!.getInstancesInRadius(pos, 32);
         return broadCheck.filter(checkEntity => (
                 checkEntity.pos.x + 16 > pos.x &&
@@ -606,7 +606,7 @@ export class Engine implements iEngineCallbacks {
         this._dialogFullscreen.open(endingText, Engine.DEFAULT_ACTION_KEY);
     }
 
-    registerCollision = (sourceInstance: Instance_Base, collisionInstance: Instance_Base, normal?: Vector, force = false): void =>{
+    registerCollision = (sourceInstance: Instance_Base, collisionInstance: Instance_Base, normal?: Vec2, force = false): void =>{
         let sourceInstanceEntry = this._collisionMap.get(sourceInstance.id);
         let subInstanceEntry;
 
@@ -626,7 +626,7 @@ export class Engine implements iEngineCallbacks {
             if (normal){
                 subInstanceEntry.normal = normal;
             }
-            
+
             subInstanceEntry.startCollision = subInstanceEntry.active ? subInstanceEntry.startCollision : this._curTime;
             subInstanceEntry.lastChecked = this._curTime;
             subInstanceEntry.active = true;
@@ -644,9 +644,9 @@ export class Engine implements iEngineCallbacks {
         }
     }
 
-    getInstancesAtPosition = (pos: Vector): Instance_Base[] =>{
+    getInstancesAtPosition = (pos: Vec2): Instance_Base[] =>{
         const broadCheck = this.room!.getInstancesInRadius(pos, 32);
-        return broadCheck.filter(instance => 
+        return broadCheck.filter(instance =>
             Util.isInBounds(
                 pos.x,
                 pos.y,
@@ -684,7 +684,7 @@ export class Engine implements iEngineCallbacks {
         instance.needsRenderUpdate = false;
     }
 
-    setInstancePosition = (instance: Instance_Base, pos: Vector): void =>{
+    setInstancePosition = (instance: Instance_Base, pos: Vec2): void =>{
         this.room!.setInstancePosition(instance, pos);
 
         if (instance.renderable){
@@ -692,13 +692,13 @@ export class Engine implements iEngineCallbacks {
         }
     }
 
-    translateInstance = (instance: Instance_Base, velocity: Readonly<Vector>): void => {
+    translateInstance = (instance: Instance_Base, velocity: Readonly<Vec2>): void => {
         const vel = velocity.clone().scale(this._deltaTime);
         const newPos = instance.pos.clone().add(vel);
         this.setInstancePosition(instance, newPos);
     }
 
-    moveAndSlide = (instance: Instance_Base, velocity: Vector): void => {
+    moveAndSlide = (instance: Instance_Base, velocity: Vec2): void => {
         const vel = velocity.clone().scale(this._deltaTime);
         const nearByInstances = this.room.getInstancesInRadius(instance.pos, vel.length())
             .filter(i => i.isSolid && i.id != instance.id);
@@ -742,7 +742,7 @@ export class Engine implements iEngineCallbacks {
 
     openDialogBox = (text: string, pause: boolean, fullscreen: boolean, interactionKey = Engine.DEFAULT_ACTION_KEY): Dialog_Base =>{
         const dialogBox = fullscreen ? this._dialogFullscreen : this._dialogBox;
-        
+
         dialogBox.onOpen.listen(()=>{
             this.enableInput = false;
             this.enableUpdate = !pause;

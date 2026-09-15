@@ -1,11 +1,12 @@
 import Tool_Base from './Tool_Base';
 import Core from '@/core';
 
-const { Vector } = Core;
+const { Vec2 } = Core;
+type Vec2 = Core.Vec2;
 
 export default class Ellipse_Brush extends Tool_Base {
     private isFilled: boolean;
-    private startPos: Core.Vector = new Core.Vector();
+    private startPos: Vec2 = new Vec2();
 
     constructor(isFilled = false){
         super();
@@ -40,24 +41,24 @@ export default class Ellipse_Brush extends Tool_Base {
         }
     }
 
-    drawEllipse(vec1: Core.Vector, vec2: Core.Vector, thickness: number){
+    drawEllipse(vec1: Vec2, vec2: Vec2, thickness: number){
         const x1 = Math.min(vec1.x, vec2.x);
         const x2 = Math.max(vec1.x, vec2.x);
         const y1 = Math.min(vec1.y, vec2.y);
         const y2 = Math.max(vec1.y, vec2.y);
         const a = (x2 - x1) / 2;
         const b = (y2 - y1) / 2;
-        const midPoint = new Vector(x1 + x2, y1 + y2).divideScalar(2);
+        const midPoint = new Vec2(x1 + x2, y1 + y2).divideScalar(2);
 
         thickness += 1;
 
         for (let x = x1; x <= x2; x++){
             for (let y = y1; y <= y2; y++){
                 if (Core.Util.isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
-                    const curPoint = this.isPointInEllipse(new Vector(x, y), midPoint, a, b);
+                    const curPoint = this.isPointInEllipse(new Vec2(x, y), midPoint, a, b);
                     const innerA = a - thickness;
                     const innerB = b - thickness;
-                    let innerCheck = Math.ceil(this.isPointInEllipse(new Vector(x, y), midPoint, a - thickness, b - thickness));
+                    let innerCheck = Math.ceil(this.isPointInEllipse(new Vec2(x, y), midPoint, a - thickness, b - thickness));
 
                     innerCheck = (innerA > 1 && innerB > 1) ? innerCheck : 2;
 
@@ -72,7 +73,7 @@ export default class Ellipse_Brush extends Tool_Base {
         }
     }
 
-    isPointInEllipse(point: Core.Vector, center: Core.Vector, a: number, b: number){
+    isPointInEllipse(point: Vec2, center: Vec2, a: number, b: number){
         const lhs = Math.pow(point.x - center.x, 2) / Math.pow(a, 2);
         const rhs = Math.pow(point.y - center.y, 2) / Math.pow(b, 2);
         return (lhs + rhs);

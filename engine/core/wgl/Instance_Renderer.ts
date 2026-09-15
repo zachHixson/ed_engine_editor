@@ -1,5 +1,5 @@
+import { Mat3 } from 'linearz';
 import { Instance_Base, WGL } from "../core";
-import { Mat3 } from "../Mat3";
 import { Atlas } from './Atlas';
 import { Color } from "../Draw";
 import { easeOutBack } from "../Util";
@@ -38,7 +38,7 @@ export class Instance_Renderer {
     private static readonly _planeUVs = WGL.createPlaneGeo().map(i => (i + 1) * 0.5);
     private static readonly _vertexSource = `
         precision highp float;
-        
+
         uniform mat3 u_viewMatrix;
         uniform float u_instanceScale;
 
@@ -390,7 +390,7 @@ export class Instance_Renderer {
 
     updateSprite(id: number | string, sprite: ImageData[]): void {
         const pool = this._atlasPool.find((atlasData) => atlasData.atlas.checkExists(id));
-        
+
         if (!pool) return;
 
         pool.atlas.updateImage(id, sprite);
@@ -398,9 +398,9 @@ export class Instance_Renderer {
 
     render(): void {
         this._gl.useProgram(this._program);
-        
+
         this._gl.viewport(0, 0, this._gl.canvas.width, this._gl.canvas.height);
-        
+
         this._gl.enable(this._gl.DEPTH_TEST);
         this._gl.depthMask(true);
         this._gl.depthFunc(this._gl.LEQUAL);

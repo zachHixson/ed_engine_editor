@@ -1,8 +1,8 @@
 <script lang="ts">
 export interface imEvent{
     type: Core.MOUSE_EVENT,
-    canvasPos: Core.Vector,
-    worldCell: Core.Vector,
+    canvasPos: Core.Vec2,
+    worldCell: Core.Vec2,
 }
 </script>
 
@@ -177,9 +177,9 @@ function resize(): void {
 
 function emitMouseEvent(event: MouseEvent, type: Core.MOUSE_EVENT): void {
     if (event.button == 0 && roomEditorStore.getSelectedNavTool == null && navHotkeyTool == null){
-        const canvasPos = new Core.Vector(event.offsetX, event.offsetY);
+        const canvasPos = new Core.Vec2(event.offsetX, event.offsetY);
         const worldCell = renderer.getMouseWorldCell();
-        
+
         emit('mouse-event', {type, canvasPos, worldCell} satisfies imEvent);
     }
 }

@@ -70,7 +70,7 @@ function setCardinal(event: MouseEvent, x: number, y: number){
 
 function setArbitrary(event: MouseEvent){
     const { left: wheelLeft, top: wheelTop, right: wheelRight} = wheelRef.value!.getBoundingClientRect();
-    const pos = new Core.Vector(
+    const pos = new Core.Vec2(
             event.clientX - wheelLeft,
             event.clientY - wheelTop
         )

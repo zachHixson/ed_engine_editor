@@ -1,5 +1,5 @@
+import { Vec2 } from 'linearz';
 import { INSTANCE_TYPE } from '../Enums';
-import { Vector } from '../Vector';
 import { Draw } from '../core';
 import { Sprite, Util, Node_Enums } from '../core';
 import type Engine from '@engine/Engine';
@@ -14,7 +14,7 @@ export enum InstanceAnimEvent {
 export interface iCollisionEvent {
     type: Node_Enums.COLLISION_EVENT,
     instance: Instance_Base,
-    normal?: Vector,
+    normal?: Vec2,
 }
 
 type vec = [number, number];
@@ -35,8 +35,8 @@ export type InstanceBaseSave = {
 export abstract class Instance_Base{
     private _animProgress: number = 0;
     private _engine: Engine | null = null;
-    private _physForce: Vector = new Vector(0, 0);
-    private _cachedTotalVelocity = new Vector(0, 0);
+    private _physForce: Vec2 = new Vec2(0, 0);
+    private _cachedTotalVelocity: Vec2 = new Vec2(0, 0);
 
     protected _sprite: Sprite | null = null;
     protected _onGround: boolean = false;
@@ -44,10 +44,10 @@ export abstract class Instance_Base{
 
     id: number;
     name: string;
-    pos: Vector;
-    lastPos: Vector = new Vector();
-    velocity: Vector = new Vector(0, 0);
-    moveVector: Vector = new Vector(0, 0);
+    pos: Vec2;
+    lastPos: Vec2 = new Vec2();
+    velocity: Vec2 = new Vec2(0, 0);
+    moveVector: Vec2 = new Vec2(0, 0);
     groups: string[] = [];
     depthOffset: number = 0;
     needsRenderUpdate = false;
@@ -59,7 +59,7 @@ export abstract class Instance_Base{
     flipV: boolean = false;
     backAnim = 1;
 
-    constructor(id: number, pos: Readonly<Vector> = new Vector()){
+    constructor(id: number, pos: Readonly<Vec2> = new Vec2()){
         this.id = id;
         this.name = this.id.toString();
         this.pos = pos.clone();
@@ -104,7 +104,7 @@ export abstract class Instance_Base{
     get onGround(){return this._onGround};
     get applyGravity(){return false};
     set applyGravity(newVal: boolean){};
-    get totalVelocity(){return this._cachedTotalVelocity as Readonly<Vector>};
+    get totalVelocity(){return this._cachedTotalVelocity as Readonly<Vec2>};
     abstract get frameDataId(): number | string;
     abstract get frameData(): Array<ImageData>;
 
@@ -160,7 +160,7 @@ export abstract class Instance_Base{
 
         if (event.normal && event.type != Node_Enums.COLLISION_EVENT.STOP){
             this._onGround ||= event.normal.y > 0;
-            
+
             //Arrest velocity in direction of collision
             if (-Math.sign(event.normal.x) == Math.sign(this._physForce.x)){
                 this._physForce.x = 0;
@@ -213,7 +213,7 @@ export abstract class Instance_Base{
                 (this._animProgress != oldProgress) &&
                 (this._animProgress == (Math.sign(this.fps) + 1) / 2)
             )
-            
+
             if (newFrame != oldFrame){
                 this.needsRenderUpdate = true;
                 this.onAnimationChange(InstanceAnimEvent.TICK);
@@ -225,7 +225,7 @@ export abstract class Instance_Base{
         }
     }
 
-    setPosition(newPos: Readonly<Vector>): void {
+    setPosition(newPos: Readonly<Vec2>): void {
         this.lastPos.copy(this.pos);
         this.pos.copy(newPos);
     }
@@ -233,7 +233,7 @@ export abstract class Instance_Base{
     loadBaseSaveData(data: InstanceBaseSave): void {
         this.id = data.id;
         this.name = data.name;
-        this.pos = Vector.fromArray(data.pos);
+        this.pos = Vec2.fromArray(data.pos);
         this._zDepthOverride = data.zDepOvr != '' ? data.zDepOvr : null;
         this.groups = data.groups;
         this.startFrameOverride = data.strtFrmOvr === '' ? null : data.strtFrmOvr;
@@ -285,7 +285,7 @@ export abstract class Instance_Base{
         return !!this.groups.find(g => g == group);
     }
 
-    applyForce(force: Vector): void {
+    applyForce(force: Vec2): void {
         this._physForce.add(force);
     }
 }

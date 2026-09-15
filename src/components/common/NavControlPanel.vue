@@ -12,7 +12,7 @@ import Core from '@/core';
 const ZOOM_SENSITIVITY = 0.03;
 const ZOOM_WHEEL_AMT = 0.8;
 
-const { NAV_TOOL_TYPE, Vector } = Core;
+const { NAV_TOOL_TYPE, Vec2 } = Core;
 
 const props = defineProps<{
     navState: Core.NavState,
@@ -55,14 +55,14 @@ const controls: iControl[] = [
         action: () => centerView()
     }
 ];
-const containerDimensions = new Vector(0, 0);
+const containerDimensions = new Vec2(0, 0);
 const mouse = {
-    position: new Vector(0, 0),
+    position: new Vec2(0, 0),
     down: false,
     mmDown: false,
-    downPosition: new Vector(0, 0),
-    lastPosition: new Vector(0, 0),
-    dragDistance: new Vector(0, 0),
+    downPosition: new Vec2(0, 0),
+    lastPosition: new Vec2(0, 0),
+    dragDistance: new Vec2(0, 0),
 };
 const hotkeyMap = new HotkeyMap();
 const hotkeyDown = hotkeyMap.keyDown.bind(hotkeyMap);
@@ -195,19 +195,19 @@ function zoom(): void {
 function centerView(): void {
     const dpiScale = props.dpiScale;
 
-    const cornerUL = new Vector(
+    const cornerUL = new Vec2(
         props.contentsBounds[0],
         props.contentsBounds[1]
     );
-    const cornerBR = new Vector(
+    const cornerBR = new Vec2(
         props.contentsBounds[2],
         props.contentsBounds[3]
     );
-    const dimensions = new Vector(
+    const dimensions = new Vec2(
         Math.abs(cornerUL.x - cornerBR.x),
         Math.abs(cornerUL.y - cornerBR.y)
     );
-    const midPoint = new Vector(
+    const midPoint = new Vec2(
         (props.contentsBounds[0] + props.contentsBounds[2]) / -2,
         (props.contentsBounds[1] + props.contentsBounds[3]) / 2
     );

@@ -1,6 +1,6 @@
+import { Vec2 } from "linearz";
 import { iNodeTemplate } from "./iNodeTemplate";
-import {SOCKET_TYPE, WIDGET} from './Node_Enums';
-import { Vector } from '../Vector';
+import { SOCKET_TYPE, WIDGET } from './Node_Enums';
 import { iEditorNode, iEngineNode, iEventContext } from '../LogicInterfaces';
 import { Instance_Base, Sprite, Util, Node_Enums } from '../core';
 
@@ -13,7 +13,7 @@ export default catMovement;
         const xInp = this.getInput<number & string>('x', eventContext);
         const yInp = this.getInput<number & string>('y', eventContext);
         const relative = this.getInput<boolean>('relative', eventContext);
-        let newPos: Vector;
+        let newPos: Vec2;
 
         if (instance == Node_Enums.THROWN){
             this.triggerOutput('_o', eventContext);
@@ -21,21 +21,21 @@ export default catMovement;
         }
 
         if (relative){
-            const offset = new Vector(
+            const offset = new Vec2(
                 xInp === '' ? 0 : xInp,
                 yInp === '' ? 0 : yInp
             );
             newPos = offset.add(instance.pos);
         }
         else{
-            newPos = new Vector(
+            newPos = new Vec2(
                 xInp === '' ? instance.pos.x : xInp,
                 yInp === '' ? instance.pos.y : yInp
             );
         }
 
         this.engine.setInstancePosition(eventContext.instance, newPos);
-        
+
         this.triggerOutput('_o', eventContext);
     }
 
@@ -69,7 +69,7 @@ export default catMovement;
             return;
         }
 
-        const desiredDest = relative ? new Vector(x, y).add(instance.pos) : new Vector(x, y).subtractScalar(halfDim);
+        const desiredDest = relative ? new Vec2(x, y).add(instance.pos) : new Vec2(x, y).subtractScalar(halfDim);
 
         //jump if no collision on instance
         if (!instance.isSolid){
@@ -84,7 +84,7 @@ export default catMovement;
         //setup raycast check
         const NORM_OFFSET = 0.0001;
         const instCenter = instance.pos.clone().addScalar(halfDim);
-        const checkDim = new Vector(Sprite.DIMENSIONS, Sprite.DIMENSIONS).subtractScalar(NORM_OFFSET); //boxes are made slightly smaller to allow for 1 tile wide paths
+        const checkDim = new Vec2(Sprite.DIMENSIONS, Sprite.DIMENSIONS).subtractScalar(NORM_OFFSET); //boxes are made slightly smaller to allow for 1 tile wide paths
         const velocity = desiredDest.clone().subtract(instance.pos);
         const nearBodies = this.engine.room.getInstancesInRadius(instance.pos, velocity.length())
             .filter(i => {
@@ -92,7 +92,7 @@ export default catMovement;
                 return selfCheck && i.isSolid;
             });
         const raycastBodies: {body: Instance_Base, checkDist: number}[] = [];
-        
+
         let nearestDist = instance.pos.distanceNoSqrt(desiredDest);
         let nearestDest = desiredDest.addScalar(halfDim);
         let nearestCastResult: ReturnType<typeof Util.projectSVF> | null = null;
@@ -146,12 +146,12 @@ export default catMovement;
             return;
         }
 
-        //final collision point is offset 
+        //final collision point is offset
         const normalOffset = nearestCastResult.normal.clone().scale(NORM_OFFSET);
         const finalDest = nearestDest
             .subtractScalar(halfDim)
             .add(normalOffset);
-        
+
         //round single axis based on direction of collision normal
         finalDest.x = nearestCastResult.normal.x ? Math.round(finalDest.x) : finalDest.x;
         finalDest.y = nearestCastResult.normal.y ? Math.round(finalDest.y) : finalDest.y;
@@ -161,7 +161,7 @@ export default catMovement;
         this.triggerOutput('_o', eventContext);
     }
 
-    function checkExitBacktrack(this: iEngineNode, eventContext: iEventContext, newPos: Readonly<Vector>): boolean {
+    function checkExitBacktrack(this: iEngineNode, eventContext: iEventContext, newPos: Readonly<Vec2>): boolean {
         if (!(eventContext.instance.prevExit && eventContext.instance.prevExit?.exit.detectBacktracking)) return false;
 
         const direction = newPos.clone().subtract(eventContext.instance.pos).normalize();
@@ -196,7 +196,7 @@ export default catMovement;
     function setVelocity(this: iEngineNode, eventContext: iEventContext): void {
         const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
         const speed = this.getInput<number>('speed', eventContext);
-        const direction = Vector.fromArray(this.widgetData);
+        const direction = Vec2.fromArray(this.widgetData);
 
         if (instance != Node_Enums.THROWN){
             instance.velocity.copy(direction.multiplyScalar(speed));
@@ -231,7 +231,7 @@ export default catMovement;
     function moveDirection(this: iEngineNode, eventContext: iEventContext): void {
         const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
         const speed = this.getInput<number>('speed', eventContext);
-        const direction = Vector.fromArray(this.widgetData);
+        const direction = Vec2.fromArray(this.widgetData);
         const velocity = direction.scale(speed);
 
         if (instance != Node_Enums.THROWN){
@@ -267,7 +267,7 @@ export default catMovement;
     function push(this: iEngineNode, eventContext: iEventContext): void {
         const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
         const strength = this.getInput<number>('strength', eventContext);
-        const force = Vector.fromArray(this.widgetData).scale(strength);
+        const force = Vec2.fromArray(this.widgetData).scale(strength);
 
         if (instance != Node_Enums.THROWN){
             instance.applyForce(force);

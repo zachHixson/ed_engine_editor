@@ -1,8 +1,8 @@
+import { Vec2 } from "linearz";
 import { SOCKET_TYPE } from "./Node_Enums";
 import { CATEGORY_ID, INSTANCE_TYPE } from "../Enums";
 import iGameData from "@engine/iGameData";
 import {
-    Vector,
     Sprite,
     Game_Object,
     Asset_Base,
@@ -22,9 +22,9 @@ const {
     BOOL,
 } = SOCKET_TYPE;
 
-export function assetToInstance(asset: Asset_Base | iEngineLogic, id: number, pos: Vector): Instance_Base | null {
+export function assetToInstance(asset: Asset_Base | iEngineLogic, id: number, pos: Vec2): Instance_Base | null {
     if (!asset) return null;
-    
+
     switch(asset.category_ID){
         case CATEGORY_ID.SPRITE:
             const sprite = asset as Sprite;

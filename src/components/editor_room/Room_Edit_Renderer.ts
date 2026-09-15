@@ -8,7 +8,8 @@ import exitIconRaw from '@/assets/exit.svg?raw';
 import endIconRaw from '@/assets/end.svg?raw';
 import logicIconRaw from '@/assets/logic.svg?raw';
 
-const { Vector, Mat3, WGL } = Core;
+const { Vec2, Mat3, WGL } = Core;
+type Vec2 = Core.Vec2;
 
 const ICON_PADDING = 0.85;
 let iconsLoaded = false;
@@ -25,11 +26,11 @@ export default class Room_Edit_Renderer {
     private _instanceRenderer: Core.Instance_Renderer;
     private _iconRenderer: Core.Instance_Renderer;
     private _uiRenderer: UI_Renderer;
-    private _screenBounds = {min: new Vector(), max: new Vector()};
+    private _screenBounds = {min: new Vec2(), max: new Vec2()};
     private _viewMatrix = new Mat3();
     private _viewMatrixInv = new Mat3();
     private _viewMatrixNeedsUpdate = true;
-    private _mouseCell = new Vector(0, 0);
+    private _mouseCell = new Vec2(0, 0);
     private _backAnimQueue = new Map<number, Core.Instance_Base>();
 
     constructor(canvas: HTMLCanvasElement, navState: Core.NavState){
@@ -82,7 +83,7 @@ export default class Room_Edit_Renderer {
         //update matrix
         const zoom = this._navState.zoomFac * this.UNIT_WIDTH;
         const { x, y } = this._navState.offset;
-        const dimensions = new Vector(this._gl.canvas.width / 2, this._gl.canvas.height / 2);
+        const dimensions = new Vec2(this._gl.canvas.width / 2, this._gl.canvas.height / 2);
         const zoomMat = new Mat3([zoom, 0, 0, 0, zoom, 0, 0, 0, 1]);
         const tranMat = new Mat3([1, 0, x, 0, 1, y, 0, 0, 1]);
         const aspectMat = new Mat3([
@@ -108,7 +109,7 @@ export default class Room_Edit_Renderer {
         this.initInstances();
         this.queueRender();
     }
-    
+
     getMouseWorldCell(){
         return this._mouseCell.clone();
     }
@@ -129,9 +130,9 @@ export default class Room_Edit_Renderer {
             this._uiRenderer.updateSelection(this._selectedInstance.pos, true);
         }
         else{
-            this._uiRenderer.updateSelection(new Vector(0,0), false);
+            this._uiRenderer.updateSelection(new Vec2(0,0), false);
         }
-        
+
         this.queueRender();
     }
 
@@ -142,8 +143,8 @@ export default class Room_Edit_Renderer {
 
     mouseMove(event: MouseEvent){
         //convert to clip space
-        const mousePos = new Vector(event.offsetX, event.offsetY).multiplyScalar(devicePixelRatio);
-        const windowDimensions = new Vector(this._canvas.width, this._canvas.height);
+        const mousePos = new Vec2(event.offsetX, event.offsetY).multiplyScalar(devicePixelRatio);
+        const windowDimensions = new Vec2(this._canvas.width, this._canvas.height);
         mousePos.divide(windowDimensions).subtractScalar(0.5).multiplyScalar(2);
         mousePos.y *= -1;
 
@@ -197,7 +198,7 @@ export default class Room_Edit_Renderer {
             instance.backAnim = 0;
             this._backAnimQueue.set(instance.id, instance);
         }
-        
+
         renderer.addInstance(instance, frame);
         this.queueRender();
     }
@@ -213,7 +214,7 @@ export default class Room_Edit_Renderer {
         const frame = hasEditorFrame ? instance.startFrame : 0;
         const renderer = this._getRenderer(hasEditorFrame);
         const otherRenderer = this._getRenderer(!hasEditorFrame);
-        
+
         if (renderer.hasInstance(instance.id)){
             renderer.updateInstance(instance, frame);
         }
@@ -363,7 +364,7 @@ class UI_Renderer {
                 gl_FragColor = mix(gl_FragColor, vec4(1.0, 0.5, 0.0, 1.0), xAxis);
                 gl_FragColor = mix(gl_FragColor, vec4(0.5, 1.0, 0.0, 1.0), yAxis);
             }
-            
+
             gl_FragColor = mix(gl_FragColor, vec4(vec3(u_iconColor), cameraIcon.a), cameraIcon.a);
             gl_FragColor = mix(gl_FragColor, vec4(vec3((u_iconColor + 0.5) * 0.4), 1.0), cameraBounds);
             gl_FragColor = mix(gl_FragColor, vec4(0.0, 0.5, 1.0, 1.0), selectionBox);
@@ -404,7 +405,7 @@ class UI_Renderer {
         this._vao = this._gl.createVertexArray()!;
 
         this._gl.bindVertexArray(this._vao);
-        
+
         this._positionAttribute.set(new Float32Array(UI_Renderer._planeGeo), 2, this._gl.FLOAT);
         this._cameraIconUniform.set(UI_Renderer.CAMERA_ICON);
 
@@ -435,8 +436,8 @@ class UI_Renderer {
     updateViewMatrix(viewMat: Core.Mat3, viewMatInv: Core.Mat3): void {
         const screenWidth = this._gl.canvas.width;
         const transposed = viewMatInv.clone().transpose();
-        const p1 = new Vector(0, 0).multiplyMat3(transposed);
-        const p2 = new Vector(1/(screenWidth/2), 0).multiplyMat3(transposed);
+        const p1 = new Vec2(0, 0).multiplyMat3(transposed);
+        const p2 = new Vec2(1/(screenWidth/2), 0).multiplyMat3(transposed);
         const pixelWidth = (p2.x - p1.x);
 
         //update uniforms
@@ -445,17 +446,17 @@ class UI_Renderer {
         this._pixelWidthUniform.set(pixelWidth);
     }
 
-    updateMousePos(mouseCell: Core.Vector): void {
+    updateMousePos(mouseCell: Vec2): void {
         this._gl.useProgram(this._program);
         this._cursorUniform.set(mouseCell.x, mouseCell.y);
     }
 
-    updateCamera(pos: Core.Vector, size: number): void {
+    updateCamera(pos: Vec2, size: number): void {
         this._gl.useProgram(this._program);
         this._cameraUniform.set(pos.x - 8, pos.y - 8, size);
     }
 
-    updateSelection(pos: Core.Vector, enabled: boolean): void {
+    updateSelection(pos: Vec2, enabled: boolean): void {
         this._gl.useProgram(this._program);
         this._selectionUniform.set(pos.x, pos.y, enabled);
     }

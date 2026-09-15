@@ -1,6 +1,6 @@
-import { Vector } from '../Vector';
+import { Vec2 } from 'linearz';
 import { iCollisionEvent, Instance_Base, InstanceBaseSave } from './Instance_Base';
-import {INSTANCE_TYPE} from '../Enums';
+import { INSTANCE_TYPE } from '../Enums';
 import { Instance_Object } from './Instance_Object';
 import { Game_Object } from './Game_Object';
 import { Camera } from './Camera';
@@ -57,7 +57,7 @@ export class Instance_Exit extends Instance_Base {
 
     get hasCollisionEvent(){return true};
 
-    private _loadRoom(objInstance: Instance_Object, instDirection?: Readonly<Vector>){
+    private _loadRoom(objInstance: Instance_Object, instDirection?: Readonly<Vec2>){
         const EXIT_TYPES = Game_Object.EXIT_TYPES;
         const engine = Instance_Exit.engine!;
         const exitBehavior = objInstance.objRef.exitBehavior;
@@ -66,11 +66,11 @@ export class Instance_Exit extends Instance_Base {
         //remove object from room so it doesn't respawn on re-enter
         if (exitBehavior != EXIT_TYPES.TRANSITION_ONLY) {
             const prevRoomData = engine.getRoomData(engine.room.id)!;
-            
+
             if (prevRoomData.hasInstance(objInstance.id)){
                 prevRoomData.removeInstance(objInstance.id);
             }
-            
+
             objInstance.lastPos.copy(objInstance.pos);
         }
 
@@ -101,7 +101,7 @@ export class Instance_Exit extends Instance_Base {
 
     override onUpdate(): void {
         if (Instance_Exit.destExit != this) return;
-        
+
         const overlapping = Instance_Exit.engine!.getInstancesOverlapping(this).filter(i => i.id == Instance_Exit.exitInstance?.id);
 
         if (!overlapping.length) {
@@ -121,7 +121,7 @@ export class Instance_Exit extends Instance_Base {
         this.triggerExit(event.instance as Instance_Object);
     }
 
-    triggerExit(objInstance: Instance_Object, instDirection?: Vector): void {
+    triggerExit(objInstance: Instance_Object, instDirection?: Vec2): void {
         if (this.destinationRoom != null){
             const transition = Instance_Exit.engine!.setTransition(this.transition);
             Instance_Exit.exitInstance = objInstance;
@@ -172,7 +172,7 @@ export class Instance_Exit extends Instance_Base {
     }
 
     static fromSaveData(data: ExitSave): Instance_Exit {
-        return new Instance_Exit(data.id, Vector.fromArray(data.pos))._loadSaveData(data);
+        return new Instance_Exit(data.id, Vec2.fromArray(data.pos))._loadSaveData(data);
     }
 
     private _loadSaveData(data: ExitSave): Instance_Exit {

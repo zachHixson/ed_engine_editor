@@ -1,8 +1,8 @@
+import { Vec2 } from 'linearz';
 import {SOCKET_TYPE, WIDGET, COLLISION_EVENT} from './Node_Enums';
 import { iNodeTemplate } from './iNodeTemplate';
 import { iEngineNode, iEventContext } from '../LogicInterfaces';
 import { MOUSE_EVENT } from '../Enums';
-import { Vector } from '../Vector';
 import { isEngineNode } from './Node_Library';
 import { type GenericNode } from './Node_Library';
 import { Instance_Base, InstanceAnimEvent } from '../core';
@@ -42,10 +42,10 @@ export default catEvents;
         lastData: {
             type: MOUSE_EVENT.DOWN | MOUSE_EVENT.UP,
             buttons: number,
-            pos: Vector,
+            pos: Vec2,
             instances: Instance_Base[],
         } | undefined,
-        downPos: Vector | undefined,
+        downPos: Vec2 | undefined,
     };
 
     const btnMap = {
@@ -197,7 +197,7 @@ export default catEvents;
                 this.setNodeData<NodeData>(new Map());
                 return;
             }
-            
+
             this.stackDataIO = true;
         },
         execute(this: iEngineNode, eventContext: iEventContext, data: any){
@@ -283,7 +283,7 @@ export default catEvents;
             const name = this.getInput<string>('name', eventContext);
 
             if (name.trim().length < 0) return;
-            
+
             if (data.name == name){
                 this.triggerOutput('_o', eventContext);
             }

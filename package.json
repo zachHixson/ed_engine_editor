@@ -16,13 +16,14 @@
         "type-check": "vue-tsc --noEmit"
     },
     "dependencies": {
-        "@vue/cli-shared-utils": "^5.0.8",
+        "linearz": "^1.0.0",
         "pinia": "^3.0.3",
         "vue": "^3.2.45"
     },
     "devDependencies": {
         "@types/node": "^18.11.12",
         "@vitejs/plugin-vue": "^4.0.0",
+        "@vue/cli-shared-utils": "^5.0.8",
         "@vue/tsconfig": "^0.1.3",
         "canvas": "^3.1.0",
         "esbuild": "^0.16.10",

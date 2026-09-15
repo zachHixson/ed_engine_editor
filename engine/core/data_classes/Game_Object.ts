@@ -1,5 +1,5 @@
 import { Asset_Base, AssetSave } from './Asset_Base';
-import {CATEGORY_ID} from '../Enums';
+import { CATEGORY_ID } from '../Enums';
 import { Sprite } from './Sprite';
 import { iEngineLogic } from '../LogicInterfaces';
 
@@ -115,7 +115,7 @@ export class Game_Object extends Asset_Base {
     purgeMissingReferences(sprites: Sprite[]): void {
         if (this.sprite){
             const spriteFound = sprites.find(s => s.id == this.sprite?.id);
-            
+
             if (!spriteFound){
                 this.sprite = null;
             }

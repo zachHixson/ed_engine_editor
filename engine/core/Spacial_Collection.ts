@@ -1,12 +1,12 @@
+import { Vec2 } from 'linearz';
 import { Linked_List, Node as LL_Node } from "./Linked_List";
-import { Vector } from "./Vector";
 import { mod } from './Util';
 import { iAnyObj } from "./interfaces";
 
 interface iSpacialObject {
     id: number,
     zDepth: number,
-    pos: Vector,
+    pos: Vec2,
     clone(): any,
     toSaveData?(): iAnyObj,
 }
@@ -70,7 +70,7 @@ export class Spacial_Collection<T extends iSpacialObject> {
         return this._map.get(id)?.data ?? null;
     }
 
-    getByRadius(pos: Readonly<Vector>, radius: number): T[] {
+    getByRadius(pos: Readonly<Vec2>, radius: number): T[] {
         const surveyCellCount = Math.floor(Math.max(radius, this._cellDimensions) / this._cellDimensions);
         const surveyGridSize = surveyCellCount * 2 + 1;
         const startPos = pos.clone().subtractScalar(surveyCellCount * this._cellDimensions);
@@ -78,7 +78,7 @@ export class Spacial_Collection<T extends iSpacialObject> {
 
         for (let y = 0; y < surveyGridSize; y++){
             for (let x = 0; x < surveyGridSize; x++){
-                const offset = new Vector(x, y).scale(this._cellDimensions);
+                const offset = new Vec2(x, y).scale(this._cellDimensions);
                 const curPos = startPos.clone().add(offset);
                 const curCellIdx = this._posToCellIdx(curPos);
                 const curCell = this._spacialGrid[curCellIdx];
@@ -94,7 +94,7 @@ export class Spacial_Collection<T extends iSpacialObject> {
         const spacialRef = this._map.get(id);
 
         if (!spacialRef) return;
-        
+
         const oldCellIdx = this._posToCellIdx(spacialRef.pos);
         const newCellIdx = this._posToCellIdx(spacialRef.data.pos);
 
@@ -109,8 +109,8 @@ export class Spacial_Collection<T extends iSpacialObject> {
         spacialRef.pos.copy(spacialRef.data.pos);
     }
 
-    private _posToCellIdx(pos: Vector): number {
-        const boundedPos = new Vector(mod(pos.x, this._size), mod(pos.y, this._size));
+    private _posToCellIdx(pos: Vec2): number {
+        const boundedPos = new Vec2(mod(pos.x, this._size), mod(pos.y, this._size));
         const cell = boundedPos.scale(1/this._cellDimensions).floor();
         return (cell.y * this._divisions) + cell.x;
     }
@@ -118,11 +118,11 @@ export class Spacial_Collection<T extends iSpacialObject> {
 
 class Spacial_Reference<T> {
     data: T;
-    pos: Vector;
+    pos: Vec2;
     gridNode?: LL_Node<Spacial_Reference<T>>;
     gridCell?: Linked_List<Spacial_Reference<T>>;
 
-    constructor(data: T, pos: Vector){
+    constructor(data: T, pos: Vec2){
         this.data = data;
         this.pos = pos.clone();
     }

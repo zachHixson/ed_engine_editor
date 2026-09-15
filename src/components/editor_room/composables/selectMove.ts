@@ -5,7 +5,10 @@ import { RoomMainEventBus } from '../RoomMain.vue';
 import Core from '@/core';
 import { ref, nextTick } from 'vue';
 
-type MoveProps = {instId?: number, instRef?: Core.Instance_Base, newPos?: Readonly<Core.Vector>, oldPos?: Core.Vector};
+const { Vec2 } = Core;
+type Vec2 = Core.Vec2;
+
+type MoveProps = {instId?: number, instRef?: Core.Instance_Base, newPos?: Readonly<Vec2>, oldPos?: Vec2};
 
 export function useSelectMove(args: iActionArguments){
     const overlapBox = ref<HTMLDivElement>();
@@ -15,15 +18,15 @@ export function useSelectMove(args: iActionArguments){
         private _down = false;
         private _newSelection = false;
         private _downOnSelection = false;
-        private _worldPosDown: Core.Vector | null = null;
-        private _last: Core.Vector | null = null;
+        private _worldPosDown: Vec2 | null = null;
+        private _last: Vec2 | null = null;
 
-        private _selectInstanceByPos(pos: Core.Vector): void {
+        private _selectInstanceByPos(pos: Vec2): void {
             const nearbyInst = args.props.selectedRoom
                 .getInstancesInRadius(pos, 0)
                 .filter(instance => instance.pos.equalTo(pos))
                 .sort((a, b) => b.zDepth - a.zDepth);
-        
+
             if (nearbyInst.length > 0){
                 args.editorSelection.value = nearbyInst[0];
             }
@@ -35,7 +38,7 @@ export function useSelectMove(args: iActionArguments){
         override mouseDown(mEvent: imEvent): void {
             this._down = true;
             this._worldPosDown = mEvent.worldCell.clone();
-            
+
             if (args.editorSelection.value?.pos.equalTo(mEvent.worldCell)){
                 this._downOnSelection = true;
                 this._last = mEvent.worldCell.clone();
@@ -82,9 +85,9 @@ export function useSelectMove(args: iActionArguments){
         }
     }
 
-    function openOverlapBox(instances: Core.Instance_Base[], pos: Core.Vector): void {
+    function openOverlapBox(instances: Core.Instance_Base[], pos: Vec2): void {
         overlappingInstances.value = instances.sort((a, b) => b.zDepth - a.zDepth);
-        
+
         nextTick(()=>{
             const parentBounds = overlapBox.value!.parentElement!.getBoundingClientRect();
             const boxBounds = overlapBox.value!.getBoundingClientRect();
@@ -107,15 +110,15 @@ export function useSelectMove(args: iActionArguments){
             args.undoStore.cache.delete('move_start');
             return;
         }
-    
+
         if (!instRef){
             instRef = args.props.selectedRoom.getInstanceById(instId!)!;
         }
-    
+
         if (!args.undoStore.cache.get('move_start')){
             args.undoStore.cache.set('move_start', {instRef, oldPos: instRef.pos.clone()});
         }
-    
+
         args.props.selectedRoom.setInstancePosition(instRef, newPos!);
         RoomMainEventBus.onInstanceChanged.emit(instRef);
     }

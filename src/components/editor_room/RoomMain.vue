@@ -127,10 +127,10 @@ const actionMap: tActionMap = new Map();
 const revertMap: tActionMap = new Map();
 const mouse = reactive({
     down: false,
-    wpLastDown: new Core.Vector(0, 0),
+    wpLastDown: new Core.Vec2(0, 0),
     downOnSelection: false,
     newSelection: false,
-    cellCache: new Array<Core.Vector>(),
+    cellCache: new Array<Core.Vec2>(),
     inWindow: false,
 });
 const editorSelection = ref<Core.Instance_Base | null>(null);
@@ -171,7 +171,7 @@ const redoLength = computed<number>(()=>undoStore.redoLength);
 //watchers
 watch(()=>props.selectedRoom, (newRoom, oldRoom)=>{
     if (!newRoom) return;
-    
+
     newRoom.initSpacialData();
 
     if (newRoom && oldRoom && newRoom.id != oldRoom.id){
@@ -247,7 +247,7 @@ function bindHotkeys(): void {
 
 function refreshRoom(): void {
     if (!props.selectedRoom) return;
-    
+
     props.selectedRoom.clearSpacialData();
     props.selectedRoom.initSpacialData();
     RoomMainEventBus.onRoomChanged.emit();
@@ -274,7 +274,7 @@ function mouseEvent(mEvent: imEvent): void {
     else if (mEvent.type == Core.MOUSE_EVENT.UP){
         mouse.down = false;
     }
-    
+
     switch(mEvent.type){
         case Core.MOUSE_EVENT.DOWN:
             curTool?.mouseDown(mEvent);
@@ -511,7 +511,7 @@ background: #AAA;
 }
 
 .overlap-list::-webkit-scrollbar-thumb:hover {
-background: #999;  
+background: #999;
 }
 
 .noRoomSelected{

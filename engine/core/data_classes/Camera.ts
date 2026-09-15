@@ -1,4 +1,4 @@
-import { Vector } from '../Vector';
+import { Vec2 } from 'linearz';
 import { Sprite } from './Sprite';
 import { Room } from './Room';
 import { Instance_Base } from './Instance_Base';
@@ -37,17 +37,17 @@ export type CameraSave = {
 
 export class Camera{
     private _size: number = 15;
-    private _targetInstLastPos = new Vector(0, 0);
-    private _smartTarget: Vector | null = null;
+    private _targetInstLastPos = new Vec2(0, 0);
+    private _smartTarget: Vec2 | null = null;
 
-    pos: Vector = new Vector(8, 8);
-    velocity: Vector = new Vector(0, 0);
+    pos: Vec2 = new Vec2(8, 8);
+    velocity: Vec2 = new Vec2(0, 0);
     moveType: MOVE_TYPES = MOVE_TYPES.LOCKED;
     scrollDir: SCROLL_DIRS = SCROLL_DIRS.RIGHT;
     scrollSpeed: number = 10;
     followObjId: number | null = null;
     followType: FOLLOW_TYPES = FOLLOW_TYPES.SMART;
-    tiledOrigin: Vector | null = null;
+    tiledOrigin: Vec2 | null = null;
 
     static get MOVE_TYPES() {return MOVE_TYPES};
     static get SCROLL_DIRS(){return SCROLL_DIRS};
@@ -84,8 +84,8 @@ export class Camera{
         const followObjId = data.flwObjId;
 
         this._size = data._size;
-        this.pos = Vector.fromArray(data.pos);
-        this.velocity = Vector.fromArray(data.vel);
+        this.pos = Vec2.fromArray(data.pos);
+        this.velocity = Vec2.fromArray(data.vel);
         this.moveType = data.moveType as MOVE_TYPES;
         this.scrollDir = data.scrDir as SCROLL_DIRS;
         this.scrollSpeed = data.scrSpeed;
@@ -113,7 +113,7 @@ export class Camera{
                 break;
             case FOLLOW_TYPES.TILED:
                 const width = Sprite.DIMENSIONS * this.size;
-                
+
                 if (!this.tiledOrigin){
                     this.tiledOrigin = this.pos.clone();
                 }
@@ -190,7 +190,7 @@ export class Camera{
             case MOVE_TYPES.FOLLOW:
                 this._moveFollow(deltaTime, room);
                 break;
-            
+
             case MOVE_TYPES.SCROLL:
                 this._moveScroll(deltaTime);
                 break;

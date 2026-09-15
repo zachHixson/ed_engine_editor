@@ -15,11 +15,12 @@ const PADDING = 20;
 const HANDLE_WIDTH = 100;
 const GRAB_DIST = 70;
 
-const { Vector } = Core;
+const { Vec2 } = Core;
+type Vec2 = Core.Vec2;
 
 const props = defineProps<{
     connectionObj: Node_Connection,
-    clientToNavSpace: (pos: Core.Vector)=>Core.Vector,
+    clientToNavSpace: (pos: Vec2)=>Vec2,
     allConnections: Node_Connection[],
     draggingConnection: Node_Connection | null,
 }>();
@@ -31,15 +32,15 @@ const emit = defineEmits([
 
 const rootRef = ref<HTMLElement>();
 
-const startPoint = ref(new Vector());
-const endPoint = ref(new Vector());
+const startPoint = ref(new Vec2());
+const endPoint = ref(new Vec2());
 const width = ref(0);
 const height = ref(0);
-const cssOrigin = ref(new Vector());
+const cssOrigin = ref(new Vec2());
 const path = ref('');
 const grabbedHandle = ref<HANDLE>(0);
-const navMouseDown = ref(new Vector());
-const navMousePos = ref(new Vector());
+const navMouseDown = ref(new Vec2());
+const navMousePos = ref(new Vec2());
 const mouseOver = ref(false);
 
 const flipVertical = computed(()=>startPoint.value.y > endPoint.value.y);
@@ -183,7 +184,7 @@ function mouseDown(event: MouseEvent): void {
         return;
     }
 
-    const clientMouseDown = new Vector(event.clientX, event.clientY);
+    const clientMouseDown = new Vec2(event.clientX, event.clientY);
     navMouseDown.value.copy(props.clientToNavSpace(clientMouseDown));
     const distToStart = navMouseDown.value.distanceTo(startPoint.value);
     const distToEnd = navMouseDown.value.distanceTo(endPoint.value);
@@ -220,7 +221,7 @@ function mouseDrag(event: MouseEvent): void {
 
     if (dragDistance > 5){
         emit('drag-start', props.connectionObj);
-        
+
         if (grabbedHandle.value == HANDLE.RIGHT){
             props.connectionObj.endSocketId = null;
             props.connectionObj.endSocketEl = null;
@@ -237,21 +238,21 @@ function mouseDrag(event: MouseEvent): void {
 }
 
 function updateMousePos(event: MouseEvent): void {
-    const clientMousePos = new Vector(event.clientX, event.clientY);
+    const clientMousePos = new Vec2(event.clientX, event.clientY);
     const navPos = props.clientToNavSpace(clientMousePos);
 
     navMousePos.value.copy(navPos);
 }
 
-function centerFromBounds(bounds: {top: number, bottom: number, left: number, right: number}): Core.Vector {
-    const ul = new Vector(bounds.left, bounds.top);
-    const br = new Vector(bounds.right, bounds.bottom);
+function centerFromBounds(bounds: {top: number, bottom: number, left: number, right: number}): Vec2 {
+    const ul = new Vec2(bounds.left, bounds.top);
+    const br = new Vec2(bounds.right, bounds.bottom);
     const midPoint = ul.add(br).divideScalar(2);
-    
+
     return midPoint;
 }
 
-function navToSVGSpace(point: Readonly<Core.Vector>): Core.Vector {
+function navToSVGSpace(point: Readonly<Vec2>): Vec2 {
     return point.clone().subtract(cssOrigin.value);
 }
 

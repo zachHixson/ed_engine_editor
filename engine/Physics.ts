@@ -1,21 +1,22 @@
-import { Instance_Base, Vector, Util, Sprite } from './core/core';
+import { Vec2 } from 'linearz';
+import { Instance_Base, Util, Sprite } from './core/core';
 
 export type MoveResult = {
-    point: Vector,
-    normal: Vector,
+    point: Vec2,
+    normal: Vec2,
     collisions: RaycastResult[],
 }
 
 export type RaycastResult = {
-    point: Vector,
-    normal: Vector,
+    point: Vec2,
+    normal: Vec2,
     instance: Instance_Base,
 }
 
 const INV_SPR_DIM = 1 / Sprite.DIMENSIONS;
 
-export function raycast(pos: Readonly<Vector>, instanceList: Instance_Base[], velocity: Readonly<Vector>): RaycastResult[] {
-    const collisionDim = new Vector(Sprite.DIMENSIONS, Sprite.DIMENSIONS);
+export function raycast(pos: Readonly<Vec2>, instanceList: Instance_Base[], velocity: Readonly<Vec2>): RaycastResult[] {
+    const collisionDim = new Vec2(Sprite.DIMENSIONS, Sprite.DIMENSIONS);
     const normVel = velocity.clone().normalize();
     const results: RaycastResult[] = [];
 
@@ -37,7 +38,7 @@ export function raycast(pos: Readonly<Vector>, instanceList: Instance_Base[], ve
     return results;
 }
 
-export function move(startPoint: Readonly<Vector>, worldInstances: Instance_Base[], velocity: Readonly<Vector>): MoveResult {
+export function move(startPoint: Readonly<Vec2>, worldInstances: Instance_Base[], velocity: Readonly<Vec2>): MoveResult {
     const velOffset = velocity.clone().normalize().scale(0.001);
     const instCenter = startPoint.clone().add(velOffset);
     const rayHits = raycast(instCenter, worldInstances, velocity);
@@ -47,7 +48,7 @@ export function move(startPoint: Readonly<Vector>, worldInstances: Instance_Base
     if (rayHits.length <= 0){
         return {
             point: startPoint.clone().add(velocity),
-            normal: new Vector(0, 0),
+            normal: new Vec2(0, 0),
             collisions: [],
         };
     }
@@ -94,7 +95,7 @@ export function move(startPoint: Readonly<Vector>, worldInstances: Instance_Base
     };
 }
 
-function holeCheck(point: Readonly<Vector>, worldInstances: Instance_Base[], velocity: Readonly<Vector>): {start: Vector, direction: Vector} | null {
+function holeCheck(point: Readonly<Vec2>, worldInstances: Instance_Base[], velocity: Readonly<Vec2>): {start: Vec2, direction: Vec2} | null {
     /*
         General Idea:
             - If the player is aligned to one axis (i.e. they are butting up against a wall, floor, or ceiling)
@@ -117,16 +118,16 @@ function holeCheck(point: Readonly<Vector>, worldInstances: Instance_Base[], vel
 
     const ra = ctr.clone();
     const rb = ctr.clone();
-    let ray: Vector;
+    let ray: Vec2;
 
     //Offset side rays
     if (xAligned){
-        ray = new Vector(Math.sign(velocity.x), 0);
+        ray = new Vec2(Math.sign(velocity.x), 0);
         ra.y += 16;
         rb.y -= 16;
     }
     else{
-        ray = new Vector(0, Math.sign(velocity.y));
+        ray = new Vec2(0, Math.sign(velocity.y));
         ra.x += 16;
         rb.x -= 16;
     }
@@ -135,7 +136,7 @@ function holeCheck(point: Readonly<Vector>, worldInstances: Instance_Base[], vel
     const cRes = raycast(ctr, worldInstances, ray);
     const aRes = raycast(ra, worldInstances, ray);
     const bRes = raycast(rb, worldInstances, ray);
-    
+
     if (!cRes.length && (aRes.length || bRes.length)){
         return {start: ctr, direction: ray};
     }
@@ -143,9 +144,9 @@ function holeCheck(point: Readonly<Vector>, worldInstances: Instance_Base[], vel
     return null;
 }
 
-export function moveAndSlide(startPoint: Readonly<Vector>, worldInstances: Instance_Base[], velocity: Readonly<Vector>): MoveResult {
+export function moveAndSlide(startPoint: Readonly<Vec2>, worldInstances: Instance_Base[], velocity: Readonly<Vec2>): MoveResult {
     const moveResult = move(startPoint, worldInstances, velocity);
-    
+
     //Calculate adjusted velocity
     if (moveResult.collisions.length > 0 && velocity.x != 0 && velocity.y != 0){
         //Detect and adjust for holes
@@ -154,7 +155,7 @@ export function moveAndSlide(startPoint: Readonly<Vector>, worldInstances: Insta
         if (holeRes){
             const correctedRes = move(holeRes.start, worldInstances, velocity.clone().multiply(holeRes.direction));
             moveResult.point = correctedRes.point;
-            moveResult.normal = new Vector(holeRes.direction.y, holeRes.direction.x);
+            moveResult.normal = new Vec2(holeRes.direction.y, holeRes.direction.x);
         }
 
         //slide

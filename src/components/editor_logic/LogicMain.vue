@@ -33,7 +33,7 @@ export type LogicEditorState = {
     isDraggingNode: Ref<boolean>,
     draggingConnection: Ref<Node_Connection | null>,
     inputActive: ComputedRef<boolean>,
-    mouseDownPos: Core.Vector,
+    mouseDownPos: Core.Vec2,
     shiftDown: { value: boolean },
 }
 
@@ -81,11 +81,12 @@ import trashIcon from '@/assets/trash.svg';
 import hamburgerIcon from '@/assets/hamburger.svg';
 
 type ActionChangeInputProps = {socket: GenericSocket, widget: boolean, oldVal: any, newVal: any, node: Node_Obj};
+type Vec2 = Core.Vec2;
 
 const mainStore = useMainStore();
 const logicEditorStore = useLogicEditorStore();
 const { getNodeDoc } = useI18nStore();
-const { Vector } = Core;
+const { Vec2 } = Core;
 
 const props = defineProps<{
     selectedAsset: Logic;
@@ -142,7 +143,7 @@ const state: LogicEditorState = {
     isDraggingNode: ref(false),
     inputActive: computed(()=>mainStore.getInputActive),
     draggingConnection: ref(null),
-    mouseDownPos: new Vector(),
+    mouseDownPos: new Vec2(),
     shiftDown: { value: false },
 }
 
@@ -252,7 +253,7 @@ onBeforeMount(()=>{
 onMounted(()=>{
     window.addEventListener('resize', resize);
     AppEventBus.onOpenNodeException.listen(focusListener);
-    
+
     resize();
 
     bindHotkeys();
@@ -296,19 +297,19 @@ function navChange(newState: Core.NavState): void {
 
     //update grid background
     const tileSize = newState.zoomFac * TILE_SIZE;
-    const center = new Vector(vpEl.clientWidth, vpEl.clientHeight)
+    const center = new Vec2(vpEl.clientWidth, vpEl.clientHeight)
         .divideScalar(2)
         .add(
             newState.offset.clone()
             .multiplyScalar(newState.zoomFac)
         )
         .divideScalar(devicePixelRatio);
-    
+
     vpEl.style.backgroundSize = `${tileSize}px ${tileSize}px`;
     vpEl.style.backgroundPosition = `left ${center.x}px top ${center.y}px`;
 }
 
-function clientToNavPos(pos: Readonly<Core.Vector>): Core.Vector {
+function clientToNavPos(pos: Readonly<Vec2>): Vec2 {
     /*
         - Calculate mouse's viewport position (based on "client space", so that the hierarchy is irrelivent)
         - Calculate the mouse's position in the navWrapper in percentage (EX: x:50%, y:25%)
@@ -317,11 +318,11 @@ function clientToNavPos(pos: Readonly<Core.Vector>): Core.Vector {
     */
     const { nodeViewportRef, nodeNavRef } = domRefs;
     const vpBounds = nodeViewportRef.value!.getBoundingClientRect();
-    const vpOrigin = new Vector(vpBounds.left, vpBounds.top);
-    const vpSize = new Vector(nodeViewportRef.value!.clientWidth, nodeViewportRef.value!.clientHeight);
+    const vpOrigin = new Vec2(vpBounds.left, vpBounds.top);
+    const vpSize = new Vec2(nodeViewportRef.value!.clientWidth, nodeViewportRef.value!.clientHeight);
     const navBounds = nodeNavRef.value!.getBoundingClientRect();
-    const navOrigin = new Vector(navBounds.left, navBounds.top).subtract(vpOrigin);
-    const navSize = new Vector(navBounds.right - navBounds.left, navBounds.bottom - navBounds.top);
+    const navOrigin = new Vec2(navBounds.left, navBounds.top).subtract(vpOrigin);
+    const navSize = new Vec2(navBounds.right - navBounds.left, navBounds.bottom - navBounds.top);
     const offsetPos = pos.clone().subtract(vpOrigin);
     const navPercent = offsetPos.clone().subtract(navOrigin).divide(navSize);
     const nodeNavPos = vpSize.clone().multiply(navPercent);
@@ -420,7 +421,7 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
         socket.value = oldVal;
         node.onForceSocketUpdate.emit(socket.id);
     }
-    
+
     node.onValueChange({
         socketId: widget ? -1 : socket.id,
         widget,

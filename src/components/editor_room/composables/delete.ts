@@ -10,10 +10,10 @@ type DeleteProps = {instId?: number, instRefList?: Core.Instance_Base[]};
 export function useDelete(args: iActionArguments){
 
     const roomEditorStore = useRoomEditorStore();
-    
+
     class Erase_Brush extends Tool_Base {
         private _down = false;
-        private _last: Core.Vector | null = null;
+        private _last: Core.Vec2 | null = null;
 
         private deleteInstancesInCell(instances: Core.Instance_Base[]): void {
             const filteredInstances = roomEditorStore.eraserSelectedType && args.props.selectedAsset ?
@@ -57,31 +57,31 @@ export function useDelete(args: iActionArguments){
     function actionDelete({instId, instRefList = []}: DeleteProps, makeCommit = true): void {
         const cacheList = args.undoStore.cache.get('delete_list');
         const singleInstance = !cacheList && makeCommit;
-    
+
         if (makeCommit && !singleInstance){
             const data = {instRefList: cacheList};
             args.undoStore.commit({action: Core.ROOM_ACTION.DELETE, data})
             args.undoStore.cache.delete('delete_list');
             return;
         }
-    
+
         if (instId != undefined){
             const instRef = args.props.selectedRoom.removeInstance(instId)!;
-    
+
             if (instRef == args.editorSelection.value){
                 args.editorSelection.value = null;
             }
-    
+
             if (cacheList){
                 cacheList.push(instRef);
             }
             else if (instRef){
                 args.undoStore.cache.set('delete_list', [instRef]);
             }
-    
+
             RoomMainEventBus.onInstanceRemoved.emit(instRef);
         }
-    
+
         for (let i = 0; i < instRefList.length; i++){
             const inst = instRefList[i]
             args.props.selectedRoom.removeInstance(inst.id);

@@ -1,10 +1,13 @@
 import Core from '@/core';
 
+const { Vec2 } = Core;
+type Vec2 = Core.Vec2;
+
 export default abstract class Tool_Base {
     protected previewBuff: ImageData = new ImageData(16, 16);
     protected pixelBuff: ImageData = new ImageData(16, 16);
     protected cellWidth = 16;
-    protected mouseCell: Core.Vector = new Core.Vector();
+    protected mouseCell: Vec2 = new Vec2();
     protected color: Core.Draw.Color = new Core.Draw.Color(255, 255, 255, 255);
     protected _mouseDown: boolean = false;
     protected brushSize : Core.ART_TOOL_SIZE = Core.ART_TOOL_SIZE.SMALL;
@@ -62,7 +65,7 @@ export default abstract class Tool_Base {
         this._mouseDown = false;
     }
 
-    setMouseCell(vec: Core.Vector): void {
+    setMouseCell(vec: Core.Vec2): void {
         this.mouseCell = vec;
     }
 

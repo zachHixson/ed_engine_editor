@@ -2,7 +2,8 @@ import Core from '@/core';
 import type Logic from "./Logic";
 import type Node_API from "../Node_API";
 
-const { Vector } = Core;
+const { Vec2 } = Core;
+type Vec2 = Core.Vec2;
 
 export default class Node {
     private _template: Core.iNodeTemplate;
@@ -20,7 +21,7 @@ export default class Node {
     parentScript: Logic;
     graphId: number;
     domRef: HTMLDivElement | null = null;
-    pos: Core.Vector;
+    pos: Vec2;
     editorCanDelete: boolean = true;
     showEditButton: boolean = false;
 
@@ -33,15 +34,15 @@ export default class Node {
     decoratorTextVars?: any;
     doNotCopy?: boolean = false;
 
-    onEditorMove = new Core.Event_Emitter<(newPos: Core.Vector)=>void>(this);
+    onEditorMove = new Core.Event_Emitter<(newPos: Vec2)=>void>(this);
     onForceUpdate = new Core.Event_Emitter<()=>void>(this);
     onForceSocketUpdate = new Core.Event_Emitter<(socketName?: string)=>void>(this);
     onUpdateConnections = new Core.Event_Emitter<()=>void>(this);
     onRecalcWidth = new Core.Event_Emitter<()=>void>(this);
 
-    constructor(templateId: string, id: number, pos: Readonly<Core.Vector>, parentScript: Logic, graphId: number, editorAPI: Node_API){
+    constructor(templateId: string, id: number, pos: Readonly<Vec2>, parentScript: Logic, graphId: number, editorAPI: Node_API){
         const template = Core.NodeMap.get(templateId)!;
-        
+
         this._template = template;
         this.nodeId = id;
         this.isEvent = template.isEvent ?? false;
@@ -212,7 +213,7 @@ export default class Node {
         const node = new Node(
             data.tmplID,
             data.nodeID,
-            Vector.fromArray(data.pos),
+            Vec2.fromArray(data.pos),
             parentScript,
             data.graphID,
             nodeAPI
@@ -248,7 +249,7 @@ export default class Node {
         this.domRef.style.top = this.pos.y + 'px';
     }
 
-    setPos(newPos: Readonly<Core.Vector>): void {
+    setPos(newPos: Readonly<Vec2>): void {
         this.pos.copy(newPos);
         this.domRef!.style.left = this.pos.x + 'px';
         this.domRef!.style.top = this.pos.y + 'px';

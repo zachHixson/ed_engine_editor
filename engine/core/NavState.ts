@@ -1,20 +1,20 @@
-import { Vector } from "./Vector";
-import { Mat3 } from "./Mat3";
+import { Vec2, Mat3 } from "linearz";
 
 const PRECISION = 100;
 
 export type tNavSaveData = [number, number, number];
+export type tNavData = [number, number, number, number, number, number, number, number, number];
 
 export interface iNavState {
-    offset: Vector;
+    offset: Vec2;
     zoomFac: number;
     matrix: Mat3;
 }
 
 export class NavState implements iNavState {
-    private static _defaultMatrix = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+    private static _defaultMatrix: tNavData = [1, 0, 0, 0, 1, 0, 0, 0, 1];
 
-    private _offset: Vector = new Vector();
+    private _offset: Vec2 = new Vec2();
     private _zoomFac: number = 1;
     private _matrix = new Mat3(NavState._defaultMatrix);
     private _needsUpdate = false;
@@ -29,7 +29,7 @@ export class NavState implements iNavState {
         return this._matrix
     }
 
-    setOffset(offset: Readonly<Vector>): void {
+    setOffset(offset: Readonly<Vec2>): void {
         this._offset.copy(offset);
         this._needsUpdate = true;
     }
@@ -38,7 +38,7 @@ export class NavState implements iNavState {
         this._zoomFac = zoom;
         this._needsUpdate = true;
     }
-    
+
     updateMatrix(): void {
         this._matrix.data[0] = this._zoomFac;
         this._matrix.data[4] = this._zoomFac;
@@ -80,7 +80,7 @@ export class NavState implements iNavState {
 
     static fromSaveData(navData: tNavSaveData): NavState {
         const newNavState = new NavState();
-        newNavState.setOffset(new Vector(navData[0], navData[1]));
+        newNavState.setOffset(new Vec2(navData[0], navData[1]));
         newNavState.setZoom(navData[2]);
         return newNavState;
     }

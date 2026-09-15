@@ -1,6 +1,6 @@
+import { Vec2 } from "linearz";
 import { iAnyObj } from "./interfaces";
 import { SOCKET_TYPE } from "./nodes/Node_Enums";
-import { Vector } from "./Vector";
 import Engine from "@engine/Engine";
 import {
     iInput,
@@ -104,7 +104,7 @@ export interface iEditorLogic {
     selectedNodes: iEditorNode[];
     localVariables: Map<string, iEditorVariable>;
 
-    addNode(templateId: string, pos: Vector, nodeAPI: iNodeAPI, nodeRef?: iEditorNode): iEditorNode;
+    addNode(templateId: string, pos: Vec2, nodeAPI: iNodeAPI, nodeRef?: iEditorNode): iEditorNode;
     deleteNode(nodeRef: iEditorNode): void;
     addConnection(connectionObj: iNodeConnection): void;
     removeConnection(id: number, connectionObj?: Connection): boolean;
@@ -155,7 +155,7 @@ export interface iEditorNode extends iNode_Base {
     stackDataIO?: boolean;
     doNotCopy?: boolean;
 
-    onEditorMove: Event_Emitter<(newPos: Vector)=>void>;
+    onEditorMove: Event_Emitter<(newPos: Vec2)=>void>;
     onForceUpdate: Event_Emitter<()=>void>;
     onForceSocketUpdate: Event_Emitter<(socketName?: string)=>void>;
     onUpdateConnections: Event_Emitter<()=>void>;

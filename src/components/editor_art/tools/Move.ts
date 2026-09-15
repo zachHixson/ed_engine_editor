@@ -2,16 +2,19 @@ import { ArtMainEventBus } from "../ArtMain.vue";
 import Tool_Base from "./Tool_Base";
 import Core from '@/core';
 
+const { Vec2 } = Core;
+type Vec2 = Core.Vec2;
+
 export default class Move extends Tool_Base {
     private CURSOR_COLOR = new Core.Draw.Color(255, 255, 255, 170);
-    private _mouseDownPos: Core.Vector = new Core.Vector();
+    private _mouseDownPos: Vec2 = new Vec2();
     private _moveBuffer: ImageData = new ImageData(Core.Sprite.DIMENSIONS, Core.Sprite.DIMENSIONS);
 
     constructor(){
         super();
     }
 
-    private _clipBounds(arr: number[], offset: Readonly<Core.Vector>): void {
+    private _clipBounds(arr: number[], offset: Readonly<Vec2>): void {
         const min = offset.clone()
         const max = min.clone().addScalar(Core.Sprite.DIMENSIONS);
 
@@ -19,8 +22,8 @@ export default class Move extends Tool_Base {
             const col = (i / 4) % (Core.Sprite.DIMENSIONS);
             const row = Math.floor((i / 4) / Core.Sprite.DIMENSIONS);
             const lowerBound = col >= min.x && row >= min.y;
-            const upperBound = col < max.x && row < max.y; 
-            
+            const upperBound = col < max.x && row < max.y;
+
             if (!(lowerBound && upperBound)){
                 arr[i + 0] = 0;
                 arr[i + 1] = 0;
@@ -44,7 +47,7 @@ export default class Move extends Tool_Base {
         this.commitResult();
         this.updateCursorBuff();
     }
-    
+
     updateCursorBuff(): void {
         const {x, y} = this.mouseCell;
 

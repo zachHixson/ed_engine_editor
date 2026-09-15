@@ -1,5 +1,5 @@
+import { Vec2 } from "linearz";
 import { INSTANCE_TYPE } from "../Enums";
-import { Vector } from "../Vector";
 import { Instance_Base, InstanceBaseSave } from "./Instance_Base";
 import { Sprite } from "./Sprite";
 
@@ -16,7 +16,7 @@ export class Instance_Sprite extends Instance_Base {
     startFrameOverride: number = 0;
     fpsOverride: number = 6;
 
-    constructor(id: number, pos = new Vector(), sprite: Sprite | null){
+    constructor(id: number, pos = new Vec2(), sprite: Sprite | null){
         super(id, pos);
         this._sprite = sprite;
         this.name = (this._sprite?.name ?? 'Sprite') + '_' + this.id;
@@ -45,7 +45,7 @@ export class Instance_Sprite extends Instance_Base {
     get frameData(){return this._useIcon || !this.renderable ? Instance_Sprite.DEFAULT_SPRITE_ICON : this.sprite!.frames}
 
     override clone(): Instance_Sprite {
-        const clone = new Instance_Sprite(0, new Vector(), this.sprite);
+        const clone = new Instance_Sprite(0, new Vec2(), this.sprite);
         Object.assign(clone, this);
         clone.pos = this.pos.clone();
 
@@ -69,7 +69,7 @@ export class Instance_Sprite extends Instance_Base {
         const spriteID = data.sprID;
         const pos = data.pos;
         const spriteAsset = spriteID >= 0 ? spriteMap.get(spriteID)! : null;
-        const newSprite = new Instance_Sprite(id, Vector.fromArray(pos), spriteAsset);
+        const newSprite = new Instance_Sprite(id, Vec2.fromArray(pos), spriteAsset);
         newSprite.loadBaseSaveData(data);
         return newSprite;
     }
