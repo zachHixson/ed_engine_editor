@@ -4,6 +4,27 @@ import { defineStore } from 'pinia';
 import en from '@/locales/en.json?raw';
 import en_nodes from '@/locales/en_node_doc.json?raw';
 
+type Lang = {
+    lang: string,
+    node: string,
+}
+
+type ParsedLang = {
+    [key: string]: string | ParsedLang
+}
+
+type ParsedNodeDoc = {
+    [key: string]: {
+        [key: string]: string
+    }
+}
+
+interface iState {
+    langCode: string,
+    langText: ParsedLang,
+    nodeText: ParsedNodeDoc,
+}
+
 //#ifdef IS_PORTABLE
 const LANG_MAP: {[key: string]: Lang} = {
     'en': {
@@ -14,28 +35,11 @@ const LANG_MAP: {[key: string]: Lang} = {
 //#endif IS_PORTABLE
 
 const DEFAULT_LANG_CODE = 'en';
-const DEFAULT_LANG_TEXT = JSON.parse(en);
-const DEFAULT_NODE_TEXT = JSON.parse(en_nodes);
-
-type Lang = {
-    lang: string,
-    node: string,
-}
-
-type ParsedLang = {
-    [key: string]: {
-        [key: string]: string
-    }
-}
-
-interface iState {
-    langCode: string,
-    langText: ParsedLang,
-    nodeText: ParsedLang,
-}
+const DEFAULT_LANG_TEXT: ParsedLang = JSON.parse(en);
+const DEFAULT_NODE_TEXT: ParsedNodeDoc = JSON.parse(en_nodes);
 
 //#ifdef IS_WEB
-    function fetchJSON(path: string, callback: (langObj: ParsedLang)=>void): void {
+    function fetchJSON(path: string, callback: (langObj: any)=>void): void {
         fetch(path)
             .then(res => {
                 if (!res.ok){
@@ -51,6 +55,26 @@ interface iState {
     }
 //#endif IS_WEB
 
+function traverseLangTree(keys: string[], sourceLang: ParsedLang, index: number): string | undefined {
+    const key = keys[index];
+
+    if (!key) {
+        return undefined;
+    }
+
+    const foundValue = sourceLang[key];
+
+    if (!foundValue) {
+        return undefined;
+    }
+
+    if (typeof foundValue == 'object') {
+        return traverseLangTree(keys, foundValue, index + 1);
+    }
+
+    return foundValue;
+}
+
 export const useI18nStore = defineStore('i18n', {
     state: (): iState => ({
         langCode: DEFAULT_LANG_CODE,
@@ -62,53 +86,36 @@ export const useI18nStore = defineStore('i18n', {
         t: (state): (key: string, replaceObj?: Record<string, unknown>)=>string => {
             return (key, replaceObj) => {
                 const split = key.split('.');
+                let langResult = traverseLangTree(split, state.langText, 0);
 
-                if (split.length < 2){
-                    console.error(`Could not parse translation key: ${key}`);
-                    return key;
+                if (!langResult) {
+                    langResult = traverseLangTree(split, DEFAULT_LANG_TEXT, 0);
                 }
 
-                const category = state.langText[split[0]] || DEFAULT_LANG_TEXT[split[0]];
-
-                if (category == undefined){
-                    //#ifdef IS_DEV
-                        console.error(`Could not find category "${split[0]}" in either set or default locale files`);
-                        return key;
-                    //#endif IS_DEV
-
-                    //#ifdef IS_BUILD
-                        return '';
-                    //#endif IS_BUILD
-                }
-
-                let text = category[split[1]] || DEFAULT_LANG_TEXT[split[0]][split[1]];
-
-                if (text == undefined){
-                    //#ifdef IS_DEV
-                        console.error(`Could not find translation key "${key}" in either set or default locale files`);
-                        return key;
-                    //#endif IS_DEV
-
-                    //#ifdef IS_BUILD
-                        return '';
-                    //#endif IS_BUILD
+                if (!langResult) {
+                    console.warn(`Could not find translation key [${key}] in lang '${state.langCode}' or default locale files`);
+                    return '';
                 }
 
                 if (replaceObj){
                     for (let i in replaceObj){
-                        text = text.replace(`{${i}}`, replaceObj[i] as string);
+                        langResult = langResult.replace(`{${i}}`, replaceObj[i] as string);
                     }
                 }
 
-                return text;
+                return langResult;
             };
         },
-        te: (state): (key: string)=>string => {
+        te: (state): (key: string)=>boolean => {
             return (key) => {
                 const split = key.split('.');
-                const category = state.langText[split[0]] || DEFAULT_LANG_TEXT[split[0]];
-                const text = category[split[1]] || DEFAULT_LANG_TEXT[split[0]][split[1]];
-                return category && text;
+                let langResult = traverseLangTree(split, state.langText, 0);
+
+                if (!langResult) {
+                    langResult = traverseLangTree(split, DEFAULT_LANG_TEXT, 0);
+                }
+
+                return !!langResult;
             }
         },
         getNodeDoc: (state): (nodeTemplateId: string)=>{[key: string]: string} => {
@@ -116,7 +123,7 @@ export const useI18nStore = defineStore('i18n', {
                 const nodeInfo = state.nodeText[nodeTempalteId] || DEFAULT_NODE_TEXT[nodeTempalteId];
 
                 if (nodeInfo == undefined){
-                    throw new Error(`Could not find nodeTemplateId "${nodeTempalteId}" in either set or default locale files`);
+                    throw new Error(`Could not find nodeTemplateId "${nodeTempalteId}" in lang or default locale files`);
                 }
 
                 return nodeInfo;
