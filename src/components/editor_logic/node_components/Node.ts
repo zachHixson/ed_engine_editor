@@ -189,19 +189,19 @@ export default class Node {
         this.beforeSave();
 
         const widgetData = this.widget ? JSON.parse(JSON.stringify(this.widgetData ?? {})) : {}
-        const outObj: Core.NodeSave = {
-            tmplID: this.templateId,
-            nodeID: this.nodeId,
-            graphID: this.graphId,
-            pos: this.pos.clone().multiplyScalar(100).divideScalar(100).floor().toArray(),
-            inps: [],
-            wdgDat: widgetData,
-            ext: {},
-        };
+        const outObj: Core.NodeSave = [
+            this.templateId,
+            this.nodeId,
+            this.graphId,
+            this.pos.clone().multiplyScalar(100).divideScalar(100).floor().toArray(),
+            [],
+            widgetData,
+            {},
+        ];
 
         this.inputs.forEach(({id, value}) => {
             const outValue = typeof value == 'boolean' ? +value : value;
-            outObj.inps.push([id, outValue]);
+            outObj[4].push([id, outValue]);
         });
 
         this.afterSave(outObj);
@@ -211,11 +211,11 @@ export default class Node {
 
     static fromSaveData(data: Core.NodeSave, parentScript: Logic, nodeAPI: Node_API): Node {
         const node = new Node(
-            data.tmplID,
-            data.nodeID,
-            Vec2.fromArray(data.pos),
+            data[0],
+            data[1],
+            Vec2.fromArray(data[3]),
             parentScript,
-            data.graphID,
+            data[2],
             nodeAPI
         );
         return node._loadSaveData(data);
@@ -224,11 +224,13 @@ export default class Node {
     private _loadSaveData(data: Core.NodeSave): Node {
         this.beforeLoad(data);
 
-        if (data.wdgDat){
-            this.widgetData = data.wdgDat;
+        const widgetData = data[5];
+
+        if (widgetData){
+            this.widgetData = widgetData;
         }
 
-        data.inps.forEach(input => {
+        data[4].forEach(input => {
             const nodeInput = this.inputs.get(input[0]);
             if (!nodeInput) return;
             nodeInput.value = input[1];

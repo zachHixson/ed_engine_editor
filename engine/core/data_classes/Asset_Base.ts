@@ -1,11 +1,11 @@
 import { CATEGORY_ID } from '../Enums';
 import { ID_Generator } from '../ID_Generator';
 
-export type AssetSave = {
+export type AssetSave = [
     id: number,
-	name: string,
-	sort: number,
-};
+	assetName: string,
+	sortOrder: number,
+];
 
 export abstract class Asset_Base {
     id: number = ID_Generator.newID();
@@ -15,18 +15,18 @@ export abstract class Asset_Base {
     abstract get category_ID(): CATEGORY_ID;
     get thumbnail(): HTMLCanvasElement | null {return null}
 
-    loadBaseAssetData(data: AssetSave): void {
-        this.id = data.id;
-        this.name = data.name;
-        this.sortOrder = data.sort;
+    loadBaseAssetData(data: [...AssetSave, ...any[]]): void {
+        this.id = data[0];
+        this.name = data[1];
+        this.sortOrder = data[2];
     }
 
     getBaseAssetData(): AssetSave {
-        return {
-            id: this.id,
-            name: this.name,
-            sort: this.sortOrder,
-        };
+        return [
+            this.id,
+            this.name,
+            this.sortOrder,
+        ];
     }
 
     abstract toSaveData(): any;

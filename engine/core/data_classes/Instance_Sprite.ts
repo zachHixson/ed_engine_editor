@@ -2,10 +2,12 @@ import { Vec2 } from "linearz";
 import { INSTANCE_TYPE } from "../Enums";
 import { Instance_Base, InstanceBaseSave } from "./Instance_Base";
 import { Sprite } from "./Sprite";
+import { u32ToVec2 } from "../Util";
 
-export type InstanceSpriteSave = InstanceBaseSave & {
-    sprID: number,
-};
+export type InstanceSpriteSave = [
+    ...InstanceBaseSave,
+    spriteId: number,
+];
 
 export class Instance_Sprite extends Instance_Base {
     static DEFAULT_SPRITE_ICON_ID = 'SPRITE_ICON';
@@ -53,10 +55,10 @@ export class Instance_Sprite extends Instance_Base {
     }
 
     override toSaveData(): InstanceSpriteSave {
-        return {
+        return [
             ...this.getBaseSaveData(),
-            sprID: this.sprite?.id ?? -1,
-        };
+            this.sprite?.id ?? -1,
+        ];
     }
 
     override needsPurge(spriteMap: Map<number, any>): boolean {
@@ -65,11 +67,11 @@ export class Instance_Sprite extends Instance_Base {
     }
 
     static fromSaveData(data: InstanceSpriteSave, spriteMap: Map<number, Sprite>): Instance_Sprite {
-        const id = data.id;
-        const spriteID = data.sprID;
-        const pos = data.pos;
+        const id = data[0];
+        const spriteID = data[10];
+        const pos = data[3];
         const spriteAsset = spriteID >= 0 ? spriteMap.get(spriteID)! : null;
-        const newSprite = new Instance_Sprite(id, Vec2.fromArray(pos), spriteAsset);
+        const newSprite = new Instance_Sprite(id, u32ToVec2(pos), spriteAsset);
         newSprite.loadBaseSaveData(data);
         return newSprite;
     }

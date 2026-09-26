@@ -2,7 +2,11 @@ import { Vec2, Mat3 } from "linearz";
 
 const PRECISION = 100;
 
-export type tNavSaveData = [number, number, number];
+export type tNavSaveData = [
+    x: number,
+    y: number,
+    zoomFactor: number
+];
 export type tNavData = [number, number, number, number, number, number, number, number, number];
 
 export interface iNavState {
@@ -69,7 +73,7 @@ export class NavState implements iNavState {
         this._zoomFac = newState.zoomFac;
     }
 
-    toSaveData(): [number, number, number] {
+    toSaveData(): tNavSaveData {
         const rounded = this.offset.clone().multiplyScalar(PRECISION).round().divideScalar(PRECISION);
         return [
             rounded.x,

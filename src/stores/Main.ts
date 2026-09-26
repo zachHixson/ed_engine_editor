@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import {version as EDITOR_VERSION} from '@/../package.json';
 import Node_API from '@/components/editor_logic/Node_API';
+import { updateProject } from './compatibility/Compatibility'
 import { useGameDataStore } from './GameData';
 import { useAssetBrowserStore } from './AssetBrowser';
 import { useI18nStore } from './I18n';
@@ -77,7 +78,7 @@ export const useMainStore = defineStore('main', {
             const assetBrowserStore = useAssetBrowserStore();
             const gameDataStore = useGameDataStore();
             let loadObj: Core.tSerializedGameData;
-            
+
             try {
                 loadObj = JSON.parse(projString);
             }
@@ -85,10 +86,12 @@ export const useMainStore = defineStore('main', {
                 throw new Error('Error parsing JSON data');
             }
 
+            updateProject(loadObj);
+
             this.projectName = loadObj.projectName;
             Core.ID_Generator.setID(loadObj.newestID);
             gameDataStore.loadSaveData(loadObj, this.nodeAPI as Node_API);
-            
+
             if (loadObj.selectedRoomId != undefined){
                 const room = gameDataStore.getAllRooms.find(r => r.id == loadObj.selectedRoomId)
                 assetBrowserStore.selectRoom(room!)

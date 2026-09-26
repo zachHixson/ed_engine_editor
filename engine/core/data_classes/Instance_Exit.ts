@@ -8,15 +8,17 @@ import Engine from '@engine/Engine';
 import { COLLISION_EVENT } from '../nodes/Node_Enums';
 import { TRANSITION } from '@engine/transitions/Transition_Base';
 import { Room } from './Room';
+import { u32ToVec2 } from '../Util';
 
-export type ExitSave = InstanceBaseSave & {
-    detBktrk: 1 | 0,
+export type ExitSave = [
+    ...InstanceBaseSave,
+    detectBackTrack: 1 | 0,
     isEnd: 1 | 0,
-    dstRmID: number | '',
-    dstRmExit: number | '',
-    trnsType: string,
-    endDlg: string,
-};
+    destRoomId: number | '',
+    destRoomExit: number | '',
+    transitionType: string,
+    endDialog: string,
+];
 
 export class Instance_Exit extends Instance_Base {
     static EXIT_ICON_ID = 'EXIT_ICON';
@@ -145,15 +147,15 @@ export class Instance_Exit extends Instance_Base {
     }
 
     override toSaveData(): ExitSave {
-        return {
+        return [
             ...this.getBaseSaveData(),
-            detBktrk: (+this.detectBacktracking) as (0 | 1),
-            isEnd: (+this.isEnding) as 0 | 1,
-            dstRmID: this.destinationRoom === null ? '' : this.destinationRoom,
-            dstRmExit: this.destinationExit === null ? '' : this.destinationExit,
-            trnsType: this.transition,
-            endDlg: this.endingDialog,
-        };
+            (+this.detectBacktracking) as (0 | 1),
+            (+this.isEnding) as 0 | 1,
+            this.destinationRoom === null ? '' : this.destinationRoom,
+            this.destinationExit === null ? '' : this.destinationExit,
+            this.transition,
+            this.endingDialog,
+        ];
     }
 
     override needsPurge(roomMap: Map<number, Room>): boolean {
@@ -172,18 +174,18 @@ export class Instance_Exit extends Instance_Base {
     }
 
     static fromSaveData(data: ExitSave): Instance_Exit {
-        return new Instance_Exit(data.id, Vec2.fromArray(data.pos))._loadSaveData(data);
+        return new Instance_Exit(data[0], u32ToVec2(data[3]))._loadSaveData(data);
     }
 
     private _loadSaveData(data: ExitSave): Instance_Exit {
         this.loadBaseSaveData(data);
 
-        this.detectBacktracking = !!data.detBktrk;
-        this.isEnding = !!data.isEnd;
-        this.destinationRoom = data.dstRmID === '' ? null : data.dstRmID;
-        this.destinationExit = data.dstRmExit === '' ? null : data.dstRmExit;
-        this.transition = data.trnsType as TRANSITION;
-        this.endingDialog = data.endDlg;
+        this.detectBacktracking = !!data[10];
+        this.isEnding = !!data[11];
+        this.destinationRoom = data[12] === '' ? null : data[12];
+        this.destinationExit = data[13] === '' ? null : data[13];
+        this.transition = data[14] as TRANSITION;
+        this.endingDialog = data[15];
 
         return this;
     }

@@ -5,6 +5,7 @@ import { Instance_Exit } from './Instance_Exit';
 import { Game_Object } from './Game_Object';
 import { InstanceAnimEvent, iCollisionEvent, Instance_Base, InstanceBaseSave } from './Instance_Base';
 import { iEngineVariable } from '../LogicInterfaces';
+import { u32ToVec2 } from '../Util';
 
 enum COLLISION_OVERRIDE {
     KEEP = 'K',
@@ -12,11 +13,12 @@ enum COLLISION_OVERRIDE {
     IGNORE = 'I',
 };
 
-export type InstanceObjectSave = InstanceBaseSave & {
-    srcObjID: number,
-    zDepOvr: number | '',
-    colOvr: string,
-};
+export type InstanceObjectSave = [
+    ...InstanceBaseSave,
+    sourceObjId: number,
+    zDepthOverride: number | '',
+    collisionOverride: string,
+];
 
 export class Instance_Object extends Instance_Base {
     static DEFAULT_INSTANCE_ICON_ID = 'INSTANCE_ICON';
@@ -149,13 +151,13 @@ export class Instance_Object extends Instance_Base {
         return clone;
     }
 
-    override toSaveData(): InstanceObjectSave {
-        return {
+    override toSaveData(): [...InstanceObjectSave, ...any[]] {
+        return [
             ...this.getBaseSaveData(),
-            srcObjID: this._objRef.id,
-            zDepOvr: this._zDepthOverride ?? '',
-            colOvr: this.collisionOverride,
-        };
+            this._objRef.id,
+            this._zDepthOverride ?? '',
+            this.collisionOverride,
+        ];
     }
 
     override needsPurge(objectMap: Map<number, any>): boolean {
@@ -163,10 +165,17 @@ export class Instance_Object extends Instance_Base {
     }
 
     static fromSaveData(data: InstanceObjectSave, objMap: Map<number, Game_Object>): Instance_Object {
+        const oget = objMap.get(data[10]);
+
+        if (!oget) {
+            const id = data[10];
+            debugger;
+        }
+
         const newObj = new Instance_Object(
-            data.id,
-            Vec2.fromArray(data.pos),
-            objMap.get(data.srcObjID)!
+            data[0],
+            u32ToVec2(data[3]),
+            objMap.get(data[10])!
         );
         newObj._loadSaveData(data);
 
@@ -176,8 +185,8 @@ export class Instance_Object extends Instance_Base {
     private _loadSaveData(data: InstanceObjectSave): void {
         this.loadBaseSaveData(data);
 
-        this.zDepthOverride = data.zDepOvr == '' ? null : data.zDepOvr;
-        this.collisionOverride = data.colOvr as COLLISION_OVERRIDE;
+        this.zDepthOverride = data[4] == '' ? null : data[4];
+        this.collisionOverride = data[12] as COLLISION_OVERRIDE;
     }
 
     executeNodeEvent(eventName: string, data?: any): void {

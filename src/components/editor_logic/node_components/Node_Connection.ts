@@ -85,29 +85,29 @@ export default class Node_Connection {
         const startNodeId = startNode!.nodeId;
         const endNodeId = endNode!.nodeId;
 
-        return {
-            ID: id,
-            graphID: graphId,
-            sSocID: startSocketId,
-            eSocID: endSocketId,
-            sNodeID: startNodeId,
-            eNodeID: endNodeId,
-        };
+        return [
+            id,
+            graphId,
+            startSocketId,
+            endSocketId,
+            startNodeId,
+            endNodeId,
+        ];
     }
 
     static fromSaveData(data: Core.ConnectionSave, nodeMap: Map<number, Node>): Node_Connection {
         const newData : tConnectionConstructor = {
-            id: data.ID,
-            graphId: data.graphID,
-            startSocketId: data.sSocID,
-            endSocketId: data.eSocID,
+            id: data[0],
+            graphId: data[1],
+            startSocketId: data[2],
+            endSocketId: data[3],
         };
         return new Node_Connection(newData)._loadSaveData(data, nodeMap);
     }
 
     private _loadSaveData(data: Core.ConnectionSave, nodeMap: Map<number, Node>){
-        this.startNode = nodeMap.get(data.sNodeID)!;
-        this.endNode = nodeMap.get(data.eNodeID)!;
+        this.startNode = nodeMap.get(data[4])!;
+        this.endNode = nodeMap.get(data[5])!;
         this.type = this.startNode.template.outputs?.find(i => i.id == this.startSocketId)?.type ?? null;
 
         return this;

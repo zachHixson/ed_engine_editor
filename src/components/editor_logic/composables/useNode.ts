@@ -166,9 +166,10 @@ export default function useNode(
         //add all selected nodes to map
         nodesToCopy.forEach(node => {
             const data = node.toSaveData();
+            const pos = data[3]
 
-            data.pos[0] -= boundsCenter.x;
-            data.pos[1] -= boundsCenter.y;
+            pos[0] -= boundsCenter.x;
+            pos[1] -= boundsCenter.y;
 
             nodeMap.set(node.nodeId, node);
             nodeData.push(data);
@@ -225,8 +226,8 @@ export default function useNode(
 
         connectionData.forEach(data => {
             const modifiedData = data;
-            modifiedData.sNodeID = idMap.get(modifiedData.sNodeID)!;
-            modifiedData.eNodeID = idMap.get(modifiedData.eNodeID)!;
+            modifiedData[4] = idMap.get(modifiedData[4])!;
+            modifiedData[5] = idMap.get(modifiedData[5])!;
 
             const connection = Node_Connection.fromSaveData(modifiedData, nodeMap);
             connection.id = 0;

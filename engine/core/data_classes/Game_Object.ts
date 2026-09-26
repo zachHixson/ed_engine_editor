@@ -9,22 +9,23 @@ enum EXIT_TYPES {
     TRANSITION_ONLY = 'TO',
 };
 
-export type GameObjectSave = AssetSave & {
-	strtFrm: number,
-	sprID: number | '',
+export type GameObjectSave = [
+    ...AssetSave,
+	startFrame: number,
+	spriteId: number | '',
 	animFPS: number,
 	loopAnim: 1 | 0,
 	playAnim: 1 | 0,
 	zDepth: number,
 	isSolid: 1 | 0,
 	useGrav: 1 | 0,
-	tgrExit: 1 | 0,
-	exitBeh: string,
-	keepCamSet: 1 | 0,
-	custLog: 1 | 0,
-	logScrID: number | '',
-	grpList: Array<string>,
-};
+	triggerExit: 1 | 0,
+	exitBehavior: string,
+	keepCamSettings: 1 | 0,
+	customLogic: 1 | 0,
+	logicScriptId: number | '',
+	groupList: Array<string>,
+];
 
 export class Game_Object extends Asset_Base {
     static get EXIT_TYPES(){return EXIT_TYPES}
@@ -68,23 +69,23 @@ export class Game_Object extends Asset_Base {
     }
 
     toSaveData(): GameObjectSave {
-        return {
+        return [
             ...this.getBaseAssetData(),
-            strtFrm: this._startFrame,
-            sprID: this.sprite?.id ?? '',
-            animFPS: this.fps,
-            loopAnim: +this.animLoop as (0 | 1),
-            playAnim: +this.animPlaying as (0 | 1),
-            zDepth: this.zDepth,
-            isSolid: +this.isSolid as (0 | 1),
-            useGrav: +this.applyGravity as (0 | 1),
-            tgrExit: +this.triggerExits as (0 | 1),
-            exitBeh: this.exitBehavior,
-            keepCamSet: +this.keepCameraSettings as (0 | 1),
-            custLog: +this.customLogic as (0 | 1),
-            logScrID: this.logicScriptId ?? '',
-            grpList: this.groups,
-        };
+            this._startFrame,
+            this.sprite?.id ?? '',
+            this.fps,
+            +this.animLoop as (0 | 1),
+            +this.animPlaying as (0 | 1),
+            this.zDepth,
+            +this.isSolid as (0 | 1),
+            +this.applyGravity as (0 | 1),
+            +this.triggerExits as (0 | 1),
+            this.exitBehavior,
+            +this.keepCameraSettings as (0 | 1),
+            +this.customLogic as (0 | 1),
+            this.logicScriptId ?? '',
+            this.groups,
+        ];
     }
 
     static fromSaveData(data: GameObjectSave, spriteMap: Map<number, Sprite>): Game_Object {
@@ -94,21 +95,21 @@ export class Game_Object extends Asset_Base {
     private _loadSaveData(data: GameObjectSave, spriteMap: Map<number, Sprite>, logicMap?: Map<number, iEngineLogic>): Game_Object {
         this.loadBaseAssetData(data);
 
-        this._startFrame = data.strtFrm;
-        this.sprite = data.sprID ? spriteMap.get(data.sprID)! : null;
-        this.fps = data.animFPS;
-        this.animLoop = !!data.loopAnim;
-        this.animPlaying = !!data.playAnim;
-        this.zDepth = data.zDepth;
-        this.isSolid = !!data.isSolid;
-        this.applyGravity = !!data.useGrav;
-        this.triggerExits = !!data.tgrExit;
-        this.exitBehavior = data.exitBeh as EXIT_TYPES;
-        this.keepCameraSettings = !!data.keepCamSet;
-        this.customLogic = !!data.custLog;
-        this.logicScriptId = data.logScrID == '' ? null : data.logScrID;
+        this._startFrame = data[3];
+        this.sprite = data[4] ? spriteMap.get(data[4])! : null;
+        this.fps = data[5];
+        this.animLoop = !!data[6];
+        this.animPlaying = !!data[7];
+        this.zDepth = data[8];
+        this.isSolid = !!data[9];
+        this.applyGravity = !!data[10];
+        this.triggerExits = !!data[11];
+        this.exitBehavior = data[12] as EXIT_TYPES;
+        this.keepCameraSettings = !!data[13];
+        this.customLogic = !!data[14];
+        this.logicScriptId = data[15] == '' ? null : data[15];
         this.logicScript = logicMap?.get(this.logicScriptId!) ?? null;
-        this.groups = data.grpList;
+        this.groups = data[16];
         return this;
     }
 

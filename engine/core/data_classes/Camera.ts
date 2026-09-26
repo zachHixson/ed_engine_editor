@@ -22,18 +22,18 @@ enum FOLLOW_TYPES {
     TILED = 'T',
 };
 
-type vec = [number, number];
+type vec = [x: number, y: number];
 
-export type CameraSave = {
-    _size: number,
+export type CameraSave = [
+    size: number,
 	pos: vec,
 	vel: vec,
 	moveType: string,
-	scrDir: string,
-	scrSpeed: number,
-	flwObjId: number | '',
-	flwType: string,
-};
+	scrollDir: string,
+	scrollSpeed: number,
+	followObjId: number | '',
+	followType: string,
+];
 
 export class Camera{
     private _size: number = 15;
@@ -64,16 +64,16 @@ export class Camera{
     }
 
     toSaveData(): CameraSave {
-        return {
-            _size: this._size,
-            pos: this.pos.toArray(),
-            vel: this.velocity.toArray(),
-            moveType: this.moveType,
-            scrDir: this.scrollDir,
-            scrSpeed: this.scrollSpeed,
-            flwObjId: this.followObjId ?? '',
-            flwType: this.followType,
-        };
+        return [
+            this._size,
+            this.pos.toArray(),
+            this.velocity.toArray(),
+            this.moveType,
+            this.scrollDir,
+            this.scrollSpeed,
+            this.followObjId ?? '',
+            this.followType,
+        ];
     }
 
     static fromSaveData(data: CameraSave): Camera {
@@ -81,16 +81,16 @@ export class Camera{
     }
 
     private _loadSaveData(data: CameraSave): Camera {
-        const followObjId = data.flwObjId;
+        const followObjId = data[6];
 
-        this._size = data._size;
-        this.pos = Vec2.fromArray(data.pos);
-        this.velocity = Vec2.fromArray(data.vel);
-        this.moveType = data.moveType as MOVE_TYPES;
-        this.scrollDir = data.scrDir as SCROLL_DIRS;
-        this.scrollSpeed = data.scrSpeed;
+        this._size = data[0];
+        this.pos = Vec2.fromArray(data[1]);
+        this.velocity = Vec2.fromArray(data[2]);
+        this.moveType = data[3] as MOVE_TYPES;
+        this.scrollDir = data[4] as SCROLL_DIRS;
+        this.scrollSpeed = data[5];
         this.followObjId = followObjId != '' ? followObjId : null;
-        this.followType = data.flwType as FOLLOW_TYPES;
+        this.followType = data[7] as FOLLOW_TYPES;
 
         return this;
     }

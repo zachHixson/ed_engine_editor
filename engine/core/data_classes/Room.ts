@@ -16,15 +16,51 @@ import { iEngineLogic } from '../LogicInterfaces';
 import { iEditorLogic } from '../LogicInterfaces';
 import { NavState, tNavSaveData } from '../NavState';
 
-export type RoomSave = AssetSave & {
-    camDat: CameraSave,
-    instList: Array<InstanceBaseSave>,
-    bgCol: string,
+type AssetMap = Map<CATEGORY_ID, Map<number, Asset_Base | iEngineLogic>>;
+
+export type RoomSave = [
+    ...AssetSave,
+    camData: CameraSave,
+    instanceList: Array<InstanceBaseSave>,
+    bgColor: string,
     persist: 1 | 0,
-    gravOn: 1 | 0,
-    gravStr: number,
-    navDat: tNavSaveData,
-};
+    useGravity: 1 | 0,
+    gravityStrength: number,
+    navData: tNavSaveData,
+];
+
+function instanceFromSave(inst: InstanceBaseSave, assetMap: AssetMap): Instance_Base {
+    const instType = inst[2];
+
+    switch(instType){
+        case INSTANCE_TYPE.SPRITE:
+            return Instance_Sprite.fromSaveData(
+                inst as unknown as InstanceSpriteSave,
+                assetMap.get(CATEGORY_ID.SPRITE) as Map<number, Sprite>
+            );
+        case INSTANCE_TYPE.OBJECT:
+            return Instance_Object.fromSaveData(
+                inst as unknown as InstanceObjectSave,
+                assetMap.get(CATEGORY_ID.OBJECT) as Map<number, Game_Object>
+            );
+        case INSTANCE_TYPE.EXIT:
+            return Instance_Exit.fromSaveData(inst as unknown as ExitSave);
+        case INSTANCE_TYPE.LOGIC:
+            const logicInstance = Instance_Logic.fromSaveData(
+                inst as unknown as InstanceObjectSave,
+                assetMap.get(CATEGORY_ID.OBJECT) as Map<number, Game_Object>
+            );
+            const logicMap = assetMap.get(CATEGORY_ID.LOGIC);
+
+            if (logicMap){
+                logicInstance.setLogic(assetMap.get(CATEGORY_ID.LOGIC) as Map<number, iEngineLogic>);
+            }
+
+            return logicInstance;
+    }
+
+    throw new Error("Unknown instance type");
+}
 
 export class Room extends Asset_Base {
     private static _curInstId: number = 0;
@@ -52,63 +88,36 @@ export class Room extends Asset_Base {
     }
 
     toSaveData(): RoomSave {
-        return {
+        return [
             ...this.getBaseAssetData(),
-            camDat: this.camera.toSaveData(),
-            instList: this.instances.toArray().map(i => i.toSaveData()),
-            bgCol: this.bgColor.toHex().replace('#', ''),
-            persist: +this.persist as (0 | 1),
-            gravOn: +this.useGravity as (0 | 1),
-            gravStr: this.gravity,
-            navDat: this.navState.toSaveData(),
-        };
+            this.camera.toSaveData(),
+            this.instances.toArray().map(i => i.toSaveData()),
+            this.bgColor.toHex().replace('#', ''),
+            +this.persist as (0 | 1),
+            +this.useGravity as (0 | 1),
+            this.gravity,
+            this.navState.toSaveData(),
+        ];
     }
 
-    static fromSaveData(data: RoomSave, assetMap: Map<CATEGORY_ID, Map<number, Asset_Base | iEngineLogic>>): Room {
+    static fromSaveData(data: RoomSave, assetMap: AssetMap): Room {
         return new Room()._loadSaveData(data, assetMap);
     }
 
-    private _loadSaveData(data: RoomSave, assetMap: Map<CATEGORY_ID, Map<number, Asset_Base | iEngineLogic>>){
-        const instancesSerial = data.instList;
+    private _loadSaveData(data: RoomSave, assetMap: AssetMap){
+        const instancesSerial = data[4];
 
         this.loadBaseAssetData(data);
-        this.camera = Camera.fromSaveData(data.camDat);
-        this.bgColor = new Color().fromHex(data.bgCol);
-        this.persist = !!data.persist;
-        this.useGravity = !!data.gravOn;
-        this.gravity = data.gravStr;
-        this.navState = NavState.fromSaveData(data.navDat);
+        this.camera = Camera.fromSaveData(data[3]);
+        this.bgColor = new Color().fromHex(data[5]);
+        this.persist = !!data[6];
+        this.useGravity = !!data[7];
+        this.gravity = data[8];
+        this.navState = NavState.fromSaveData(data[9]);
 
         for (let i = 0; i < instancesSerial.length; i++){
             const curInstance = instancesSerial[i];
-            const newInstance: Instance_Base = (()=>{
-                switch(curInstance.instType){
-                    case INSTANCE_TYPE.SPRITE:
-                        return Instance_Sprite.fromSaveData(
-                            instancesSerial[i] as unknown as InstanceSpriteSave,
-                            assetMap.get(CATEGORY_ID.SPRITE) as Map<number, Sprite>
-                        );
-                    case INSTANCE_TYPE.OBJECT:
-                        return Instance_Object.fromSaveData(
-                            instancesSerial[i] as unknown as InstanceObjectSave,
-                            assetMap.get(CATEGORY_ID.OBJECT) as Map<number, Game_Object>
-                        );
-                    case INSTANCE_TYPE.EXIT:
-                        return Instance_Exit.fromSaveData(curInstance as unknown as ExitSave);
-                    case INSTANCE_TYPE.LOGIC:
-                        const logicInstance = Instance_Logic.fromSaveData(
-                            curInstance as unknown as InstanceLogicSave,
-                            assetMap.get(CATEGORY_ID.OBJECT) as Map<number, Game_Object>
-                        );
-                        const logicMap = assetMap.get(CATEGORY_ID.LOGIC);
-
-                        if (logicMap){
-                            logicInstance.setLogic(assetMap.get(CATEGORY_ID.LOGIC) as Map<number, iEngineLogic>);
-                        }
-
-                        return logicInstance;
-                }
-            })()!;
+            const newInstance = instanceFromSave(curInstance, assetMap);
 
             this.addInstance(newInstance)
             Room._curInstId = Math.max(newInstance.id + 1, Room._curInstId);

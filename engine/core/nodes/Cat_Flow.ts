@@ -44,12 +44,12 @@ export default catFlow;
         ],
         outTriggers: ['#1', '#2'],
         afterSave(this: iEditorNode, saveData: NodeSave){
-            saveData.ext = this.outTriggers.size;
+            saveData[6] = this.outTriggers.size;
         },
         afterLoad(this: iEditorNode, saveData: NodeSave){
-            const outputNumber = saveData.ext as number;
+            const outputNumber = saveData[6] as number;
             this.outTriggers.clear();
-    
+
             for (let i = 0; i < outputNumber; i++){
                 const id = '#' + (i + 1);
                 this.outTriggers.set(id, {
@@ -62,7 +62,7 @@ export default catFlow;
             const wrapper = document.createElement('div');
             const removeBtn = document.createElement('button');
             const addBtn = document.createElement('button');
-    
+
             wrapper.style.cssText = `
                 display: flex;
                 flex-direction: row;
@@ -70,7 +70,7 @@ export default catFlow;
                 gap: 3px;
                 padding: 5px;
             `;
-    
+
             removeBtn.style.cssText = `
                 display: flex;
                 justify-content: center;
@@ -81,28 +81,28 @@ export default catFlow;
                 border-radius: 5px;
             `;
             addBtn.style.cssText = removeBtn.style.cssText;
-            
+
             removeBtn.innerHTML = '-';
             addBtn.innerHTML = '+';
-    
+
             removeBtn.onclick = ()=>{
                 if (this.outTriggers.size > 1){
                     const lastOutput = '#' + this.outTriggers.size;
                     const connections = this.editorAPI.getOutputConnections(this, lastOutput);
-    
+
                     if (connections.length){
                         this.editorAPI.deleteConnections(connections, false);
                     }
-    
+
                     this.outTriggers.delete(lastOutput);
                     this.onForceUpdate.emit();
-    
+
                     setTimeout(()=>{
                         this.onUpdateConnections.emit();
                     });
                 }
             };
-    
+
             addBtn.onclick = ()=>{
                 const nextOutputName = '#' + (this.outTriggers.size + 1);
                 this.outTriggers.set(nextOutputName, {
@@ -114,10 +114,10 @@ export default catFlow;
                     this.onUpdateConnections.emit();
                 });
             };
-            
+
             wrapper.append(removeBtn);
             wrapper.append(addBtn);
-    
+
             this.domRef!.append(wrapper);
         },
     };
@@ -304,7 +304,7 @@ export default catFlow;
         },
     };
     catFlow.push(countLoop);
-    
+
 }
 
 {// list_loop
@@ -448,10 +448,10 @@ export default catFlow;
             if (itemInputConnection && !editor_validateConnection.call(this, itemInputConnection, false)){
                 deleteConnections.push(itemInputConnection);
             }
-            
+
             listOutputConnections.forEach(c => {
                 c.endNode?.refresh();
-                
+
                 if (!editor_validateConnection.call(this, c, true)){
                     deleteConnections.push(c);
                 }
@@ -732,7 +732,7 @@ export default catFlow;
         const global = this.getInput<boolean>('global', eventContext);
 
         if (name.trim().length < 0) return;
-        
+
         if (global){
             this.engine.broadcastMessage(name);
         }
@@ -793,7 +793,7 @@ export default catFlow;
             const deltaTimeMS = this.engine.deltaTime * 1000;
 
             if (!data) return;
-            
+
             if (!this.engine.isRunning) return;
 
             if (!data.active){
@@ -830,7 +830,7 @@ export default catFlow;
 
     function pause(this: iEngineNode, eventContext: iEventContext): void {
         const data = this.getNodeData<NodeData>().get(eventContext.instance.id);
-        
+
         if (data){
             data.active = false;
         }

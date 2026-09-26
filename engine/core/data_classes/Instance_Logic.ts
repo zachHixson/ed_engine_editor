@@ -3,10 +3,12 @@ import { Instance_Object, InstanceObjectSave } from "./Instance_Object";
 import { Game_Object } from "./Game_Object";
 import { iEngineLogic } from "../LogicInterfaces";
 import { INSTANCE_TYPE } from "../Enums";
+import { u32ToVec2 } from "../Util";
 
-export type InstanceLogicSave = InstanceObjectSave & {
-    logId: number,
-};
+export type InstanceLogicSave = [
+    ...InstanceObjectSave,
+    logicId: number,
+];
 
 export class Instance_Logic extends Instance_Object {
     private static readonly _placeHolderObject = (()=>{
@@ -56,32 +58,33 @@ export class Instance_Logic extends Instance_Object {
     }
 
     override toSaveData(): InstanceLogicSave {
-        return {
+        return [
             ...super.toSaveData(),
-            logId: this.logicId,
-        };
+            this.logicId,
+        ] as unknown as InstanceLogicSave;
     }
 
     override needsPurge(logicMap: Map<number, any>): boolean {
         return !logicMap.get(this.logicId);
     }
 
-    static fromSaveData(data: InstanceLogicSave, objMap: Map<number, Game_Object>): Instance_Logic {
+    static fromSaveData(data: InstanceObjectSave, objMap: Map<number, Game_Object>): Instance_Logic {
+        const lData = data as unknown as InstanceLogicSave;
         const instance = new Instance_Logic(
-            data.id,
-            Vec2.fromArray(data.pos),
-            data.logId,
-            data.name
+            lData[0],
+            u32ToVec2(lData[3]),
+            lData[13],
+            ""
         );
-        const srcObjId = data.srcObjID;
+        const srcObjId = lData[10];
 
-        instance.name = data.name;
+        instance.name = lData[1];
 
         if (srcObjId >= 0){
             instance._objRef = objMap.get(srcObjId)!;
         }
 
-        instance.logicId = data.logId;
+        instance.logicId = lData[13];
 
         return instance;
     }

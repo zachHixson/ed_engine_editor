@@ -27,37 +27,38 @@ type iNodeAPI = {};
 type vec = [number, number];
 export type ActionCallback<T> = (args: T, commit: boolean) => (Partial<T> | void);
 
-export type ConnectionSave = {
-	ID: number,
-	graphID: number,
-	sSocID: string,
-	eSocID: string,
-	sNodeID: number,
-	eNodeID: number,
-};
+export type ConnectionSave = [
+	id: number,
+	graphId: number,
+	startSocketId: string,
+	endSocketId: string,
+	startNodeId: number,
+	endNodeId: number,
+];
 
-export type NodeSave = {
-    tmplID: string,
-    nodeID: number,
-    graphID: number,
+export type NodeSave = [
+    templateId: string,
+    nodeId: number,
+    graphId: number,
     pos: vec,
-    inps: Array<[string, any]>,
-    wdgDat: any,
-    ext: any,
-};
+    inputs: Array<[string, any]>,
+    widgetData: {[key: string]: any},
+    extra: any,
+];
 
-export type GraphSave = {
-    ID: number,
+export type GraphSave = [
+    id: number,
     name: string,
-    navDat: tNavSaveData,
-};
+    navData: tNavSaveData,
+];
 
-export type LogicSave = AssetSave & {
-    selGraphID: number,
-    graphLst: Array<GraphSave>,
-    nodeDatLst: Array<NodeSave>,
-    cncDatLst: Array<ConnectionSave>,
-};
+export type LogicSave = [
+    ...AssetSave,
+    selectedGraphId: number,
+    graphList: Array<GraphSave>,
+    nodeDataList: Array<NodeSave>,
+    connectionDataList: Array<ConnectionSave>,
+];
 
 interface iNode_Base extends iNodeLifecycleEvents {
     template: iNodeTemplate;

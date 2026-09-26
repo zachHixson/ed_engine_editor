@@ -32,18 +32,18 @@ export default class Node implements iEngineNode {
     execute: ((eventContext: iEventContext, data: any)=>void) | null = null;
 
     constructor(nodeSaveData: NodeSave, logic: Logic, engine: Engine){
-        const template = NodeMap.get(nodeSaveData.tmplID)!;
+        const template = NodeMap.get(nodeSaveData[0])!;
 
         this.engine = engine;
 
         template.beforeLoad?.call(this, nodeSaveData);
-        
+
         this.template = template;
-        this.nodeId = nodeSaveData.nodeID;
+        this.nodeId = nodeSaveData[1];
         this.parentScript = logic;
-        this.graphId = nodeSaveData.graphID;
+        this.graphId = nodeSaveData[2];
         this.isEvent = template.isEvent ?? false;
-        this.widgetData = nodeSaveData.wdgDat ?? null;
+        this.widgetData = nodeSaveData[5] ?? null;
 
         template.inTriggers?.forEach(trigger => {
             const {execute} = trigger;
@@ -82,7 +82,7 @@ export default class Node implements iEngineNode {
             });
         })
 
-        nodeSaveData.inps.forEach(srcInput => {
+        nodeSaveData[4].forEach(srcInput => {
             this.inputs.get(srcInput[0])!.value = srcInput[1];
         });
 

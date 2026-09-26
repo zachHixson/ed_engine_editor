@@ -22,7 +22,7 @@ export default catVariables;
     function getValue(this: iEngineNode, eventContext: iEventContext): any {
         const {name, isGlobal} = this.getNodeData<iVarInfo>();
         const variable = isGlobal ? this.engine.getGlobalVariable(name) : eventContext.instance.getLocalVariable(name);
-        
+
         if (variable == undefined){
             return null;
         }
@@ -32,7 +32,7 @@ export default catVariables;
 
     function actionCreateVariable({varNode, varInfo}: ActionCreateVariable): Partial<ActionCreateVariable> {
         const valSocket = varNode.inputs.get('initial_value')!;
-    
+
         varNode.setNodeData<iVarInfo>(varInfo);
         editor_initVarNode.call(varNode);
         valSocket.value = SOCKET_DEFAULT.get(varInfo.type);
@@ -67,11 +67,11 @@ export default catVariables;
                 node.refresh();
             });
         }
-        
+
         //Update data if type changed
         if (newVarInfo.type != oldVarInfo.type){
             const getSetNodes = varNode.editorAPI.getVariableUsage(oldVarInfo.name, null, !!oldVarInfo.isGlobal);
-            
+
             getSetNodes.forEach(node => node.refresh());
         }
 
@@ -122,7 +122,7 @@ export default catVariables;
         }
 
         typeSocket.value = {titleId: 'node.create_var_display_type', data: `node.${SOCKET_TYPE[type]}`, translate: true};
-        
+
         valSocket.type = type;
         outSocket.type = type;
         outSocket.isList = !!isList;
@@ -135,7 +135,7 @@ export default catVariables;
 
         if (!varInfo) return;
         const {name, type, isGlobal, isList} = varInfo;
-        
+
         if (isGlobal){
             this.editorAPI.setGlobalVariable(name, type, !!isList);
         }
@@ -180,7 +180,7 @@ export default catVariables;
         },
         onCreate(this: GenericNode){
             if (isEngineNode(this)) return;
-            
+
             this.editorAPI.deleteNodes([this], false);
             this.editorAPI.popLastCommit();
 
@@ -196,17 +196,17 @@ export default catVariables;
             });
         },
         afterSave(this: iEditorNode, saveData: NodeSave){
-            const valueInput = saveData.inps.find((input: iAnyObj) => input[0] == 'initial_value')!;
+            const valueInput = saveData[4].find((input: iAnyObj) => input[0] == 'initial_value')!;
             const varInfo = Object.assign({}, this.getNodeData<iVarInfo>());
 
             varInfo.isGlobal = varInfo.isGlobal ? 1 : 0;
             varInfo.isList = varInfo.isList ? 1 : 0;
-            
-            saveData.ext = varInfo;
-            saveData.inps[0] = valueInput;
+
+            saveData[6] = varInfo;
+            saveData[4][0] = valueInput;
         },
         afterLoad(this: GenericNode, saveData: NodeSave){
-            const varInfo = saveData.ext;
+            const varInfo = saveData[6];
 
             varInfo.isGlobal = !!varInfo.isGlobal;
             varInfo.isList = !!varInfo.isList;
@@ -239,7 +239,7 @@ export default catVariables;
 
             this.editorAPI.dialogVariable((positive, varInfo)=> {
                 if (!positive) return;
-                
+
                 const args: ActionEditVariable = {
                     varNode: this,
                     newVarInfo: varInfo,
@@ -355,7 +355,7 @@ export default catVariables;
 
             const upStreamSocket = this.editorAPI.getConnectedInputSocket(this, 'data', upStreamConnection)!;
             const dataSocket = this.inputs.get('data')!;
-            
+
             if (!(canConvertSocket(upStreamSocket.type, dataSocket.type) && this.getNodeData<GetSetNodeData>().isValid)){
                 const isRecording = this.editorAPI.undoStore.isRecording;
                 this.editorAPI.deleteConnections([upStreamConnection], isRecording);
@@ -380,7 +380,7 @@ export default catVariables;
         const varName = this.getInput<string>('name', eventContext);
         const isGlobal = this.engine.getGlobalVariable(varName);
         const variable = isGlobal ? isGlobal : eventContext.instance.getLocalVariable(varName);
-        
+
         //this condition should be impossible due to being unable to connect a non-existant variable
         if (variable == null){
             this.engine.nodeException({

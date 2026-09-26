@@ -44,13 +44,13 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
     }
 
     toSaveData(): Core.LogicSave {
-        return {
+        return [
             ...this.getBaseAssetData(),
-            selGraphID: this.selectedGraphId,
-            graphLst: this.graphs.map(g => g.toSaveData()),
-            nodeDatLst: this.nodes.map(n => n.toSaveData()),
-            cncDatLst: this.connections.map(c => c.toSaveData()),
-        };
+            this.selectedGraphId,
+            this.graphs.map(g => g.toSaveData()),
+            this.nodes.map(n => n.toSaveData()),
+            this.connections.map(c => c.toSaveData()),
+        ];
     }
 
     static fromSaveData(data: Core.LogicSave, nodeAPI: Node_API): Logic {
@@ -62,12 +62,12 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
 
         this.loadBaseAssetData(data);
 
-        this.graphs = data.graphLst.map(graph => {
-            this._nextGraphId = Math.max(this._nextGraphId, graph.ID + 1);
+        this.graphs = data[4].map(graph => {
+            this._nextGraphId = Math.max(this._nextGraphId, graph[0] + 1);
             return Graph.fromSaveData(graph as unknown as any);
         });
-        this.nodes = data.nodeDatLst.map(nodeData => {
-            this._nextNodeId = Math.max(this._nextNodeId, nodeData.nodeID + 1);
+        this.nodes = data[5].map(nodeData => {
+            this._nextNodeId = Math.max(this._nextNodeId, nodeData[1] + 1);
             return Node.fromSaveData(nodeData, this, nodeAPI);
         });
 
@@ -75,8 +75,8 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
             nodeMap.set(node.nodeId, node);
         });
 
-        this.connections = data.cncDatLst.map(connectionData => {
-            this._nextConnectionId = Math.max(this._nextConnectionId, connectionData.ID + 1);
+        this.connections = data[6].map(connectionData => {
+            this._nextConnectionId = Math.max(this._nextConnectionId, connectionData[0] + 1);
             return Node_Connection.fromSaveData(connectionData, nodeMap);
         });
 
@@ -207,17 +207,17 @@ class Graph {
     }
 
     toSaveData(): Core.GraphSave {
-        return {
-            ID: this.id,
-            name: this.name,
-            navDat: this.navState.toSaveData(),
-        };
+        return [
+            this.id,
+            this.name,
+            this.navState.toSaveData(),
+        ];
     }
 
     static fromSaveData(data: Core.GraphSave): Graph {
-        const newGraph = new Graph(data.ID);
-        newGraph.name = data.name;
-        newGraph.navState = Core.NavState.fromSaveData(data.navDat);
+        const newGraph = new Graph(data[0]);
+        newGraph.name = data[1];
+        newGraph.navState = Core.NavState.fromSaveData(data[2]);
         return newGraph;
     }
 }

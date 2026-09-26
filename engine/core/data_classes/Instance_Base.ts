@@ -1,7 +1,7 @@
 import { Vec2 } from 'linearz';
 import { INSTANCE_TYPE } from '../Enums';
-import { Draw } from '../core';
-import { Sprite, Util, Node_Enums } from '../core';
+import { Draw, Sprite, Node_Enums } from '../core';
+import { mod as edmod, u32ToVec2, vec2ToU32 } from '../Util';
 import type Engine from '@engine/Engine';
 
 export enum InstanceAnimEvent {
@@ -17,20 +17,18 @@ export interface iCollisionEvent {
     normal?: Vec2,
 }
 
-type vec = [number, number];
-
-export type InstanceBaseSave = {
+export type InstanceBaseSave = [
 	id: number,
 	name: string,
 	instType: string,
-	pos: vec,
-	zDepOvr: number | '',
+	pos: number,
+	zDepthOverride: number | '',
 	groups: Array<string>,
-	strtFrmOvr: number | '',
-	fpsOvr: number | '',
-	animLoopOvr: 0 | 1 | 2,
-	animPlayingOvr: 0 | 1 | 2,
-};
+	startFrameOverride: number | '',
+	fpsOverride: number | '',
+	animLoopOverride: 0 | 1 | 2,
+	animPlayingOverride: 0 | 1 | 2,
+];
 
 export abstract class Instance_Base{
     private _animProgress: number = 0;
@@ -198,7 +196,7 @@ export abstract class Instance_Base{
             let hasFinished: boolean;
 
             if (this.animLoop){
-                this._animProgress = Util.mod(this._animProgress, 1);
+                this._animProgress = edmod(this._animProgress, 1);
             }
             else{
                 this._animProgress = Math.max(Math.min(this._animProgress, 1), 0);
@@ -230,33 +228,33 @@ export abstract class Instance_Base{
         this.pos.copy(newPos);
     }
 
-    loadBaseSaveData(data: InstanceBaseSave): void {
-        this.id = data.id;
-        this.name = data.name;
-        this.pos = Vec2.fromArray(data.pos);
-        this._zDepthOverride = data.zDepOvr != '' ? data.zDepOvr : null;
-        this.groups = data.groups;
-        this.startFrameOverride = data.strtFrmOvr === '' ? null : data.strtFrmOvr;
-        this.fpsOverride = data.fpsOvr === '' ? null : data.fpsOvr;
-        this.animLoopOverride = data.animLoopOvr === 0 ? null : !!(data.animLoopOvr - 1);
-        this.animPlayingOverride = data.animPlayingOvr === 0 ? null : !!(data.animPlayingOvr - 1);
+    loadBaseSaveData(data: [...InstanceBaseSave, ...any[]]): void {
+        this.id = data[0];
+        this.name = data[1];
+        this.pos = u32ToVec2(data[3]);
+        this._zDepthOverride = data[4] != '' ? data[4] : null;
+        this.groups = data[5];
+        this.startFrameOverride = data[6] === '' ? null : data[6];
+        this.fpsOverride = data[7] === '' ? null : data[7];
+        this.animLoopOverride = data[8] === 0 ? null : !!(data[8] - 1);
+        this.animPlayingOverride = data[9] === 0 ? null : !!(data[9] - 1);
 
         this.animFrame = this.startFrame;
     }
 
     getBaseSaveData(): InstanceBaseSave {
-        return {
-            id: this.id,
-            name: this.name,
-            instType: this.TYPE,
-            pos: this.pos.toArray(),
-            zDepOvr: this._zDepthOverride ?? '',
-            groups: this.groups,
-            strtFrmOvr: this.startFrameOverride ?? '',
-            fpsOvr: this.fpsOverride ?? '',
-            animLoopOvr: this.animLoopOverride === null ? 0 : +this.animLoopOverride + 1 as (1 | 2),
-            animPlayingOvr: this.animPlayingOverride === null ? 0 : +this.animPlayingOverride + 1 as (1 | 2),
-        };
+        return [
+            this.id,
+            this.name,
+            this.TYPE,
+            vec2ToU32(this.pos),
+            this._zDepthOverride ?? '',
+            this.groups,
+            this.startFrameOverride ?? '',
+            this.fpsOverride ?? '',
+            this.animLoopOverride === null ? 0 : +this.animLoopOverride + 1 as (1 | 2),
+            this.animPlayingOverride === null ? 0 : +this.animPlayingOverride + 1 as (1 | 2),
+        ];
     }
 
     drawThumbnail(canvas: HTMLCanvasElement): void {

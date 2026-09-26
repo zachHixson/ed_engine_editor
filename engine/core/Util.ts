@@ -115,3 +115,18 @@ export function projectPointOnLine(p: Readonly<Vec2>, lp: Readonly<Vec2>, normal
     const projectedPoint = dest.multiplyScalar(magnitude);
     return projectedPoint.add(lp);
 }
+
+export function vec2ToU32(vec: {x: number, y: number}): number {
+    const x = vec.x / 16 + 256;
+    const y = vec.y / 16 + 256;
+    return (x << 9) | y;
+}
+
+export function u32ToVec2(u32: number): Vec2 {
+    const minX = (u32 >> 9) & 511;
+    const minY = u32 & 511;
+    return new Vec2(
+        (minX - 256) * 16,
+        (minY - 256) * 16,
+    );
+}
