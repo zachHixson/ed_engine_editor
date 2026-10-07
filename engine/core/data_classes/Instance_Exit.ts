@@ -1,14 +1,14 @@
 import { Vec2 } from 'linearz';
 import { iCollisionEvent, Instance_Base, InstanceBaseSave } from './Instance_Base';
-import { INSTANCE_TYPE } from '../Enums';
+import { INSTANCE_TYPE } from '@engine/core/Enums';
 import { Instance_Object } from './Instance_Object';
 import { Game_Object } from './Game_Object';
 import { Camera } from './Camera';
 import Engine from '@engine/Engine';
-import { COLLISION_EVENT } from '../nodes/Node_Enums';
+import { COLLISION_EVENT } from '@engine/core/nodes/Node_Enums';
 import { TRANSITION } from '@engine/transitions/Transition_Base';
-import { Room } from './Room';
-import { u32ToVec2 } from '../Util';
+import { u32ToVec2 } from '@engine/core/Util';
+import { AssetMap } from '@engine/core/interfaces';
 
 export type ExitSave = [
     ...InstanceBaseSave,
@@ -158,8 +158,8 @@ export class Instance_Exit extends Instance_Base {
         ];
     }
 
-    override needsPurge(roomMap: Map<number, Room>): boolean {
-        const destRoom = roomMap.get(this.destinationRoom!);
+    override needsPurge(assetMap: AssetMap): boolean {
+        const destRoom = assetMap.room?.get(this.destinationRoom!);
         const destExit = destRoom?.instances.find(i => i.id == this.destinationExit);
 
         if (!destRoom){

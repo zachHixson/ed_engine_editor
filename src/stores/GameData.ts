@@ -51,7 +51,7 @@ export const useGameDataStore = defineStore('GameData', {
         },
         addAsset(category: Core.CATEGORY_ID){
             const { t } = useI18nStore();
-            
+
             switch (category){
                 case Core.CATEGORY_ID.SPRITE:
                     const spriteName = t(`asset_browser.sprite_prefix`) + getSuffixNum(this.sprites);
@@ -87,7 +87,7 @@ export const useGameDataStore = defineStore('GameData', {
         deleteAsset(category: Core.CATEGORY_ID, id: number){
             let curList: Core.Asset_Base[];
             let hasFound = false;
-    
+
             switch(category){
                 case Core.CATEGORY_ID.SPRITE:
                     curList = this.sprites;
@@ -104,7 +104,7 @@ export const useGameDataStore = defineStore('GameData', {
                 default:
                     curList = this.sprites;
             }
-    
+
             for (let i = 0; !hasFound && i < curList.length; i++){
                 if (curList[i].id == id){
                     curList.splice(i, 1);
@@ -115,10 +115,10 @@ export const useGameDataStore = defineStore('GameData', {
         loadSaveData(loadObj: Core.tSerializedGameData, nodeAPI: Node_API){
             const spriteMap = new Map<number, Core.Sprite>();
             const objectMap = new Map<number, Core.Game_Object>();
-            const assetMap = new Map<Core.CATEGORY_ID, Map<number, Core.Asset_Base>>([
-                [Core.CATEGORY_ID.SPRITE, spriteMap],
-                [Core.CATEGORY_ID.OBJECT, objectMap],
-            ]);
+            const assetMap: Core.AssetMap = {
+                sprite: spriteMap,
+                object: objectMap,
+            };
 
             this.startRoomId = loadObj.startRoom;
 
@@ -136,12 +136,12 @@ export const useGameDataStore = defineStore('GameData', {
             const objectMap = new Map<number, Core.Game_Object>();
             const logicMap = new Map<number, Core.iEditorLogic>();
             const roomMap = new Map<number, Core.Room>();
-            const assetMap = new Map<Core.CATEGORY_ID, Map<number, Core.Asset_Base | Core.iEditorLogic>>([
-                [Core.CATEGORY_ID.SPRITE, spriteMap],
-                [Core.CATEGORY_ID.OBJECT, objectMap],
-                [Core.CATEGORY_ID.LOGIC, logicMap],
-                [Core.CATEGORY_ID.ROOM, roomMap],
-            ]);
+            const assetMap: Core.AssetMap = {
+                sprite: spriteMap,
+                object: objectMap,
+                editorLogic: logicMap,
+                room: roomMap,
+            };
 
             this.sprites.forEach((s: any) => spriteMap.set(s.id, s));
             this.objects.forEach((o: any) => objectMap.set(o.id, o));
@@ -170,7 +170,7 @@ function getSuffixNum(list: Core.Asset_Base[]){
     else{
         requiredDigits = 1;
     }
-    
+
     if (requiredDigits < PADDING){
         output = new Array(PADDING - requiredDigits).fill('0').join('');
     }

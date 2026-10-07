@@ -1,22 +1,17 @@
 import { Vec2 } from 'linearz';
 import { Camera, CameraSave } from './Camera';
-import { Spacial_Collection } from '../Spacial_Collection';
-import { CATEGORY_ID, INSTANCE_TYPE } from '../Enums';
-import { Color } from '../Draw';
+import { Spacial_Collection } from '@engine/core/Spacial_Collection';
+import { CATEGORY_ID, INSTANCE_TYPE } from '@engine/core/Enums';
+import type { AssetMap } from '@engine/core/interfaces';
+import { NavState, tNavSaveData } from '@engine/core/NavState';
+import { Color } from '@engine/core/Draw';
 import { Asset_Base, AssetSave } from './Asset_Base';
-import { Sprite } from './Sprite';
-import { Game_Object } from './Game_Object';
 import { Instance_Base, InstanceBaseSave } from './Instance_Base';
 import { Instance_Sprite, InstanceSpriteSave } from './Instance_Sprite';
 import { Instance_Object, InstanceObjectSave } from './Instance_Object';
-import { Instance_Logic, InstanceLogicSave } from './Instance_Logic';
+import { Instance_Logic } from './Instance_Logic';
 import { Instance_Exit, ExitSave } from './Instance_Exit';
-import { Linked_List } from '../Linked_List';
-import { iEngineLogic } from '../LogicInterfaces';
-import { iEditorLogic } from '../LogicInterfaces';
-import { NavState, tNavSaveData } from '../NavState';
-
-type AssetMap = Map<CATEGORY_ID, Map<number, Asset_Base | iEngineLogic>>;
+import { Linked_List } from '@engine/core/Linked_List';
 
 export type RoomSave = [
     ...AssetSave,
@@ -36,24 +31,23 @@ function instanceFromSave(inst: InstanceBaseSave, assetMap: AssetMap): Instance_
         case INSTANCE_TYPE.SPRITE:
             return Instance_Sprite.fromSaveData(
                 inst as unknown as InstanceSpriteSave,
-                assetMap.get(CATEGORY_ID.SPRITE) as Map<number, Sprite>
+                assetMap.sprite
             );
         case INSTANCE_TYPE.OBJECT:
             return Instance_Object.fromSaveData(
                 inst as unknown as InstanceObjectSave,
-                assetMap.get(CATEGORY_ID.OBJECT) as Map<number, Game_Object>
+                assetMap.object
             );
         case INSTANCE_TYPE.EXIT:
             return Instance_Exit.fromSaveData(inst as unknown as ExitSave);
         case INSTANCE_TYPE.LOGIC:
             const logicInstance = Instance_Logic.fromSaveData(
                 inst as unknown as InstanceObjectSave,
-                assetMap.get(CATEGORY_ID.OBJECT) as Map<number, Game_Object>
+                assetMap.object
             );
-            const logicMap = assetMap.get(CATEGORY_ID.LOGIC);
 
-            if (logicMap){
-                logicInstance.setLogic(assetMap.get(CATEGORY_ID.LOGIC) as Map<number, iEngineLogic>);
+            if (assetMap.engineLogic) {
+                logicInstance.setLogic(assetMap.engineLogic);
             }
 
             return logicInstance;
@@ -130,18 +124,9 @@ export class Room extends Asset_Base {
         console.error('ERROR: Cannot perform spacial operations without initializing spacial data');
     }
 
-    purgeMissingReferences(assetMap: Map<CATEGORY_ID, Map<number, Asset_Base | iEditorLogic>>){
+    purgeMissingReferences(assetMap: AssetMap){
         this._instances.forEach(instance => {
-            let typeMap;
-
-            switch(instance.TYPE){
-                case INSTANCE_TYPE.SPRITE: typeMap = assetMap.get(CATEGORY_ID.SPRITE)!; break;
-                case INSTANCE_TYPE.OBJECT: typeMap = assetMap.get(CATEGORY_ID.OBJECT)!; break;
-                case INSTANCE_TYPE.LOGIC: typeMap = assetMap.get(CATEGORY_ID.LOGIC)!; break;
-                case INSTANCE_TYPE.EXIT: typeMap = assetMap.get(CATEGORY_ID.ROOM)!; break;
-            }
-
-            if (instance.needsPurge(typeMap)){
+            if (instance.needsPurge(assetMap)){
                 this.removeInstance(instance.id);
 
                 if (this.camera.followObjId == instance.id){

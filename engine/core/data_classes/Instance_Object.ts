@@ -1,11 +1,12 @@
 import { Vec2 } from 'linearz';
-import { INSTANCE_TYPE } from '../Enums';
+import { INSTANCE_TYPE } from '@engine/core/Enums';
 import { Sprite } from './Sprite';
 import { Instance_Exit } from './Instance_Exit';
 import { Game_Object } from './Game_Object';
 import { InstanceAnimEvent, iCollisionEvent, Instance_Base, InstanceBaseSave } from './Instance_Base';
-import { iEngineVariable } from '../LogicInterfaces';
-import { u32ToVec2 } from '../Util';
+import { iEngineVariable } from '@engine/core/LogicInterfaces';
+import type { AssetMap } from '@engine/core/interfaces';
+import { u32ToVec2 } from '@engine/core/Util';
 
 enum COLLISION_OVERRIDE {
     KEEP = 'K',
@@ -160,8 +161,8 @@ export class Instance_Object extends Instance_Base {
         ];
     }
 
-    override needsPurge(objectMap: Map<number, any>): boolean {
-        return !objectMap.get(this._objRef.id);
+    override needsPurge(assetMap: AssetMap): boolean {
+        return !assetMap.object.get(this._objRef.id);
     }
 
     static fromSaveData(data: InstanceObjectSave, objMap: Map<number, Game_Object>): Instance_Object {

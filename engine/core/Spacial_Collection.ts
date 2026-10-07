@@ -5,7 +5,6 @@ import { iAnyObj } from "./interfaces";
 
 interface iSpacialObject {
     id: number,
-    zDepth: number,
     pos: Vec2,
     clone(): any,
     toSaveData?(): iAnyObj,

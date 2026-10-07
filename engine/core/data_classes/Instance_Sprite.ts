@@ -1,8 +1,9 @@
 import { Vec2 } from "linearz";
-import { INSTANCE_TYPE } from "../Enums";
+import { INSTANCE_TYPE } from "@engine/core/Enums";
 import { Instance_Base, InstanceBaseSave } from "./Instance_Base";
 import { Sprite } from "./Sprite";
-import { u32ToVec2 } from "../Util";
+import { u32ToVec2 } from "@engine/core/Util";
+import type { AssetMap } from "@engine/core/interfaces";
 
 export type InstanceSpriteSave = [
     ...InstanceBaseSave,
@@ -61,9 +62,9 @@ export class Instance_Sprite extends Instance_Base {
         ];
     }
 
-    override needsPurge(spriteMap: Map<number, any>): boolean {
+    override needsPurge(assetMap: AssetMap): boolean {
         if (!this.sprite) return false;
-        return !spriteMap.get(this.sprite.id);
+        return !assetMap.sprite.get(this.sprite.id);
     }
 
     static fromSaveData(data: InstanceSpriteSave, spriteMap: Map<number, Sprite>): Instance_Sprite {

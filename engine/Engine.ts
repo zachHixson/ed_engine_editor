@@ -11,6 +11,7 @@ import {
     Game_Object,
     Instance_Base,
     tSerializedGameData,
+    AssetMap,
     iAnyObj,
     Instance_Object,
     Util,
@@ -364,11 +365,11 @@ export class Engine implements iEngineCallbacks {
         const spriteMap = new Map<number, Sprite>();
         const objectMap = new Map<number, Game_Object>();
         const logicMap = new Map<number, iEngineLogic>();
-        const assetMap = new Map<CATEGORY_ID, Map<number, Asset_Base | iEngineLogic>>([
-            [CATEGORY_ID.SPRITE, spriteMap],
-            [CATEGORY_ID.OBJECT, objectMap],
-            [CATEGORY_ID.LOGIC, logicMap],
-        ]);
+        const assetMap: AssetMap = {
+            sprite: spriteMap,
+            object: objectMap,
+            engineLogic: logicMap,
+        };
         let parsedJson;
 
         try {

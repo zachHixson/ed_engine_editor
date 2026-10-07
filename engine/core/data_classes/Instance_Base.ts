@@ -1,10 +1,11 @@
 import { Vec2 } from 'linearz';
-import { INSTANCE_TYPE } from '../Enums';
-import { Draw, Sprite, Node_Enums } from '../core';
-import { mod as edmod, u32ToVec2, vec2ToU32 } from '../Util';
+import { INSTANCE_TYPE } from '@engine/core/Enums';
+import { Draw, Sprite, Node_Enums } from '@engine/core/core';
+import { mod as edmod, u32ToVec2, vec2ToU32 } from '@engine/core/Util';
+import type { AssetMap } from '@engine/core/interfaces';
 import type Engine from '@engine/Engine';
 
-export enum InstanceAnimEvent {
+export const enum InstanceAnimEvent {
     START = 1,
     STOP,
     TICK,
@@ -17,6 +18,18 @@ export interface iCollisionEvent {
     normal?: Vec2,
 }
 
+const enum LoopOverride {
+    NULL = 0,
+    FALSE = 1,
+    TRUE = 2,
+};
+
+const enum PlayingOverride {
+    NULL = 0,
+    FALSE = 1,
+    TRUE = 2,
+};
+
 export type InstanceBaseSave = [
 	id: number,
 	name: string,
@@ -26,8 +39,8 @@ export type InstanceBaseSave = [
 	groups: Array<string>,
 	startFrameOverride: number | '',
 	fpsOverride: number | '',
-	animLoopOverride: 0 | 1 | 2,
-	animPlayingOverride: 0 | 1 | 2,
+	animLoopOverride: LoopOverride,
+	animPlayingOverride: PlayingOverride,
 ];
 
 export abstract class Instance_Base{
@@ -68,7 +81,7 @@ export abstract class Instance_Base{
     abstract get sourceId(): number | string;
     abstract clone(): Instance_Base;
     abstract toSaveData(): any;
-    abstract needsPurge(assetMap: Map<number, any>): boolean;
+    abstract needsPurge(assetMap: AssetMap): boolean;
 
     //Rendering getters
     get sprite(){return this._sprite};

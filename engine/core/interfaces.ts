@@ -1,4 +1,9 @@
-import {
+import type {
+    Sprite,
+    Game_Object,
+    iEngineLogic,
+    iEditorLogic,
+    Room,
     SpriteSave,
     GameObjectSave,
     RoomSave,
@@ -6,6 +11,14 @@ import {
 } from './core';
 
 export type iAnyObj = {[key: string | number | symbol]: any};
+
+export type AssetMap = {
+    sprite: Map<number, Sprite>,
+    object: Map<number, Game_Object>,
+    engineLogic?: Map<number, iEngineLogic>,
+    editorLogic?: Map<number, iEditorLogic>,
+    room?: Map<number, Room>,
+};
 
 export type tSerializedGameData = {
     projectName: string,

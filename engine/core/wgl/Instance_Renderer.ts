@@ -215,8 +215,8 @@ export class Instance_Renderer {
         let orientationData = 0b000;
 
         //Pack orientation data
-        orientationData = orientationData | (+instance.flipH * ORIENTATION_BITS.hFlip);
-        orientationData = orientationData | (+instance.flipV * ORIENTATION_BITS.vFlip);
+        orientationData |= +instance.flipH * ORIENTATION_BITS.hFlip;
+        orientationData |= +instance.flipV * ORIENTATION_BITS.vFlip;
 
         this._gl.bindVertexArray(atlasData.vao);
 

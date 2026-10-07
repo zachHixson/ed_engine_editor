@@ -1,9 +1,10 @@
 import { Vec2 } from "linearz";
 import { Instance_Object, InstanceObjectSave } from "./Instance_Object";
 import { Game_Object } from "./Game_Object";
-import { iEngineLogic } from "../LogicInterfaces";
-import { INSTANCE_TYPE } from "../Enums";
-import { u32ToVec2 } from "../Util";
+import { iEngineLogic } from "@engine/core/LogicInterfaces";
+import type { AssetMap } from "@engine/core/interfaces";
+import { INSTANCE_TYPE } from "@engine/core/Enums";
+import { u32ToVec2 } from "@engine/core/Util";
 
 export type InstanceLogicSave = [
     ...InstanceObjectSave,
@@ -64,8 +65,9 @@ export class Instance_Logic extends Instance_Object {
         ] as unknown as InstanceLogicSave;
     }
 
-    override needsPurge(logicMap: Map<number, any>): boolean {
-        return !logicMap.get(this.logicId);
+    override needsPurge(assetMap: AssetMap): boolean {
+        const map = assetMap.engineLogic ?? assetMap.editorLogic;
+        return !map?.get(this.logicId);
     }
 
     static fromSaveData(data: InstanceObjectSave, objMap: Map<number, Game_Object>): Instance_Logic {
