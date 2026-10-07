@@ -370,26 +370,35 @@ export class Engine implements iEngineCallbacks {
             object: objectMap,
             engineLogic: logicMap,
         };
-        let parsedJson;
+        let parsedJson: tSerializedGameData;
 
         try {
             parsedJson = JSON.parse(gameData);
         }
         catch (e) {
             console.error("ERROR: Engine could not parse provided JSON", e);
-            return {} as iGameData;
+            throw e;
         }
 
-        loadedData.startRoom = parsedJson.startRoom;
+        loadedData.startRoom = parsedJson.startRoom ?? 0;
 
-        loadedData.logic = parsedJson.logic.map((l: serialLogic) => new Logic(l, this));
-        loadedData.logic.forEach(logic => logicMap.set(logic.id, logic));
+        loadedData.logic = parsedJson.logic.map((l: serialLogic) => {
+            const logic = new Logic(l, this);
+            logicMap.set(logic.id, logic);
+            return logic;
+        });
 
-        loadedData.sprites = parsedJson.sprites.map((s: serialSprite) => Sprite.fromSaveData(s));
-        loadedData.sprites.forEach(sprite => spriteMap.set(sprite.id, sprite));
+        loadedData.sprites = parsedJson.sprites.map((s: serialSprite) => {
+            const sprite = Sprite.fromSaveData(s);
+            spriteMap.set(sprite.id, sprite);
+            return sprite;
+        });
 
-        loadedData.objects = parsedJson.objects.map((o: serialObject) => Game_Object.fromSaveData(o, spriteMap));
-        loadedData.objects.forEach(object => objectMap.set(object.id, object));
+        loadedData.objects = parsedJson.objects.map((o: serialObject) => {
+            const object = Game_Object.fromSaveData(o, spriteMap);
+            objectMap.set(object.id, object);
+            return object;
+        });
 
         loadedData.rooms = parsedJson.rooms.map((r: serialRoom) => Room.fromSaveData(r, assetMap));
 
