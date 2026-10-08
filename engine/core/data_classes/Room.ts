@@ -146,6 +146,7 @@ export class Room extends Asset_Base {
     }
 
     addInstance(newInstance: Instance_Base): void {
+        newInstance.setRoom(this);
         this.instances.push(newInstance);
         this._spacialCollection?.add(newInstance);
     }
@@ -166,6 +167,7 @@ export class Room extends Asset_Base {
     removeInstance(instId: number): Instance_Base | null {
         const instance = this._instances.remove(i => i.id == instId);
 
+        instance?.clearRoom();
         this._spacialCollection?.remove(instId);
 
         return instance;

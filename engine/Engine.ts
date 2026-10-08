@@ -99,7 +99,7 @@ export class Engine implements iEngineCallbacks {
     private _dialogFullscreen: Dialog_Fullscreen;
     private _nextAnimationFrame: number = -1;
     private _keymap: Map<string, KEY_STATE> = new Map();
-    private _nodeEventMap: Map<string, Map<number, Instance_Object>> = new Map();
+    private _nodeEventMap: Map<string, Array<Instance_Object>> = new Map();
     private _collisionMap: Map<number, iCollisionMapping> = new Map();
     private _globalVariables: Map<string, iEngineVariable> = new Map();
     private _gameData: iGameData;
@@ -189,10 +189,12 @@ export class Engine implements iEngineCallbacks {
                 objInstance.initLocalVariables();
                 this._registerInstanceEvents(objInstance);
             }
+
+            instance.setEngine(this);
+            instance.setRoom(room);
         });
 
         this._loadedRoom.instances.forEach(instance => {
-            instance.setEngine(this);
             instance.onCreate();
         });
     }
@@ -519,24 +521,40 @@ export class Engine implements iEngineCallbacks {
     }
 
     private _registerNodeEvent = (eventName: string, instance: Instance_Object)=>{
-        let eventMapGet = this._nodeEventMap.get(eventName);
+        let registeredInstances = this._nodeEventMap.get(eventName);
 
-        if (!eventMapGet){
-            eventMapGet = new Map();
-            this._nodeEventMap.set(eventName, eventMapGet);
+        if (!registeredInstances){
+            registeredInstances = new Array();
+            this._nodeEventMap.set(eventName, registeredInstances);
         }
 
-        eventMapGet.set(instance.id, instance);
+        registeredInstances.push(instance);
     }
 
     private _dispatchLogicEvent = (eventName: string, data?: iAnyObj): void => {
         const registeredInstances = this._nodeEventMap.get(eventName);
+        const staleInstanceIndexes = new Array<number>();
 
         if (!registeredInstances) return;
 
-        registeredInstances.forEach(instance => {
-            instance.executeNodeEvent(eventName, data);
-        });
+        //dispatch events
+        for (let i = 0; i < registeredInstances.length; i++) {
+            const instance = registeredInstances[i];
+
+            if (instance.room) {
+                instance.executeNodeEvent(eventName, data);
+            }
+            else {
+                staleInstanceIndexes.push(i);
+            }
+        }
+
+        //purge stale instances
+        const sortedIndexes = [...staleInstanceIndexes].sort((a, b) => b - a);
+
+        for (let i = 0; i < sortedIndexes.length; i++) {
+            registeredInstances.splice(sortedIndexes[i], 1);
+        }
     }
 
     private _clearNodeEvents = (): void =>{

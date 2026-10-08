@@ -1,7 +1,7 @@
 import { Asset_Base, AssetSave } from './Asset_Base';
-import { CATEGORY_ID } from '../Enums';
+import { CATEGORY_ID } from '@engine/core/Enums';
 import { Sprite } from './Sprite';
-import { iEngineLogic } from '../LogicInterfaces';
+import { iEngineLogic } from '@engine/core/LogicInterfaces';
 
 enum EXIT_TYPES {
     TO_DESTINATION = 'TD',

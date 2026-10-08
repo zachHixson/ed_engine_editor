@@ -1,6 +1,6 @@
 import { Vec2 } from 'linearz';
 import { INSTANCE_TYPE } from '@engine/core/Enums';
-import { Draw, Sprite, Node_Enums } from '@engine/core/core';
+import { Draw, Sprite, Room, Node_Enums } from '@engine/core/core';
 import { mod as edmod, u32ToVec2, vec2ToU32 } from '@engine/core/Util';
 import type { AssetMap } from '@engine/core/interfaces';
 import type Engine from '@engine/Engine';
@@ -50,6 +50,7 @@ export abstract class Instance_Base{
     private _cachedTotalVelocity: Vec2 = new Vec2(0, 0);
 
     protected _sprite: Sprite | null = null;
+    protected _roomRef: WeakRef<Room> | null = null;
     protected _onGround: boolean = false;
     protected _zDepthOverride: number | null = null;
 
@@ -87,6 +88,7 @@ export abstract class Instance_Base{
     get sprite(){return this._sprite};
     set sprite(newSprite: Sprite | null){this._sprite = newSprite};
     get renderable(){return !!this.sprite};
+    get room(){return this._roomRef?.deref() ?? null}
     get hasEditorFrame(){return false};
     get startFrame(){return 0};
     get fps(){return 0};
@@ -191,6 +193,14 @@ export abstract class Instance_Base{
 
     setEngine(engine: Engine): void {
         this._engine = engine;
+    }
+
+    setRoom(room: Room): void {
+        this._roomRef = new WeakRef(room);
+    }
+
+    clearRoom(): void {
+        this._roomRef = null;
     }
 
     advanceAnimation(deltaTime: number): void {
