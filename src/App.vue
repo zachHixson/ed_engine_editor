@@ -10,13 +10,14 @@ export const AppEventBus = {
 <script setup lang="ts">
 import HeaderPanel from './components/HeaderPanel.vue';
 import TabPanel from './components/TabPanel.vue';
+import DialogBox, {DIALOG_TYPE, type DialogBoxProps} from './components/DialogBox.vue';
 import AssetBrowser from './components/asset_browser/AssetBrowser.vue';
-import EditorWindow, { type DialogBoxProps } from './components/EditorWindow.vue';
+import EditorWindow from './components/EditorWindow.vue';
 import PlayWindow from './components/PlayWindow.vue';
 import WelcomeModal from './components/WelcomeModal.vue';
 import Tooltip from './components/common/Tooltip.vue';
 
-import { ref, onMounted, nextTick, onBeforeMount } from 'vue';
+import { ref, onMounted, nextTick } from 'vue';
 import { useMainStore, PLAY_STATE } from './stores/Main';
 import { useGameDataStore } from './stores/GameData';
 import { useAssetBrowserStore } from './stores/AssetBrowser';
@@ -46,6 +47,7 @@ const engineLicensePreamble = `
 `;
 
 const autoSaving = ref(false);
+const dialogBoxEl = ref<InstanceType<typeof DialogBox>>();
 const editorWindowEl = ref<InstanceType<typeof EditorWindow>>();
 const welcomeDialogEl = ref<InstanceType<typeof WelcomeModal>>();
 
@@ -117,7 +119,7 @@ function openProject(data: string): void {
 
     if (!loadData){
         dialogOpen({
-            alertDialog: true,
+            type: DIALOG_TYPE.ALERT,
             textInfo: {
                 textId: 'editor_main.error_opening_html'
             }
@@ -133,7 +135,7 @@ function openProject(data: string): void {
         console.error(e);
 
         dialogOpen({
-            alertDialog: true,
+            type: DIALOG_TYPE.ALERT,
             textInfo: {
                 textId: 'editor_main.error_reading_project'
             }
@@ -180,7 +182,7 @@ async function autoSave(){
 }
 
 function dialogOpen(props: DialogBoxProps){
-    editorWindowEl.value!.dialogOpen(props);
+    dialogBoxEl.value!.dialogOpen(props);
 }
 
 function openNodeException({nodeId, logicId}: {nodeId: number, logicId: number}): void {
@@ -204,6 +206,7 @@ function openNodeException({nodeId, logicId}: {nodeId: number, logicId: number})
             @package-game="packageGame"
             @open-welcome="welcomeDialogEl?.openModal()"
             @dialog-open="dialogOpen" />
+        <DialogBox ref="dialogBoxEl" />
         <TabPanel class="TabPanel" ref="tabPanel"/>
         <AssetBrowser class="assetBrowser" ref="assetBrowser"
             @asset-selected="updateEditorAsset"

@@ -19,7 +19,7 @@ import { useI18nStore } from '@/stores/I18n';
 import Core from '@/core';
 import type { iChangeEventProps } from '@/components/common/DragList.vue';
 import type { iRenameEventProps } from './Asset.vue';
-import type { DialogBoxProps } from '@/components/EditorWindow.vue';
+import {DIALOG_TYPE, type DialogBoxProps } from '@/components/DialogBox.vue';
 
 import spriteIcon from '@/assets/sprite_icon.svg';
 import objectIcon from '@/assets/object_icon.svg';
@@ -120,7 +120,7 @@ function addAsset(): void {
 
 function deleteAsset(asset: Core.Asset_Base): void {
     const props: DialogBoxProps = {
-        confirmDialog: true,
+        type: DIALOG_TYPE.CONFIRM,
         textInfo: {
             textId: 'asset_browser.confirm_delete',
             vars: {
@@ -200,7 +200,7 @@ function orderChanged(event: iChangeEventProps): void {
     const selectedListCopy = [...selectedList.value];
     const movedAsset = selectedListCopy.splice(event.itemIdx, 1);
     selectedListCopy.splice(event.newIdx, 0, ...movedAsset);
-    
+
     for (let i = 0; i < selectedListCopy.length; i++){
         selectedListCopy[i].sortOrder = i;
     }

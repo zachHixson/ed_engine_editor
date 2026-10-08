@@ -9,6 +9,7 @@ export const AnimationPanelEventBus = {
 <script setup lang="ts">
 import AnimFrame from './AnimFrame.vue';
 import AnimationPlayer from '@/components/common/AnimationPlayer.vue';
+import {DIALOG_TYPE, type DialogBoxProps} from '@/components/DialogBox.vue';
 import HotkeyMap from '@/components/common/HotkeyMap';
 import DragList from '@/components/common/DragList.vue';
 import Svg from '@/components/common/Svg.vue';
@@ -75,7 +76,7 @@ onBeforeUnmount(()=>{
     window.removeEventListener('keyup', hotkeyUp);
 
     ArtMainEventBus.onUpdateFramePreviews.remove(updateFramePreviews);
-    
+
     artEditorStore.setAnimPanelState(isOpen.value);
 });
 
@@ -127,7 +128,7 @@ function updateFramePreviews(range: number[] = [0, props.sprite.frames.length - 
 
 function addFrame(): void {
     if (props.sprite.frames.length >= 4096) {
-        emit('dialog-open', {alertDialog: true, textInfo: {textId: 'art_editor.frame_limit'}, callback: ()=>{}});
+        emit('dialog-open', {type: DIALOG_TYPE.ALERT, textInfo: {textId: 'art_editor.frame_limit'}, callback: ()=>{}} as DialogBoxProps);
         return;
     }
 
@@ -163,7 +164,7 @@ function frameMoved({idx, dir}: {idx: number, dir: number}): void {
         start,
         Math.min(endMin, props.sprite.frames.length - 1)
     ]);
-    
+
     emit('frame-moved');
 }
 

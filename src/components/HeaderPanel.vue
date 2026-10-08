@@ -2,12 +2,14 @@
 import Svg from '@/components/common/Svg.vue';
 
 import { ref, nextTick, computed, onMounted } from 'vue';
+import {version as EDITOR_VERSION} from '@/../package.json';
 import { useMainStore, PLAY_STATE } from '@/stores/Main';
 import { useI18nStore } from '@/stores/I18n';
 import renameIcon from '@/assets/rename.svg';
 import packageIcon from '@/assets/package.svg';
 import debugIcon from '@/assets/debug.svg';
 import playIcon from '@/assets/play.svg';
+import { DIALOG_TYPE, type DialogBoxProps } from '@/components/DialogBox.vue';
 
 const mainStore = useMainStore();
 const { t } = useI18nStore();
@@ -159,18 +161,18 @@ function openWelcome(): void {
 
 function openAboutMenu(): void {
     emit('dialog-open', {
-        alertDialog: true,
+        type: DIALOG_TYPE.ALERT,
         textInfo: {
-            textId: `
+            rawText: `
                 <div style=\"display: block; width: 200px; height: 100px;\">
                     <h3>${t('file_menu.about')}:</h3>
                     Zach Hixson <br />
-                    2024 <br />
+                    ${EDITOR_VERSION} <br />
                     <a href="${t('file_menu.github_link')}" target="_blank">Github</a>
                 </div>
             `,
-        }
-    });
+        },
+    } as DialogBoxProps);
 }
 </script>
 
