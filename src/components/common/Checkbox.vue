@@ -13,7 +13,9 @@ const props = defineProps<{
     disabled?: boolean,
 }>();
 
-const emit = defineEmits(['change']);
+const emit = defineEmits<{
+    change: [true | false | null],
+}>();
 
 const state = ref(props.value);
 const showCheck = computed(()=>state.value);

@@ -16,14 +16,14 @@ const props = defineProps<{
     camera: Core.Camera;
 }>();
 
-const emit = defineEmits([
-    'cam-prop-set',
-]);
+const emit = defineEmits<{
+    camPropSet: [Partial<Core.Camera>],
+}>();
 
 const followObjName = computed(()=>props.selectedRoom.instances.find(i => i.id == props.camera.followObjId)?.name ?? 'none');
 
-function setCamProp(propObj: any): void {
-    emit('cam-prop-set', propObj);
+function setCamProp(propObj: Partial<Core.Camera>): void {
+    emit('camPropSet', propObj);
 }
 
 function setFollowObj(): void {

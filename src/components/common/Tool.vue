@@ -11,14 +11,16 @@ const props = defineProps<{
     toggled?: boolean,
 }>();
 
-const emit = defineEmits(['tool-clicked']);
+const emit = defineEmits<{
+    toolClicked: [any],
+}>();
 
 const iconLoaded = ref(true);
 
 const isSelected = computed(()=>(props.curSelection == props.tool) || (props.toggled));
 
 function click(): void {
-    emit('tool-clicked', props.tool);
+    emit('toolClicked', props.tool);
 }
 </script>
 

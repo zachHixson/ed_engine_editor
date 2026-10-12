@@ -62,14 +62,14 @@ const choices = [
     }
 ];
 
-const emit = defineEmits([
-    'new-project',
-    'save-project',
-    'open-project',
-    'package-game',
-    'open-welcome',
-    'dialog-open',
-]);
+const emit = defineEmits<{
+    newProject: [],
+    saveProject: [],
+    openProject: [string | ArrayBuffer | null],
+    packageGame: [],
+    openWelcome: [],
+    dialogOpen: [DialogBoxProps],
+}>();
 
 const projName = computed({
     get(): string {
@@ -124,11 +124,11 @@ function getMenuAction(callback: ()=>void): (e: MouseEvent)=>void {
 }
 
 function newProject(): void {
-    emit('new-project');
+    emit('newProject');
 }
 
 function save(): void {
-    emit('save-project');
+    emit('saveProject');
 }
 
 function open(): void {
@@ -145,22 +145,22 @@ const loadProjectFile = (event: Event): void => {
     if ('files' in input && input.files.length > 0){
         const reader = new FileReader();
         reader.onload = () => {
-            emit('open-project', reader.result);
+            emit('openProject', reader.result);
         }
         reader.readAsText(input.files[0]);
     }
 }
 
 function packageGame(): void {
-    emit('package-game');
+    emit('packageGame');
 }
 
 function openWelcome(): void {
-    emit('open-welcome');
+    emit('openWelcome');
 }
 
 function openAboutMenu(): void {
-    emit('dialog-open', {
+    emit('dialogOpen', {
         type: DIALOG_TYPE.ALERT,
         textInfo: {
             rawText: `
@@ -172,7 +172,7 @@ function openAboutMenu(): void {
                 </div>
             `,
         },
-    } as DialogBoxProps);
+    });
 }
 </script>
 

@@ -33,20 +33,24 @@ const props = defineProps<{
     invertYAxis?: boolean,
 }>();
 
-const emit = defineEmits(['tool-selected', 'nav-changed', 'set-hotkey-tool']);
+const emit = defineEmits<{
+    toolSelected: [Core.NAV_TOOL_TYPE],
+    navChanged: [Core.NavState],
+    setHotkeyTool: [Core.NAV_TOOL_TYPE | null],
+}>();
 
 const controls: iControl[] = [
     {
         id: NAV_TOOL_TYPE.PAN,
         altText: 'navigation.pan_tool',
         icon: panIcon,
-        action: () => emit('tool-selected', NAV_TOOL_TYPE.PAN)
+        action: () => emit('toolSelected', NAV_TOOL_TYPE.PAN)
     },
     {
         id: Core.NAV_TOOL_TYPE.ZOOM,
         altText: 'navigation.zoom_tool',
         icon: zoomIcon,
-        action: () => emit('tool-selected', NAV_TOOL_TYPE.ZOOM)
+        action: () => emit('toolSelected', NAV_TOOL_TYPE.ZOOM)
     },
     {
         id: NAV_TOOL_TYPE.CENTER,
@@ -105,7 +109,7 @@ function controlClick(control: typeof controls[number]): void {
 
 function setHotkeyTool(newTool: Core.NAV_TOOL_TYPE | null): void {
     hotkeyTool = newTool;
-    emit('set-hotkey-tool', hotkeyTool);
+    emit('setHotkeyTool', hotkeyTool);
 }
 
 function mouseDown(event: MouseEvent): void {
@@ -153,7 +157,7 @@ function scroll(event: WheelEvent): void {
     let zoomDir = (event.deltaY < 0) ? 1 : -1;
     zoomDir *= ZOOM_WHEEL_AMT * (props.navState.zoomFac / props.maxZoom);
     setZoom(props.navState.zoomFac + zoomDir);
-    emit('nav-changed', props.navState);
+    emit('navChanged', props.navState);
 }
 
 function setContainerDimensions({width, height}: {width: number, height: number}): void {
@@ -180,7 +184,7 @@ function pan(): void {
 
     props.navState.setOffset(props.navState.offset);
 
-    emit('nav-changed', props.navState);
+    emit('navChanged', props.navState);
 }
 
 function zoom(): void {
@@ -189,7 +193,7 @@ function zoom(): void {
     yDifference *= ZOOM_SENSITIVITY;
     setZoom(props.navState.zoomFac + yDifference);
 
-    emit('nav-changed', props.navState);
+    emit('navChanged', props.navState);
 }
 
 function centerView(): void {
@@ -221,7 +225,7 @@ function centerView(): void {
 
     setZoom((minContainerDim / maxContentsDim) * dpiScale);
     props.navState.setOffset(midPoint);
-    emit('nav-changed', props.navState);
+    emit('navChanged', props.navState);
 }
 
 defineExpose({centerView});

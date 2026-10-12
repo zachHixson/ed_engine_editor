@@ -9,7 +9,9 @@ import categoryStyleMap from './categoryStyleMap';
 import icon_magglass from '@/assets/navigation_magglass.svg';
 import icon_arrow from '@/assets/arrow_01.svg';
 
-const emit = defineEmits(['node-clicked']);
+const emit = defineEmits<{
+    nodeClicked: [string],
+}>();
 
 const logicEditorStore = useLogicEditorStore();
 const { t, getNodeDoc } = useI18nStore();
@@ -66,7 +68,7 @@ function tabClick(category: string): void {
                     class="node"
                     :style="`border-color: ${categoryStyleMap.get(node.category)?.color ?? 'var(--tool-panel-bg)'}`"
                     v-tooltip="getNodeDoc(node.id)?.desc ?? ''"
-                    @click="emit('node-clicked', node.id)">
+                    @click="emit('nodeClicked', node.id)">
                     <div class="node-icon">
                         <Svg :src="categoryStyleMap.get(node.category)?.icon ?? ''"></Svg>
                     </div>

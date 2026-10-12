@@ -18,7 +18,9 @@ const props = defineProps<{
     selectedAsset: Logic;
 }>();
 
-const emit = defineEmits(['graph-switched']);
+const emit = defineEmits<{
+    graphSwitched: [number],
+}>();
 
 const graphListRef = ref<HTMLDivElement>();
 const graphRenameRefs: Map<number, HTMLInputElement> = new Map();
@@ -81,12 +83,12 @@ function graphOrderChanged(event: iChangeEventProps): void {
         </div>
         <div ref="graphListRef" class="graph-list">
             <DragList
-                @order-changed="graphOrderChanged">
+                @orderChanged="graphOrderChanged">
                 <div
                     v-for="graph in graphs"
                     class="graph"
                     :class="selectedAsset.selectedGraphId == graph.id ? 'graph-selected' : ''"
-                    @click="emit('graph-switched', graph.id)"
+                    @click="emit('graphSwitched', graph.id)"
                     v-click-outside="stopRenamingGraph">
                     <div class="graph-name">
                         <div

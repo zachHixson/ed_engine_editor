@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Svg from './Svg.vue';
-
 import { ref, computed, watch } from 'vue';
+import type Core from '@/core';
 
 import arrowIcon from '@/assets/arrow_01.svg';
 
@@ -15,7 +15,12 @@ const props = withDefaults(defineProps<{
     disabled: false,
 });
 
-const emit = defineEmits(['input', 'change', 'focus', 'blur']);
+const emit = defineEmits<{
+    input: [Core.iNodeInputEvent],
+    change: [Core.iNodeInputEvent],
+    focus: [FocusEvent],
+    blur: [FocusEvent],
+}>();
 
 const inputRef = ref<HTMLInputElement>();
 const internalValue = ref(props.value ?? ((props.required ?? true) && props.type == 'number' ? 0 : ''));
@@ -46,6 +51,10 @@ function onBlur(event: FocusEvent): void {
     emit('blur', event);
 }
 
+function onInput(event: Event): void {
+    emit('input', {target: event.target as HTMLInputElement, value: internalValue.value})
+}
+
 function onChange(event: Event): void {
     const target = event.target as HTMLInputElement;
     const parsedVal = parseFloat(target.value);
@@ -74,7 +83,7 @@ function numButton(increment: number): void {
 
     internalValue.value = curVal + increment;
     lastVal = internalValue.value;
-    eventData = {target: inputRef.value, value: internalValue.value};
+    eventData = {target: inputRef.value!, value: internalValue.value};
     emit('change', eventData);
     emit('input', eventData);
 }
@@ -92,7 +101,7 @@ defineExpose({value: internalValue.value});
             v-model="internalValue"
             :disabled="disabled"
             @change="onChange"
-            @input="emit('input', $event)"
+            @input="onInput($event)"
             @focus="onFocus"
             @blur="onBlur"
             v-input-active/>

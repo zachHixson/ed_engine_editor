@@ -32,11 +32,11 @@ const assetBrowserStore = useAssetBrowserStore();
 const gameDataStore = useGameDataStore();
 const { t } = useI18nStore();
 
-const emit = defineEmits([
-    'asset-deleted',
-    'asset-selected',
-    'dialog-open',
-]);
+const emit = defineEmits<{
+    assetDeleted: [],
+    assetSelected: [],
+    dialogOpen: [DialogBoxProps],
+}>();
 
 const slideWrapperRef = ref<HTMLDivElement>();
 const assetListRef = ref<HTMLDivElement>();
@@ -140,11 +140,11 @@ function deleteAsset(asset: Core.Asset_Base): void {
 
             //Actually delete the asset from Vuex
             gameDataStore.deleteAsset(asset.category_ID, asset.id);
-            emit('asset-deleted');
+            emit('assetDeleted');
         },
     };
 
-    emit('dialog-open', props);
+    emit('dialogOpen', props);
 }
 
 function selectAsset(asset: Core.Asset_Base, catId?: Core.CATEGORY_ID): void {
@@ -159,7 +159,7 @@ function selectAsset(asset: Core.Asset_Base, catId?: Core.CATEGORY_ID): void {
         assetBrowserStore.selectAsset(asset);
     }
 
-    emit('asset-selected');
+    emit('assetSelected');
 }
 
 function selectAdjacent(delAsset: Core.Asset_Base): void {

@@ -1,6 +1,6 @@
 import { iNodeTemplate } from './iNodeTemplate';
 import {SOCKET_TYPE, SOCKET_DEFAULT} from './Node_Enums';
-import { iEditorNode, iEngineNode, iEventContext, iVarInfo, iEditorAPI, NodeSave } from '../LogicInterfaces';
+import { iEditorNode, iEngineNode, iEventContext, iVarInfo, iEditorAPI, iNodeInputEvent, NodeSave } from '../LogicInterfaces';
 import { iAnyObj } from '../interfaces';
 import { isEngineNode, type GenericNode } from './Node_Library';
 import { canConvertSocket } from './Socket_Conversions';
@@ -608,8 +608,8 @@ function afterGameDataLoaded(this: GenericNode){
     }
 }
 
-function onInput(this: iEditorNode, event: InputEvent){
-    validate.call(this, event.target as HTMLInputElement);
+function onInput(this: iEditorNode, event: iNodeInputEvent){
+    validate.call(this, event.target);
 }
 
 function onNewVariable(this: iEditorNode){

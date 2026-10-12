@@ -18,7 +18,10 @@ const props = defineProps<{
     redoLength: number,
 }>();
 
-const emit = defineEmits(['undo', 'redo']);
+const emit = defineEmits<{
+    undo: [],
+    redo: [],
+}>();
 
 const hotkeyMap = new HotkeyMap();
 const keyDown = hotkeyMap.keyDown.bind(hotkeyMap);

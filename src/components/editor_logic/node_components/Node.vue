@@ -37,14 +37,14 @@ const props = defineProps<{
     desc: any | undefined;
 }>();
 
-const emit = defineEmits([
-    'node-down',
-    'node-clicked',
-    'node-move-end',
-    'socket-down',
-    'socket-over',
-    'socket-value-changed',
-]);
+const emit = defineEmits<{
+    nodeDown: [Node],
+    nodeClicked: [{nodeObj: Node, event: MouseEvent}],
+    nodeMoveEnd: [],
+    socketDown: [Node_Connection],
+    socketOver: [iHoverSocket | null],
+    socketValueChanged: [iValueChanged],
+}>();
 
 const rootRef = ref<HTMLDivElement>();
 const inTriggerRefs = ref<InstanceType<typeof Socket>[]>([]);
@@ -119,7 +119,7 @@ function updateNodeSize(): void {
 
 function mouseDown(event: MouseEvent): void {
     if (event.button == 0){
-        emit('node-down', props.nodeObj);
+        emit('nodeDown', props.nodeObj);
 
         if (props.canDrag){
             const mousePos = new Vec2(event.clientX, event.clientY);
@@ -133,7 +133,7 @@ function mouseDown(event: MouseEvent): void {
 
 function mouseUp(): void {
     if (isDragging.value == true){
-        emit('node-move-end');
+        emit('nodeMoveEnd');
     }
 
     isDragging.value = false;
@@ -148,13 +148,13 @@ function setWidgetData(data: Core.iAnyObj, commit = false): void {
     props.nodeObj.widgetData = data;
 
     if (commit){
-        emit('socket-value-changed', {
+        emit('socketValueChanged', {
             widget: true,
             socket: null,
             oldVal,
             newVal: props.nodeObj.widgetData,
             node: props.nodeObj,
-        } satisfies iValueChanged);
+        });
     }
 }
 
@@ -168,23 +168,23 @@ function socketDown(connection: Node_Connection): void {
         connection.startNode = props.nodeObj;
     }
 
-    emit('socket-down', connection);
+    emit('socketDown', connection);
 }
 
-function socketOver(event: iHoverSocket): void {
+function socketOver(event: iHoverSocket | null): void {
     if (event){
         event.node = props.nodeObj;
     }
 
-    emit('socket-over', event);
+    emit('socketOver', event);
 }
 
 function socketValueChanged(event: iValueChanged): void {
     event.node = props.nodeObj;
-    emit('socket-value-changed', event)
+    emit('socketValueChanged', event)
 }
 
-function onInput(event: InputEvent): void {
+function onInput(event: Core.iNodeInputEvent): void {
     props.nodeObj.onInput(event);
     forceUpdate();
 }
@@ -232,7 +232,7 @@ defineExpose({getRelinkInfo});
             (isSelected ? 'border-color: var(--button-norm); border-style: solid;' : '')
             "
         v-tooltip="errorData ? t('' + props.errorData?.msgId) ?? '' : ''"
-        @click="emit('node-clicked', {nodeObj, event: $event})"
+        @click="emit('nodeClicked', {nodeObj, event: $event})"
         @mousedown="mouseDown">
         <div class="heading" :style="`border-color: ${categoryStyle.color}`">
             <div v-if="categoryStyle.icon" class="node-icon">
@@ -270,8 +270,8 @@ defineExpose({getRelinkInfo});
                     :parentConnections="connections"
                     :parentId="nodeObj.nodeId"
                     :desc="desc ? desc[inTrigger.id] : undefined"
-                    @mouse-down="socketDown"
-                    @socket-over="socketOver"/>
+                    @mouseDown="socketDown"
+                    @socketOver="socketOver"/>
             </div>
             <div class="socket-column" style="align-items: flex-end">
                 <Socket
@@ -283,8 +283,8 @@ defineExpose({getRelinkInfo});
                     :parentConnections="connections"
                     :parentId="nodeObj.nodeId"
                     :desc="desc ? desc[outTrigger.id] : undefined"
-                    @mouse-down="socketDown"
-                    @socket-over="socketOver"/>
+                    @mouseDown="socketDown"
+                    @socketOver="socketOver"/>
             </div>
         </div>
         <div v-if="showTriggers && showDataSockets" class="separator"></div>
@@ -304,7 +304,7 @@ defineExpose({getRelinkInfo});
                     :desc="desc ? desc[input.id] : undefined"
                     @mouse-down="socketDown"
                     @socket-over="socketOver"
-                    @on-input="onInput"
+                    @onInput="onInput"
                     @value-changed="socketValueChanged"/>
             </div>
             <div

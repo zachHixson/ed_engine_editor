@@ -152,7 +152,7 @@ export default class Node {
         this.template.onEdit?.call(this);
     }
 
-    onInput(event: InputEvent): void {
+    onInput(event: Core.iNodeInputEvent): void {
         this.template.onInput?.call(this, event);
     }
 

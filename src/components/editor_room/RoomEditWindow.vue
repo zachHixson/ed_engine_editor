@@ -30,18 +30,11 @@ const props = defineProps<{
     redoLength: number
 }>();
 
-const emit = defineEmits([
-    'mouse-event',
-    'mouse-down',
-    'mouse-up',
-    'mouse-move',
-    'mouse-enter',
-    'mouse-leave',
-    'mouse-wheel',
-    'nav-set-container-dimentions',
-    'undo',
-    'redo',
-]);
+const emit = defineEmits<{
+    mouseEvent: [imEvent],
+    undo: [],
+    redo: [],
+}>();
 
 //define data
 const RoomEditWindowEventBus = {
@@ -180,7 +173,7 @@ function emitMouseEvent(event: MouseEvent, type: Core.MOUSE_EVENT): void {
         const canvasPos = new Core.Vec2(event.offsetX, event.offsetY);
         const worldCell = renderer.getMouseWorldCell();
 
-        emit('mouse-event', {type, canvasPos, worldCell} satisfies imEvent);
+        emit('mouseEvent', {type, canvasPos, worldCell});
     }
 }
 
@@ -237,10 +230,9 @@ function navToolSelected(tool: Core.NAV_TOOL_TYPE): void {
             :dpiScale="devicePixelRatio"
             :maxZoom="2"
             :parentEventBus="RoomEditWindowEventBus"
-            :invert-y-axis="true"
-            @nav-changed="renderer.navChanged()"
-            @tool-selected="navToolSelected"
-            @hotkey-tool-selected="navHotkeyTool = $event"/>
+            :invertYAxis="true"
+            @navChanged="renderer.navChanged()"
+            @toolSelected="navToolSelected"/>
         <canvas
             ref="canvasEl"
             class="canvas"

@@ -18,12 +18,11 @@ const props = defineProps<{
     index: number,
 }>();
 
-const emit = defineEmits([
-    'selected-frame-changed',
-    'frame-deleted',
-    'frame-copied',
-    'frame-moved',
-]);
+const emit = defineEmits<{
+    frameDeleted: [number],
+    frameCopied: [number],
+    frameMoved: [{idx: number, dir: number}],
+}>();
 
 const hover = ref(false);
 const canvasRef = ref<HTMLCanvasElement>();
@@ -68,7 +67,7 @@ function checkRange(range?: number[]): void {
 function drawCanvas(): void {
     const canvas = canvasRef.value!;
     const ctx = canvas.getContext('2d')!;
-    
+
     ctx.drawImage(checkerBGBuff, 0, 0, canvas.width, canvas.height);
 
     if (props.sprite.frames[props.index]){
@@ -86,12 +85,11 @@ function drawCanvas(): void {
 
 function selectFrame(idx: number = props.index): void {
     artEditorStore.selectFrame(idx);
-    emit('selected-frame-changed');
 }
 
 function deleteFrame(event: MouseEvent): void {
     event.stopPropagation();
-    emit('frame-deleted', props.index);
+    emit('frameDeleted', props.index);
 }
 
 function copyFrame(event: MouseEvent): void {
@@ -102,10 +100,10 @@ function copyFrame(event: MouseEvent): void {
     if (props.index < selectedFrame){
         selectedFrame += 1;
     }
-    
+
     props.sprite.copyFrame(props.index);
     artEditorStore.selectFrame(selectedFrame);
-    emit('frame-copied', props.index);
+    emit('frameCopied', props.index);
 }
 
 function moveFrame(event: MouseEvent, dir: number): void {
@@ -116,11 +114,10 @@ function moveFrame(event: MouseEvent, dir: number): void {
     if (isSelected.value){
         selectFrame += dir;
     }
-    
+
     props.sprite.moveFrame(props.index, dir);
     artEditorStore.selectFrame(selectFrame);
-    emit('selected-frame-changed');
-    emit('frame-moved', {idx: props.index, dir});
+    emit('frameMoved', {idx: props.index, dir});
 }
 </script>
 

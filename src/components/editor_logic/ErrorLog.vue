@@ -9,7 +9,9 @@ import xIcon from '@/assets/x.svg';
 import errorIcon from '@/assets/error_decorator.svg';
 import warningIcon from '@/assets/warning_decorator.svg';
 
-const emit = defineEmits(['open-node-exception']);
+const emit = defineEmits<{
+    openNodeException: [{nodeId: number, logicId: number}],
+}>();
 
 const logicEditorStore = useLogicEditorStore();
 const { t } = useI18nStore();
@@ -31,7 +33,7 @@ function toggleErrorList(): void {
 }
 
 function openNodeException(nodeId: number, logicId: number): void {
-    emit('open-node-exception', {nodeId, logicId});
+    emit('openNodeException', {nodeId, logicId});
 }
 
 </script>

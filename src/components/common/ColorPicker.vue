@@ -11,7 +11,11 @@ const props = defineProps<{
     width: number,
 }>();
 
-const emit = defineEmits(['change-start', 'change', 'change-end']);
+const emit = defineEmits<{
+    changeStart: [],
+    change: [Core.Draw.Color],
+    changeEnd: [Core.Draw.Color],
+}>();
 
 const vertexSource = `
 attribute vec4 a_position;
@@ -217,7 +221,7 @@ function wheelDown(event: MouseEvent): void {
     updateCursorPos(event.clientX, event.clientY);
     document.addEventListener('mousemove', wheelMove as EventListener);
     document.addEventListener('mouseup', mouseUp);
-    emit('change-start');
+    emit('changeStart');
     emit('change', selectedColor);
 }
 
@@ -225,7 +229,7 @@ function valueDown(event: MouseEvent): void {
     updateValuePos(event.clientX);
     document.addEventListener('mousemove', valueMove);
     document.addEventListener('mouseup', mouseUp);
-    emit('change-start');
+    emit('changeStart');
     emit('change', selectedColor);
 }
 
@@ -243,14 +247,14 @@ function mouseUp(): void {
     document.removeEventListener('mousemove', wheelMove as EventListener);
     document.removeEventListener('mousemove', valueMove);
     document.removeEventListener('mouseup', mouseUp);
-    emit('change-end', selectedColor);
+    emit('changeEnd', selectedColor);
 }
 
 function doubleClick(): void {
     const white = new Core.Draw.Color(255, 255, 255);
     selectedColor = white;
     moveCursorToColor(white);
-    emit('change-end', selectedColor);
+    emit('changeEnd', selectedColor);
 }
 </script>
 

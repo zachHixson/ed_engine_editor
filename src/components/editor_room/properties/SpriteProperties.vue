@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import Collapsible from './Collapsible.vue';
 import Checkbox from '@/components/common/Checkbox.vue';
-import GroupList from '@/components/common/GroupList.vue';
+import GroupList, { type iGroupChangedProps } from '@/components/common/GroupList.vue';
 
-import { checkNameCollisions, nanToNull } from '../Properties.vue';
+import { checkNameCollisions, nanToNull, nanToPrev } from '../Properties.vue';
 import { useI18nStore } from '@/stores/I18n';
 import type Core from '@/core';
 
@@ -14,10 +14,10 @@ const props = defineProps<{
     selectedRoom: Core.Room;
 }>();
 
-const emit = defineEmits([
-    'inst-prop-set',
-    'inst-group-changed',
-]);
+const emit = defineEmits<{
+    instPropSet: [Partial<Core.Instance_Sprite>],
+    instGroupChanged: [iGroupChangedProps],
+}>();
 
 function setInstanceName(newName: string): void {
     const instanceList = props.selectedRoom.instances;
@@ -26,8 +26,8 @@ function setInstanceName(newName: string): void {
     setInstProp({name: newName});
 }
 
-function setInstProp(propObj: any): void {
-    emit('inst-prop-set', propObj);
+function setInstProp(propObj: Partial<Core.Instance_Sprite>): void {
+    emit('instPropSet', propObj);
 }
 </script>
 
@@ -64,18 +64,18 @@ function setInstProp(propObj: any): void {
                 <div class="control">
                     <label for="startframe">{{ t('object_editor.start_frame') }}:</label>
                     <input id="startframe" type="number" :value="selectedSprite.startFrame" v-tooltip="t('room_editor.tt_start_frame')"
-                        @change="setInstProp({startFrame: nanToNull(parseInt(($event.target as any).value))})" v-input-active/>
+                        @change="setInstProp({startFrame: nanToPrev(parseInt(($event.target as any).value), ()=>selectedSprite.startFrame)})" v-input-active/>
                 </div>
                 <div class="control">
                     <label for="fps">{{t('object_editor.fps')}}:</label>
                     <input id="fps" type="number" :value="selectedSprite.fpsOverride" v-tooltip="t('room_editor.tt_fps')"
-                        @change="setInstProp({fpsOverride: nanToNull(parseInt(($event.target as any).value))})" v-input-active/>
+                        @change="setInstProp({fpsOverride: nanToPrev(parseInt(($event.target as any).value), ()=>selectedSprite.fpsOverride)})" v-input-active/>
                 </div>
             </div>
         </Collapsible>
         <GroupList
             :editList="selectedSprite.groups"
-            @group-changed="emit('inst-group-changed', $event)"/>
+            @groupChanged="emit('instGroupChanged', $event)"/>
     </div>
 </template>
 

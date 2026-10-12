@@ -85,7 +85,7 @@ export interface iNodeLifecycleEvents {
     onMount?: ()=>void;
     onNewVariable?: ()=>void;
     onEdit?: ()=>void;
-    onInput?: (event: InputEvent)=>void;
+    onInput?: (event: iNodeInputEvent)=>void;
     onMove?: ()=>void;
     onNewConnection?: (connection: iNodeConnection, isUndo?: boolean)=>void;
     onRemoveConnection?: (connection: iNodeConnection, isUndo?: boolean)=>void;
@@ -289,4 +289,9 @@ export interface iNodeExceptionData {
     nodeId: number;
     fatal?: boolean;
     onClearCallback?: (data: iNodeExceptionData)=>void;
+}
+
+export interface iNodeInputEvent {
+    target: HTMLInputElement,
+    value: number | string,
 }

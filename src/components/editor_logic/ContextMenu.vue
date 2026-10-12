@@ -10,7 +10,10 @@ const props = defineProps<{
     position: Vec2,
 }>();
 
-const emit = defineEmits(['copy', 'paste']);
+const emit = defineEmits<{
+    copy: [],
+    paste: [],
+}>();
 
 const logicEditorStore = useLogicEditorStore();
 

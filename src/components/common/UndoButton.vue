@@ -9,7 +9,9 @@ const props = defineProps<{
     isActive: boolean,
 }>();
 
-const emit = defineEmits(['click']);
+const emit = defineEmits<{
+    click: [],
+}>();
 
 const iconLoaded = ref<boolean>(true);
 

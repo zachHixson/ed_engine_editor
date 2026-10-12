@@ -13,7 +13,9 @@ const props = defineProps<{
     setWidgetData: (data: Core.iAnyObj)=>void,
 }>();
 
-const emit = defineEmits(['input']);
+const emit = defineEmits<{
+    input: [Core.iNodeInputEvent],
+}>();
 
 const currentWidget = computed(()=>{
     const WIDGET = Core.Node_Enums.WIDGET;

@@ -14,11 +14,11 @@ const props = defineProps<{
     room: Core.Room;
 }>();
 
-const emit = defineEmits([
-    'room-prop-set',
-    'room-bg-changed',
-    'room-bg-change-end',
-]);
+const emit = defineEmits<{
+    roomPropSet: [Partial<Core.Room>],
+    roomBgChanged: [Partial<Core.Room>],
+    roomBgChangeEnd: [Partial<Core.Room>],
+}>();
 
 const changeingBG = ref<boolean>(false);
 const bgColorBtn = ref<HTMLElement>();
@@ -31,8 +31,8 @@ onMounted(()=>{
     setColorBtn(props.room.bgColor);
 });
 
-function setRoomProp(propObj: any): void {
-    emit('room-prop-set', propObj);
+function setRoomProp(propObj: Partial<Core.Room>): void {
+    emit('roomPropSet', propObj);
 }
 
 function setColorBtn(newColor: Core.Draw.Color){
@@ -61,8 +61,8 @@ function closeRoomBGColorEditor(): void {
                         <ColorPicker
                             :color="props.room.bgColor"
                             :width="150"
-                            @change="emit('room-bg-changed', {bgColor: $event})"
-                            @change-end="emit('room-bg-change-end', {bgColor: $event})"/>
+                            @change="emit('roomBgChanged', {bgColor: $event})"
+                            @changeEnd="emit('roomBgChangeEnd', {bgColor: $event})"/>
                     </div>
                 </div>
             </button>

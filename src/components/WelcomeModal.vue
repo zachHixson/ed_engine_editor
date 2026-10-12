@@ -6,9 +6,9 @@ import { useI18nStore } from '@/stores/I18n';
 import xIcon from '@/assets/x.svg';
 import throbberIcon from '@/assets/throbber.svg';
 
-const emit = defineEmits([
-    'demo-opened',
-]);
+const emit = defineEmits<{
+    demoOpened: [string],
+}>();
 const { t } = useI18nStore();
 
 const isPortable = location.hostname == '';
@@ -98,7 +98,7 @@ function openDemo(demo: string): void {
 
             loadingDemo.value = false;
             closeModal();
-            emit('demo-opened', fileContents);
+            emit('demoOpened', fileContents);
         });
 }
 

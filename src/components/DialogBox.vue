@@ -13,7 +13,7 @@ export const enum DIALOG_OPTION {
 export interface DialogBoxProps {
     type: DIALOG_TYPE,
     textInfo: {
-        textId: string,
+        textId?: string,
         rawText?: string,
         vars?: {[keys: string]: any}
     },
@@ -38,7 +38,7 @@ function dialogOpen({type, defaultOpt, textInfo, callback}: DialogBoxProps): voi
     isOpen.value = true;
     dialogType.value = type;
     dialogDefault.value = defaultOpt ?? DIALOG_OPTION.NEGATIVE;
-    text.value = textInfo.rawText ?? t(textInfo.textId, textInfo.vars);
+    text.value = (textInfo.textId ? t(textInfo.textId, textInfo.vars) : textInfo.rawText) ?? 'NO_TEXT';
     dialogCallback = callback ?? null;
 }
 

@@ -9,14 +9,14 @@ export const ObjectMainEventBus = {
 
 <script setup lang="ts">
 import AnimationPlayer from '@/components/common/AnimationPlayer.vue';
-import GroupList from '@/components/common/GroupList.vue';
+import GroupList, {type iGroupChangedProps} from '@/components/common/GroupList.vue';
 import CategoryWrapper from './CategoryWrapper.vue';
 import SearchDropdown from '../common/SearchDropdown.vue';
 import Svg from '../common/Svg.vue';
 
 import { ref, computed, nextTick } from 'vue';
 import { useGameDataStore } from '@/stores/GameData';
-import { AssetBrowserEventBus } from '../asset_browser/AssetBrowser.vue';
+import { AssetBrowserEventBus } from '@/components/asset_browser/AssetBrowser.vue';
 import { useI18nStore } from '@/stores/I18n';
 import Core from '@/core';
 
@@ -32,7 +32,9 @@ const props = defineProps<{
     selectedAsset: Core.Game_Object;
 }>();
 
-const emit = defineEmits(['asset-changed']);
+const emit = defineEmits<{
+    assetChanged: [number],
+}>();
 
 const frameStartRef = ref<HTMLInputElement>();
 
@@ -72,7 +74,7 @@ const startFrame = computed({
         const selectedAsset = props.selectedAsset as Core.Game_Object;
         frameStartRef.value!.value = selectedAsset.startFrame.toString();
         selectedAsset.startFrame = newFrame;
-        emit('asset-changed', selectedAsset.id);
+        emit('assetChanged', selectedAsset.id);
     }
 });
 
@@ -95,7 +97,7 @@ function setObjectSprite(id: number) : void {
         }
     });
 
-    emit('asset-changed', props.selectedAsset.id);
+    emit('assetChanged', props.selectedAsset.id);
 }
 
 function validateFPS(): void {
@@ -103,7 +105,7 @@ function validateFPS(): void {
     ObjectMainEventBus.onFPSChanged.emit();
 }
 
-function groupChanged({add, groupName, newName, remove}: {add: boolean, groupName: string, newName: string, remove: boolean}): void {
+function groupChanged({add, groupName, newName, remove}: iGroupChangedProps): void {
     if (add){
         props.selectedAsset.groups.push(groupName);
     }
@@ -239,7 +241,7 @@ function gotoLogicScript(){
                     <GroupList
                         style="min-width: 200px"
                         :editList="props.selectedAsset.groups"
-                        @group-changed="groupChanged"/>
+                        @groupChanged="groupChanged"/>
                 </div>
             </div>
         </CategoryWrapper>

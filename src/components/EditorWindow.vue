@@ -3,6 +3,7 @@ import RoomEditor from './editor_room/RoomMain.vue';
 import ArtEditor from './editor_art/ArtMain.vue';
 import ObjectEditor from './editor_object/ObjectMain.vue';
 import LogicEditor from './editor_logic/LogicMain.vue';
+import type { DialogBoxProps } from './DialogBox.vue';
 
 import { computed } from 'vue';
 import { useMainStore } from '@/stores/Main';
@@ -12,7 +13,11 @@ import Core from '@/core';
 const mainStore = useMainStore();
 const assetBrowserStore = useAssetBrowserStore();
 
-const emit = defineEmits(['asset-changed', 'open-node-exception', 'dialog-open']);
+const emit = defineEmits<{
+    assetChanged: [number],
+    openNodeException: [{nodeId: number, logicId: number}],
+    dialogOpen: [DialogBoxProps],
+}>();
 
 const currentEditor = computed(()=>{
     switch(mainStore.getSelectedEditor){
@@ -38,9 +43,9 @@ const selectedRoom = computed(()=>assetBrowserStore.getSelectedRoom);
             :is="currentEditor"
             :selectedAsset="(selectedAsset as any)"
             :selectedRoom="selectedRoom"
-            @asset-changed="emit('asset-changed', $event)"
-            @dialog-open="emit('dialog-open', $event)"
-            @open-node-exception="emit('open-node-exception', $event)" />
+            @assetChanged="emit('assetChanged', $event)"
+            @dialogOpen="emit('dialogOpen', $event)"
+            @openNodeException="emit('openNodeException', $event)" />
     </div>
 </template>
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Collapsible from './Collapsible.vue';
-import GroupList from '@/components/common/GroupList.vue';
+import GroupList, { type iGroupChangedProps } from '@/components/common/GroupList.vue';
 import Checkbox from '@/components/common/Checkbox.vue';
 import SearchDropdown from '@/components/common/SearchDropdown.vue';
 
@@ -15,15 +15,15 @@ const props = defineProps<{
     selectedRoom: Core.Room;
 }>();
 
-const emit = defineEmits([
-    'inst-prop-set',
-    'inst-group-changed',
-]);
+const emit = defineEmits<{
+    instPropSet: [Partial<Core.Instance_Object>],
+    instGroupChanged: [iGroupChangedProps],
+}>();
 
 const collisionOverrides = Core.Instance_Object.COLLISION_OVERRIDES;
 
-function setInstProp(propObj: any): void {
-    emit('inst-prop-set', propObj);
+function setInstProp(propObj: Partial<Core.Instance_Object>): void {
+    emit('instPropSet', propObj);
 }
 
 function setInstanceName(newName: string): void {
@@ -94,7 +94,7 @@ function setInstanceName(newName: string): void {
         <GroupList
             :editList="selectedObject!.groups"
             :readOnlyList="(selectedObject as Core.Instance_Object).objRef.groups"
-            @group-changed="emit('inst-group-changed', $event)"/>
+            @groupChanged="emit('instGroupChanged', $event)"/>
         </div>
 </template>
 

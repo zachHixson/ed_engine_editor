@@ -20,7 +20,9 @@ const props = defineProps<{
     isSelected: boolean,
 }>();
 
-const emit = defineEmits(['click']);
+const emit = defineEmits<{
+    click: [iControl],
+}>();
 const { t } = useI18nStore();
 
 const iconLoaded = ref<boolean>(true);

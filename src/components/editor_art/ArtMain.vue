@@ -6,6 +6,7 @@ export const ArtMainEventBus = {
 </script>
 
 <script setup lang="ts">
+import type { DialogBoxProps } from '@/components/DialogBox.vue';
 import Undo_Store from '@/components/common/Undo_Store';
 import ToolPanel from './ToolPanel.vue';
 import ArtCanvas from './ArtCanvas.vue';
@@ -32,10 +33,10 @@ const props = defineProps<{
     selectedAsset: Core.Sprite;
 }>();
 
-const emit = defineEmits([
-    'asset-changed',
-    'dialog-open',
-]);
+const emit = defineEmits<{
+    assetChanged: [number],
+    dialogOpen: [DialogBoxProps],
+}>();
 
 const undoStore = reactive(new Undo_Store<iSpriteUndoData>(32));
 const toolMap: Map<Core.ART_TOOL_TYPE, ()=>Tool_Base> = new Map();
@@ -70,7 +71,7 @@ watch(()=>artEditorStore.getSelectedTool, (newTool)=>toolSelected(newTool!));
 onMounted(()=>{
     const maxFrame = props.selectedAsset.frames.length - 1;
     const selectedFrame = Math.min(selectedFrameIdx.value, maxFrame);
-    
+
     selectedFrameIdx.value = selectedFrame;
     window.addEventListener('resize', resize);
     undoStore.setInitialState(packageUndoData());
@@ -101,7 +102,7 @@ function spriteDataChanged(): void {
     render();
     commitFullState();
     props.selectedAsset.updateFrame(selectedFrameIdx.value);
-    emit('asset-changed', props.selectedAsset.id);
+    emit('assetChanged', props.selectedAsset.id);
 }
 
 function render(): void {
@@ -110,7 +111,7 @@ function render(): void {
 
 function framesMoved(): void {
     commitFullState();
-    emit('asset-changed', props.selectedAsset.id);
+    emit('assetChanged', props.selectedAsset.id);
 }
 
 function frameAdded(): void {
@@ -185,10 +186,10 @@ function undo(): void {
     if (selectedFrameIdx.value > props.selectedAsset.frames.length - 1){
         selectedFrameIdx.value--;
     }
-    
+
     nextTick(()=>{
         ArtMainEventBus.onUpdateFramePreviews.emit();
-        emit('asset-changed', props.selectedAsset.id);
+        emit('assetChanged', props.selectedAsset.id);
     });
 }
 
@@ -201,7 +202,7 @@ function redo(): void {
 
     nextTick(()=>{
         ArtMainEventBus.onUpdateFramePreviews.emit();
-        emit('asset-changed', props.selectedAsset.id);
+        emit('assetChanged', props.selectedAsset.id);
     });
 }
 
@@ -225,10 +226,10 @@ function packageUndoData(): iSpriteUndoData {
             :spriteFrame="selectedAsset.frames[selectedFrameIdx]"
             :undoLength="undoLength"
             :redoLength="redoLength"
-            @mouse-down="mouseDown"
-            @mouse-up="mouseUp"
-            @mouse-move="mouseMove"
-            @mouse-leave="mouseLeave"
+            @mouseDown="mouseDown"
+            @mouseUp="mouseUp"
+            @mouseMove="mouseMove"
+            @mouseLeave="mouseLeave"
             @undo="undo()"
             @redo="redo()" />
         <AnimationPanel
@@ -236,11 +237,11 @@ function packageUndoData(): iSpriteUndoData {
             ref="animPanel"
             :sprite="selectedAsset"
             @resized="resize"
-            @frame-added="frameAdded()"
-            @frame-deleted="commitFullState()"
-            @frame-moved="framesMoved"
-            @frame-copied="commitFullState()"
-            @dialog-open="emit('dialog-open', $event)" />
+            @frameAdded="frameAdded()"
+            @frameDeleted="commitFullState()"
+            @frameMoved="framesMoved"
+            @frameCopied="commitFullState()"
+            @dialogOpen="emit('dialogOpen', $event)" />
     </div>
 </template>
 

@@ -29,17 +29,17 @@ const props = defineProps<{
     redoLength: number,
 }>();
 
-const emit = defineEmits([
-    'mouse-down',
-    'mouse-up',
-    'mouse-move',
-    'mouse-enter',
-    'mouse-leave',
-    'mouse-wheel',
-    'nav-selected',
-    'undo',
-    'redo',
-]);
+const emit = defineEmits<{
+    mouseDown: [MouseEvent],
+    mouseUp: [MouseEvent],
+    mouseMove: [MouseEvent],
+    mouseEnter: [],
+    mouseLeave: [MouseEvent],
+    mouseWheel: [WheelEvent],
+    navSelected: [],
+    undo: [],
+    redo: [],
+}>();
 
 const artEditorStore = useArtEditorStore();
 const { Vec2 } = Core;
@@ -112,14 +112,14 @@ function mouseDown(event: MouseEvent): void {
     ArtCanvasEventBus.onMouseDown.emit(event);
 
     if (navHotkeyTool.value == null){
-        emit('mouse-down', event);
+        emit('mouseDown', event);
         renderer!.mouseDown();
     }
 }
 
 function mouseUp(event: MouseEvent): void {
     if (navHotkeyTool.value == null){
-        emit('mouse-up', event);
+        emit('mouseUp', event);
         renderer!.mouseUp();
     }
 
@@ -131,25 +131,25 @@ function mouseMove(event: MouseEvent): void {
 
     if (navHotkeyTool.value == null){
         updateMouseCell(event);
-        emit('mouse-move', event);
+        emit('mouseMove', event);
         renderer!.mouseMove();
     }
 }
 
 function mouseEnter(): void {
     ArtCanvasEventBus.onMouseEnter.emit();
-    emit('mouse-enter');
+    emit('mouseEnter');
 }
 
 function mouseLeave(event: MouseEvent): void {
     mouseMove(event);
     ArtCanvasEventBus.onMouseLeave.emit(event);
-    emit('mouse-leave', event);
+    emit('mouseLeave', event);
 }
 
 function wheel(event: WheelEvent): void {
     ArtCanvasEventBus.onMouseWheel.emit(event);
-    emit('mouse-wheel', event);
+    emit('mouseWheel', event);
 }
 
 function resize(): void {
@@ -173,7 +173,7 @@ function resize(): void {
 function enableNav(navTool: Core.NAV_TOOL_TYPE): void {
     artEditorStore.selectTool(null);
     artEditorStore.setSelectedNavTool(navTool);
-    emit('nav-selected');
+    emit('navSelected');
 }
 
 function getZoomBounds(): {min: number, max: number} {
@@ -237,9 +237,9 @@ function updateMouseCell(event: MouseEvent): void {
             :dpiScale="devicePixelRatio"
             :parentEventBus="ArtCanvasEventBus"
             :invert-y-axis="true"
-            @nav-changed="(renderer! as Art_Canvas_Renderer).navChanged()"
-            @tool-selected="enableNav"
-            @set-hotkey-tool="navHotkeyTool = $event"/>
+            @navChanged="(renderer! as Art_Canvas_Renderer).navChanged()"
+            @toolSelected="enableNav"
+            @setHotkeyTool="navHotkeyTool = $event"/>
     </div>
 </template>
 

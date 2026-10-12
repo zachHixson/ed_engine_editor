@@ -16,9 +16,9 @@ const props = defineProps<{
     room: Core.Room;
 }>();
 
-const emit = defineEmits([
-    'exit-prop-set',
-]);
+const emit = defineEmits<{
+    exitPropSet: [Partial<Core.Instance_Exit>],
+}>();
 
 const genericNoOption = { name: t('generic.no_option'), id: -1, value: null };
 
@@ -33,7 +33,7 @@ const destinationRooms = computed(()=>{
 });
 const destinationRoomExits = computed(()=>{
     if (props.selectedExit?.TYPE != Core.INSTANCE_TYPE.EXIT) return [genericNoOption];
-    
+
     const allRooms = gameDataStore.getAllRooms;
     const destRoom = allRooms.find(r => r.id == props.selectedExit.destinationRoom);
     const destExits = destRoom?.instances.toArray().filter(instance => instance.TYPE == Core.INSTANCE_TYPE.EXIT && instance.id != props.selectedExit.id);
@@ -46,8 +46,8 @@ const destinationRoomExits = computed(()=>{
     return [genericNoOption, ...options];
 });
 
-function setExitProp(propObj: any): void {
-    emit('exit-prop-set', propObj);
+function setExitProp(propObj: Partial<Core.Instance_Exit>): void {
+    emit('exitPropSet', propObj);
 }
 
 function setExitName(newName: string): void {
@@ -69,12 +69,12 @@ function setExitName(newName: string): void {
         <div class="control">
             <label for="detectBacktrack">{{ t('room_editor.detect_backtrack') }}:</label>
             <Checkbox id="detectBacktrack" class="custom-checkbox" :value="selectedExit.detectBacktracking" v-tooltip="t('room_editor.tt_exit_detect_backtrack')"
-                @change="setExitProp({detectBacktracking: $event})"></Checkbox>
+                @change="setExitProp({detectBacktracking: !!$event})"></Checkbox>
         </div>
         <div class="control">
             <label for="exitEnding">{{ t('room_editor.is_ending') }}:</label>
             <Checkbox id="exitEnding" class="custom-checkbox" :value="selectedExit.isEnding" v-tooltip="t('room_editor.tt_exit_is_ending')"
-                @change="setExitProp({isEnding: $event})"></Checkbox>
+                @change="setExitProp({isEnding: !!$event})"></Checkbox>
         </div>
         <div v-show="selectedExit.isEnding" class="control">
             <label for="endingDialog">{{ t('room_editor.end_dialog') }}:</label>

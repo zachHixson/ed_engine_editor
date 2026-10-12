@@ -1,7 +1,7 @@
 <script lang="ts">
 export interface iRenameEventProps {
     asset: Core.Asset_Base,
-    oldName: string,
+    oldName: string | null,
 }
 </script>
 
@@ -31,7 +31,11 @@ const props = defineProps<{
     wrapperElement: HTMLDivElement;
 }>();
 
-const emit = defineEmits(['delete-asset', 'select-asset', 'renamed']);
+const emit = defineEmits<{
+    deleteAsset: [Core.Asset_Base],
+    selectAsset: [Core.Asset_Base],
+    renamed: [iRenameEventProps],
+}>();
 
 const assetRef = ref<HTMLElement>();
 const renameTextRef = ref<HTMLInputElement>();
@@ -81,12 +85,12 @@ function calculateVisibility(): void {
 function deleteAsset(event: MouseEvent): void {
     event.stopPropagation();
     isRenaming.value = false;
-    emit('delete-asset', props.asset);
+    emit('deleteAsset', props.asset);
 }
 
 function selectAsset(event: MouseEvent): void {
     event.preventDefault();
-    emit('select-asset', props.asset);
+    emit('selectAsset', props.asset);
 }
 
 function rename(): void {

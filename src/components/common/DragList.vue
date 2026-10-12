@@ -13,7 +13,12 @@ const DRAG_DIST = 20;
 
 const { Vec2 } = Core;
 
-const emit = defineEmits(['order-changed']);
+const emit = defineEmits<{
+    orderChanged: [{
+        itemIdx: number,
+        newIdx: number
+    }],
+}>();
 
 const rootEl = shallowRef<HTMLDivElement>();
 const dragLineRef = shallowRef<HTMLDivElement>();
@@ -29,7 +34,6 @@ let hoverEl: HTMLDivElement | null;
 let originalDisplay: string;
 let overY: number = 0;
 let dragIdx: number | null;
-let isDragging = false;
 let hasMoved = false;
 
 onMounted(()=>{
@@ -150,7 +154,7 @@ function mouseMove(event: MouseEvent): void {
     }
 
     //check which separator item is being dragged over
-    if (isDragging){
+    if (dragEl){
         handleScroll();
         updateDragIdx();
     }
@@ -159,7 +163,7 @@ function mouseMove(event: MouseEvent): void {
     if (mouseDownPos){
         const distance = mouseDownPos.distanceTo(mousePos);
 
-        if (distance > DRAG_DIST && !isDragging){
+        if (distance > DRAG_DIST && !dragEl){
             dragStart();
         }
     }
@@ -178,13 +182,12 @@ function mouseUp(): void {
     document.removeEventListener('mousemove', mouseMove);
     document.removeEventListener('mouseup', mouseMove);
 
-    if (isDragging){
+    if (dragEl){
         dragEnd();
     }
 }
 
 function dragStart(): void {
-    isDragging = true;
     dragEl = cloneEl(downEl!);
     dragIdx = parseInt(dragEl!.getAttribute('idx')!);
     hoverIdx = dragIdx;
@@ -209,10 +212,12 @@ function dragStart(): void {
 }
 
 function dragEnd(): void {
-    const newIdx = hoverIdx! > dragIdx! ? hoverIdx! - 1 : hoverIdx;
+    if (!dragEl) return;
 
-    if (hoverIdx != null){
-        emit('order-changed', {
+    if (!(hoverIdx == null || dragIdx == null)) {
+        const newIdx = hoverIdx > dragIdx ? hoverIdx - 1 : hoverIdx;
+
+        emit('orderChanged', {
             itemIdx: dragIdx,
             newIdx
         });
@@ -226,14 +231,14 @@ function dragEnd(): void {
     hoverEl = null;
     downEl = null;
     dragIdx = null;
-    isDragging = false;
-    dragEl!.parentNode!.removeChild(dragEl!);
+    dragEl.parentNode?.removeChild(dragEl);
+    dragEl = null;
 
     onContentsChange();
 }
 
 function handleScroll(): void {
-    if (overY != 0 && isDragging){
+    if (overY != 0 && dragEl){
         const scrollAmt = overY * devicePixelRatio * 0.1;
         rootEl.value!.parentElement!.scrollBy(0, scrollAmt);
         requestAnimationFrame(handleScroll);

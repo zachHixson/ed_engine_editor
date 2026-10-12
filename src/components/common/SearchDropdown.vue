@@ -24,7 +24,9 @@ const props = withDefaults(defineProps<{
     search: false,
 });
 
-const emit = defineEmits(['change']);
+const emit = defineEmits<{
+    change: [any],
+}>();
 
 const boxEl = ref<HTMLDivElement>();
 const searchEl = ref<HTMLInputElement>();

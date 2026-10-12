@@ -33,15 +33,14 @@ const props = defineProps<{
     sprite: Core.Sprite,
 }>();
 
-const emit = defineEmits([
-    'resized',
-    'frame-added',
-    'frame-deleted',
-    'frame-moved',
-    'frame-copied',
-    'selected-frame-changed',
-    'dialog-open',
-]);
+const emit = defineEmits<{
+    resized: [],
+    frameAdded: [],
+    frameDeleted: [],
+    frameMoved: [],
+    frameCopied: [],
+    dialogOpen: [DialogBoxProps],
+}>();
 
 const frameListRef = ref<HTMLDivElement>();
 const isOpen = ref(artEditorStore.isAnimPanelOpen);
@@ -85,14 +84,12 @@ function bindHotkeys(): void {
         if (selectedFrameIdx.value > 0){
             const newIdx = selectedFrameIdx.value - 1;
             artEditorStore.selectFrame(newIdx);
-            selectedFrameChanged(newIdx);
         }
     }
     const nextFrame = () => {
         if (selectedFrameIdx.value < props.sprite.frames.length - 1){
             const newIdx = selectedFrameIdx.value + 1;
             artEditorStore.selectFrame(newIdx);
-            selectedFrameChanged(newIdx);
         }
     }
 
@@ -128,13 +125,13 @@ function updateFramePreviews(range: number[] = [0, props.sprite.frames.length - 
 
 function addFrame(): void {
     if (props.sprite.frames.length >= 4096) {
-        emit('dialog-open', {type: DIALOG_TYPE.ALERT, textInfo: {textId: 'art_editor.frame_limit'}, callback: ()=>{}} as DialogBoxProps);
+        emit('dialogOpen', {type: DIALOG_TYPE.ALERT, textInfo: {textId: 'art_editor.frame_limit'}, callback: ()=>{}});
         return;
     }
 
     const newFrameIdx = props.sprite.addFrame();
     artEditorStore.selectFrame(newFrameIdx);
-    emit('frame-added');
+    emit('frameAdded');
 
     nextTick(()=>{
         const frameList = frameListRef.value;
@@ -148,7 +145,7 @@ function addFrame(): void {
 function deleteFrame(idx: number): void {
     props.sprite.deleteFrame(idx);
     selectedFrameIdx.value = Math.min(selectedFrameIdx.value, props.sprite.frames.length - 1);
-    emit('frame-deleted');
+    emit('frameDeleted');
 }
 
 function frameMoved({idx, dir}: {idx: number, dir: number}): void {
@@ -165,16 +162,12 @@ function frameMoved({idx, dir}: {idx: number, dir: number}): void {
         Math.min(endMin, props.sprite.frames.length - 1)
     ]);
 
-    emit('frame-moved');
+    emit('frameMoved');
 }
 
 function frameCopied(frameIdx: number): void {
     updateFramePreviews([frameIdx + 1]);
-    emit('frame-copied');
-}
-
-function selectedFrameChanged(newIdx: number): void {
-    emit('selected-frame-changed', newIdx);
+    emit('frameCopied');
 }
 
 function frameOrderChanged(event: {itemIdx: number, newIdx: number}): void {
@@ -207,7 +200,7 @@ function frameOrderChanged(event: {itemIdx: number, newIdx: number}): void {
         props.sprite.frames.length - 1
     ]);
 
-    emit('frame-moved');
+    emit('frameMoved');
 }
 </script>
 
@@ -231,14 +224,13 @@ function frameOrderChanged(event: {itemIdx: number, newIdx: number}): void {
             </div>
             <div v-if="isOpen" ref="frameListRef" class="scrollWrapper">
                 <DragList
-                    @order-changed="frameOrderChanged">
+                    @orderChanged="frameOrderChanged">
                     <AnimFrame
-                        v-for="(frame, idx) in animFrames"
+                        v-for="(_, idx) in animFrames"
                         class="animFrame"
                         :key="sprite.id.toString() + idx"
                         :index="idx"
                         :sprite="sprite"
-                        @selectedFrameChanged="selectedFrameChanged"
                         @frameDeleted="deleteFrame"
                         @frameCopied="frameCopied"
                         @frameMoved="frameMoved"/>

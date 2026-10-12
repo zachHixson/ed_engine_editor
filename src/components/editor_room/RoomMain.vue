@@ -82,9 +82,6 @@ const props = defineProps<{
     selectedRoom: Core.Room;
 }>();
 
-//define dom refs
-const editWindow = ref<any>();
-
 //define component data
 const tools = [
     {
@@ -311,14 +308,14 @@ function toggleGrid(): void {
                 :name="tool.text"
                 :tool="tool.tool"
                 :curSelection="roomEditorStore.getSelectedTool"
-                @tool-clicked="toolClicked"/>
+                @toolClicked="toolClicked"/>
             <div class="toolSpacer"></div>
             <Tool
                 :tool="0"
                 :icon="gridIcon"
                 :name="t('room_editor.toggle_grid')"
                 :toggled="roomEditorStore.getGridState"
-                @tool-clicked="toggleGrid"/>
+                @toolClicked="toggleGrid"/>
         </div>
         <div
             v-if="overlappingInstances.length > 0"
@@ -342,7 +339,7 @@ function toggleGrid(): void {
             ref="editWindow"
             class="editWindow"
             :selectedRoom="selectedRoom"
-            :editorSelection="(editorSelection as Core.Instance_Base)"
+            :editorSelection="editorSelection as Core.Instance_Base"
             :undoLength="undoLength"
             :redoLength="redoLength"
             @mouse-event="mouseEvent"
@@ -365,15 +362,15 @@ function toggleGrid(): void {
                     :selected-instance="(editorSelection as Core.Instance_Base)"
                     :camera="selectedRoom.camera"
                     :room="selectedRoom"
-                    @inst-prop-set="changeInstanceProps({newState: $event as object})"
-                    @inst-group-changed="changeInstanceGroups($event)"
-                    @inst-var-changed="()=>{}"
-                    @inst-deleted="deleteInstance({instId: $event.id}, $event.commit)"
-                    @cam-prop-set="changeCameraProps({newState: $event})"
-                    @exit-prop-set="changeInstanceProps({newState: ($event as Partial<Core.Instance_Base>)})"
-                    @room-prop-set="changeRoomProps({newState: $event})"
-                    @room-bg-changed="changeRoomProps({newState: $event}, false)"
-                    @room-bg-change-end="changeRoomProps({newState: $event}, true)"/>
+                    @instPropSet="changeInstanceProps({newState: $event})"
+                    @instGroupChanged="changeInstanceGroups($event)"
+                    @instVarChanged="()=>{}"
+                    @instDeleted="deleteInstance({instId: $event.id}, $event.commit)"
+                    @camPropSet="changeCameraProps({newState: $event})"
+                    @exitPropSet="changeInstanceProps({newState: $event})"
+                    @roomPropSet="changeRoomProps({newState: $event})"
+                    @roomBgChanged="changeRoomProps({newState: $event}, false)"
+                    @roomBgChangeEnd="changeRoomProps({newState: $event}, true)"/>
             </div>
         </div>
     </div>

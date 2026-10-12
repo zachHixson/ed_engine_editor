@@ -23,12 +23,21 @@ export function nanToNull(inp: number): number | null {
     if (isNaN(inp)){
         return null;
     }
-    
+
+    return inp;
+}
+
+export function nanToPrev(inp: number, getter: ()=>number): number {
+    if (isNaN(inp)) {
+        return getter();
+    }
+
     return inp;
 }
 </script>
 
 <script setup lang="ts">
+import { type iGroupChangedProps } from '@/components/common/GroupList.vue';
 import AddBrushProperties from './properties/AddBrushProperties.vue';
 import SpriteProperties from './properties/SpriteProperties.vue';
 import ObjectProperties from './properties/ObjectProperties.vue';
@@ -53,16 +62,16 @@ const props = defineProps<{
     selectedInstance: Core.Instance_Base | null,
 }>();
 
-const emit = defineEmits([
-    'inst-prop-set',
-    'inst-group-changed',
-    'inst-deleted',
-    'cam-prop-set',
-    'exit-prop-set',
-    'room-prop-set',
-    'room-bg-changed',
-    'room-bg-change-end',
-]);
+const emit = defineEmits<{
+    instPropSet: [Partial<Core.Instance_Base>],
+    instGroupChanged: [iGroupChangedProps],
+    instDeleted: [{id?: number, commit: boolean}],
+    camPropSet: [Partial<Core.Camera>],
+    exitPropSet: [Partial<Core.Instance_Exit>],
+    roomPropSet: [Partial<Core.Room>],
+    roomBgChanged: [Partial<Core.Room>],
+    roomBgChangeEnd: [Partial<Core.Room>],
+}>();
 
 const showAddBrushProps = computed(()=>props.selectedTool == Core.ROOM_TOOL_TYPE.ADD_BRUSH);
 const showSpriteProps = computed(()=>(
@@ -101,42 +110,42 @@ const showNoToolProps = computed(()=>!props.selectedTool);
             v-if="showSpriteProps"
             :selected-sprite="(selectedInstance as Core.Instance_Sprite)"
             :selected-room="room"
-            @inst-prop-set="emit('inst-prop-set', $event)"
-            @inst-group-changed="emit('inst-group-changed', $event)"></SpriteProperties>
+            @instPropSet="emit('instPropSet', $event)"
+            @instGroupChanged="emit('instGroupChanged', $event)"></SpriteProperties>
         <ObjectProperties
             v-if="showObjectProps"
             :selected-object="(selectedInstance as Core.Instance_Object)"
             :selected-room="room"
-            @inst-prop-set="emit('inst-prop-set', $event)"
-            @inst-group-changed="emit('inst-group-changed', $event)"></ObjectProperties>
+            @instPropSet="emit('instPropSet', $event)"
+            @instGroupChanged="emit('instGroupChanged', $event)"></ObjectProperties>
         <LogicProperties
             v-if="showLogicProps"
             :selected-logic="(selectedInstance as Core.Instance_Logic)"
             :selected-room="room"
-            @inst-prop-set="emit('inst-prop-set', $event)"
-            @inst-group-changed="emit('inst-group-changed', $event)"></LogicProperties>
+            @instPropSet="emit('instPropSet', $event)"
+            @instGroupChanged="emit('instGroupChanged', $event)"></LogicProperties>
         <EraserProperties
             v-if="showEraserProps"
-            :selected-asset="assetBrowserStore.getSelectedAsset"
-            :selected-room="room"
-            @inst-deleted="emit('inst-deleted', $event)"></EraserProperties>
+            :selectedAsset="assetBrowserStore.getSelectedAsset"
+            :selectedRoom="room"
+            @instDeleted="emit('instDeleted', $event)"></EraserProperties>
         <CameraProperties
             v-if="showCameraProps"
             :selected-instance="selectedInstance"
             :selected-room="room"
             :camera="camera"
-            @cam-prop-set="emit('cam-prop-set', $event)"></CameraProperties>
+            @camPropSet="emit('camPropSet', $event)"></CameraProperties>
         <ExitProperties
             v-if="showExitProps"
-            :selected-exit="(selectedInstance as Core.Instance_Exit)"
+            :selectedExit="(selectedInstance as Core.Instance_Exit)"
             :room="room"
-            @exit-prop-set="emit('exit-prop-set', $event)"></ExitProperties>
+            @exitPropSet="emit('exitPropSet', $event)"></ExitProperties>
         <RoomProperties
             v-show="showRoomProps"
             :room="room"
-            @room-prop-set="emit('room-prop-set', $event)"
-            @room-bg-changed="emit('room-bg-changed', $event)"
-            @room-bg-change-end="emit('room-bg-change-end', $event)"></RoomProperties>
+            @roomPropSet="emit('roomPropSet', $event)"
+            @roomBgChanged="emit('roomBgChanged', $event)"
+            @roomBgChangeEnd="emit('roomBgChangeEnd', $event)"></RoomProperties>
         <div v-show="showNoSelection" class="noProps">{{ t('room_editor.no_selection') }}</div>
         <div v-show="showNoToolProps" class="noProps">{{ t('room_editor.no_tool_props') }}</div>
     </div>

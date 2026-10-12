@@ -24,7 +24,9 @@ const props = defineProps<{
     callback: (positive: boolean, varInfo: Core.iVarInfo)=>void,
 }>();
 
-const emit = defineEmits(['close']);
+const emit = defineEmits<{
+    close: [],
+}>();
 
 const varName = ref('');
 const type = ref(Core.Node_Enums.SOCKET_TYPE.NUMBER);

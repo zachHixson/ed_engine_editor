@@ -1,10 +1,13 @@
 <script lang="ts">
+import Core from '@/core';
+
 export interface iGroupChangedProps {
     groupName: string,
     add?: boolean,
     remove?: boolean,
     newName?: string,
     oldIdx?: number,
+    instRef?: Core.Instance_Base,
 }
 </script>
 
@@ -13,7 +16,6 @@ import Svg from '@/components/common/Svg.vue';
 
 import { ref, nextTick } from 'vue';
 import { useI18nStore } from '@/stores/I18n';
-import Core from '@/core';
 import plusIcon from '@/assets/plus.svg';
 
 const { t } = useI18nStore();
@@ -23,7 +25,9 @@ const props = defineProps<{
     readOnlyList?: string[],
 }>();
 
-const emit = defineEmits(['group-changed']);
+const emit = defineEmits<{
+    groupChanged: [iGroupChangedProps],
+}>();
 
 const list = ref();
 
@@ -48,10 +52,10 @@ function addGroup(): void {
         props.readOnlyList ? Core.Util.getHighestEndingNumber(props.readOnlyList) : 0
     ) + 1;
 
-    emit('group-changed', {
+    emit('groupChanged', {
         add: true,
         groupName: t('object_editor.group_prefix') + nextNum
-    } satisfies iGroupChangedProps);
+    });
     nextTick(()=>{
         const listEl = list.value;
         listEl.scrollTop = listEl.scrollHeight - listEl.clientHeight;
@@ -59,13 +63,13 @@ function addGroup(): void {
 }
 
 function groupNameChanged(group: string, event: any): void {
-    const obj = {groupName: group, newName: validateName(event.target.value, group)} satisfies iGroupChangedProps;
-    emit('group-changed', obj);
+    const obj = {groupName: group, newName: validateName(event.target.value, group)};
+    emit('groupChanged', obj);
 }
 
-function groupDeleted(group: string, idx: number, event: any): void {
-    const obj = {groupName: group, remove: true, oldIdx: idx} satisfies iGroupChangedProps;
-    emit('group-changed', obj);
+function groupDeleted(group: string, idx: number): void {
+    const obj = {groupName: group, remove: true, oldIdx: idx};
+    emit('groupChanged', obj);
 }
 </script>
 
@@ -89,7 +93,7 @@ function groupDeleted(group: string, idx: number, event: any): void {
                     :key="group"
                     class="item">
                     <input class="listInput" :value="group" @change="groupNameChanged(group, $event)"/>
-                    <button class="deleteBtn" @click="groupDeleted(group, idx, $event)">
+                    <button class="deleteBtn" @click="groupDeleted(group, idx)">
                         <Svg :src="plusIcon" style="transform: rotate(45deg)"></Svg>
                     </button>
                 </div>

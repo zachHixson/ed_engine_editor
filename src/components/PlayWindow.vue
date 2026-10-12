@@ -28,7 +28,9 @@ interface iConsoleLine {
     exceptionData?: Core.iNodeExceptionData;
 }
 
-const emit = defineEmits(['openNodeException']);
+const emit = defineEmits<{
+    openNodeException: [{nodeId: number, logicId: number}],
+}>();
 
 const mainStore = useMainStore();
 const logicEditorStore = useLogicEditorStore();
@@ -145,7 +147,7 @@ function addLogMessage(src: string[], text: string, level: Level, exceptionData?
     const h = padNum(time.getHours());
     const m = padNum(time.getMinutes());
     const s = padNum(time.getSeconds());
-    
+
     consoleOuput.value.push({
         message: text,
         time: [h, m, s],
@@ -162,7 +164,7 @@ function addLogMessage(src: string[], text: string, level: Level, exceptionData?
     if (consoleOpen.value){
         const listEl = debugConsoleRef.value?.querySelector('.console-message-list')!;
         const listHeight = listEl.getBoundingClientRect().height;
-        
+
         if (listEl.scrollTop >= (listEl.scrollHeight - listHeight)){
             dbgScrollToBottom();
         }

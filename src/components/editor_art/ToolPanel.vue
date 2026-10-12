@@ -28,7 +28,9 @@ const mainStore = useMainStore();
 const artEditorStore = useArtEditorStore();
 const { t } = useI18nStore();
 
-const emit = defineEmits(['resized']);
+const emit = defineEmits<{
+    resized: [],
+}>();
 
 const brushSizes = [
     {
@@ -203,7 +205,7 @@ function toolChanged(newTool: Core.ART_TOOL_TYPE): void {
                     <ColorPicker
                         :width="200"
                         :color="toolColor"
-                        @change-end="colorChanged"/>
+                        @changeEnd="colorChanged"/>
                 </div>
                 <div class="brush-size-container">
                     <Tool

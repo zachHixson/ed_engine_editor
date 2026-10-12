@@ -13,7 +13,9 @@ const props = defineProps<{
     selectedRoom: Core.Room;
 }>();
 
-const emit = defineEmits(['inst-deleted']);
+const emit = defineEmits<{
+    instDeleted: [{id?: number, commit: boolean}],
+}>();
 
 function deleteAllType(): void {
     if (!props.selectedAsset) return;
@@ -26,8 +28,8 @@ function deleteAllType(): void {
         }
     });
 
-    instances.forEach(i => emit('inst-deleted', {id: i.id, commit: false}));
-    emit('inst-deleted', {commit: true});
+    instances.forEach(i => emit('instDeleted', {id: i.id, commit: false}));
+    emit('instDeleted', {commit: true});
 }
 </script>
 
@@ -37,12 +39,12 @@ function deleteAllType(): void {
         <div class="control">
             <label for="copySelected">{{ t('room_editor.erase_top_only') }}:</label>
             <Checkbox id="copySelected" class="custom-checkbox" :value="roomEditorStore.eraserTopOnly"  v-tooltip="t('room_editor.tt_erase_top_only')"
-                @change="roomEditorStore.eraserTopOnly = $event"/>
+                @change="roomEditorStore.eraserTopOnly = !!$event"/>
         </div>
         <div class="control">
             <label for="copySelected">{{ t('room_editor.erase_selected_type') }}:</label>
             <Checkbox id="copySelected" class="custom-checkbox" :value="roomEditorStore.eraserSelectedType" v-tooltip="t('room_editor.tt_erase_selected_type')"
-                @change="roomEditorStore.eraserSelectedType = $event"/>
+                @change="roomEditorStore.eraserSelectedType = !!$event"/>
         </div>
         <div class="control">
             <button

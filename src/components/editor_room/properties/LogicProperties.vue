@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import GroupList from '@/components/common/GroupList.vue';
+import GroupList, {type iGroupChangedProps} from '@/components/common/GroupList.vue';
 
 import { computed } from 'vue';
 import { checkNameCollisions } from '../Properties.vue';
@@ -15,18 +15,18 @@ const props = defineProps<{
     selectedRoom: Core.Room;
 }>();
 
-const emit = defineEmits([
-    'inst-prop-set',
-    'inst-group-changed',
-]);
+const emit = defineEmits<{
+    instPropSet: [Partial<Core.Instance_Logic>],
+    instGroupChanged: [iGroupChangedProps],
+}>();
 
 const logicName = computed(()=>{
     const logicScript = gameDataStore.getAllLogic.find(l => l.id == props.selectedLogic.logicId);
     return logicScript?.name;
 });
 
-function setInstProp(propObj: any): void {
-    emit('inst-prop-set', propObj);
+function setInstProp(propObj: Partial<Core.Instance_Logic>): void {
+    emit('instPropSet', propObj);
 }
 
 function setInstanceName(newName: string): void {
@@ -51,7 +51,7 @@ function setInstanceName(newName: string): void {
         </div>
         <GroupList
             :editList="selectedLogic.groups"
-            @group-changed="emit('inst-group-changed', $event)"/>
+            @groupChanged="emit('instGroupChanged', $event)"/>
     </div>
 </template>
 

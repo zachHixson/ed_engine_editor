@@ -15,12 +15,12 @@ const roomEditorStore = useRoomEditorStore();
         <div class="control">
             <label for="copySelected">{{ t('room_editor.copy_selected_instance') }}:</label>
             <Checkbox id="copySelected" class="custom-checkbox" :value="roomEditorStore.addBrushCopy" v-tooltip="t('room_editor.tt_copy_selected_instance')"
-                @change="roomEditorStore.addBrushCopy = $event"/>
+                @change="roomEditorStore.addBrushCopy = !!$event"/>
         </div>
         <div class="control">
             <label for="paintOverlap">{{ t('room_editor.allow_overlap') }}:</label>
             <Checkbox id="paintOverlap" class="custom-checkbox" :value="roomEditorStore.addBrushOverlap" v-tooltip="t('room_editor.tt_allow_overlap')"
-                @change="roomEditorStore.addBrushOverlap = $event"/>
+                @change="roomEditorStore.addBrushOverlap = !!$event"/>
         </div>
         <div class="control">
             <label for="fps">{{ t('room_editor.paint_at_depth') }}:</label>

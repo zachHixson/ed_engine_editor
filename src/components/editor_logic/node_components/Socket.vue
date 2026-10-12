@@ -37,25 +37,31 @@ import socketListIcon from '@/assets/list_icon.svg';
 import type Logic from './Logic';
 import decoratorMap from '../decoratorMap';
 
+type Socket = Core.iEditorNodeInput & {node: Node};
+
 const assetBrowserStore = useAssetBrowserStore();
 const { t, te } = useI18nStore();
 
 const props = defineProps<{
-    socket: Core.iEditorNodeInput & {node: Node};
+    socket: Socket;
     isInput: boolean;
     parentConnections: Node_Connection[];
     parentId: number;
     desc: string | undefined;
 }>();
 
-const emit = defineEmits(['on-input', 'value-changed', 'mouse-down', 'socket-over']);
+const emit = defineEmits<{
+    onInput: [Core.iNodeInputEvent],
+    valueChanged: [iValueChanged],
+    mouseDown: [Node_Connection],
+    socketOver: [iHoverSocket | null],
+}>();
 
-const numInputRef = ref<InstanceType<typeof Input>>();
 const boolCheckboxRef = ref<HTMLInputElement>();
 const socketConnectionRef = ref<HTMLDivElement>();
 const hasSize = ref(false);
 const forceRefreshkey = ref(0);
-let lastValue: any = 0;
+let lastValue: unknown = 0;
 
 const socketType = computed(()=>{
     forceRefreshkey.value;
@@ -87,7 +93,7 @@ const iconMap = new Map<Core.Node_Enums.SOCKET_TYPE, string>([
     [Core.Node_Enums.SOCKET_TYPE.NUMBER, socketNumberIcon],
     [Core.Node_Enums.SOCKET_TYPE.STRING, socketStringIcon],
     [Core.Node_Enums.SOCKET_TYPE.ASSET, socketAssetIcon],
-    [Core.Node_Enums.SOCKET_TYPE.INSTANCE, socketInstanceIcon],    
+    [Core.Node_Enums.SOCKET_TYPE.INSTANCE, socketInstanceIcon],
     [Core.Node_Enums.SOCKET_TYPE.BOOL, socketBoolIcon],
 ]);
 const socketIcon = computed(()=>iconMap.get(socketType.value)!);
@@ -141,24 +147,12 @@ function forceSocketUpdate(socketId: string | undefined): void {
     }
 }
 
-function onInput(event: InputEvent): void {
-    emit('on-input', event);
-}
-
-function valueChanged(target: HTMLInputElement): void {
-    emitValueChanged(target.value);
-}
-
-function numValueChanged({value}:{value: number}): void {
-    emitValueChanged(value);
-}
-
-function boolValueChanged(newVal: boolean | null): void {
-    emitValueChanged(newVal);
+function onInput(event: Core.iNodeInputEvent): void {
+    emit('onInput', event);
 }
 
 function emitValueChanged(newVal: any): void {
-    emit('value-changed', {
+    emit('valueChanged', {
         socket: props.socket,
         oldVal: lastValue,
         newVal: newVal,
@@ -188,11 +182,13 @@ function mouseDown(event: MouseEvent): void {
     connection.canConnect = canConnect.value;
     connection.graphId = (assetBrowserStore.getSelectedAsset as unknown as Logic).selectedGraphId;
 
-    emit('mouse-down', connection);
+    emit('mouseDown', connection);
 }
 
 function mouseEnter(): void {
-    emit('socket-over', {
+    if (!socketConnectionRef.value) return;
+
+    emit('socketOver', {
         socketData: props.socket,
         isInput: props.isInput,
         canConnect: canConnect.value,
@@ -201,7 +197,7 @@ function mouseEnter(): void {
 }
 
 function mouseLeave(): void {
-    emit('socket-over', null);
+    emit('socketOver', null);
 }
 
 function onTextBlur(event: FocusEvent): void {
@@ -256,8 +252,8 @@ defineExpose({socket: props.socket});
                     :value="socketValue"
                     :required="required"
                     :disabled="disabled"
-                    @change="numValueChanged"
-                    @input="onInput($event as InputEvent)" />
+                    @change="emitValueChanged($event.value)"
+                    @input="onInput($event)" />
                 <Input
                     v-if="socketType == Core.Node_Enums.SOCKET_TYPE.STRING"
                     type="text"
@@ -265,8 +261,8 @@ defineExpose({socket: props.socket});
                     :style="customStyles"
                     :value="socketValue"
                     :disabled="disabled"
-                    @change="valueChanged($event.target as HTMLInputElement)"
-                    @input="onInput($event as InputEvent)"
+                    @change="emitValueChanged($event.target.value)"
+                    @input="onInput($event)"
                     @blur="onTextBlur($event as FocusEvent)"
                     v-input-active
                     v-tooltip="disabled && socket.value.length > 8 ? socket.value : ''" />
@@ -283,8 +279,8 @@ defineExpose({socket: props.socket});
                     style="width: 20px"
                     :value="socketValue"
                     :disabled="disabled"
-                    @change="boolValueChanged"
-                    @input="onInput($event as InputEvent)"></Checkbox>
+                    @change="emitValueChanged"
+                    @input="onInput($event)"></Checkbox>
             </div>
         </div>
         <div v-if="socketType == Core.Node_Enums.SOCKET_TYPE.INFO && socket.value" class="infoBox">

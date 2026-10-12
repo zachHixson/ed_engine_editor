@@ -56,6 +56,7 @@ import type Node_Connection from '@/components/editor_logic/node_components/Node
 import Connection from '@/components/editor_logic/node_components/Connection.vue';
 import HotkeyMap from '@/components/common/HotkeyMap';
 import Undo_Store, { type iActionStore, useUndoHelpers } from '@/components/common/Undo_Store';
+import type { DialogBoxProps } from '@/components/DialogBox.vue';
 import DialogVariable from './DialogVariable.vue';
 import Svg from '@/components/common/Svg.vue';
 import NodeLibrary from './NodeLibrary.vue';
@@ -71,6 +72,7 @@ import { useLogicEditorStore } from '@/stores/LogicEditor';
 import { useI18nStore } from '@/stores/I18n';
 import type Logic from './node_components/Logic';
 import type { default as Node_Obj } from './node_components/Node';
+import type { iValueChanged } from './node_components/Socket.vue';
 import useConnection from './composables/useConnection';
 import useInput from './composables/useInput';
 import useNode from './composables/useNode';
@@ -80,7 +82,6 @@ import arrowIcon from '@/assets/arrow_01.svg';
 import trashIcon from '@/assets/trash.svg';
 import hamburgerIcon from '@/assets/hamburger.svg';
 
-type ActionChangeInputProps = {socket: GenericSocket, widget: boolean, oldVal: any, newVal: any, node: Node_Obj};
 type Vec2 = Core.Vec2;
 
 const mainStore = useMainStore();
@@ -95,7 +96,10 @@ const props = defineProps<{
 const connectionForceUpdateQueued = ref(false);
 const connectionForceUpdateKey = ref(0);
 
-const emit = defineEmits(['dialog-open', 'open-node-exception']);
+const emit = defineEmits<{
+    dialogOpen: [DialogBoxProps],
+    openNodeException: [{nodeId: number, logicId: number}],
+}>();
 
 const domRefs: DomRefs = {
     nodeViewportRef: ref(),
@@ -390,7 +394,9 @@ function queueForceConnectionUpdate(): void {
     });
 }
 
-function actionChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeInputProps, makeCommit = true): void {
+function actionChangeInput({socket, widget, oldVal, newVal, node}: iValueChanged, makeCommit = true): void {
+    if (!node) return;
+
     if (widget){
         node.widgetData = newVal;
     }
@@ -413,7 +419,9 @@ function actionChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
     }
 }
 
-function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeInputProps): void {
+function revertChangeInput({socket, widget, oldVal, newVal, node}: iValueChanged): void {
+    if (!node) return;
+
     if (widget){
         node.widgetData = oldVal;
     }
@@ -448,7 +456,7 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
             @paste="pasteNodes({}); contextMenuPosition = null;"></ContextMenu>
         <div class="node-panel-wrapper">
             <NodeLibrary
-                @node-clicked="addNode({templateId: $event})"/>
+                @nodeClicked="addNode({templateId: $event})"/>
             <div class="undo-panel-wrapper">
                 <UndoPanel
                     class="undo-panel"
@@ -471,8 +479,8 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
                     :clientToNavSpace="clientToNavPos"
                     :allConnections="selectedAsset.connections"
                     :draggingConnection="(state.draggingConnection.value as Node_Connection)"
-                    @drag-start="dragConnection"
-                    @force-update="queueForceConnectionUpdate"/>
+                    @dragStart="dragConnection"
+                    @forceUpdate="queueForceConnectionUpdate"/>
                 <Node
                     v-for="node in state.visibleNodes.value"
                     :key="`node,${selectedAsset.id},${selectedAsset.selectedGraphId},${node.nodeId}`"
@@ -485,12 +493,12 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
                     :errorData="logicEditorStore.errors.find(e => e.nodeId == node.nodeId)"
                     :desc="getNodeDoc(node.templateId)"
                     class="node"
-                    @node-clicked="nodeClick"
-                    @node-down="nodeDown"
-                    @node-move-end="nodeMoveEnd"
-                    @socket-down="createConnection"
-                    @socket-over="currentSocketOver = $event"
-                    @socket-value-changed="actionChangeInput($event)"/>
+                    @nodeClicked="nodeClick"
+                    @nodeDown="nodeDown"
+                    @nodeMoveEnd="nodeMoveEnd"
+                    @socketDown="createConnection"
+                    @socketOver="currentSocketOver = $event"
+                    @socketValueChanged="actionChangeInput($event)"/>
             </div>
             <svg class="selection-box-wrapper" width="100%" height="100%">
                 <rect
@@ -512,11 +520,11 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
                 <Svg :src="trashIcon"></Svg>
             </button>
         </div>
-        <ErrorLog @open-node-exception="emit('open-node-exception', $event);"></ErrorLog>
+        <ErrorLog @openNodeException="emit('openNodeException', $event);"></ErrorLog>
         <div class="graph-list-wrapper">
             <Graphs
                 :selected-asset="selectedAsset"
-                @graph-switched="switchGraph($event)"></Graphs>
+                @graphSwitched="switchGraph($event)"></Graphs>
             <div class="resizeBtn-left-wrapper">
                 <button class="resizeBtn resizeBtn-left" @click="state.showGraphs.value = !state.showGraphs.value" :style="state.showGraphs.value ? 'transform: translateX(2px);' : ''">
                     <Svg v-show="state.showGraphs.value" :src="arrowIcon" style="transform: rotate(90deg)"></Svg>
@@ -538,8 +546,8 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: ActionChangeI
                     :dpi-scale="1"
                     :parent-event-bus="LogicMainEventBus"
                     @navChanged="navChange"
-                    @tool-selected="navToolSelected"
-                    @set-hotkey-tool="state.navHotkeyTool.value = $event"/>
+                    @toolSelected="navToolSelected"
+                    @setHotkeyTool="state.navHotkeyTool.value = $event"/>
             </div>
         </div>
     </div>

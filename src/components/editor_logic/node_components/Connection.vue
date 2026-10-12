@@ -25,10 +25,10 @@ const props = defineProps<{
     draggingConnection: Node_Connection | null,
 }>();
 
-const emit = defineEmits([
-    'drag-start',
-    'force-update',
-]);
+const emit = defineEmits<{
+    dragStart: [Node_Connection],
+    forceUpdate: [],
+}>();
 
 const rootRef = ref<HTMLElement>();
 
@@ -176,7 +176,7 @@ function updatePath(): void {
 }
 
 function forceUpdate(): void {
-    emit('force-update');
+    emit('forceUpdate');
 }
 
 function mouseDown(event: MouseEvent): void {
@@ -220,7 +220,7 @@ function mouseDrag(event: MouseEvent): void {
     const dragDistance = navMouseDown.value.distanceTo(navMousePos.value);
 
     if (dragDistance > 5){
-        emit('drag-start', props.connectionObj);
+        emit('dragStart', props.connectionObj);
 
         if (grabbedHandle.value == HANDLE.RIGHT){
             props.connectionObj.endSocketId = null;
