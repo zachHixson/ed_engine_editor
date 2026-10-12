@@ -1,9 +1,19 @@
 import { defineStore } from 'pinia';
-import Core from '@/core';
+import { NAV_TOOL_TYPE } from '@/components/common/NavControlPanel.vue';
+
+export const enum ROOM_TOOL_TYPE {
+    SELECT_MOVE = 1,
+    ADD_BRUSH,
+    ERASER,
+    EXIT,
+    CAMERA,
+    ROOM_PROPERTIES,
+    TOGGLE_GRID,
+};
 
 interface iState {
-    selectedTool: Core.ROOM_TOOL_TYPE | null,
-    selectedNavTool: Core.NAV_TOOL_TYPE | null,
+    selectedTool: ROOM_TOOL_TYPE | null,
+    selectedNavTool: NAV_TOOL_TYPE | null,
     propertiesOpen: boolean,
     viewGrid: boolean,
     addBrushCopy: boolean,
@@ -15,7 +25,7 @@ interface iState {
 
 export const useRoomEditorStore = defineStore('RoomEditor', {
     state: (): iState => ({
-        selectedTool: Core.ROOM_TOOL_TYPE.ADD_BRUSH,
+        selectedTool: ROOM_TOOL_TYPE.ADD_BRUSH,
         selectedNavTool: null,
         propertiesOpen: false,
         viewGrid: true,
@@ -34,8 +44,8 @@ export const useRoomEditorStore = defineStore('RoomEditor', {
     },
 
     actions: {
-        setSelectedTool(newTool: Core.ROOM_TOOL_TYPE | null){ this.selectedTool = newTool },
-        setSelectedNavTool(newTool: Core.NAV_TOOL_TYPE | null){ this.selectedNavTool = newTool },
+        setSelectedTool(newTool: ROOM_TOOL_TYPE | null){ this.selectedTool = newTool },
+        setSelectedNavTool(newTool: NAV_TOOL_TYPE | null){ this.selectedNavTool = newTool },
         setPropPanelState(newState: boolean){ this.propertiesOpen = newState },
         setGridState(newState: boolean){ this.viewGrid = newState },
     }

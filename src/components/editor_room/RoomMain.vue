@@ -1,6 +1,21 @@
 <script lang="ts">
+import { ROOM_TOOL_TYPE } from '@/stores/RoomEditor';
 import type Tool_Base from './composables/Tool_Base';
 import type { Ref } from 'vue';
+
+export const enum ROOM_ACTION {
+    MOVE = 1,
+    ADD,
+    DELETE,
+    INSTANCE_CHANGE,
+    INSTANCE_GROUP_CHANGE,
+    INSTANCE_VAR_CHANGE,
+    EXIT_ADD,
+    EXIT_CHANGE,
+    EXIT_DELETE,
+    CAMERA_CHANGE,
+    ROOM_PROP_CHANGE,
+};
 
 export const RoomMainEventBus = {
     onResize: new Core.Event_Emitter<()=>void>(),
@@ -13,8 +28,8 @@ export const RoomMainEventBus = {
     onGridStateChanged: new Core.Event_Emitter<(newState: boolean)=>void>(),
 };
 
-export type tActionMap = Map<Core.ROOM_ACTION, (data: any, commit?: boolean)=>void>;
-export type tToolMap = Map<Core.ROOM_TOOL_TYPE, typeof Tool_Base>;
+export type tActionMap = Map<ROOM_ACTION, (data: any, commit?: boolean)=>void>;
+export type tToolMap = Map<ROOM_TOOL_TYPE, typeof Tool_Base>;
 
 export interface iActionArguments {
     props: {
@@ -69,8 +84,6 @@ import cameraIcon from '@/assets/camera.svg';
 import exitIcon from '@/assets/exit.svg';
 import gearIcon from '@/assets/gear.svg';
 import noIcon from '@/assets/no.svg';
-
-const { ROOM_TOOL_TYPE } = Core;
 
 //define stores
 const mainStore = useMainStore();
@@ -256,7 +269,7 @@ function resize(): void {
     });
 }
 
-function toolClicked(tool: Core.ROOM_TOOL_TYPE): void {
+function toolClicked(tool: ROOM_TOOL_TYPE): void {
     const toolClass = toolMap.get(tool)!;
     curTool = new toolClass();
     roomEditorStore.setSelectedTool(tool);

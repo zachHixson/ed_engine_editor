@@ -1,6 +1,6 @@
 import type { iGroupChangedProps } from '@/components/common/GroupList.vue';
 import type { iActionArguments } from '../RoomMain.vue';
-import { RoomMainEventBus } from '../RoomMain.vue';
+import { RoomMainEventBus, ROOM_ACTION } from '../RoomMain.vue';
 import Core from '@/core';
 
 type InstanceChangeProps = {newState: Partial<Core.Instance_Base>, oldState?: object, instRef?: Core.Instance_Base};
@@ -16,7 +16,7 @@ export function useInstanceProps(args: iActionArguments){
 
         if (makeCommit){
             const data: InstanceChangeProps = {newState, oldState, instRef: curInstance};
-            args.undoStore.commit({action: Core.ROOM_ACTION.INSTANCE_CHANGE, data});
+            args.undoStore.commit({action: ROOM_ACTION.INSTANCE_CHANGE, data});
         }
     }
 
@@ -46,7 +46,7 @@ export function useInstanceProps(args: iActionArguments){
 
         if (makeCommit){
             const data: iGroupChangedProps = {add, groupName, newName, remove, oldIdx, instRef: curInstRef};
-            args.undoStore.commit({action: Core.ROOM_ACTION.INSTANCE_GROUP_CHANGE, data});
+            args.undoStore.commit({action: ROOM_ACTION.INSTANCE_GROUP_CHANGE, data});
         }
     }
 
@@ -75,10 +75,10 @@ export function useInstanceProps(args: iActionArguments){
         }
     }
 
-    args.actionMap.set(Core.ROOM_ACTION.INSTANCE_CHANGE, actionInstanceChange);
-    args.actionMap.set(Core.ROOM_ACTION.INSTANCE_GROUP_CHANGE, actionInstanceGroupChange);
-    args.revertMap.set(Core.ROOM_ACTION.INSTANCE_CHANGE, revertInstanceChange);
-    args.revertMap.set(Core.ROOM_ACTION.INSTANCE_GROUP_CHANGE, revertInstanceGroupChange);
+    args.actionMap.set(ROOM_ACTION.INSTANCE_CHANGE, actionInstanceChange);
+    args.actionMap.set(ROOM_ACTION.INSTANCE_GROUP_CHANGE, actionInstanceGroupChange);
+    args.revertMap.set(ROOM_ACTION.INSTANCE_CHANGE, revertInstanceChange);
+    args.revertMap.set(ROOM_ACTION.INSTANCE_GROUP_CHANGE, revertInstanceGroupChange);
 
     return {
         changeInstanceProps: actionInstanceChange,

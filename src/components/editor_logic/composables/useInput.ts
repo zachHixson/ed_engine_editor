@@ -1,4 +1,5 @@
 import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
+import { NAV_TOOL_TYPE } from '@/components/common/NavControlPanel.vue';
 import { useLogicEditorStore } from "@/stores/LogicEditor";
 import { DomRefs, ActionData, LogicEditorState, LogicMainEventBus } from '../LogicMain.vue';
 import type Node_Connection from '../node_components/Node_Connection';
@@ -202,7 +203,7 @@ export default function useInput(
         contextMenuPosition.value = mousePos;
     }
 
-    function navToolSelected(newTool: Core.NAV_TOOL_TYPE): void {
+    function navToolSelected(newTool: NAV_TOOL_TYPE): void {
         const logicEditorStore = useLogicEditorStore();
         logicEditorStore.selectNavTool(newTool);
     }

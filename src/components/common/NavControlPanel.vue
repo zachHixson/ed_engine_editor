@@ -1,3 +1,11 @@
+<script lang="ts">
+export const enum NAV_TOOL_TYPE {
+    PAN = 1,
+    ZOOM,
+    CENTER,
+};
+</script>
+
 <script setup lang="ts">
 import NavControl from './NavControl.vue';
 import HotkeyMap from '@/components/common/HotkeyMap';
@@ -12,11 +20,11 @@ import Core from '@/core';
 const ZOOM_SENSITIVITY = 0.03;
 const ZOOM_WHEEL_AMT = 0.8;
 
-const { NAV_TOOL_TYPE, Vec2 } = Core;
+const { Vec2 } = Core;
 
 const props = defineProps<{
     navState: Core.NavState,
-    selectedNavTool: Core.NAV_TOOL_TYPE | null,
+    selectedNavTool: NAV_TOOL_TYPE | null,
     maxZoom: number,
     contentsBounds: number[],
     unitScale: number,
@@ -34,9 +42,9 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-    toolSelected: [Core.NAV_TOOL_TYPE],
+    toolSelected: [NAV_TOOL_TYPE],
     navChanged: [Core.NavState],
-    setHotkeyTool: [Core.NAV_TOOL_TYPE | null],
+    setHotkeyTool: [NAV_TOOL_TYPE | null],
 }>();
 
 const controls: iControl[] = [
@@ -47,7 +55,7 @@ const controls: iControl[] = [
         action: () => emit('toolSelected', NAV_TOOL_TYPE.PAN)
     },
     {
-        id: Core.NAV_TOOL_TYPE.ZOOM,
+        id: NAV_TOOL_TYPE.ZOOM,
         altText: 'navigation.zoom_tool',
         icon: zoomIcon,
         action: () => emit('toolSelected', NAV_TOOL_TYPE.ZOOM)
@@ -71,7 +79,7 @@ const mouse = {
 const hotkeyMap = new HotkeyMap();
 const hotkeyDown = hotkeyMap.keyDown.bind(hotkeyMap);
 const hotkeyUp = hotkeyMap.keyUp.bind(hotkeyMap);
-let hotkeyTool: Core.NAV_TOOL_TYPE | null = null;
+let hotkeyTool: NAV_TOOL_TYPE | null = null;
 
 onMounted(()=>{
     window.addEventListener('keydown', hotkeyDown as EventListener);
@@ -107,7 +115,7 @@ function controlClick(control: typeof controls[number]): void {
     control.action();
 }
 
-function setHotkeyTool(newTool: Core.NAV_TOOL_TYPE | null): void {
+function setHotkeyTool(newTool: NAV_TOOL_TYPE | null): void {
     hotkeyTool = newTool;
     emit('setHotkeyTool', hotkeyTool);
 }

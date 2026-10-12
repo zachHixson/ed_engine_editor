@@ -5,7 +5,7 @@ import Node_Connection from "../node_components/Node_Connection";
 import type Logic from '../node_components/Logic';
 import type { iRelinkInfo } from '../node_components/Node.vue';
 import type { ActionData, DomRefs, LogicEditorState } from '../LogicMain.vue';
-import Core from '@/core';
+import { LOGIC_ACTION } from '../LogicMain.vue';
 
 export type ActionMakeConnectionProps = {connectionObj: Node_Connection, socketOver: iHoverSocket, prevSocket?: GenericSocket};
 export type ActionRemoveConnectionProps = {connectionObj: Node_Connection};
@@ -17,7 +17,7 @@ export default function useConnection(
     actionData: ActionData,
     state: LogicEditorState,
 ){
-    const { nodeRefs, connectionRefs } = domRefs; 
+    const { nodeRefs, connectionRefs } = domRefs;
     const { actionMap, revertMap, undoStore } = actionData;
     const { draggingConnection } = state;
 
@@ -25,24 +25,24 @@ export default function useConnection(
         props.selectedAsset.addConnection(connectionObj);
         draggingConnection.value = connectionObj;
     }
-    
+
     function dragConnection(connectionObj: Node_Connection): void {
         const {startNode, startSocketId, endNode, endSocketId} = connectionObj;
-    
+
         draggingConnection.value = connectionObj;
         undoStore.cache.set('prev_socket', {startNode, startSocketId, endNode, endSocketId});
     }
-    
+
     function relinkConnections(): void {
         const nodeEls = nodeRefs.value;
         const connectionEls = connectionRefs.value;
         const nodeInfo = new Map<number, iRelinkInfo>();
-    
+
         nodeEls.forEach(nodeEl => {
             const info = nodeEl.getRelinkInfo();
             nodeInfo.set(info.id, info);
         });
-    
+
         connectionEls?.forEach(connectionEl => connectionEl.relink(nodeInfo));
     }
 
@@ -57,7 +57,7 @@ export default function useConnection(
             connectionObj.startSocketId = socketOver.socketData.id;
             connectionObj.startSocketEl = socketOver.socketEl;
         }
-    
+
         //if connection was removed entirely by a previous undo, we need to recreate
         if (!props.selectedAsset.connections.includes(connectionObj)){
             props.selectedAsset.addConnection(connectionObj);
@@ -65,37 +65,37 @@ export default function useConnection(
 
         connectionObj.startNode?.onNewConnection(connectionObj);
         connectionObj.endNode?.onNewConnection(connectionObj);
-    
+
         if (makeCommit){
             const prevSocket = undoStore.cache.get('prev_socket');
             const socketOverCopy: any = Object.assign({}, socketOver);
-    
+
             delete socketOverCopy.socketEl;
-    
+
             const data = {connectionObj, socketOver: socketOverCopy, prevSocket} satisfies ActionMakeConnectionProps;
-            undoStore.commit({action: Core.LOGIC_ACTION.CONNECT, data});
-    
+            undoStore.commit({action: LOGIC_ACTION.CONNECT, data});
+
             nextTick(()=>{
                 connectionObj.update();
             });
         }
-    
+
         undoStore.cache.delete('prev_socket');
     }
-    
+
     function actionRemoveConnection({connectionObj}: ActionRemoveConnectionProps, makeCommit = true): void {
         makeCommit &&= !!(connectionObj.startNode && connectionObj.endNode);
 
         connectionObj.startNode?.onRemoveConnection(connectionObj);
         connectionObj.endNode?.onRemoveConnection(connectionObj);
-    
+
         if (makeCommit){
             const data = {connectionObj: Object.assign(new Node_Connection({id: 0}), connectionObj)};
             const prevSocket = undoStore.cache.get('prev_socket');
-    
+
             Object.assign(data.connectionObj, prevSocket);
             undoStore.cache.delete('prev_socket');
-            undoStore.commit({action: Core.LOGIC_ACTION.DISCONNECT, data});
+            undoStore.commit({action: LOGIC_ACTION.DISCONNECT, data});
         }
 
         props.selectedAsset.removeConnection(connectionObj.id);
@@ -126,7 +126,7 @@ export default function useConnection(
                 cList.push(c);
             });
 
-            undoStore.commit({action: Core.LOGIC_ACTION.BATCH_REMOVE_CONNECTIONS, data});
+            undoStore.commit({action: LOGIC_ACTION.BATCH_REMOVE_CONNECTIONS, data});
         }
 
         for (let i = 0; i < connectionObjList.length; i++){
@@ -147,7 +147,7 @@ export default function useConnection(
             props.selectedAsset.removeConnection(connectionObj.id);
         }
     }
-    
+
     function revertRemoveConnection({connectionObj}: ActionRemoveConnectionProps): void {
         props.selectedAsset.addConnection(connectionObj);
 
@@ -161,19 +161,19 @@ export default function useConnection(
                 logic.addConnection(c);
                 c.startNode?.onNewConnection(c, true);
                 c.endNode?.onNewConnection(c, true);
-                
+
                 //clear node exception
                 c.startNode!.editorAPI.clearNodeException(Symbol.for(c.id.toString() + 'connection_deleted'));
             });
         });
     }
 
-    actionMap.set(Core.LOGIC_ACTION.CONNECT, actionMakeConnection);
-    actionMap.set(Core.LOGIC_ACTION.DISCONNECT, actionRemoveConnection);
-    actionMap.set(Core.LOGIC_ACTION.BATCH_REMOVE_CONNECTIONS, actionBatchRemoveConnections);
-    revertMap.set(Core.LOGIC_ACTION.CONNECT, revertMakeConnection);
-    revertMap.set(Core.LOGIC_ACTION.DISCONNECT, revertRemoveConnection);
-    revertMap.set(Core.LOGIC_ACTION.BATCH_REMOVE_CONNECTIONS, revertBatchRemoveConnections);
+    actionMap.set(LOGIC_ACTION.CONNECT, actionMakeConnection);
+    actionMap.set(LOGIC_ACTION.DISCONNECT, actionRemoveConnection);
+    actionMap.set(LOGIC_ACTION.BATCH_REMOVE_CONNECTIONS, actionBatchRemoveConnections);
+    revertMap.set(LOGIC_ACTION.CONNECT, revertMakeConnection);
+    revertMap.set(LOGIC_ACTION.DISCONNECT, revertRemoveConnection);
+    revertMap.set(LOGIC_ACTION.BATCH_REMOVE_CONNECTIONS, revertBatchRemoveConnections);
 
     return {
         draggingConnection,

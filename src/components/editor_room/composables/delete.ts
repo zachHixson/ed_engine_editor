@@ -1,8 +1,8 @@
 import Tool_Base from './Tool_Base';
 import type { iActionArguments } from '../RoomMain.vue';
 import type { imEvent } from '../RoomEditWindow.vue';
-import { RoomMainEventBus } from '../RoomMain.vue';
-import { useRoomEditorStore } from '@/stores/RoomEditor';
+import { RoomMainEventBus, ROOM_ACTION } from '../RoomMain.vue';
+import { useRoomEditorStore, ROOM_TOOL_TYPE } from '@/stores/RoomEditor';
 import Core from '@/core';
 
 type DeleteProps = {instId?: number, instRefList?: Core.Instance_Base[]};
@@ -60,7 +60,7 @@ export function useDelete(args: iActionArguments){
 
         if (makeCommit && !singleInstance){
             const data = {instRefList: cacheList};
-            args.undoStore.commit({action: Core.ROOM_ACTION.DELETE, data})
+            args.undoStore.commit({action: ROOM_ACTION.DELETE, data})
             args.undoStore.cache.delete('delete_list');
             return;
         }
@@ -97,9 +97,9 @@ export function useDelete(args: iActionArguments){
         }
     }
 
-    args.toolMap.set(Core.ROOM_TOOL_TYPE.ERASER, Erase_Brush);
-    args.actionMap.set(Core.ROOM_ACTION.DELETE, actionDelete);
-    args.revertMap.set(Core.ROOM_ACTION.DELETE, revertDelete);
+    args.toolMap.set(ROOM_TOOL_TYPE.ERASER, Erase_Brush);
+    args.actionMap.set(ROOM_ACTION.DELETE, actionDelete);
+    args.revertMap.set(ROOM_ACTION.DELETE, revertDelete);
 
     return { deleteInstance: actionDelete };
 }

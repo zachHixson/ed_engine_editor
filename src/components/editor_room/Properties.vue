@@ -37,6 +37,7 @@ export function nanToPrev(inp: number, getter: ()=>number): number {
 </script>
 
 <script setup lang="ts">
+import { ROOM_TOOL_TYPE } from '@/stores/RoomEditor';
 import { type iGroupChangedProps } from '@/components/common/GroupList.vue';
 import AddBrushProperties from './properties/AddBrushProperties.vue';
 import SpriteProperties from './properties/SpriteProperties.vue';
@@ -58,7 +59,7 @@ const { t } = useI18nStore();
 const props = defineProps<{
     camera: Core.Camera,
     room: Core.Room,
-    selectedTool: Core.ROOM_TOOL_TYPE | null,
+    selectedTool: ROOM_TOOL_TYPE | null,
     selectedInstance: Core.Instance_Base | null,
 }>();
 
@@ -73,28 +74,28 @@ const emit = defineEmits<{
     roomBgChangeEnd: [Partial<Core.Room>],
 }>();
 
-const showAddBrushProps = computed(()=>props.selectedTool == Core.ROOM_TOOL_TYPE.ADD_BRUSH);
+const showAddBrushProps = computed(()=>props.selectedTool == ROOM_TOOL_TYPE.ADD_BRUSH);
 const showSpriteProps = computed(()=>(
-    props.selectedTool == Core.ROOM_TOOL_TYPE.SELECT_MOVE &&
+    props.selectedTool == ROOM_TOOL_TYPE.SELECT_MOVE &&
     props.selectedInstance?.TYPE == Core.INSTANCE_TYPE.SPRITE
 ))
 const showObjectProps = computed(()=>(
-    props.selectedTool == Core.ROOM_TOOL_TYPE.SELECT_MOVE &&
+    props.selectedTool == ROOM_TOOL_TYPE.SELECT_MOVE &&
     props.selectedInstance?.TYPE == Core.INSTANCE_TYPE.OBJECT
 ));
 const showLogicProps = computed(()=>(
-    props.selectedTool == Core.ROOM_TOOL_TYPE.SELECT_MOVE &&
+    props.selectedTool == ROOM_TOOL_TYPE.SELECT_MOVE &&
     props.selectedInstance?.TYPE == Core.INSTANCE_TYPE.LOGIC
 ));
-const showEraserProps = computed(()=>props.selectedTool == Core.ROOM_TOOL_TYPE.ERASER);
-const showCameraProps = computed(()=>props.selectedTool == Core.ROOM_TOOL_TYPE.CAMERA);
+const showEraserProps = computed(()=>props.selectedTool == ROOM_TOOL_TYPE.ERASER);
+const showCameraProps = computed(()=>props.selectedTool == ROOM_TOOL_TYPE.CAMERA);
 const showExitProps = computed(()=>(
     props.selectedInstance?.TYPE == Core.INSTANCE_TYPE.EXIT &&
-    (props.selectedTool == Core.ROOM_TOOL_TYPE.SELECT_MOVE || props.selectedTool == Core.ROOM_TOOL_TYPE.EXIT)
+    (props.selectedTool == ROOM_TOOL_TYPE.SELECT_MOVE || props.selectedTool == ROOM_TOOL_TYPE.EXIT)
 ));
-const showRoomProps = computed(()=>props.selectedTool == Core.ROOM_TOOL_TYPE.ROOM_PROPERTIES);
+const showRoomProps = computed(()=>props.selectedTool == ROOM_TOOL_TYPE.ROOM_PROPERTIES);
 const showNoSelection = computed(()=>
-    (props.selectedTool == Core.ROOM_TOOL_TYPE.SELECT_MOVE || props.selectedTool == Core.ROOM_TOOL_TYPE.EXIT) &&
+    (props.selectedTool == ROOM_TOOL_TYPE.SELECT_MOVE || props.selectedTool == ROOM_TOOL_TYPE.EXIT) &&
     !props.selectedInstance
 );
 const showNoToolProps = computed(()=>!props.selectedTool);

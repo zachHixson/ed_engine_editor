@@ -7,6 +7,13 @@ import { useAssetBrowserStore } from './AssetBrowser';
 import { useI18nStore } from './I18n';
 import Core from '@/core';
 
+export const enum EDITOR_ID {
+    ROOM = 1,
+    ART,
+    OBJECT,
+    LOGIC,
+};
+
 export enum PLAY_STATE {
     PLAYING,
     DEBUGGING,
@@ -18,7 +25,7 @@ interface iState {
     inputActive: boolean,
     playState: PLAY_STATE,
     nodeAPI: Node_API,
-    selectedEditor: Core.EDITOR_ID,
+    selectedEditor: EDITOR_ID,
 }
 
 export const useMainStore = defineStore('main', {
@@ -27,7 +34,7 @@ export const useMainStore = defineStore('main', {
         inputActive: false,
         playState: PLAY_STATE.NOT_PLAYING,
         nodeAPI: new Node_API(),
-        selectedEditor: Core.EDITOR_ID.ROOM,
+        selectedEditor: EDITOR_ID.ROOM,
     }),
 
     getters: {
@@ -49,7 +56,7 @@ export const useMainStore = defineStore('main', {
 
             return JSON.stringify(saveObj);
         },
-        getSelectedEditor: (state): Core.EDITOR_ID => state.selectedEditor,
+        getSelectedEditor: (state): EDITOR_ID => state.selectedEditor,
         getInputActive: (state): boolean => state.inputActive,
         getPlayState: (state): PLAY_STATE => state.playState,
         getNodeAPI: (state): Node_API => state.nodeAPI as Node_API,
@@ -99,7 +106,7 @@ export const useMainStore = defineStore('main', {
 
             this.nodeAPI.forEachNode(node => node.afterGameDataLoaded && node.afterGameDataLoaded());
         },
-        setSelectedEditor(newEditor: Core.EDITOR_ID){ this.selectedEditor = newEditor },
+        setSelectedEditor(newEditor: EDITOR_ID){ this.selectedEditor = newEditor },
         setInputActive(newState: boolean){
             this.inputActive = newState;
         },

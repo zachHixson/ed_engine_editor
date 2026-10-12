@@ -1,3 +1,4 @@
+import { ART_TOOL_SIZE } from '@/stores/ArtEditor';
 import Tool_Base from './Tool_Base';
 import Core from '@/core';
 
@@ -60,13 +61,13 @@ export default class Line_Brush extends Tool_Base {
             const {x, y} = this.mouseCell;
 
             switch(this.brushSize){
-                case Core.ART_TOOL_SIZE.SMALL:
+                case ART_TOOL_SIZE.SMALL:
                     this.drawPixel(x, y, this.color);
                     break;
-                case Core.ART_TOOL_SIZE.MEDIUM:
+                case ART_TOOL_SIZE.MEDIUM:
                     this.fillRect(x, y, x + 1, y + 1);
                     break;
-                case Core.ART_TOOL_SIZE.LARGE:
+                case ART_TOOL_SIZE.LARGE:
                     this.fillRect(x - 1, y - 1, x + 1, y + 1);
                     break;
             }
@@ -90,13 +91,13 @@ export default class Line_Brush extends Tool_Base {
     drawPoint(x: number, y: number): void {
         if (Core.Util.isInBounds(x, y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){
             switch(this.brushSize){
-                case Core.ART_TOOL_SIZE.SMALL:
+                case ART_TOOL_SIZE.SMALL:
                     this.drawPixel(x, y, this.color);
                     break;
-                case Core.ART_TOOL_SIZE.MEDIUM:
+                case ART_TOOL_SIZE.MEDIUM:
                     this.fillRect(x, y, x + 1, y + 1);
                     break;
-                case Core.ART_TOOL_SIZE.LARGE:
+                case ART_TOOL_SIZE.LARGE:
                     this.fillRect(x - 1, y - 1, x + 1, y + 1);
                     break;
             }

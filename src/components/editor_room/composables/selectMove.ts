@@ -1,8 +1,9 @@
 import Tool_Base from './Tool_Base';
 import type { iActionArguments } from '../RoomMain.vue';
 import type { imEvent } from '../RoomEditWindow.vue';
-import { RoomMainEventBus } from '../RoomMain.vue';
+import { RoomMainEventBus, ROOM_ACTION } from '../RoomMain.vue';
 import Core from '@/core';
+import { ROOM_TOOL_TYPE } from '@/stores/RoomEditor';
 import { ref, nextTick } from 'vue';
 
 const { Vec2 } = Core;
@@ -106,7 +107,7 @@ export function useSelectMove(args: iActionArguments){
         if (makeCommit){
             const {instRef, oldPos} = args.undoStore.cache.get('move_start');
             const data = {instId: instRef.id, instRef, newPos: instRef.pos.clone(), oldPos} satisfies MoveProps;
-            args.undoStore.commit({action: Core.ROOM_ACTION.MOVE, data});
+            args.undoStore.commit({action: ROOM_ACTION.MOVE, data});
             args.undoStore.cache.delete('move_start');
             return;
         }
@@ -128,9 +129,9 @@ export function useSelectMove(args: iActionArguments){
         RoomMainEventBus.onInstanceChanged.emit(instRef!);
     }
 
-    args.toolMap.set(Core.ROOM_TOOL_TYPE.SELECT_MOVE, Select_Move);
-    args.actionMap.set(Core.ROOM_ACTION.MOVE, actionMove);
-    args.revertMap.set(Core.ROOM_ACTION.MOVE, revertMove);
+    args.toolMap.set(ROOM_TOOL_TYPE.SELECT_MOVE, Select_Move);
+    args.actionMap.set(ROOM_ACTION.MOVE, actionMove);
+    args.revertMap.set(ROOM_ACTION.MOVE, revertMove);
 
     return { overlapBox, overlappingInstances };
 }

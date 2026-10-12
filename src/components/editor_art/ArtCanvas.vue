@@ -12,7 +12,7 @@ export const ArtCanvasEventBus = {
 
 <script setup lang="ts">
 import UndoPanel from '@/components/common/UndoPanel.vue';
-import NavControlPanel from '@/components/common/NavControlPanel.vue';
+import NavControlPanel, { NAV_TOOL_TYPE } from '@/components/common/NavControlPanel.vue';
 import Art_Canvas_Renderer from './Art_Canvas_Renderer';
 
 import { ref, watch, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
@@ -46,7 +46,7 @@ const { Vec2 } = Core;
 
 const artCanvasRef = ref<HTMLDivElement>();
 const canvasRef = ref<HTMLCanvasElement>();
-const navHotkeyTool = ref<Core.NAV_TOOL_TYPE | null>(null);
+const navHotkeyTool = ref<NAV_TOOL_TYPE | null>(null);
 const previewData: ImageData = new ImageData(Core.Sprite.DIMENSIONS, Core.Sprite.DIMENSIONS);
 const maxZoom = ref(2);
 const mouseCell = new Core.Vec2(-20, -20);
@@ -170,7 +170,7 @@ function resize(): void {
     }
 }
 
-function enableNav(navTool: Core.NAV_TOOL_TYPE): void {
+function enableNav(navTool: NAV_TOOL_TYPE): void {
     artEditorStore.selectTool(null);
     artEditorStore.setSelectedNavTool(navTool);
     emit('navSelected');

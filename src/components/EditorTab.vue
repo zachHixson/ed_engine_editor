@@ -2,15 +2,14 @@
 import Svg from '@/components/common/Svg.vue';
 
 import { computed } from 'vue';
-import { useMainStore } from '@/stores/Main';
-import type Core from '@/core';
+import { useMainStore, EDITOR_ID } from '@/stores/Main';
 
 const mainStore = useMainStore();
 
 const props = defineProps<{
     tabText: string;
     logoPath: string;
-    editorID: Core.EDITOR_ID;
+    editorID: EDITOR_ID;
 }>();
 
 const isSelected = computed<boolean>(()=>mainStore.getSelectedEditor == props.editorID);

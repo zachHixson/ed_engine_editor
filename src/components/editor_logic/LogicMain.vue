@@ -1,6 +1,19 @@
 <script lang="ts">
+import { NAV_TOOL_TYPE } from '@/components/common/NavControlPanel.vue';
+
+export const enum LOGIC_ACTION {
+    ADD_NODE = 1,
+    DELETE_NODES,
+    MOVE,
+    CONNECT,
+    DISCONNECT,
+    BATCH_REMOVE_CONNECTIONS,
+    CHANGE_INPUT,
+    PASTE,
+};
+
 export type GenericSocket = {id: string, value: any};
-export type ActionMap = Map<Core.LOGIC_ACTION, (data?: any | object, commit?: boolean)=>void>;
+export type ActionMap = Map<LOGIC_ACTION, (data?: any | object, commit?: boolean)=>void>;
 
 export type DomRefs = {
     nodeViewportRef: Ref<HTMLDivElement | undefined>,
@@ -10,8 +23,8 @@ export type DomRefs = {
 }
 
 export type ActionData = {
-    actionMap: Map<Core.LOGIC_ACTION, (data?: any | object, commit?: boolean)=>void>,
-    revertMap: Map<Core.LOGIC_ACTION, (data?: any | object, commit?: boolean)=>void>,
+    actionMap: Map<LOGIC_ACTION, (data?: any | object, commit?: boolean)=>void>,
+    revertMap: Map<LOGIC_ACTION, (data?: any | object, commit?: boolean)=>void>,
     hotkeyMap: HotkeyMap,
     undoStore: Undo_Store<iActionStore>,
     undoLength: ComputedRef<number>,
@@ -22,8 +35,8 @@ export type LogicEditorState = {
     showNewVariableWindow: Ref<boolean>,
     variableEditInfo: Ref<Core.iVarInfo | null>,
     variableCallback: Ref<(positive: boolean, varInfo: Core.iVarInfo)=>void>,
-    navHotkeyTool: Ref<Core.NAV_TOOL_TYPE | null>,
-    selectedNavTool: ComputedRef<Core.NAV_TOOL_TYPE | null>,
+    navHotkeyTool: Ref<NAV_TOOL_TYPE | null>,
+    selectedNavTool: ComputedRef<NAV_TOOL_TYPE | null>,
     showGraphs: WritableComputedRef<boolean>,
     nodeDraggingEnabled: ComputedRef<boolean>,
     curNavState: ComputedRef<Core.NavState>,
@@ -261,8 +274,8 @@ onMounted(()=>{
     resize();
 
     bindHotkeys();
-    actionData.actionMap.set(Core.LOGIC_ACTION.CHANGE_INPUT, actionChangeInput);
-    actionData.revertMap.set(Core.LOGIC_ACTION.CHANGE_INPUT, revertChangeInput);
+    actionData.actionMap.set(LOGIC_ACTION.CHANGE_INPUT, actionChangeInput);
+    actionData.revertMap.set(LOGIC_ACTION.CHANGE_INPUT, revertChangeInput);
     navChange(props.selectedAsset.graphNavState);
     relinkConnections();
     updateNodeBounds();
@@ -415,7 +428,7 @@ function actionChangeInput({socket, widget, oldVal, newVal, node}: iValueChanged
 
     if (makeCommit){
         const data = {socket, widget, oldVal, newVal, node};
-        actionData.undoStore.commit({action: Core.LOGIC_ACTION.CHANGE_INPUT, data});
+        actionData.undoStore.commit({action: LOGIC_ACTION.CHANGE_INPUT, data});
     }
 }
 

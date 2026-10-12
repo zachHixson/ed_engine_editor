@@ -1,7 +1,7 @@
 import Tool_Base from './Tool_Base';
-import { RoomMainEventBus } from '../RoomMain.vue';
+import { RoomMainEventBus, ROOM_ACTION } from '../RoomMain.vue';
 import type { iActionArguments } from '../RoomMain.vue';
-import { useRoomEditorStore } from '@/stores/RoomEditor';
+import { useRoomEditorStore, ROOM_TOOL_TYPE } from '@/stores/RoomEditor';
 import { useI18nStore } from '@/stores/I18n';
 import Core from '@/core';
 import type { imEvent } from '../RoomEditWindow.vue';
@@ -121,7 +121,7 @@ export function useAdd(args: iActionArguments){
 
         if (makeCommit && cacheList){
             const data = {instRefList: cacheList};
-            args.undoStore.commit({action: Core.ROOM_ACTION.ADD, data});
+            args.undoStore.commit({action: ROOM_ACTION.ADD, data});
             args.undoStore.cache.delete('add_list');
             return;
         }
@@ -154,7 +154,7 @@ export function useAdd(args: iActionArguments){
 
         if (makeCommit){
             const data = {exitRef: newExit, pos: pos.clone()} satisfies ExitAddProps;
-            args.undoStore.commit({action: Core.ROOM_ACTION.EXIT_ADD, data});
+            args.undoStore.commit({action: ROOM_ACTION.EXIT_ADD, data});
         }
 
         return newExit;
@@ -183,10 +183,10 @@ export function useAdd(args: iActionArguments){
         RoomMainEventBus.onInstanceRemoved.emit(exitRef!);
     }
 
-    args.toolMap.set(Core.ROOM_TOOL_TYPE.ADD_BRUSH, Add_Brush);
-    args.toolMap.set(Core.ROOM_TOOL_TYPE.EXIT, Add_Exit);
-    args.actionMap.set(Core.ROOM_ACTION.ADD, actionAdd);
-    args.actionMap.set(Core.ROOM_ACTION.EXIT_ADD, actionExitAdd);
-    args.revertMap.set(Core.ROOM_ACTION.ADD, revertAdd);
-    args.revertMap.set(Core.ROOM_ACTION.EXIT_ADD, revertExitAdd);
+    args.toolMap.set(ROOM_TOOL_TYPE.ADD_BRUSH, Add_Brush);
+    args.toolMap.set(ROOM_TOOL_TYPE.EXIT, Add_Exit);
+    args.actionMap.set(ROOM_ACTION.ADD, actionAdd);
+    args.actionMap.set(ROOM_ACTION.EXIT_ADD, actionExitAdd);
+    args.revertMap.set(ROOM_ACTION.ADD, revertAdd);
+    args.revertMap.set(ROOM_ACTION.EXIT_ADD, revertExitAdd);
 }

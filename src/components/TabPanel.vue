@@ -2,7 +2,7 @@
 import EditorTab from './EditorTab.vue';
 
 import { ref, onMounted } from 'vue';
-import { useMainStore } from '@/stores/Main';
+import { useMainStore, EDITOR_ID } from '@/stores/Main';
 import { useAssetBrowserStore } from '@/stores/AssetBrowser';
 import { useI18nStore } from '@/stores/I18n';
 import { AppEventBus } from '@/App.vue';
@@ -17,29 +17,29 @@ const assetBrowserStore = useAssetBrowserStore();
 const { t } = useI18nStore();
 
 interface iEditorTab {
-    id: Core.EDITOR_ID,
+    id: EDITOR_ID,
     logoPath: string,
     text: string,
 };
 
 const editorTabs: {[key: string]: iEditorTab} = {
     room: {
-        id: Core.EDITOR_ID.ROOM,
+        id: EDITOR_ID.ROOM,
         logoPath: roomTab,
         text: 'editor_main.room_tab'
     },
     art: {
-        id: Core.EDITOR_ID.ART,
+        id: EDITOR_ID.ART,
         logoPath: spriteIcon,
         text: 'editor_main.art_tab'
     },
     object: {
-        id: Core.EDITOR_ID.OBJECT,
+        id: EDITOR_ID.OBJECT,
         logoPath: objectIcon,
         text: 'editor_main.object_tab'
     },
     logic: {
-        id: Core.EDITOR_ID.LOGIC,
+        id: EDITOR_ID.LOGIC,
         logoPath: logicIcon,
         text: 'editor_main.logic_tab'
     },
@@ -48,7 +48,7 @@ const contextTabs = ref<iEditorTab[]>([editorTabs.room]);
 
 onMounted(()=>{
     updateEditorTabs();
-    mainStore.setSelectedEditor(Core.EDITOR_ID.ROOM);
+    mainStore.setSelectedEditor(EDITOR_ID.ROOM);
     AppEventBus.onUpdateEditorTabs.listen(updateEditorTabs);
 });
 
@@ -74,17 +74,17 @@ function updateEditorTabs(){
 
         //if user is in tab that no longer exists, transition them to appropriate tab
         if (contextTabs.value.find(t => t.id == selectedTab) == undefined){
-            let newTab = Core.EDITOR_ID.ROOM;
+            let newTab = EDITOR_ID.ROOM;
 
             switch(assetType){
                 case Core.CATEGORY_ID.SPRITE:
-                    newTab = Core.EDITOR_ID.ART;
+                    newTab = EDITOR_ID.ART;
                     break;
                 case Core.CATEGORY_ID.OBJECT:
-                    newTab = Core.EDITOR_ID.OBJECT;
+                    newTab = EDITOR_ID.OBJECT;
                     break;
                 case Core.CATEGORY_ID.LOGIC:
-                    newTab = Core.EDITOR_ID.LOGIC;
+                    newTab = EDITOR_ID.LOGIC;
                     break;
             }
 
@@ -92,7 +92,7 @@ function updateEditorTabs(){
         }
     }
     else{
-        mainStore.setSelectedEditor(Core.EDITOR_ID.ROOM);
+        mainStore.setSelectedEditor(EDITOR_ID.ROOM);
     }
 }
 </script>

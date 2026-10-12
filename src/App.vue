@@ -4,7 +4,7 @@ export const AppEventBus = {
     onUpdateEditorTabs: new Core.Event_Emitter<()=>void>(),
     onAssetDeleted: new Core.Event_Emitter<()=>void>(),
     onOpenNodeException: new Core.Event_Emitter<(nodeId: number, logicId: number)=>void>(),
-}
+};
 </script>
 
 <script setup lang="ts">
@@ -18,7 +18,7 @@ import WelcomeModal from './components/WelcomeModal.vue';
 import Tooltip from './components/common/Tooltip.vue';
 
 import { ref, onMounted, nextTick } from 'vue';
-import { useMainStore, PLAY_STATE } from './stores/Main';
+import { useMainStore, EDITOR_ID, PLAY_STATE } from './stores/Main';
 import { useGameDataStore } from './stores/GameData';
 import { useAssetBrowserStore } from './stores/AssetBrowser';
 import { useLogicEditorStore } from './stores/LogicEditor';
@@ -162,7 +162,7 @@ function packageGame(): void {
 
 function resetUI(): void {
     assetBrowserStore.deselectAssets();
-    mainStore.setSelectedEditor(Core.EDITOR_ID.ROOM);
+    mainStore.setSelectedEditor(EDITOR_ID.ROOM);
     updateEditorAsset();
 }
 
@@ -188,7 +188,7 @@ function dialogOpen(props: DialogBoxProps){
 function openNodeException({nodeId, logicId}: {nodeId: number, logicId: number}): void {
     const logicAsset = gameDataStore.logic.find(l => l.id == logicId) as Logic;
     assetBrowserStore.selectAsset(logicAsset);
-    mainStore.setSelectedEditor(Core.EDITOR_ID.LOGIC);
+    mainStore.setSelectedEditor(EDITOR_ID.LOGIC);
     updateEditorAsset();
     nextTick(()=>{
         AppEventBus.onOpenNodeException.emit(nodeId, logicId);
@@ -200,9 +200,9 @@ function openNodeException({nodeId, logicId}: {nodeId: number, logicId: number})
     <div id="global-dest"></div>
     <div class="main">
         <HeaderPanel class="headerPanel"
-            @new-project="newProject"
-            @open-project="openProject"
-            @save-project="saveProject"
+            @newProject="newProject"
+            @openProject="openProject"
+            @saveProject="saveProject"
             @package-game="packageGame"
             @open-welcome="welcomeDialogEl?.openModal()"
             @dialog-open="dialogOpen" />

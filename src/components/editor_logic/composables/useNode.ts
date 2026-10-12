@@ -4,6 +4,7 @@ import Node_Connection from '../node_components/Node_Connection';
 import { useMainStore } from '@/stores/Main';
 import { useLogicEditorStore } from '@/stores/LogicEditor';
 import type { ActionData, DomRefs, LogicEditorState } from '../LogicMain.vue';
+import { LOGIC_ACTION } from '../LogicMain.vue';
 import Core from '@/core';
 
 type ActionAddNodeProps = {templateId: string, nodeRef?: Node_Obj};
@@ -194,7 +195,7 @@ export default function useNode(
 
         if (makeCommit){
             const data = {templateId, nodeRef: newNode} satisfies ActionAddNodeProps;
-            undoStore.commit({action: Core.LOGIC_ACTION.ADD_NODE, data});
+            undoStore.commit({action: LOGIC_ACTION.ADD_NODE, data});
         }
 
         if (!nodeRef) newNode.onCreate();
@@ -242,7 +243,7 @@ export default function useNode(
             const nodeList = Array.from(nodeMap, ([_, value])=>value);
             const connectionMap = new Map().set(props.selectedAsset, connectionList);
             const data = {nodeRefList: nodeList, connectionRefMap: connectionMap} satisfies ActionDeleteNodesProps;
-            undoStore.commit({action: Core.LOGIC_ACTION.PASTE, data});
+            undoStore.commit({action: LOGIC_ACTION.PASTE, data});
         }
     }
 
@@ -279,7 +280,7 @@ export default function useNode(
 
         if (makeCommit){
             const data = {nodeRefList: [...nodeRefList], connectionRefMap} satisfies ActionDeleteNodesProps;
-            undoStore.commit({action: Core.LOGIC_ACTION.DELETE_NODES, data});
+            undoStore.commit({action: LOGIC_ACTION.DELETE_NODES, data});
         }
     }
 
@@ -291,7 +292,7 @@ export default function useNode(
                 const totalVel = nodeRefList[0].pos.clone().subtract(startVec);
                 const data = {nodeRefList: [...nodeRefList], velocity: totalVel};
 
-                undoStore.commit({action: Core.LOGIC_ACTION.MOVE, data});
+                undoStore.commit({action: LOGIC_ACTION.MOVE, data});
                 undoStore.cache.delete('move_start');
             }
 
@@ -340,14 +341,14 @@ export default function useNode(
         }
     }
 
-    actionMap.set(Core.LOGIC_ACTION.ADD_NODE, actionAddNode);
-    actionMap.set(Core.LOGIC_ACTION.PASTE, revertDeleteNodes);
-    actionMap.set(Core.LOGIC_ACTION.DELETE_NODES, actionDeleteNodes);
-    actionMap.set(Core.LOGIC_ACTION.MOVE, actionMoveNodes);
-    revertMap.set(Core.LOGIC_ACTION.ADD_NODE, revertAddNode);
-    revertMap.set(Core.LOGIC_ACTION.PASTE, actionDeleteNodes);
-    revertMap.set(Core.LOGIC_ACTION.DELETE_NODES, revertDeleteNodes);
-    revertMap.set(Core.LOGIC_ACTION.MOVE, revertMoveNodes);
+    actionMap.set(LOGIC_ACTION.ADD_NODE, actionAddNode);
+    actionMap.set(LOGIC_ACTION.PASTE, revertDeleteNodes);
+    actionMap.set(LOGIC_ACTION.DELETE_NODES, actionDeleteNodes);
+    actionMap.set(LOGIC_ACTION.MOVE, actionMoveNodes);
+    revertMap.set(LOGIC_ACTION.ADD_NODE, revertAddNode);
+    revertMap.set(LOGIC_ACTION.PASTE, actionDeleteNodes);
+    revertMap.set(LOGIC_ACTION.DELETE_NODES, revertDeleteNodes);
+    revertMap.set(LOGIC_ACTION.MOVE, revertMoveNodes);
 
     return {
         nodeClick,

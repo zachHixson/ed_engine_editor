@@ -65,7 +65,7 @@ const choices = [
 const emit = defineEmits<{
     newProject: [],
     saveProject: [],
-    openProject: [string | ArrayBuffer | null],
+    openProject: [string],
     packageGame: [],
     openWelcome: [],
     dialogOpen: [DialogBoxProps],
@@ -145,7 +145,12 @@ const loadProjectFile = (event: Event): void => {
     if ('files' in input && input.files.length > 0){
         const reader = new FileReader();
         reader.onload = () => {
-            emit('openProject', reader.result);
+            if (!reader.result) {
+                console.error('File result is null');
+                return;
+            }
+
+            emit('openProject', reader.result as string);
         }
         reader.readAsText(input.files[0]);
     }

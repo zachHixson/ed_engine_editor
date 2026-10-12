@@ -7,7 +7,7 @@ export interface imEvent{
 </script>
 
 <script setup lang="ts">
-import NavControlPanel from '@/components/common/NavControlPanel.vue';
+import NavControlPanel, { NAV_TOOL_TYPE } from '@/components/common/NavControlPanel.vue';
 import UndoPanel from '@/components/common/UndoPanel.vue';
 import Room_Edit_Renderer from './Room_Edit_Renderer';
 
@@ -51,7 +51,7 @@ const devicePixelRatio = window.devicePixelRatio;
 const contentsBounds = ref([0, 0, 0, 0]);
 let renderer: Room_Edit_Renderer;
 let unitWidth = 1;
-let navHotkeyTool: Core.NAV_TOOL_TYPE | null = null;
+let navHotkeyTool: NAV_TOOL_TYPE | null = null;
 
 //template refs
 const canvasEl = ref<HTMLCanvasElement>();
@@ -206,7 +206,7 @@ function bgColorChanged(): void {
     renderer.bgColorChanged();
 }
 
-function navToolSelected(tool: Core.NAV_TOOL_TYPE): void {
+function navToolSelected(tool: NAV_TOOL_TYPE): void {
     roomEditorStore.setSelectedTool(null);
     roomEditorStore.setSelectedNavTool(tool);
 }

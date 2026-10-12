@@ -1,10 +1,9 @@
 <script lang="ts">
 import Svg from '@/components/common/Svg.vue';
-
-import type Core from '@/core';
+import { NAV_TOOL_TYPE } from './NavControlPanel.vue';
 
 export interface iControl {
-    id: Core.NAV_TOOL_TYPE,
+    id: NAV_TOOL_TYPE,
     altText: string,
     icon: string,
     action: (...args: any)=>void;

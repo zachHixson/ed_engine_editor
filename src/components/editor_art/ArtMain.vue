@@ -21,7 +21,7 @@ import Eraser from './tools/Eraser';
 import Eye_Dropper from './tools/Eye_Dropper';
 
 import { ref, reactive, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
-import { useArtEditorStore } from '@/stores/ArtEditor';
+import { useArtEditorStore, ART_TOOL_TYPE } from '@/stores/ArtEditor';
 import Core from '@/core';
 import Move from './tools/Move';
 
@@ -39,7 +39,7 @@ const emit = defineEmits<{
 }>();
 
 const undoStore = reactive(new Undo_Store<iSpriteUndoData>(32));
-const toolMap: Map<Core.ART_TOOL_TYPE, ()=>Tool_Base> = new Map();
+const toolMap: Map<ART_TOOL_TYPE, ()=>Tool_Base> = new Map();
 const tool = ref<Tool_Base | null>(null);
 
 const selectedFrameIdx = computed({
@@ -76,16 +76,16 @@ onMounted(()=>{
     window.addEventListener('resize', resize);
     undoStore.setInitialState(packageUndoData());
 
-    toolMap.set(Core.ART_TOOL_TYPE.BRUSH, ()=> new Brush());
-    toolMap.set(Core.ART_TOOL_TYPE.BUCKET, ()=> new Bucket());
-    toolMap.set(Core.ART_TOOL_TYPE.LINE, ()=> new Line_Brush());
-    toolMap.set(Core.ART_TOOL_TYPE.BOX, ()=> new Box_Brush());
-    toolMap.set(Core.ART_TOOL_TYPE.BOX_FILL, ()=> new Box_Brush(true));
-    toolMap.set(Core.ART_TOOL_TYPE.ELLIPSE, ()=> new Ellipse_Brush());
-    toolMap.set(Core.ART_TOOL_TYPE.ELLIPSE_FILL, ()=> new Ellipse_Brush(true));
-    toolMap.set(Core.ART_TOOL_TYPE.ERASER, ()=> new Eraser());
-    toolMap.set(Core.ART_TOOL_TYPE.MOVE, ()=>new Move());
-    toolMap.set(Core.ART_TOOL_TYPE.EYE_DROPPER, ()=> new Eye_Dropper());
+    toolMap.set(ART_TOOL_TYPE.BRUSH, ()=> new Brush());
+    toolMap.set(ART_TOOL_TYPE.BUCKET, ()=> new Bucket());
+    toolMap.set(ART_TOOL_TYPE.LINE, ()=> new Line_Brush());
+    toolMap.set(ART_TOOL_TYPE.BOX, ()=> new Box_Brush());
+    toolMap.set(ART_TOOL_TYPE.BOX_FILL, ()=> new Box_Brush(true));
+    toolMap.set(ART_TOOL_TYPE.ELLIPSE, ()=> new Ellipse_Brush());
+    toolMap.set(ART_TOOL_TYPE.ELLIPSE_FILL, ()=> new Ellipse_Brush(true));
+    toolMap.set(ART_TOOL_TYPE.ERASER, ()=> new Eraser());
+    toolMap.set(ART_TOOL_TYPE.MOVE, ()=>new Move());
+    toolMap.set(ART_TOOL_TYPE.EYE_DROPPER, ()=> new Eye_Dropper());
 
     toolSelected(artEditorStore.getSelectedTool!);
 });
@@ -118,7 +118,7 @@ function frameAdded(): void {
     commitFullState();
 }
 
-function toolSelected(newTool: Core.ART_TOOL_TYPE): void {
+function toolSelected(newTool: ART_TOOL_TYPE): void {
     if (newTool){
         artEditorStore.setSelectedNavTool(null);
         tool.value = getTool(newTool);
@@ -132,7 +132,7 @@ function toolSelected(newTool: Core.ART_TOOL_TYPE): void {
     }
 }
 
-function getTool(newTool: Core.ART_TOOL_TYPE): Tool_Base {
+function getTool(newTool: ART_TOOL_TYPE): Tool_Base {
     const getter = toolMap.get(newTool);
 
     if (getter){

@@ -1,13 +1,14 @@
 import Tool_Base from './Tool_Base';
 import type { iActionArguments } from '../RoomMain.vue';
 import type { imEvent } from '../RoomEditWindow.vue';
-import { RoomMainEventBus } from '../RoomMain.vue';
+import { RoomMainEventBus, ROOM_ACTION } from '../RoomMain.vue';
+import { ROOM_TOOL_TYPE } from '@/stores/RoomEditor';
 import Core from '@/core';
 
 type CameraChangeProps = {newState?: Partial<Core.Camera>, oldState?: Partial<Core.Camera>};
 
 export function useCameraProps(args: iActionArguments){
-    
+
     class Camera_Tool extends Tool_Base {
         private _down = false;
 
@@ -38,11 +39,11 @@ export function useCameraProps(args: iActionArguments){
         newState ??= Object.assign({}, args.props.selectedRoom.camera);
         Object.assign(args.props.selectedRoom.camera, newState);
         RoomMainEventBus.onCameraChanged.emit();
-    
+
         if (makeCommit){
             const cacheGet = (args.undoStore.cache.get('camera-start-pos') ?? oldState) as Partial<Core.Camera>;
             const data = {newState, oldState: cacheGet} satisfies CameraChangeProps;
-            args.undoStore.commit({action: Core.ROOM_ACTION.CAMERA_CHANGE, data});
+            args.undoStore.commit({action: ROOM_ACTION.CAMERA_CHANGE, data});
             args.undoStore.cache.delete('camera-start-pos');
         }
     }
@@ -52,9 +53,9 @@ export function useCameraProps(args: iActionArguments){
         RoomMainEventBus.onCameraChanged.emit();
     }
 
-    args.toolMap.set(Core.ROOM_TOOL_TYPE.CAMERA, Camera_Tool);
-    args.actionMap.set(Core.ROOM_ACTION.CAMERA_CHANGE, actionCameraChange);
-    args.revertMap.set(Core.ROOM_ACTION.CAMERA_CHANGE, revertCameraChange);
+    args.toolMap.set(ROOM_TOOL_TYPE.CAMERA, Camera_Tool);
+    args.actionMap.set(ROOM_ACTION.CAMERA_CHANGE, actionCameraChange);
+    args.revertMap.set(ROOM_ACTION.CAMERA_CHANGE, revertCameraChange);
 
     return { changeCameraProps: actionCameraChange };
 }

@@ -1,3 +1,4 @@
+import { ART_TOOL_SIZE } from '@/stores/ArtEditor';
 import Tool_Base from './Tool_Base';
 import Core from '@/core';
 
@@ -31,13 +32,13 @@ export default class Eraser extends Tool_Base {
             //erase sprite data
             if (this._mouseDown){
                 switch(this.brushSize){
-                    case Core.ART_TOOL_SIZE.SMALL:
+                    case ART_TOOL_SIZE.SMALL:
                         this.erasePixel(x, y);
                         break;
-                    case Core.ART_TOOL_SIZE.MEDIUM:
+                    case ART_TOOL_SIZE.MEDIUM:
                         this.clearRect(x - 1, y - 1, x, y);
                         break;
-                    case Core.ART_TOOL_SIZE.LARGE:
+                    case ART_TOOL_SIZE.LARGE:
                         this.clearRect(x - 1, y - 1, x + 1, y + 1);
                         break;
                 }
@@ -45,13 +46,13 @@ export default class Eraser extends Tool_Base {
 
             //draw preview cursor
             switch(this.brushSize){
-                case Core.ART_TOOL_SIZE.SMALL:
+                case ART_TOOL_SIZE.SMALL:
                     this.drawPixel(x, y, this.CURSOR_COLOR);
                     break;
-                case Core.ART_TOOL_SIZE.MEDIUM:
+                case ART_TOOL_SIZE.MEDIUM:
                     this.fillRect(x - 1, y - 1, x, y, this.CURSOR_COLOR);
                     break;
-                case Core.ART_TOOL_SIZE.LARGE:
+                case ART_TOOL_SIZE.LARGE:
                     this.fillRect(x - 1, y - 1, x + 1, y + 1, this.CURSOR_COLOR);
                     break;
             }

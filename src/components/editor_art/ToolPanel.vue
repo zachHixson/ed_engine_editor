@@ -6,7 +6,7 @@ import Svg from '@/components/common/Svg.vue';
 
 import { computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { useMainStore } from '@/stores/Main';
-import { useArtEditorStore } from '@/stores/ArtEditor';
+import { useArtEditorStore, ART_TOOL_SIZE, ART_TOOL_TYPE } from '@/stores/ArtEditor';
 import { useI18nStore } from '@/stores/I18n';
 import Core from '@/core';
 import smallBrushIcon from '@/assets/small_brush.svg';
@@ -24,6 +24,18 @@ import moveIcon from '@/assets/direction_arrows.svg';
 import eyeDropperIcon from '@/assets/eye_dropper.svg';
 import arrowIcon from '@/assets/arrow_01.svg';
 
+type BRUSH_SIZE = {
+    tool: ART_TOOL_SIZE;
+    name: string;
+    icon: string;
+};
+
+type BRUSH = {
+    tool: ART_TOOL_TYPE;
+    name: string;
+    icon: string;
+};
+
 const mainStore = useMainStore();
 const artEditorStore = useArtEditorStore();
 const { t } = useI18nStore();
@@ -32,71 +44,71 @@ const emit = defineEmits<{
     resized: [],
 }>();
 
-const brushSizes = [
+const brushSizes: Array<BRUSH_SIZE> = [
     {
-        tool: Core.ART_TOOL_SIZE.SMALL,
+        tool: ART_TOOL_SIZE.SMALL,
         name: t('art_editor.small_brush'),
         icon: smallBrushIcon,
     },
     {
-        tool: Core.ART_TOOL_SIZE.MEDIUM,
+        tool: ART_TOOL_SIZE.MEDIUM,
         name: t('art_editor.medium_brush'),
         icon: mediumBrushIcon,
     },
     {
-        tool: Core.ART_TOOL_SIZE.LARGE,
+        tool: ART_TOOL_SIZE.LARGE,
         name: t('art_editor.large_brush'),
         icon: largeBrushIcon,
     }
 ];
-const brushes = [
+const brushes: Array<BRUSH> = [
     {
-        tool: Core.ART_TOOL_TYPE.BRUSH,
+        tool: ART_TOOL_TYPE.BRUSH,
         name: t('art_editor.brush_tool'),
         icon: brushIcon,
     },
     {
-        tool: Core.ART_TOOL_TYPE.BUCKET,
+        tool: ART_TOOL_TYPE.BUCKET,
         name: t('art_editor.bucket_tool'),
         icon: bucketIcon,
     },
     {
-        tool: Core.ART_TOOL_TYPE.ERASER,
+        tool: ART_TOOL_TYPE.ERASER,
         name: t('art_editor.eraser_tool'),
         icon: eraserIcon,
     },
     {
-        tool: Core.ART_TOOL_TYPE.LINE,
+        tool: ART_TOOL_TYPE.LINE,
         name: t('art_editor.line_tool'),
         icon: lineIcon,
     },
     {
-        tool: Core.ART_TOOL_TYPE.BOX,
+        tool: ART_TOOL_TYPE.BOX,
         name: t('art_editor.box_stroke_tool'),
         icon: boxIcon,
     },
     {
-        tool: Core.ART_TOOL_TYPE.BOX_FILL,
+        tool: ART_TOOL_TYPE.BOX_FILL,
         name: t('art_editor.box_fill_tool'),
         icon: boxFilledIcon,
     },
     {
-        tool: Core.ART_TOOL_TYPE.ELLIPSE,
+        tool: ART_TOOL_TYPE.ELLIPSE,
         name: t('art_editor.circle_stroke_tool'),
         icon: circleIcon,
     },
     {
-        tool: Core.ART_TOOL_TYPE.ELLIPSE_FILL,
+        tool: ART_TOOL_TYPE.ELLIPSE_FILL,
         name: t('art_editor.circle_fill_tool'),
         icon: circleFilledIcon,
     },
     {
-        tool: Core.ART_TOOL_TYPE.MOVE,
+        tool: ART_TOOL_TYPE.MOVE,
         name: t('art_editor.move_tool'),
         icon: moveIcon,
     },
     {
-        tool: Core.ART_TOOL_TYPE.EYE_DROPPER,
+        tool: ART_TOOL_TYPE.EYE_DROPPER,
         name: t('art_editor.eye_dropper_tool'),
         icon: eyeDropperIcon,
     }
@@ -160,21 +172,21 @@ function bindHotkeys(): void {
     hotkeyMap.bindKey(['t'], toggleOpen);
 
     //size hotkeys
-    hotkeyMap.bindKey(['1'], sizeChanged, [Core.ART_TOOL_SIZE.SMALL]);
-    hotkeyMap.bindKey(['2'], sizeChanged, [Core.ART_TOOL_SIZE.MEDIUM]);
-    hotkeyMap.bindKey(['3'], sizeChanged, [Core.ART_TOOL_SIZE.LARGE]);
+    hotkeyMap.bindKey(['1'], sizeChanged, [ART_TOOL_SIZE.SMALL]);
+    hotkeyMap.bindKey(['2'], sizeChanged, [ART_TOOL_SIZE.MEDIUM]);
+    hotkeyMap.bindKey(['3'], sizeChanged, [ART_TOOL_SIZE.LARGE]);
 
     //layout based hotkeys
-    hotkeyMap.bindKey(['b'], toolChanged, [Core.ART_TOOL_TYPE.BRUSH]);
-    hotkeyMap.bindKey(['f'], toolChanged, [Core.ART_TOOL_TYPE.BUCKET]);
-    hotkeyMap.bindKey(['x'], toolChanged, [Core.ART_TOOL_TYPE.LINE]);
-    hotkeyMap.bindKey(['s'], toolChanged, [Core.ART_TOOL_TYPE.BOX]);
-    hotkeyMap.bindKey(['alt', 's'], toolChanged, [Core.ART_TOOL_TYPE.BOX_FILL]);
-    hotkeyMap.bindKey(['c'], toolChanged, [Core.ART_TOOL_TYPE.ELLIPSE]);
-    hotkeyMap.bindKey(['alt', 'c'], toolChanged, [Core.ART_TOOL_TYPE.ELLIPSE_FILL]);
-    hotkeyMap.bindKey(['e'], toolChanged, [Core.ART_TOOL_TYPE.ERASER]);
-    hotkeyMap.bindKey(['m'], toolChanged, [Core.ART_TOOL_TYPE.MOVE]);
-    hotkeyMap.bindKey(['d'], toolChanged, [Core.ART_TOOL_TYPE.EYE_DROPPER]);
+    hotkeyMap.bindKey(['b'], toolChanged, [ART_TOOL_TYPE.BRUSH]);
+    hotkeyMap.bindKey(['f'], toolChanged, [ART_TOOL_TYPE.BUCKET]);
+    hotkeyMap.bindKey(['x'], toolChanged, [ART_TOOL_TYPE.LINE]);
+    hotkeyMap.bindKey(['s'], toolChanged, [ART_TOOL_TYPE.BOX]);
+    hotkeyMap.bindKey(['alt', 's'], toolChanged, [ART_TOOL_TYPE.BOX_FILL]);
+    hotkeyMap.bindKey(['c'], toolChanged, [ART_TOOL_TYPE.ELLIPSE]);
+    hotkeyMap.bindKey(['alt', 'c'], toolChanged, [ART_TOOL_TYPE.ELLIPSE_FILL]);
+    hotkeyMap.bindKey(['e'], toolChanged, [ART_TOOL_TYPE.ERASER]);
+    hotkeyMap.bindKey(['m'], toolChanged, [ART_TOOL_TYPE.MOVE]);
+    hotkeyMap.bindKey(['d'], toolChanged, [ART_TOOL_TYPE.EYE_DROPPER]);
 }
 
 function toggleOpen(): void {
@@ -188,11 +200,11 @@ function colorChanged(newColor: Core.Draw.Color): void {
     toolColor.value = newColor;
 }
 
-function sizeChanged(newSize: Core.ART_TOOL_SIZE): void {
+function sizeChanged(newSize: ART_TOOL_SIZE): void {
     toolSize.value = newSize;
 }
 
-function toolChanged(newTool: Core.ART_TOOL_TYPE): void {
+function toolChanged(newTool: ART_TOOL_TYPE): void {
     toolId.value = newTool
 }
 </script>

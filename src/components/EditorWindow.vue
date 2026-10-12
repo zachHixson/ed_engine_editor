@@ -6,9 +6,8 @@ import LogicEditor from './editor_logic/LogicMain.vue';
 import type { DialogBoxProps } from './DialogBox.vue';
 
 import { computed } from 'vue';
-import { useMainStore } from '@/stores/Main';
+import { useMainStore, EDITOR_ID } from '@/stores/Main';
 import { useAssetBrowserStore } from '@/stores/AssetBrowser';
-import Core from '@/core';
 
 const mainStore = useMainStore();
 const assetBrowserStore = useAssetBrowserStore();
@@ -21,13 +20,13 @@ const emit = defineEmits<{
 
 const currentEditor = computed(()=>{
     switch(mainStore.getSelectedEditor){
-        case Core.EDITOR_ID.ROOM:
+        case EDITOR_ID.ROOM:
             return RoomEditor;
-        case Core.EDITOR_ID.ART:
+        case EDITOR_ID.ART:
             return ArtEditor;
-        case Core.EDITOR_ID.OBJECT:
+        case EDITOR_ID.OBJECT:
             return ObjectEditor;
-        case Core.EDITOR_ID.LOGIC:
+        case EDITOR_ID.LOGIC:
             return LogicEditor;
         default:
             return RoomEditor;

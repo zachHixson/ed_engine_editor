@@ -1,3 +1,4 @@
+import { ART_TOOL_SIZE } from '@/stores/ArtEditor';
 import Core from '@/core';
 
 const { Vec2 } = Core;
@@ -10,7 +11,7 @@ export default abstract class Tool_Base {
     protected mouseCell: Vec2 = new Vec2();
     protected color: Core.Draw.Color = new Core.Draw.Color(255, 255, 255, 255);
     protected _mouseDown: boolean = false;
-    protected brushSize : Core.ART_TOOL_SIZE = Core.ART_TOOL_SIZE.SMALL;
+    protected brushSize : ART_TOOL_SIZE = ART_TOOL_SIZE.SMALL;
     protected commitCallback: ()=>void = ()=>{};
     protected renderCallback: ()=>void = ()=>{};
 
@@ -18,11 +19,11 @@ export default abstract class Tool_Base {
 
     get brushPxSize(){
         switch(this.brushSize){
-            case Core.ART_TOOL_SIZE.SMALL:
+            case ART_TOOL_SIZE.SMALL:
                 return 0
-            case Core.ART_TOOL_SIZE.MEDIUM:
+            case ART_TOOL_SIZE.MEDIUM:
                 return 1
-            case Core.ART_TOOL_SIZE.LARGE:
+            case ART_TOOL_SIZE.LARGE:
                 return 2
             default:
                 return 0
@@ -89,7 +90,7 @@ export default abstract class Tool_Base {
         this.color = color;
     }
 
-    setToolSize(val: Core.ART_TOOL_SIZE): void {
+    setToolSize(val: ART_TOOL_SIZE): void {
         this.brushSize = val;
     }
 
