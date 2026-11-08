@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
+import type { WidgetKey } from '@engine/core/core';
 
 const props = defineProps<{
-    widget: any,
-    widgetData: any,
-    setWidgetData: (data: any)=>void,
+    widget: unknown,
+    widgetData: unknown,
+    setWidgetData: (data: WidgetKey['widget']['data'])=>void,
 }>();
 
 const active = ref(false);
@@ -30,9 +31,11 @@ onBeforeMount(()=>{
 });
 
 onMounted(()=>{
+    const widgetData = props.widgetData as WidgetKey['widget']['data'];
+
     if (props.widgetData){
-        key.value = props.widgetData.key;
-        code.value = props.widgetData.code;
+        key.value = widgetData.key;
+        code.value = widgetData.code;
     }
 });
 

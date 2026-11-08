@@ -1,6 +1,7 @@
 import Renderer from "@engine/Renderer";
 import { WGL } from "@engine/core/core";
-import Transition_Base, {TRANSITION} from "./Transition_Base";
+import { TRANSITION_TYPE } from "@engine/core/core";
+import Transition_Base from "./Transition_Base";
 
 const DURATION = 1;
 
@@ -24,7 +25,7 @@ export default class Transition_Fade extends Transition_Base {
             gl_FragColor = vec4(vec3(0.0), u_opacity);
         }
     `;
-    get type(){return TRANSITION.FADE};
+    get type(){return TRANSITION_TYPE.FADE};
 
     private _roomId: number = -1;
     private _progress: number = 0;
@@ -32,7 +33,7 @@ export default class Transition_Fade extends Transition_Base {
 
     private _program: WebGLProgram;
     private _geoAttrib: WGL.Attribute;
-    private _opacityUniform: WGL.Uniform;
+    private _opacityUniform: WGL.Uniform<WGL.Uniform_Types.FLOAT>;
     private _vao: WebGLVertexArrayObject;
 
     constructor(gl: WebGL2RenderingContext, renderer: Renderer){

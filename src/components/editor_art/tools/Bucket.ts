@@ -4,7 +4,7 @@ import Core from '@/core';
 export default class Bucket extends Tool_Base {
     private sampledColor: Core.Draw.Color = new Core.Draw.Color();
 
-    mouseDown(event: MouseEvent): void {
+    mouseDown(): void {
         this.sampledColor = this._sampleColor(this.pixelBuff, this.mouseCell.x, this.mouseCell.y);
 
         if (Core.Util.isInBounds(this.mouseCell.x, this.mouseCell.y, 0, 0, this.cellWidth - 1, this.cellWidth - 1)){

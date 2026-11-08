@@ -91,7 +91,7 @@ export class Room extends Asset_Base {
             +this.useGravity as (0 | 1),
             this.gravity,
             this.navState.toSaveData(),
-        ];
+        ] as RoomSave;
     }
 
     static fromSaveData(data: RoomSave, assetMap: AssetMap): Room {

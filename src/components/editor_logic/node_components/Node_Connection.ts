@@ -1,4 +1,3 @@
-import type Node from './Node';
 import Core from '@/core';
 
 type tConnectionConstructor = {
@@ -7,15 +6,15 @@ type tConnectionConstructor = {
     type: Core.Node_Enums.SOCKET_TYPE,
     graphId: number,
     canConnect: boolean,
-    startNode: Node | null,
+    startNode: Core.iEditorNode | null,
     startSocketId: string | null,
     startSocketEl: HTMLElement | null,
-    endNode: Node | null,
+    endNode: Core.iEditorNode | null,
     endSocketId: string | null,
     endSocketEl: HTMLElement | null,
 }>
 
-export default class Node_Connection {
+export default class Node_Connection implements Core.iNodeConnection {
     private _disconnectedFrom: string | null = null;
     private _startSocketId: string | null = null;
     private _endSocketId: string | null = null;
@@ -24,9 +23,9 @@ export default class Node_Connection {
     type: Core.Node_Enums.SOCKET_TYPE | null;
     graphId: number;
     canConnect: boolean;
-    startNode: Node | null;
+    startNode: Core.iEditorNode | null;
     startSocketEl: HTMLElement | null;
-    endNode: Node | null;
+    endNode: Core.iEditorNode | null;
     endSocketEl: HTMLElement | null;
 
     onConnectionUpdate = new Core.Event_Emitter<()=>void>(this);
@@ -73,7 +72,7 @@ export default class Node_Connection {
         return this.endNode?.inputs.get(this.endSocketId!);
     }
 
-    componentDestructor(){
+    componentDestructor(): void {
         this.startSocketEl = null;
         this.endSocketEl = null;
     }
@@ -95,7 +94,7 @@ export default class Node_Connection {
         ];
     }
 
-    static fromSaveData(data: Core.ConnectionSave, nodeMap: Map<number, Node>): Node_Connection {
+    static fromSaveData(data: Core.ConnectionSave, nodeMap: Map<number, Core.iEditorNode>): Node_Connection {
         const newData : tConnectionConstructor = {
             id: data[0],
             graphId: data[1],
@@ -105,7 +104,7 @@ export default class Node_Connection {
         return new Node_Connection(newData)._loadSaveData(data, nodeMap);
     }
 
-    private _loadSaveData(data: Core.ConnectionSave, nodeMap: Map<number, Node>){
+    private _loadSaveData(data: Core.ConnectionSave, nodeMap: Map<number, Core.iEditorNode>){
         this.startNode = nodeMap.get(data[4])!;
         this.endNode = nodeMap.get(data[5])!;
         this.type = this.startNode.template.outputs?.find(i => i.id == this.startSocketId)?.type ?? null;

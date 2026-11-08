@@ -184,7 +184,7 @@ function error(src: string[], data: string): void {
 }
 
 function nodeException(data: Core.iNodeExceptionData): void {
-    const msgText = data.msgVars ? t(data.msgId, data.msgVars) : t(data.msgId);
+    const msgText = t(data.msgId, data.msgVars);
     const excLvl = data.fatal ? Level.FATAL_EXCEPTION : Level.NODE_EXCEPTION;
     const fatalErr = fatalError.value || (data.fatal ?? false);
     addLogMessage([], msgText + t('editor_main.nodeExceptionClick'), excLvl, data);

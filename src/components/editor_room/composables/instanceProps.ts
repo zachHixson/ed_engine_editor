@@ -3,10 +3,12 @@ import type { iActionArguments } from '../RoomMain.vue';
 import { RoomMainEventBus, ROOM_ACTION } from '../RoomMain.vue';
 import Core from '@/core';
 
-type InstanceChangeProps = {newState: Partial<Core.Instance_Base>, oldState?: object, instRef?: Core.Instance_Base};
+export type InstanceChangeProps = { actionType: ROOM_ACTION.INSTANCE_CHANGE, newState: Partial<Core.Instance_Base>, oldState?: object, instRef?: Core.Instance_Base };
+export type InstanceGroupChangeProps = { actionType: ROOM_ACTION.INSTANCE_GROUP_CHANGE } & iGroupChangedProps;
 
 export function useInstanceProps(args: iActionArguments){
-    function actionInstanceChange({newState, instRef}: InstanceChangeProps, makeCommit = true): void {
+    function actionInstanceChange(data: Core.ActionCallbackData, makeCommit = true): void {
+        const { newState, instRef } = data as InstanceChangeProps;
         const curInstance = (instRef ?? args.editorSelection.value)! as Core.Instance_Base;
         const oldState = Object.assign({}, curInstance);
 
@@ -15,15 +17,15 @@ export function useInstanceProps(args: iActionArguments){
         RoomMainEventBus.onInstanceChanged.emit(curInstance);
 
         if (makeCommit){
-            const data: InstanceChangeProps = {newState, oldState, instRef: curInstance};
-            args.undoStore.commit({action: ROOM_ACTION.INSTANCE_CHANGE, data});
+            const data = { actionType: ROOM_ACTION.INSTANCE_CHANGE, newState, oldState, instRef: curInstance } as Core.ActionCallbackData;
+            args.undoStore.commit(data);
         }
     }
 
-    function actionInstanceGroupChange(
-        {add, groupName, newName, remove, oldIdx, instRef}: iGroupChangedProps, makeCommit = true
-    ): void {
+    function actionInstanceGroupChange(data: Core.ActionCallbackData, makeCommit = true): void {
+        const { add, groupName, newName, remove, oldIdx, instRef } = data as InstanceGroupChangeProps;
         const curInstRef = instRef ?? args.editorSelection.value;
+
         let groups: Array<string>;
 
         if (!curInstRef) {
@@ -45,17 +47,21 @@ export function useInstanceProps(args: iActionArguments){
         }
 
         if (makeCommit){
-            const data: iGroupChangedProps = {add, groupName, newName, remove, oldIdx, instRef: curInstRef};
-            args.undoStore.commit({action: ROOM_ACTION.INSTANCE_GROUP_CHANGE, data});
+            const data = { actionType: ROOM_ACTION.INSTANCE_GROUP_CHANGE, add, groupName, newName, remove, oldIdx, instRef: curInstRef } as InstanceGroupChangeProps;
+            args.undoStore.commit(data);
         }
     }
 
-    function revertInstanceChange({oldState, instRef}: InstanceChangeProps): void {
+    function revertInstanceChange(data: Core.ActionCallbackData): void {
+        const { oldState, instRef } = data as InstanceChangeProps;
+
         Object.assign(instRef!, oldState);
         RoomMainEventBus.onInstanceChanged.emit(instRef!);
     }
 
-    function revertInstanceGroupChange({add, groupName, newName, remove, oldIdx, instRef}: iGroupChangedProps): void {
+    function revertInstanceGroupChange(data: Core.ActionCallbackData): void {
+        const { add, groupName, newName, remove, oldIdx, instRef } = data as InstanceGroupChangeProps;
+
         if (!instRef) {
             throw new Error('No instRef available for reverting InstanceGroupChange');
         }

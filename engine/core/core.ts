@@ -16,6 +16,7 @@ export * from './nodes/Node_Library';
 export * from './nodes/iNodeTemplate';
 export * from './LogicInterfaces';
 export * from './nodes/Socket_Conversions';
+export * from './nodes/Widget';
 
 export * as Draw from './Draw';
 export * from './Enums';

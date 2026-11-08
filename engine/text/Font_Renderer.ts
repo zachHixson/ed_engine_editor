@@ -65,8 +65,8 @@ export default class Font_Renderer{
     private _planeGeoAttrib: WGL.Attribute;
     private _positionAttrib: WGL.Attribute;
     private _charOffsetAttrib: WGL.Attribute;
-    private _dimensionUniform: WGL.Uniform;
-    private _fontSizeUniform: WGL.Uniform;
+    private _dimensionUniform: WGL.Uniform<WGL.Uniform_Types.VEC2>;
+    private _fontSizeUniform: WGL.Uniform<WGL.Uniform_Types.FLOAT>;
     private _atlasUniform: WGL.Texture_Uniform;
     private _vao: WebGLVertexArrayObject;
 

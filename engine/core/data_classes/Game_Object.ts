@@ -3,7 +3,7 @@ import { CATEGORY_ID } from '@engine/core/Enums';
 import { Sprite } from './Sprite';
 import { iEngineLogic } from '@engine/core/LogicInterfaces';
 
-enum EXIT_TYPES {
+export enum OBJECT_EXIT_TYPES {
     TO_DESTINATION = 'TD',
     KEEP_POSITION = 'KP',
     TRANSITION_ONLY = 'TO',
@@ -28,8 +28,6 @@ export type GameObjectSave = [
 ];
 
 export class Game_Object extends Asset_Base {
-    static get EXIT_TYPES(){return EXIT_TYPES}
-
     private _startFrame: number = 0;
     private _zDepth: number = 0;
 
@@ -40,7 +38,7 @@ export class Game_Object extends Asset_Base {
     isSolid: boolean = false;
     applyGravity: boolean = false;
     triggerExits: boolean = false;
-    exitBehavior: EXIT_TYPES = EXIT_TYPES.TO_DESTINATION;
+    exitBehavior: OBJECT_EXIT_TYPES = OBJECT_EXIT_TYPES.TO_DESTINATION;
     keepCameraSettings: boolean = true;
     customLogic: boolean = false;
     logicScriptId: number | null = null;
@@ -104,7 +102,7 @@ export class Game_Object extends Asset_Base {
         this.isSolid = !!data[9];
         this.applyGravity = !!data[10];
         this.triggerExits = !!data[11];
-        this.exitBehavior = data[12] as EXIT_TYPES;
+        this.exitBehavior = data[12] as OBJECT_EXIT_TYPES;
         this.keepCameraSettings = !!data[13];
         this.customLogic = !!data[14];
         this.logicScriptId = data[15] == '' ? null : data[15];

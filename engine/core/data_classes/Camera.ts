@@ -22,6 +22,12 @@ enum FOLLOW_TYPES {
     TILED = 'T',
 };
 
+export {
+    MOVE_TYPES as CAMERA_MOVE_TYPES,
+    SCROLL_DIRS as CAMERA_SCROLL_DIRS,
+    FOLLOW_TYPES as CAMERA_FOLLOW_TYPES,
+};
+
 type vec = [x: number, y: number];
 
 export type CameraSave = [
@@ -48,10 +54,6 @@ export class Camera{
     followObjId: number | null = null;
     followType: FOLLOW_TYPES = FOLLOW_TYPES.SMART;
     tiledOrigin: Vec2 | null = null;
-
-    static get MOVE_TYPES() {return MOVE_TYPES};
-    static get SCROLL_DIRS(){return SCROLL_DIRS};
-    static get FOLLOW_TYPES() {return FOLLOW_TYPES};
 
     get size(){return this._size};
 

@@ -5,7 +5,7 @@ import { RoomMainEventBus, ROOM_ACTION } from '../RoomMain.vue';
 import { useRoomEditorStore, ROOM_TOOL_TYPE } from '@/stores/RoomEditor';
 import Core from '@/core';
 
-type DeleteProps = {instId?: number, instRefList?: Core.Instance_Base[]};
+export type DeleteProps = {actionType: ROOM_ACTION.DELETE, instId?: number, instRefList?: Core.Instance_Base[]};
 
 export function useDelete(args: iActionArguments){
 
@@ -22,11 +22,15 @@ export function useDelete(args: iActionArguments){
             if (filteredInstances.length <= 0) return;
 
             if (roomEditorStore.eraserTopOnly){
+                const data = {actionType: ROOM_ACTION.DELETE, instId: filteredInstances[0].id} as DeleteProps;
                 filteredInstances.sort((a, b) => b.zDepth - a.zDepth);
-                actionDelete({instId: filteredInstances[0].id}, false);
+                actionDelete(data, false);
             }
             else{
-                filteredInstances.forEach(i => actionDelete({instId: i.id}, false));
+                filteredInstances.forEach(i => {
+                    const data = {actionType: ROOM_ACTION.DELETE, instId: i.id} as DeleteProps;
+                    actionDelete(data, false);
+                });
             }
         }
 
@@ -50,17 +54,18 @@ export function useDelete(args: iActionArguments){
         override mouseUp(): void {
             this._down = false;
             this._last = null;
-            actionDelete({}, true);
+            actionDelete({actionType: ROOM_ACTION.DELETE}, true);
         }
     }
 
-    function actionDelete({instId, instRefList = []}: DeleteProps, makeCommit = true): void {
-        const cacheList = args.undoStore.cache.get('delete_list');
+    function actionDelete(data: Core.ActionCallbackData, makeCommit = true): void {
+        const { instId, instRefList = [] } = data as DeleteProps;
+        const cacheList = args.undoStore.cache.get('delete_list') as unknown[];
         const singleInstance = !cacheList && makeCommit;
 
         if (makeCommit && !singleInstance){
-            const data = {instRefList: cacheList};
-            args.undoStore.commit({action: ROOM_ACTION.DELETE, data})
+            const commitData = {actionType: ROOM_ACTION.DELETE, instRefList: cacheList} as DeleteProps;
+            args.undoStore.commit(commitData);
             args.undoStore.cache.delete('delete_list');
             return;
         }
@@ -89,7 +94,9 @@ export function useDelete(args: iActionArguments){
         }
     }
 
-    function revertDelete({instRefList = []}: DeleteProps): void {
+    function revertDelete(data: Core.ActionCallbackData): void {
+        const { instRefList = [] } = data as DeleteProps;
+
         for (let i = 0; i < instRefList.length; i++){
             const instRef = instRefList[i];
             args.props.selectedRoom.addInstance(instRef);

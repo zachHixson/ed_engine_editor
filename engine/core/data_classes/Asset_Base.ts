@@ -15,7 +15,7 @@ export abstract class Asset_Base {
     abstract get category_ID(): CATEGORY_ID;
     get thumbnail(): HTMLCanvasElement | null {return null}
 
-    loadBaseAssetData(data: [...AssetSave, ...any[]]): void {
+    loadBaseAssetData(data: [...AssetSave, ...unknown[]]): void {
         this.id = data[0];
         this.name = data[1];
         this.sortOrder = data[2];
@@ -29,7 +29,7 @@ export abstract class Asset_Base {
         ];
     }
 
-    abstract toSaveData(): any;
+    abstract toSaveData(): [...AssetSave, ...unknown[]];
 
-    purgeMissingReferences(...args: any): void {};
+    purgeMissingReferences(...args: unknown[]): void {};
 };

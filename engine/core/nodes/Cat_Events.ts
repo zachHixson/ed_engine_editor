@@ -1,20 +1,24 @@
 import { Vec2 } from 'linearz';
-import {SOCKET_TYPE, WIDGET, COLLISION_EVENT} from './Node_Enums';
-import { iNodeTemplate } from './iNodeTemplate';
-import { iEngineNode, iEventContext } from '../LogicInterfaces';
+import { SOCKET_TYPE, COLLISION_EVENT } from './Node_Enums';
+import { KEY_STATE } from '@engine/core/Enums';
+import { iInput, iNodeTemplate } from './iNodeTemplate';
+import { iEngineNode, iEventContext } from '@engine/core/LogicInterfaces';
 import { MOUSE_EVENT } from '../Enums';
 import { isEngineNode } from './Node_Library';
 import { type GenericNode } from './Node_Library';
-import { Instance_Base, InstanceAnimEvent } from '../core';
+import { Instance_Base, InstanceAnimEvent } from '@engine/core/core';
+import { WIDGET_TYPE, type WidgetKey } from './Widget';
 
 const catEvents: iNodeTemplate[] = [];
+const category = 'events';
+
 export default catEvents;
 
 {// Create
     const create = {
         id: 'e_create',
         isEvent: true,
-        category: 'events',
+        category,
         outTriggers: ['_o'],
     };
     catEvents.push(create);
@@ -28,7 +32,7 @@ export default catEvents;
     const update = {
         id: 'e_update',
         isEvent: true,
-        category: 'events',
+        category,
         outTriggers: ['_o'],
         outputs: [
             {id: 'delta_time', type: SOCKET_TYPE.NUMBER, execute: getDelta},
@@ -37,18 +41,31 @@ export default catEvents;
     catEvents.push(update);
 }
 
+const E_MOUSE_BUTTON_ID = 'e_mouse_button' as const;
+
+export type E_MOUSE_BUTTON = {
+    id: typeof E_MOUSE_BUTTON_ID;
+    data: {
+        type: MOUSE_EVENT.DOWN | MOUSE_EVENT.UP,
+        buttons: number,
+        pos: Vec2,
+        instances: Instance_Base[],
+    };
+};
+
 {// Mouse Button
-    type NodeData = {
-        lastData: {
-            type: MOUSE_EVENT.DOWN | MOUSE_EVENT.UP,
-            buttons: number,
-            pos: Vec2,
-            instances: Instance_Base[],
-        } | undefined,
-        downPos: Vec2 | undefined,
+    const enum OT {
+        DOWN = 'button_down',
+        UP = 'button_up',
+        CLICK = 'button_click'
     };
 
-    const btnMap = {
+    type NodeData = {
+        lastData: E_MOUSE_BUTTON['data'] | null,
+        downPos: Vec2 | null,
+    };
+
+    const btnMap: Record<number, number> = {
         2: 3,
         4: 2,
     };
@@ -56,7 +73,7 @@ export default catEvents;
     function which(this: iEngineNode): number {
         const eventData = this.getNodeData<NodeData>().lastData;
         const btn = eventData?.buttons ?? 0;
-        const remap = (<any>btnMap)[btn] ?? btn;
+        const remap = btnMap[btn] ?? btn;
         return remap;
     }
 
@@ -76,10 +93,10 @@ export default catEvents;
     }
 
     const mouseBtn = {
-        id: 'e_mouse_button',
+        id: E_MOUSE_BUTTON_ID,
         isEvent: true,
-        category: 'events',
-        outTriggers: ['button_down', 'button_up', 'button_click'],
+        category,
+        outTriggers: [OT.DOWN, OT.UP, OT.CLICK],
         outputs: [
             {id: 'which_button', type: SOCKET_TYPE.NUMBER, execute: which},
             {id: 'x_pos', type: SOCKET_TYPE.NUMBER, execute: x},
@@ -89,39 +106,37 @@ export default catEvents;
         init(this: GenericNode){
             if (!isEngineNode(this)) return;
             this.setNodeData<NodeData>({
-                lastData: undefined,
-                downPos: undefined,
+                lastData: null,
+                downPos: null,
             });
         },
-        execute(this: iEngineNode, eventContext: iEventContext, data: any){
-            const lBtn = !!(data.buttons & 0b001);
-            const mBtn = !!(data.buttons & 0b010);
-            const rBtn = !!(data.buttons & 0b100);
-
-            if (lBtn) data.button = 1;
-            if (mBtn) data.button = 2;
-            if (rBtn) data.button = 3;
-
+        execute(this: iEngineNode, eventContext: iEventContext, data: E_MOUSE_BUTTON['data']){
             this.getNodeData<NodeData>().lastData = data;
 
             if (data.type == MOUSE_EVENT.DOWN){
                 this.getNodeData<NodeData>().downPos = data.pos.clone();
-                this.triggerOutput('button_down', eventContext);
+                this.triggerOutput(OT.DOWN, eventContext);
             }
             else if (data.type == MOUSE_EVENT.UP){
                 const downPos = this.getNodeData<NodeData>().downPos;
 
                 if (downPos && downPos.equalTo(data.pos)){
-                    this.triggerOutput('button_click', eventContext);
+                    this.triggerOutput(OT.CLICK, eventContext);
                 }
                 else{
-                    this.triggerOutput('button_up', eventContext);
+                    this.triggerOutput(OT.UP, eventContext);
                 }
             }
         },
     };
     catEvents.push(mouseBtn);
 }
+
+const E_MOUSE_MOVE_ID = 'e_mouse_move' as const;
+
+export type E_MOUSE_MOVE = {
+    id: typeof E_MOUSE_MOVE_ID;
+};
 
 {// Mouse Move
     function x(this: iEngineNode): number {
@@ -133,9 +148,9 @@ export default catEvents;
     }
 
     const mouseMove = {
-        id: 'e_mouse_move',
+        id: E_MOUSE_MOVE_ID,
         isEvent: true,
-        category: 'events',
+        category,
         outTriggers: ['_o'],
         outputs: [
             {id: 'x_pos', type: SOCKET_TYPE.NUMBER, execute: x},
@@ -145,39 +160,71 @@ export default catEvents;
     catEvents.push(mouseMove);
 }
 
+const E_KEYBOARD_ID = 'e_keyboard' as const;
+
+export type E_KEYBOARD = {
+    id: typeof E_KEYBOARD_ID;
+    data: {
+        which_key: string;
+        code: string;
+        type: KEY_STATE;
+    };
+};
+
 {// Keyboard
+    const enum KEY {
+        KEY_DOWN = 'key_down',
+        KEY_PRESSED = 'key_pressed',
+        KEY_UP = 'key_up',
+    };
+
     const keyboard = {
         id: 'e_keyboard',
         isEvent: true,
-        category: 'events',
+        category,
         widget: {
-            id: 'key_selector',
-            type: WIDGET.KEY,
+            type: WIDGET_TYPE.KEY,
         },
-        outTriggers: ['key_down', 'key_pressed', 'key_up'],
-        execute(this: iEngineNode, eventContext: iEventContext, data: KeyboardEvent){
-            const {code} = this.getWidgetData();
+        outTriggers: [KEY.KEY_DOWN, KEY.KEY_PRESSED, KEY.KEY_UP],
+        execute(this: iEngineNode, eventContext: iEventContext, data: E_KEYBOARD['data']){
+            const { code } = this.getWidgetData() as WidgetKey['widget']['data'];
 
             if (data.code == code){
                 switch (data.type){
                     case 'down':
-                        this.triggerOutput('key_down', eventContext);
+                        this.triggerOutput(KEY.KEY_DOWN, eventContext);
                         break;
                     case 'pressed':
-                        this.triggerOutput('key_pressed', eventContext);
+                        this.triggerOutput(KEY.KEY_PRESSED, eventContext);
                         break;
                     case 'up':
-                        this.triggerOutput('key_up', eventContext);
+                        this.triggerOutput(KEY.KEY_UP, eventContext);
                         break;
                 }
             }
         },
-    };
+    } as const satisfies iNodeTemplate;
     catEvents.push(keyboard);
 }
 
+const E_COLLISION_ID = 'e_collision' as const;
+
+export type E_COLLISION = {
+    id: typeof E_COLLISION_ID;
+    data: {
+        type: COLLISION_EVENT;
+        instance: Instance_Base
+    };
+};
+
 {// Collision
-    type NodeData = Map<number, any>;
+    type NodeData = Map<number, E_COLLISION['data']>;
+
+    const enum OTRIG {
+        START = 'start',
+        REPEAT = 'repeat',
+        STOP = 'stop',
+    };
 
     function getInstance(this: iEngineNode, eventContext: iEventContext): Instance_Base | null {
         const nodeData = this.getNodeData<NodeData>().get(eventContext.eventKey);
@@ -185,10 +232,10 @@ export default catEvents;
     }
 
     const collision = {
-        id: 'e_collision',
+        id: E_COLLISION_ID,
         isEvent: true,
-        category: 'events',
-        outTriggers: ['start', 'repeat', 'stop'],
+        category,
+        outTriggers: [OTRIG.START, OTRIG.REPEAT, OTRIG.STOP],
         outputs: [
             {id: 'instance', type: SOCKET_TYPE.INSTANCE, execute: getInstance},
         ],
@@ -200,19 +247,19 @@ export default catEvents;
 
             this.stackDataIO = true;
         },
-        execute(this: iEngineNode, eventContext: iEventContext, data: any){
+        execute(this: iEngineNode, eventContext: iEventContext, data: E_COLLISION['data']){
             //Dispatch collision event
             this.getNodeData<NodeData>().set(eventContext.eventKey, data);
 
             switch (data.type){
                 case COLLISION_EVENT.START:
-                    this.triggerOutput('start', eventContext);
+                    this.triggerOutput(OTRIG.START, eventContext);
                     break;
                 case COLLISION_EVENT.REPEAT:
-                    this.triggerOutput('repeat', eventContext);
+                    this.triggerOutput(OTRIG.REPEAT, eventContext);
                     break;
                 case COLLISION_EVENT.STOP:
-                    this.triggerOutput('stop', eventContext);
+                    this.triggerOutput(OTRIG.START, eventContext);
                     break;
             }
 
@@ -223,6 +270,13 @@ export default catEvents;
 }
 
 {// Animation
+    const enum OT {
+        START = 'start',
+        STOP = 'stop',
+        TICK = 'tick',
+        FINISHED = 'finished',
+    };
+
     function getPlaying(this: iEngineNode, eventContext: iEventContext): boolean {
         return eventContext.instance.animPlaying;
     }
@@ -238,8 +292,8 @@ export default catEvents;
     const animation = {
         id: 'e_animation',
         isEvent: true,
-        category: 'events',
-        outTriggers: ['start', 'stop', 'tick', 'finished'],
+        category,
+        outTriggers: [OT.START, OT.STOP, OT.TICK, OT.FINISHED],
         outputs: [
             {id: 'is_playing', type: SOCKET_TYPE.BOOL, execute: getPlaying},
             {id: 'frame', type: SOCKET_TYPE.NUMBER, execute: getFrame},
@@ -248,16 +302,16 @@ export default catEvents;
         execute(this: iEngineNode, eventContext: iEventContext, data: InstanceAnimEvent){
             switch(data){
                 case InstanceAnimEvent.START:
-                    this.triggerOutput('start', eventContext);
+                    this.triggerOutput(OT.START, eventContext);
                     break;
                 case InstanceAnimEvent.STOP:
-                    this.triggerOutput('stop', eventContext);
+                    this.triggerOutput(OT.STOP, eventContext);
                     break;
                 case InstanceAnimEvent.TICK:
-                    this.triggerOutput('tick', eventContext);
+                    this.triggerOutput(OT.TICK, eventContext);
                     break;
                 case InstanceAnimEvent.FINISHED:
-                    this.triggerOutput('finished', eventContext);
+                    this.triggerOutput(OT.FINISHED, eventContext);
                     break;
             }
         },
@@ -265,29 +319,42 @@ export default catEvents;
     catEvents.push(animation);
 }
 
+const E_MESSAGE_ID = 'e_message' as const;
+
+export type E_MESSAGE = {
+    id: typeof E_MESSAGE_ID;
+    data: {name: string};
+};
+
 {// Message
+    const enum OT {
+        O = '_o',
+    };
+
+    const nameInput = { id: 'name', type: SOCKET_TYPE.STRING, flipInput: true, hideSocket: true, default: '' } as const satisfies iInput;
     const message = {
-        id: 'e_message',
+        id: E_MESSAGE_ID,
         isEvent: true,
-        category: 'events',
-        outTriggers: ['_o'],
+        category,
+        outTriggers: [OT.O],
         inputs: [
-            {id: 'name', type: SOCKET_TYPE.STRING, flipInput: true, hideSocket: true},
+            nameInput,
         ],
         init(this: GenericNode){
             if (!isEngineNode(this)){
                 this.inputBoxWidth = 6;
             }
         },
-        execute(this: iEngineNode, eventContext: iEventContext, data: any){
-            const name = this.getInput<string>('name', eventContext);
+        execute(this: iEngineNode, eventContext: iEventContext, data: E_MESSAGE['data']){
+            const input = nameInput;
+            const name = this.getInput(input, eventContext);
 
             if (name.trim().length < 0) return;
 
             if (data.name == name){
-                this.triggerOutput('_o', eventContext);
+                this.triggerOutput(OT.O, eventContext);
             }
         },
-    };
+    } as const satisfies iNodeTemplate;
     catEvents.push(message);
 }

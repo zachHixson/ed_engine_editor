@@ -15,9 +15,9 @@ export interface DialogBoxProps {
     textInfo: {
         textId?: string,
         rawText?: string,
-        vars?: {[keys: string]: any}
+        vars?: {[keys: string]: unknown}
     },
-    callback?: (...args: any)=>void,
+    callback?: (positive: boolean)=>void,
     defaultOpt?: DIALOG_OPTION,
 }
 </script>

@@ -54,7 +54,7 @@ export default class Dialog_Fullscreen extends Dialog_Base{
     private _program: WebGLProgram;
     private _geoAttrib: WGL.Attribute;
     private _uvAttrib: WGL.Attribute;
-    private _arrowAnimUniform: WGL.Uniform;
+    private _arrowAnimUniform: WGL.Uniform<WGL.Uniform_Types.FLOAT>;
     private _arrowTexture: WGL.Texture_Uniform;
     private _vao: WebGLVertexArrayObject;
 

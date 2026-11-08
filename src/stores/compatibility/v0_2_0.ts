@@ -119,9 +119,9 @@ type NodeSaveOld = {
     nodeID: number,
     graphID: number,
     pos: vec,
-    inps: Array<[string, any]>,
-    wdgDat: any,
-    ext: any,
+    inps: Array<[string, string | number]>,
+    wdgDat: Record<string, unknown>,
+    ext: unknown,
 };
 
 type ConnectionSaveOld = {
@@ -245,17 +245,17 @@ function instExitToArray(data: InstanceExitSaveOld): ExitSave {
 
 function instanceToArray(data: InstanceBaseSaveOld): InstanceBaseSave {
     const instType = data.instType;
-    const d = data as any;
+    const d = data as unknown;
 
     switch(instType) {
         case INSTANCE_TYPE.SPRITE:
-            return instSpriteToArray(d) as unknown as InstanceBaseSave;
+            return instSpriteToArray(d as InstanceSpriteSaveOld) as unknown as InstanceBaseSave;
         case INSTANCE_TYPE.OBJECT:
-            return instObjectToArray(d) as unknown as InstanceBaseSave;
+            return instObjectToArray(d as InstanceObjectSaveOld) as unknown as InstanceBaseSave;
         case INSTANCE_TYPE.LOGIC:
-            return instLogicToArray(d) as unknown as InstanceBaseSave;
+            return instLogicToArray(d as InstanceLogicSaveOld) as unknown as InstanceBaseSave;
         case INSTANCE_TYPE.EXIT:
-            return instExitToArray(d) as unknown as InstanceBaseSave;
+            return instExitToArray(d as InstanceExitSaveOld) as unknown as InstanceBaseSave;
     }
 
     throw new Error("Could not update data of unknown instance type");
@@ -315,12 +315,13 @@ function logicToArray(data: LogicSaveOld): LogicSave {
     ];
 }
 
-function dataClassesToArrays(data: ProjectSaveOld): void {
+function dataClassesToArrays(data: ProjectSaveOld): tSerializedGameData {
     const fixedData = data as unknown as tSerializedGameData;
     fixedData.sprites = data.sprites.map(i => spriteToArray(i));
     fixedData.objects = data.objects.map(i => objectToArray(i));
     fixedData.rooms = data.rooms.map(i => roomToArray(i));
     fixedData.logic = data.logic.map(i => logicToArray(i));
+    return fixedData;
 }
 
 function decompressFrame(frame: string[]): ImageData {
@@ -360,7 +361,7 @@ function decompressFrame(frame: string[]): ImageData {
     return new ImageData(data, 16, 16);
 }
 
-function updateSprites(data: tSerializedGameData): void {
+function updateSprites(data: tSerializedGameData): tSerializedGameData {
     const spriteData = data.sprites;
 
     for (let i = 0; i < spriteData.length; i++) {
@@ -374,12 +375,14 @@ function updateSprites(data: tSerializedGameData): void {
 
         spriteData[i][3] = Core.Sprite.compressFrames(imgDataFrames);
     }
+
+    return data;
 }
 
-Updates.add({
+Updates.add<ProjectSaveOld>({
     version: [0, 2, 0],
     updateCallback: data => {
-        dataClassesToArrays(data);
-        updateSprites(data);
+        const arrayedData = dataClassesToArrays(data);
+        updateSprites(arrayedData);
     }
 });

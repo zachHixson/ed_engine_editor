@@ -8,7 +8,7 @@ export enum Uniform_Types {
     MAT3,
 }
 
-export function getGLContext(canvas: HTMLCanvasElement, settings = {}): WebGL2RenderingContext | null {
+export function getGLContext(canvas: HTMLCanvasElement, settings?: Record<string, unknown>): WebGL2RenderingContext | null {
     const ctx = canvas.getContext('webgl2', settings) ?? getPolyfill(canvas, settings);
 
     if (!ctx){
@@ -19,8 +19,27 @@ export function getGLContext(canvas: HTMLCanvasElement, settings = {}): WebGL2Re
     return ctx as WebGL2RenderingContext;
 }
 
-function getPolyfill(canvas: HTMLCanvasElement, settings: any): WebGL2RenderingContext | null {
-    const ctx = canvas.getContext('webgl', settings) as any;
+function getPolyfill(canvas: HTMLCanvasElement, settings?: Record<string, unknown>): WebGL2RenderingContext | null {
+    type WebGLPolyfill = Omit<WebGLRenderingContext,
+        'createVertexArray' |
+        'bindVertexArray' |
+        'deleteVertexArray' |
+        'drawArraysInstanced' |
+        'drawElementsInstanced' |
+        'vertexAttribDivisor' |
+        'texStorage2D' |
+        'bufferSubData'
+    > & {
+        createVertexArray: WebGL2RenderingContext['createVertexArray'];
+        bindVertexArray: WebGL2RenderingContext['bindVertexArray'];
+        deleteVertexArray: WebGL2RenderingContext['deleteVertexArray'];
+        drawArraysInstanced: WebGL2RenderingContext['drawArraysInstanced'];
+        drawElementsInstanced: WebGL2RenderingContext['drawElementsInstanced'];
+        vertexAttribDivisor: WebGL2RenderingContext['vertexAttribDivisor'];
+        texStorage2D: WebGL2RenderingContext['texStorage2D'];
+        bufferSubData: WebGL2RenderingContext['bufferSubData'];
+    };
+    const ctx = canvas.getContext('webgl', settings) as WebGLPolyfill;
     const vboExt = ctx.getExtension('OES_vertex_array_object');
     const instanceExt = ctx.getExtension('ANGLE_instanced_arrays');
 
@@ -29,12 +48,12 @@ function getPolyfill(canvas: HTMLCanvasElement, settings: any): WebGL2RenderingC
         return null;
     }
 
-    function makeCallable(ext: any, func: Function){
+    function makeCallable(ext: unknown, func: Function){
         return function(){
             return func.apply(ext, arguments);
         }
     }
-    
+
     //bind VBO ext
     ctx.createVertexArray = makeCallable(vboExt, vboExt.createVertexArrayOES);
     ctx.bindVertexArray = makeCallable(vboExt, vboExt.bindVertexArrayOES);
@@ -53,7 +72,7 @@ function getPolyfill(canvas: HTMLCanvasElement, settings: any): WebGL2RenderingC
 
     console.warn('WARNING: WebGL -> WebGL2 polyfill is being used. Some functionality may be unavailable');
 
-    return ctx;
+    return ctx as WebGL2RenderingContext;
 }
 
 function substitute_texStorage2D(this: WebGLRenderingContext, target: number, levels: number, internalFormat: number, width: number, height: number){
@@ -70,12 +89,19 @@ function substitute_texStorage2D(this: WebGLRenderingContext, target: number, le
     );
 }
 
-function substitute_bufferSubData(ctx: WebGLRenderingContext){
-    const oldSubData = ctx.bufferSubData;
+function substitute_bufferSubData(ctx: WebGLRenderingContext): WebGL2RenderingContext['bufferSubData'] {
+    type ReturnT = ReturnType<WebGL2RenderingContext['bufferSubData']>;
 
-    return function (this: WebGLRenderingContext, target: number, dstByteOffset: number, srcData: ArrayBuffer, srcOffset: number) {
+    const oldSubData = ctx.bufferSubData;
+    const func: WebGL2RenderingContext['bufferSubData'] = function (
+        target: GLenum,
+        dstByteOffset: GLintptr,
+        srcData: AllowSharedBufferSource,
+    ): ReturnT {
         oldSubData.call(ctx, target, dstByteOffset, srcData);
-    }
+    };
+
+    return func;
 }
 
 export function compileProgram(gl:WebGL2RenderingContext, vertexSource: string, fragmentSource: string, checkErrors = true): WebGLProgram {
@@ -116,14 +142,14 @@ export function createPlaneGeo(){
     ];
 }
 
-export class Uniform {
+export class Uniform<T extends Uniform_Types> {
     private _gl: WebGL2RenderingContext;
     private _program: WebGLProgram;
     private _name: string;
-    private _type: Uniform_Types;
+    private _type: T;
     private _loc: WebGLUniformLocation;
 
-    constructor(gl: WebGL2RenderingContext, program: WebGLProgram, name: string, type: Uniform_Types){
+    constructor(gl: WebGL2RenderingContext, program: WebGLProgram, name: string, type: T){
         this._gl = gl;
         this._program = program;
         this._name = name;
@@ -131,26 +157,37 @@ export class Uniform {
         this._loc = this._gl.getUniformLocation(program, this._name)!;
     }
 
-    set(...args: any[]): void {
+    set(this: Uniform<Uniform_Types.BOOL>, bool: boolean): void;
+    set(this: Uniform<Uniform_Types.INT>, int: number): void;
+    set(this: Uniform<Uniform_Types.FLOAT>, float: number): void;
+    set(this: Uniform<Uniform_Types.VEC2>, x: number, y: number): void;
+    set(this: Uniform<Uniform_Types.VEC3>, x: number, y: number, z: number): void;
+    set(this: Uniform<Uniform_Types.VEC4>, x: number, y: number, z: number, w: number): void;
+    set(this: Uniform<Uniform_Types.MAT3>, transpose: boolean, data: Float32List): void;
+    set(...args: unknown[]): void {
         switch(this._type){
             case Uniform_Types.BOOL:
             case Uniform_Types.INT:
-                this._gl.uniform1i(this._loc, args[0]);
+                this._gl.uniform1i(this._loc, (args as [number])[0]);
                 break;
             case Uniform_Types.FLOAT:
-                this._gl.uniform1f(this._loc, args[0]);
+                this._gl.uniform1f(this._loc, (args as [number])[0]);
                 break;
             case Uniform_Types.VEC2:
-                this._gl.uniform2f(this._loc, args[0], args[1]);
+                const v2 = (args as [number, number]);
+                this._gl.uniform2f(this._loc, v2[0], v2[1]);
                 break;
             case Uniform_Types.VEC3:
-                this._gl.uniform3f(this._loc, args[0], args[1], args[2]);
+                const v3 = (args as [number, number, number]);
+                this._gl.uniform3f(this._loc, v3[0], v3[1], v3[2]);
                 break;
             case Uniform_Types.VEC4:
-                this._gl.uniform4f(this._loc, args[0], args[1], args[2], args[3]);
+                const v4 = (args as [number, number, number, number]);
+                this._gl.uniform4f(this._loc, v4[0], v4[1], v4[2], v4[3]);
                 break;
             case Uniform_Types.MAT3:
-                this._gl.uniformMatrix3fv(this._loc, args[0], args[1]);
+                const m3 = (args as [boolean, Float32List]);
+                this._gl.uniformMatrix3fv(this._loc, m3[0], m3[1]);
                 break;
         }
     }

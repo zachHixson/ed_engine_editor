@@ -1,6 +1,6 @@
 //@ts-nocheck
 
-function check(label: string, value: any, checkVal: any): void {
+function check(label: string, value: unknown, checkVal: unknown): void {
     console.log(value == checkVal ? '✅' : '❌', label);
 }
 
@@ -24,12 +24,12 @@ function createSprite(length: number){
 
         return image;
     });
-    
+
     return sprite;
 }
 
 let dbgEnabled = false;
-function debug(...args: any[]){
+function debug(...args: unknown[]){
     //@ts-ignore
     if (dbgEnabled){
         console.log(...arguments);
@@ -69,7 +69,7 @@ function debug(...args: any[]){
         for (let j = 0; j < i; j++){
             fact += j;
         }
-        
+
         //measure
         for (let j = fact; j < fact + i; j++){
             //@ts-ignore
@@ -89,7 +89,7 @@ function debug(...args: any[]){
 
     check('free index when empty', atlas.checkFree(2), true);
     check('free index after cache', atlas.checkFree(2), true);
-    
+
     //after a few images
     for (let i = 0; i < 24; i++){
         const image = createSprite(3);
@@ -156,12 +156,12 @@ function debug(...args: any[]){
     //check correct order
     const order = [4, 4, 4, 1, 2, 5, 5, 3];
     let inOrder = true;
-    
+
     for (let i = 0; i < order.length; i++){
         //@ts-ignore
         inOrder &&= atlas._assignment[i] == order[i];
     }
-    
+
     check('is the order correct after overwriting data', inOrder, true);
 })();
 

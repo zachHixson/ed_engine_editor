@@ -1,7 +1,6 @@
 import Node from './Node';
 import Node_Connection from './Node_Connection';
 import Core from '@/core';
-import type Node_API from '../Node_API';
 import { useI18nStore } from '@/stores/I18n';
 
 const { Vec2 } = Core;
@@ -15,10 +14,10 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
     id: number;
     name: string;
     graphs: Graph[] = [];
-    nodes: Node[] = [];
-    connections: Node_Connection[] = [];
+    nodes: Core.iEditorNode[] = [];
+    connections: Core.iNodeConnection[] = [];
     selectedGraphId: number = 0;
-    selectedNodes: Node[] = [];
+    selectedNodes: Core.iEditorNode[] = [];
     localVariables: Map<string, Core.iEditorVariable> = new Map();
     sortOrder: number = 0;
 
@@ -53,18 +52,18 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
         ];
     }
 
-    static fromSaveData(data: Core.LogicSave, nodeAPI: Node_API): Logic {
+    static fromSaveData(data: Core.LogicSave, nodeAPI: Core.iEditorAPI): Logic {
         return new Logic()._loadSaveData(data, nodeAPI);
     }
 
-    private _loadSaveData(data: Core.LogicSave, nodeAPI: Node_API): Logic {
-        const nodeMap = new Map<number, Node>();
+    private _loadSaveData(data: Core.LogicSave, nodeAPI: Core.iEditorAPI): Logic {
+        const nodeMap = new Map<number, Core.iEditorNode>();
 
         this.loadBaseAssetData(data);
 
         this.graphs = data[4].map(graph => {
             this._nextGraphId = Math.max(this._nextGraphId, graph[0] + 1);
-            return Graph.fromSaveData(graph as unknown as any);
+            return Graph.fromSaveData(graph);
         });
         this.nodes = data[5].map(nodeData => {
             this._nextNodeId = Math.max(this._nextNodeId, nodeData[1] + 1);
@@ -82,7 +81,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
 
         //dispatch node event
         this.nodes.forEach(node => {
-            node.logicLoaded(this);
+            node.logicLoaded && node.logicLoaded(this);
         });
 
         return this;
@@ -136,7 +135,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
         }
     }
 
-    addNode(templateId: string, pos: Vec2, nodeAPI: Node_API, nodeRef?: Node): Node {
+    addNode(templateId: string, pos: Vec2, nodeAPI: Core.iEditorAPI, nodeRef?: Core.iEditorNode): Core.iEditorNode {
         const newNode = nodeRef ?? new Node(templateId, this.nextNodeId, pos, this, this.selectedGraphId, nodeAPI);
 
         this.nodes.push(newNode);
@@ -144,7 +143,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
         return newNode
     }
 
-    deleteNode(nodeRef: Node): void {
+    deleteNode(nodeRef: Core.iEditorNode): void {
         let nodeIdx = -1;
 
         for (let i = 0; nodeIdx < 0 && i < this.nodes.length; i++){
@@ -158,7 +157,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
         this.nodes.splice(nodeIdx, 1);
     }
 
-    addConnection(connectionObj: Node_Connection): void {
+    addConnection(connectionObj: Core.iNodeConnection): void {
         if (!connectionObj.id){
             connectionObj.id = this._nextConnectionId++;
         }
@@ -166,7 +165,7 @@ export default class Logic extends Core.Asset_Base implements Core.iEditorLogic 
         this.connections.push(connectionObj);
     }
 
-    removeConnection(id: number, connectionobj?: Node_Connection): boolean {
+    removeConnection(id: number, connectionobj?: Core.iNodeConnection): boolean {
         for (let i = 0; i < this.connections.length; i++){
             const connection = this.connections[i];
 

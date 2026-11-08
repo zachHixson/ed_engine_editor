@@ -1,20 +1,23 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import type { WidgetDirection } from '@engine/core/nodes/Widget';
 import Core from '@/core';
 
 const props = defineProps<{
-    widget: any,
-    widgetData: any,
-    setWidgetData: (data: any, commit?: boolean)=>void,
+    widget: unknown,
+    widgetData: unknown,
+    setWidgetData: (data: WidgetDirection['widget']['data'], commit?: boolean)=>void,
 }>();
 
 const wheelRef = ref<HTMLDivElement>();
 
 const rad = computed(()=>{
-    if (!props.widgetData) return 0;
+    const widgetData = props.widgetData as WidgetDirection['widget']['data'];
 
-    const x = props.widgetData[0];
-    const y = -props.widgetData[1];
+    if (!widgetData) return 0;
+
+    const x = widgetData[0];
+    const y = -widgetData[1];
     return Math.atan2(y, x);
 });
 
@@ -22,13 +25,16 @@ let startPos: number[] | null = null;
 let mouseBtnDown = false;
 
 onMounted(()=>{
-    if (props.widgetData){
-        props.setWidgetData(props.widgetData, false);
+    const widget = props.widget as WidgetDirection['widget'];
+    const widgetData = props.widgetData as WidgetDirection['widget']['data'];
+
+    if (widgetData){
+        props.setWidgetData(widgetData, false);
         return;
     }
 
-    if (props.widget.options.starDir){
-        props.setWidgetData(props.widget.options.starDir, false);
+    if (widget.options.startDir){
+        props.setWidgetData(widget.options.startDir, false);
         return;
     }
 
@@ -36,9 +42,11 @@ onMounted(()=>{
 });
 
 function mouseDown(event: MouseEvent){
+    const widgetData = props.widgetData as WidgetDirection['widget']['data'];
+
     event.preventDefault();
     event.stopPropagation();
-    startPos = [...props.widgetData];
+    startPos = [...widgetData];
     mouseBtnDown = true;
 }
 
@@ -61,10 +69,12 @@ function mouseUp(event: MouseEvent){
 }
 
 function setCardinal(event: MouseEvent, x: number, y: number){
+    const widgetData = props.widgetData as WidgetDirection['widget']['data'];
+
     event.stopPropagation();
-    startPos = [...props.widgetData];
-    props.widgetData[0] = x;
-    props.widgetData[1] = y;
+    startPos = [...widgetData];
+    widgetData[0] = x;
+    widgetData[1] = y;
     commit();
 }
 
@@ -76,19 +86,22 @@ function setArbitrary(event: MouseEvent){
         )
         .subtractScalar((wheelRight - wheelLeft) / 2)
         .normalize();
+    const widgetData = props.widgetData as WidgetDirection['widget']['data'];
 
-    props.widgetData[0] = pos.x;
-    props.widgetData[1] = -pos.y;
+    widgetData[0] = pos.x;
+    widgetData[1] = -pos.y;
 
     event.stopPropagation();
 }
 
 function commit(){
-    if (startPos && startPos[0] == props.widgetData[0] && startPos![1] == props.widgetData[1]) return;
+    const widgetData = props.widgetData as WidgetDirection['widget']['data'];
 
-    const newData = [...props.widgetData];
-    props.widgetData[0] = startPos![0];
-    props.widgetData[1] = startPos![1];
+    if (startPos && startPos[0] == widgetData[0] && startPos![1] == widgetData[1]) return;
+
+    const newData: [number, number] = [...widgetData];
+    widgetData[0] = startPos![0];
+    widgetData[1] = startPos![1];
     props.setWidgetData(newData, true);
 }
 </script>

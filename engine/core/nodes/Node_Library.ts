@@ -23,6 +23,6 @@ NodeList.forEach(node => {
     NodeMap.set(node.id, node);
 });
 
-export function isEngineNode(node: any): node is iEngineNode {
-    return !!node.engine;
+export function isEngineNode(node: GenericNode): node is iEngineNode {
+    return !!(node as iEngineNode).engine;
 }

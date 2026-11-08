@@ -47,7 +47,7 @@ function setInstanceName(newName: string): void {
         <div class="control">
             <label for="name">{{t('room_editor.instance_name')}}:</label>
             <input id="name" type="text" :value="selectedLogic.name" v-tooltip="t('room_editor.tt_inst_name')"
-                @change="setInstanceName(($event.target as any).value)" v-input-active/>
+                @change="setInstanceName(($event.target as HTMLInputElement).value)" v-input-active/>
         </div>
         <GroupList
             :editList="selectedLogic.groups"

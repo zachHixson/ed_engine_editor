@@ -5,13 +5,8 @@ type MultiAction<T> = {
     actions: T[];
 }
 
-export interface iActionStore {
-    action: number;
-    data: Core.iAnyObj;
-};
-
-function isMultiAction(a: any): a is MultiAction<any> {
-    return !!a.isMultiAction;
+function isMultiAction<T>(a: T | MultiAction<T>): a is MultiAction<T> {
+    return !!(a as MultiAction<T>).isMultiAction;
 }
 
 export default class Undo_Store<T>{
@@ -24,7 +19,7 @@ export default class Undo_Store<T>{
     stepLimit: number;
     initialState: T | MultiAction<T> | null = null;
     returnPrevStep: boolean;
-    cache = new Map<any, any | object>();
+    cache = new Map<unknown, unknown>();
 
     constructor(stepLimit = 1, returnPrevStep = true){
         this.stepLimit = stepLimit;
@@ -134,11 +129,16 @@ export default class Undo_Store<T>{
     }
 }
 
-export function useUndoHelpers(undoStore: Undo_Store<any>, actionMap: Map<any, any>, revertMap: Map<any, any>){
+export function useUndoHelpers(undoStore: Undo_Store<Core.ActionCallbackData>, actionMap: Map<number, Core.ActionCallback>, revertMap: Map<number, Core.ActionCallback>){
     function stepBackward(): void {
         if (undoStore.undoLength <= 0) return;
 
         const step = undoStore.stepBack();
+
+        if (!step) {
+            console.error("Could not retrieve undo step");
+            return;
+        }
 
         if (isMultiAction(step)){
             for (let i = step.actions.length - 1; i >= 0; i--){
@@ -150,11 +150,16 @@ export function useUndoHelpers(undoStore: Undo_Store<any>, actionMap: Map<any, a
             applyChronoStep(step, revertMap);
         }
     }
-    
+
     function stepForward(): void {
         if (undoStore.redoLength <= 0) return;
 
         const step = undoStore.stepForward();
+
+        if (!step) {
+            console.error("Could no retrieve undo step");
+            return;
+        }
 
         if (isMultiAction(step)){
             for (let i = 0; i < step.actions.length; i++){
@@ -166,11 +171,16 @@ export function useUndoHelpers(undoStore: Undo_Store<any>, actionMap: Map<any, a
             applyChronoStep(step, actionMap);
         }
     }
-    
-    function applyChronoStep(step: iActionStore, map: Map<number, (data: Core.iAnyObj, commit: boolean)=>void>): void {
-        const action = map.get(step.action)!;
-        
-        action(step.data, false);
+
+    function applyChronoStep(step: Core.ActionCallbackData, map: Map<Core.ActionCallbackData['actionType'], Core.ActionCallback>): void {
+        const action = map.get(step.actionType);
+
+        if (!action) {
+            console.error('Could not find action');
+            return;
+        }
+
+        action(step, false);
     }
 
     return {

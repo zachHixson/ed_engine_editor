@@ -1,25 +1,28 @@
-import { iNodeTemplate } from './iNodeTemplate';
+import { iNodeTemplate, iInput } from './iNodeTemplate';
 import {SOCKET_TYPE, SOCKET_DEFAULT} from './Node_Enums';
-import { iEditorNode, iEngineNode, iEventContext, iVarInfo, iEditorAPI, iNodeInputEvent, NodeSave } from '../LogicInterfaces';
-import { iAnyObj } from '../interfaces';
+import type { ActionCallbackData } from '@engine/core/interfaces';
+import { iEditorNode, iEngineNode, iEventContext, iVarInfo, iEditorAPI, iNodeInputEvent, NodeSave , iSocketInfo} from '@engine/core/LogicInterfaces';
 import { isEngineNode, type GenericNode } from './Node_Library';
 import { canConvertSocket } from './Socket_Conversions';
+import { WIDGET_TYPE, WidgetVarInfo } from './Widget';
 
-type ActionCreateVariable = {varNode: iEditorNode, varInfo: iVarInfo};
-type ActionEditVariable = {varNode: iEditorNode, newVarInfo: iVarInfo, oldVarInfo: iVarInfo, oldInitValue: any};
+const ActionCreateVariableKey = Symbol('create variable');
+const ActionEditVariableKey = Symbol('edit variable');
+
+type ActionCreateVariable = {actionType: typeof ActionCreateVariableKey, varNode: iEditorNode, varInfo: iVarInfo};
+type ActionEditVariable = {actionType: typeof ActionEditVariableKey, varNode: iEditorNode, newVarInfo: iVarInfo, oldVarInfo: iVarInfo, oldInitValue: unknown};
 type GetSetNodeData = {
     isValid: boolean,
     onNewVariableCB: ()=>void,
 };
 
-const ActionCreateVariableKey = Symbol('create variable');
-const ActionEditVariableKey = Symbol('edit variable');
-
 const catVariables: iNodeTemplate[] = [];
+const category = 'variables';
+
 export default catVariables;
 
 {// Create Variable
-    function getValue(this: iEngineNode, eventContext: iEventContext): any {
+    function getValue(this: iEngineNode, eventContext: iEventContext): unknown {
         const {name, isGlobal} = this.getNodeData<iVarInfo>();
         const variable = isGlobal ? this.engine.getGlobalVariable(name) : eventContext.instance.getLocalVariable(name);
 
@@ -30,25 +33,32 @@ export default catVariables;
         return variable.value;
     }
 
-    function actionCreateVariable({varNode, varInfo}: ActionCreateVariable): Partial<ActionCreateVariable> {
+    function actionCreateVariable(data: ActionCallbackData): ActionCallbackData {
+        if (data.actionType != ActionCreateVariableKey) throw new Error('actionCreateVariable called with invalid key');
+
+        const {actionType, varNode, varInfo} = data as ActionCreateVariable;
         const valSocket = varNode.inputs.get('initial_value')!;
 
         varNode.setNodeData<iVarInfo>(varInfo);
         editor_initVarNode.call(varNode);
-        valSocket.value = SOCKET_DEFAULT.get(varInfo.type);
+        valSocket.value = SOCKET_DEFAULT.get(varInfo.type)!;
         editor_setVar.call(varNode);
         varNode.editorAPI.addNode(varNode, false);
         document.dispatchEvent(new CustomEvent('onNewVariable'));
-        return {varNode}
+        return {actionType, varNode} as ActionCallbackData;
     }
 
-    function revertCreateVariable({varNode}: ActionCreateVariable): void {
+    function revertCreateVariable(data: ActionCallbackData): void {
+        if (data.actionType != ActionCreateVariableKey) return;
+        const {varNode} = data as ActionCreateVariable;
         varNode.editorAPI.deleteNodes([varNode], false);
         editor_deleteVar.call(varNode);
     }
 
-    function actionEditVariable(this: iEditorNode, args: ActionEditVariable): Partial<ActionEditVariable> {
-        const {varNode, newVarInfo, oldVarInfo} = args;
+    function actionEditVariable(this: iEditorNode, data: ActionCallbackData): ActionCallbackData {
+        if (data.actionType != ActionEditVariableKey) throw new Error('actionEditVariable called without valid key');
+
+        const {varNode, newVarInfo, oldVarInfo} = data as ActionEditVariable;
 
         //remove old var name from variable map
         editor_deleteVar.call(varNode);
@@ -75,10 +85,14 @@ export default catVariables;
             getSetNodes.forEach(node => node.refresh());
         }
 
-        return args;
+        return data;
     }
 
-    function revertEditVariable({varNode, newVarInfo, oldVarInfo, oldInitValue}: ActionEditVariable): void {
+    function revertEditVariable(data: ActionCallbackData): void {
+        if (data.actionType != ActionEditVariableKey) return;
+
+        const {varNode, newVarInfo, oldVarInfo, oldInitValue} = data as ActionEditVariable;
+
         //remove old var name from variable map
         editor_deleteVar.call(varNode);
 
@@ -103,25 +117,29 @@ export default catVariables;
             const valSocket = varNode.inputs.get('initial_value')!;
 
             getSetNodes.forEach(node => node.refresh());
-            valSocket.value = oldInitValue;
+            valSocket.value = <typeof valSocket.value>oldInitValue;
         }
     }
 
     function editor_initVarNode(this: iEditorNode): void {
         const {name, type, isGlobal, isList} = this.getNodeData<iVarInfo>();
-        const nameSocket = this.inputs.get('_varName')!;
-        const typeSocket = this.inputs.get('_varType')!;
         const valSocket = this.inputs.get('initial_value')!;
         const outSocket = this.outputs.get('_value')!;
+        const widget = this.widget as WidgetVarInfo['widget'];
+        const varType = SOCKET_TYPE[type];
 
-        nameSocket.value = {titleId: 'node.create_var_display_name', data: name, translate: false};
-
-        if (isGlobal){
-            nameSocket.decoratorIcon = 'global_variable';
-            nameSocket.decoratorText = 'node.global_variable';
+        if (widget.options == undefined) {
+            widget.options = {
+                name,
+                type: varType,
+                isGlobal: !!isGlobal,
+            };
         }
-
-        typeSocket.value = {titleId: 'node.create_var_display_type', data: `node.${SOCKET_TYPE[type]}`, translate: true};
+        else {
+            widget.options.name = name;
+            widget.options.type = varType;
+            widget.options.isGlobal = !!isGlobal;
+        }
 
         valSocket.type = type;
         outSocket.type = type;
@@ -153,26 +171,27 @@ export default catVariables;
 
     const createVariable = {
         id: 'create_variable',
-        category: 'variables',
+        category,
         doNotCopy: true,
         editorCanDelete: false,
         showEditButton: true,
         reverseOutputs: true,
+        widget: {
+            type: WIDGET_TYPE.VAR_INFO,
+        },
         inputs: [
-            {id: '_varName', type: SOCKET_TYPE.INFO, hideSocket: true, enableDecorators: true},
-            {id: '_varType', type: SOCKET_TYPE.INFO, hideSocket: true, enableDecorators: true},
             {id: 'initial_value', type: SOCKET_TYPE.NUMBER, default: 0, hideSocket: true, flipInput: true},
         ],
         outputs: [
             {id: '_value', type: SOCKET_TYPE.ANY, execute: getValue}
         ],
         registerActions(editorAPI: iEditorAPI){
-            editorAPI.registerAction<ActionCreateVariable>(
+            editorAPI.registerAction(
                 ActionCreateVariableKey,
                 actionCreateVariable,
                 revertCreateVariable
             );
-            editorAPI.registerAction<ActionEditVariable>(
+            editorAPI.registerAction(
                 ActionEditVariableKey,
                 actionEditVariable,
                 revertEditVariable
@@ -186,6 +205,7 @@ export default catVariables;
 
             this.editorAPI.dialogVariable((positive, varInfo) => {
                 const args: ActionCreateVariable = {
+                    actionType: ActionCreateVariableKey,
                     varNode: this,
                     varInfo,
                 };
@@ -196,17 +216,15 @@ export default catVariables;
             });
         },
         afterSave(this: iEditorNode, saveData: NodeSave){
-            const valueInput = saveData[4].find((input: iAnyObj) => input[0] == 'initial_value')!;
             const varInfo = Object.assign({}, this.getNodeData<iVarInfo>());
 
             varInfo.isGlobal = varInfo.isGlobal ? 1 : 0;
             varInfo.isList = varInfo.isList ? 1 : 0;
 
             saveData[6] = varInfo;
-            saveData[4][0] = valueInput;
         },
         afterLoad(this: GenericNode, saveData: NodeSave){
-            const varInfo = saveData[6];
+            const varInfo = saveData[6] as iVarInfo;
 
             varInfo.isGlobal = !!varInfo.isGlobal;
             varInfo.isList = !!varInfo.isList;
@@ -237,10 +255,11 @@ export default catVariables;
         onEdit(this: GenericNode){
             if (isEngineNode(this)) return;
 
-            this.editorAPI.dialogVariable((positive, varInfo)=> {
+            this.editorAPI.dialogVariable((positive, varInfo) => {
                 if (!positive) return;
 
                 const args: ActionEditVariable = {
+                    actionType: ActionEditVariableKey,
                     varNode: this,
                     newVarInfo: varInfo,
                     oldVarInfo: this.getNodeData<iVarInfo>(),
@@ -253,7 +272,7 @@ export default catVariables;
         },
         onDeleteStopped(this: iEditorNode, protectedNodes: iEditorNode[]){
             const createVars = protectedNodes.filter(node => node.templateId == this.templateId);
-            const varNames = createVars.map(node => node.inputs.get('_varName')!.value.data);
+            const varNames = createVars.map(node => node.getNodeData<iVarInfo>().name);
             const message = varNames.length > 1 ? 'node.create_var_confirm_multiple' : 'node.create_var_confirm';
             const selectedNodes = this.editorAPI.getSelectedNodes();
 
@@ -284,14 +303,17 @@ export default catVariables;
 
             downStream.forEach(connection => connection.endNode!.refresh());
         },
-    };
+    } as const satisfies iNodeTemplate;
     catVariables.push(createVariable);
 }
 
 {// Set Variable
+    const nameInp = {id: 'name', type: SOCKET_TYPE.STRING, default: '', hideSocket: true, enableDecorators: true} as const satisfies iInput;
+    const dataInp = {id: 'data', type: SOCKET_TYPE.ANY, default: null, disabled: true, hideInput: true} as const satisfies iInput;
+
     function setVar(this: iEngineNode, eventContext: iEventContext): void {
-        const varName = this.getInput<string>('name', eventContext);
-        const data = this.getInput<any>('data', eventContext);
+        const varName = this.getInput(nameInp, eventContext);
+        const data = this.getInput(dataInp, eventContext);
         const isGlobal = this.engine.getGlobalVariable(varName) !== null;
         const isDefined = !!(isGlobal || eventContext.instance.getLocalVariable(varName));
 
@@ -302,7 +324,7 @@ export default catVariables;
             this.engine.nodeException({
                 errorId: Symbol.for(this.nodeId.toString() + 'no_variable_found'),
                 msgId: 'node.error_var_not_found',
-                msgVars: [varName],
+                msgVars: {varName},
                 logicId: this.parentScript.id,
                 nodeId: this.nodeId,
                 fatal: false,
@@ -314,15 +336,15 @@ export default catVariables;
 
     const setVariable = {
         id: 'set_variable',
-        category: 'variables',
+        category,
         inputBoxWidth: 6,
         inTriggers: [
             {id: '_i', execute: setVar},
         ],
         outTriggers: ['_o'],
         inputs: [
-            {id: 'name', type: SOCKET_TYPE.STRING, default: '', hideSocket: true, enableDecorators: true},
-            {id: 'data', type: SOCKET_TYPE.ANY, default: null, disabled: true, hideInput: true},
+            nameInp,
+            dataInp,
         ],
         init(this: GenericNode){
             if (isEngineNode(this)) return;
@@ -369,15 +391,17 @@ export default catVariables;
                 });
             }
         },
-    };
+    } as const satisfies iNodeTemplate;
     catVariables.push(setVariable);
 }
 
 {// Get Variable
     type IsValid = boolean;
 
-    function getVar(this: iEngineNode, eventContext: iEventContext): void {
-        const varName = this.getInput<string>('name', eventContext);
+    const nameInp = {id: 'name', type: SOCKET_TYPE.STRING, default: '', hideSocket: true, flipInput: true} as const satisfies iInput;
+
+    function getVar(this: iEngineNode, eventContext: iEventContext): unknown {
+        const varName = this.getInput(nameInp, eventContext) as string;
         const isGlobal = this.engine.getGlobalVariable(varName);
         const variable = isGlobal ? isGlobal : eventContext.instance.getLocalVariable(varName);
 
@@ -386,7 +410,7 @@ export default catVariables;
             this.engine.nodeException({
                 errorId: Symbol.for(this.nodeId.toString() + 'no_variable_found'),
                 msgId: 'node.error_var_not_found',
-                msgVars: [varName],
+                msgVars: {varName},
                 logicId: this.parentScript.id,
                 nodeId: this.nodeId,
                 fatal: true,
@@ -399,11 +423,11 @@ export default catVariables;
 
     const getVariable = {
         id: 'get_variable',
-        category: 'variables',
+        category,
         inputBoxWidth: 6,
         stackDataIO: true,
         inputs: [
-            {id: 'name', type: SOCKET_TYPE.STRING, default: '', hideSocket: true, flipInput: true},
+            nameInp,
         ],
         outputs: [
             {id: 'data', type: SOCKET_TYPE.ANY, disabled: true, execute: getVar},
@@ -467,61 +491,67 @@ export default catVariables;
                 });
             }
         },
-    };
+    } as const satisfies iNodeTemplate;
     catVariables.push(getVariable);
 }
 
 {// Number
+    const numInp = {id: '_number', type: SOCKET_TYPE.NUMBER, default: 0, hideSocket: true} as const satisfies iInput;
+
     function value(this: iEngineNode, eventContext: iEventContext): number {
-        return this.getInput<number>('_number', eventContext);
+        return this.getInput(numInp, eventContext) as number;
     }
 
     const num = {
         id: 'number',
-        category: 'variables',
+        category,
         inputs: [
-            {id: '_number', type: SOCKET_TYPE.NUMBER, default: 0, required: true, hideSocket: true},
+            numInp,
         ],
         outputs: [
             {id: '_out', type: SOCKET_TYPE.NUMBER, execute: value},
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catVariables.push(num);
 }
 
 {// String
+    const strInp = {id: '_string', type: SOCKET_TYPE.STRING, default: '', hideSocket: true} as const satisfies iInput;
+
     function value(this: iEngineNode, eventContext: iEventContext): string {
-        return this.getInput<string>('_string', eventContext);
+        return this.getInput(strInp, eventContext) as string;
     }
 
     const str = {
         id: 'string',
-        category: 'variables',
+        category,
         inputs: [
-            {id: '_string', type: SOCKET_TYPE.STRING, default: '', hideSocket: true},
+            strInp,
         ],
         outputs: [
             {id: '_out', type: SOCKET_TYPE.STRING, execute: value},
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catVariables.push(str);
 }
 
 {// Boolean
+    const boolInp = {id: '_boolean', type: SOCKET_TYPE.BOOL, default: false, hideSocket: true} as const satisfies iInput;
+
     function value(this: iEngineNode, eventContext: iEventContext): boolean {
-        return this.getInput<boolean>('_boolean', eventContext);
+        return this.getInput(boolInp, eventContext) as boolean;
     }
 
     const bool = {
         id: 'boolean',
-        category: 'variables',
+        category,
         inputs: [
-            {id: '_boolean', type: SOCKET_TYPE.BOOL, default: false, hideSocket: true},
+            boolInp,
         ],
         outputs: [
             {id: '_out', type: SOCKET_TYPE.BOOL, execute: value},
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catVariables.push(bool);
 }
 
@@ -541,7 +571,7 @@ function getNoVariableFoundKey(node: GenericNode): symbol {
 function validate(this: iEditorNode, textbox?: HTMLInputElement){
     const noVariableFoundKey = getNoVariableFoundKey(this);
     const dataSocket = this.inputs.get('data') || this.outputs.get('data')!;
-    const varName = textbox?.value ?? this.getInput<string>('name');
+    const varName = textbox?.value ?? this.getInput('name') as string;
     const globalGet = this.editorAPI.getGlobalVariable(varName);
     const localGet = this.parentScript.getLocalVariable(varName);
     const isValid = !!globalGet || !!localGet;
@@ -573,7 +603,7 @@ function validate(this: iEditorNode, textbox?: HTMLInputElement){
         this.editorAPI.pushNodeException({
             errorId: noVariableFoundKey,
             msgId: 'node.error_var_not_found',
-            msgVars: [varName],
+            msgVars: {varName},
             logicId: this.parentScript.id,
             nodeId: this.nodeId,
             fatal: false,
@@ -593,7 +623,7 @@ function validate(this: iEditorNode, textbox?: HTMLInputElement){
 function afterGameDataLoaded(this: GenericNode){
     if (isEngineNode(this)){
         //set global node state if global variable
-        const varName = this.inputs.get('name')!.value;
+        const varName = this.inputs.get('name')!.value as string;
         const dataSocket = this.inputs.get('data') ?? this.outputs.get('data');
         const variable = this.engine.getGlobalVariable(varName) ?? this.parentScript.localVariableDefaults.get(varName);
 

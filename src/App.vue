@@ -53,23 +53,31 @@ const welcomeDialogEl = ref<InstanceType<typeof WelcomeModal>>();
 
 i18nStore.initLang();
 
+type DebugWindow = Window & {
+    setAutoLoad: ()=>void;
+    clearAutoLoad: ()=>void;
+    enableAutoSave: ()=>void;
+    disableAutoSave: ()=>void;
+};
+
 onMounted(()=>{
     const autoLoadData = localStorage.getItem('autoLoad');
+    const debugWindow = window as unknown as DebugWindow;
 
     mainStore.newProject();
     updateEditorAsset();
 
     //setup debug commands
-    (<any>window).setAutoLoad = ()=>{
+    debugWindow.setAutoLoad = ()=>{
         autoSave();
     };
-    (<any>window).clearAutoLoad = ()=>{
+    debugWindow.clearAutoLoad = ()=>{
         localStorage.setItem('autoLoad', '');
     };
-    (<any>window).enableAutoSave = ()=>{
+    debugWindow.enableAutoSave = ()=>{
         localStorage.removeItem('disableAutoSave');
     };
-    (<any>window).disableAutoSave = ()=>{
+    debugWindow.disableAutoSave = ()=>{
         localStorage.setItem('disableAutoSave', 'true');
     };
 
@@ -212,7 +220,10 @@ function openNodeException({nodeId, logicId}: {nodeId: number, logicId: number})
             @asset-selected="updateEditorAsset"
             @asset-deleted="updateAfterDeletion"
             @dialog-open="dialogOpen" />
-        <EditorWindow class="editorWindow" ref="editorWindowEl" @asset-changed="updateAssetPreviews" @open-node-exception="openNodeException($event)"/>
+        <EditorWindow class="editorWindow" ref="editorWindowEl"
+            @asset-changed="updateAssetPreviews"
+            @open-node-exception="openNodeException($event)"
+            @dialog-open="dialogOpen" />
         <transition name="playWindow">
             <PlayWindow v-if="mainStore.getPlayState != PLAY_STATE.NOT_PLAYING" class="playWindow" @open-node-exception="openNodeException"/>
         </transition>

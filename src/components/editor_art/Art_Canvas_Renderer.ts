@@ -85,8 +85,8 @@ export default class Art_Canvas_Renderer{
     private _program: WebGLProgram;
     private _positionAttribute: Core.WGL.Attribute;
     private _uvAttribute: Core.WGL.Attribute;
-    private _dimensionUniform: Core.WGL.Uniform;
-    private _viewMatrixUniform: Core.WGL.Uniform;
+    private _dimensionUniform: Core.WGL.Uniform<Core.WGL.Uniform_Types.VEC2>;
+    private _viewMatrixUniform: Core.WGL.Uniform<Core.WGL.Uniform_Types.MAT3>;
     private _spriteTexUniform: Core.WGL.Texture_Uniform;
     private _previewTexUniform: Core.WGL.Texture_Uniform;
     private _vao: WebGLVertexArrayObject;

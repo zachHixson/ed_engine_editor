@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { NAV_TOOL_TYPE } from '@/components/common/NavControlPanel.vue';
 import Core from '@/core';
+import type { Color } from '@engine/core/Draw';
 
 export const enum ART_TOOL_SIZE {
     SMALL = 1,
@@ -22,7 +23,7 @@ export const enum ART_TOOL_TYPE {
 };
 
 interface iState {
-    selectedColor: any, //Pinia doesn't like the private variables in Core.Draw.Color for some reason, so using 'any' instead.
+    selectedColor: Core.Draw.Color,
     selectedSize: ART_TOOL_SIZE,
     selectedTool: ART_TOOL_TYPE | null,
     selectedNavTool: NAV_TOOL_TYPE | null,
@@ -43,7 +44,7 @@ export const useArtEditorStore = defineStore('ArtEditor', {
     }),
 
     getters: {
-        getSelectedColor: (state): Core.Draw.Color => state.selectedColor,
+        getSelectedColor: (state): Core.Draw.Color => state.selectedColor as Core.Draw.Color,
         getSelectedSize: (state): ART_TOOL_SIZE => state.selectedSize,
         getSelectedTool: (state): ART_TOOL_TYPE | null => state.selectedTool,
         getSelectedNavTool: (state): NAV_TOOL_TYPE | null => state.selectedNavTool,

@@ -1,16 +1,14 @@
 import { Vec2 } from 'linearz';
 import { Linked_List, Node as LL_Node } from "./Linked_List";
 import { mod } from './Util';
-import { iAnyObj } from "./interfaces";
 
-interface iSpacialObject {
+interface iSpacialObject<T> {
     id: number,
     pos: Vec2,
-    clone(): any,
-    toSaveData?(): iAnyObj,
+    clone(): T,
 }
 
-export class Spacial_Collection<T extends iSpacialObject> {
+export class Spacial_Collection<T extends iSpacialObject<T>> {
     private _size: number;
     private _divisions: number;
     private _cellDimensions: number;
@@ -53,7 +51,7 @@ export class Spacial_Collection<T extends iSpacialObject> {
         const clone = new Spacial_Collection<T>(this._size, this._divisions);
         this._map.forEach(spacialRef => {
             const newData = recursive ? spacialRef.data.clone() : spacialRef.data;
-            clone.add(newData)
+            clone.add(newData);
         });
         return clone;
     }

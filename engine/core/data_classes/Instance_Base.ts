@@ -81,7 +81,7 @@ export abstract class Instance_Base{
     abstract get TYPE(): INSTANCE_TYPE;
     abstract get sourceId(): number | string;
     abstract clone(): Instance_Base;
-    abstract toSaveData(): any;
+    abstract toSaveData(): [...InstanceBaseSave, ...unknown[]];
     abstract needsPurge(assetMap: AssetMap): boolean;
 
     //Rendering getters
@@ -251,7 +251,7 @@ export abstract class Instance_Base{
         this.pos.copy(newPos);
     }
 
-    loadBaseSaveData(data: [...InstanceBaseSave, ...any[]]): void {
+    loadBaseSaveData(data: [...InstanceBaseSave, ...unknown[]]): void {
         this.id = data[0];
         this.name = data[1];
         this.pos = u32ToVec2(data[3]);

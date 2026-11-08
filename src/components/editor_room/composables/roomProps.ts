@@ -2,8 +2,9 @@ import Tool_Base from './Tool_Base';
 import type { iActionArguments } from '../RoomMain.vue';
 import { RoomMainEventBus, ROOM_ACTION } from '../RoomMain.vue';
 import { useRoomEditorStore, ROOM_TOOL_TYPE } from '@/stores/RoomEditor';
+import Core from '@/core';
 
-type RoomPropChangeProps = {newState: object, oldState?: object};
+export type RoomPropChangeProps = { actionType: ROOM_ACTION.ROOM_PROP_CHANGE, newState: object, oldState?: object };
 
 export function useRoomProps(args: iActionArguments){
 
@@ -23,7 +24,8 @@ export function useRoomProps(args: iActionArguments){
         }
     }
 
-    function actionRoomPropChange({newState}: RoomPropChangeProps, makeCommit = true): void {
+    function actionRoomPropChange(data: Core.ActionCallbackData, makeCommit = true): void {
+        const { newState } = data as RoomPropChangeProps;
         const oldState = Object.assign({}, args.props.selectedRoom);
 
         Object.assign(args.props.selectedRoom, newState);
@@ -35,13 +37,15 @@ export function useRoomProps(args: iActionArguments){
         }
 
         if (makeCommit){
-            const data = {newState, oldState} satisfies RoomPropChangeProps;
+            const commitData = { actionType: ROOM_ACTION.ROOM_PROP_CHANGE, newState, oldState } as RoomPropChangeProps;
+            const bgColorGet = args.undoStore.cache.get('bg-color') as Core.Draw.Color;
 
-            if (args.undoStore.cache.has('bg-color')){
-                data.oldState.bgColor = args.undoStore.cache.get('bg-color').clone();
+            if (bgColorGet){
+                type HasBGColor = { bgColor: Core.Draw.Color };
+                (commitData.oldState as HasBGColor).bgColor = bgColorGet;
             }
 
-            args.undoStore.commit({action: ROOM_ACTION.ROOM_PROP_CHANGE, data});
+            args.undoStore.commit(commitData);
             args.undoStore.cache.delete('bg-color');
         }
         else if(bgColorHasChanged && !args.undoStore.cache.has('bg-color')){
@@ -49,7 +53,8 @@ export function useRoomProps(args: iActionArguments){
         }
     }
 
-    function revertRoomPropChange({oldState}: RoomPropChangeProps): void {
+    function revertRoomPropChange(data: Core.ActionCallbackData): void {
+        const { oldState } = data as RoomPropChangeProps;
         const curBG = args.props.selectedRoom.bgColor.clone();
 
         Object.assign(args.props.selectedRoom, oldState);

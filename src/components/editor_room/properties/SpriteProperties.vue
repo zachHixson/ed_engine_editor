@@ -41,12 +41,12 @@ function setInstProp(propObj: Partial<Core.Instance_Sprite>): void {
         <div class="control">
             <label for="name">{{ t('room_editor.instance_name') }}:</label>
             <input id="name" type="text" :value="selectedSprite.name" v-tooltip="t('room_editor.tt_inst_name')"
-                @change="setInstanceName(($event.target as any).value)" v-input-active/>
+                @change="setInstanceName(($event.target as HTMLInputElement).value)" v-input-active/>
         </div>
         <div class="control">
             <label for="custDepth">{{ t('room_editor.custom_depth') }}:</label>
             <input id="custDepth" type="number" :value="selectedSprite.zDepthOverride ?? ''" v-tooltip="t('room_editor.tt_cust_depth')"
-                @change="setInstProp({zDepthOverride: nanToNull(parseInt(($event.target as any).value))})" v-input-active/>
+                @change="setInstProp({zDepthOverride: nanToNull(parseInt(($event.target as HTMLInputElement).value))})" v-input-active/>
         </div>
         <Collapsible
             heading-text="Animation Settings">
@@ -64,12 +64,12 @@ function setInstProp(propObj: Partial<Core.Instance_Sprite>): void {
                 <div class="control">
                     <label for="startframe">{{ t('object_editor.start_frame') }}:</label>
                     <input id="startframe" type="number" :value="selectedSprite.startFrame" v-tooltip="t('room_editor.tt_start_frame')"
-                        @change="setInstProp({startFrame: nanToPrev(parseInt(($event.target as any).value), ()=>selectedSprite.startFrame)})" v-input-active/>
+                        @change="setInstProp({startFrame: nanToPrev(parseInt(($event.target as HTMLInputElement).value), ()=>selectedSprite.startFrame)})" v-input-active/>
                 </div>
                 <div class="control">
                     <label for="fps">{{t('object_editor.fps')}}:</label>
                     <input id="fps" type="number" :value="selectedSprite.fpsOverride" v-tooltip="t('room_editor.tt_fps')"
-                        @change="setInstProp({fpsOverride: nanToPrev(parseInt(($event.target as any).value), ()=>selectedSprite.fpsOverride)})" v-input-active/>
+                        @change="setInstProp({fpsOverride: nanToPrev(parseInt(($event.target as HTMLInputElement).value), ()=>selectedSprite.fpsOverride)})" v-input-active/>
                 </div>
             </div>
         </Collapsible>

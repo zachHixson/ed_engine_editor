@@ -1,30 +1,39 @@
-import { iNodeTemplate } from "./iNodeTemplate";
+import { iInput, iNodeTemplate } from "./iNodeTemplate";
 import { iEngineNode, iEditorNode, iEventContext, iNodeConnection, NodeSave } from "../LogicInterfaces";
 import { canConvertSocket } from './Socket_Conversions';
-import { SOCKET_TYPE, WIDGET } from "./Node_Enums";
-import { Asset_Base, GenericNode, isEngineNode } from "../core";
+import { SOCKET_TYPE } from "./Node_Enums";
+import { GenericNode, Instance_Base, Instance_Object, Instance_Sprite, isEngineNode } from "../core";
+import { WIDGET_TYPE, type WidgetKey, type WidgetTextArea } from "@engine/core/nodes/Widget";
 
 const catFlow: iNodeTemplate[] = [];
+const category = 'flow';
+
 export default catFlow;
 
 {// Branch
+    const enum OT {
+        TRUE = 'true',
+        FALSE = 'false',
+    };
+    const inp = {id: 'condition', type: SOCKET_TYPE.BOOL, default: false} as const satisfies iInput;
+
     function checkCondition(this: iEngineNode, eventContext: iEventContext): void {
-        const conditionVal = this.getInput<boolean>('condition', eventContext);
-        const out = conditionVal ? 'true' : 'false';
+        const conditionVal = this.getInput(inp, eventContext);
+        const out = conditionVal ? OT.TRUE : OT.FALSE;
         this.triggerOutput(out, eventContext);
     }
 
     const branch = {
         id: 'branch',
-        category: 'flow',
+        category,
         inTriggers: [
             {id: '_i', execute: checkCondition},
         ],
-        outTriggers: ['true', 'false'],
+        outTriggers: [OT.TRUE, OT.FALSE],
         inputs: [
-            {id: 'condition', type: SOCKET_TYPE.BOOL, default: false},
+            inp,
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catFlow.push(branch);
 }
 
@@ -38,7 +47,7 @@ export default catFlow;
 
     const sequence = {
         id: 'sequence',
-        category: 'flow',
+        category,
         inTriggers: [
             {id: '_i', execute: startSequence},
         ],
@@ -125,46 +134,59 @@ export default catFlow;
 }
 
 {// Compare
+    const enum OT {
+        EQ = 'equal_sym',
+        GT = 'gt',
+        LT = 'lt',
+        GTE = 'gte',
+        LTE = 'lte',
+    };
+
+    const inp1 = {id: '_inp1', type: SOCKET_TYPE.NUMBER, default: 0} as const satisfies iInput;
+    const inp2 = {id: '_inp2', type: SOCKET_TYPE.NUMBER, default: 0} as const satisfies iInput;
+
     function compare(this: iEngineNode, eventContext: iEventContext): boolean {
         const compareFunc = this.getWidgetData();
-        const inp1 = this.getInput<number>('_inp1', eventContext);
-        const inp2 = this.getInput<number>('_inp2', eventContext);
+        const inp1Val = this.getInput(inp1, eventContext);
+        const inp2Val = this.getInput(inp2, eventContext);
 
         switch(compareFunc){
-            case 'equal_sym': return inp1 == inp2;
-            case 'gt': return inp1 > inp2;
-            case 'lt': return inp1 < inp2;
-            case 'gte': return inp1 >= inp2;
-            case 'lte': return inp1 <= inp2;
+            case OT.EQ: return inp1Val == inp2Val;
+            case OT.GT: return inp1Val > inp2Val;
+            case OT.LT: return inp1Val < inp2Val;
+            case OT.GTE: return inp1Val >= inp2Val;
+            case OT.LTE: return inp1Val <= inp2Val;
             default: return false;
         }
     }
 
     const compareNode = {
         id: 'compare_numbers',
-        category: 'flow',
+        category,
         inputs: [
-            {id: '_inp1', type: SOCKET_TYPE.NUMBER, default: 0},
-            {id: '_inp2', type: SOCKET_TYPE.NUMBER, default: 0},
+            inp1,
+            inp2,
         ],
         widget: {
-            id: 'compare_function',
-            type: WIDGET.ENUM,
+            type: WIDGET_TYPE.ENUM,
             options: {
-                items: ['equal_sym', 'gt', 'lt', 'gte', 'lte'],
+                stringItems: [OT.EQ, OT.GT, OT.LT, OT.GTE, OT.LTE],
             },
         },
         outputs: [
             {id: 'result', type: SOCKET_TYPE.BOOL, execute: compare},
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catFlow.push(compareNode);
 }
 
 {// Compare Instances
+    const inp1 = {id: '_i1', type: SOCKET_TYPE.ASSET, default: null} as const satisfies iInput;
+    const inp2 = {id: '_i2', type: SOCKET_TYPE.ASSET, default: null} as const satisfies iInput;
+
     function getResult(this: iEngineNode, eventContext: iEventContext): boolean {
-        const i1 = this.getInput<Asset_Base | null>('_i1', eventContext);
-        const i2 = this.getInput<Asset_Base | null>('_i2', eventContext);
+        const i1 = this.getInput(inp1, eventContext);
+        const i2 = this.getInput(inp2, eventContext);
 
         if (i1 == null || i2 == null){
             this.engine.nodeException({
@@ -203,12 +225,11 @@ export default catFlow;
 
     const compareInstance = {
         id: 'compare_instances',
-        category: 'flow',
+        category,
         widget: {
-            id: 'type',
-            type: WIDGET.ENUM,
+            type: WIDGET_TYPE.ENUM,
             options: {
-                items: ['compare_instance', 'compare_type'],
+                stringItems: ['compare_instance', 'compare_type'],
             },
         },
         onBeforeMount(this: iEditorNode){
@@ -218,56 +239,59 @@ export default catFlow;
             editor_setSocketType.call(this);
         },
         inputs: [
-            {id: '_i1', type: SOCKET_TYPE.ASSET, default: null},
-            {id: '_i2', type: SOCKET_TYPE.ASSET, default: null},
+            inp1,
+            inp2,
         ],
         outputs: [
             {id: 'result', type: SOCKET_TYPE.BOOL, execute: getResult},
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catFlow.push(compareInstance);
 }
 
 {// Logic
+    const inp1 = {id: '_inp1', type: SOCKET_TYPE.BOOL, default: false} as const satisfies iInput;
+    const inp2 = {id: '_inp2', type: SOCKET_TYPE.BOOL, default: false} as const satisfies iInput;
+
     function result(this: iEngineNode, eventContext: iEventContext): boolean {
         const logicFunc = this.getWidgetData();
-        const inp1 = this.getInput<boolean>('_inp1', eventContext);
-        const inp2 = this.getInput<boolean>('_inp2', eventContext);
+        const i1 = this.getInput(inp1, eventContext);
+        const i2 = this.getInput(inp2, eventContext);
 
         switch(logicFunc){
-            case 'and': return inp1 && inp2;
-            case 'or': return inp1 || inp2;
-            case 'xor': return !!(+inp1 ^ +inp2);
+            case 'and': return i1 && i2;
+            case 'or': return i1 || i2;
+            case 'xor': return !!(+i1 ^ +i2);
             default: return false;
         }
     };
 
     const logic = {
         id: 'logic',
-        category: 'flow',
+        category,
         widget: {
-            id: 'logic_function',
-            type: WIDGET.ENUM,
+            type: WIDGET_TYPE.ENUM,
             options: {
-                items: ['and', 'or', 'xor']
+                stringItems: ['and', 'or', 'xor']
             },
         },
         inputs: [
-            {id: '_inp1', type: SOCKET_TYPE.BOOL, default: false},
-            {id: '_inp2', type: SOCKET_TYPE.BOOL, default: false},
+            inp1,
+            inp2,
         ],
         outputs: [
             {id: 'result', type: SOCKET_TYPE.BOOL, execute: result},
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catFlow.push(logic);
 }
 
 {// count_loop
     type NodeData = Map<number, {index: number, length: number}>;
+    const inp = {id: 'count', type: SOCKET_TYPE.NUMBER, default: 1} as const satisfies iInput;
 
     function runLoop(this: iEngineNode, eventContext: iEventContext): void {
-        const count = this.getInput<number>('count', eventContext);
+        const count = this.getInput(inp, eventContext);
         const nodeData = this.getNodeData<NodeData>();
 
         for (let i = 0; i < count; i++){
@@ -279,16 +303,17 @@ export default catFlow;
     }
 
     function getIndex(this: iEngineNode, eventContext: iEventContext): number {
-        const data = this.getNodeData<NodeData>().get(eventContext.eventKey);
-        return data?.index ?? 0;
+        const data = this.getNodeData<NodeData>();
+        const value = data.get(eventContext.eventKey);
+        return value?.index ?? 0;
     }
 
     const countLoop = {
         id: 'count_loop',
-        category: 'flow',
+        category,
         stackDataIO: true,
         inputs: [
-            {id: 'count', type: SOCKET_TYPE.NUMBER, default: 1},
+            inp,
         ],
         outputs: [
             {id: 'index', type: SOCKET_TYPE.NUMBER, execute: getIndex},
@@ -299,19 +324,18 @@ export default catFlow;
         outTriggers: ['_o'],
         init(this: GenericNode){
             if (!isEngineNode(this)) return;
-
             this.setNodeData<NodeData>(new Map());
         },
-    };
+    } as const satisfies iNodeTemplate;
     catFlow.push(countLoop);
-
 }
 
 {// list_loop
-    type NodeData = Map<number, {index: number, item: any}>;
+    type NodeData = Map<number, {index: number, item: unknown}>;
+    const listInp = {id: 'list', type: SOCKET_TYPE.ANY, hideInput: true, isList: true, default: null} as const satisfies iInput;
 
     function runLoop(this: iEngineNode, eventContext: iEventContext): void {
-        const list = this.getInput<any[]>('list', eventContext);
+        const list = this.getInput(listInp, eventContext);
         const nodeData = this.getNodeData<NodeData>();
 
         if (list && list.length){
@@ -329,17 +353,17 @@ export default catFlow;
         return data?.index ?? 0;
     }
 
-    function getItem(this: iEngineNode, eventContext: iEventContext): number | null {
+    function getItem(this: iEngineNode, eventContext: iEventContext): unknown | null {
         const data = this.getNodeData<NodeData>().get(eventContext.eventKey);
         return data?.item ?? null;
     }
 
     const listLoop = {
         id: 'list_loop',
-        category: 'flow',
+        category,
         stackDataIO: true,
         inputs: [
-            {id: 'list', type: SOCKET_TYPE.ANY, hideInput: true, isList: true, default: []},
+            listInp,
         ],
         outputs: [
             {id: 'index', type: SOCKET_TYPE.NUMBER, execute: getIndex},
@@ -392,9 +416,12 @@ export default catFlow;
 }
 
 {// Add to List
-    function getList(this: iEngineNode, eventContext: iEventContext): any[] {
-        const list = this.getInput<any[]>('list', eventContext);
-        const item = this.getInput<any>('item', eventContext);
+    const listInp = {id: 'list', type: SOCKET_TYPE.ANY, hideInput: true, isList: true, default: []} as const satisfies iInput;
+    const itemInp = {id: 'item', type: SOCKET_TYPE.ANY, hideInput: true, default: null} as const satisfies iInput;
+
+    function getList(this: iEngineNode, eventContext: iEventContext): unknown[] {
+        const list = this.getInput(listInp, eventContext);
+        const item = this.getInput(itemInp, eventContext);
         const outputList = [...list];
 
         (item != null) && outputList.push(item);
@@ -413,10 +440,10 @@ export default catFlow;
 
     const addToList = {
         id: 'add_to_list',
-        category: 'flow',
+        category,
         inputs: [
-            {id: 'list', type: SOCKET_TYPE.ANY, hideInput: true, isList: true, default: []},
-            {id: 'item', type: SOCKET_TYPE.ANY, hideInput: true, default: null},
+            listInp,
+            itemInp,
         ],
         outputs: [
             {id: '_o', type: SOCKET_TYPE.ANY, isList: true, execute: getList},
@@ -469,22 +496,23 @@ export default catFlow;
                 this.onForceSocketUpdate.emit('_o');
             });
         },
-    };
+    } as const satisfies iNodeTemplate;
     catFlow.push(addToList);
 }
 
 {// List Length
-    function getLength(this: iEngineNode, eventContext: iEventContext): number {
-        const list = this.getInput<any[] | null>('_list', eventContext);
+    const inp = {id: '_list', type: SOCKET_TYPE.ANY, hideInput: true, isList: true, default: null} as const satisfies iInput;
 
+    function getLength(this: iEngineNode, eventContext: iEventContext): number {
+        const list = this.getInput(inp, eventContext);
         return list?.length ?? 0;
     }
 
     const listLength = {
         id: 'list_length',
-        category: 'flow',
+        category,
         inputs: [
-            {id: '_list', type: SOCKET_TYPE.ANY, hideInput: true, isList: true, default: null},
+            inp,
         ],
         outputs: [
             {id: 'length', type: SOCKET_TYPE.NUMBER, execute: getLength},
@@ -492,10 +520,10 @@ export default catFlow;
         onBeforeMount(this: iEditorNode){
             this.refresh();
         },
-        onNewConnection(this: iEditorNode, connection: iNodeConnection){
+        onNewConnection(this: iEditorNode){
             setTimeout(()=>this.refresh());
         },
-        onRemoveConnection(this: iEditorNode, connection: iNodeConnection){
+        onRemoveConnection(this: iEditorNode){
             setTimeout(()=>this.refresh());
         },
         refresh(this: iEditorNode){
@@ -513,20 +541,22 @@ export default catFlow;
 
             this.onForceSocketUpdate.emit('_list');
         },
-    };
+    } as const satisfies iNodeTemplate;
     catFlow.push(listLength);
 }
 
 {// Not
+    const inp = {id: '_inp', type: SOCKET_TYPE.BOOL, default: false} as const satisfies iInput;
+
     function not(this: iEngineNode, eventContext: iEventContext): boolean {
-        return !this.getInput<boolean>('_inp', eventContext);
+        return !this.getInput(inp, eventContext) as boolean;
     }
 
     const notNode = {
         id: 'not',
-        category: 'flow',
+        category,
         inputs: [
-            {id: '_inp', type: SOCKET_TYPE.BOOL, default: false},
+            inp,
         ],
         outputs: [
             {id: '_out', type: SOCKET_TYPE.BOOL, execute: not},
@@ -536,28 +566,36 @@ export default catFlow;
 }
 
 {// Debug Log
+    const labelInp = {id: 'label', type: SOCKET_TYPE.STRING, default: ''} as const satisfies iInput;
+    const dataInp = {id: '_data', type: SOCKET_TYPE.ANY, default: null} as const satisfies iInput;
+
+    function isInstanceBaseArray(array: unknown[]): array is Instance_Base[] {
+        return array[0] instanceof Instance_Base;
+    }
+
+    function isInstanceBaseSingular(data: unknown): data is Instance_Base[] {
+        return data instanceof Instance_Base;
+    }
+
     function log(this: iEngineNode, eventContext: iEventContext): void {
-        const label = this.getInput<string>('label', eventContext);
-        const data = this.getInput<any>('_data', eventContext, false);
+        const label = this.getInput(labelInp, eventContext);
+        const data = this.getInput(dataInp, eventContext);
         let src = [this.parentScript.name];
         let output = '';
 
         if (label.length) output += label;
 
         if (Array.isArray(data)){
-            let arrayString = '';
+            const array: unknown[] = data;
+            let joinArray: unknown[] = array;
 
-            if (data[0].name){
-                const arrayNames = data.map(o => `{ ${convertObjectToString(o)} }`);
-                arrayString = arrayNames.join(', ');
-            }
-            else{
-                data.join(', ');
+            if (isInstanceBaseArray(array)){
+                joinArray = array.map(o => `{ ${convertObjectToString(o)} }`);
             }
 
-            output += `[${arrayString}]`;
+            output += `[${joinArray.join(', ')}]`;
         }
-        else if (data?.name){
+        else if (isInstanceBaseSingular(data)){
             output += `{ ${convertObjectToString(data[0])} }`;
         }
         else if (data != null){
@@ -576,43 +614,50 @@ export default catFlow;
 
     const debugLog = {
         id: 'debug_log',
-        category: 'flow',
+        category,
         inTriggers: [
             {id: '_i', execute: log}
         ],
         outTriggers: ['_o'],
         inputs: [
-            {id: 'label', type: SOCKET_TYPE.STRING, default: ''},
-            {id: '_data', type: SOCKET_TYPE.ANY, default: null},
+            labelInp,
+            dataInp,
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catFlow.push(debugLog);
 }
 
 {// Note
     const node = {
         id: 'note',
-        category: 'flow',
+        category,
         widget: {
-            id: 'text',
-            type: WIDGET.TEXT_AREA,
+            type: WIDGET_TYPE.TEXT_AREA,
         },
         onMount(this: iEditorNode){
             const el = this.domRef!;
             el.style.background = '#0088ff10';
         },
-    };
+    } as const satisfies iNodeTemplate;
     catFlow.push(node);
 }
 
 {// Key Input
     function getKey(this: iEngineNode): string {
-        return this.getWidgetData().code ?? '';
+        const data = this.getWidgetData() as WidgetKey['widget']['data'];
+        return data.code ?? '';
     }
 
     function isDown(this: iEngineNode): boolean {
         const keymap = this.engine.keyMap;
-        const input = this.getWidgetData().code;
+        const data = this.getWidgetData() as WidgetKey['widget']['data'];
+        const input = data.code;
+
+        if (!input) {
+            console.error('No key code in widget data');
+            return false;
+        }
+
         const mapCheck = keymap.get(input);
 
         return mapCheck == 'down' || mapCheck == 'pressed';
@@ -620,30 +665,40 @@ export default catFlow;
 
     const keyInput = {
         id: 'key_input',
-        category: 'flow',
+        category,
         widget: {
-            id: 'key_selector',
-            type: WIDGET.KEY,
+            type: WIDGET_TYPE.KEY,
         },
         outputs: [
             {id: 'key', type: SOCKET_TYPE.STRING, execute: getKey},
             {id: 'is_down', type: SOCKET_TYPE.BOOL, execute: isDown},
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catFlow.push(keyInput);
 }
 
 {// Math
+    const enum OP {
+        ADD_SYM = 'add_sym',
+        SUB_SYM = 'subtract_sym',
+        MUL_SYM = 'multiply_sym',
+        DIV_SYM = 'divide_sym',
+        POW_SYM = 'power',
+    };
+
+    const inp1 = {id: '_num1', type: SOCKET_TYPE.NUMBER, default: 0} as const satisfies iInput;
+    const inp2 = {id: '_num2', type: SOCKET_TYPE.NUMBER, default: 0} as const satisfies iInput;
+
     function compute(this: iEngineNode, eventContext: iEventContext): number {
         const mathFunc = this.getWidgetData();
-        const num1= this.getInput<number>('_num1', eventContext);
-        const num2= this.getInput<number>('_num2', eventContext);
+        const num1= this.getInput(inp1, eventContext);
+        const num2= this.getInput(inp2, eventContext);
 
         switch(mathFunc){
-            case 'add_sym': return num1 + num2;
-            case 'subtract_sym': return num1 - num2;
-            case 'multiply_sym': return num1 * num2;
-            case 'divide_sym':
+            case OP.ADD_SYM: return num1 + num2;
+            case OP.SUB_SYM: return num1 - num2;
+            case OP.MUL_SYM: return num1 * num2;
+            case OP.DIV_SYM:
                 if (num2 == 0){
                     this.engine.nodeException({
                         errorId: Symbol(),
@@ -655,7 +710,7 @@ export default catFlow;
                     return 0;
                 }
                 return num1 / num2;
-            case 'power': return Math.pow(num1, num2);
+            case OP.POW_SYM: return Math.pow(num1, num2);
         }
 
         return 0;
@@ -663,33 +718,42 @@ export default catFlow;
 
     const math = {
         id: 'math',
-        category: 'flow',
+        category,
         widget: {
-            id: 'math_function',
-            type: WIDGET.ENUM,
+            type: WIDGET_TYPE.ENUM,
             options: {
-                items: ['add_sym', 'subtract_sym', 'multiply_sym', 'divide_sym', 'power'],
+                stringItems: [OP.ADD_SYM, OP.SUB_SYM, OP.MUL_SYM, OP.DIV_SYM, OP.POW_SYM],
             },
         },
         inputs: [
-            {id: '_num1', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
-            {id: '_num2', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
+            inp1,
+            inp2,
         ],
         outputs: [
             {id: '_out', type: SOCKET_TYPE.NUMBER, execute: compute},
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catFlow.push(math);
 }
 
 {// Dialog Box
+    const enum OT {
+        IMMEDIATE = 'immediate',
+        DIALOG_CLOSED = 'dialog_closed',
+    };
+
+    const textInp = {id: 'text', type: SOCKET_TYPE.STRING, hideInput: true, default: ''} as const satisfies iInput;
+    const intrInp = {id: 'interaction_key', type: SOCKET_TYPE.STRING, hideInput: true, optional: true, default: null} as const satisfies iInput;
+    const pauseInp = {id: 'pause_game', type: SOCKET_TYPE.BOOL, default: false} as const satisfies iInput;
+    const fullscreenInp = {id: 'fullscreen', type: SOCKET_TYPE.BOOL, default: false} as const satisfies iInput;
+
     function startDialog(this: iEngineNode, eventContext: iEventContext): void {
-        const widgetData = this.getWidgetData();
+        const widgetData = this.getWidgetData() as WidgetTextArea['widget']['data'];
         const textArea = Object.keys(widgetData).length > 0 ? widgetData : "";
-        const textBox = this.getInput<string>('text', eventContext);
-        const interactKey = this.getInput<string>('interaction_key', eventContext) ?? 'Space';
-        const shouldPause = this.getInput<boolean>('pause_game', eventContext);
-        const isFullscreen = this.getInput<boolean>('fullscreen', eventContext);
+        const textBox = this.getInput(textInp, eventContext);
+        const interactKey = this.getOptionalInput(intrInp, eventContext) ?? 'Space';
+        const shouldPause = this.getInput(pauseInp, eventContext);
+        const isFullscreen = this.getInput(fullscreenInp, eventContext);
         const text = textBox ? textBox : textArea;
         const dialogBox = this.engine.openDialogBox(text, shouldPause, isFullscreen, interactKey);
 
@@ -699,37 +763,39 @@ export default catFlow;
                 return;
             }
 
-            this.triggerOutput('dialog_closed', eventContext);
+            this.triggerOutput(OT.DIALOG_CLOSED, eventContext);
         }, {once:true});
 
-        this.triggerOutput('immediate', eventContext);
+        this.triggerOutput(OT.IMMEDIATE, eventContext);
     }
 
     const dialogBox = {
         id: 'dialog_box',
-        category: 'flow',
+        category,
         widget: {
-            id: 'text',
-            type: WIDGET.TEXT_AREA,
+            type: WIDGET_TYPE.TEXT_AREA,
         },
         inTriggers: [
             {id: '_i', execute: startDialog},
         ],
-        outTriggers: ['immediate', 'dialog_closed'],
+        outTriggers: [OT.IMMEDIATE, OT.DIALOG_CLOSED],
         inputs: [
-            {id: 'text', type: SOCKET_TYPE.STRING, hideInput: true, default: ''},
-            {id: 'interaction_key', type: SOCKET_TYPE.STRING, hideInput: true, default: null},
-            {id: 'pause_game', type: SOCKET_TYPE.BOOL, default: false},
-            {id: 'fullscreen', type: SOCKET_TYPE.BOOL, default: false},
+            textInp,
+            intrInp,
+            pauseInp,
+            fullscreenInp,
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catFlow.push(dialogBox);
 }
 
 {// Broadcast Message
+    const nameInp = {id: 'name', type: SOCKET_TYPE.STRING, default: ''} as const satisfies iInput;
+    const globalInp = {id: 'global', type: SOCKET_TYPE.BOOL, default: false} as const satisfies iInput;
+
     function broadcastMessage(this: iEngineNode, eventContext: iEventContext): void {
-        const name = this.getInput<string>('name', eventContext);
-        const global = this.getInput<boolean>('global', eventContext);
+        const name = this.getInput(nameInp, eventContext);
+        const global = this.getInput(globalInp, eventContext);
 
         if (name.trim().length < 0) return;
 
@@ -745,17 +811,17 @@ export default catFlow;
 
     const broadCastMessageNode = {
         id: 'broadcast_message',
-        category: 'flow',
+        category,
         inputBoxWidth: 6,
         inTriggers: [
             {id: '_i', execute: broadcastMessage},
         ],
         outTriggers: ['_o'],
         inputs: [
-            {id: 'name', type: SOCKET_TYPE.STRING, default: ''},
-            {id: 'global', type: SOCKET_TYPE.BOOL, default: false},
+            nameInp,
+            globalInp,
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catFlow.push(broadCastMessageNode);
 }
 
@@ -769,18 +835,28 @@ export default catFlow;
         complete: boolean,
     }>;
 
+    const enum OT {
+        IMMEDIATE = 'immediate',
+        STARTED = 'started',
+        TICK = 'tick',
+        COMPLETE = 'complete',
+    };
+
+    const durInp = {id: 'duration', type: SOCKET_TYPE.NUMBER, default: 0} as const satisfies iInput;
+    const stepInp = {id: 'step', type: SOCKET_TYPE.NUMBER, default: 0} as const satisfies iInput;
+
     function start(this: iEngineNode, eventContext: iEventContext): void {
         const nodeData = this.getNodeData<NodeData>();
         const oldData = nodeData.get(eventContext.instance.id);
 
         if (oldData && !oldData.complete){
             oldData.active = true;
-            this.triggerOutput('immediate', eventContext);
+            this.triggerOutput(OT.IMMEDIATE, eventContext);
             return;
         }
 
-        const duration = this.getInput<number>('duration', eventContext) * 1000;
-        const step = this.getInput<number>('step', eventContext) * 1000;
+        const duration = this.getInput(durInp, eventContext) * 1000;
+        const step = this.getInput(stepInp, eventContext) * 1000;
         const data = {
             duration,
             step,
@@ -805,14 +881,14 @@ export default catFlow;
 
             if (data.progress >= data.duration){
                 data.complete = true;
-                this.triggerOutput('complete', eventContext);
-                this.triggerOutput('tick', eventContext);
+                this.triggerOutput(OT.COMPLETE, eventContext);
+                this.triggerOutput(OT.TICK, eventContext);
                 nodeData.delete(eventContext.instance.id);
                 return;
             }
 
             if (deltaTimeMS > data.step || data.lastTickGap >= data.step){
-                this.triggerOutput('tick', eventContext);
+                this.triggerOutput(OT.TICK, eventContext);
                 data.lastTickGap = 0;
             }
             else{
@@ -824,8 +900,8 @@ export default catFlow;
 
         nodeData.set(eventContext.instance.id, data);
         requestAnimationFrame(tickLoop);
-        this.triggerOutput('started', eventContext);
-        this.triggerOutput('immediate', eventContext);
+        this.triggerOutput(OT.STARTED, eventContext);
+        this.triggerOutput(OT.IMMEDIATE, eventContext);
     }
 
     function pause(this: iEngineNode, eventContext: iEventContext): void {
@@ -835,12 +911,12 @@ export default catFlow;
             data.active = false;
         }
 
-        this.triggerOutput('immediate', eventContext);
+        this.triggerOutput(OT.IMMEDIATE, eventContext);
     }
 
     function reset(this: iEngineNode, eventContext: iEventContext): void {
         this.getNodeData<NodeData>().delete(eventContext.instance.id);
-        this.triggerOutput('immediate', eventContext);
+        this.triggerOutput(OT.IMMEDIATE, eventContext);
     }
 
     function getElapsed(this: iEngineNode, eventContext: iEventContext): number {
@@ -860,11 +936,11 @@ export default catFlow;
 
     const timer = {
         id: 'timer',
-        category: 'flow',
+        category,
         stackDataIO: true,
         inputs: [
-            {id: 'duration', type: SOCKET_TYPE.NUMBER, required: true, default: 0},
-            {id: 'step', type: SOCKET_TYPE.NUMBER, required: true, default: 0},
+            durInp,
+            stepInp,
         ],
         outputs: [
             {id: 'elapsed', type: SOCKET_TYPE.NUMBER, execute: getElapsed},
@@ -876,20 +952,24 @@ export default catFlow;
             {id: 'pause', execute: pause},
             {id: 'reset', execute: reset},
         ],
-        outTriggers: ['immediate', 'started', 'tick', 'complete'],
+        outTriggers: [OT.IMMEDIATE, OT.STARTED, OT.TICK, OT.COMPLETE],
         init(this: GenericNode){
             if (!isEngineNode(this)) return;
             this.setNodeData<NodeData>(new Map());
         },
-    };
+    } as const satisfies iNodeTemplate;
     catFlow.push(timer);
 }
 
 {// Random Number
+    const lowerInp = {id: 'lower', type: SOCKET_TYPE.NUMBER, default: 0} as const satisfies iInput;
+    const upperInp = {id: 'upper', type: SOCKET_TYPE.NUMBER, default: 1} as const satisfies iInput;
+    const roundInp = {id: 'round', type: SOCKET_TYPE.BOOL, default: false} as const satisfies iInput;
+
     function getNum(this: iEngineNode, eventContext: iEventContext): number {
-        const lower = this.getInput<number>('lower', eventContext);
-        const upper = this.getInput<number>('upper', eventContext);
-        const round = this.getInput<boolean>('round', eventContext);
+        const lower = this.getInput(lowerInp, eventContext);
+        const upper = this.getInput(upperInp, eventContext);
+        const round = this.getInput(roundInp, eventContext);
         const num = Math.random() * (upper - lower) + lower;
 
         return round ? Math.round(num) : num;
@@ -897,12 +977,12 @@ export default catFlow;
 
     const randomNumber = {
         id: 'random_number',
-        category: 'flow',
+        category,
         stackDataIO: true,
         inputs: [
-            {id: 'lower', type: SOCKET_TYPE.NUMBER, required: true, default: 0},
-            {id: 'upper', type: SOCKET_TYPE.NUMBER, required: true, default: 1},
-            {id: 'round', type: SOCKET_TYPE.BOOL, default: false},
+            lowerInp,
+            upperInp,
+            roundInp,
         ],
         outputs: [
             {id: 'number', type: SOCKET_TYPE.NUMBER, execute: getNum},
@@ -918,7 +998,7 @@ export default catFlow;
 
     const restartGameNode = {
         id: 'restart_game',
-        category: 'flow',
+        category,
         inTriggers: [
             {id: '_i', execute: restartGame},
         ],
@@ -926,10 +1006,15 @@ export default catFlow;
     catFlow.push(restartGameNode);
 }
 
-function convertObjectToString(obj: any): string {
+type PossibleObjectTypes =
+    Instance_Object |
+    Instance_Sprite |
+    Instance_Base;
+
+function convertObjectToString(obj: PossibleObjectTypes): string {
     const output = [];
 
-    if (obj.objRef){
+    if (obj instanceof Instance_Object){
         output.push(obj.objRef.name)
     }
     else if (obj.sprite){

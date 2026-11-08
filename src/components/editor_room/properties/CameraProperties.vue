@@ -38,7 +38,7 @@ function setFollowObj(): void {
         <div class="control">
             <label for="cameraSize">{{ t('room_editor.camera_size') }}:</label>
             <input id="cameraSize" type="number" :value="camera.size" v-tooltip="t('room_editor.tt_camera_size')"
-                @change="setCamProp({size: ($event.target as any).value}); ($event.target as any).value = camera.size" v-input-active/>
+                @change="setCamProp({size: +($event.target as HTMLInputElement).value}); (($event.target as HTMLInputElement).value as unknown as number) = camera.size" v-input-active/>
         </div>
         <div class="control">
             <label for="camMoveType">{{ t('room_editor.camera_move_type') }}:</label>
@@ -47,48 +47,48 @@ function setFollowObj(): void {
                 class="custom-select"
                 :value="camera.moveType"
                 :items="[
-                    { name: t('room_editor.locked'), id: Core.Camera.MOVE_TYPES.LOCKED, value: Core.Camera.MOVE_TYPES.LOCKED },
-                    { name: t('room_editor.follow'), id: Core.Camera.MOVE_TYPES.FOLLOW, value: Core.Camera.MOVE_TYPES.FOLLOW },
-                    { name: t('room_editor.scroll'), id: Core.Camera.MOVE_TYPES.SCROLL, value: Core.Camera.MOVE_TYPES.SCROLL },
+                    { name: t('room_editor.locked'), id: Core.CAMERA_MOVE_TYPES.LOCKED, value: Core.CAMERA_MOVE_TYPES.LOCKED },
+                    { name: t('room_editor.follow'), id: Core.CAMERA_MOVE_TYPES.FOLLOW, value: Core.CAMERA_MOVE_TYPES.FOLLOW },
+                    { name: t('room_editor.scroll'), id: Core.CAMERA_MOVE_TYPES.SCROLL, value: Core.CAMERA_MOVE_TYPES.SCROLL },
                 ]"
-                @change="setCamProp({moveType: $event})"
+                @change="setCamProp({moveType: ($event as Core.CAMERA_MOVE_TYPES)})"
                 v-tooltip="t('room_editor.tt_camera_move')"></SearchDropdown>
         </div>
-        <div v-show="camera.moveType == Core.Camera.MOVE_TYPES.SCROLL" class="control">
+        <div v-show="camera.moveType == Core.CAMERA_MOVE_TYPES.SCROLL" class="control">
             <label for="camScrollDir">{{t('room_editor.scroll_dir')}}: </label>
             <SearchDropdown
                 id="camScrollDir"
                 class="custom-select"
                 :value="camera.scrollDir"
                 :items="[
-                    { name: t('room_editor.up'), id: Core.Camera.SCROLL_DIRS.UP, value: Core.Camera.SCROLL_DIRS.UP },
-                    { name: t('room_editor.down'), id: Core.Camera.SCROLL_DIRS.DOWN, value: Core.Camera.SCROLL_DIRS.DOWN },
-                    { name: t('room_editor.left'), id: Core.Camera.SCROLL_DIRS.LEFT, value: Core.Camera.SCROLL_DIRS.LEFT },
-                    { name: t('room_editor.right'), id: Core.Camera.SCROLL_DIRS.RIGHT, value: Core.Camera.SCROLL_DIRS.RIGHT },
+                    { name: t('room_editor.up'), id: Core.CAMERA_SCROLL_DIRS.UP, value: Core.CAMERA_SCROLL_DIRS.UP },
+                    { name: t('room_editor.down'), id: Core.CAMERA_SCROLL_DIRS.DOWN, value: Core.CAMERA_SCROLL_DIRS.DOWN },
+                    { name: t('room_editor.left'), id: Core.CAMERA_SCROLL_DIRS.LEFT, value: Core.CAMERA_SCROLL_DIRS.LEFT },
+                    { name: t('room_editor.right'), id: Core.CAMERA_SCROLL_DIRS.RIGHT, value: Core.CAMERA_SCROLL_DIRS.RIGHT },
                 ]"
-                @change="setCamProp({scrollDir: $event})"
+                @change="setCamProp({scrollDir: ($event as Core.CAMERA_SCROLL_DIRS)})"
                 v-tooltip="t('room_editor.tt_camera_scroll_dir')"></SearchDropdown>
         </div>
-        <div v-show="camera.moveType == Core.Camera.MOVE_TYPES.SCROLL" class="control">
+        <div v-show="camera.moveType == Core.CAMERA_MOVE_TYPES.SCROLL" class="control">
             <label for="camScrollSpeed">{{ t('room_editor.scroll_speed') }}: </label>
             <input id="camScrollSpeed" type="number" step="any" :value="camera.scrollSpeed" v-tooltip="t('room_editor.tt_camera_scroll_speed')"
-                @change="setCamProp({scrollSpeed: parseFloat(($event.target as any).value)})" v-input-active/>
+                @change="setCamProp({scrollSpeed: parseFloat(($event.target as HTMLInputElement).value)})" v-input-active/>
         </div>
-        <div v-show="camera.moveType == Core.Camera.MOVE_TYPES.FOLLOW" class="control">
+        <div v-show="camera.moveType == Core.CAMERA_MOVE_TYPES.FOLLOW" class="control">
             <label for="camFollowType">{{ t('room_editor.follow_type') }}: </label>
             <SearchDropdown
                 id="camFollowType"
                 class="custom-select"
                 :value="camera.followType"
                 :items="[
-                    { name: t('room_editor.smart'), id: Core.Camera.FOLLOW_TYPES.SMART, value: Core.Camera.FOLLOW_TYPES.SMART },
-                    { name: t('room_editor.centered'), id: Core.Camera.FOLLOW_TYPES.CENTERED, value: Core.Camera.FOLLOW_TYPES.CENTERED },
-                    { name: t('room_editor.tiled'), id: Core.Camera.FOLLOW_TYPES.TILED, value: Core.Camera.FOLLOW_TYPES.TILED },
+                    { name: t('room_editor.smart'), id: Core.CAMERA_FOLLOW_TYPES.SMART, value: Core.CAMERA_FOLLOW_TYPES.SMART },
+                    { name: t('room_editor.centered'), id: Core.CAMERA_FOLLOW_TYPES.CENTERED, value: Core.CAMERA_FOLLOW_TYPES.CENTERED },
+                    { name: t('room_editor.tiled'), id: Core.CAMERA_FOLLOW_TYPES.TILED, value: Core.CAMERA_FOLLOW_TYPES.TILED },
                 ]"
-                @change="setCamProp({followType: $event})"
+                @change="setCamProp({followType: ($event as Core.CAMERA_FOLLOW_TYPES)})"
                 v-tooltip="t('room_editor.tt_camera_follow_type')"></SearchDropdown>
         </div>
-        <div v-show="camera.moveType == Core.Camera.MOVE_TYPES.FOLLOW" class="control">
+        <div v-show="camera.moveType == Core.CAMERA_MOVE_TYPES.FOLLOW" class="control">
             <label for="camFollowObj">{{t('room_editor.follow_obj')}}: </label>
             <div class="followObjInfo">
                 <div class="followObjName" v-tooltip="()=>followObjName">{{ followObjName }}</div>

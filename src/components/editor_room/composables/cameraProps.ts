@@ -5,7 +5,7 @@ import { RoomMainEventBus, ROOM_ACTION } from '../RoomMain.vue';
 import { ROOM_TOOL_TYPE } from '@/stores/RoomEditor';
 import Core from '@/core';
 
-type CameraChangeProps = {newState?: Partial<Core.Camera>, oldState?: Partial<Core.Camera>};
+export type CameraChangeProps = {actionType: ROOM_ACTION.CAMERA_CHANGE, newState?: Partial<Core.Camera>, oldState?: Partial<Core.Camera>};
 
 export function useCameraProps(args: iActionArguments){
 
@@ -19,36 +19,39 @@ export function useCameraProps(args: iActionArguments){
 
         override mouseMove(mEvent: imEvent): void {
             if (this._down){
-                actionCameraChange({newState: {pos: mEvent.worldCell.addScalar(8)}}, false);
+                const data = {actionType: ROOM_ACTION.CAMERA_CHANGE, newState: {pos: mEvent.worldCell.addScalar(8)}} as CameraChangeProps;
+                actionCameraChange(data, false);
             }
         }
 
         override mouseUp(): void {
             this._down = false;
-            actionCameraChange({}, true);
+            actionCameraChange({actionType: ROOM_ACTION.CAMERA_CHANGE}, true);
         }
     }
 
-    function actionCameraChange({newState}: CameraChangeProps, makeCommit = true): void {
+    function actionCameraChange(data: Core.ActionCallbackData, makeCommit = true): void {
+        const camData = data as CameraChangeProps;
         const oldState = Object.assign({}, args.props.selectedRoom.camera);
 
-        if (newState?.pos && !args.undoStore.cache.has('camera-start-pos')){
+        if (camData.newState?.pos && !args.undoStore.cache.has('camera-start-pos')){
             args.undoStore.cache.set('camera-start-pos', {pos: args.props.selectedRoom.camera.pos});
         }
 
-        newState ??= Object.assign({}, args.props.selectedRoom.camera);
-        Object.assign(args.props.selectedRoom.camera, newState);
+        camData.newState ??= Object.assign({}, args.props.selectedRoom.camera);
+        Object.assign(args.props.selectedRoom.camera, camData.newState);
         RoomMainEventBus.onCameraChanged.emit();
 
         if (makeCommit){
             const cacheGet = (args.undoStore.cache.get('camera-start-pos') ?? oldState) as Partial<Core.Camera>;
-            const data = {newState, oldState: cacheGet} satisfies CameraChangeProps;
-            args.undoStore.commit({action: ROOM_ACTION.CAMERA_CHANGE, data});
+            const commitData = {actionType: ROOM_ACTION.CAMERA_CHANGE, newState: camData.newState, oldState: cacheGet} as CameraChangeProps;
+            args.undoStore.commit(commitData);
             args.undoStore.cache.delete('camera-start-pos');
         }
     }
 
-    function revertCameraChange({oldState}: CameraChangeProps): void {
+    function revertCameraChange(data: Core.ActionCallbackData): void {
+        const { oldState } = data as CameraChangeProps;
         Object.assign(args.props.selectedRoom.camera, oldState);
         RoomMainEventBus.onCameraChanged.emit();
     }

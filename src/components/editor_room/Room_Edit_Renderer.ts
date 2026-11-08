@@ -373,14 +373,14 @@ class UI_Renderer {
 
     private _gl: WebGL2RenderingContext;
     private _program: WebGLProgram;
-    private _invViewMatrixUniform: Core.WGL.Uniform;
-    private _showGridUniform: Core.WGL.Uniform;
-    private _pixelWidthUniform: Core.WGL.Uniform;
-    private _dimensionUniform: Core.WGL.Uniform;
-    private _cursorUniform: Core.WGL.Uniform;
-    private _cameraUniform: Core.WGL.Uniform;
-    private _iconColorUniform: Core.WGL.Uniform;
-    private _selectionUniform: Core.WGL.Uniform;
+    private _invViewMatrixUniform: Core.WGL.Uniform<Core.WGL.Uniform_Types.MAT3>;
+    private _showGridUniform: Core.WGL.Uniform<Core.WGL.Uniform_Types.BOOL>;
+    private _pixelWidthUniform: Core.WGL.Uniform<Core.WGL.Uniform_Types.FLOAT>;
+    private _dimensionUniform: Core.WGL.Uniform<Core.WGL.Uniform_Types.VEC2>;
+    private _cursorUniform: Core.WGL.Uniform<Core.WGL.Uniform_Types.VEC2>;
+    private _cameraUniform: Core.WGL.Uniform<Core.WGL.Uniform_Types.VEC3>;
+    private _iconColorUniform: Core.WGL.Uniform<Core.WGL.Uniform_Types.VEC3>;
+    private _selectionUniform: Core.WGL.Uniform<Core.WGL.Uniform_Types.VEC3>;
     private _cameraIconUniform: Core.WGL.Texture_Uniform;
     private _positionAttribute: Core.WGL.Attribute;
     private _vao: WebGLVertexArrayObject;
@@ -458,7 +458,7 @@ class UI_Renderer {
 
     updateSelection(pos: Vec2, enabled: boolean): void {
         this._gl.useProgram(this._program);
-        this._selectionUniform.set(pos.x, pos.y, enabled);
+        this._selectionUniform.set(pos.x, pos.y, +enabled);
     }
 
     setGridState(state: boolean): void {

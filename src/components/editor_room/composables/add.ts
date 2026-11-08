@@ -10,8 +10,8 @@ import { checkNameCollisions } from '../Properties.vue';
 const { Vec2 } = Core;
 type Vec2 = Core.Vec2;
 
-type AddProps = {newInstance?: Core.Instance_Base, instRefList?: Core.Instance_Base[], pos?: Vec2};
-type ExitAddProps = {exitRef?: Core.Instance_Exit, pos: Readonly<Vec2>};
+export type AddProps = {actionType: ROOM_ACTION.ADD, newInstance?: Core.Instance_Base, instRefList?: Core.Instance_Base[], pos?: Vec2};
+export type ExitAddProps = {actionType: ROOM_ACTION.EXIT_ADD, exitRef?: Core.Instance_Exit, pos: Readonly<Vec2>};
 
 export function useAdd(args: iActionArguments){
 
@@ -79,12 +79,13 @@ export function useAdd(args: iActionArguments){
             if (this._mouseDown && newCell && !instancesInCell.length){
                 const createFunc = roomEditorStore.addBrushCopy ? this._instanceFromCopy : this._instanceFromAsset;
                 const newInstance = createFunc(mEvent.worldCell)!;
+                const data = {actionType: ROOM_ACTION.ADD, newInstance, pos: mEvent.worldCell} as AddProps;
 
                 if (roomEditorStore.addBrushDepth != null){
                     newInstance.zDepthOverride = roomEditorStore.addBrushDepth;
                 }
 
-                actionAdd({newInstance, pos: mEvent.worldCell}, false);
+                actionAdd(data, false);
                 this._curCell = mEvent.worldCell.clone();
             }
         }
@@ -96,7 +97,7 @@ export function useAdd(args: iActionArguments){
         }
 
         override mouseUp(): void {
-            actionAdd({}, true);
+            actionAdd({actionType: ROOM_ACTION.ADD}, true);
             this._mouseDown = false;
             this._curCell = null;
         }
@@ -111,17 +112,19 @@ export function useAdd(args: iActionArguments){
                 args.editorSelection.value = exitAtCursor;
             }
             else{
-                args.editorSelection.value = actionExitAdd({pos: mEvent.worldCell});
+                const data = {actionType: ROOM_ACTION.ADD, pos: mEvent.worldCell} as AddProps;
+                args.editorSelection.value = actionExitAdd(data).exitRef;
             }
         }
     }
 
-    function actionAdd({newInstance, instRefList = [], pos}: AddProps, makeCommit = true): void {
+    function actionAdd(data: Core.ActionCallbackData, makeCommit = true): void {
+        const {newInstance, instRefList = []} = data as AddProps;
         const cacheList = args.undoStore.cache.get('add_list') as Core.Instance_Base[];
 
         if (makeCommit && cacheList){
-            const data = {instRefList: cacheList};
-            args.undoStore.commit({action: ROOM_ACTION.ADD, data});
+            const data = {actionType: ROOM_ACTION.ADD, instRefList: cacheList} as AddProps;
+            args.undoStore.commit(data);
             args.undoStore.cache.delete('add_list');
             return;
         }
@@ -143,7 +146,8 @@ export function useAdd(args: iActionArguments){
         }
     }
 
-    function actionExitAdd({exitRef, pos}: ExitAddProps, makeCommit = true): Core.Instance_Exit {
+    function actionExitAdd(data: Core.ActionCallbackData, makeCommit = true): Required<ExitAddProps> {
+        const {exitRef, pos} = data as ExitAddProps;
         const newExit = exitRef ?? new Core.Instance_Exit(args.props.selectedRoom.curInstId, pos);
         const newExitName = useI18nStore().t('room_editor.new_exit_prefix') + newExit.id;
         args.props.selectedRoom.addInstance(newExit);
@@ -153,14 +157,16 @@ export function useAdd(args: iActionArguments){
         RoomMainEventBus.onInstanceAdded.emit(newExit);
 
         if (makeCommit){
-            const data = {exitRef: newExit, pos: pos.clone()} satisfies ExitAddProps;
-            args.undoStore.commit({action: ROOM_ACTION.EXIT_ADD, data});
+            const commitData = {actionType: ROOM_ACTION.EXIT_ADD, exitRef: newExit, pos: pos.clone()} as ExitAddProps;
+            args.undoStore.commit(commitData);
         }
 
-        return newExit;
+        return {actionType: ROOM_ACTION.EXIT_ADD, exitRef: newExit, pos};
     }
 
-    function revertAdd({instRefList = []}: AddProps): void {
+    function revertAdd(data: Core.ActionCallbackData): void {
+        const {instRefList = []} = data as AddProps;
+
         for (let i = 0; i < instRefList.length; i++){
             const instRef = instRefList[i];
             const editorSelection = args.editorSelection;
@@ -174,7 +180,9 @@ export function useAdd(args: iActionArguments){
         }
     }
 
-    function revertExitAdd({exitRef}: ExitAddProps): void {
+    function revertExitAdd(data: Core.ActionCallbackData): void {
+        const {exitRef} = data as ExitAddProps;
+
         if (exitRef!.id == args.editorSelection.value?.id){
             args.editorSelection.value = null;
         }

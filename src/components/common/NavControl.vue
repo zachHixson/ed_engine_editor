@@ -6,7 +6,7 @@ export interface iControl {
     id: NAV_TOOL_TYPE,
     altText: string,
     icon: string,
-    action: (...args: any)=>void;
+    action: (...args: unknown[])=>void;
 }
 </script>
 

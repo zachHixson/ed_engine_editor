@@ -2,11 +2,11 @@ export interface Options {
     once?: boolean,
 }
 
-export class Event_Emitter <T extends (...args: any)=>void> {
-    private _context: any;
+export class Event_Emitter <T extends (...args: never[])=>void> {
+    private _context: unknown;
     private _callbacks: ({cb: T, o: Options})[] = [];
 
-    constructor(context: any = window){
+    constructor(context: unknown = window){
         this._context = context;
     }
 
@@ -27,7 +27,7 @@ export class Event_Emitter <T extends (...args: any)=>void> {
     emit(){
         for (let i = 0; i < this._callbacks.length; i++){
             const {cb, o} = this._callbacks[i];
-            cb.apply(this._context, arguments as unknown as any[]);
+            cb.apply(this._context, arguments as unknown as never[]);
 
             if (o.once){
                 this.remove(cb);

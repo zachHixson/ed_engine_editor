@@ -13,35 +13,32 @@ import Svg from '@/components/common/Svg.vue';
 
 import { ref, reactive, computed, nextTick, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
 import { useI18nStore } from '@/stores/I18n';
-import type Node from './Node';
-import type Node_Connection from './Node_Connection';
 import type { iHoverSocket, iValueChanged } from './Socket.vue';
 import type { iState as LogicState } from '@/stores/LogicEditor';
-import decoratorMap from '../decoratorMap';
 import categoryStyleMap from '../categoryStyleMap';
 import Core from '@/core';
 
 import editIcon from '@/assets/edit.svg';
 
-const { t, te } = useI18nStore();
+const { t } = useI18nStore();
 const { Vec2 } = Core;
 type Vec2 = Core.Vec2;
 
 const props = defineProps<{
-    nodeObj: Node;
+    nodeObj: Core.iEditorNode;
     clientToNavSpace: (pos: Vec2)=>Vec2;
     canDrag: boolean;
-    selectedNodes: Node[];
-    allConnections: Node_Connection[];
+    selectedNodes: Core.iEditorNode[];
+    allConnections: Core.iNodeConnection[];
     errorData: LogicState['errors'][number] | undefined;
-    desc: any | undefined;
+    desc: Record<string | number, string> | undefined;
 }>();
 
 const emit = defineEmits<{
-    nodeDown: [Node],
-    nodeClicked: [{nodeObj: Node, event: MouseEvent}],
+    nodeDown: [Core.iEditorNode],
+    nodeClicked: [{nodeObj: Core.iEditorNode, event: MouseEvent}],
     nodeMoveEnd: [],
-    socketDown: [Node_Connection],
+    socketDown: [Core.iNodeConnection],
     socketOver: [iHoverSocket | null],
     socketValueChanged: [iValueChanged],
 }>();
@@ -73,6 +70,10 @@ const outputList = computed(()=>{
     forceUpdateKey.value;
     return Array.from(props.nodeObj.outputs, ([_, output]) => output);
 });
+const widget = computed(()=>{
+    forceUpdateKey.value;
+    return props.nodeObj.widget;
+});
 const widgetData = computed(()=>props.nodeObj.widgetData);
 const showTriggers = computed(()=>inTriggerList.value.length > 0 || outTriggerList.value.length > 0);
 const showDataSockets = computed(()=>inputList.value.length > 0 || outputList.value.length > 0);
@@ -81,10 +82,9 @@ const connections = computed(()=>props.allConnections.filter(
     c => (c.startNode?.nodeId == props.nodeObj.nodeId || c.endNode?.nodeId == props.nodeObj.nodeId)
 ));
 const categoryStyle = computed(()=>categoryStyleMap.get(props.nodeObj.template.category) ?? {color: 'gray', icon:null});
-const decoratorIconPath = computed(()=>decoratorMap.get(props.nodeObj.decoratorIcon!)!);
 
 onBeforeMount(()=>{
-    props.nodeObj.onBeforeMount();
+    props.nodeObj.onBeforeMount && props.nodeObj.onBeforeMount();
 });
 
 onMounted(()=>{
@@ -143,7 +143,7 @@ function onEdit(): void {
     props.nodeObj.onEdit();
 }
 
-function setWidgetData(data: Core.iAnyObj, commit = false): void {
+function setWidgetData(data: unknown, commit = false): void {
     const oldVal = props.nodeObj.widgetData;
     props.nodeObj.widgetData = data;
 
@@ -158,7 +158,7 @@ function setWidgetData(data: Core.iAnyObj, commit = false): void {
     }
 }
 
-function socketDown(connection: Node_Connection): void {
+function socketDown(connection: Core.iNodeConnection): void {
     const isInput = !connection.startSocketEl;
 
     if (isInput){
@@ -181,7 +181,7 @@ function socketOver(event: iHoverSocket | null): void {
 
 function socketValueChanged(event: iValueChanged): void {
     event.node = props.nodeObj;
-    emit('socketValueChanged', event)
+    emit('socketValueChanged', event);
 }
 
 function onInput(event: Core.iNodeInputEvent): void {
@@ -229,8 +229,7 @@ defineExpose({getRelinkInfo});
         :style="
             (errorData?.fatal === false ? 'border-color: #FFA000; border-style: dashed;' : '') +
             (errorData?.fatal === true ? 'border-color: red; border-style: dashed;' : '') +
-            (isSelected ? 'border-color: var(--button-norm); border-style: solid;' : '')
-            "
+            (isSelected ? 'border-color: var(--button-norm); border-style: solid;' : '')"
         v-tooltip="errorData ? t('' + props.errorData?.msgId) ?? '' : ''"
         @click="emit('nodeClicked', {nodeObj, event: $event})"
         @mousedown="mouseDown">
@@ -239,22 +238,15 @@ defineExpose({getRelinkInfo});
                 <Svg :src="categoryStyle.icon"></Svg>
             </div>
             <div>{{t('node.' + nodeObj.templateId)}}</div>
-            <div class="decorator-wrapper" :key="forceUpdateKey">
-                <Svg
-                    v-if="!!nodeObjRef.decoratorIcon"
-                    class="decorator"
-                    :src="decoratorIconPath"
-                    v-tooltip="te(nodeObj.decoratorText!) ? t(nodeObj.decoratorText!, nodeObj.decoratorTextVars || {}): ''"></Svg>
-            </div>
             <button v-if="nodeObj.showEditButton" class="edit-btn" @click="onEdit">
                 <Svg
                     :src="editIcon"
                     style="width: 20px; height: 20px;"></Svg>
             </button>
         </div>
-        <div v-if="!!nodeObj.widget" class="widgetWrapper">
+        <div v-if="!!widget" class="widgetWrapper">
             <Widget
-                :widget="nodeObj.widget"
+                :widget="widget"
                 :widgetData="widgetData"
                 :setWidgetData="setWidgetData"
                 @input="onInput($event)"/>
@@ -265,7 +257,7 @@ defineExpose({getRelinkInfo});
                     v-for="inTrigger in inTriggerList"
                     :key="inTrigger.id"
                     ref="inTriggerRefs"
-                    :socket="(inTrigger as any)"
+                    :socket="inTrigger"
                     :isInput="true"
                     :parentConnections="connections"
                     :parentId="nodeObj.nodeId"
@@ -278,7 +270,7 @@ defineExpose({getRelinkInfo});
                     v-for="outTrigger in outTriggerList"
                     :key="outTrigger.id"
                     ref="outTriggerRefs"
-                    :socket="(outTrigger as any)"
+                    :socket="outTrigger"
                     :isInput="false"
                     :parentConnections="connections"
                     :parentId="nodeObj.nodeId"
@@ -297,7 +289,7 @@ defineExpose({getRelinkInfo});
                     v-for="input in inputList"
                     :key="input.id"
                     ref="inputRefs"
-                    :socket="(input as any)"
+                    :socket="input"
                     :isInput="true"
                     :parentConnections="connections"
                     :parentId="nodeObj.nodeId"
@@ -315,7 +307,7 @@ defineExpose({getRelinkInfo});
                     v-for="output in outputList"
                     :key="output.id"
                     ref="outputRefs"
-                    :socket="(output as any)"
+                    :socket="output"
                     :isInput="false"
                     :parentConnections="connections"
                     :parentId="nodeObj.nodeId"
@@ -371,11 +363,9 @@ defineExpose({getRelinkInfo});
 }
 
 .edit-btn {
-    position: absolute;
-    right: 5px;
+    margin-left: auto;
     border: none;
     background: none;
-    border-radius: 5px;
 }
 
 .edit-btn:hover {

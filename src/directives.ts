@@ -2,14 +2,15 @@ import { type DirectiveBinding } from 'vue';
 import { useMainStore } from './stores/Main';
 import { TooltipEventBus } from './components/common/Tooltip.vue';
 
-type ExpandedEl = HTMLElement & {[key: string | number | symbol]: any};
-
 //Run code when clicking outside of an element
+type VClickOutSideEl = HTMLElement & {
+    checkOutside: (event: Event) => void;
+};
 export const vClickOutside = {
-    mounted: function (el: ExpandedEl, binding: DirectiveBinding) {
+    mounted: function (el: VClickOutSideEl, binding: DirectiveBinding) {
         el.checkOutside = (event: Event) => {
             if (!(el == event.target || el.contains(event.target as HTMLElement))) {
-                const instance = binding.instance as any;
+                const instance = binding.instance as DirectiveBinding['instance'];
                 instance && binding.value(event);
             }
         };
@@ -27,15 +28,20 @@ export const vClickOutside = {
             document.body.addEventListener('mousedown', el.checkOutside);
         }
     },
-    unmounted: function (el: ExpandedEl) {
+    unmounted: function (el: VClickOutSideEl) {
         document.body.removeEventListener('click', el.checkOutside);
         document.body.removeEventListener('mousedown', el.checkOutside);
     }
 };
 
 //Allows hotkey code to detect when the user is typing in an input
+type VInputActiveEl = HTMLElement & {
+    onFocus: () => void;
+    onBlur: () => void;
+    stopProp: (event: Event) => void;
+};
 export const vInputActive = {
-    beforeMount: function(el: ExpandedEl){
+    beforeMount: function(el: VInputActiveEl){
         const mainStore = useMainStore();
 
         el.onFocus = ()=>{
@@ -53,7 +59,7 @@ export const vInputActive = {
         el.addEventListener('mousemove', el.stopProp);
     },
 
-    unmounted: function(el: ExpandedEl){
+    unmounted: function(el: VInputActiveEl){
         el.removeEventListener('focus', el.onFocus);
         el.removeEventListener('blur', el.onBlur);
         el.removeEventListener('mousedown', el.stopProp);
@@ -63,8 +69,14 @@ export const vInputActive = {
 };
 
 //Popup global tooltip above components
+type VTooltipEl = HTMLElement & {
+    tooltipText: string;
+    mouseOverHandler: (e: MouseEvent) => void;
+    mouseOutHandler: () => void;
+    mouseDownHandler: () => void;
+};
 export const vTooltip = {
-    beforeMount: function(el: ExpandedEl, binding: DirectiveBinding){
+    beforeMount: function(el: VTooltipEl, binding: DirectiveBinding){
         const isGetter = typeof binding.value == 'function';
 
         el.tooltipText = isGetter ? binding.value() : binding.value;
@@ -73,7 +85,7 @@ export const vTooltip = {
             e.stopPropagation();
 
             TooltipEventBus.onActivateTooltip.emit({
-                el: (el as HTMLDivElement),
+                el: (el as unknown as HTMLDivElement),
                 text: el.tooltipText,
             });
         };
@@ -89,11 +101,11 @@ export const vTooltip = {
         el.addEventListener('mousedown', el.mouseDownHandler);
     },
 
-    updated: function(el: ExpandedEl, binding: DirectiveBinding){
+    updated: function(el: VTooltipEl, binding: DirectiveBinding){
         el.tooltipText = binding.value;
     },
 
-    unmounted: function(el: ExpandedEl){
+    unmounted: function(el: VTooltipEl){
         el.removeEventListener('mouseover', el.mouseOverHandler);
         el.removeEventListener('mouseout', el.mouseOutHandler);
         el.removeEventListener('mousedown', el.mouseDownHandler);

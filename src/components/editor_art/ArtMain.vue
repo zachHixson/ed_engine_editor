@@ -42,9 +42,16 @@ const undoStore = reactive(new Undo_Store<iSpriteUndoData>(32));
 const toolMap: Map<ART_TOOL_TYPE, ()=>Tool_Base> = new Map();
 const tool = ref<Tool_Base | null>(null);
 
+const sprite = computed(()=>{
+    if (props.selectedAsset.category_ID != Core.CATEGORY_ID.SPRITE) {
+        throw new Error("Art editor open without sprite asset selected");
+    }
+
+    return props.selectedAsset as Core.Sprite;
+});
 const selectedFrameIdx = computed({
     get(){
-        return Math.min(props.selectedAsset.frames.length - 1, artEditorStore.getSelectedFrame);
+        return Math.min(sprite.value.frames.length - 1, artEditorStore.getSelectedFrame);
     },
     set(newIdx){
         artEditorStore.selectFrame(newIdx);
@@ -56,12 +63,14 @@ const redoLength = computed(()=>undoStore.redoLength);
 watch(()=>props.selectedAsset, ()=>{
     undoStore.clear();
 
-    if (props.selectedAsset && props.selectedAsset.category_ID == Core.CATEGORY_ID.SPRITE){
-        const selectedFrame = artEditorStore.getSelectedFrame;
+    if (!props.selectedAsset) {
+        return;
+    }
 
-        if (props.selectedAsset.frames.length < selectedFrame + 1){
-            artEditorStore.selectFrame(selectedFrameIdx.value);
-        }
+    const selectedFrame = artEditorStore.getSelectedFrame;
+
+    if (sprite.value.frames.length < selectedFrame + 1) {
+        artEditorStore.selectFrame(selectedFrameIdx.value);
     }
 });
 watch(()=>artEditorStore.getSelectedColor, (newColor)=>tool.value!.setToolColor(newColor));
@@ -69,7 +78,7 @@ watch(()=>artEditorStore.getSelectedSize, (newSize)=>tool.value!.setToolSize(new
 watch(()=>artEditorStore.getSelectedTool, (newTool)=>toolSelected(newTool!));
 
 onMounted(()=>{
-    const maxFrame = props.selectedAsset.frames.length - 1;
+    const maxFrame = sprite.value.frames.length - 1;
     const selectedFrame = Math.min(selectedFrameIdx.value, maxFrame);
 
     selectedFrameIdx.value = selectedFrame;
@@ -101,8 +110,8 @@ function resize(): void {
 function spriteDataChanged(): void {
     render();
     commitFullState();
-    props.selectedAsset.updateFrame(selectedFrameIdx.value);
-    emit('assetChanged', props.selectedAsset.id);
+    sprite.value.updateFrame(selectedFrameIdx.value);
+    emit('assetChanged', sprite.value.id);
 }
 
 function render(): void {
@@ -176,20 +185,20 @@ function undo(): void {
     const prevStep = undoStore.stepBack() as iSpriteUndoData;
 
     if (prevStep && prevStep.spriteData){
-        props.selectedAsset.setFramesFromArray(prevStep.spriteData);
+        sprite.value.setFramesFromArray(prevStep.spriteData);
     }
     else{
         const initialState = undoStore.initialState! as iSpriteUndoData;
-        props.selectedAsset.setFramesFromArray(initialState.spriteData);
+        sprite.value.setFramesFromArray(initialState.spriteData);
     }
 
-    if (selectedFrameIdx.value > props.selectedAsset.frames.length - 1){
+    if (selectedFrameIdx.value > sprite.value.frames.length - 1){
         selectedFrameIdx.value--;
     }
 
     nextTick(()=>{
         ArtMainEventBus.onUpdateFramePreviews.emit();
-        emit('assetChanged', props.selectedAsset.id);
+        emit('assetChanged', sprite.value.id);
     });
 }
 
@@ -197,18 +206,18 @@ function redo(): void {
     const nextStep = undoStore.stepForward() as iSpriteUndoData;
 
     if (nextStep && nextStep.spriteData){
-        props.selectedAsset.setFramesFromArray(nextStep.spriteData);
+        sprite.value.setFramesFromArray(nextStep.spriteData);
     }
 
     nextTick(()=>{
         ArtMainEventBus.onUpdateFramePreviews.emit();
-        emit('assetChanged', props.selectedAsset.id);
+        emit('assetChanged', sprite.value.id);
     });
 }
 
 function packageUndoData(): iSpriteUndoData {
     return {
-        spriteData: props.selectedAsset.getFramesCopy()
+        spriteData: sprite.value.getFramesCopy()
     }
 }
 </script>
@@ -222,8 +231,8 @@ function packageUndoData(): iSpriteUndoData {
             class="artCanvas"
             ref="artCanvas"
             :tool="(tool as Tool_Base | null)"
-            :navState="selectedAsset.navState!"
-            :spriteFrame="selectedAsset.frames[selectedFrameIdx]"
+            :navState="sprite.navState!"
+            :spriteFrame="sprite.frames[selectedFrameIdx]"
             :undoLength="undoLength"
             :redoLength="redoLength"
             @mouseDown="mouseDown"
@@ -235,7 +244,7 @@ function packageUndoData(): iSpriteUndoData {
         <AnimationPanel
             class="animPanel"
             ref="animPanel"
-            :sprite="selectedAsset"
+            :sprite="sprite"
             @resized="resize"
             @frameAdded="frameAdded()"
             @frameDeleted="commitFullState()"

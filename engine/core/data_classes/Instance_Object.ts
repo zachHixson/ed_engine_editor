@@ -38,7 +38,7 @@ export class Instance_Object extends Instance_Base {
     gravityOverride: boolean | null = null;
     collisionOverride: COLLISION_OVERRIDE = COLLISION_OVERRIDE.KEEP;
     localVariables: Map<string, iEngineVariable> = new Map();
-    exposedProps: Map<string, any> = new Map();
+    exposedProps: Map<string, unknown> = new Map();
 
     constructor(id: number, pos: Readonly<Vec2>, objRef: Game_Object){
         super(id, pos);
@@ -152,7 +152,7 @@ export class Instance_Object extends Instance_Base {
         return clone;
     }
 
-    override toSaveData(): [...InstanceObjectSave, ...any[]] {
+    override toSaveData(): [...InstanceObjectSave, ...unknown[]] {
         return [
             ...this.getBaseSaveData(),
             this._objRef.id,
@@ -166,13 +166,6 @@ export class Instance_Object extends Instance_Base {
     }
 
     static fromSaveData(data: InstanceObjectSave, objMap: Map<number, Game_Object>): Instance_Object {
-        const oget = objMap.get(data[10]);
-
-        if (!oget) {
-            const id = data[10];
-            debugger;
-        }
-
         const newObj = new Instance_Object(
             data[0],
             u32ToVec2(data[3]),
@@ -190,7 +183,7 @@ export class Instance_Object extends Instance_Base {
         this.collisionOverride = data[12] as COLLISION_OVERRIDE;
     }
 
-    executeNodeEvent(eventName: string, data?: any): void {
+    executeNodeEvent(eventName: string, data?: unknown): void {
         this.logic?.executeEvent(eventName, this, data);
     }
 
@@ -211,7 +204,7 @@ export class Instance_Object extends Instance_Base {
         });
     }
 
-    setLocalVariable(name: string, value: any): void {
+    setLocalVariable(name: string, value: unknown): void {
         const varName = name.trim().toLowerCase();
         const varData = this.localVariables.get(varName)!;
         varData.value = value;

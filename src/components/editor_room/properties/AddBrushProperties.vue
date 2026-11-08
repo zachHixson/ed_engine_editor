@@ -25,7 +25,7 @@ const roomEditorStore = useRoomEditorStore();
         <div class="control">
             <label for="fps">{{ t('room_editor.paint_at_depth') }}:</label>
             <input id="fps" type="number" :value="roomEditorStore.addBrushDepth" v-tooltip="t('room_editor.tt_paint_at_depth')"
-                @change="roomEditorStore.addBrushDepth = ($event as any).target.value" v-input-active/>
+                @change="roomEditorStore.addBrushDepth = +($event.target! as HTMLInputElement).value" v-input-active/>
         </div>
     </div>
 </template>

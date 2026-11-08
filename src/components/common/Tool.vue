@@ -5,14 +5,14 @@ import { ref, computed } from 'vue';
 
 const props = defineProps<{
     icon: string,
-    tool: any,
+    tool: number,
     name: string,
-    curSelection?: any,
+    curSelection?: unknown,
     toggled?: boolean,
 }>();
 
 const emit = defineEmits<{
-    toolClicked: [any],
+    toolClicked: [number],
 }>();
 
 const iconLoaded = ref(true);

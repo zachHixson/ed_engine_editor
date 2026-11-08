@@ -10,7 +10,8 @@ import type {
     LogicSave,
 } from './core';
 
-export type iAnyObj = {[key: string | number | symbol]: any};
+export type ActionCallbackData = {actionType: Symbol | number};
+export type ActionCallback = (data: ActionCallbackData, commit?: boolean) => (ActionCallbackData | void);
 
 export type AssetMap = {
     sprite: Map<number, Sprite>,

@@ -70,17 +70,17 @@ function closeRoomBGColorEditor(): void {
         <div class="control">
             <label for="roomPersist">{{ t('room_editor.persist') }}:</label>
             <Checkbox id="roomPersist" class="custom-checkbox" :value="room.persist" v-tooltip="t('room_editor.tt_room_persist')"
-                @change="setRoomProp({persist: ($event as any)})"/>
+                @change="setRoomProp({persist: !!$event})"/>
         </div>
         <div class="control">
             <label for="roomUseGrav">{{ t('room_editor.enable_gravity') }}:</label>
             <Checkbox id="roomUseGrav" class="custom-checkbox" :value="room.useGravity" v-tooltip="t('room_editor.tt_room_use_gravity')"
-                @change="setRoomProp({useGravity: ($event as any)})"/>
+                @change="setRoomProp({useGravity: !!$event})"/>
         </div>
         <div v-show="room.useGravity" class="control">
             <label for="roomGrav">{{ t('room_editor.gravity') }}:</label>
             <input id="roomGrav" type="number" step="any" :value="room.gravity" v-tooltip="t('room_editor.tt_room_gravity')"
-                @change="setRoomProp({gravity: parseFloat(($event.target as any).value)})" v-input-active/>
+                @change="setRoomProp({gravity: parseFloat(($event.target as HTMLInputElement).value)})" v-input-active/>
         </div>
         <div class="control">
             <label for="roomSetStart">{{ t('room_editor.set_start_room') }}:</label>

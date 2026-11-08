@@ -15,8 +15,12 @@ function compareSemantic(a: VersionNum, b: VersionNum): -1 | 0 | 1 {
     return 0;
 }
 
-export function updateProject(data: any): void {
-    const projectVersion = data["editor_version"] as string | undefined;
+type BaseGameData = {
+    editor_version: string;
+}
+
+export function updateProject(data: BaseGameData): void {
+    const projectVersion = data.editor_version;
 
     if (!projectVersion) {
         console.error("Could not find key \"editor_version\" in project data");

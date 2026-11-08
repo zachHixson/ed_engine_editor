@@ -1,12 +1,11 @@
 import { Vec2 } from 'linearz';
 import { iCollisionEvent, Instance_Base, InstanceBaseSave } from './Instance_Base';
-import { INSTANCE_TYPE } from '@engine/core/Enums';
+import { INSTANCE_TYPE, TRANSITION_TYPE } from '@engine/core/Enums';
 import { Instance_Object } from './Instance_Object';
-import { Game_Object } from './Game_Object';
+import { OBJECT_EXIT_TYPES } from './Game_Object';
 import { Camera } from './Camera';
 import Engine from '@engine/Engine';
 import { COLLISION_EVENT } from '@engine/core/nodes/Node_Enums';
-import { TRANSITION } from '@engine/transitions/Transition_Base';
 import { u32ToVec2 } from '@engine/core/Util';
 import { AssetMap } from '@engine/core/interfaces';
 
@@ -46,10 +45,8 @@ export class Instance_Exit extends Instance_Base {
     detectBacktracking: boolean = true;
     destinationRoom: number | null = null;
     destinationExit: number | null = null;
-    transition: TRANSITION = TRANSITION.NONE;
+    transition: TRANSITION_TYPE = TRANSITION_TYPE.NONE;
     endingDialog: string = '';
-
-    static get TRANSITION_TYPES(){return TRANSITION}
 
     get TYPE(){return INSTANCE_TYPE.EXIT}
     get sourceId(){return -1}
@@ -60,13 +57,12 @@ export class Instance_Exit extends Instance_Base {
     get hasCollisionEvent(){return true};
 
     private _loadRoom(objInstance: Instance_Object, instDirection?: Readonly<Vec2>){
-        const EXIT_TYPES = Game_Object.EXIT_TYPES;
         const engine = Instance_Exit.engine!;
         const exitBehavior = objInstance.objRef.exitBehavior;
         const direction = instDirection ?? objInstance.pos.clone().subtract(objInstance.lastPos).normalize();
 
         //remove object from room so it doesn't respawn on re-enter
-        if (exitBehavior != EXIT_TYPES.TRANSITION_ONLY) {
+        if (exitBehavior != OBJECT_EXIT_TYPES.TRANSITION_ONLY) {
             const prevRoomData = engine.getRoomData(engine.room.id)!;
 
             if (prevRoomData.hasInstance(objInstance.id)){
@@ -78,7 +74,7 @@ export class Instance_Exit extends Instance_Base {
 
         engine.loadRoom(this.destinationRoom!);
 
-        if (exitBehavior == EXIT_TYPES.TO_DESTINATION && this.destinationExit){
+        if (exitBehavior == OBJECT_EXIT_TYPES.TO_DESTINATION && this.destinationExit){
             Instance_Exit.destExit = engine.room.instances.find(e => e.id == this.destinationExit)! as Instance_Exit;
 
             objInstance.pos.copy(Instance_Exit.destExit.pos);
@@ -90,7 +86,7 @@ export class Instance_Exit extends Instance_Base {
             Instance_Exit.resetState();
         }
 
-        if (exitBehavior != EXIT_TYPES.TRANSITION_ONLY){
+        if (exitBehavior != OBJECT_EXIT_TYPES.TRANSITION_ONLY){
             engine.addInstance(objInstance);
         }
 
@@ -184,7 +180,7 @@ export class Instance_Exit extends Instance_Base {
         this.isEnding = !!data[11];
         this.destinationRoom = data[12] === '' ? null : data[12];
         this.destinationExit = data[13] === '' ? null : data[13];
-        this.transition = data[14] as TRANSITION;
+        this.transition = data[14] as TRANSITION_TYPE;
         this.endingDialog = data[15];
 
         return this;

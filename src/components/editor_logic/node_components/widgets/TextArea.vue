@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted } from 'vue';
+import type { WidgetTextArea } from '@engine/core/nodes/Widget';
 
 const props = defineProps<{
-    widget: any,
-    widgetData: any,
-    setWidgetData: (data: any)=>void,
+    widget: unknown,
+    widgetData: unknown,
+    setWidgetData: (data: WidgetTextArea['widget']['data'])=>void,
 }>();
 
-const text = computed(()=>props.widgetData ?? '');
+const text = computed(()=>(props.widgetData as WidgetTextArea['widget']['data']) ?? '');
 
 onMounted(()=>{
     nextTick(()=>{

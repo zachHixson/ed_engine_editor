@@ -53,7 +53,7 @@ export function RGBAToHex(r: number = 0, g: number = 0, b: number = 0, a: number
     g = clamp(g, 0, 255);
     b = clamp(b, 0, 255);
     a = clamp(a, 0, 255);
-    
+
     const hexR = r.toString(16).padStart(2, '0');
     const hexG = g.toString(16).padStart(2, '0');
     const hexB = b.toString(16).padStart(2, '0');
@@ -62,7 +62,7 @@ export function RGBAToHex(r: number = 0, g: number = 0, b: number = 0, a: number
     return '#' + hexR + hexG + hexB + hexA;
 };
 
-export function FastHSVToRGB(h: number, s: number, v: number, rgbObj: any): void {
+export function FastHSVToRGB(h: number, s: number, v: number, rgbObj: {r: number, g: number, b: number}): void {
     const c = v * s;
     const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
     const m = v - c;
@@ -244,7 +244,7 @@ export class Color{
         Object.assign(this, {r, g, b, a});
         return this;
     }
-    
+
     compare(col: Color): boolean {
         return (
             this.r == col.r &&

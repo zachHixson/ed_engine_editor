@@ -1,4 +1,4 @@
-import Node from './Node';
+import Node, { type iEventData } from './Node';
 import Engine from './Engine';
 import {
     Instance_Object,
@@ -7,6 +7,7 @@ import {
     iEngineOutput,
     iEngineInTrigger,
     iEngineInput,
+    iEngineVariable,
     CATEGORY_ID,
     iEventContext,
     LogicSave,
@@ -19,7 +20,7 @@ export default class Logic implements iEngineLogic {
     private static _curEventKey = 0;
 
     private _nodes: Node[] = [];
-    private _localVariableDefaults: Map<string, {value: any, type: SOCKET_TYPE, isList: boolean}> = new Map();
+    private _localVariableDefaults: Map<string, iEngineVariable> = new Map();
 
     id: number;
     name: string;
@@ -82,7 +83,7 @@ export default class Logic implements iEngineLogic {
         return { eventKey: Logic._curEventKey++, instance: instance };
     }
 
-    executeEvent(eventName: string, instance: Instance_Object, data: any): void {
+    executeEvent(eventName: string, instance: Instance_Object, data: iEventData): void {
         const event = this.events.get(eventName);
 
         if (!event) return;
@@ -113,7 +114,7 @@ export default class Logic implements iEngineLogic {
         }
     }
 
-    setLocalVariableDefault(name: string, value: any, type: SOCKET_TYPE, isList: boolean): void {
+    setLocalVariableDefault(name: string, value: unknown, type: SOCKET_TYPE, isList: boolean): void {
         const varName = name.trim().toLowerCase();
         this._localVariableDefaults.set(varName, {value, type, isList});
     }

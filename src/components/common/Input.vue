@@ -5,15 +5,12 @@ import type Core from '@/core';
 
 import arrowIcon from '@/assets/arrow_01.svg';
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
     type: 'number' | 'text',
     value?: number | string,
-    required?: boolean,
+    optional?: boolean,
     disabled?: boolean,
-}>(), {
-    required: true,
-    disabled: false,
-});
+}>();
 
 const emit = defineEmits<{
     input: [Core.iNodeInputEvent],
@@ -23,7 +20,7 @@ const emit = defineEmits<{
 }>();
 
 const inputRef = ref<HTMLInputElement>();
-const internalValue = ref(props.value ?? ((props.required ?? true) && props.type == 'number' ? 0 : ''));
+const internalValue = ref(props.value ?? (!props.optional && props.type == 'number' ? 0 : ''));
 const focused = ref(false);
 let lastVal = internalValue.value;
 
@@ -57,10 +54,10 @@ function onInput(event: Event): void {
 
 function onChange(event: Event): void {
     const target = event.target as HTMLInputElement;
-    const parsedVal = parseFloat(target.value);
 
     if (props.type == 'number'){
-        const needsReplace = target.value.length || props.required;
+        const parsedVal = parseFloat(target.value);
+        const needsReplace = target.value.length || !props.optional;
 
         if (!isNaN(parsedVal)){
             internalValue.value = parsedVal;

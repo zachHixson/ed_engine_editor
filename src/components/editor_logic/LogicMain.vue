@@ -1,5 +1,6 @@
 <script lang="ts">
 import { NAV_TOOL_TYPE } from '@/components/common/NavControlPanel.vue';
+import type { ActionMap } from './Node_API';
 
 export const enum LOGIC_ACTION {
     ADD_NODE = 1,
@@ -12,8 +13,7 @@ export const enum LOGIC_ACTION {
     PASTE,
 };
 
-export type GenericSocket = {id: string, value: any};
-export type ActionMap = Map<LOGIC_ACTION, (data?: any | object, commit?: boolean)=>void>;
+export type GenericSocket = {id: string, value: unknown};
 
 export type DomRefs = {
     nodeViewportRef: Ref<HTMLDivElement | undefined>,
@@ -23,10 +23,10 @@ export type DomRefs = {
 }
 
 export type ActionData = {
-    actionMap: Map<LOGIC_ACTION, (data?: any | object, commit?: boolean)=>void>,
-    revertMap: Map<LOGIC_ACTION, (data?: any | object, commit?: boolean)=>void>,
+    actionMap: ActionMap,
+    revertMap: ActionMap,
     hotkeyMap: HotkeyMap,
-    undoStore: Undo_Store<iActionStore>,
+    undoStore: Undo_Store<Core.ActionCallbackData>,
     undoLength: ComputedRef<number>,
     redoLength: ComputedRef<number>,
 }
@@ -40,11 +40,11 @@ export type LogicEditorState = {
     showGraphs: WritableComputedRef<boolean>,
     nodeDraggingEnabled: ComputedRef<boolean>,
     curNavState: ComputedRef<Core.NavState>,
-    visibleNodes: ComputedRef<Node_Obj[]>,
-    visibleConnections: ComputedRef<Node_Connection[]>,
-    selectedNodes: ComputedRef<Node_Obj[]>,
+    visibleNodes: ComputedRef<Core.iEditorNode[]>,
+    visibleConnections: ComputedRef<Core.iNodeConnection[]>,
+    selectedNodes: ComputedRef<Core.iEditorNode[]>,
     isDraggingNode: Ref<boolean>,
-    draggingConnection: Ref<Node_Connection | null>,
+    draggingConnection: Ref<Core.iNodeConnection | null>,
     inputActive: ComputedRef<boolean>,
     mouseDownPos: Core.Vec2,
     shiftDown: { value: boolean },
@@ -68,7 +68,7 @@ import Node from '@/components/editor_logic/node_components/Node.vue';
 import type Node_Connection from '@/components/editor_logic/node_components/Node_Connection';
 import Connection from '@/components/editor_logic/node_components/Connection.vue';
 import HotkeyMap from '@/components/common/HotkeyMap';
-import Undo_Store, { type iActionStore, useUndoHelpers } from '@/components/common/Undo_Store';
+import Undo_Store, { useUndoHelpers } from '@/components/common/Undo_Store';
 import type { DialogBoxProps } from '@/components/DialogBox.vue';
 import DialogVariable from './DialogVariable.vue';
 import Svg from '@/components/common/Svg.vue';
@@ -84,7 +84,6 @@ import { useMainStore } from '@/stores/Main';
 import { useLogicEditorStore } from '@/stores/LogicEditor';
 import { useI18nStore } from '@/stores/I18n';
 import type Logic from './node_components/Logic';
-import type { default as Node_Obj } from './node_components/Node';
 import type { iValueChanged } from './node_components/Socket.vue';
 import useConnection from './composables/useConnection';
 import useInput from './composables/useInput';
@@ -107,7 +106,6 @@ const props = defineProps<{
 }>();
 
 const connectionForceUpdateQueued = ref(false);
-const connectionForceUpdateKey = ref(0);
 
 const emit = defineEmits<{
     dialogOpen: [DialogBoxProps],
@@ -125,7 +123,7 @@ const actionData: ActionData = {
     actionMap: new Map(),
     revertMap: new Map(),
     hotkeyMap: new HotkeyMap(),
-    undoStore: reactive(new Undo_Store<iActionStore>(32, false)) as Undo_Store<iActionStore>,
+    undoStore: reactive(new Undo_Store<Core.ActionCallbackData>(32, false)) as Undo_Store<Core.ActionCallbackData>,
     undoLength: computed(()=>actionData.undoStore.undoLength),
     redoLength: computed(()=>actionData.undoStore.redoLength),
 }
@@ -153,8 +151,7 @@ const state: LogicEditorState = {
     }),
     visibleNodes: computed(()=>props.selectedAsset.nodes.filter(n => n.graphId == props.selectedAsset.selectedGraphId)),
     visibleConnections: computed(()=>{
-        (window as any).cfk = connectionForceUpdateKey.value;
-        return props.selectedAsset.connections.filter(n => n.graphId == props.selectedAsset.selectedGraphId)
+        return props.selectedAsset.connections.filter(c => c.graphId == props.selectedAsset.selectedGraphId)
     }),
     selectedNodes: computed(()=>props.selectedAsset.selectedNodes),
     isDraggingNode: ref(false),
@@ -240,7 +237,11 @@ const {
     moveNodes
 );
 
+void selectionBoxRef; //selectionBoxRef is used in the Vue template below, but without this line the editor marks it as unused (which is confusing as hell)
+
 onBeforeMount(()=>{
+    const getSelectedNodes = ()=>state.selectedNodes.value;
+    const getSelectedAsset = ()=>props.selectedAsset;
     const apiExports = {
         addNode,
         deleteNodes,
@@ -252,17 +253,10 @@ onBeforeMount(()=>{
         undoStore: actionData.undoStore,
         actionMap: actionData.actionMap,
         revertMap: actionData.revertMap,
-        emit,
+        getSelectedNodes,
+        getSelectedAsset,
+        dialogOpen: (props: DialogBoxProps) => emit('dialogOpen', props),
     };
-
-    Object.defineProperties(apiExports, {
-        selectedNodes: {
-            get: ()=>state.selectedNodes.value
-        },
-        selectedAsset: {
-            get: ()=>props.selectedAsset
-        }
-    });
 
     mainStore.getNodeAPI.setNodeEditorContext(apiExports);
 });
@@ -402,49 +396,58 @@ function queueForceConnectionUpdate(): void {
 
     connectionForceUpdateQueued.value = true;
     nextTick(()=>{
-        connectionForceUpdateKey.value++;
         connectionForceUpdateQueued.value = false;
     });
 }
 
-function actionChangeInput({socket, widget, oldVal, newVal, node}: iValueChanged, makeCommit = true): void {
+type ActionChangeInputData = Core.ActionCallbackData & {actionType: LOGIC_ACTION.CHANGE_INPUT} & iValueChanged;
+
+function actionChangeInput(data: Core.ActionCallbackData, makeCommit = true): void {
+    if (data.actionType != LOGIC_ACTION.CHANGE_INPUT) return;
+
+    const { socket, widget, oldVal, newVal, node } = data as ActionChangeInputData;
+
     if (!node) return;
 
     if (widget){
         node.widgetData = newVal;
     }
-    else{
-        socket.value = newVal;
+    else {
+        socket!.value = <Core.iEditorNodeInput['value']>newVal;
     }
 
     node.onValueChange({
-        socketId: widget ? -1 : socket.id,
+        socketId: widget ? -1 : socket!.id,
         widget,
         oldVal,
         newVal
     });
 
-    !(makeCommit || widget) && node.onForceSocketUpdate.emit(socket.id);
+    !(makeCommit || widget) && node.onForceSocketUpdate.emit(socket!.id);
 
     if (makeCommit){
-        const data = {socket, widget, oldVal, newVal, node};
-        actionData.undoStore.commit({action: LOGIC_ACTION.CHANGE_INPUT, data});
+        const data = {actionType: LOGIC_ACTION.CHANGE_INPUT, socket, widget, oldVal, newVal, node};
+        actionData.undoStore.commit(data);
     }
 }
 
-function revertChangeInput({socket, widget, oldVal, newVal, node}: iValueChanged): void {
+function revertChangeInput(data: Core.ActionCallbackData): void {
+    if (data.actionType != LOGIC_ACTION.CHANGE_INPUT) return;
+
+    const { socket, widget, oldVal, newVal, node } = data as ActionChangeInputData;
+
     if (!node) return;
 
     if (widget){
         node.widgetData = oldVal;
     }
     else{
-        socket.value = oldVal;
-        node.onForceSocketUpdate.emit(socket.id);
+        socket!.value = <Core.iEditorNodeInput['value']>oldVal;
+        node.onForceSocketUpdate.emit(socket!.id);
     }
 
     node.onValueChange({
-        socketId: widget ? -1 : socket.id,
+        socketId: widget ? -1 : socket!.id,
         widget,
         newVal,
         oldVal
@@ -469,7 +472,7 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: iValueChanged
             @paste="pasteNodes({}); contextMenuPosition = null;"></ContextMenu>
         <div class="node-panel-wrapper">
             <NodeLibrary
-                @nodeClicked="addNode({templateId: $event})"/>
+                @nodeClicked="addNode({actionType: LOGIC_ACTION.ADD_NODE, templateId: $event} as Core.ActionCallbackData)"/>
             <div class="undo-panel-wrapper">
                 <UndoPanel
                     class="undo-panel"
@@ -491,7 +494,7 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: iValueChanged
                     :connectionObj="connection"
                     :clientToNavSpace="clientToNavPos"
                     :allConnections="selectedAsset.connections"
-                    :draggingConnection="(state.draggingConnection.value as Node_Connection)"
+                    :draggingConnection="<Node_Connection>state.draggingConnection.value"
                     @dragStart="dragConnection"
                     @forceUpdate="queueForceConnectionUpdate"/>
                 <Node
@@ -511,7 +514,7 @@ function revertChangeInput({socket, widget, oldVal, newVal, node}: iValueChanged
                     @nodeMoveEnd="nodeMoveEnd"
                     @socketDown="createConnection"
                     @socketOver="currentSocketOver = $event"
-                    @socketValueChanged="actionChangeInput($event)"/>
+                    @socketValueChanged="actionChangeInput({actionType: LOGIC_ACTION.CHANGE_INPUT, ...$event})"/>
             </div>
             <svg class="selection-box-wrapper" width="100%" height="100%">
                 <rect

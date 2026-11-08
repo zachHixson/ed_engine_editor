@@ -1,21 +1,51 @@
 import { useLogicEditorStore } from "@/stores/LogicEditor";
 import { useGameDataStore } from "@/stores/GameData";
 import { useI18nStore } from "@/stores/I18n";
-import type Node from "./node_components/Node";
 import type Core from '@/core';
 import type Node_Connection from "./node_components/Node_Connection";
-import Undo_Store, { iActionStore } from "../common/Undo_Store";
+import Undo_Store from "../common/Undo_Store";
 
-export type TextInfo = {textId: string, vars: {[keys: string]: any}};
+import type useNode from "./composables/useNode";
+import type useConnection from "./composables/useConnection";
+import type { nextTick } from "vue";
+import { LOGIC_ACTION } from "./LogicMain.vue";
+import { DIALOG_TYPE, type DialogBoxProps } from '@/components/DialogBox.vue';
+import type Logic from "./node_components/Logic";
+
+export type TextInfo = {textId: string, vars: {[keys: string]: unknown}};
+export type ActionMap = Map<LOGIC_ACTION, Core.ActionCallback>;
+
+type Editor = {
+    addNode: ReturnType<typeof useNode>['addNode'];
+    deleteNodes: ReturnType<typeof useNode>['deleteNodes'];
+    revertMakeConnection: ReturnType<typeof useConnection>['revertMakeConnection'];
+    removeConnectionList: ReturnType<typeof useConnection>['removeConnectionList'];
+    relinkConnections: ReturnType<typeof useConnection>['relinkConnections'];
+    dialogVariable: (callback: (positive: boolean, varInfo: Core.iVarInfo)=>void, edit?: Core.iVarInfo) => void;
+    nextTick: typeof nextTick;
+    undoStore: Undo_Store<Core.ActionCallbackData>;
+    actionMap: ActionMap;
+    revertMap: ActionMap;
+    dialogOpen: (props: DialogBoxProps) => void;
+    getSelectedNodes: () => Core.iEditorNode[];
+    getSelectedAsset: () => Logic;
+};
 
 export default class Node_API implements Core.iEditorAPI {
-    private _editor!: Core.iEditorAPI['editor'] | null;
+    private _editor: Editor | null = null;
 
     readonly gameDataStore = useGameDataStore();
     readonly logicEditorStore = useLogicEditorStore();
 
-    get editor(){return this._editor!};
-    get undoStore(){return this.editor.undoStore as Undo_Store<iActionStore>};
+    private _checkEditor(editor: Editor | null): asserts editor is NonNullable<Editor> {
+        if (editor) return;
+        throw new Error('Attempted to access Node_API editor context before editor context has been set');
+    }
+
+    get undoStore(){
+        this._checkEditor(this._editor);
+        return this._editor.undoStore as Undo_Store<Core.ActionCallbackData>
+    };
     get globalVariableMap(){
         return this.logicEditorStore.globalVariableMap;
     };
@@ -24,7 +54,7 @@ export default class Node_API implements Core.iEditorAPI {
         this._editor = null;
     }
 
-    setNodeEditorContext(editorContext: any): void {
+    setNodeEditorContext(editorContext: Editor): void {
         this._editor = editorContext;
     }
 
@@ -43,12 +73,16 @@ export default class Node_API implements Core.iEditorAPI {
         this.globalVariableMap.delete(name);
     }
 
-    getVariableUsage(name: string, nodeType: string | null, isGlobal: boolean): Node[] {
-        const usage: Node[] = [];
+    getVariableUsage(name: string, nodeType: string | null, isGlobal: boolean): Core.iEditorNode[] {
+        const usage: Core.iEditorNode[] = [];
         name = name.trim().toLowerCase();
 
         this.forEachNode(node => {
-            const curVarName = node.inputs.get('name')?.value.trim().toLowerCase();
+            const nameInput = node.inputs.get('name');
+
+            if (!nameInput) return;
+
+            const curVarName = (nameInput.value as string).trim().toLowerCase();
             const isVarMatch = curVarName == name;
             const isVarNode = node.templateId == 'set_variable' || node.templateId == 'get_variable';
             const isUsage = nodeType?.includes(node.templateId) || isVarNode;
@@ -101,11 +135,6 @@ export default class Node_API implements Core.iEditorAPI {
         return outputConnections;
     }
 
-    cancelConnection(connection: Core.iNodeConnection): void {
-        this.editor.revertMakeConnection({connectionObj: connection});
-        this.undoStore.popLast();
-    }
-
     getConnectedInputSocket(node: Core.iEditorNode, socketId: string, inputConnection?: Node_Connection): Core.iEditorNodeOutput | Core.iEditorNodeInput | undefined {
         const connection = inputConnection ?? this.getInputConnection(node, socketId);
 
@@ -116,40 +145,50 @@ export default class Node_API implements Core.iEditorAPI {
         return connection.startSocket;
     }
 
-    getSelectedNodes(): Node[] {
-        return [...this.editor.selectedNodes];
+    getSelectedNodes(): Core.iEditorNode[] {
+        this._checkEditor(this._editor);
+        return [...this._editor.getSelectedNodes()];
     }
 
     clearSelectedNodes(): void {
-        this.editor.selectedNodes.splice(0, this.editor.selectedNodes.length);
+        this._checkEditor(this._editor);
+        const selectedNodes = this._editor.getSelectedNodes();
+        selectedNodes.splice(0, selectedNodes.length);
     }
 
-    addNode(node: Node, commit: boolean = true): void {
-        this.editor.addNode({templateId: node.templateId, nodeRef: node}, commit);
+    addNode(node: Core.iEditorNode, commit: boolean = true): void {
+        const data = {actionType: LOGIC_ACTION.ADD_NODE, templateId: node.templateId, nodeRef: node} as Core.ActionCallbackData;
+        this._checkEditor(this._editor);
+        this._editor.addNode(data, commit);
     }
 
-    deleteNodes(nodeList: Node[], commit: boolean = true): void {
-        this.editor.deleteNodes({nodeRefList: nodeList}, commit);
+    deleteNodes(nodeList: Core.iEditorNode[], commit: boolean = true): void {
+        const data = {actionType: LOGIC_ACTION.DELETE_NODES, nodeRefList: nodeList} as Core.ActionCallbackData;
+        this._checkEditor(this._editor);
+        this._editor.deleteNodes(data, commit);
     }
 
-    deleteConnections(connectionList: Node_Connection[], commit: boolean = true): void {
-        this.editor.removeConnectionList({connectionObjList: connectionList}, commit);
+    deleteConnections(connectionList: Core.iNodeConnection[], commit: boolean = true): void {
+        const data = {actionType: LOGIC_ACTION.BATCH_REMOVE_CONNECTIONS, connectionObjList: connectionList} as Core.ActionCallbackData;
+        this._checkEditor(this._editor);
+        this._editor.removeConnectionList(data, commit);
     }
 
-    forEachNode(callback: (node: Node)=>void, isGlobal = true): void {
+    forEachNode(callback: (node: Core.iEditorNode)=>void, isGlobal = true): void {
         if (isGlobal){
             const allLogic = this.gameDataStore.getAllLogic;
 
             for (let l = 0; l < allLogic.length; l++){
                 const curLogic = allLogic[l];
-    
+
                 for (let n = 0; n < curLogic.nodes.length; n++){
                     callback(curLogic.nodes[n]);
                 }
             }
         }
         else{
-            const nodes = this.editor.selectedAsset.nodes;
+            this._checkEditor(this._editor);
+            const nodes = this._editor.getSelectedAsset().nodes;
 
             for (let i = 0; i < nodes.length; i++){
                 callback(nodes[i]);
@@ -157,12 +196,14 @@ export default class Node_API implements Core.iEditorAPI {
         }
     }
 
-    dialogConfirm(textInfo: TextInfo, callback: (positive: boolean)=>any){
-        this.editor.emit('dialog-open', {confirmDialog: true, textInfo, callback});
+    dialogConfirm(textInfo: TextInfo, callback: (positive: boolean)=>void){
+        this._checkEditor(this._editor);
+        this._editor.dialogOpen({type: DIALOG_TYPE.CONFIRM, textInfo, callback});
     }
 
     dialogVariable(callback: (positive: boolean, varInfo: Core.iVarInfo)=>void, edit?: Core.iVarInfo): void {
-        this.editor.dialogVariable(callback, edit);
+        this._checkEditor(this._editor);
+        this._editor.dialogVariable(callback, edit);
     }
 
     popLastCommit(){
@@ -175,17 +216,22 @@ export default class Node_API implements Core.iEditorAPI {
     }
 
     nextTick(callback: ()=>void): void {
-        this.editor.nextTick(callback);
+        this._checkEditor(this._editor);
+        this._editor.nextTick(callback);
     }
 
-    registerAction<T extends {}>(key: any, action: Core.ActionCallback<T>, revert: Core.ActionCallback<T>): void {
-        this.editor.actionMap.set(key, action);
-        this.editor.revertMap.set(key, revert);
+    registerAction(key: LOGIC_ACTION, action: Core.ActionCallback, revert: Core.ActionCallback): void {
+        this._checkEditor(this._editor);
+        this._editor.actionMap.set(key, action);
+        this._editor.revertMap.set(key, revert);
     }
 
-    executeAction<T>(key: any, args: T, commit: boolean): void {
-        const data = this.editor.actionMap.get(key)(args, commit) ?? {};
-        this.undoStore.commit({action: key, data});
+    executeAction<T extends Core.ActionCallbackData>(key: LOGIC_ACTION, args: T, commit: boolean): void {
+        this._checkEditor(this._editor);
+        const action = this._editor.actionMap.get(key);
+        if (!action) throw new Error('failure to get action');
+        const data = action(args, commit) ?? {actionType: args.actionType};
+        this.undoStore.commit(data);
     }
 
     pushNodeException(data: Core.iNodeExceptionData): void {

@@ -79,8 +79,8 @@ export default class Dialog_Box extends Dialog_Base {
     private _program: WebGLProgram;
     private _geoAttrib: WGL.Attribute;
     private _uvAttrib: WGL.Attribute;
-    private _yOffsetUniform: WGL.Uniform;
-    private _arrowAnimUniform: WGL.Uniform;
+    private _yOffsetUniform: WGL.Uniform<WGL.Uniform_Types.FLOAT>;
+    private _arrowAnimUniform: WGL.Uniform<WGL.Uniform_Types.FLOAT>;
     private _arrowTexture: WGL.Texture_Uniform;
     private _vao: WebGLVertexArrayObject;
 
@@ -128,7 +128,7 @@ export default class Dialog_Box extends Dialog_Base {
 
     get alignment(){return this._alignment};
     set alignment(val: ALIGN){
-        this._alignment;
+        this._alignment = val;
         this._yOffsetUniform.set(0.15);
     }
 

@@ -62,8 +62,9 @@ function addGroup(): void {
     });
 }
 
-function groupNameChanged(group: string, event: any): void {
-    const obj = {groupName: group, newName: validateName(event.target.value, group)};
+function groupNameChanged(group: string, event: InputEvent): void {
+    const target = event.target! as HTMLInputElement;
+    const obj = {groupName: group, newName: validateName(target.value, group)};
     emit('groupChanged', obj);
 }
 
@@ -92,7 +93,7 @@ function groupDeleted(group: string, idx: number): void {
                     v-for="(group, idx) in editList"
                     :key="group"
                     class="item">
-                    <input class="listInput" :value="group" @change="groupNameChanged(group, $event)"/>
+                    <input class="listInput" :value="group" @change="groupNameChanged(group, $event as InputEvent)"/>
                     <button class="deleteBtn" @click="groupDeleted(group, idx)">
                         <Svg :src="plusIcon" style="transform: rotate(45deg)"></Svg>
                     </button>

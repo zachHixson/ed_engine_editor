@@ -1,6 +1,5 @@
-import { Vec2 } from "linearz";
-import { iAnyObj } from "./interfaces";
-import { SOCKET_TYPE } from "./nodes/Node_Enums";
+import type { Vec2 } from "linearz";
+import { SOCKET_TYPE, type SocketTypeLookup } from "./nodes/Node_Enums";
 import Engine from "@engine/Engine";
 import {
     iInput,
@@ -12,20 +11,20 @@ import {
     Event_Emitter,
     Node_Enums,
     tNavSaveData,
+    Asset_Base,
     AssetSave,
+    ActionCallback,
+    ActionCallbackData,
+    Widget,
 } from "./core";
 
 //types needed for node editor API, which is the only place the engine code has to know about editor types
-//@ts-ignore
 import type Undo_Store from '@src/components/common/Undo_Store';
-//@ts-ignore
-import type { iActionStore } from '@src/components/common/Undo_Store';
+import type { useGameDataStore } from "@src/stores/GameData";
 
 type Graph = {};
 type Connection = {};
-type iNodeAPI = {};
 type vec = [number, number];
-export type ActionCallback<T> = (args: T, commit: boolean) => (Partial<T> | void);
 
 export type ConnectionSave = [
 	id: number,
@@ -41,9 +40,9 @@ export type NodeSave = [
     nodeId: number,
     graphId: number,
     pos: vec,
-    inputs: Array<[string, any]>,
-    widgetData: {[key: string]: any},
-    extra: any,
+    inputs: Array<[inputId: string, inputData: number | string]>,
+    widgetData: {[key: string]: unknown},
+    extra: unknown,
 ];
 
 export type GraphSave = [
@@ -60,16 +59,48 @@ export type LogicSave = [
     connectionDataList: Array<ConnectionSave>,
 ];
 
-interface iNode_Base extends iNodeLifecycleEvents {
+interface iNode_Base {
     template: iNodeTemplate;
     nodeId: number;
     isEvent: boolean;
-    widgetData?: any;
-    setNodeData<T>(data: T): T;
+    widgetData?: unknown;
+    setNodeData<T>(data: T): void;
     getNodeData<T>(): T;
 }
 
-export interface iNodeLifecycleEvents {
+export interface iNodeLifeCycleShared {
+    onCreate: ((this: iEngineNode, eventContext: iEventContext)=>void) | ((this: iEditorNode)=>void);
+    logicLoaded: (logic: iEditorLogic | iEngineLogic)=>void;
+    afterGameDataLoaded: ()=>void;
+}
+
+export interface iEngineNodeLifecycle extends iNodeLifeCycleShared {}
+
+export interface iEditorNodeLifecycle extends iNodeLifeCycleShared {
+    init: ()=>void; // Fired on constructor
+    beforeSave: ()=>void;
+    afterSave: (saveData: NodeSave)=>void;
+    beforeLoad: (saveData: NodeSave)=>void;
+    afterLoad: (saveData: NodeSave)=>void;
+    onBeforeMount: ()=>void;
+    onMount: ()=>void;
+    onNewVariable: ()=>void;
+    onEdit: ()=>void;
+    onInput: (event: iNodeInputEvent)=>void;
+    onMove: ()=>void;
+    onNewConnection: (connection: iNodeConnection, isUndo?: boolean)=>void;
+    onRemoveConnection: (connection: iNodeConnection, isUndo?: boolean)=>void;
+    onValueChange: (value: unknown)=>void;
+    onDeleteStopped: (protectedNodes: iEditorNode[])=>void;
+    onBeforeDelete: ()=>void;
+    onBeforeUnmount: ()=>void;
+}
+
+export interface iTemplateLifecycle extends Partial<iEngineNodeLifecycle>, Partial<iEditorNodeLifecycle> {
+    registerActions?: (editorAPI: iEditorAPI)=>void; //Fired once per template each time the node editor is opened
+}
+
+export interface iNodeLifecycleEventsXXX {
     registerActions?: (editorAPI: iEditorAPI)=>void; //Fired once per template each time the node editor is opened
     init?: ()=>void; // Fired on constructor
     beforeSave?: ()=>void;
@@ -89,7 +120,7 @@ export interface iNodeLifecycleEvents {
     onMove?: ()=>void;
     onNewConnection?: (connection: iNodeConnection, isUndo?: boolean)=>void;
     onRemoveConnection?: (connection: iNodeConnection, isUndo?: boolean)=>void;
-    onValueChange?: (value: any)=>void;
+    onValueChange?: (value: unknown)=>void;
     onDeleteStopped?: (protectedNodes: iEditorNode[])=>void;
     onBeforeDelete?: ()=>void;
     onBeforeUnmount?: ()=>void;
@@ -105,43 +136,48 @@ export interface iEditorLogic {
     selectedNodes: iEditorNode[];
     localVariables: Map<string, iEditorVariable>;
 
-    addNode(templateId: string, pos: Vec2, nodeAPI: iNodeAPI, nodeRef?: iEditorNode): iEditorNode;
+    addNode(templateId: string, pos: Vec2, nodeAPI: iEditorAPI, nodeRef?: iEditorNode): iEditorNode;
     deleteNode(nodeRef: iEditorNode): void;
     addConnection(connectionObj: iNodeConnection): void;
     removeConnection(id: number, connectionObj?: Connection): boolean;
     setLocalVariable(name: string, type: SOCKET_TYPE, isList: boolean): void;
     getLocalVariable(name: string): iEditorVariable | undefined;
     deleteLocalVariable(name: string): void;
+    toSaveData(): LogicSave;
 }
 
 export interface iEditorNodeInTrigger extends iInTrigger {
     node: iEditorNode,
 };
 
-export interface iEditorNodeInput extends iInput {
+export interface iEditorNodeOutTrigger {
+    id: string,
+    node: iEditorNode,
+}
+
+export type iEditorNodeInput = iInput & {
     node: iEditorNode;
-    value: any;
+    value: number | string | boolean | null;
 };
 
 export interface iEditorNodeOutput extends iOutput {
     node: iEditorNode,
 };
 
-export type iEditorNodeMethod = (this: iEditorNode, data?: any) => any;
+export type iEditorNodeMethod = (this: iEditorNode, data?: unknown) => unknown;
 
 export type iEditorVariable = {type: SOCKET_TYPE, isList: boolean};
 
-export interface iEditorNode extends iNode_Base {
+export interface iEditorNode extends iNode_Base, iEditorNodeLifecycle {
     templateId: string;
-    widget?: any;
+    widget?: Widget;
     inTriggers: Map<string, iEditorNodeInTrigger>;
-    outTriggers: Map<string, {
-        id: string,
-        node: iEditorNode,
-    }>;
+    outTriggers: Map<string, iEditorNodeOutTrigger>;
     inputs: Map<string, iEditorNodeInput>;
     outputs: Map<string, iEditorNodeOutput>;
     parentScript: iEditorLogic;
+    graphId: number;
+    pos: Vec2;
     editorCanDelete: boolean;
     showEditButton: boolean;
     editorAPI: iEditorAPI;
@@ -151,8 +187,6 @@ export interface iEditorNode extends iNode_Base {
     reverseInputs?: boolean;
     reverseOutputs?: boolean;
     inputBoxWidth?: number;
-    decoratorIcon?: string | null;
-    decoratorText?: string | null;
     stackDataIO?: boolean;
     doNotCopy?: boolean;
 
@@ -162,20 +196,33 @@ export interface iEditorNode extends iNode_Base {
     onUpdateConnections: Event_Emitter<()=>void>;
     onRecalcWidth: Event_Emitter<()=>void>;
 
-    getInput<T>(inputName: string): T;
+    setDomRef(domRef: HTMLDivElement): void;
+    setPos(newPos: Readonly<Vec2>): void;
+    toSaveData(): NodeSave;
     refresh(): void;
+
+    getInput(inputName: string): number | string | boolean | null;
 }
 
 export interface iNodeConnection {
     id: number;
+    type: Node_Enums.SOCKET_TYPE | null;
+    graphId: number;
+    canConnect: boolean;
     startNode: iEditorNode | null;
+    startSocketEl: HTMLElement | null;
     endNode: iEditorNode | null;
+    endSocketEl: HTMLElement | null;
     startSocketId: string | null;
     endSocketId: string | null;
     disconnectedFrom: string | null;
 
     onConnectionUpdate: Event_Emitter<()=>void>;
     onForceUpdate: Event_Emitter<()=>void>;
+
+    toSaveData(): ConnectionSave;
+    componentDestructor(): void;
+    update(): void;
 }
 
 export interface iVarInfo {
@@ -186,11 +233,10 @@ export interface iVarInfo {
 }
 
 export interface iEditorAPI {
-    editor: iAnyObj;
-    undoStore: Undo_Store<iActionStore>;
+    undoStore: Undo_Store<ActionCallbackData>;
     globalVariableMap: Map<string, iEditorVariable>;
-    gameDataStore: any;
-    logicEditorStore: any;
+    gameDataStore: ReturnType<typeof useGameDataStore>;
+    logicEditorStore: unknown;
 
     getGlobalVariable(name: string): iEditorVariable | undefined;
     setGlobalVariable(name: string, type: SOCKET_TYPE, isList: boolean): void;
@@ -198,21 +244,20 @@ export interface iEditorAPI {
     getVariableUsage(name: string, nodeType: string | null, isGlobal: boolean): iEditorNode[];
     getInputConnection(node: iEditorNode, socketId: string): iNodeConnection | null;
     getOutputConnections(node: iEditorNode, socketId: string): iNodeConnection[];
-    cancelConnection(connection: iNodeConnection): void;
     getConnectedInputSocket(node: iEditorNode, socketId: string, inputConnection?: iNodeConnection): iEditorNodeInput | iEditorNodeOutput | undefined;
     getSelectedNodes(): iEditorNode[];
     clearSelectedNodes(): void;
     addNode(node: iEditorNode, commit?: boolean): void;
     deleteNodes(nodeList: iEditorNode[], commit?: boolean): void;
     deleteConnections(connectionList: iNodeConnection[], commit?: boolean): void;
-    forEachNode(callback: (...args: any)=>void, isGlobal: boolean): void;
-    dialogConfirm(textInfo: {textId: string, vars: {[keys: string]: any}}, callback: (positive: boolean)=>void): void;
+    forEachNode(callback: (...args: unknown[])=>void, isGlobal: boolean): void;
+    dialogConfirm(textInfo: {textId: string, vars: {[keys: string]: unknown}}, callback: (positive: boolean)=>void): void;
     dialogVariable(callback: (positive: boolean, varInfo: iVarInfo)=>void, edit?: iVarInfo): void;
     popLastCommit(): void;
     t(text: string): string;
     nextTick(callback: ()=>void): void;
-    registerAction<T extends {}>(key: any, action: ActionCallback<T>, revert: ActionCallback<T>): void;
-    executeAction<T>(key: any, args: T, commit: boolean): void;
+    registerAction(key: unknown, action: ActionCallback, revert: ActionCallback): void;
+    executeAction<T extends ActionCallbackData>(key: unknown, args: T, commit: boolean): void;
     pushNodeException(data: iNodeExceptionData): void;
     clearNodeException(errorId: symbol): void;
 }
@@ -225,15 +270,15 @@ export interface iEngineLogic {
     events: Map<string, iEngineNode[]>;
     localVariableDefaults: Map<string, iEngineVariable>;
 
-    setLocalVariableDefault(name: string, value: any, type: SOCKET_TYPE, isList: boolean): void;
-    executeEvent(eventName: string, instance: Instance_Object, data: any): void;
+    setLocalVariableDefault(name: string, value: unknown, type: SOCKET_TYPE, isList: boolean): void;
+    executeEvent(eventName: string, instance: Instance_Object, data: unknown): void;
     dispatchOnCreate(instance: Instance_Object): void;
     dispatchLogicLoaded(): void;
     dispatchAfterGameDataLoaded(): void;
 }
 
 export interface iEngineInTrigger {
-    execute(eventContext: iEventContext, data: any): void,
+    execute(eventContext: iEventContext, data: unknown): void,
     node: iEngineNode,
     connection: iEngineOutTrigger | null,
 };
@@ -243,7 +288,7 @@ export interface iEngineOutTrigger {
 }
 
 export interface iEngineInput {
-    value: any,
+    value: unknown,
     type: SOCKET_TYPE,
     connection: iEngineOutput | null,
     isList?: boolean,
@@ -254,13 +299,15 @@ export interface iEngineOutput {
     connection: iEngineInput | null,
     node: iEngineNode,
     type: SOCKET_TYPE,
-    execute(eventContext: iEventContext, data: any): void,
+    execute(eventContext: iEventContext, data: unknown): void,
     isList?: boolean,
 };
 
-export type iEngineNodeMethod = (this: iEngineNode, eventContext: iEventContext, data?: any) => any;
+export type iEngineNodeMethod = (this: iEngineNode, eventContext: iEventContext, data?: unknown) => unknown;
 
-export type iEngineVariable = {value: any, type: SOCKET_TYPE, isList: boolean};
+export type iEngineVariable = {value: unknown, type: SOCKET_TYPE, isList: boolean};
+
+type ResolveKey<T> = T extends SOCKET_TYPE ? T : never;
 
 export interface iEngineNode extends iNode_Base {
     inTriggers: Map<string, iEngineInTrigger>;
@@ -272,19 +319,28 @@ export interface iEngineNode extends iNode_Base {
 
     engine: Engine;
 
-    getWidgetData(): any;
-    getInput<T>(inputName: string, eventContext: iEventContext, convertList?: boolean): T;
+    getWidgetData(): unknown;
     triggerOutput(outputId: string, eventContext: iEventContext): void;
-    throwOnNullInput<T>(inputName: string, eventContext: iEventContext, errorId: string, fatal?: boolean): T | typeof Node_Enums.THROWN | null;
-    throwOnNullInput<T>(inputName: string, eventContext: iEventContext, errorId: string, fatal: true, rejectNoConnection?: boolean): T | null;
+
+    throwOnNullInput<T extends iInput>(socketTemplate: T & {isList?: never}, eventContext: iEventContext, errorId: string, fatal?: false | never): SocketTypeLookup[ResolveKey<T['type']>] | typeof Node_Enums.THROWN | null;
+    throwOnNullInput<T extends iInput>(socketTemplate: T & {isList: true}, eventContext: iEventContext, errorId: string, fatal?: false | never): Array<SocketTypeLookup[T['type']]> | typeof Node_Enums.THROWN | null;
+    throwOnNullInput<T extends iInput>(socketTemplate: T & {isList?: never}, eventContext: iEventContext, errorId: string, fatal: true): SocketTypeLookup[T['type']] | null;
+    throwOnNullInput<T extends iInput>(socketTemplate: T & {isList: true}, eventContext: iEventContext, errorId: string, fatal: true): Array<SocketTypeLookup[T['type']]> | null;
+
+    getInput<T extends iInput>(socketTemplate: T & {isList?: never} & {optional?: never}, eventContext: iEventContext, convertList?: true): SocketTypeLookup[T['type']];
+    getInput<T extends iInput>(socketTemplate: T & {isList: true} & {optional?: never}, eventContext: iEventContext): Array<SocketTypeLookup[T['type']]>;
+
+    getOptionalInput<T extends iInput>(socketTemplate: T & {isList?: never} & {optional: true}, eventContext: iEventContext): SocketTypeLookup[T['type']] | null;
 }
+
+export interface iEventSignature {id: string, data?: unknown};
 
 export type iEventContext = {eventKey: number, instance: Instance_Object};
 
 export interface iNodeExceptionData {
     errorId: symbol;
     msgId: string;
-    msgVars?: {[key: string]: any};
+    msgVars?: Record<string, unknown>;
     logicId: number;
     nodeId: number;
     fatal?: boolean;
@@ -295,3 +351,11 @@ export interface iNodeInputEvent {
     target: HTMLInputElement,
     value: number | string,
 }
+
+export type iSocketInfo = Omit<iEditorNodeInput, 'value'> & {
+    value: {
+    	data: string;
+    	titleId: string;
+    	translate: boolean;
+    }
+};

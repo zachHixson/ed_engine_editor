@@ -1,24 +1,23 @@
 import Core from '@/core';
 import type Logic from "./Logic";
-import type Node_API from "../Node_API";
 
 const { Vec2 } = Core;
 type Vec2 = Core.Vec2;
 
-export default class Node {
+export default class Node implements Core.iEditorNode {
     private _template: Core.iNodeTemplate;
-    private _editorAPI: Node_API;
+    private _editorAPI: Core.iEditorAPI;
     private _nodeData: unknown = null as unknown;
 
     nodeId: number;
     isEvent: boolean;
-    widget?: Core.iAnyObj;
-    widgetData?: any;
+    widget?: Core.iNodeTemplate['widget'];
+    widgetData?: unknown;
     inTriggers: Core.iEditorNode['inTriggers'] = new Map();
     outTriggers: Core.iEditorNode['outTriggers'] = new Map();
     inputs: Core.iEditorNode['inputs'] = new Map();
     outputs: Core.iEditorNode['outputs'] = new Map();
-    parentScript: Logic;
+    parentScript: Core.iEditorLogic;
     graphId: number;
     domRef: HTMLDivElement | null = null;
     pos: Vec2;
@@ -29,9 +28,6 @@ export default class Node {
     reverseOutputs?: boolean;
     stackDataIO?: boolean;
     inputBoxWidth?: number;
-    decoratorIcon?: string;
-    decoratorText?: string;
-    decoratorTextVars?: any;
     doNotCopy?: boolean = false;
 
     onEditorMove = new Core.Event_Emitter<(newPos: Vec2)=>void>(this);
@@ -40,13 +36,13 @@ export default class Node {
     onUpdateConnections = new Core.Event_Emitter<()=>void>(this);
     onRecalcWidth = new Core.Event_Emitter<()=>void>(this);
 
-    constructor(templateId: string, id: number, pos: Readonly<Vec2>, parentScript: Logic, graphId: number, editorAPI: Node_API){
+    constructor(templateId: string, id: number, pos: Readonly<Vec2>, parentScript: Logic, graphId: number, editorAPI: Core.iEditorAPI){
         const template = Core.NodeMap.get(templateId)!;
 
         this._template = template;
         this.nodeId = id;
         this.isEvent = template.isEvent ?? false;
-        this.widget = template.widget;
+        this.widget = template.widget ? JSON.parse(JSON.stringify(template.widget)) : undefined;
         this.parentScript = parentScript;
         this.graphId = graphId;
         this._editorAPI = editorAPI;
@@ -57,9 +53,6 @@ export default class Node {
         this.reverseOutputs =  this.template.reverseOutputs;
         this.stackDataIO =  this.template.stackDataIO;
         this.inputBoxWidth =  this.template.inputBoxWidth;
-        this.decoratorIcon =  this.template.decoratorIcon;
-        this.decoratorText =  this.template.decoratorText;
-        this.decoratorTextVars =  this.template.decoratorTextVars;
         this.editorCanDelete = this.template.editorCanDelete ?? this.editorCanDelete;
         this.showEditButton = this.template.showEditButton ?? this.showEditButton;
         this.doNotCopy = this.template.doNotCopy ?? this.doNotCopy;
@@ -83,8 +76,8 @@ export default class Node {
         template.inputs?.forEach(input => {
             let value = input.default;
 
-            if (value === undefined){
-                value = Core.Node_Enums.SOCKET_DEFAULT.get(input.type);
+            if (value instanceof Array) {
+                value = null;
             }
 
             this.inputs.set(input.id, Object.assign({
@@ -168,7 +161,7 @@ export default class Node {
         this.template.onRemoveConnection?.call(this, connection, isUndo);
     }
 
-    onValueChange(value: any): void {
+    onValueChange(value: unknown): void {
         this.template.onValueChange?.call(this, value);
     }
 
@@ -199,8 +192,13 @@ export default class Node {
             {},
         ];
 
-        this.inputs.forEach(({id, value}) => {
-            const outValue = typeof value == 'boolean' ? +value : value;
+        this.inputs.forEach(({ id, type, value }) => {
+            const outValue = Core.serializeInputValue(type, value);
+
+            if (outValue == null) {
+                return;
+            }
+
             outObj[4].push([id, outValue]);
         });
 
@@ -209,7 +207,7 @@ export default class Node {
         return outObj;
     }
 
-    static fromSaveData(data: Core.NodeSave, parentScript: Logic, nodeAPI: Node_API): Node {
+    static fromSaveData(data: Core.NodeSave, parentScript: Logic, nodeAPI: Core.iEditorAPI): Node {
         const node = new Node(
             data[0],
             data[1],
@@ -233,7 +231,7 @@ export default class Node {
         data[4].forEach(input => {
             const nodeInput = this.inputs.get(input[0]);
             if (!nodeInput) return;
-            nodeInput.value = input[1];
+            nodeInput.value = Core.parseSavedInputValue(nodeInput.type, input[1]);
         });
 
         this.afterLoad(data);
@@ -241,7 +239,7 @@ export default class Node {
         return this;
     }
 
-    setEditorAPI(context: Node_API): void {
+    setEditorAPI(context: Core.iEditorAPI): void {
         this._editorAPI = context;
     }
 
@@ -258,12 +256,11 @@ export default class Node {
         this.onEditorMove.emit(newPos.clone());
     }
 
-    getInput(inputName: string): any {
+    getInput(inputName: string): number | string | boolean | null {
         const input = this.inputs.get(inputName);
 
         if (!input){
-            console.error(`ERROR: No input "${inputName}" found on node "${this.templateId}"`);
-            return null;
+            throw new Error(`ERROR: No input "${inputName}" found on node "${this.templateId}"`);
         }
 
         if (!input.hideSocket){

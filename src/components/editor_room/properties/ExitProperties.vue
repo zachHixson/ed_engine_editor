@@ -4,9 +4,15 @@ import SearchDropdown from '@/components/common/SearchDropdown.vue';
 
 import { computed } from 'vue';
 import Core from '@/core';
-import { checkNameCollisions, nanToNull } from '../Properties.vue';
+import { checkNameCollisions } from '@/components/editor_room/Properties.vue';
 import { useGameDataStore } from '@/stores/GameData';
 import { useI18nStore } from '@/stores/I18n';
+
+type DestinationRoom = {
+    name: string;
+    id: number,
+    value: number | null,
+};
 
 const { t } = useI18nStore();
 const gameDataStore = useGameDataStore();
@@ -20,9 +26,9 @@ const emit = defineEmits<{
     exitPropSet: [Partial<Core.Instance_Exit>],
 }>();
 
-const genericNoOption = { name: t('generic.no_option'), id: -1, value: null };
+const genericNoOption: DestinationRoom = { name: t('generic.no_option'), id: -1, value: null };
 
-const destinationRooms = computed(()=>{
+const destinationRooms = computed<DestinationRoom[]>(()=>{
     const rooms = gameDataStore.getAllRooms.map(r => ({
         name: r.name,
         id: r.id,
@@ -64,7 +70,7 @@ function setExitName(newName: string): void {
         <div class="control">
             <label for="exitName">{{ t('room_editor.exit_name') }}:</label>
             <input id="exitName" type="text" :value="selectedExit.name" v-tooltip="t('room_editor.tt_exit_name')"
-                @change="setExitName(($event.target as any).value)" v-input-active/>
+                @change="setExitName(($event.target as HTMLInputElement).value)" v-input-active/>
         </div>
         <div class="control">
             <label for="detectBacktrack">{{ t('room_editor.detect_backtrack') }}:</label>
@@ -79,7 +85,7 @@ function setExitName(newName: string): void {
         <div v-show="selectedExit.isEnding" class="control">
             <label for="endingDialog">{{ t('room_editor.end_dialog') }}:</label>
             <textarea id="endingDialog" :value="selectedExit.endingDialog" v-tooltip="t('room_editor.tt_exit_end_dialog')"
-                @change="setExitProp({endingDialog: ($event.target as any).value})"></textarea>
+                @change="setExitProp({endingDialog: ($event.target as HTMLInputElement).value})"></textarea>
         </div>
         <div class="control">
             <label for="exitTrans">{{ t('room_editor.transition') }}:</label>
@@ -88,10 +94,10 @@ function setExitName(newName: string): void {
                 class="custom-select"
                 :value="selectedExit.transition"
                 :items="[
-                    { name: t('generic.no_option'), id: Core.Instance_Exit.TRANSITION_TYPES.NONE, value: Core.Instance_Exit.TRANSITION_TYPES.NONE},
-                    { name: t('room_editor.trans_fade'), id: Core.Instance_Exit.TRANSITION_TYPES.FADE, value: Core.Instance_Exit.TRANSITION_TYPES.FADE},
+                    { name: t('generic.no_option'), id: Core.TRANSITION_TYPE.NONE, value: Core.TRANSITION_TYPE.NONE},
+                    { name: t('room_editor.trans_fade'), id: Core.TRANSITION_TYPE.FADE, value: Core.TRANSITION_TYPE.FADE},
                 ]"
-                @change="setExitProp({transition: $event})"
+                @change="setExitProp({transition: $event as Core.TRANSITION_TYPE})"
                 v-tooltip="t('room_editor.tt_exit_trans')"></SearchDropdown>
         </div>
         <div v-show="!selectedExit.isEnding" class="control">
@@ -101,7 +107,7 @@ function setExitName(newName: string): void {
                 class="custom-select"
                 :value="selectedExit.destinationRoom"
                 :items="destinationRooms"
-                @change="setExitProp({destinationRoom: nanToNull(parseInt($event))})"
+                @change="setExitProp({destinationRoom: ($event as number | null)})"
                 v-tooltip="t('room_editor.tt_exit_dest_room')"></SearchDropdown>
         </div>
         <div v-show="!selectedExit.isEnding && selectedExit.destinationRoom !== null" class="control">
@@ -111,7 +117,7 @@ function setExitName(newName: string): void {
                 class="custom-select"
                 :value="selectedExit.destinationExit"
                 :items="destinationRoomExits"
-                @change="setExitProp({destinationExit: nanToNull(parseInt($event))})"
+                @change="setExitProp({destinationExit: ($event as number | null)})"
                 v-tooltip="t('room_editor.tt_exit_dest_exit')"></SearchDropdown>
         </div>
     </div>

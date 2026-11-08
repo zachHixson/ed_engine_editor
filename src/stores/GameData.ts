@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia';
 import { useI18nStore } from './I18n';
 import Logic from '@/components/editor_logic/node_components/Logic';
-import type Node_API from '@/components/editor_logic/Node_API';
 import Core from '@/core';
 
 interface iState {
@@ -30,7 +29,7 @@ export const useGameDataStore = defineStore('GameData', {
         getSpriteSaveData: (state) => (): Core.SpriteSave[] => state.sprites.map(s => s.toSaveData()),
         getObjectSaveData: (state) => (): Core.GameObjectSave[] => state.objects.map(o => o.toSaveData()),
         getRoomSaveData: (state) => (): Core.RoomSave[] => state.rooms.map(r => r.toSaveData()),
-        getLogicSaveData: (state) => (): any => state.logic.map(r => r.toSaveData()),
+        getLogicSaveData: (state) => (): Core.LogicSave[] => state.logic.map(r => r.toSaveData()),
     },
 
     actions: {
@@ -112,24 +111,25 @@ export const useGameDataStore = defineStore('GameData', {
                 }
             }
         },
-        loadSaveData(loadObj: Core.tSerializedGameData, nodeAPI: Node_API){
+        loadSaveData(loadObj: Core.tSerializedGameData, nodeAPI: Core.iEditorAPI){
             const spriteMap = new Map<number, Core.Sprite>();
             const objectMap = new Map<number, Core.Game_Object>();
             const assetMap: Core.AssetMap = {
                 sprite: spriteMap,
                 object: objectMap,
             };
+            const self = this as unknown as iState;
 
-            this.startRoomId = loadObj.startRoom;
+            self.startRoomId = loadObj.startRoom;
 
-            this.sprites = loadObj.sprites.map(s => Core.Sprite.fromSaveData(s));
-            this.sprites.forEach(sprite => spriteMap.set(sprite.id, sprite as Core.Sprite));
+            self.sprites = loadObj.sprites.map(s => Core.Sprite.fromSaveData(s));
+            self.sprites.forEach(sprite => spriteMap.set(sprite.id, sprite));
 
-            this.objects = loadObj.objects.map(o => Core.Game_Object.fromSaveData(o, spriteMap));
-            this.objects.forEach(object => objectMap.set(object.id, object as Core.Game_Object));
+            self.objects = loadObj.objects.map(o => Core.Game_Object.fromSaveData(o, spriteMap));
+            self.objects.forEach(object => objectMap.set(object.id, object));
 
-            this.rooms = loadObj.rooms.map(r => Core.Room.fromSaveData(r, assetMap));
-            this.logic = loadObj.logic.map(l => Logic.fromSaveData(l, nodeAPI));
+            self.rooms = loadObj.rooms.map(r => Core.Room.fromSaveData(r, assetMap));
+            self.logic = loadObj.logic.map(l => Logic.fromSaveData(l, nodeAPI));
         },
         purgeMissingReferences(){
             const spriteMap = new Map<number, Core.Sprite>();
@@ -142,14 +142,15 @@ export const useGameDataStore = defineStore('GameData', {
                 editorLogic: logicMap,
                 room: roomMap,
             };
+            const self = this as unknown as iState;
 
-            this.sprites.forEach((s: any) => spriteMap.set(s.id, s));
-            this.objects.forEach((o: any) => objectMap.set(o.id, o));
-            this.logic.forEach((l: any) => logicMap.set(l.id, l));
-            this.rooms.forEach((r: any) => roomMap.set(r.id, r));
+            self.sprites.forEach(s => spriteMap.set(s.id, s));
+            self.objects.forEach(o => objectMap.set(o.id, o));
+            self.logic.forEach(l => logicMap.set(l.id, l));
+            self.rooms.forEach(r => roomMap.set(r.id, r));
 
-            this.objects.forEach(o => o.purgeMissingReferences(this.sprites as Core.Sprite[]));
-            this.rooms.forEach(r => r.purgeMissingReferences(assetMap));
+            self.objects.forEach(o => o.purgeMissingReferences(self.sprites));
+            self.rooms.forEach(r => r.purgeMissingReferences(assetMap));
         }
     }
 });

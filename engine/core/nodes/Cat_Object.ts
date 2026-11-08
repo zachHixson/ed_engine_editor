@@ -1,18 +1,23 @@
 import { Vec2 } from "linearz";
-import { iNodeTemplate } from "./iNodeTemplate";
+import { iInput, iNodeTemplate } from "./iNodeTemplate";
 import { iEngineNode, iEditorNode, iEventContext} from "../LogicInterfaces";
 import { Instance_Base, Instance_Sprite, Instance_Object, Sprite, Game_Object, Node_Enums, Asset_Base, GenericNode, isEngineNode, Util } from "../core";
 import { assetToInstance, instanceToAsset } from './Socket_Conversions';
-import { SOCKET_TYPE, WIDGET } from "./Node_Enums";
+import { SOCKET_TYPE } from "./Node_Enums";
+import { WIDGET_TYPE, WidgetDirection, WidgetEnum } from './Widget';
 
 type SortableAsset = {sortOrder: number};
 
-const catObject: iNodeTemplate[] = [];
+const catObject: Readonly<iNodeTemplate>[] = [];
+const category = 'object';
+
 export default catObject;
 
 {// Remove Instance
+    const instInp = {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null} as const satisfies iInput;
+
     function removeInstance(this: iEngineNode, eventContext: iEventContext): void {
-        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
+        const instance = this.throwOnNullInput(instInp, eventContext, 'null_instance', false) ?? eventContext.instance;
 
         if (instance != Node_Enums.THROWN){
             const removeInst = instance ?? eventContext.instance;
@@ -24,34 +29,32 @@ export default catObject;
 
     const removeInstanceNode = {
         id: 'remove_instance',
-        category: 'object',
+        category,
         inTriggers: [
             {id: '_i', execute: removeInstance},
         ],
         outTriggers: ['_o'],
         inputs: [
-            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
+            instInp,
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catObject.push(removeInstanceNode);
 }
 
 {// Object Input
     function getObject(this: iEngineNode): Game_Object | null {
         const objects = this.engine.gameData.objects;
-        const selectedObjectId = this.widgetData;
+        const selectedEnum = this.widgetData as number;
 
-        return objects.find(o => o.id == selectedObjectId) ?? null;
+        return objects.find(o => o.id == selectedEnum) ?? null;
     }
 
     const objectInput = {
         id:'object_input',
-        category: 'object',
+        category,
         widget: {
-            id: 'object',
-            type: WIDGET.ENUM,
+            type: WIDGET_TYPE.ENUM,
             options: {
-                items: [],
                 showSearch: true,
                 showThumbnail: true,
             },
@@ -80,10 +83,11 @@ export default catObject;
                     return o.sprite.frameIsEmpty(o.startFrame) ? Instance_Object.DEFAULT_INSTANCE_ICON[0] : o.sprite?.frames[o.startFrame];
                 })()
             })).sort((a: SortableAsset, b: SortableAsset)=>a.sortOrder - b.sortOrder);
+            const widget = this.widget as WidgetEnum['widget'];
 
-            this.widget.options.items = [genericNoOption, ...objects];
+            widget.options.items = [genericNoOption, ...objects];
         },
-    };
+    } as const satisfies iNodeTemplate;
     catObject.push(objectInput);
 }
 
@@ -94,7 +98,7 @@ export default catObject;
 
     const getSelfNode = {
         id: 'get_self',
-        category: 'object',
+        category,
         outputs: [
             {id: 'self', type: SOCKET_TYPE.INSTANCE, execute: getSelf},
         ],
@@ -103,13 +107,15 @@ export default catObject;
 }
 
 {// Instance Properties
+    const instInp = {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null} as const satisfies iInput;
+
     function getAsset(this: iEngineNode, eventContext: iEventContext): ReturnType<typeof instanceToAsset> {
-        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', true) ?? eventContext.instance;
+        const instance = this.throwOnNullInput(instInp, eventContext, 'null_instance', true) ?? eventContext.instance;
         return instanceToAsset(instance, this.engine.gameData);
     }
 
     function getName(this: iEngineNode, eventContext: iEventContext): string {
-        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
+        const instance = this.throwOnNullInput(instInp, eventContext, 'null_instance', false) ?? eventContext.instance;
 
         if (instance == Node_Enums.THROWN){
             return '####';
@@ -120,24 +126,29 @@ export default catObject;
 
     const instanceProperties = {
         id: 'instance_properties',
-        category: 'object',
+        category,
         stackDataIO: true,
         inputs: [
-            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
+            instInp,
         ],
         outputs: [
             {id: 'type', type: SOCKET_TYPE.ASSET, execute: getAsset},
             {id: 'name', type: SOCKET_TYPE.STRING, execute: getName},
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catObject.push(instanceProperties);
 }
 
 {// Spawn Instance
     type NodeData = WeakMap<iEventContext, Instance_Base>;
 
+    const typeInp = {id: 'type', type: SOCKET_TYPE.ASSET, default: null} as const satisfies iInput;
+    const xInp = {id: 'x', type: SOCKET_TYPE.NUMBER, default: 0} as const satisfies iInput;
+    const yInp = {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0} as const satisfies iInput;
+    const relativeInp = {id: 'relative', type: SOCKET_TYPE.BOOL, default: false} as const satisfies iInput;
+
     function spawnInstance(this: iEngineNode, eventContext: iEventContext): void {
-        const baseAsset = this.getInput<Asset_Base>('type', eventContext);
+        const baseAsset = this.getInput(typeInp, eventContext);
 
         if (!baseAsset){
             this.engine.nodeException({
@@ -150,9 +161,9 @@ export default catObject;
             throw new Error('Asset type undefined');
         }
 
-        const x = this.getInput<number>('x', eventContext);
-        const y = this.getInput<number>('y', eventContext);
-        const relative = this.getInput<boolean>('relative', eventContext);
+        const x = this.getInput(xInp, eventContext);
+        const y = this.getInput(yInp, eventContext);
+        const relative = this.getInput(relativeInp, eventContext);
         const pos = relative ? new Vec2(x, y).add(eventContext.instance.pos) : new Vec2(x, y);
         const nextId = this.engine.room.curInstId;
         const newInstance = assetToInstance(baseAsset, nextId, pos);
@@ -177,16 +188,16 @@ export default catObject;
 
     const spawnInstanceNode = {
         id: 'spawn_instance',
-        category: 'object',
+        category,
         inTriggers: [
             {id: '_i', execute: spawnInstance}
         ],
         outTriggers: ['_o'],
         inputs: [
-            {id: 'type', type: SOCKET_TYPE.ASSET, default: null, required: true},
-            {id: 'x', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
-            {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
-            {id: 'relative', type: SOCKET_TYPE.BOOL, default: false},
+            typeInp,
+            xInp,
+            yInp,
+            relativeInp,
         ],
         outputs: [
             {id: 'instance', type: SOCKET_TYPE.INSTANCE, execute: getAsset},
@@ -195,15 +206,19 @@ export default catObject;
             if (!isEngineNode(this)) return;
             this.setNodeData<NodeData>(new WeakMap());
         },
-    };
+    } as const satisfies iNodeTemplate;
     catObject.push(spawnInstanceNode);
 }
 
 {// Get Instances
+    const nameInp = {id: 'name', type: SOCKET_TYPE.STRING, default: ''} as const satisfies iInput;
+    const groupInp = {id: 'group', type: SOCKET_TYPE.STRING, default: ''} as const satisfies iInput;
+    const typeInp = {id: 'type', type: SOCKET_TYPE.ASSET, default: null} as const satisfies iInput;
+
     function getInstances(this: iEngineNode, eventContext: iEventContext): Instance_Base[] {
-        const name = this.getInput<string>('name', eventContext);
-        const group = this.getInput<string>('group', eventContext);
-        const typeGet = this.throwOnNullInput<Asset_Base | null>('type', eventContext, 'null_asset', false);
+        const name = this.getInput(nameInp, eventContext);
+        const group = this.getInput(groupInp, eventContext);
+        const typeGet = this.throwOnNullInput(typeInp, eventContext, 'null_asset', false);
         const type = typeGet == Node_Enums.THROWN ? null : typeGet;
         const instances: Instance_Base[] = [];
         const intersect = type && group;
@@ -231,24 +246,27 @@ export default catObject;
 
     const getInstancesNode = {
         id: 'get_instances',
-        category: 'object',
+        category,
         stackDataIO: true,
         inputs: [
-            {id: 'name', type: SOCKET_TYPE.STRING, default: ''},
-            {id: 'group', type: SOCKET_TYPE.STRING, default: ''},
-            {id: 'type', type: SOCKET_TYPE.ASSET, default: null},
+            nameInp,
+            groupInp,
+            typeInp,
         ],
         outputs: [
             {id: 'instances', type: SOCKET_TYPE.INSTANCE, isList: true, execute: getInstances},
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catObject.push(getInstancesNode);
 }
 
 {// Is In Group
+    const groupInp = {id: 'group', type: SOCKET_TYPE.STRING, default: ''} as const satisfies iInput;
+    const instInp = {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null} as const satisfies iInput;
+
     function isInGroup(this: iEngineNode, eventContext: iEventContext): boolean {
-        const group = this.getInput<string>('group', eventContext);
-        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
+        const group = this.getInput(groupInp, eventContext);
+        const instance = this.throwOnNullInput(instInp, eventContext, 'null_instance', false) ?? eventContext.instance;
 
         if (instance == Node_Enums.THROWN){
             return false;
@@ -259,28 +277,33 @@ export default catObject;
 
     const isInGroupNode = {
         id: 'is_in_group',
-        category: 'object',
+        category,
         inputs: [
-            {id: 'group', type: SOCKET_TYPE.STRING, default: ''},
-            {id: 'instance', type: SOCKET_TYPE.INSTANCE, required: true, default: null}
+            groupInp,
+            instInp,
         ],
         outputs: [
             {id: '_o', type: SOCKET_TYPE.BOOL, execute: isInGroup},
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catObject.push(isInGroupNode);
 }
 
 {// Raycast
+    const startXInp = {id: 'start_x', type: SOCKET_TYPE.NUMBER, optional: true, default: null} as const satisfies iInput;
+    const startYInp = {id: 'start_y', type: SOCKET_TYPE.NUMBER, optional: true, default: null} as const satisfies iInput;
+    const distanceInp = {id: 'distance', type: SOCKET_TYPE.NUMBER, default: 1} as const satisfies iInput;
+    const onlySolidInp = {id: 'only_solid', type: SOCKET_TYPE.BOOL, default: false} as const satisfies iInput;
+
     function raycast(this: iEngineNode, eventContext: iEventContext): Instance_Base[] {
-        const widgetDir = this.widgetData;
-        const startX = this.getInput<number>('start_x', eventContext);
-        const startY = this.getInput<number>('start_y', eventContext);
-        const distance = this.getInput<number>('distance', eventContext);
-        const onlySolid = this.getInput<boolean>('only_solid', eventContext);
+        const widgetDir = this.widgetData as WidgetDirection['widget']['data'];
+        const startX = this.getOptionalInput(startXInp, eventContext);
+        const startY = this.getOptionalInput(startYInp, eventContext);
+        const distance = this.getInput(distanceInp, eventContext);
+        const onlySolid = this.getInput(onlySolidInp, eventContext);
         const startPos = new Vec2(
-            startX || eventContext.instance.pos.x,
-            startY || eventContext.instance.pos.y,
+            startX ?? eventContext.instance.pos.x,
+            startY ?? eventContext.instance.pos.y,
         );
         const ignoreSelf = (startX || true) || (startY || true);
         const rayVector = new Vec2(widgetDir[0], widgetDir[1]).multiplyScalar(distance);
@@ -314,84 +337,94 @@ export default catObject;
 
     const raycastNode = {
         id: 'raycast',
-        category: 'object',
+        category,
         stackDataIO: true,
         widget: {
-            id: 'direction',
-            type: WIDGET.DIRECTION,
+            type: WIDGET_TYPE.DIRECTION,
             options: {
                 startDir: [1, 0],
             },
         },
         inputs: [
-            {id: 'start_x', type: SOCKET_TYPE.NUMBER, required: false, default: ''},
-            {id: 'start_y', type: SOCKET_TYPE.NUMBER, required: false, default: ''},
-            {id: 'distance', type: SOCKET_TYPE.NUMBER, required: true, default: 1},
-            {id: 'only_solid', type: SOCKET_TYPE.BOOL, default: false},
+            startXInp,
+            startYInp,
+            distanceInp,
+            onlySolidInp,
         ],
         outputs: [
             {id: 'instances', type: SOCKET_TYPE.INSTANCE, isList: true, execute: raycast},
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catObject.push(raycastNode);
 }
 
 {// Set Animation Playback
+    const instInp = {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null} as const satisfies iInput;
+    const frameInp = {id: 'frame', type: SOCKET_TYPE.NUMBER, optional: true, default: null} as const satisfies iInput;
+    const fpsInp = {id: 'fps', type: SOCKET_TYPE.NUMBER, optional: true, default: null} as const satisfies iInput;
+    const loopInp = {id: 'loop', type: SOCKET_TYPE.TRIPLE, default: null} as const satisfies iInput;
+    const isPlayingInp = {id: 'is_playing', type: SOCKET_TYPE.TRIPLE, default: null} as const satisfies iInput;
+
     function setSettings(this: iEngineNode, eventContext: iEventContext): void {
-        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
-        const frame = parseInt(this.getInput<string>('frame', eventContext));
-        const fps = parseInt(this.getInput<string>('fps', eventContext));
-        const loop = this.getInput<boolean | null>('loop', eventContext);
-        const playing = this.getInput<boolean | null>('is_playing', eventContext);
+        const instance = this.throwOnNullInput(instInp, eventContext, 'null_instance', false) ?? eventContext.instance;
+        const frame = this.getOptionalInput(frameInp, eventContext);
+        const fps = this.getOptionalInput(fpsInp, eventContext);
+        const loop = this.getInput(loopInp, eventContext);
+        const playing = this.getInput(isPlayingInp, eventContext);
 
         if (!instance || instance == Node_Enums.THROWN){
             this.triggerOutput('_o', eventContext);
             return;
         }
 
-        if (!isNaN(frame)){
-            instance.animFrame = frame;
+        const mutInstance = <Instance_Base>instance;
+
+        if (frame != null){
+            mutInstance.animFrame = frame;
         }
 
-        if (!isNaN(fps)){
-            instance.fpsOverride = fps;
+        if (fps != null){
+            mutInstance.fpsOverride = fps;
         }
 
         if (loop != null){
-            instance.animLoopOverride = loop;
+            mutInstance.animLoopOverride = loop;
         }
 
         if (playing != null){
-            instance.animPlaying = playing;
+            mutInstance.animPlaying = playing;
         }
 
-        instance.needsRenderUpdate = true;
+        mutInstance.needsRenderUpdate = true;
 
         this.triggerOutput('_o', eventContext);
     }
 
     const setAnimationPlayback = {
         id: 'set_animation_playback',
-        category: 'object',
+        category,
         inTriggers: [
             {id: '_i', execute: setSettings},
         ],
         outTriggers: ['_o'],
         inputs: [
-            {id: 'instance', type: SOCKET_TYPE.INSTANCE, required: true, default: null},
-            {id: 'frame', type: SOCKET_TYPE.NUMBER, default: ''},
-            {id: 'fps', type: SOCKET_TYPE.NUMBER, default: ''},
-            {id: 'loop', type: SOCKET_TYPE.BOOL, default: null, triple: true},
-            {id: 'is_playing', type: SOCKET_TYPE.BOOL, default: null, triple: true},
+            instInp,
+            frameInp,
+            fpsInp,
+            loopInp,
+            isPlayingInp,
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catObject.push(setAnimationPlayback);
 }
 
 {// Set Sprite
+    const instInp = {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null} as const satisfies iInput;
+
     function setSprite(this: iEngineNode, eventContext: iEventContext): void {
-        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
-        const spriteId: number = this.widgetData;
+        const instance = this.throwOnNullInput(instInp, eventContext, 'null_instance', false) ?? eventContext.instance;
+        const widgetData = this.widgetData;
+        const spriteId: number = widgetData as number;
         const sprite = this.engine.gameData.sprites.find(s => s.id == spriteId);
 
         if (instance != Node_Enums.THROWN){
@@ -404,10 +437,9 @@ export default catObject;
 
     const setSpriteNode = {
         id: 'set_sprite',
-        category: 'object',
+        category,
         widget: {
-            id: 'sprite',
-            type: WIDGET.ENUM,
+            type: WIDGET_TYPE.ENUM,
             options: {
                 items: [],
                 showSearch: true,
@@ -419,7 +451,7 @@ export default catObject;
         ],
         outTriggers: ['_o'],
         inputs: [
-            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
+            instInp,
         ],
         onBeforeMount(this: iEditorNode){
             const genericNoOption = {
@@ -440,18 +472,23 @@ export default catObject;
                     return s.frames[0];
                 })(),
             })).sort((a: SortableAsset, b: SortableAsset)=>a.sortOrder - b.sortOrder);
+            const widget = this.widget as WidgetEnum['widget'];
 
-            this.widget.options.items = [genericNoOption, ...sprites];
+            widget.options.items = [genericNoOption, ...sprites];
         },
-    };
+    } as const satisfies iNodeTemplate;
     catObject.push(setSpriteNode);
 }
 
 {// Flip Sprite
+    const instInp = {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null} as const satisfies iInput;
+    const hFlipInp = {id: 'hFlip', type: SOCKET_TYPE.BOOL, default: false} as const satisfies iInput;
+    const vFlipInp = {id: 'vFlip', type: SOCKET_TYPE.BOOL, default: false} as const satisfies iInput;
+
     function flipSprite(this: iEngineNode, eventContext: iEventContext): void {
-        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
-        const hFlip = this.getInput<boolean>('hFlip', eventContext);
-        const vFlip = this.getInput<boolean>('vFlip', eventContext);
+        const instance = this.throwOnNullInput(instInp, eventContext, 'null_instance', false) ?? eventContext.instance;
+        const hFlip = this.getInput(hFlipInp, eventContext) as boolean;
+        const vFlip = this.getInput(vFlipInp, eventContext) as boolean;
 
         if (instance != Node_Enums.THROWN){
             instance.flipH = hFlip;
@@ -464,15 +501,15 @@ export default catObject;
 
     const flipSpriteNode = {
         id: 'flip_sprite',
-        category: 'object',
+        category,
         inTriggers: [
             {id: '_i', execute: flipSprite},
         ],
         outTriggers: ['_o'],
         inputs: [
-            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
-            {id: 'hFlip', type: SOCKET_TYPE.BOOL, default: false},
-            {id: 'vFlip', type: SOCKET_TYPE.BOOL, default: false},
+            instInp,
+            hFlipInp,
+            vFlipInp,
         ],
     };
     catObject.push(flipSpriteNode);

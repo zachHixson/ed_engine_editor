@@ -12,25 +12,25 @@ import {
     Instance_Base,
     tSerializedGameData,
     AssetMap,
-    iAnyObj,
     Instance_Object,
     Util,
     INSTANCE_TYPE,
     Node_Enums,
     WGL,
-    CATEGORY_ID,
-    Asset_Base,
     iEngineLogic,
     Instance_Logic,
     MOUSE_EVENT,
     iEngineVariable,
     iNodeExceptionData,
+    iEventSignature,
     Event_Emitter,
 } from '@engine/core/core';
 import iGameData from './iGameData';
 import getTransitions from './transitions/getTransitions';
-import Transition_Base, { TRANSITION } from './transitions/Transition_Base';
+import Transition_Base from './transitions/Transition_Base';
 import { SOCKET_TYPE } from './core/nodes/Node_Enums';
+import { KEY_STATE, TRANSITION_TYPE } from '@engine/core/Enums';
+import type { E_KEYBOARD, E_MESSAGE, E_MOUSE_BUTTON, E_MOUSE_MOVE } from './core/nodes/Cat_Events';
 
 import * as Physics from './Physics';
 export * as Core from '@engine/core/core';
@@ -39,13 +39,6 @@ declare global {
     interface Window {
         IS_ENGINE: boolean;
     }
-}
-
-enum KEY_STATE {
-    DOWN = 'down',
-    PRESSED = 'pressed',
-    UP = 'up',
-    NONE = 'NONE',
 }
 
 type ConsoleLog = [src: string[], data: string];
@@ -110,7 +103,7 @@ export class Engine implements iEngineCallbacks {
         moved: false,
         buttons: 0,
     };
-    private _transitionMap: Map<TRANSITION, Transition_Base>;
+    private _transitionMap: Map<TRANSITION_TYPE, Transition_Base>;
     private _transition: Transition_Base;
 
     enableInput = true;
@@ -140,7 +133,7 @@ export class Engine implements iEngineCallbacks {
         this._dialogFullscreen = new Dialog_Fullscreen(this._gl);
         this._gameData = this._parseGameData(gameData);
         this._transitionMap = getTransitions(this._gl, this._renderer);
-        this._transition = this._transitionMap.get(TRANSITION.NONE)!;
+        this._transition = this._transitionMap.get(TRANSITION_TYPE.NONE)!;
 
         //integrate callbacks
         if (callbacks){
@@ -168,7 +161,6 @@ export class Engine implements iEngineCallbacks {
 
     loadRoom = (roomId: number): void =>{
         const room = this._gameData.rooms.find((r: Room) => r.id == roomId)!;
-        this._dispatchLogicEvent('e_before_destroy');
 
         this._loadedRoom && this._loadedRoom.clearSpacialData();
 
@@ -248,7 +240,7 @@ export class Engine implements iEngineCallbacks {
                 let nextState: KEY_STATE = state;
 
                 if (this.enableInput){
-                    this._dispatchLogicEvent('e_keyboard', {
+                    this._dispatchLogicEvent<E_KEYBOARD>('e_keyboard', {
                         which_key: code.toUpperCase(),
                         code: code,
                         type: state,
@@ -277,7 +269,7 @@ export class Engine implements iEngineCallbacks {
             const instances = this.getInstancesAtPosition(this.mouse.pos);
             const eventType = this.mouse.down ? MOUSE_EVENT.DOWN : MOUSE_EVENT.UP;
 
-            this._dispatchLogicEvent('e_mouse_button', {
+            this._dispatchLogicEvent<E_MOUSE_BUTTON>('e_mouse_button', {
                 type: eventType,
                 buttons: this.mouse.buttons,
                 pos: this.mouse.pos,
@@ -286,7 +278,7 @@ export class Engine implements iEngineCallbacks {
         }
 
         if (this.mouse.moved){
-            this._dispatchLogicEvent('e_mouse_move');
+            this._dispatchLogicEvent<E_MOUSE_MOVE>('e_mouse_move');
             this.mouse.moved = false;
         }
     }
@@ -531,7 +523,7 @@ export class Engine implements iEngineCallbacks {
         registeredInstances.push(instance);
     }
 
-    private _dispatchLogicEvent = (eventName: string, data?: iAnyObj): void => {
+    private _dispatchLogicEvent = <T extends iEventSignature>(eventName: T['id'], data?: T['data']): void => {
         const registeredInstances = this._nodeEventMap.get(eventName);
         const staleInstanceIndexes = new Array<number>();
 
@@ -622,8 +614,8 @@ export class Engine implements iEngineCallbacks {
         return this._gameData.rooms.find(room => room.id == roomId);
     }
 
-    setTransition = (transitionType: TRANSITION): Transition_Base => {
-        this._transition = this._transitionMap.get(transitionType) ?? this._transitionMap.get(TRANSITION.NONE)!;
+    setTransition = (transitionType: TRANSITION_TYPE): Transition_Base => {
+        this._transition = this._transitionMap.get(transitionType) ?? this._transitionMap.get(TRANSITION_TYPE.NONE)!;
         return this._transition;
     }
 
@@ -749,12 +741,12 @@ export class Engine implements iEngineCallbacks {
         this._renderer.addInstance(instance);
     }
 
-    createGlobalVariable = (name: string, value: any, type: SOCKET_TYPE, isList: boolean): void =>{
+    createGlobalVariable = (name: string, value: unknown, type: SOCKET_TYPE, isList: boolean): void =>{
         const varname = name.trim().toLowerCase();
         this._globalVariables.set(varname, {value, type, isList});
     }
 
-    setGlobalVariable = (name: string, value: any): void =>{
+    setGlobalVariable = (name: string, value: unknown): void =>{
         const varname = name.trim().toLowerCase();
         const varGet = this._globalVariables.get(varname);
 
@@ -785,7 +777,7 @@ export class Engine implements iEngineCallbacks {
     }
 
     broadcastMessage = (name: string): void => {
-        this._dispatchLogicEvent('e_message', {name});
+        this._dispatchLogicEvent<E_MESSAGE>('e_message', {name});
     }
 }
 

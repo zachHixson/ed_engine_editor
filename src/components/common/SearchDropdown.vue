@@ -13,10 +13,10 @@ const props = withDefaults(defineProps<{
     items: Array<{
         name: string,
         id: number | string,
-        value: any,
+        value: unknown,
         thumbnail?: ImageData,
     }>;
-    value?: any;
+    value?: unknown;
     thumbnail?: boolean;
     search?: boolean;
 }>(), {
@@ -25,7 +25,7 @@ const props = withDefaults(defineProps<{
 });
 
 const emit = defineEmits<{
-    change: [any],
+    change: [unknown],
 }>();
 
 const boxEl = ref<HTMLDivElement>();
@@ -36,7 +36,7 @@ const selectedId = ref<number | string>(-1);
 const open = ref(false);
 const searchQuery = ref<string>('');
 
-const selected = computed<any>(()=>findSelected(selectedId.value));
+const selected = computed(()=>findSelected(selectedId.value));
 const filteredItems = computed(()=>searchQuery.value.length ? props.items.filter(i => i.name.toLowerCase().includes(searchQuery.value.toLowerCase())) : props.items);
 
 watch(()=>props.value, ()=>{
@@ -76,7 +76,7 @@ function selectItem(item: typeof props.items[number]): void {
     open.value = false;
 }
 
-function findSelected(val: any): typeof props.items[number] | null {
+function findSelected(val: unknown): typeof props.items[number] | null {
     return props.items.find(i => i.id == val) ?? (props.items[0] ?? null);
 }
 </script>

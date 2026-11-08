@@ -6,10 +6,11 @@ import { useLogicEditorStore } from '@/stores/LogicEditor';
 import type { ActionData, DomRefs, LogicEditorState } from '../LogicMain.vue';
 import { LOGIC_ACTION } from '../LogicMain.vue';
 import Core from '@/core';
+import { ActionCallbackData } from '@engine/core/interfaces';
 
-type ActionAddNodeProps = {templateId: string, nodeRef?: Node_Obj};
-type ActionDeleteNodesProps = {nodeRefList: Node_Obj[], connectionRefMap?: Map<Logic, Node_Connection[]>};
-export type ActionMoveNodesProps = {nodeRefList: Node_Obj[], velocity: Readonly<Vec2>};
+export type ActionAddNodeProps = {actionType: LOGIC_ACTION.ADD_NODE, templateId: string, nodeRef?: Core.iEditorNode};
+export type ActionDeleteNodesProps = {actionType: LOGIC_ACTION.DELETE_NODES, nodeRefList: Core.iEditorNode[], connectionRefMap?: Map<Core.iEditorLogic, Core.iNodeConnection[]>};
+export type ActionMoveNodesProps = {actionType: LOGIC_ACTION.MOVE, nodeRefList: Core.iEditorNode[], velocity: Readonly<Vec2>};
 
 const { Vec2 } = Core;
 type Vec2 = Core.Vec2;
@@ -29,7 +30,7 @@ export default function useNode(
 
     const contentsBounds = [0, 0, 0, 0];
 
-    function nodeClick({nodeObj, event}: {nodeObj: Node_Obj, event: MouseEvent}): void {
+    function nodeClick({nodeObj, event}: {nodeObj: Core.iEditorNode, event: MouseEvent}): void {
         const mousePos = new Vec2(event.clientX, event.clientY);
 
         if (mouseDownPos.distanceTo(mousePos) < 2){
@@ -38,7 +39,7 @@ export default function useNode(
         }
     }
 
-    function nodeDown(node: Node_Obj): void {
+    function nodeDown(node: Core.iEditorNode): void {
         const alreadySelected = !!selectedNodes.value.find(n => n.nodeId == node.nodeId);
         const navHotkeyActive = navHotkeyTool.value != null;
         const navToolSelected = logicEditorStore.getSelectedNavTool != null;
@@ -57,7 +58,8 @@ export default function useNode(
     }
 
     function nodeMoveEnd(): void {
-        actionMoveNodes({nodeRefList: selectedNodes.value, velocity: new Vec2()}, true);
+        const data = {actionType: LOGIC_ACTION.MOVE, nodeRefList: selectedNodes.value, velocity: new Vec2()} as Core.ActionCallbackData;
+        actionMoveNodes(data, true);
         updateNodeBounds();
     }
 
@@ -121,7 +123,7 @@ export default function useNode(
     }
 
     function deleteSelectedNodes(): void {
-        const protectedNodes: Node_Obj[] = [];
+        const protectedNodes: Core.iEditorNode[] = [];
         const deletableNodes = selectedNodes.value.filter(node => {
             if (node.editorCanDelete) return true;
 
@@ -130,7 +132,8 @@ export default function useNode(
         });
 
         if (deletableNodes.length){
-            actionDeleteNodes({nodeRefList: deletableNodes}, true);
+            const data = {actionType: LOGIC_ACTION.DELETE_NODES, nodeRefList: deletableNodes} as Core.ActionCallbackData;
+            actionDeleteNodes(data, true);
             deselectAllNodes();
         }
 
@@ -151,7 +154,7 @@ export default function useNode(
         }
         if (nodesToCopy.length <= 0) return;
 
-        const nodeMap = new Map<number, Node_Obj>();
+        const nodeMap = new Map<number, Core.iEditorNode>();
         const connectionList= nodesToCopy[0].parentScript.connections;
         const nodeData: Core.NodeSave[] = [];
         const connectionData: Core.ConnectionSave[] = [];
@@ -188,17 +191,18 @@ export default function useNode(
         logicEditorStore.setClipboard(nodeData, connectionData);
     }
 
-    function actionAddNode({templateId, nodeRef}: ActionAddNodeProps, makeCommit = true): void {
+    function actionAddNode(data: ActionCallbackData, makeCommit = true): void {
+        const { templateId, nodeRef } = data as ActionAddNodeProps;
         const nodeAPI = mainStore.getNodeAPI;
         const pos = getNewNodePos();
         const newNode = props.selectedAsset.addNode(templateId, pos, nodeAPI, nodeRef);
 
         if (makeCommit){
-            const data = {templateId, nodeRef: newNode} satisfies ActionAddNodeProps;
-            undoStore.commit({action: LOGIC_ACTION.ADD_NODE, data});
+            const data = {actionType: LOGIC_ACTION.ADD_NODE, templateId, nodeRef: newNode} satisfies ActionAddNodeProps;
+            undoStore.commit(data);
         }
 
-        if (!nodeRef) newNode.onCreate();
+        if (!nodeRef) (newNode.onCreate as ()=>void)();
     }
 
     function actionPasteNodes(_:{}, makeCommit = true): void {
@@ -242,17 +246,18 @@ export default function useNode(
         if (makeCommit){
             const nodeList = Array.from(nodeMap, ([_, value])=>value);
             const connectionMap = new Map().set(props.selectedAsset, connectionList);
-            const data = {nodeRefList: nodeList, connectionRefMap: connectionMap} satisfies ActionDeleteNodesProps;
-            undoStore.commit({action: LOGIC_ACTION.PASTE, data});
+            const data = {actionType: LOGIC_ACTION.DELETE_NODES, nodeRefList: nodeList, connectionRefMap: connectionMap} satisfies ActionDeleteNodesProps;
+            undoStore.commit(data);
         }
     }
 
-    function actionDeleteNodes({nodeRefList}: ActionDeleteNodesProps, makeCommit = true): void {
-        const connectionRefMap: Map<Logic, Node_Connection[]> = new Map();
+    function actionDeleteNodes(data: ActionCallbackData, makeCommit = true): void {
+        const { nodeRefList } = data as ActionDeleteNodesProps;
+        const connectionRefMap: Map<Core.iEditorLogic, Core.iNodeConnection[]> = new Map();
 
         nodeRefList.forEach(node => {
             //find and delete connections attached to the node
-            const currentConnections: Node_Connection[] = [];
+            const currentConnections: Core.iNodeConnection[] = [];
 
             node.parentScript.connections.forEach(connection => {
                 const startNodeId = connection.startNode!.nodeId;
@@ -279,20 +284,21 @@ export default function useNode(
         });
 
         if (makeCommit){
-            const data = {nodeRefList: [...nodeRefList], connectionRefMap} satisfies ActionDeleteNodesProps;
-            undoStore.commit({action: LOGIC_ACTION.DELETE_NODES, data});
+            const data = {actionType: LOGIC_ACTION.DELETE_NODES, nodeRefList: [...nodeRefList], connectionRefMap} satisfies ActionDeleteNodesProps;
+            undoStore.commit(data);
         }
     }
 
-    function actionMoveNodes({nodeRefList, velocity}: ActionMoveNodesProps, makeCommit = true): void {
+    function actionMoveNodes(data: ActionCallbackData, makeCommit = true): void {
+        const { nodeRefList, velocity } = data as ActionMoveNodesProps;
         if (makeCommit){
-            const startVec = undoStore.cache.get('move_start');
+            const startVec = undoStore.cache.get('move_start') as Core.Vec2;
 
             if (startVec){
                 const totalVel = nodeRefList[0].pos.clone().subtract(startVec);
-                const data = {nodeRefList: [...nodeRefList], velocity: totalVel};
+                const data = {actionType: LOGIC_ACTION.MOVE, nodeRefList: [...nodeRefList], velocity: totalVel};
 
-                undoStore.commit({action: LOGIC_ACTION.MOVE, data});
+                undoStore.commit(data);
                 undoStore.cache.delete('move_start');
             }
 
@@ -311,12 +317,14 @@ export default function useNode(
         }
     }
 
-    function revertAddNode({nodeRef}: ActionAddNodeProps): void {
+    function revertAddNode(data: ActionCallbackData): void {
+        const { nodeRef } = data as ActionAddNodeProps;
         nodeRef!.onBeforeDelete();
         props.selectedAsset.deleteNode(nodeRef!);
     }
 
-    function revertDeleteNodes({nodeRefList, connectionRefMap}: ActionDeleteNodesProps): void {
+    function revertDeleteNodes(data: ActionCallbackData): void {
+        const { nodeRefList, connectionRefMap } = data as ActionDeleteNodesProps;
         const nodeAPI = mainStore.getNodeAPI;
 
         nodeRefList.forEach(node => {
@@ -332,7 +340,8 @@ export default function useNode(
         });
     }
 
-    function revertMoveNodes({nodeRefList, velocity}: ActionMoveNodesProps): void {
+    function revertMoveNodes(data: ActionCallbackData): void {
+        const { nodeRefList, velocity } = data as ActionMoveNodesProps;
         for (let i = 0; i < nodeRefList.length; i++){
             const curNode = nodeRefList[i];
             const newPos = curNode.pos.clone().subtract(velocity);

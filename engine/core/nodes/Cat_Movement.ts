@@ -1,36 +1,44 @@
 import { Vec2 } from "linearz";
-import { iNodeTemplate } from "./iNodeTemplate";
-import { SOCKET_TYPE, WIDGET } from './Node_Enums';
-import { iEditorNode, iEngineNode, iEventContext } from '../LogicInterfaces';
-import { Instance_Base, Sprite, Util, Node_Enums } from '../core';
+import { iInput, iNodeTemplate } from "./iNodeTemplate";
+import { SOCKET_TYPE } from './Node_Enums';
+import { iEditorNode, iEngineNode, iEventContext } from '@engine/core/LogicInterfaces';
+import { Instance_Base, Sprite, Util, Node_Enums, WidgetDirection, Instance_Object } from '@engine/core/core';
+import { WIDGET_TYPE } from "@engine/core/core";
 
 const catMovement: iNodeTemplate[] = [];
+const category = 'movement';
+
 export default catMovement;
 
 {// Set Position
+    const instInp = {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null} as const satisfies iInput;
+    const xInp = {id: 'x', type: SOCKET_TYPE.NUMBER, default: null, optional: true} as const satisfies iInput;
+    const yInp = {id: 'y', type: SOCKET_TYPE.NUMBER, default: null, optional: true} as const satisfies iInput;
+    const relInp = {id: 'relative', type: SOCKET_TYPE.BOOL, default: false} as const satisfies iInput;
+
     function setPosition(this: iEngineNode, eventContext: iEventContext): void {
-        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
-        const xInp = this.getInput<number & string>('x', eventContext);
-        const yInp = this.getInput<number & string>('y', eventContext);
-        const relative = this.getInput<boolean>('relative', eventContext);
+        const instanceVal = this.throwOnNullInput(instInp, eventContext, 'null_instance') ?? eventContext.instance;
+        const xInpVal = this.getOptionalInput(xInp, eventContext);
+        const yInpVal = this.getOptionalInput(yInp, eventContext);
+        const relativeVal = this.getInput(relInp, eventContext);
         let newPos: Vec2;
 
-        if (instance == Node_Enums.THROWN){
+        if (instanceVal == Node_Enums.THROWN){
             this.triggerOutput('_o', eventContext);
             return;
         }
 
-        if (relative){
+        if (relativeVal){
             const offset = new Vec2(
-                xInp === '' ? 0 : xInp,
-                yInp === '' ? 0 : yInp
+                xInpVal ?? 0,
+                yInpVal ?? 0
             );
-            newPos = offset.add(instance.pos);
+            newPos = offset.add(instanceVal.pos);
         }
         else{
             newPos = new Vec2(
-                xInp === '' ? instance.pos.x : xInp,
-                yInp === '' ? instance.pos.y : yInp
+                xInpVal ?? instanceVal.pos.x,
+                yInpVal ?? instanceVal.pos.y
             );
         }
 
@@ -39,30 +47,35 @@ export default catMovement;
         this.triggerOutput('_o', eventContext);
     }
 
-    const setPostionNode = {
+    const setPositionNode = {
         id: 'set_position',
-        category: 'movement',
+        category,
         inTriggers: [
             {id: '_i', execute: setPosition},
         ],
         outTriggers: ['_o'],
         inputs: [
-            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
-            {id: 'x', type: SOCKET_TYPE.NUMBER, default: '', required: false},
-            {id: 'y', type: SOCKET_TYPE.NUMBER, default: '', required: false},
-            {id: 'relative', type: SOCKET_TYPE.BOOL, default: false},
+            instInp,
+            xInp,
+            yInp,
+            relInp,
         ],
-    };
-    catMovement.push(setPostionNode);
+    } as const satisfies iNodeTemplate;
+    catMovement.push(setPositionNode);
 }
 
 {// Jump To
+    const instInp = {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null} as const satisfies iInput;
+    const xInp = {id: 'x', type: SOCKET_TYPE.NUMBER, default: 0} as const satisfies iInput;
+    const yInp = {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0} as const satisfies iInput;
+    const relativeInp = {id: 'relative', type: SOCKET_TYPE.BOOL, default: false} as const satisfies iInput;
+
     function jumpTo(this: iEngineNode, eventContext: iEventContext): void {
         const halfDim = Sprite.DIMENSIONS / 2;
-        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
-        const x = Math.round(this.getInput<number>('x', eventContext));
-        const y = Math.round(this.getInput<number>('y', eventContext));
-        const relative = this.getInput<boolean>('relative', eventContext);
+        const instance = this.throwOnNullInput(instInp, eventContext, 'null_instance', false) ?? eventContext.instance;
+        const x = Math.round(this.getInput(xInp, eventContext));
+        const y = Math.round(this.getInput(yInp, eventContext));
+        const relative = this.getInput(relativeInp, eventContext);
 
         if (instance == Node_Enums.THROWN){
             this.triggerOutput('_o', eventContext);
@@ -177,26 +190,29 @@ export default catMovement;
 
     const jumpToNode = {
         id: 'jump_to',
-        category: 'movement',
+        category,
         inTriggers: [
             {id: '_i', execute: jumpTo},
         ],
         outTriggers: ['_o'],
         inputs: [
-            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
-            {id: 'x', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
-            {id: 'y', type: SOCKET_TYPE.NUMBER, default: 0, required: true},
-            {id: 'relative', type: SOCKET_TYPE.BOOL, default: false},
+            instInp,
+            xInp,
+            yInp,
+            relativeInp,
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catMovement.push(jumpToNode);
 }
 
 {// Set Velocity
+    const instInp = {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null} as const satisfies iInput;
+    const speedInp = {id: 'speed', type: SOCKET_TYPE.NUMBER, default: 10} as const satisfies iInput;
+
     function setVelocity(this: iEngineNode, eventContext: iEventContext): void {
-        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
-        const speed = this.getInput<number>('speed', eventContext);
-        const direction = Vec2.fromArray(this.widgetData);
+        const instance = this.throwOnNullInput(instInp, eventContext, 'null_instance', false) ?? eventContext.instance;
+        const speed = this.getInput(speedInp, eventContext);
+        const direction = Vec2.fromArray(<WidgetDirection['widget']['data']>this.widgetData);
 
         if (instance != Node_Enums.THROWN){
             instance.velocity.copy(direction.multiplyScalar(speed));
@@ -207,10 +223,9 @@ export default catMovement;
 
     const setVelocityNode = {
         id: 'set_velocity',
-        category: 'movement',
+        category,
         widget: {
-            id: 'direction',
-            type: WIDGET.DIRECTION,
+            type: WIDGET_TYPE.DIRECTION,
             options: {
                 startDir: [1, 0],
             },
@@ -220,18 +235,21 @@ export default catMovement;
         ],
         outTriggers: ['_o'],
         inputs: [
-            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
-            {id: 'speed', type: SOCKET_TYPE.NUMBER, default: 10, required: true},
+            instInp,
+            speedInp,
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catMovement.push(setVelocityNode);
 }
 
 {// Move Direction
+    const instInp = {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null} as const satisfies iInput;
+    const speedInp = {id: 'speed', type: SOCKET_TYPE.NUMBER, default: 1} as const satisfies iInput;
+
     function moveDirection(this: iEngineNode, eventContext: iEventContext): void {
-        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
-        const speed = this.getInput<number>('speed', eventContext);
-        const direction = Vec2.fromArray(this.widgetData);
+        const instance = this.throwOnNullInput(instInp, eventContext, 'null_instance', false) ?? eventContext.instance;
+        const speed = this.getInput(speedInp, eventContext);
+        const direction = Vec2.fromArray(<WidgetDirection['widget']['data']>this.widgetData);
         const velocity = direction.scale(speed);
 
         if (instance != Node_Enums.THROWN){
@@ -243,10 +261,9 @@ export default catMovement;
 
     const moveDirectionNode = {
         id: 'move_direction',
-        category: 'movement',
+        category,
         widget: {
-            id: 'direction',
-            type: WIDGET.DIRECTION,
+            type: WIDGET_TYPE.DIRECTION,
             options: {
                 startDir: [1, 0],
             },
@@ -256,18 +273,21 @@ export default catMovement;
         ],
         outTriggers: ['_o'],
         inputs: [
-            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
-            {id: 'speed', type: SOCKET_TYPE.NUMBER, default: 1, required: true},
+            instInp,
+            speedInp,
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catMovement.push(moveDirectionNode);
 }
 
 {// Push Direction
+    const instInp = {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null} as const satisfies iInput;
+    const strengthInp = {id: 'strength', type: SOCKET_TYPE.NUMBER, default: 1} as const satisfies iInput;
+
     function push(this: iEngineNode, eventContext: iEventContext): void {
-        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? eventContext.instance;
-        const strength = this.getInput<number>('strength', eventContext);
-        const force = Vec2.fromArray(this.widgetData).scale(strength);
+        const instance = this.throwOnNullInput(instInp, eventContext, 'null_instance', false) ?? eventContext.instance;
+        const strength = this.getInput(strengthInp, eventContext);
+        const force = Vec2.fromArray(<WidgetDirection['widget']['data']>this.widgetData).scale(strength);
 
         if (instance != Node_Enums.THROWN){
             instance.applyForce(force);
@@ -278,10 +298,9 @@ export default catMovement;
 
     const pushDirection = {
         id: 'push_direction',
-        category: 'movement',
+        category,
         widget: {
-            id: 'direction',
-            type: WIDGET.DIRECTION,
+            type: WIDGET_TYPE.DIRECTION,
             options: {
                 startDir: [1, 0],
             },
@@ -291,10 +310,10 @@ export default catMovement;
         ],
         outTriggers: ['_o'],
         inputs: [
-            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
-            {id: 'strength', type: SOCKET_TYPE.NUMBER, default: 1, required: true},
+            instInp,
+            strengthInp,
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catMovement.push(pushDirection);
 }
 
@@ -305,76 +324,85 @@ export default catMovement;
 
     const isOnGround = {
         id: 'is_on_ground',
-        category: 'movement',
+        category,
         outputs: [
             {id: '_o', type: SOCKET_TYPE.BOOL, execute: onGround},
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catMovement.push(isOnGround);
 }
 
 {// Get Position
+    const instInp = {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null} as const satisfies iInput;
+
     function getX(this: iEngineNode, eventContext: iEventContext): number {
-        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', true) ?? eventContext.instance;
+        const instance = this.throwOnNullInput(instInp, eventContext, 'null_instance', true) ?? eventContext.instance;
         return instance.pos.x;
     }
 
     function getY(this: iEngineNode, eventContext: iEventContext): number {
-        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', true) ?? eventContext.instance;
+        const instance = this.throwOnNullInput(instInp, eventContext, 'null_instance', true) ?? eventContext.instance;
         return instance.pos.y;
     }
 
     const getPosition = {
         id: 'get_position',
-        category: 'movement',
+        category,
         onBeforeMount(this: iEditorNode){
             this.stackDataIO = true;
         },
         inputs: [
-            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
+            instInp,
         ],
         outputs: [
             {id: 'x', type: SOCKET_TYPE.NUMBER, execute: getX},
             {id: 'y', type: SOCKET_TYPE.NUMBER, execute: getY},
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catMovement.push(getPosition);
 }
 
 {// Get Velocity
+    const insInp = {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null} as const satisfies iInput;
+
     function getX(this: iEngineNode, eventContext: iEventContext): number {
-        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', true) ?? eventContext.instance;
+        const instance = (this.throwOnNullInput(insInp, eventContext, 'null_instance', true) ?? eventContext.instance);
         return instance.totalVelocity.x;
     }
 
     function getY(this: iEngineNode, eventContext: iEventContext): number {
-        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', true) ?? eventContext.instance;
+        const instance = (this.throwOnNullInput(insInp, eventContext, 'null_instance', true) ?? eventContext.instance);
         return instance.totalVelocity.y;
     }
 
     const getVelocity = {
         id: 'get_velocity',
-        category: 'movement',
+        category,
         onBeforeMount(this: iEditorNode){
             this.stackDataIO = true;
         },
         inputs: [
-            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
+            insInp,
         ],
         outputs: [
             {id: 'x', type: SOCKET_TYPE.NUMBER, execute: getX},
             {id: 'y', type: SOCKET_TYPE.NUMBER, execute: getY},
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catMovement.push(getVelocity);
 }
 
 {// Get Distance
+    const x1Inp = {id: 'x1', type: SOCKET_TYPE.NUMBER, default: 0} as const satisfies iInput;
+    const y1Inp = {id: 'y1', type: SOCKET_TYPE.NUMBER, default: 0} as const satisfies iInput;
+    const x2Inp = {id: 'x2', type: SOCKET_TYPE.NUMBER, default: 0} as const satisfies iInput;
+    const y2Inp = {id: 'y2', type: SOCKET_TYPE.NUMBER, default: 0} as const satisfies iInput;
+
     function getDistance(this: iEngineNode, eventContext: iEventContext): number {
-        const x1 = this.getInput<number>('x1', eventContext);
-        const y1 = this.getInput<number>('y1', eventContext);
-        const x2 = this.getInput<number>('x2', eventContext);
-        const y2 = this.getInput<number>('y2', eventContext);
+        const x1 = this.getInput(x1Inp, eventContext);
+        const y1 = this.getInput(y1Inp, eventContext);
+        const x2 = this.getInput(x2Inp, eventContext);
+        const y2 = this.getInput(y2Inp, eventContext);
         const dx = x1 - x2;
         const dy = y1 - y2;
 
@@ -383,37 +411,43 @@ export default catMovement;
 
     const getDistanceNode = {
         id: 'get_distance',
-        category: 'movement',
+        category,
         inputs: [
-            {id: 'x1', type: SOCKET_TYPE.NUMBER, default: 0},
-            {id: 'y1', type: SOCKET_TYPE.NUMBER, default: 0},
-            {id: 'x2', type: SOCKET_TYPE.NUMBER, default: 0},
-            {id: 'y2', type: SOCKET_TYPE.NUMBER, default: 0},
+            x1Inp,
+            y1Inp,
+            x2Inp,
+            y2Inp,
         ],
         outputs: [
             {id: 'distance', type: SOCKET_TYPE.NUMBER, execute: getDistance},
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catMovement.push(getDistanceNode);
 }
 
 {// Set Physics
+    const instInp = {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null} as const satisfies iInput;
+    const solidInp = {id: 'solid', type: SOCKET_TYPE.TRIPLE, default: null} as const satisfies iInput;
+    const gravInp = {id: 'gravity', type: SOCKET_TYPE.TRIPLE, default: null} as const satisfies iInput;
+
     function setPhysics(this: iEngineNode, eventContext: iEventContext): void {
-        const instance = this.throwOnNullInput<Instance_Base | null>('instance', eventContext, 'null_instance', false) ?? (eventContext.instance as Instance_Base);
-        const solid = this.getInput<boolean | null>('solid', eventContext);
-        const gravity = this.getInput<boolean | null>('gravity', eventContext);
+        const instance = this.throwOnNullInput(instInp, eventContext, 'null_instance', false) ?? eventContext.instance;
+        const solid = this.getInput(solidInp, eventContext);
+        const gravity = this.getInput(gravInp, eventContext);
 
         if (instance == Node_Enums.THROWN){
             this.triggerOutput('_o', eventContext);
             return;
         }
 
+        const mutInstance = <Instance_Base>instance;
+
         if (solid != null){
-            instance.isSolid = solid;
+            mutInstance.isSolid = solid;
         }
 
         if (gravity != null){
-            instance.applyGravity = gravity;
+            mutInstance.applyGravity = gravity;
         }
 
         this.triggerOutput('_o', eventContext);
@@ -421,16 +455,16 @@ export default catMovement;
 
     const setPhysicsNode = {
         id: 'set_physics',
-        category: 'movement',
+        category,
         inTriggers: [
             {id: '_i', execute: setPhysics},
         ],
         outTriggers: ['_o'],
         inputs: [
-            {id: 'instance', type: SOCKET_TYPE.INSTANCE, default: null, required: true},
-            {id: 'solid', type: SOCKET_TYPE.BOOL, triple: true, default: null},
-            {id: 'gravity', type: SOCKET_TYPE.BOOL, triple: true, default: null},
+            instInp,
+            solidInp,
+            gravInp,
         ],
-    };
+    } as const satisfies iNodeTemplate;
     catMovement.push(setPhysicsNode);
 }

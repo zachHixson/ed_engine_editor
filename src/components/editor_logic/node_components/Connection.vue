@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type Node_Connection from './Node_Connection';
-
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import Core from '@/core';
 import type { iRelinkInfo } from './Node.vue';
@@ -19,14 +17,14 @@ const { Vec2 } = Core;
 type Vec2 = Core.Vec2;
 
 const props = defineProps<{
-    connectionObj: Node_Connection,
+    connectionObj: Core.iNodeConnection,
     clientToNavSpace: (pos: Vec2)=>Vec2,
-    allConnections: Node_Connection[],
-    draggingConnection: Node_Connection | null,
+    allConnections: Core.iNodeConnection[],
+    draggingConnection: Core.iNodeConnection | null,
 }>();
 
 const emit = defineEmits<{
-    dragStart: [Node_Connection],
+    dragStart: [Core.iNodeConnection],
     forceUpdate: [],
 }>();
 

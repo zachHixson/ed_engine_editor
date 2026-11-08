@@ -16,9 +16,21 @@ export enum MOUSE_EVENT {
     ENTER,
 };
 
+export enum KEY_STATE {
+    DOWN = 'down',
+    PRESSED = 'pressed',
+    UP = 'up',
+    NONE = 'NONE',
+}
+
 export enum INSTANCE_TYPE {
     SPRITE = 'S',
     OBJECT = 'O',
     EXIT = 'E',
     LOGIC = 'L',
+};
+
+export enum TRANSITION_TYPE {
+    NONE = 'N',
+    FADE = 'F',
 };

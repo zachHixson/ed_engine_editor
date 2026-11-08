@@ -29,7 +29,7 @@ const gameDataStore = useGameDataStore();
 const { t } = useI18nStore();
 
 const props = defineProps<{
-    selectedAsset: Core.Game_Object;
+    selectedAsset: Core.Asset_Base;
 }>();
 
 const emit = defineEmits<{
@@ -40,11 +40,18 @@ const frameStartRef = ref<HTMLInputElement>();
 
 const genericNoOption = {name: t('generic.no_option'), id: -1, value: null}
 const exitBehaviors = [
-    {name: t('object_editor.to_destination'), id: Core.Game_Object.EXIT_TYPES.TO_DESTINATION, value: Core.Game_Object.EXIT_TYPES.TO_DESTINATION},
-    {name: t('object_editor.keep_position'), id: Core.Game_Object.EXIT_TYPES.KEEP_POSITION, value: Core.Game_Object.EXIT_TYPES.KEEP_POSITION},
-    {name: t('object_editor.transition_only'), id: Core.Game_Object.EXIT_TYPES.TRANSITION_ONLY, value: Core.Game_Object.EXIT_TYPES.TRANSITION_ONLY},
+    {name: t('object_editor.to_destination'), id: Core.OBJECT_EXIT_TYPES.TO_DESTINATION, value: Core.OBJECT_EXIT_TYPES.TO_DESTINATION},
+    {name: t('object_editor.keep_position'), id: Core.OBJECT_EXIT_TYPES.KEEP_POSITION, value: Core.OBJECT_EXIT_TYPES.KEEP_POSITION},
+    {name: t('object_editor.transition_only'), id: Core.OBJECT_EXIT_TYPES.TRANSITION_ONLY, value: Core.OBJECT_EXIT_TYPES.TRANSITION_ONLY},
 ];
 
+const selectedObject = computed(()=>{
+    if (props.selectedAsset.category_ID != Core.CATEGORY_ID.OBJECT) {
+        throw new Error("Object editor open without object asset selected");
+    }
+
+    return props.selectedAsset as Core.Game_Object;
+});
 const spriteChoices = computed(()=>{
     const sprites = gameDataStore.getAllSprites.map(s => ({
         name: s.name,
@@ -68,13 +75,12 @@ const logicChoices = computed(()=>{
 });
 const startFrame = computed({
     get(){
-        return props.selectedAsset.startFrame;
+        return selectedObject.value.startFrame;
     },
     set(newFrame: number){
-        const selectedAsset = props.selectedAsset as Core.Game_Object;
-        frameStartRef.value!.value = selectedAsset.startFrame.toString();
-        selectedAsset.startFrame = newFrame;
-        emit('assetChanged', selectedAsset.id);
+        frameStartRef.value!.value = selectedObject.value.startFrame.toString();
+        selectedObject.value.startFrame = newFrame;
+        emit('assetChanged', selectedObject.value.id);
     }
 });
 
@@ -82,18 +88,18 @@ function setObjectSprite(id: number) : void {
     if (id >= 0){
         const allSprites = gameDataStore.getAllSprites;
         const selectedSprite = allSprites.find(s => s.id == id);
-        props.selectedAsset.sprite = selectedSprite!;
+        selectedObject.value.sprite = selectedSprite!;
     }
     else{
-        props.selectedAsset.sprite = null;
+        selectedObject.value.sprite = null;
     }
 
     nextTick(()=>{
         ObjectMainEventBus.onNewSpriteSelected.emit();
 
-        if (props.selectedAsset.sprite){
+        if (selectedObject.value.sprite){
             //triggers the frame count validation
-            props.selectedAsset.startFrame = props.selectedAsset.startFrame;
+            selectedObject.value.startFrame = selectedObject.value.startFrame;
         }
     });
 
@@ -101,23 +107,23 @@ function setObjectSprite(id: number) : void {
 }
 
 function validateFPS(): void {
-    props.selectedAsset.fps = Math.floor(props.selectedAsset.fps);
+    selectedObject.value.fps = Math.floor(selectedObject.value.fps);
     ObjectMainEventBus.onFPSChanged.emit();
 }
 
 function groupChanged({add, groupName, newName, remove}: iGroupChangedProps): void {
     if (add){
-        props.selectedAsset.groups.push(groupName);
+        selectedObject.value.groups.push(groupName);
     }
 
     if (newName){
-        const groupIdx = props.selectedAsset.groups.indexOf(groupName);
-        props.selectedAsset.groups[groupIdx] = newName;
+        const groupIdx = selectedObject.value.groups.indexOf(groupName);
+        selectedObject.value.groups[groupIdx] = newName;
     }
 
     if (remove){
-        const groupIdx = props.selectedAsset.groups.indexOf(groupName);
-        props.selectedAsset.groups.splice(groupIdx, 1);
+        const groupIdx = selectedObject.value.groups.indexOf(groupName);
+        selectedObject.value.groups.splice(groupIdx, 1);
     }
 }
 
@@ -136,11 +142,11 @@ function logicScriptChanged(id: number | string): void {
         scriptId = numid;
     }
 
-    props.selectedAsset.logicScriptId = scriptId;
+    selectedObject.value.logicScriptId = scriptId;
 }
 
 function gotoLogicScript(){
-    const selectedScriptId = props.selectedAsset.logicScriptId;
+    const selectedScriptId = selectedObject.value.logicScriptId;
 
     if (selectedScriptId == null) return;
 
@@ -157,41 +163,41 @@ function gotoLogicScript(){
                     <div class="control">
                         <SearchDropdown
                             :items="spriteChoices"
-                            :value="props.selectedAsset.sprite ? props.selectedAsset.sprite.id : null"
+                            :value="selectedObject.sprite ? selectedObject.sprite.id : null"
                             :thumbnail="true"
                             :search="true"
-                            @change="setObjectSprite"
+                            @change="setObjectSprite($event as number)"
                             v-tooltip="t('object_editor.tt_sprite')"></SearchDropdown>
                     </div>
-                    <div v-if="props.selectedAsset.sprite" class="control">
+                    <div v-if="selectedObject.sprite" class="control">
                         <label for="frameStart">{{ t('object_editor.start_frame') }}:</label>
                         <input type="number" ref="frameStartRef" id="frameStart"  v-model="startFrame" v-tooltip="t('object_editor.tt_start_frame')"/>
                     </div>
-                    <div v-if="props.selectedAsset.sprite" class="control">
+                    <div v-if="selectedObject.sprite" class="control">
                         <label for="fps">{{ t('object_editor.fps') }}:</label>
-                        <input type="number" id="fps" v-model="props.selectedAsset.fps" @change="validateFPS" v-tooltip="t('object_editor.tt_fps')"/>
+                        <input type="number" id="fps" v-model="selectedObject.fps" @change="validateFPS" v-tooltip="t('object_editor.tt_fps')"/>
                     </div>
-                    <div v-if="props.selectedAsset.sprite" class="control">
+                    <div v-if="selectedObject.sprite" class="control">
                         <label for="loop">{{ t('object_editor.loop') }}:</label>
-                        <input type="checkbox" id="loop" v-model="props.selectedAsset.animLoop" v-tooltip="t('object_editor.tt_loop')"/>
+                        <input type="checkbox" id="loop" v-model="selectedObject.animLoop" v-tooltip="t('object_editor.tt_loop')"/>
                     </div>
-                    <div v-if="props.selectedAsset.sprite" class="control">
+                    <div v-if="selectedObject.sprite" class="control">
                         <label for="isPlaying">{{ t('object_editor.is_playing') }}:</label>
-                        <input type="checkbox" id="isPlaying" v-model="props.selectedAsset.animPlaying" v-tooltip="t('object_editor.tt_is_playing')"/>
+                        <input type="checkbox" id="isPlaying" v-model="selectedObject.animPlaying" v-tooltip="t('object_editor.tt_is_playing')"/>
                     </div>
-                    <div v-if="props.selectedAsset.sprite" class="control">
+                    <div v-if="selectedObject.sprite" class="control">
                         <label for="depth">{{ t('object_editor.depth') }}:</label>
-                        <input type="number" id="depth" v-model.lazy="props.selectedAsset.zDepth" v-tooltip="t('object_editor.tt_depth')"/>
+                        <input type="number" id="depth" v-model.lazy="selectedObject.zDepth" v-tooltip="t('object_editor.tt_depth')"/>
                     </div>
                 </div>
                 <div class="v-divider"></div>
                 <div class="options">
                     <div class="control">
                         <AnimationPlayer
-                            :sprite="props.selectedAsset.sprite!"
-                            :fps="props.selectedAsset.fps"
+                            :sprite="selectedObject.sprite!"
+                            :fps="selectedObject.fps"
                             :startFrame="startFrame"
-                            :loop="props.selectedAsset.animLoop"
+                            :loop="selectedObject.animLoop"
                             :parent-event-bus="ObjectMainEventBus"/>
                     </div>
                 </div>
@@ -200,11 +206,11 @@ function gotoLogicScript(){
                 <div class="options">
                     <div class="control">
                         <label for="isSolid">{{ t('object_editor.is_solid') }}:</label>
-                        <input type="checkbox" id="isSolid" v-model="props.selectedAsset.isSolid" v-tooltip="t('object_editor.tt_solid')"/>
+                        <input type="checkbox" id="isSolid" v-model="selectedObject.isSolid" v-tooltip="t('object_editor.tt_solid')"/>
                     </div>
                     <div class="control">
                         <label for="useGravity">{{ t('object_editor.apply_gravity') }}:</label>
-                        <input type="checkbox" id="useGravity" v-model="props.selectedAsset.applyGravity" v-tooltip="t('object_editor.tt_gravity')"/>
+                        <input type="checkbox" id="useGravity" v-model="selectedObject.applyGravity" v-tooltip="t('object_editor.tt_gravity')"/>
                     </div>
                 </div>
             </CategoryWrapper>
@@ -213,23 +219,23 @@ function gotoLogicScript(){
             <div class="options">
                 <div class="control">
                     <label for="trigger_exits">{{ t('object_editor.trigger_exits') }}:</label>
-                    <input type="checkbox" id="trigger_exits" v-model="props.selectedAsset.triggerExits" v-tooltip="t('object_editor.tt_trigger_exits')" />
+                    <input type="checkbox" id="trigger_exits" v-model="selectedObject.triggerExits" v-tooltip="t('object_editor.tt_trigger_exits')" />
                 </div>
-                <div v-if="props.selectedAsset.triggerExits" class="control">
+                <div v-if="selectedObject.triggerExits" class="control">
                     <label for="exit_behavior">{{ t('object_editor.exit_behavior') }}:</label>
-                    <SearchDropdown id="exit_behavior" :items="exitBehaviors" :value="props.selectedAsset.exitBehavior" @change="props.selectedAsset.exitBehavior = $event"></SearchDropdown>
+                    <SearchDropdown id="exit_behavior" :items="exitBehaviors" :value="selectedObject.exitBehavior" @change="selectedObject.exitBehavior = $event as Core.OBJECT_EXIT_TYPES"></SearchDropdown>
                 </div>
-                <div v-if="props.selectedAsset.triggerExits" class="control">
+                <div v-if="selectedObject.triggerExits" class="control">
                     <label for="keep_camera_settings">{{ t('object_editor.keep_camera_settings') }}:</label>
-                    <input type="checkbox" id="keep_camera_settings" v-model="props.selectedAsset.keepCameraSettings" v-tooltip="t('object_editor.tt_keep_camera_settings')" />
+                    <input type="checkbox" id="keep_camera_settings" v-model="selectedObject.keepCameraSettings" v-tooltip="t('object_editor.tt_keep_camera_settings')" />
                 </div>
-                <div v-if="props.selectedAsset.triggerExits" class="spacer"></div>
+                <div v-if="selectedObject.triggerExits" class="spacer"></div>
             </div>
             <div class="v-divider"></div>
             <div class="options">
                 <div class="control">
                     <label for="logic_script_select">{{ t('object_editor.logic_script') }}:</label>
-                    <SearchDropdown id="logic_script_select" :items="logicChoices" :value="props.selectedAsset.logicScriptId ?? null" @change="logicScriptChanged"></SearchDropdown>
+                    <SearchDropdown id="logic_script_select" :items="logicChoices" :value="selectedObject.logicScriptId ?? null" @change="logicScriptChanged($event as number | string)"></SearchDropdown>
                     <button style="width: 25px; height: 25px;" @click="gotoLogicScript" v-tooltip="t('object_editor.tt_goto_logic')">
                         <Svg :src="goTo" style="width: 100%; height: 100%;"></Svg>
                     </button>
@@ -240,7 +246,7 @@ function gotoLogicScript(){
                 <div class="control">
                     <GroupList
                         style="min-width: 200px"
-                        :editList="props.selectedAsset.groups"
+                        :editList="selectedObject.groups"
                         @groupChanged="groupChanged"/>
                 </div>
             </div>

@@ -4,6 +4,7 @@ import ArtEditor from './editor_art/ArtMain.vue';
 import ObjectEditor from './editor_object/ObjectMain.vue';
 import LogicEditor from './editor_logic/LogicMain.vue';
 import type { DialogBoxProps } from './DialogBox.vue';
+import type { Asset_Base } from '@engine/core/core';
 
 import { computed } from 'vue';
 import { useMainStore, EDITOR_ID } from '@/stores/Main';
@@ -40,7 +41,7 @@ const selectedRoom = computed(()=>assetBrowserStore.getSelectedRoom);
     <div class="editorWindow">
         <component ref="editor"
             :is="currentEditor"
-            :selectedAsset="(selectedAsset as any)"
+            :selectedAsset="selectedAsset!"
             :selectedRoom="selectedRoom"
             @assetChanged="emit('assetChanged', $event)"
             @dialogOpen="emit('dialogOpen', $event)"

@@ -1,5 +1,5 @@
 import { Mat3 } from 'linearz';
-import { Instance_Base, WGL } from "../core";
+import { Instance_Base, WGL } from "@engine/core/core";
 import { Atlas } from './Atlas';
 import { Color } from "../Draw";
 import { easeOutBack } from "../Util";
@@ -142,11 +142,11 @@ export class Instance_Renderer {
     private _gl: WebGL2RenderingContext;
     private _program: WebGLProgram;
     private _generateMipmaps: boolean;
-    private _viewMatrixUniform: WGL.Uniform;
-    private _tileSizeUniform: WGL.Uniform;
-    private _atlasSizeUniform: WGL.Uniform;
-    private _instanceScaleUniform: WGL.Uniform;
-    private _colorOverrideUniform: WGL.Uniform;
+    private _viewMatrixUniform: WGL.Uniform<WGL.Uniform_Types.MAT3>;
+    private _tileSizeUniform: WGL.Uniform<WGL.Uniform_Types.INT>;
+    private _atlasSizeUniform: WGL.Uniform<WGL.Uniform_Types.INT>;
+    private _instanceScaleUniform: WGL.Uniform<WGL.Uniform_Types.FLOAT>;
+    private _colorOverrideUniform: WGL.Uniform<WGL.Uniform_Types.VEC4>;
     private _atlasTextureUniform: WGL.Texture_Uniform;
 
     //instance properties

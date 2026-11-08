@@ -1,8 +1,9 @@
 import Renderer from "@engine/Renderer";
-import Transition_Base, {TRANSITION} from "./Transition_Base";
+import { TRANSITION_TYPE } from "@engine/core/Enums";
+import Transition_Base from "./Transition_Base";
 
 export default class Transition_Fade extends Transition_Base {
-    get type(){return TRANSITION.NONE};
+    get type(){return TRANSITION_TYPE.NONE};
 
     constructor(gl: WebGL2RenderingContext, renderer: Renderer){
         super(gl, renderer);

@@ -40,16 +40,16 @@ export function assetToInstance(asset: Asset_Base | iEngineLogic, id: number, po
     }
 }
 
-export function listConvert(fromList: boolean, toList: boolean, value: any | any[]): any | any[] {
+export function listConvert(fromList: boolean, toList: boolean, value: unknown | unknown[]): unknown | unknown[] {
     if (fromList == toList){
         return value;
     }
 
-    if (fromList && !toList){
-        return value[0] ?? null;
+    if (fromList){
+        return (value as unknown[])[0] ?? null;
     }
 
-    if (!fromList && toList){
+    if (toList){
         return [value];
     }
 
@@ -77,7 +77,7 @@ export function instanceToAsset(instance: Instance_Base, gameData: iGameData): A
 }
 
 const socketConversionMap = (()=>{
-    const scm = new Map<SOCKET_TYPE, Map<SOCKET_TYPE, (val: any)=>any>>();
+    const scm = new Map<SOCKET_TYPE, Map<SOCKET_TYPE, (val: unknown)=>unknown>>();
 
     const number = new Map();
     number.set(STRING, (val: number): string => val.toString());
@@ -135,7 +135,7 @@ export function canConvertSocket(fromType: SOCKET_TYPE, toType: SOCKET_TYPE): bo
     return triggerCheck && (!needsConvert(fromType, toType) || hasConversionFunc);
 }
 
-export function convertSocketType(fromType: SOCKET_TYPE, toType: SOCKET_TYPE, value: any): any {
+export function convertSocketType(fromType: SOCKET_TYPE, toType: SOCKET_TYPE, value: unknown): unknown {
     if (!needsConvert(fromType, toType)){
         return value;
     }
@@ -144,4 +144,35 @@ export function convertSocketType(fromType: SOCKET_TYPE, toType: SOCKET_TYPE, va
     const toTypeFunc = fromTypeMap.get(toType);
 
     return toTypeFunc ? toTypeFunc(value) : null;
+}
+
+export function serializeInputValue(type: SOCKET_TYPE, value: number | string | boolean | null): number | string | null {
+    switch(type) {
+        case SOCKET_TYPE.NUMBER:
+            return (value === '' || value == null) ? '' : <number>value;
+        case SOCKET_TYPE.STRING:
+            return <string>value ?? '';
+        case SOCKET_TYPE.BOOL:
+            return +(<boolean>value);
+        case SOCKET_TYPE.TRIPLE:
+            return value === null ? '' : +value;
+        default:
+            return '';
+    }
+}
+
+export function parseSavedInputValue(type: SOCKET_TYPE, value: number | string): number | string | boolean | null {
+    const isNull = value === '' || value === null;
+
+    switch(type) {
+        case SOCKET_TYPE.NUMBER:
+            return isNull ? null : value;
+        case SOCKET_TYPE.STRING:
+            return value;
+        case SOCKET_TYPE.BOOL:
+        case SOCKET_TYPE.TRIPLE:
+            return isNull ? null : !!value;
+        default:
+            return null;
+    }
 }

@@ -9,7 +9,7 @@ import { ref, nextTick } from 'vue';
 const { Vec2 } = Core;
 type Vec2 = Core.Vec2;
 
-type MoveProps = {instId?: number, instRef?: Core.Instance_Base, newPos?: Readonly<Vec2>, oldPos?: Vec2};
+export type MoveProps = { actionType: ROOM_ACTION.MOVE, instId?: number, instRef?: Core.Instance_Base, newPos?: Readonly<Vec2>, oldPos?: Vec2 };
 
 export function useSelectMove(args: iActionArguments){
     const overlapBox = ref<HTMLDivElement>();
@@ -56,7 +56,8 @@ export function useSelectMove(args: iActionArguments){
                 this._downOnSelection &&
                 !this._last?.equalTo(mEvent.worldCell)
             ){
-                actionMove({instRef: args.editorSelection.value as Core.Instance_Object, newPos: mEvent.worldCell}, false);
+                const data = { actionType: ROOM_ACTION.MOVE, instRef: args.editorSelection.value as Core.Instance_Object, newPos: mEvent.worldCell } as MoveProps;
+                actionMove(data, false);
                 this._last?.copy(mEvent.worldCell);
             }
         }
@@ -76,7 +77,7 @@ export function useSelectMove(args: iActionArguments){
             }
 
             if (args.undoStore.cache.get('move_start')){
-                actionMove({}, true);
+                actionMove({ actionType: ROOM_ACTION.MOVE } as MoveProps, true);
             }
 
             this._downOnSelection = false;
@@ -103,28 +104,35 @@ export function useSelectMove(args: iActionArguments){
         });
     }
 
-    function actionMove({instId, instRef, newPos}: MoveProps, makeCommit = true): void {
+    function actionMove(data: Core.ActionCallbackData, makeCommit = true): void {
+        type MoveStartCache = { instRef: Core.Instance_Base, newPos?: Readonly<Core.Vec2>, oldPos: Readonly<Core.Vec2> };
+
+        const moveData = data as MoveProps;
+        const { instId, newPos } = moveData;
+
         if (makeCommit){
-            const {instRef, oldPos} = args.undoStore.cache.get('move_start');
-            const data = {instId: instRef.id, instRef, newPos: instRef.pos.clone(), oldPos} satisfies MoveProps;
-            args.undoStore.commit({action: ROOM_ACTION.MOVE, data});
+            const { instRef, oldPos } = args.undoStore.cache.get('move_start') as MoveStartCache;
+            const commitData = { actionType: ROOM_ACTION.MOVE, instId: instRef.id, instRef, newPos: instRef.pos.clone(), oldPos } satisfies MoveProps as Core.ActionCallbackData;
+            args.undoStore.commit(commitData);
             args.undoStore.cache.delete('move_start');
             return;
         }
 
-        if (!instRef){
-            instRef = args.props.selectedRoom.getInstanceById(instId!)!;
+        if (!moveData.instRef){
+            moveData.instRef = args.props.selectedRoom.getInstanceById(instId!)!;
         }
 
         if (!args.undoStore.cache.get('move_start')){
-            args.undoStore.cache.set('move_start', {instRef, oldPos: instRef.pos.clone()});
+            const cacheData = { instRef: moveData.instRef, oldPos: moveData.instRef.pos.clone() } satisfies MoveStartCache;
+            args.undoStore.cache.set('move_start', cacheData);
         }
 
-        args.props.selectedRoom.setInstancePosition(instRef, newPos!);
-        RoomMainEventBus.onInstanceChanged.emit(instRef);
+        args.props.selectedRoom.setInstancePosition(moveData.instRef, newPos!);
+        RoomMainEventBus.onInstanceChanged.emit(moveData.instRef);
     }
 
-    function revertMove({instRef, oldPos}: MoveProps): void {
+    function revertMove(data: Core.ActionCallbackData): void {
+        const { instRef, oldPos } = data as MoveProps;
         args.props.selectedRoom.setInstancePosition(instRef!, oldPos!);
         RoomMainEventBus.onInstanceChanged.emit(instRef!);
     }

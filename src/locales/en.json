@@ -281,6 +281,7 @@
         "NUMBER": "Number",
         "STRING": "String",
         "BOOL": "Boolean",
+        "TRIPLE": "Boolean",
         "OBJECT": "Object",
         "INSTANCE": "Instance",
         "list": "List",

@@ -22,7 +22,7 @@ type ParsedNodeDoc = {
 interface iState {
     langCode: string,
     langText: ParsedLang,
-    nodeText: ParsedNodeDoc,
+    nodeText: ParsedLang,
 }
 
 //#ifdef IS_PORTABLE
@@ -36,10 +36,10 @@ const LANG_MAP: {[key: string]: Lang} = {
 
 const DEFAULT_LANG_CODE = 'en';
 const DEFAULT_LANG_TEXT: ParsedLang = JSON.parse(en);
-const DEFAULT_NODE_TEXT: ParsedNodeDoc = JSON.parse(en_nodes);
+const DEFAULT_NODE_TEXT: ParsedLang = JSON.parse(en_nodes);
 
 //#ifdef IS_WEB
-    function fetchJSON(path: string, callback: (langObj: any)=>void): void {
+    function fetchJSON(path: string, callback: (langObj: ParsedLang)=>void): void {
         fetch(path)
             .then(res => {
                 if (!res.ok){
@@ -118,7 +118,7 @@ export const useI18nStore = defineStore('i18n', {
                 return !!langResult;
             }
         },
-        getNodeDoc: (state): (nodeTemplateId: string)=>{[key: string]: string} => {
+        getNodeDoc: (state): (nodeTemplateId: string)=>Record<string, string> => {
             return (nodeTempalteId: string) => {
                 const nodeInfo = state.nodeText[nodeTempalteId] || DEFAULT_NODE_TEXT[nodeTempalteId];
 
@@ -126,7 +126,7 @@ export const useI18nStore = defineStore('i18n', {
                     throw new Error(`Could not find nodeTemplateId "${nodeTempalteId}" in lang or default locale files`);
                 }
 
-                return nodeInfo;
+                return nodeInfo as Record<string, string>;
             }
         }
     },

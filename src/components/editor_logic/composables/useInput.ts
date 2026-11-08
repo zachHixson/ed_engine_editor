@@ -1,14 +1,13 @@
 import { ref, reactive, onMounted, onBeforeUnmount } from 'vue';
 import { NAV_TOOL_TYPE } from '@/components/common/NavControlPanel.vue';
 import { useLogicEditorStore } from "@/stores/LogicEditor";
-import { DomRefs, ActionData, LogicEditorState, LogicMainEventBus } from '../LogicMain.vue';
+import { DomRefs, ActionData, LogicEditorState, LogicMainEventBus, LOGIC_ACTION } from '../LogicMain.vue';
 import type Node_Connection from '../node_components/Node_Connection';
-import type { iHoverSocket } from '../node_components/Socket.vue';
-import type { default as Node_Obj } from '../node_components/Node';
+import type { iHoverSocket, IOSocket } from '../node_components/Socket.vue';
 import Core from '@/core';
 import type { ActionMakeConnectionProps, ActionRemoveConnectionProps } from './useConnection';
 import type { ActionMoveNodesProps } from './useNode';
-import type Logic from '../node_components/Logic';
+import type Logic from '@/components/editor_logic/node_components/Logic';
 
 const { Vec2 } = Core;
 type Vec2 = Core.Vec2;
@@ -119,12 +118,13 @@ export default function useInput(
         selectNodesInBox();
 
         if (draggingConnection.value){
-            const socketOver = currentSocketOver.value as iHoverSocket;
-            const connectionObj = draggingConnection.value as Node_Connection;
-            const startType = !!connectionObj.startSocketEl ? connectionObj.type : socketOver?.socketData.type;
-            const endType = !!connectionObj.startSocketEl ? socketOver?.socketData.type : connectionObj.type;
+            const socketOver = currentSocketOver.value;
+            const socketData = socketOver?.socketData as (IOSocket | undefined);
+            const connectionObj = draggingConnection.value!;
+            const startType = !!connectionObj.startSocketEl ? connectionObj.type : socketData?.type;
+            const endType = !!connectionObj.startSocketEl ? socketData?.type : connectionObj.type;
             const isTrigger = startType == endType && startType == null;
-            const typeMatch = isTrigger || Core.canConvertSocket(startType, endType);
+            const typeMatch = isTrigger || Core.canConvertSocket(startType!, endType!);
             const directionMatch = !!connectionObj.startSocketEl == !!socketOver?.isInput;
 
             draggingConnection.value = null;
@@ -135,20 +135,22 @@ export default function useInput(
                 directionMatch &&
                 connectionObj.canConnect &&
                 socketOver.canConnect &&
-                !socketOver.socketData.disabled
+                !socketData?.disabled
             ){
-                const leftNode = ((socketOver.isInput) ? socketOver.node : connectionObj.endNode) as Node_Obj;
-                const rightNode = (!(socketOver.isInput) ? socketOver.node : connectionObj.startNode) as Node_Obj;
+                const leftNode = ((socketOver.isInput) ? socketOver.node : connectionObj.endNode) as Core.iEditorNode;
+                const rightNode = (!(socketOver.isInput) ? socketOver.node : connectionObj.startNode) as Core.iEditorNode;
 
                 if (!checkLoop(leftNode, rightNode)){
+                    const data = {actionType: LOGIC_ACTION.CONNECT, connectionObj, socketOver} as ActionMakeConnectionProps;
                     actionData.undoStore.startRecording();
-                    makeConnection({connectionObj, socketOver});
+                    makeConnection(data);
                     return;
                 }
             }
 
+            const data = {actionType: LOGIC_ACTION.DISCONNECT, connectionObj} as ActionRemoveConnectionProps;
             actionData.undoStore.startRecording();
-            removeConnection({connectionObj});
+            removeConnection(data);
         }
     }
 
@@ -190,8 +192,9 @@ export default function useInput(
             const mousePos = new Vec2(event.clientX, event.clientY);
             const mouseNavPos = clientToNavPos(mousePos);
             const velocity = mouseNavPos.subtract(startPos);
+            const data = {actionType: LOGIC_ACTION.MOVE, nodeRefList: selectedNodes.value, velocity} as ActionMoveNodesProps;
 
-            moveNodes({nodeRefList: selectedNodes.value, velocity}, false);
+            moveNodes(data, false);
             lastMouseDragPos.copy(mousePos);
         }
     }
@@ -222,7 +225,7 @@ export default function useInput(
         });
     }
 
-    function checkLoop(leftNode: Node_Obj, rightNode: Node_Obj): boolean {
+    function checkLoop(leftNode: Core.iEditorNode, rightNode: Core.iEditorNode): boolean {
         const connectionMap = new Map();
         const checkedNodes = new Map();
         const connections = props.selectedAsset.connections;
@@ -238,7 +241,7 @@ export default function useInput(
         return _checkLoop({endNode: leftNode}, connectionMap, checkedNodes);
     }
 
-    function _checkLoop(connection: {endNode: Node_Obj | null}, connectionMap: Map<string, Node_Connection>, checkedNodes: Map<number, boolean>): boolean {
+    function _checkLoop(connection: {endNode: Core.iEditorNode | null}, connectionMap: Map<string, Node_Connection>, checkedNodes: Map<number, boolean>): boolean {
         const curNode = connection.endNode!;
         const socketArr: {id: string}[] = [];
         let foundLoop = false;

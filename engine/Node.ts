@@ -8,11 +8,17 @@ import {
     iEventContext,
     Node_Enums,
     NodeSave,
+    iInput,
+    parseSavedInputValue,
 } from "@engine/core/core";
-import { iAnyObj } from "./core/interfaces";
 import { listConvert } from "./core/nodes/Socket_Conversions";
 import Engine from "./Engine";
 import Logic from "./Logic";
+import { SOCKET_TYPE, type SocketTypeLookup } from "./core/nodes/Node_Enums";
+
+export interface iEventData {
+    trigger?: string;
+}
 
 export default class Node implements iEngineNode {
     private _nodeData: unknown = null as unknown;
@@ -23,13 +29,13 @@ export default class Node implements iEngineNode {
     graphId: number;
     engine: Engine;
     isEvent: boolean;
-    widgetData: iAnyObj | null = null;
+    widgetData: unknown;
     defaultTriggerId: string | null = null;
     inTriggers: iEngineNode["inTriggers"] = new Map();
     outTriggers: iEngineNode["outTriggers"] = new Map();
     inputs: iEngineNode["inputs"] = new Map();
     outputs: iEngineNode["outputs"] = new Map();
-    execute: ((eventContext: iEventContext, data: any)=>void) | null = null;
+    execute: ((eventContext: iEventContext, data: iEventData)=>void) | null = null;
 
     constructor(nodeSaveData: NodeSave, logic: Logic, engine: Engine){
         const template = NodeMap.get(nodeSaveData[0])!;
@@ -60,10 +66,10 @@ export default class Node implements iEngineNode {
 
         template.inputs?.forEach(input => {
             const {id, type, isList} = input;
-            const def = input.default ?? 0;
+            const defVal = input.default;
 
             this.inputs.set(id, {
-                value: def,
+                value: defVal,
                 type,
                 connection: null,
                 isList,
@@ -83,7 +89,15 @@ export default class Node implements iEngineNode {
         })
 
         nodeSaveData[4].forEach(srcInput => {
-            this.inputs.get(srcInput[0])!.value = srcInput[1];
+            const inpId = srcInput[0];
+            const rawInpData = srcInput[1];
+            const inp = this.inputs.get(inpId);
+
+            if (!inp) {
+                throw new Error(`Could not find input ${inpId} on node ${this.template.id}`);
+            }
+
+            inp.value = parseSavedInputValue(inp.type, rawInpData);
         });
 
         if (template.outTriggers && template.outTriggers.length > 0){
@@ -98,9 +112,29 @@ export default class Node implements iEngineNode {
         this.template.init?.call(this);
     }
 
-    private _getOutputData(outputName: string, eventContext: iEventContext): any {
+    private _getOutputData(outputName: string, eventContext: iEventContext): unknown {
         const outputMethod = this.outputs.get(outputName)?.execute;
         return outputMethod?.call(this, eventContext, null);
+    }
+
+    private _getInput(socketTemplate: iInput, eventContext: iEventContext, convertList: boolean = true): unknown {
+        const inputName = socketTemplate.id;
+        const input = this.inputs.get(inputName);
+
+        if (!input) {
+            throw new Error(`Unable to find input ${JSON.stringify(socketTemplate)} in node "${this.template.id}"`);
+        }
+
+        if (input.connection){
+            const node = input.connection.node as Node;
+            const val = node._getOutputData(input.connection.id, eventContext);
+            const listResult = convertList ? listConvert(Array.isArray(val), !!input.isList, val) : val;
+
+            return convertSocketType(input.connection.type, input.type, listResult);
+        }
+        else{
+            return input.value;
+        }
     }
 
     logicLoaded(logic: iEditorLogic | iEngineLogic): void {
@@ -115,7 +149,7 @@ export default class Node implements iEngineNode {
         (this.template.onCreate as (this: iEngineNode, ctx: iEventContext)=>void)?.call(this, context);
     }
 
-    executeEvent(data: any, eventContext: iEventContext): void {
+    executeEvent(data: iEventData, eventContext: iEventContext): void {
         if (!this.isEvent) {
             console.error('Error: Cannot call \"executeEvent()\" from non-event node');
             return
@@ -124,30 +158,32 @@ export default class Node implements iEngineNode {
         //execute first node
         if (this.execute){
             this.execute.call(this, eventContext, data);
+            return;
         }
-        else{
-            const triggerId = data?.trigger ?? this.defaultTriggerId;
-            this.triggerOutput(triggerId, eventContext);
+
+        const triggerId = data?.trigger ?? this.defaultTriggerId;
+
+        if (!triggerId) {
+            console.error("Cannot trigger node output without defined triggerId");
+            return;
         }
+
+        this.triggerOutput(triggerId, eventContext);
     }
 
-    getWidgetData(): any {
+    getWidgetData(): unknown {
         return this.widgetData;
     }
 
-    getInput(inputName: string, eventContext: iEventContext, convertList: boolean = true): any {
-        const input = this.inputs.get(inputName)!;
+    getInput<T extends iInput>(socketTemplate: T & {isList?: never} & {optional?: never}, eventContext: iEventContext, convertList?: true): SocketTypeLookup[T['type']];
+    getInput<T extends iInput>(socketTemplate: T & {isList: true} & {optional?: never}, eventContext: iEventContext): Array<SocketTypeLookup[T['type']]>;
+    getInput<T extends iInput>(socketTemplate: T & {isList: true}, eventContext: iEventContext, convertList?: boolean): SocketTypeLookup[T['type']] | Array<SocketTypeLookup[T['type']]> {
+        return this._getInput(socketTemplate, eventContext, convertList) as SocketTypeLookup[T['type']];
+    }
 
-        if (input.connection){
-            const node = input.connection.node as Node;
-            const val = node._getOutputData(input.connection.id, eventContext);
-            const listResult = convertList ? listConvert(Array.isArray(val), !!input.isList, val) : val;
-
-            return convertSocketType(input.connection.type, input.type, listResult);
-        }
-        else{
-            return input.value;
-        }
+    getOptionalInput<T extends iInput>(socketTemplate: T & {optional: true}, eventContext: iEventContext): SocketTypeLookup[T['type']] | null {
+        const inp = this._getInput(socketTemplate, eventContext);
+        return inp as SocketTypeLookup[T['type']] | null;
     }
 
     triggerOutput(outputId: string, eventContext: iEventContext): void {
@@ -155,7 +191,7 @@ export default class Node implements iEngineNode {
 
         if (trigger?.connection){
             try{
-                const node = trigger.connection.node as Node;
+                const node = trigger.connection.node as iEngineNode;
                 trigger.connection.execute.call(node, eventContext, null);
             }
             catch(e){
@@ -166,10 +202,21 @@ export default class Node implements iEngineNode {
         }
     }
 
-    throwOnNullInput<T>(inputName: string, eventContext: iEventContext, errorId: string, fatal: boolean = false, rejectNoConnection: boolean = false): T | typeof Node_Enums.THROWN | null {
-        const value = this.getInput(inputName, eventContext);
+    throwOnNullInput<T extends iInput>(socketTemplate: T & {isList?: never}, eventContext: iEventContext, errorId: string, fatal?: false | never): SocketTypeLookup[T['type']] | typeof Node_Enums.THROWN | null;
+    throwOnNullInput<T extends iInput>(socketTemplate: T & {isList: true}, eventContext: iEventContext, errorId: string, fatal?: false | never): Array<SocketTypeLookup[T['type']]> | typeof Node_Enums.THROWN | null;
+    throwOnNullInput<T extends iInput>(socketTemplate: T & {isList?: never}, eventContext: iEventContext, errorId: string, fatal: true): SocketTypeLookup[T['type']] | null;
+    throwOnNullInput<T extends iInput>(socketTemplate: T & {isList: true}, eventContext: iEventContext, errorId: string, fatal: true): Array<SocketTypeLookup[T['type']]> | null;
+    throwOnNullInput<T extends iInput>(socketTemplate: T & {isList: true}, eventContext: iEventContext, errorId: string, fatal?: boolean): SocketTypeLookup[T['type']] | Array<SocketTypeLookup[T['type']]> | typeof Node_Enums.THROWN | null {
+        const inputName = socketTemplate.id;
+        const input = this.inputs.get(inputName);
+
+        if (!input) {
+            throw new Error(`Unable to find input ${JSON.stringify(socketTemplate)} in node "${this.template.id}"`);
+        }
+
+        const value = this._getInput(socketTemplate, eventContext) as SocketTypeLookup[T['type']];
         const hasVal = !(value == null && value == undefined);
-        const returnNull = !(rejectNoConnection || this.inputs.get(inputName)?.connection);
+        const returnNull = !(input?.connection);
 
         if (hasVal || returnNull) return value;
 
@@ -188,9 +235,8 @@ export default class Node implements iEngineNode {
         return Node_Enums.THROWN;
     }
 
-    setNodeData<T>(data: T): T {
+    setNodeData<T>(data: T): void {
         this._nodeData = data;
-        return this._nodeData as T;
     }
 
     getNodeData<T>(): T {

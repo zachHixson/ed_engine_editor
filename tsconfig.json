@@ -13,7 +13,6 @@
         "preserveValueImports": false,
         "lib": ["DOM", "DOM.Iterable", "es2018"]
     },
-
     "references": [
         {
             "path": "./tsconfig.config.json"

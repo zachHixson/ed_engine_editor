@@ -1,6 +1,7 @@
 <script lang="ts">
 import { ROOM_TOOL_TYPE } from '@/stores/RoomEditor';
 import type Tool_Base from './composables/Tool_Base';
+import type { ActionCallback, ActionCallbackData } from '@engine/core/interfaces';
 import type { Ref } from 'vue';
 
 export const enum ROOM_ACTION {
@@ -28,7 +29,7 @@ export const RoomMainEventBus = {
     onGridStateChanged: new Core.Event_Emitter<(newState: boolean)=>void>(),
 };
 
-export type tActionMap = Map<ROOM_ACTION, (data: any, commit?: boolean)=>void>;
+export type tActionMap = Map<ROOM_ACTION, ActionCallback>;
 export type tToolMap = Map<ROOM_TOOL_TYPE, typeof Tool_Base>;
 
 export interface iActionArguments {
@@ -39,13 +40,13 @@ export interface iActionArguments {
     toolMap: tToolMap;
     actionMap: tActionMap;
     revertMap: tActionMap;
-    undoStore: Undo_Store<iActionStore>;
+    undoStore: Undo_Store<ActionCallbackData>;
     editorSelection: Ref<Core.Instance_Base | null>;
 }
 </script>
 
 <script setup lang="ts">
-import Undo_Store, { type iActionStore, useUndoHelpers} from '@/components/common/Undo_Store';
+import Undo_Store, { useUndoHelpers} from '@/components/common/Undo_Store';
 import RoomEditWindow from './RoomEditWindow.vue';
 import Properties from './Properties.vue';
 import Tool from '@/components/common/Tool.vue';
@@ -66,12 +67,12 @@ import {
 import { useMainStore } from '@/stores/Main';
 import { useRoomEditorStore } from '@/stores/RoomEditor';
 import { useI18nStore } from '@/stores/I18n';
-import { useAdd } from './composables/add';
-import { useSelectMove } from './composables/selectMove';
-import { useDelete } from './composables/delete';
-import { useCameraProps } from './composables/cameraProps';
-import { useInstanceProps } from './composables/instanceProps';
-import { useRoomProps } from './composables/roomProps';
+import { useAdd, AddProps, ExitAddProps } from './composables/add';
+import { useSelectMove, MoveProps } from './composables/selectMove';
+import { useDelete, DeleteProps } from './composables/delete';
+import { useCameraProps, CameraChangeProps } from './composables/cameraProps';
+import { useInstanceProps, InstanceChangeProps, InstanceGroupChangeProps } from './composables/instanceProps';
+import { useRoomProps, RoomPropChangeProps } from './composables/roomProps';
 import Core from '@/core';
 import type { imEvent } from './RoomEditWindow.vue';
 
@@ -128,7 +129,7 @@ const tools = [
         icon: gearIcon,
     }
 ];
-const undoStore = reactive(new Undo_Store<iActionStore>(32, false)) as Undo_Store<iActionStore>;
+const undoStore = reactive(new Undo_Store<ActionCallbackData>(32, false)) as Undo_Store<ActionCallbackData>;
 const hotkeyMap = new HotkeyMap();
 const hotkeyDown = hotkeyMap.keyDown.bind(hotkeyMap);
 const hotkeyUp = hotkeyMap.keyUp.bind(hotkeyMap);
@@ -229,7 +230,7 @@ const actionArgs: iActionArguments = {
     editorSelection: editorSelection as Ref<Core.Instance_Base | null>,
 }
 const { stepForward, stepBackward } = useUndoHelpers(undoStore, actionMap, revertMap);
-const { overlapBox, overlappingInstances } = useSelectMove(actionArgs);
+const { overlappingInstances } = useSelectMove(actionArgs);
 const { deleteInstance } = useDelete(actionArgs);
 const { changeCameraProps } = useCameraProps(actionArgs);
 const { changeInstanceProps, changeInstanceGroups } = useInstanceProps(actionArgs);
@@ -239,8 +240,8 @@ useAdd(actionArgs);
 function bindHotkeys(): void {
     const deleteInstanceMacro = () => {
         const id = editorSelection.value?.id;
-        deleteInstance({instId: id}, false);
-        deleteInstance({}, true);
+        deleteInstance({actionType: ROOM_ACTION.DELETE, instId: id} as DeleteProps, false);
+        deleteInstance({actionType: ROOM_ACTION.DELETE}, true);
     }
 
     hotkeyMap.bindKey(['s'], toolClicked, [ROOM_TOOL_TYPE.SELECT_MOVE]);
@@ -321,7 +322,7 @@ function toggleGrid(): void {
                 :name="tool.text"
                 :tool="tool.tool"
                 :curSelection="roomEditorStore.getSelectedTool"
-                @toolClicked="toolClicked"/>
+                @toolClicked="toolClicked($event as ROOM_TOOL_TYPE)"/>
             <div class="toolSpacer"></div>
             <Tool
                 :tool="0"
@@ -375,15 +376,15 @@ function toggleGrid(): void {
                     :selected-instance="(editorSelection as Core.Instance_Base)"
                     :camera="selectedRoom.camera"
                     :room="selectedRoom"
-                    @instPropSet="changeInstanceProps({newState: $event})"
-                    @instGroupChanged="changeInstanceGroups($event)"
+                    @instPropSet="changeInstanceProps({actionType: ROOM_ACTION.INSTANCE_CHANGE, newState: $event} as InstanceChangeProps)"
+                    @instGroupChanged="changeInstanceGroups({actionType: ROOM_ACTION.INSTANCE_GROUP_CHANGE, ...$event} as InstanceGroupChangeProps)"
                     @instVarChanged="()=>{}"
-                    @instDeleted="deleteInstance({instId: $event.id}, $event.commit)"
-                    @camPropSet="changeCameraProps({newState: $event})"
-                    @exitPropSet="changeInstanceProps({newState: $event})"
-                    @roomPropSet="changeRoomProps({newState: $event})"
-                    @roomBgChanged="changeRoomProps({newState: $event}, false)"
-                    @roomBgChangeEnd="changeRoomProps({newState: $event}, true)"/>
+                    @instDeleted="deleteInstance({actionType: ROOM_ACTION.DELETE, instId: $event.id} as DeleteProps, $event.commit)"
+                    @camPropSet="changeCameraProps({actionType: ROOM_ACTION.CAMERA_CHANGE, newState: $event} as CameraChangeProps)"
+                    @exitPropSet="changeInstanceProps({actionType: ROOM_ACTION.INSTANCE_CHANGE, newState: $event} as InstanceChangeProps)"
+                    @roomPropSet="changeRoomProps({actionType: ROOM_ACTION.ROOM_PROP_CHANGE, newState: $event} as RoomPropChangeProps)"
+                    @roomBgChanged="changeRoomProps({actionType: ROOM_ACTION.ROOM_PROP_CHANGE, newState: $event} as RoomPropChangeProps, false)"
+                    @roomBgChangeEnd="changeRoomProps({actionType: ROOM_ACTION.ROOM_PROP_CHANGE, newState: $event} as RoomPropChangeProps, true)"/>
             </div>
         </div>
     </div>

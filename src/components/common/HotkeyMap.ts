@@ -1,9 +1,9 @@
 interface iEvent {
     keys: string[],
-    callback: (...args: any)=>void,
-    args: any[],
-    releaseCallback: (...args: any)=>void,
-    releaseArgs: any[],
+    callback: (...args: unknown[])=>void,
+    args?: unknown[],
+    releaseCallback?: (...args: unknown[])=>void,
+    releaseArgs?: unknown[],
 }
 
 export default class HotkeyMap{
@@ -74,7 +74,7 @@ export default class HotkeyMap{
             const modifiersDown = controlDown + altDown + shiftDown;
             let keysDown = 0;
             let modifiersRequired = 0;
- 
+
             for (let key = 0; key < curEvent.keys.length; key++){
                 modifiersRequired += +(curEvent.keys[key] == 'control');
                 modifiersRequired += +(curEvent.keys[key] == 'alt');
@@ -85,7 +85,8 @@ export default class HotkeyMap{
             if (keysDown == curEvent.keys.length && modifiersRequired == modifiersDown){
                 event.preventDefault();
                 this.active.push(curEvent);
-                curEvent.callback(...curEvent.args);
+                const args = curEvent.args ?? [];
+                curEvent.callback && curEvent.callback(...args);
             }
         }
     }
@@ -96,7 +97,8 @@ export default class HotkeyMap{
 
             if (curEvent.keys.includes(event.key)){
                 event.preventDefault();
-                curEvent.releaseCallback(...curEvent.releaseArgs);
+                const args = curEvent.releaseArgs ?? [];
+                curEvent.releaseCallback && curEvent.releaseCallback(...args);
                 i--;
             }
 
@@ -104,12 +106,12 @@ export default class HotkeyMap{
         }
     }
 
-    bindKey(
+    bindKey<T extends (...args: any[])=>void>(
         keys: string[],
-        callback: (...args: any)=>void,
-        args: any[] = [],
-        releaseCallback: (...args: any)=>void = ()=>{},
-        releaseArgs: any[] = []
+        callback: T,
+        args?: Parameters<T>,
+        releaseCallback?: T,
+        releaseArgs?: Parameters<T>
     ): void {
         this.events.push({
             keys,

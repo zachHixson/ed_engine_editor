@@ -79,6 +79,12 @@ const typeWarning = computed<string>(()=>{
     return '';
 });
 const isValid = computed(()=>!nameError.value && !!varName.value.trim().length);
+const emptyVarInfo: Core.iVarInfo = {
+    name: 'EMPTY_VAR',
+    type: Core.Node_Enums.SOCKET_TYPE.ANY,
+    isGlobal: false,
+    isList: false,
+};
 
 onMounted(()=>{
     if (props.editVarInfo){
@@ -100,7 +106,7 @@ function confirm(): void {
 }
 
 function cancel(): void {
-    props.callback(false, {} as any);
+    props.callback(false, emptyVarInfo);
     close();
 }
 
@@ -130,7 +136,7 @@ function close(): void {
                 </div>
                 <div class="control">
                     <label for="type">{{ t('logic_editor.type') }}: </label>
-                    <SearchDropdown id="type" :value="type" @change="type = $event" :items="[
+                    <SearchDropdown id="type" :value="type" @change="type = $event as Core.Node_Enums.SOCKET_TYPE" :items="[
                         { name: t('logic_editor.number'), id: Core.Node_Enums.SOCKET_TYPE.NUMBER, value: Core.Node_Enums.SOCKET_TYPE.NUMBER },
                         { name: t('logic_editor.string'), id: Core.Node_Enums.SOCKET_TYPE.STRING, value: Core.Node_Enums.SOCKET_TYPE.STRING },
                         { name: t('logic_editor.boolean'), id: Core.Node_Enums.SOCKET_TYPE.BOOL, value: Core.Node_Enums.SOCKET_TYPE.BOOL },

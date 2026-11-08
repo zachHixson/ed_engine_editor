@@ -1,25 +1,30 @@
 <script lang="ts">
+import type { iEditorNodeInput, iEditorNodeInTrigger, iEditorNodeOutput, iEditorNodeOutTrigger } from '@engine/core/LogicInterfaces';
+
+export type IOSocket = iEditorNodeInput | iEditorNodeOutput;
+export type Trigger = iEditorNodeInTrigger | iEditorNodeOutTrigger;
+export type Socket = IOSocket | Trigger;
+
 export interface iHoverSocket {
-    socketData: Core.iAnyObj,
+    socketData: Socket,
     isInput: boolean,
     canConnect: boolean,
-    socketEl: HTMLDivElement,
-    node?: Node;
+    socketEl: HTMLDivElement | null,
+    node?: Core.iEditorNode;
 }
 
 export interface iValueChanged {
     widget?: boolean;
-    socket: any;
-    newVal: any;
-    oldVal: any;
-    node?: Node;
+    socket: iEditorNodeInput | null;
+    newVal: unknown;
+    oldVal: unknown;
+    node?: Core.iEditorNode;
 }
 </script>
 
 <script setup lang="ts">
 import Node_Connection from './Node_Connection';
 import Svg from '@/components/common/Svg.vue';
-import type Node from './Node';
 import Checkbox from '@/components/common/Checkbox.vue';
 import Input from '@/components/common/Input.vue';
 
@@ -37,15 +42,13 @@ import socketListIcon from '@/assets/list_icon.svg';
 import type Logic from './Logic';
 import decoratorMap from '../decoratorMap';
 
-type Socket = Core.iEditorNodeInput & {node: Node};
-
 const assetBrowserStore = useAssetBrowserStore();
 const { t, te } = useI18nStore();
 
 const props = defineProps<{
     socket: Socket;
     isInput: boolean;
-    parentConnections: Node_Connection[];
+    parentConnections: Core.iNodeConnection[];
     parentId: number;
     desc: string | undefined;
 }>();
@@ -53,7 +56,7 @@ const props = defineProps<{
 const emit = defineEmits<{
     onInput: [Core.iNodeInputEvent],
     valueChanged: [iValueChanged],
-    mouseDown: [Node_Connection],
+    mouseDown: [Core.iNodeConnection],
     socketOver: [iHoverSocket | null],
 }>();
 
@@ -63,31 +66,46 @@ const hasSize = ref(false);
 const forceRefreshkey = ref(0);
 let lastValue: unknown = 0;
 
+const isTrigger = computed(()=>((<IOSocket>props.socket).type == undefined));
+const ioSocket = computed(()=>{
+    if (isTrigger.value) return null;
+    return props.socket as IOSocket;
+});
+const inSocket = computed(()=>{
+    if (ioSocket.value == null || (<iEditorNodeInput>ioSocket.value).value === undefined) return null;
+    return ioSocket.value as iEditorNodeInput;
+});
 const socketType = computed(()=>{
     forceRefreshkey.value;
-    return props.socket.type;
+    if (!ioSocket.value) return null;
+    return ioSocket.value.type;
 });
 const socketValue = computed(()=>{
     forceRefreshkey.value;
-    return props.socket.value;
+    if (!inSocket.value) return null;
+    return inSocket.value.value;
 });
 const showLabel = computed(()=>props.socket.id.charAt(0) != '_');
 const hideSocket = computed(()=>{
     forceRefreshkey.value;
-    return props.socket.hideSocket
+    if (!inSocket.value) return null;
+    return inSocket.value.hideSocket;
 });
 const hideInput = computed(()=>{
     forceRefreshkey.value;
-    return props.socket.hideInput
+    if (!inSocket.value) return null;
+    return inSocket.value.hideInput;
 });
-const isTrigger = computed(()=>(socketType.value == undefined));
 const isConnected = computed(()=>(!!props.parentConnections.find(c => {
     const connectedInput = c.endNode?.nodeId == props.parentId && c.endSocketId == props.socket.id && props.isInput;
     const connectedOutput = c.startNode?.nodeId == props.parentId && c.startSocketId == props.socket.id && !props.isInput;
     return connectedInput || connectedOutput;
 }) && !!hasSize));
 const canConnect = computed(()=>!(isConnected.value && (isTrigger.value != props.isInput)));
-const required = computed(()=>!!props.socket.required);
+const optional = computed(()=>{
+    if (!inSocket.value) return false;
+    return !!inSocket.value.optional;
+});
 const iconMap = new Map<Core.Node_Enums.SOCKET_TYPE, string>([
     [Core.Node_Enums.SOCKET_TYPE.ANY, socketAnyIcon],
     [Core.Node_Enums.SOCKET_TYPE.NUMBER, socketNumberIcon],
@@ -95,51 +113,74 @@ const iconMap = new Map<Core.Node_Enums.SOCKET_TYPE, string>([
     [Core.Node_Enums.SOCKET_TYPE.ASSET, socketAssetIcon],
     [Core.Node_Enums.SOCKET_TYPE.INSTANCE, socketInstanceIcon],
     [Core.Node_Enums.SOCKET_TYPE.BOOL, socketBoolIcon],
+    [Core.Node_Enums.SOCKET_TYPE.TRIPLE, socketBoolIcon],
 ]);
-const socketIcon = computed(()=>iconMap.get(socketType.value)!);
+const socketIcon = computed(()=>{
+    const err = `Could not get socket icon of type '${socketType.value},' returning default`;
+
+    if (!socketType.value) {
+        console.warn(err);
+        return socketAnyIcon;
+    }
+
+    const iconGet = iconMap.get(socketType.value);
+
+    if (!iconGet) {
+        console.warn(err);
+        return socketAnyIcon;
+    }
+
+    return iconGet;
+});
 const customStyles = computed(()=>{
     forceRefreshkey.value;
     const width = props.socket.node.inputBoxWidth;
     return width ? `width: ${width}rem` : '';
 });
 const decoratorIcon = computed(()=>{
-    return props.socket.decoratorIcon
+    if (!inSocket.value) return null;
+    return inSocket.value.decoratorIcon;
 });
 const decoratorIconPath = computed(()=>decoratorMap.get(decoratorIcon.value!)!);
 const disabled = computed(()=>{
     forceRefreshkey.value;
-    return props.socket.disabled;
+    if (!ioSocket.value) return null;
+    return ioSocket.value.disabled;
 });
 const tooltip = computed(()=>{
     let out: string[] = [];
 
-    if (props.socket.type){
-        const type = t(`node.${Core.Node_Enums.SOCKET_TYPE[props.socket.type]}`) + (props.socket.isList ? ' ' + t('node.list') : '');
+    if (ioSocket.value && socketType.value){
+        const type = t(`node.${Core.Node_Enums.SOCKET_TYPE[socketType.value]}`) + (ioSocket.value.isList ? ' ' + t('node.list') : '');
         out.push(`<b>${t('node.type')}: </b>` + type);
     }
 
     if (props.desc){
         out.push(props.desc);
     }
+
     return out.join('<br /><br />');
 });
 
 onMounted(()=>{
     props.socket.node.onForceSocketUpdate.listen(forceSocketUpdate);
-    lastValue = props.socket.value;
+
+    if (inSocket.value) {
+        lastValue = inSocket.value.value;
+    }
 
     nextTick(()=>{
         hasSize.value = true;
 
-        if (props.socket.type == Core.Node_Enums.SOCKET_TYPE.BOOL && boolCheckboxRef.value){
-            boolCheckboxRef.value.indeterminate = props.socket.value == null;
+        if (socketType.value == Core.Node_Enums.SOCKET_TYPE.BOOL && boolCheckboxRef.value){
+            boolCheckboxRef.value.indeterminate = socketValue.value == null;
         }
     });
 });
 
 onBeforeUnmount(()=>{
     props.socket.node.onForceSocketUpdate.remove(forceSocketUpdate);
-})
+});
 
 function forceSocketUpdate(socketId: string | undefined): void {
     if (socketId == props.socket.id || !socketId){
@@ -151,9 +192,13 @@ function onInput(event: Core.iNodeInputEvent): void {
     emit('onInput', event);
 }
 
-function emitValueChanged(newVal: any): void {
+function emitValueChanged(newVal: unknown): void {
+    if (socketType.value == Core.Node_Enums.SOCKET_TYPE.NUMBER && newVal === '') {
+        newVal = null;
+    }
+
     emit('valueChanged', {
-        socket: props.socket,
+        socket: props.socket as iEditorNodeInput,
         oldVal: lastValue,
         newVal: newVal,
     });
@@ -165,7 +210,7 @@ function mouseDown(event: MouseEvent): void {
 
     event.stopPropagation();
 
-    if (props.socket.disabled){
+    if (ioSocket.value && ioSocket.value.disabled){
         return;
     }
 
@@ -178,7 +223,7 @@ function mouseDown(event: MouseEvent): void {
         connection.startSocketEl = socketConnectionRef.value!;
     }
 
-    connection.type = props.socket.type;
+    connection.type = socketType.value;
     connection.canConnect = canConnect.value;
     connection.graphId = (assetBrowserStore.getSelectedAsset as unknown as Logic).selectedGraphId;
 
@@ -210,21 +255,21 @@ defineExpose({socket: props.socket});
 
 <template>
     <div class="dataSocket" :class="isInput ? 'isInput' : ''">
-        <div v-if="socket.enableDecorators" class="decorator-wrapper">
+        <div v-if="inSocket && inSocket.enableDecorators" class="decorator-wrapper">
             <Svg
                 v-if="!!decoratorIcon"
                 class="decorator"
                 :src="decoratorIconPath"
-                v-tooltip="te(socket.decoratorText!) ? t(socket.decoratorText!, socket.decoratorTextVars || {}): ''"></Svg>
+                v-tooltip="te(inSocket!.decoratorText!) ? t(inSocket!.decoratorText!, inSocket.decoratorTextVars || {}): ''"></Svg>
         </div>
-        <div class="name-input-wrapper" :style="isInput && !socket.flipInput ? 'flex-direction: row-reverse;':''">
+        <div class="name-input-wrapper" :style="inSocket && !inSocket.flipInput ? 'flex-direction: row-reverse;':''">
             <div
                 name="spaceholders"
                 v-if="isInput && isConnected && !hideInput"
                 class="inputBox"
                 style="opacity: 0%;">
                 <div
-                    v-if="socketType == Core.Node_Enums.SOCKET_TYPE.INSTANCE && socket.required"
+                    v-if="socketType == Core.Node_Enums.SOCKET_TYPE.INSTANCE && !(<iEditorNodeInput>ioSocket).optional"
                     class="selfBox"
                     :style="customStyles">
                 </div>
@@ -239,19 +284,19 @@ defineExpose({socket: props.socket});
                     :style="customStyles">
                 </div>
             </div>
-            <div v-if="showLabel" class="socket_name" :class="socket.hideLabel ? 'invisible':''">
+            <div v-if="showLabel" class="socket_name" :class="(ioSocket as iEditorNodeInput)?.hideLabel ? 'invisible' : '' ">
                 <div>{{ socket.id[0] == '#' ? socket.id.substring(1, socket.id.length) : t('node.' + socket.id)}}</div>
             </div>
-            <div v-if="isInput && !isConnected && !hideInput" class="inputBox">
+            <div v-if="isInput && inSocket && !isConnected && !hideInput" class="inputBox">
                 <Input
                     v-if="socketType == Core.Node_Enums.SOCKET_TYPE.NUMBER"
                     type="number"
                     ref="numInputRef"
                     class="textField"
                     :style="customStyles"
-                    :value="socketValue"
-                    :required="required"
-                    :disabled="disabled"
+                    :value="socketValue as number"
+                    :optional="optional ?? false"
+                    :disabled="disabled ?? false"
                     @change="emitValueChanged($event.value)"
                     @input="onInput($event)" />
                 <Input
@@ -259,33 +304,29 @@ defineExpose({socket: props.socket});
                     type="text"
                     class="textField"
                     :style="customStyles"
-                    :value="socketValue"
-                    :disabled="disabled"
+                    :value="socketValue as string"
+                    :disabled="disabled == null ? undefined : disabled"
                     @change="emitValueChanged($event.target.value)"
                     @input="onInput($event)"
                     @blur="onTextBlur($event as FocusEvent)"
                     v-input-active
-                    v-tooltip="disabled && socket.value.length > 8 ? socket.value : ''" />
+                    v-tooltip="disabled && (inSocket.value as string).length > 8 ? inSocket.value : ''" />
                 <div
-                    v-if="socketType == Core.Node_Enums.SOCKET_TYPE.INSTANCE && socket.required"
+                    v-if="socketType == Core.Node_Enums.SOCKET_TYPE.INSTANCE && !(<iEditorNodeInput>ioSocket).optional"
                     class="selfBox"
                     :style="customStyles">
                         <div>{{t('logic_editor.self')}}</div>
                 </div>
                 <Checkbox
-                    v-if="socketType == Core.Node_Enums.SOCKET_TYPE.BOOL"
+                    v-if="socketType == Core.Node_Enums.SOCKET_TYPE.BOOL || socketType == Core.Node_Enums.SOCKET_TYPE.TRIPLE"
                     ref="boolCheckboxRef"
-                    :triple="props.socket.triple"
+                    :triple="socketType == Core.Node_Enums.SOCKET_TYPE.TRIPLE"
                     style="width: 20px"
-                    :value="socketValue"
-                    :disabled="disabled"
+                    :value="socketValue != null ? !!socketValue : null"
+                    :disabled="disabled == null ? undefined : disabled"
                     @change="emitValueChanged"
                     @input="onInput($event)"></Checkbox>
             </div>
-        </div>
-        <div v-if="socketType == Core.Node_Enums.SOCKET_TYPE.INFO && socket.value" class="infoBox">
-            <div v-html="t(socket.value.titleId)" class="infoTitle"></div>
-            <div>{{te(socket.value.data) && socket.value.translate ? t(socket.value.data) : socket.value.data}}</div>
         </div>
         <div
             v-if="!(isTrigger || hideSocket)"
@@ -298,9 +339,9 @@ defineExpose({socket: props.socket});
             v-tooltip="tooltip">
             <Svg
                 class="socket_icon_img"
-                :class="socket.isList ? 'socket_icon_img_list':''"
+                :class="ioSocket!.isList ? 'socket_icon_img_list':''"
                 :src="socketIcon"></Svg>
-            <Svg v-if="socket.isList" class="list_icon_img" :src="socketListIcon"></Svg>
+            <Svg v-if="ioSocket!.isList" class="list_icon_img" :src="socketListIcon"></Svg>
         </div>
         <div v-if="hideSocket" class="hidden-socket"></div>
         <svg
@@ -426,18 +467,6 @@ defineExpose({socket: props.socket});
 
 .textField{
     height: 100%;
-}
-
-.infoBox {
-    position: relative;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-}
-
-.infoTitle{
-    font-weight: bold;
 }
 
 .selfBox{
