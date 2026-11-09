@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
+import { useI18nStore } from '@/stores/I18n';
 import type { WidgetKey } from '@engine/core/core';
+
+const { t } = useI18nStore();
 
 const props = defineProps<{
     widget: unknown,
@@ -78,8 +81,8 @@ function deactivateSpace(event: KeyboardEvent): void {
             @mousedown="$event.stopPropagation()"
             @keyup.space="deactivateSpace"
             v-click-outside="deactivate">
-                <div v-show="!key && !active">No Key Set</div>
-                <div v-show="active">Press any key</div>
+                <div v-show="!key && !active">{{ t('node.no_key_set') }}</div>
+                <div v-show="active">{{ t('node.press_any_key') }}</div>
                 <div v-show="key && !active">{{keyDisplay}}</div>
         </button>
     </div>

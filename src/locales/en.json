@@ -353,6 +353,8 @@
         "key_down": "Key Down",
         "key_pressed": "Key Pressed",
         "key_up": "Key Up",
+        "no_key_set": "No Key Set",
+        "press_any_key": "Press Any Key",
         "start": "Start",
         "repeat": "Repeat",
         "stop": "Stop",
