@@ -124,7 +124,17 @@ function getMenuAction(callback: ()=>void): (e: MouseEvent)=>void {
 }
 
 function newProject(): void {
-    emit('newProject');
+    const dialogProps: DialogBoxProps = {
+        type: DIALOG_TYPE.CONFIRM,
+        textInfo: {
+            textId: 'file_menu.confirm_new_project',
+        },
+        callback: (positive)=>{
+            if (!positive) return;
+            emit('newProject');
+        },
+    };
+    emit('dialogOpen', dialogProps);
 }
 
 function save(): void {

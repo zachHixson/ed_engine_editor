@@ -42,6 +42,7 @@
         "report_bug": "Report bug",
         "show_welcome": "Show Welcome",
         "about": "About",
+        "confirm_new_project": "Are you sure you want to create a new project?<br />All unsaved data will be lost.",
         "github_link": "https://github.com/zachHixson/ed_engine_editor",
         "github_bug_report": "https://github.com/zachHixson/ed_engine_editor/issues"
     },

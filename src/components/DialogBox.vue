@@ -10,13 +10,19 @@ export const enum DIALOG_OPTION {
     POSITIVE,
 };
 
+type TextInfo = ({
+    textId: string,
+    rawText?: never,
+} | {
+    textId?: never,
+    rawText: string,
+}) & {
+    vars?: {[keys: string]: unknown},
+};
+
 export interface DialogBoxProps {
     type: DIALOG_TYPE,
-    textInfo: {
-        textId?: string,
-        rawText?: string,
-        vars?: {[keys: string]: unknown}
-    },
+    textInfo: TextInfo,
     callback?: (positive: boolean)=>void,
     defaultOpt?: DIALOG_OPTION,
 }
