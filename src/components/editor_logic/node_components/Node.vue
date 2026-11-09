@@ -11,7 +11,7 @@ import Socket from './Socket.vue';
 import Widget from './Widget.vue';
 import Svg from '@/components/common/Svg.vue';
 
-import { ref, reactive, computed, nextTick, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, nextTick, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
 import { useI18nStore } from '@/stores/I18n';
 import type { iHoverSocket, iValueChanged } from './Socket.vue';
 import type { iState as LogicState } from '@/stores/LogicEditor';
@@ -48,7 +48,6 @@ const inTriggerRefs = ref<InstanceType<typeof Socket>[]>([]);
 const outTriggerRefs = ref<InstanceType<typeof Socket>[]>([]);
 const inputRefs = ref<InstanceType<typeof Socket>[]>([]);
 const outputRefs = ref<InstanceType<typeof Socket>[]>([]);
-const nodeObjRef = reactive(props.nodeObj);
 
 const dragOffset = new Vec2();
 const isDragging = ref(false);

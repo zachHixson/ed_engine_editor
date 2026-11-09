@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onBeforeMount, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onBeforeMount, onBeforeUnmount } from 'vue';
 import { useI18nStore } from '@/stores/I18n';
 import type { WidgetKey } from '@engine/core/core';
 
@@ -8,37 +8,28 @@ const { t } = useI18nStore();
 const props = defineProps<{
     widget: unknown,
     widgetData: unknown,
-    setWidgetData: (data: WidgetKey['widget']['data'])=>void,
+    setWidgetData: (data: WidgetKey['widget']['data'], commit?: boolean)=>void,
 }>();
 
 const active = ref(false);
-const key = ref<string | null>(null);
-const code = ref<string | null>(null);
 
 const keyDisplay = computed(()=>{
-    if (code.value == 'Space'){
-        return code.value;
+    const data = props.widgetData as WidgetKey['widget']['data'];
+
+    if (data.code == 'Space'){
+        return data.code;
     }
 
-    if (!key.value){
+    if (!data.key){
         return '';
     }
 
-    return key.value.length > 1 ? key.value : key.value.toUpperCase();
+    return data.key.length > 1 ? data.key : data.key.toUpperCase();
 });
 
 onBeforeMount(()=>{
     if (!props.widgetData){
         props.setWidgetData({code: null, key: null});
-    }
-});
-
-onMounted(()=>{
-    const widgetData = props.widgetData as WidgetKey['widget']['data'];
-
-    if (props.widgetData){
-        key.value = widgetData.key;
-        code.value = widgetData.code;
     }
 });
 
@@ -57,9 +48,7 @@ function onKey(event: KeyboardEvent): void {
     props.setWidgetData({
         code: event.code,
         key: event.key,
-    });
-    key.value = event.key;
-    code.value = event.code;
+    }, true);
 }
 
 function deactivate(): void {
@@ -81,9 +70,9 @@ function deactivateSpace(event: KeyboardEvent): void {
             @mousedown="$event.stopPropagation()"
             @keyup.space="deactivateSpace"
             v-click-outside="deactivate">
-                <div v-show="!key && !active">{{ t('node.no_key_set') }}</div>
+                <div v-show="!(<WidgetKey['widget']['data']>widgetData).key && !active">{{ t('node.no_key_set') }}</div>
                 <div v-show="active">{{ t('node.press_any_key') }}</div>
-                <div v-show="key && !active">{{keyDisplay}}</div>
+                <div v-show="(<WidgetKey['widget']['data']>widgetData).key && !active">{{keyDisplay}}</div>
         </button>
     </div>
 </template>

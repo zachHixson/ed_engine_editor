@@ -5,7 +5,7 @@ import type { WidgetTextArea } from '@engine/core/nodes/Widget';
 const props = defineProps<{
     widget: unknown,
     widgetData: unknown,
-    setWidgetData: (data: WidgetTextArea['widget']['data'])=>void,
+    setWidgetData: (data: WidgetTextArea['widget']['data'], commit?: boolean)=>void,
 }>();
 
 const text = computed(()=>(props.widgetData as WidgetTextArea['widget']['data']) ?? '');
@@ -23,6 +23,6 @@ onMounted(()=>{
             rows="4"
             cols="31"
             style="resize: none; margin-top: 5px"
-            @change="setWidgetData(($event.target as HTMLInputElement).value)" :value="text" v-input-active></textarea>
+            @change="setWidgetData(($event.target as HTMLInputElement).value, true)" :value="text" v-input-active></textarea>
     </div>
 </template>
